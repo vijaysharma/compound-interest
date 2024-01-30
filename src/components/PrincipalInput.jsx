@@ -7,7 +7,7 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
     <>
       <div className="form-control w-full">
         <div className="label">
-          <span className="label-text text-xs/3">
+          <span className="label-text text-sm/3">
             {convertToWords(sanctnum(principalAmount))}
           </span>
         </div>
