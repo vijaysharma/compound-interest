@@ -2,9 +2,9 @@ import React from "react";
 
 const PaymentMode = ({ mode, setMode }) => {
   return (
-    <div className="form-control w-full">
+    <div className="form-control w-full text-center">
       <h5>Payout Mode</h5>
-      <div className="join">
+      <div className="join mx-auto">
         <input
           className="join-item btn"
           type="radio"

@@ -21,16 +21,18 @@ const Inputs = () => {
     setPayoutAmount(Math.round(interestAmount));
   }, [pa, rt, mode]);
   return (
-    <div className="p-4 w-96 max-w-lg bg-primary/5">
-      <h3 className="text-lg text-center p-4 bg-primary/15">
-        Compound Interest
-      </h3>
-      <PrincipalInput principalAmount={pa} setPrincipalAmount={setPa} />
-      <ROITenureInput rt={rt} setRt={setRt} />
-      <PaymentMode mode={mode} setMode={setMode} />
-      <br />
-      <Interest payoutAmount={payoutAmount} />
-    </div>
+    <>
+      <h2 className="text-lg text-center p-4 bg-primary/15">
+        <b>Compound Interest</b>
+      </h2>
+      <div className="p-4 w-full max-w-lg bg-primary/5">
+        <PrincipalInput principalAmount={pa} setPrincipalAmount={setPa} />
+        <ROITenureInput rt={rt} setRt={setRt} />
+        <PaymentMode mode={mode} setMode={setMode} />
+        <br />
+        <Interest payoutAmount={payoutAmount} />
+      </div>
+    </>
   );
 };
 
