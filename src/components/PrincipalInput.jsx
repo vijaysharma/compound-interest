@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import convertToWords from "../utilities/currency";
+import { sanctnum } from "../utilities/numSanitity";
 
 const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
   return (
@@ -7,7 +8,7 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
       <div className="form-control w-full">
         <div className="label">
           <span className="label-text text-xs/3">
-            {convertToWords(principalAmount ? principalAmount : 0)}
+            {convertToWords(sanctnum(principalAmount))}
           </span>
         </div>
         <div className="join mb-2">
@@ -27,8 +28,8 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
           min={0}
           max={100000000}
           step={1000}
-          value={principalAmount ? principalAmount : 0}
-          className="range-primary"
+          value={sanctnum(principalAmount)}
+          className="range-primary range-lg"
           onChange={(e) => setPrincipalAmount(e.target.value)}
         />
         <div className="label">
