@@ -22,7 +22,7 @@ const Inputs = () => {
     m = sanctnum(m);
     f = sanctnum(f);
     t = sanctnum(t);
-    return p * Math.pow(1 + r / f / 100, (f * m) / 12) - p;
+    return sanctnum(p * (1 + r / f / 100) ** ((f * m) / 12) - p);
   };
   useEffect(() => {
     const interestAmount = calculateInterest(
@@ -32,6 +32,7 @@ const Inputs = () => {
       frequency,
       rt.tenure
     );
+    console.log("aa==", interestAmount);
     setPayoutAmount(Math.round(interestAmount));
   }, [pa, rt, mode, frequency]);
   return (

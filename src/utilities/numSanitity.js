@@ -1,3 +1,7 @@
 export const sanctnum = (inputValue) => {
-  return isNaN(parseFloat(inputValue)) ? 0 : parseFloat(inputValue);
+  // parseFloat the input value
+  inputValue = parseFloat(inputValue) ? parseFloat(inputValue) : 0;
+  // check if the input value is finite or not
+  inputValue = isFinite(inputValue) ? inputValue : 0;
+  return inputValue;
 };

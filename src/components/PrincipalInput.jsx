@@ -11,14 +11,14 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
             {convertToWords(sanctnum(principalAmount))}
           </span>
         </div>
-        <div className="join mb-2">
+        <div className="join mb-2 focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
           <strong className="join-item w-12 pt-2 bg-primary inline-block rounded-r-full border border- border-primary text-center align-middle text-lg">
             ₹
           </strong>
           <input
             type="text"
             placeholder="Type here"
-            className="join-item input input-bordered input-primary w-full"
+            className="join-item input input-bordered input-primary w-full focus:outline-none"
             value={principalAmount}
             onChange={(e) => setPrincipalAmount(e.target.value)}
           />
@@ -29,7 +29,7 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
           max={100000000}
           step={1000}
           value={sanctnum(principalAmount)}
-          className="range-primary range-lg"
+          className="range range-primary range-sm mt-2"
           onChange={(e) => setPrincipalAmount(e.target.value)}
         />
         <div className="label">
