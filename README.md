@@ -1,4 +1,9 @@
-# Getting Started with Create React App
+# Compound Interest Calculator
+
+This app let us calculate the compound interest based on different frequency and different payout terms.
+The unit system used is `INR (₹)` cuurency and `en-IN` system
+
+## Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
