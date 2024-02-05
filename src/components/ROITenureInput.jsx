@@ -11,7 +11,7 @@ const ROITenureInput = ({ rt, setRt }) => {
           <span className="label-text">ROI (%)</span>
         </div>
         <input
-          type="text"
+          type="number"
           placeholder="Type here"
           className="input input-bordered input-primary"
           value={rt.roi}
@@ -28,7 +28,7 @@ const ROITenureInput = ({ rt, setRt }) => {
           <span className="label-text">Tenure (Months)</span>
         </div>
         <input
-          type="text"
+          type="number"
           placeholder="Type here"
           className="input input-bordered input-primary"
           value={rt.tenure}

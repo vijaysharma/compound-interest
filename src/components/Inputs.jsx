@@ -5,6 +5,8 @@ import PaymentMode from "./PaymentMode";
 import Interest from "./Interest";
 import { sanctnum } from "../utilities/numSanitity";
 import Compounded from "./Compounded";
+import Tabs from "./Tabs";
+import Logo from "./Logo";
 
 const Inputs = () => {
   const [pa, setPa] = useState(100000);
@@ -24,6 +26,7 @@ const Inputs = () => {
     t = sanctnum(t);
     return sanctnum(p * (1 + r / f / 100) ** ((f * m) / 12) - p);
   };
+
   useEffect(() => {
     const interestAmount = calculateInterest(
       pa,
@@ -32,22 +35,30 @@ const Inputs = () => {
       frequency,
       rt.tenure
     );
-    console.log("aa==", interestAmount);
     setPayoutAmount(Math.round(interestAmount));
   }, [pa, rt, mode, frequency]);
+  const wheight = window.document.documentElement.clientHeight;
   return (
     <>
-      <h2 className="text-lg text-center p-4 bg-primary/15">
-        <b>Compound Interest</b>
-      </h2>
-      <div className="p-4 w-full max-w-lg bg-primary/5 mx-auto">
-        <PrincipalInput principalAmount={pa} setPrincipalAmount={setPa} />
-        <ROITenureInput rt={rt} setRt={setRt} />
-        <Compounded fr={frequency} setFr={setFrequency} />
-        <br />
-        <PaymentMode mode={mode} setMode={setMode} />
-        <br />
-        <Interest payoutAmount={payoutAmount} />
+      <Logo />
+      <div
+        className="w-full max-w-lg bg-primary/5 mx-auto"
+        style={{ height: wheight - 60 }}
+      >
+        <Tabs name="tab" height={wheight - 111}>
+          <div id={1} title="Compound Interest">
+            <PrincipalInput principalAmount={pa} setPrincipalAmount={setPa} />
+            <ROITenureInput rt={rt} setRt={setRt} />
+            <Compounded fr={frequency} setFr={setFrequency} />
+            <br />
+            <PaymentMode mode={mode} setMode={setMode} />
+            <br />
+            <Interest payoutAmount={payoutAmount} />
+          </div>
+          <div id={2} title="Date Calculator">
+            Work in progress!!
+          </div>
+        </Tabs>
       </div>
     </>
   );

@@ -16,7 +16,7 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
             ₹
           </strong>
           <input
-            type="text"
+            type="number"
             placeholder="Type here"
             className="join-item input input-bordered input-primary w-full focus:outline-none"
             value={principalAmount}
