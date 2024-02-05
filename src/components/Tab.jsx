@@ -14,7 +14,7 @@ const Tab = ({ name, child, selectedId, setSelectedId, height }) => {
       />
       <div
         role="tabpanel"
-        className="tab-content p-4 overflow-y-auto"
+        className="tab-content p-4 w-full overflow-y-auto"
         style={{ height }}
       >
         {child}
