@@ -1,4 +1,4 @@
-const Tab = ({ name, child, selectedId, setSelectedId, height }) => {
+const Tab = ({ name, child, selectedId, setSelectedId, height, width }) => {
   return (
     <>
       <input
@@ -6,6 +6,7 @@ const Tab = ({ name, child, selectedId, setSelectedId, height }) => {
         name={name}
         role="tab"
         className={`tab ${selectedId === child.props.id ? "tab-active" : ""}`}
+        style={{ width }}
         aria-label={child.props.title}
         checked={selectedId === child.props.id}
         onChange={() => setSelectedId(child.props.id)}

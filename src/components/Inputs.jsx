@@ -38,6 +38,7 @@ const Inputs = () => {
     setPayoutAmount(Math.round(interestAmount));
   }, [pa, rt, mode, frequency]);
   const wheight = window.document.documentElement.clientHeight;
+  const wwidth = window.document.documentElement.clientWidth;
   return (
     <>
       <Logo />
@@ -45,7 +46,7 @@ const Inputs = () => {
         className="w-full max-w-lg bg-primary/5 mx-auto"
         style={{ height: wheight - 76 }}
       >
-        <Tabs name="tab" height={wheight - 127}>
+        <Tabs name="tab" height={wheight - 127} width={wwidth}>
           <div id={1} title="Compound Interest">
             <PrincipalInput principalAmount={pa} setPrincipalAmount={setPa} />
             <ROITenureInput rt={rt} setRt={setRt} />

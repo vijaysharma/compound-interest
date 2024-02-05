@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Tab from "./Tab";
 
-const Tabs = ({ name, children, height }) => {
+const Tabs = ({ name, children, height, width }) => {
   const [selectedId, setSelectedId] = useState(1);
   return (
     <div role="tablist" className="tabs tabs-lg tabs-bordered w-full">
@@ -13,6 +13,7 @@ const Tabs = ({ name, children, height }) => {
           selectedId={selectedId}
           setSelectedId={setSelectedId}
           height={height}
+          width={width / children.length}
         />
       ))}
     </div>
