@@ -5,9 +5,7 @@ const Tab = ({ name, child, selectedId, setSelectedId, height }) => {
         type="radio"
         name={name}
         role="tab"
-        className={`tab whitespace-nowrap box-content ${
-          selectedId === child.props.id ? "tab-active" : ""
-        }`}
+        className={`tab ${selectedId === child.props.id ? "tab-active" : ""}`}
         aria-label={child.props.title}
         checked={selectedId === child.props.id}
         onChange={() => setSelectedId(child.props.id)}
