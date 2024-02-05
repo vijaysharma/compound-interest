@@ -4,7 +4,7 @@ import Tab from "./Tab";
 const Tabs = ({ name, children, height }) => {
   const [selectedId, setSelectedId] = useState(1);
   return (
-    <div role="tablist" className="tabs tabs-lg tabs-bordered">
+    <div role="tablist" className="tabs tabs-lg tabs-bordered w-full">
       {children.map((child) => (
         <Tab
           key={child.props.id}
