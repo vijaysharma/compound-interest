@@ -43,9 +43,9 @@ const Inputs = () => {
       <Logo />
       <div
         className="w-full max-w-lg bg-primary/5 mx-auto"
-        style={{ height: wheight - 60 }}
+        style={{ height: wheight - 76 }}
       >
-        <Tabs name="tab" height={wheight - 111}>
+        <Tabs name="tab" height={wheight - 127}>
           <div id={1} title="Compound Interest">
             <PrincipalInput principalAmount={pa} setPrincipalAmount={setPa} />
             <ROITenureInput rt={rt} setRt={setRt} />

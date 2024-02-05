@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import convertToWords from "../utilities/currency";
 import { sanctnum } from "../utilities/numSanitity";
 
@@ -12,7 +11,7 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
           </span>
         </div>
         <div className="join mb-2 focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
-          <strong className="join-item w-12 pt-2 bg-primary inline-block rounded-r-full border border- border-primary text-center align-middle text-lg">
+          <strong className="join-item w-12 pt-2 bg-primary text-primary-content inline-block rounded-r-full border border-primary text-center align-middle text-lg">
             ₹
           </strong>
           <input

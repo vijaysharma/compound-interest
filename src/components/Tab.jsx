@@ -6,9 +6,7 @@ const Tab = ({ name, child, selectedId, setSelectedId, height }) => {
         name={name}
         role="tab"
         className={`tab whitespace-nowrap box-content ${
-          selectedId === child.props.id
-            ? "tab-active bg-primary text-primary-content"
-            : ""
+          selectedId === child.props.id ? "tab-active" : ""
         }`}
         aria-label={child.props.title}
         checked={selectedId === child.props.id}

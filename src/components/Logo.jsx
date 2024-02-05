@@ -44,7 +44,7 @@ const Logo = () => {
   }, [theme]);
   return (
     <div
-      className="text-lg text-center p-2 bg-primary/35"
+      className="text-lg text-center py-4 bg-primary text-primary-content fill-primary-content"
       onClick={(e) => {
         setTheme(themes[getRandomNumber(0, themes.length)]);
       }}
@@ -56,7 +56,7 @@ const Logo = () => {
         height="44"
         viewBox="0 0 139.000000 126.000000"
         preserveAspectRatio="xMidYMid meet"
-        className="inline-block fill-primary"
+        className="inline-block"
       >
         <g
           transform="translate(0.000000,126.000000) scale(0.100000,-0.100000)"
