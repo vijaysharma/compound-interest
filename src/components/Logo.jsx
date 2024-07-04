@@ -44,7 +44,7 @@ const Logo = () => {
   }, [theme]);
   return (
     <div
-      className="text-lg text-center py-4 bg-primary text-primary-content fill-primary-content"
+      className="text-lg text-center py-2 bg-primary text-primary-content fill-primary-content"
       onClick={(e) => {
         setTheme(themes[getRandomNumber(0, themes.length)]);
       }}

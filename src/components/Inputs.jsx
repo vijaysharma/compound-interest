@@ -17,6 +17,7 @@ const Inputs = () => {
   const [mode, setMode] = useState(1);
   const [frequency, setFrequency] = useState(4);
   const [payoutAmount, setPayoutAmount] = useState(0);
+  const [wwidth, setWWidth] = useState(390);
   const calculateInterest = (p, r, m, f, t) => {
     m = m === 100 ? t : m;
     p = sanctnum(p);
@@ -26,7 +27,6 @@ const Inputs = () => {
     t = sanctnum(t);
     return sanctnum(p * (1 + r / f / 100) ** ((f * m) / 12) - p);
   };
-
   useEffect(() => {
     const interestAmount = calculateInterest(
       pa,
@@ -36,13 +36,14 @@ const Inputs = () => {
       rt.tenure
     );
     setPayoutAmount(Math.round(interestAmount));
+    setWWidth(window.document.getElementById("container").clientWidth);
   }, [pa, rt, mode, frequency]);
   const wheight = window.document.documentElement.clientHeight;
-  const wwidth = window.document.documentElement.clientWidth;
   return (
     <>
       <Logo />
       <div
+        id="container"
         className="w-full max-w-lg bg-primary/5 mx-auto"
         style={{ height: wheight - 76 }}
       >
@@ -57,6 +58,9 @@ const Inputs = () => {
             <Interest payoutAmount={payoutAmount} />
           </div>
           <div id={2} title="Date Calculator">
+            Work in progress!!
+          </div>
+          <div id={3} title="Calculator">
             Work in progress!!
           </div>
         </Tabs>

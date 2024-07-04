@@ -6,7 +6,7 @@ const Tab = ({ name, child, selectedId, setSelectedId, height, width }) => {
         name={name}
         role="tab"
         className={`tab ${selectedId === child.props.id ? "tab-active" : ""}`}
-        style={{ width }}
+        style={{ width, lineHeight: 1 }}
         aria-label={child.props.title}
         checked={selectedId === child.props.id}
         onChange={() => setSelectedId(child.props.id)}
