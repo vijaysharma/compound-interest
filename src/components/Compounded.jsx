@@ -6,7 +6,7 @@ const Compounded = ({ fr, setFr }) => {
       <h5>Compounded</h5>
       <div className="join mx-auto">
         <input
-          className="join-item btn"
+          className="join-item input-bordered btn"
           type="radio"
           name="frequency"
           aria-label="Monthly"
@@ -15,7 +15,7 @@ const Compounded = ({ fr, setFr }) => {
           onChange={(e) => setFr(parseInt(e.target.value))}
         />
         <input
-          className="join-item btn"
+          className="join-item input-bordered btn"
           type="radio"
           name="frequency"
           aria-label="Quarterly"
@@ -24,7 +24,7 @@ const Compounded = ({ fr, setFr }) => {
           onChange={(e) => setFr(parseInt(e.target.value))}
         />
         <input
-          className="join-item btn"
+          className="join-item input-bordered btn"
           type="radio"
           name="frequency"
           aria-label="Yearly"

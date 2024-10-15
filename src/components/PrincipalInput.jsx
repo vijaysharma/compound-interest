@@ -26,14 +26,14 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
           type="range"
           min={0}
           max={100000000}
-          step={1000}
+          step={10000}
           value={sanctnum(principalAmount)}
           className="range range-primary range-sm mt-2"
           onChange={(e) => setPrincipalAmount(e.target.value)}
         />
         <div className="label">
-          <span className="label-text">₹0.00</span>
-          <span className="label-text">₹10,00,00,000.00</span>
+          <span className="label-text">₹0</span>
+          <span className="label-text">₹10,00,00,000</span>
         </div>
       </div>
     </>

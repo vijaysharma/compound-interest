@@ -13,18 +13,20 @@ const Inputs = () => {
   const [rt, setRt] = useState({
     roi: 7.1,
     tenure: 24,
+    tenureFormat: "m",
   });
   const [mode, setMode] = useState(1);
   const [frequency, setFrequency] = useState(4);
   const [payoutAmount, setPayoutAmount] = useState(0);
   const [wwidth, setWWidth] = useState(390);
-  const calculateInterest = (p, r, m, f, t) => {
+  const calculateInterest = (p, r, m, f, t, tf) => {
+    t = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
     m = m === 100 ? t : m;
     p = sanctnum(p);
     r = sanctnum(r);
     m = sanctnum(m);
     f = sanctnum(f);
-    t = sanctnum(t);
+
     return sanctnum(p * (1 + r / f / 100) ** ((f * m) / 12) - p);
   };
   useEffect(() => {
@@ -33,9 +35,12 @@ const Inputs = () => {
       rt.roi,
       mode,
       frequency,
-      rt.tenure
+      rt.tenure,
+      rt.tenureFormat
     );
-    setPayoutAmount(Math.round(interestAmount));
+    mode === 100
+      ? setPayoutAmount(Math.round(interestAmount) + Math.round(pa))
+      : setPayoutAmount(Math.round(interestAmount));
     setWWidth(window.document.getElementById("container").clientWidth);
   }, [pa, rt, mode, frequency]);
   const wheight = window.document.documentElement.clientHeight;
@@ -45,7 +50,7 @@ const Inputs = () => {
       <div
         id="container"
         className="w-full max-w-lg bg-primary/5 mx-auto"
-        style={{ height: wheight - 76 }}
+        style={{ height: wheight - 88 }}
       >
         <Tabs name="tab" height={wheight - 127} width={wwidth}>
           <div id={1} title="Compound Interest">
@@ -55,14 +60,18 @@ const Inputs = () => {
             <br />
             <PaymentMode mode={mode} setMode={setMode} />
             <br />
-            <Interest payoutAmount={payoutAmount} />
+            <Interest
+              payoutAmount={payoutAmount}
+              principalAmount={pa}
+              mode={mode}
+            />
           </div>
-          <div id={2} title="Date Calculator">
+          {/* <div id={2} title="Date Calculator">
             Work in progress!!
           </div>
           <div id={3} title="Calculator">
             Work in progress!!
-          </div>
+          </div> */}
         </Tabs>
       </div>
     </>
