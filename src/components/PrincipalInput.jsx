@@ -36,20 +36,20 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
             min="0"
             placeholder="Type here"
             className="join-item input input-bordered input-primary w-full focus:outline-none"
-            value={principalAmount}
+            value={principalAmount.toString().replace(/^0+/, "") || 0}
             onChange={(e) => setPrincipalAmount(Math.abs(e.target.value))}
           />
           <button
             className="join-item input-bordered input-primary btn"
             onClick={(e) => setPrincipalAmount(0)}
           >
-            0
+            C
           </button>
           <input
             className="join-item input-bordered input-primary btn"
             type="radio"
             name="sum"
-            aria-label="+ Add"
+            aria-label="+"
             value={"+"}
             checked={sum === "+"}
             onChange={(e) => setSum(e.target.value)}
@@ -58,25 +58,25 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
             className="join-item input-bordered input-primary btn"
             type="radio"
             name="sum"
-            aria-label="- Subtract"
+            aria-label="-"
             value={"-"}
             disabled={principalAmount === 0}
             checked={sum === "-"}
             onChange={(e) => setSum(e.target.value)}
           />
         </div>
-        <div className="join">
-          <button
+        <div className="join justify-center">
+          {/* <button
             className="join-item btn border-primary"
             onClick={() => setSumValue(100000000)}
           >
             10Cr
-          </button>
+          </button> */}
           <button
             className="join-item btn border-primary"
-            onClick={() => setSumValue(20000000)}
+            onClick={() => setSumValue(50000000)}
           >
-            2Cr
+            5Cr
           </button>
           <button
             className="join-item btn border-primary"
@@ -84,29 +84,29 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
           >
             50L
           </button>
-          <button
+          {/* <button
             className="join-item btn border-primary"
             onClick={() => setSumValue(2000000)}
           >
             20L
-          </button>
-          <button
+          </button> */}
+          {/* <button
             className="join-item btn border-primary"
             onClick={() => setSumValue(1000000)}
           >
             10L
-          </button>
-          <button
+          </button> */}
+          {/* <button
             className="join-item btn border-primary"
             onClick={() => setSumValue(200000)}
           >
             2L
-          </button>
+          </button> */}
           <button
             className="join-item btn border-primary"
-            onClick={() => setSumValue(100000)}
+            onClick={() => setSumValue(500000)}
           >
-            1L
+            5L
           </button>
           <button
             className="join-item btn border-primary"
@@ -116,9 +116,21 @@ const PrincipalInput = ({ principalAmount, setPrincipalAmount }) => {
           </button>
           <button
             className="join-item btn border-primary"
-            onClick={() => setSumValue(10000)}
+            onClick={() => setSumValue(5000)}
           >
-            10K
+            5K
+          </button>
+          <button
+            className="join-item btn border-primary"
+            onClick={() => setSumValue(500)}
+          >
+            500
+          </button>
+          <button
+            className="join-item btn border-primary"
+            onClick={() => setSumValue(50)}
+          >
+            50
           </button>
         </div>
       </div>

@@ -27,8 +27,8 @@ const Tenure = ({ rt, setRt }) => {
         <input
           type="number"
           placeholder="Type here"
-          className="input input-bordered input-primary focus:outline-none join-item w-24 text-center"
-          value={rt.tenure}
+          className="input input-bordered input-primary focus:outline-none join-item w-16 text-center"
+          value={rt.tenure.toString().replace(/^0+/, "") || 0}
           onChange={(e) => setRt({ ...rt, tenure: Math.abs(e.target.value) })}
         />
         <button
@@ -43,8 +43,6 @@ const Tenure = ({ rt, setRt }) => {
         >
           +10
         </button>
-      </div>
-      <div className="join ml-4">
         <input
           className="join-item input-bordered input-primary btn"
           type="radio"
@@ -52,7 +50,13 @@ const Tenure = ({ rt, setRt }) => {
           aria-label="M"
           value={"m"}
           checked={rt.tenureFormat === "m"}
-          onChange={(e) => setRt({ ...rt, tenureFormat: e.target.value })}
+          onChange={(e) => {
+            setRt({
+              ...rt,
+              tenure: rt.tenureFormat === "y" ? rt.tenure * 12 : rt.tenure,
+              tenureFormat: e.target.value,
+            });
+          }}
         />
         <input
           className="join-item input-bordered input-primary btn"
@@ -61,7 +65,13 @@ const Tenure = ({ rt, setRt }) => {
           aria-label="Y"
           value={"y"}
           checked={rt.tenureFormat === "y"}
-          onChange={(e) => setRt({ ...rt, tenureFormat: e.target.value })}
+          onChange={(e) =>
+            setRt({
+              ...rt,
+              tenure: rt.tenureFormat === "m" ? rt.tenure / 12 : rt.tenure,
+              tenureFormat: e.target.value,
+            })
+          }
         />
       </div>
     </div>
