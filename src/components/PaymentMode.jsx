@@ -6,7 +6,7 @@ const PaymentMode = ({ mode, setMode }) => {
       <h5>Payout Mode</h5>
       <div className="join mx-auto">
         <input
-          className="join-item input-bordered btn"
+          className="join-item input-bordered input-primary btn"
           type="radio"
           name="payment-mode"
           aria-label="Monthly"
@@ -15,7 +15,7 @@ const PaymentMode = ({ mode, setMode }) => {
           onChange={(e) => setMode(parseInt(e.target.value))}
         />
         <input
-          className="join-item input-bordered btn"
+          className="join-item input-bordered input-primary btn"
           type="radio"
           name="payment-mode"
           aria-label="Quarterly"
@@ -24,7 +24,7 @@ const PaymentMode = ({ mode, setMode }) => {
           onChange={(e) => setMode(parseInt(e.target.value))}
         />
         <input
-          className="join-item input-bordered btn"
+          className="join-item input-bordered input-primary btn"
           type="radio"
           name="payment-mode"
           aria-label="Yearly"
@@ -33,7 +33,7 @@ const PaymentMode = ({ mode, setMode }) => {
           onChange={(e) => setMode(parseInt(e.target.value))}
         />
         <input
-          className="join-item input-bordered btn"
+          className="join-item input-bordered input-primary btn"
           type="radio"
           name="payment-mode"
           aria-label="Cumulative"

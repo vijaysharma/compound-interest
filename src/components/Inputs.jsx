@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import PrincipalInput from "./PrincipalInput";
-import ROITenureInput from "./ROITenureInput";
+import RateOfInterest from "./RateOfInterest";
 import PaymentMode from "./PaymentMode";
 import Interest from "./Interest";
 import { sanctnum } from "../utilities/numSanitity";
 import Compounded from "./Compounded";
 import Tabs from "./Tabs";
 import Logo from "./Logo";
+import Tenure from "./Tenure";
 
 const Inputs = () => {
   const [pa, setPa] = useState(100000);
@@ -55,7 +56,8 @@ const Inputs = () => {
         <Tabs name="tab" height={wheight - 127} width={wwidth}>
           <div id={1} title="Compound Interest">
             <PrincipalInput principalAmount={pa} setPrincipalAmount={setPa} />
-            <ROITenureInput rt={rt} setRt={setRt} />
+            <RateOfInterest rt={rt} setRt={setRt} />
+            <Tenure rt={rt} setRt={setRt} />
             <Compounded fr={frequency} setFr={setFrequency} />
             <br />
             <PaymentMode mode={mode} setMode={setMode} />

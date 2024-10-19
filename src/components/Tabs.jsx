@@ -19,18 +19,18 @@ const Tabs = ({ name, children, height, width }) => {
       ))}
     </div>
   ) : (
-    // <Tab
-    //   key={children.props.id}
-    //   name={name}
-    //   child={children}
-    //   selectedId={selectedId}
-    //   setSelectedId={setSelectedId}
-    //   height={height}
-    //   width={width / children.length}
-    // />
-    <div className="p-4 w-full overflow-y-auto" style={{ height }}>
-      {children}
-    </div>
+    <Tab
+      key={children.props.id}
+      name={name}
+      child={children}
+      selectedId={selectedId}
+      setSelectedId={setSelectedId}
+      height={height}
+      width={width / children.length}
+    />
+    // <div className="p-4 w-full overflow-y-auto" style={{ height }}>
+    //   {children}
+    // </div>
   );
 };
 
