@@ -13,36 +13,8 @@ const SIP = () => {
     tenure: 5,
     tenureFormat: "y",
   });
-  const [frequency, setFrequency] = useState(4);
   const [type, setType] = useState("rd");
   const [payoutAmount, setPayoutAmount] = useState(0);
-  const calculateSIP = (p, r, t, tf) => {
-    t = tf === "y" ? sanctnum(t) : sanctnum(t) / 12;
-    p = sanctnum(p);
-    r = sanctnum(r / 100);
-    let n = 12;
-    let fa = 0;
-    for (let i = 1; i <= t * n; i++) {
-      fa += p * Math.pow(1 + r / n, n * (i / 12));
-    }
-    return sanctnum(fa);
-  };
-  const calculateRD = (p, r, t, tf) => {
-    t = tf === "y" ? sanctnum(t) : sanctnum(t) / 12;
-    p = sanctnum(p);
-    r = sanctnum(r / 100);
-    let n = 4;
-    let totalMonths = t * 12;
-    let fa = 0;
-
-    for (let i = 1; i <= totalMonths; i++) {
-      const monthsLeft = totalMonths - i + 1;
-      const yearsLeft = monthsLeft / 12;
-      fa += p * Math.pow(1 + r / n, n * yearsLeft);
-    }
-
-    return sanctnum(fa);
-  };
   const calculate = (p, r, t, tf, type) => {
     t = tf === "y" ? sanctnum(t) : sanctnum(t) / 12;
     p = sanctnum(p);
@@ -89,8 +61,8 @@ const SIP = () => {
       <HoriJoinedPill
         className="mb-3"
         data={[
-          { value: "rd", title: "RD" },
-          { value: "sip", title: "SIP" },
+          { id: "t1", value: "rd", title: "RD" },
+          { id: "t2", value: "sip", title: "SIP" },
         ]}
         selectedValue={type}
         updateSelectedValue={setType}

@@ -15,6 +15,7 @@ const HoriJoinedPill = ({
         {data &&
           data.map((p) => (
             <button
+              key={p.id}
               className={`join-item btn border-primary ${
                 selectedValue === p.value ? "btn-primary" : ""
               }`}

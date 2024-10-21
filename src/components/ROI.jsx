@@ -3,12 +3,12 @@ import { sanctnum } from "../utilities/numSanitity";
 const ROI = ({ rt, setRt, title, className }) => {
   const setROI = (n) => {
     let roi = parseFloat(rt);
-
+    roi += n;
     if (roi <= 0) {
       setRt(0);
       return;
     }
-    roi += n;
+
     setRt(Math.round((roi + Number.EPSILON) * 100) / 100);
   };
   return (

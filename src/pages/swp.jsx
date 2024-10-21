@@ -15,7 +15,7 @@ const SWP = () => {
   });
   const [wa, setWa] = useState(50000);
   const [remainingAmount, setRAmount] = useState(0);
-  const [lwa, setLwa] = useState(wa);
+  const [lwa, setLwa] = useState(0);
   const calculateRemainingAmount = (p, r, ir, t, tf, w) => {
     t = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
     p = sanctnum(p);
@@ -24,15 +24,12 @@ const SWP = () => {
     ir = sanctnum(ir);
     let fa = p;
     let wa = w;
+    if (t <= 0) setLwa(Math.round(0));
     for (let i = 1; i <= t; i++) {
-      if (ir && i > 12 && (i - 1) % 12 === 0) {
-        wa = wa * (1 + ir / 100);
-        setLwa(Math.round(wa));
-      }
-
+      wa = ir && i > 12 && (i - 1) % 12 === 0 ? wa * (1 + ir / 100) : wa;
+      setLwa(Math.round(wa));
       fa = fa * (1 + r / 100) ** (1 / 12) - wa;
     }
-
     return sanctnum(fa);
   };
   useEffect(() => {

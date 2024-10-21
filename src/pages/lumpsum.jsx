@@ -51,9 +51,9 @@ const Lumpsum = () => {
       <HoriJoinedPill
         className="mb-3"
         data={[
-          { value: 12, title: "Monthly" },
-          { value: 4, title: "Quarterly" },
-          { value: 1, title: "Yearly" },
+          { id: "fr1", value: 12, title: "Monthly" },
+          { id: "fr2", value: 4, title: "Quarterly" },
+          { id: "fr3", value: 1, title: "Yearly" },
         ]}
         selectedValue={frequency}
         updateSelectedValue={setFrequency}
@@ -62,10 +62,10 @@ const Lumpsum = () => {
       <HoriJoinedPill
         className="mb-3"
         data={[
-          { value: 1, title: "Monthly" },
-          { value: 3, title: "Quarterly" },
-          { value: 12, title: "Yearly" },
-          { value: 100, title: "Cumulative" },
+          { id: "pm1", value: 1, title: "Monthly" },
+          { id: "pm2", value: 3, title: "Quarterly" },
+          { id: "pm3", value: 12, title: "Yearly" },
+          { id: "pm4", value: 100, title: "Cumulative" },
         ]}
         selectedValue={mode}
         updateSelectedValue={setMode}
