@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import Compounded from "../components/Compounded";
 import FinalPaymentCard from "../components/FinalPaymentCard";
-import PaymentMode from "../components/PaymentMode";
 import PrincipalInput from "../components/PrincipalInput";
 import RateOfInterest from "../components/RateOfInterest";
 import Tenure from "../components/Tenure";
 import { sanctnum } from "../utilities/numSanitity";
+import HoriJoinedPill from "../components/HoriJoinedPill";
 
 const Lumpsum = () => {
   const [pa, setPa] = useState(100000);
@@ -49,8 +48,29 @@ const Lumpsum = () => {
       />
       <RateOfInterest className="mb-3" rt={rt} setRt={setRt} />
       <Tenure className="mb-3" rt={rt} setRt={setRt} />
-      <Compounded className="mb-3" fr={frequency} setFr={setFrequency} />
-      <PaymentMode className="mb-3" mode={mode} setMode={setMode} />
+      <HoriJoinedPill
+        className="mb-3"
+        data={[
+          { value: 12, title: "Monthly" },
+          { value: 4, title: "Quarterly" },
+          { value: 1, title: "Yearly" },
+        ]}
+        selectedValue={frequency}
+        updateSelectedValue={setFrequency}
+        title="Compounded"
+      />
+      <HoriJoinedPill
+        className="mb-3"
+        data={[
+          { value: 1, title: "Monthly" },
+          { value: 3, title: "Quarterly" },
+          { value: 12, title: "Yearly" },
+          { value: 100, title: "Cumulative" },
+        ]}
+        selectedValue={mode}
+        updateSelectedValue={setMode}
+        title="Payout Mode"
+      />
       <FinalPaymentCard finalAmount={payoutAmount} />
     </>
   );

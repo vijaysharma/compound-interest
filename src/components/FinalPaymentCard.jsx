@@ -1,10 +1,10 @@
 import convertToWords from "../utilities/currency";
 
-const FinalPaymentCard = ({ finalAmount, additonalAmount }) => {
+const FinalPaymentCard = ({ finalAmount, title, additonalAmount }) => {
   return (
     <div className="stats stats-vertical border-solid border border-primary w-full text-center">
       <div className="stat">
-        <div className="stat-title">Balance amount</div>
+        <div className="stat-title">{title || "Balance amount"}</div>
         <div className="stat-value text-primary">
           ₹{finalAmount.toLocaleString("en-IN")}
         </div>

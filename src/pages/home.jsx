@@ -2,6 +2,7 @@ import Tabs from "../components/Tabs";
 import Logo from "../components/Logo";
 import Lumpsum from "./lumpsum";
 import SWP from "./swp";
+import SIP from "./sip";
 
 const Home = () => {
   const wheight = window.document.documentElement.clientHeight;
@@ -17,12 +18,12 @@ const Home = () => {
           <div id={1} title="FD / Lumpsum">
             <Lumpsum />
           </div>
-          <div id={2} title="SWP">
+          <div id={2} title="RD / SIP">
+            <SIP />
+          </div>
+          <div id={3} title="SWP">
             <SWP />
           </div>
-          {/* <div id={3} title="Calculator">
-            Work in progress!!
-          </div> */}
         </Tabs>
       </div>
     </>

@@ -5,33 +5,30 @@ const Compounded = ({ fr, setFr, className }) => {
     <div className={`form-control w-full text-center ${className}`}>
       <h5>Compounded</h5>
       <div className="join mx-auto">
-        <input
-          className="join-item input-bordered input-primary btn"
-          type="radio"
-          name="frequency"
-          aria-label="Monthly"
-          value={12}
-          checked={fr === 12}
-          onChange={(e) => setFr(parseInt(e.target.value))}
-        />
-        <input
-          className="join-item input-bordered input-primary btn"
-          type="radio"
-          name="frequency"
-          aria-label="Quarterly"
-          value={4}
-          checked={fr === 4}
-          onChange={(e) => setFr(parseInt(e.target.value))}
-        />
-        <input
-          className="join-item input-bordered input-primary btn"
-          type="radio"
-          name="frequency"
-          aria-label="Yearly"
-          value={1}
-          checked={fr === 1}
-          onChange={(e) => setFr(parseInt(e.target.value))}
-        />
+        <button
+          className={`join-item btn border-primary ${
+            fr === 12 ? "btn-primary" : ""
+          }`}
+          onClick={() => setFr(12)}
+        >
+          Monthly
+        </button>
+        <button
+          className={`join-item btn border-primary ${
+            fr === 4 ? "btn-primary" : ""
+          }`}
+          onClick={() => setFr(4)}
+        >
+          Quarterly
+        </button>
+        <button
+          className={`join-item btn border-primary ${
+            fr === 1 ? "btn-primary" : ""
+          }`}
+          onClick={() => setFr(1)}
+        >
+          Yearly
+        </button>
       </div>
     </div>
   );
