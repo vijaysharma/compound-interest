@@ -2,12 +2,7 @@ import { useState } from "react";
 import convertToWords from "../utilities/currency";
 import { sanctnum } from "../utilities/numSanitity";
 
-const PrincipalInput = ({
-  principalAmount,
-  setPrincipalAmount,
-  title,
-  className,
-}) => {
+const Investment = ({ principalAmount, setPrincipalAmount }) => {
   const [sum, setSum] = useState("+");
   const setSumValue = (amnt) => {
     let total = parseInt(principalAmount);
@@ -25,11 +20,11 @@ const PrincipalInput = ({
   };
   return (
     <>
-      <div className={`form-control w-full ${className}`}>
-        <h5>{title || "Invested amount"}</h5>
+      <div className="form-control w-full">
+        <h5>Invested amount</h5>
         <div className="join mb-1 focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
           <strong className="join-item w-12 pt-2 bg-primary text-primary-content inline-block rounded-r-full border border-primary text-center align-middle text-lg">
-            &nbsp;&nbsp;₹&nbsp;&nbsp;
+            ₹
           </strong>
           <input
             type="number"
@@ -41,15 +36,12 @@ const PrincipalInput = ({
           />
           <button
             className="join-item input-bordered input-primary btn"
-            onClick={(e) => {
-              setPrincipalAmount(0);
-              setSum("+");
-            }}
+            onClick={(e) => setPrincipalAmount(0)}
           >
             C
           </button>
           <button
-            className={`join-item btn border-primary ${
+            className={`${"join-item btn border-primary"} ${
               sum === "+" ? "btn-primary" : ""
             }`}
             onClick={(e) => setSum("+")}
@@ -57,7 +49,7 @@ const PrincipalInput = ({
             +
           </button>
           <button
-            className={`join-item btn border-primary ${
+            className={`${"join-item btn border-primary"} ${
               sum === "-" ? "btn-primary" : ""
             }`}
             onClick={(e) => setSum("-")}
@@ -119,4 +111,4 @@ const PrincipalInput = ({
   );
 };
 
-export default PrincipalInput;
+export default Investment;

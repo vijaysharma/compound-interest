@@ -1,8 +1,8 @@
 import "./App.css";
-import Inputs from "./components/Inputs";
+import Home from "./pages/home";
 
 function App() {
-  return <Inputs />;
+  return <Home />;
 }
 
 export default App;

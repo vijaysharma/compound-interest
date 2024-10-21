@@ -1,8 +1,8 @@
 import React from "react";
 
-const Compounded = ({ fr, setFr }) => {
+const Compounded = ({ fr, setFr, className }) => {
   return (
-    <div className="form-control w-full text-center">
+    <div className={`form-control w-full text-center ${className}`}>
       <h5>Compounded</h5>
       <div className="join mx-auto">
         <input

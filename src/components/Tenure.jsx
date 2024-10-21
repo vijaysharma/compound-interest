@@ -1,4 +1,4 @@
-const Tenure = ({ rt, setRt }) => {
+const Tenure = ({ rt, setRt, className }) => {
   const setTenure = (n) => {
     let tenure = rt.tenure;
     tenure += parseInt(n);
@@ -9,7 +9,7 @@ const Tenure = ({ rt, setRt }) => {
     setRt({ ...rt, tenure: tenure });
   };
   return (
-    <div className="mt-4 mb-4 text-center">
+    <div className={`text-center ${className}`}>
       <h5>Tenure </h5>
       <div className="join focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
         <button
@@ -43,36 +43,34 @@ const Tenure = ({ rt, setRt }) => {
         >
           +10
         </button>
-        <input
-          className="join-item input-bordered input-primary btn"
-          type="radio"
-          name="tenure"
-          aria-label="M"
-          value={"m"}
-          checked={rt.tenureFormat === "m"}
-          onChange={(e) => {
+        <button
+          className={`join-item btn border-primary ${
+            rt.tenureFormat === "m" ? "btn-primary" : ""
+          }`}
+          onClick={(e) => {
             setRt({
               ...rt,
               tenure: rt.tenureFormat === "y" ? rt.tenure * 12 : rt.tenure,
-              tenureFormat: e.target.value,
+              tenureFormat: "m",
             });
           }}
-        />
-        <input
-          className="join-item input-bordered input-primary btn"
-          type="radio"
-          name="tenure"
-          aria-label="Y"
-          value={"y"}
-          checked={rt.tenureFormat === "y"}
-          onChange={(e) =>
+        >
+          M
+        </button>
+        <button
+          className={`join-item btn border-primary ${
+            rt.tenureFormat === "y" ? "btn-primary" : ""
+          }`}
+          onClick={(e) =>
             setRt({
               ...rt,
               tenure: rt.tenureFormat === "m" ? rt.tenure / 12 : rt.tenure,
-              tenureFormat: e.target.value,
+              tenureFormat: "y",
             })
           }
-        />
+        >
+          Y
+        </button>
       </div>
     </div>
   );

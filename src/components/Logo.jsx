@@ -109,8 +109,6 @@ l-60 0 0 -59z"
           />
         </g>
       </svg>
-      <br />
-      <h1>Rupees Calculator</h1>
     </div>
   );
 };

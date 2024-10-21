@@ -1,0 +1,59 @@
+import { sanctnum } from "../utilities/numSanitity";
+
+const ROI = ({ rt, setRt, title, className }) => {
+  const setROI = (n) => {
+    let roi = parseFloat(rt);
+
+    if (roi <= 0) {
+      setRt(0);
+      return;
+    }
+    roi += n;
+    setRt(Math.round((roi + Number.EPSILON) * 100) / 100);
+  };
+  return (
+    <div className={`text-center ${className}`}>
+      <h5>{title || "Rate of Interest (%)"}</h5>
+      <div className="join focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
+        <button
+          className="join-item btn border-primary"
+          onClick={() => setROI(-0.1)}
+        >
+          -0.1
+        </button>
+        <button
+          className="join-item btn border-primary"
+          onClick={() => setROI(-1)}
+        >
+          -1
+        </button>
+        <input
+          type="number"
+          placeholder="Type here"
+          min="0"
+          className="join-item input input-bordered focus:outline-none text-center input-primary w-24"
+          value={rt.toString().replace(/^0+/, "") || 0}
+          onChange={(e) => {
+            const iv = Math.abs(e.target.value);
+            if (sanctnum(iv) < 0) return;
+            setRt(iv);
+          }}
+        />
+        <button
+          className="join-item btn border-primary"
+          onClick={() => setROI(1)}
+        >
+          +1
+        </button>
+        <button
+          className="join-item btn border-primary"
+          onClick={() => setROI(0.1)}
+        >
+          +0.1
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default ROI;

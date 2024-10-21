@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { sanctnum } from "../utilities/numSanitity";
 
-const RateOfInterest = ({ rt, setRt }) => {
+const RateOfInterest = ({ rt, setRt, title, className }) => {
   const [expROI, setExpROI] = useState("+");
   const setROI = (n) => {
     let roi = parseFloat(rt.roi);
@@ -19,8 +19,8 @@ const RateOfInterest = ({ rt, setRt }) => {
     setRt({ ...rt, roi: Math.round((roi + Number.EPSILON) * 100) / 100 });
   };
   return (
-    <div className="text-center mt-4">
-      <h5>Rate of Interest (%)</h5>
+    <div className={`text-center ${className}`}>
+      <h5>{title || "Rate of Interest (%)"}</h5>
       <div className="join focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
         <button
           className="join-item btn border-primary"
@@ -55,25 +55,23 @@ const RateOfInterest = ({ rt, setRt }) => {
             setRt({ ...rt, roi: iv });
           }}
         />
-        <input
-          className="join-item input-bordered input-primary btn"
-          type="radio"
-          name="expROI"
-          aria-label="+"
-          value={"+"}
-          checked={expROI === "+"}
-          onChange={(e) => setExpROI(e.target.value)}
-        />
-        <input
-          className="join-item input-bordered input-primary btn"
-          type="radio"
-          name="expROI"
-          aria-label="-"
-          value={"-"}
+        <button
+          className={`join-item btn border-primary ${
+            expROI === "+" ? "btn-primary" : ""
+          }`}
+          onClick={(e) => setExpROI("+")}
+        >
+          +
+        </button>
+        <button
+          className={`join-item btn border-primary ${
+            expROI === "-" ? "btn-primary" : ""
+          }`}
+          onClick={(e) => setExpROI("-")}
           disabled={rt.roi === 0}
-          checked={expROI === "-"}
-          onChange={(e) => setExpROI(e.target.value)}
-        />
+        >
+          -
+        </button>
       </div>
     </div>
   );

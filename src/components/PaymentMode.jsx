@@ -1,8 +1,8 @@
 import React from "react";
 
-const PaymentMode = ({ mode, setMode }) => {
+const PaymentMode = ({ mode, setMode, className }) => {
   return (
-    <div className="form-control w-full text-center">
+    <div className={`form-control w-full text-center ${className}`}>
       <h5>Payout Mode</h5>
       <div className="join mx-auto">
         <input
