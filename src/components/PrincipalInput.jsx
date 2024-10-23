@@ -8,6 +8,9 @@ const PrincipalInput = ({
   setPrincipalAmount,
   stepData,
   stepSize,
+  type,
+  setType,
+  typeData,
   title,
   className,
 }) => {
@@ -29,22 +32,35 @@ const PrincipalInput = ({
   return (
     <>
       <div className={`form-control w-full ${className}`}>
-        <h5>{title || "Invested amount"}</h5>
+        {!type && <h5>{title || "Invested amount"}</h5>}
         <div className="focus-within:outline-primary rounded-lg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
+          {type && (
+            <HoriJoinedPill
+              data={typeData}
+              selectedValue={type}
+              updateSelectedValue={setType}
+              size="sm"
+              styleClass="rounded-bl-none rounded-br-none border-b-0"
+            />
+          )}
           <div className="join mb-0 w-full">
-            <strong className="join-item w-12 pt-2 bg-primary text-primary-content inline-block rounded-r-full border border-primary text-center align-middle text-lg rounded-bl-none">
+            <div
+              className={`join-item w-12 pt-2 bg-primary text-primary-content border border-primary text-center align-middle text-sm rounded-bl-none ${
+                type && "rounded-tl-none"
+              }`}
+            >
               &nbsp;&nbsp;₹&nbsp;&nbsp;
-            </strong>
+            </div>
             <input
               type="number"
               min="0"
               placeholder="Type here"
-              className="join-item grow input input-bordered input-primary w-full focus:outline-none"
+              className="join-item grow input input-sm input-bordered input-primary w-full focus:outline-none"
               value={principalAmount.toString().replace(/^0+/, "") || 0}
               onChange={(e) => setPrincipalAmount(Math.abs(e.target.value))}
             />
             <button
-              className="join-item input-bordered input-primary btn"
+              className="join-item input-bordered input-primary btn btn-sm grow"
               onClick={(e) => {
                 setPrincipalAmount(0);
                 setSum("+");
@@ -53,7 +69,7 @@ const PrincipalInput = ({
               C
             </button>
             <button
-              className={`join-item btn border-primary ${
+              className={`join-item btn border-primary btn btn-sm grow ${
                 sum === "+" ? "btn-primary" : ""
               }`}
               onClick={(e) => setSum("+")}
@@ -61,9 +77,9 @@ const PrincipalInput = ({
               +
             </button>
             <button
-              className={`join-item btn border-primary rounded-br-none ${
+              className={`join-item btn border-primary/100 btn btn-sm grow rounded-br-none ${
                 sum === "-" ? "btn-primary" : ""
-              }`}
+              } ${type && "rounded-tr-none"}`}
               onClick={(e) => setSum("-")}
               disabled={principalAmount === 0}
             >

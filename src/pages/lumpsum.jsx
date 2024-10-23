@@ -62,19 +62,16 @@ const Lumpsum = () => {
   }, [pa, rt, mode, invType, frequency]);
   return (
     <>
-      <HoriJoinedPill
-        className="mb-3"
-        data={[
-          { id: "ty1", value: "inv", title: "One time amount" },
-          { id: "ty2", value: "tgt", title: "Target amount" },
-        ]}
-        selectedValue={invType}
-        updateSelectedValue={setInvType}
-      />
       <PrincipalInput
         className="mb-3"
         principalAmount={pa}
         setPrincipalAmount={setPa}
+        type={invType}
+        setType={setInvType}
+        typeData={[
+          { id: "ty1", value: "inv", title: "One time amount" },
+          { id: "ty2", value: "tgt", title: "Target amount" },
+        ]}
         stepData={stepData}
         stepSize={"sm"}
         title={invType === "tgt" && "Target amount"}
@@ -88,6 +85,7 @@ const Lumpsum = () => {
           { id: "fr2", value: 4, title: "Quarterly" },
           { id: "fr3", value: 1, title: "Yearly" },
         ]}
+        size="sm"
         selectedValue={frequency}
         updateSelectedValue={setFrequency}
         title="Compounded"
@@ -101,6 +99,7 @@ const Lumpsum = () => {
             { id: "pm3", value: 12, title: "Yearly" },
             { id: "pm4", value: 100, title: "Cumulative" },
           ]}
+          size="sm"
           selectedValue={mode}
           updateSelectedValue={setMode}
           title="Payout Mode"

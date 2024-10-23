@@ -19,23 +19,23 @@ const RateOfInterest = ({ rt, setRt, title, className }) => {
     setRt({ ...rt, roi: Math.round((roi + Number.EPSILON) * 100) / 100 });
   };
   return (
-    <div className={`text-center ${className}`}>
+    <div className={`text-center w-full ${className}`}>
       <h5>{title || "Rate of Interest (%)"}</h5>
-      <div className="join focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
+      <div className="join w-full focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
         <button
-          className="join-item btn border-primary"
+          className="join-item btn btn-sm grow border-primary"
           onClick={() => setROI(0.01)}
         >
           0.01
         </button>
         <button
-          className="join-item btn border-primary"
+          className="join-item btn btn-sm grow border-primary"
           onClick={() => setROI(0.1)}
         >
           0.1
         </button>
         <button
-          className="join-item btn border-primary"
+          className="join-item btn btn-sm grow border-primary"
           onClick={() => setROI(1)}
         >
           1
@@ -44,7 +44,7 @@ const RateOfInterest = ({ rt, setRt, title, className }) => {
           type="number"
           placeholder="Type here"
           min="0"
-          className="join-item input input-bordered focus:outline-none text-center input-primary w-24"
+          className="join-item input input-sm input-bordered focus:outline-none text-center input-primary w-24"
           value={rt.roi.toString().replace(/^0+/, "") || 0}
           onChange={(e) => {
             const iv = Math.abs(e.target.value);
@@ -56,7 +56,7 @@ const RateOfInterest = ({ rt, setRt, title, className }) => {
           }}
         />
         <button
-          className={`join-item btn border-primary ${
+          className={`join-item btn btn-sm grow border-primary ${
             expROI === "+" ? "btn-primary" : ""
           }`}
           onClick={(e) => setExpROI("+")}
@@ -64,7 +64,7 @@ const RateOfInterest = ({ rt, setRt, title, className }) => {
           +
         </button>
         <button
-          className={`join-item btn border-primary ${
+          className={`join-item btn btn-sm grow border-primary ${
             expROI === "-" ? "btn-primary" : ""
           }`}
           onClick={(e) => setExpROI("-")}

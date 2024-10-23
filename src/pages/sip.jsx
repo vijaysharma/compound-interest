@@ -79,19 +79,16 @@ const SIP = () => {
   }, [pa, rt, type, invType]);
   return (
     <>
-      <HoriJoinedPill
-        className="mb-3"
-        data={[
-          { id: "ty1", value: "my", title: "Monthly amount" },
-          { id: "ty2", value: "tgt", title: "Target amount" },
-        ]}
-        selectedValue={invType}
-        updateSelectedValue={setInvType}
-      />
       <PrincipalInput
         className="mb-3"
         principalAmount={pa}
         setPrincipalAmount={setPa}
+        type={invType}
+        setType={setInvType}
+        typeData={[
+          { id: "ty1", value: "my", title: "Monthly amount" },
+          { id: "ty2", value: "tgt", title: "Target amount" },
+        ]}
         stepData={stepData}
         stepSize={"sm"}
         title={invType === "my" ? "Monthly Investment" : "Target amount"}
@@ -104,6 +101,7 @@ const SIP = () => {
           { id: "t1", value: "rd", title: "RD" },
           { id: "t2", value: "sip", title: "SIP" },
         ]}
+        size="sm"
         selectedValue={type}
         updateSelectedValue={setType}
       />
