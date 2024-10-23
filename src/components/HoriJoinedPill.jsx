@@ -16,7 +16,7 @@ const HoriJoinedPill = ({
           data.map((p) => (
             <button
               key={p.id}
-              className={`join-item btn border-primary ${
+              className={`join-item btn btn-sm border-primary ${
                 selectedValue === p.value ? "btn-primary" : ""
               }`}
               onClick={() => updateSelectedValue(p.value)}

@@ -44,7 +44,7 @@ const Logo = () => {
   }, [theme]);
   return (
     <div
-      className="text-lg text-center py-2 bg-primary text-primary-content fill-primary-content"
+      className="text-center py-2 bg-primary text-primary-content fill-primary-content"
       onClick={(e) => {
         setTheme(themes[getRandomNumber(0, themes.length)]);
       }}
@@ -53,7 +53,7 @@ const Logo = () => {
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"
         width="60"
-        height="44"
+        height="32"
         viewBox="0 0 139.000000 126.000000"
         preserveAspectRatio="xMidYMid meet"
         className="inline-block"

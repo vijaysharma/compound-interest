@@ -7,15 +7,16 @@ import { sanctnum } from "../utilities/numSanitity";
 import HoriJoinedPill from "../components/HoriJoinedPill";
 
 const Lumpsum = () => {
-  const [pa, setPa] = useState(100000);
+  const [pa, setPa] = useState(3000000);
   const [rt, setRt] = useState({
     roi: 7.1,
-    tenure: 24,
-    tenureFormat: "m",
+    tenure: 2,
+    tenureFormat: "y",
   });
   const [mode, setMode] = useState(1);
   const [frequency, setFrequency] = useState(4);
   const [payoutAmount, setPayoutAmount] = useState(0);
+  const [invType, setInvType] = useState("inv");
   const stepData = [
     { id: "p1", value: 50000000, title: "5Cr" },
     { id: "p2", value: 5000000, title: "50L" },
@@ -32,30 +33,50 @@ const Lumpsum = () => {
     r = sanctnum(r);
     m = sanctnum(m);
     f = sanctnum(f);
-
     return sanctnum(p * (1 + r / f / 100) ** ((f * m) / 12) - p);
   };
 
+  const calculatePrincipal = (tgt, r, f, t, tf) => {
+    t = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
+    tgt = sanctnum(tgt);
+    r = sanctnum(r);
+    f = sanctnum(f);
+    return sanctnum(tgt / (1 + r / f / 100) ** ((f * t) / 12));
+  };
+
   useEffect(() => {
-    const interestAmount = calculateInterest(
-      pa,
-      rt.roi,
-      mode,
-      frequency,
-      rt.tenure,
-      rt.tenureFormat
-    );
-    mode === 100
-      ? setPayoutAmount(Math.round(interestAmount) + Math.round(pa))
-      : setPayoutAmount(Math.round(interestAmount));
-  }, [pa, rt, mode, frequency]);
+    const finalAmount =
+      invType === "tgt"
+        ? calculatePrincipal(pa, rt.roi, frequency, rt.tenure, rt.tenureFormat)
+        : calculateInterest(
+            pa,
+            rt.roi,
+            mode,
+            frequency,
+            rt.tenure,
+            rt.tenureFormat
+          );
+    mode === 100 && invType === "inv"
+      ? setPayoutAmount(Math.round(finalAmount) + Math.round(pa))
+      : setPayoutAmount(Math.round(finalAmount));
+  }, [pa, rt, mode, invType, frequency]);
   return (
     <>
+      <HoriJoinedPill
+        className="mb-3"
+        data={[
+          { id: "ty1", value: "inv", title: "One time amount" },
+          { id: "ty2", value: "tgt", title: "Target amount" },
+        ]}
+        selectedValue={invType}
+        updateSelectedValue={setInvType}
+      />
       <PrincipalInput
         className="mb-3"
         principalAmount={pa}
         setPrincipalAmount={setPa}
         stepData={stepData}
+        title={invType === "tgt" && "Target amount"}
       />
       <RateOfInterest className="mb-3" rt={rt} setRt={setRt} />
       <Tenure className="mb-3" rt={rt} setRt={setRt} />
@@ -70,19 +91,24 @@ const Lumpsum = () => {
         updateSelectedValue={setFrequency}
         title="Compounded"
       />
-      <HoriJoinedPill
-        className="mb-3"
-        data={[
-          { id: "pm1", value: 1, title: "Monthly" },
-          { id: "pm2", value: 3, title: "Quarterly" },
-          { id: "pm3", value: 12, title: "Yearly" },
-          { id: "pm4", value: 100, title: "Cumulative" },
-        ]}
-        selectedValue={mode}
-        updateSelectedValue={setMode}
-        title="Payout Mode"
+      {invType === "inv" && (
+        <HoriJoinedPill
+          className="mb-3"
+          data={[
+            { id: "pm1", value: 1, title: "Monthly" },
+            { id: "pm2", value: 3, title: "Quarterly" },
+            { id: "pm3", value: 12, title: "Yearly" },
+            { id: "pm4", value: 100, title: "Cumulative" },
+          ]}
+          selectedValue={mode}
+          updateSelectedValue={setMode}
+          title="Payout Mode"
+        />
+      )}
+      <FinalPaymentCard
+        finalAmount={payoutAmount}
+        title={invType === "tgt" && "Lumpsum amount required"}
       />
-      <FinalPaymentCard finalAmount={payoutAmount} />
     </>
   );
 };

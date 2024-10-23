@@ -15,6 +15,7 @@ const SIP = () => {
   });
   const [type, setType] = useState("rd");
   const [payoutAmount, setPayoutAmount] = useState(0);
+  const [invType, setInvType] = useState("my");
   const stepData = [
     { id: "p1", value: 50000000, title: "5Cr" },
     { id: "p2", value: 5000000, title: "50L" },
@@ -24,7 +25,7 @@ const SIP = () => {
     { id: "p6", value: 500, title: "500" },
     { id: "p7", value: 50, title: "50" },
   ];
-  const calculate = (p, r, t, tf, type) => {
+  const calculate = (p, r, t, tf, type, invType) => {
     t = tf === "y" ? sanctnum(t) : sanctnum(t) / 12;
     p = sanctnum(p);
     r = sanctnum(r / 100);
@@ -34,15 +35,33 @@ const SIP = () => {
 
     if (type === "sip") {
       // SIP
-      for (let i = 1; i <= t * n; i++) {
-        fa += p * Math.pow(1 + r / n, n * (i / 12));
+      if (invType === "my") {
+        for (let i = 1; i <= t * n; i++) {
+          fa += p * Math.pow(1 + r / n, n * (i / 12));
+        }
+      } else {
+        let sum = 0;
+        for (let i = 1; i <= t * n; i++) {
+          sum += Math.pow(1 + r / n, n * (i / 12));
+        }
+        fa = p / sum;
       }
     } else {
       // RD
-      for (let i = 1; i <= totalMonths; i++) {
-        const monthsLeft = totalMonths - i + 1;
-        const yearsLeft = monthsLeft / 12;
-        fa += p * Math.pow(1 + r / n, n * yearsLeft);
+      if (invType === "my") {
+        for (let i = 1; i <= totalMonths; i++) {
+          const monthsLeft = totalMonths - i + 1;
+          const yearsLeft = monthsLeft / 12;
+          fa += p * Math.pow(1 + r / n, n * yearsLeft);
+        }
+      } else {
+        let sum = 0;
+        for (let i = 1; i <= totalMonths; i++) {
+          const monthsLeft = totalMonths - i + 1;
+          const yearsLeft = monthsLeft / 12;
+          sum += Math.pow(1 + r / n, n * yearsLeft);
+        }
+        fa = p / sum;
       }
     }
     return sanctnum(fa);
@@ -53,18 +72,28 @@ const SIP = () => {
       rt.roi,
       rt.tenure,
       rt.tenureFormat,
-      type
+      type,
+      invType
     );
-    setPayoutAmount(Math.round(maturityAmount));
-  }, [pa, rt, type]);
+    setPayoutAmount(Math.ceil(maturityAmount));
+  }, [pa, rt, type, invType]);
   return (
     <>
+      <HoriJoinedPill
+        className="mb-3"
+        data={[
+          { id: "ty1", value: "my", title: "Monthly amount" },
+          { id: "ty2", value: "tgt", title: "Target amount" },
+        ]}
+        selectedValue={invType}
+        updateSelectedValue={setInvType}
+      />
       <PrincipalInput
         className="mb-3"
         principalAmount={pa}
-        title="Monthly Investment"
         setPrincipalAmount={setPa}
         stepData={stepData}
+        title={invType === "my" ? "Monthly Investment" : "Target amount"}
       />
       <RateOfInterest className="mb-3" rt={rt} setRt={setRt} />
       <Tenure className="mb-3" rt={rt} setRt={setRt} />
@@ -77,7 +106,12 @@ const SIP = () => {
         selectedValue={type}
         updateSelectedValue={setType}
       />
-      <FinalPaymentCard finalAmount={payoutAmount} title="Maturity Amount" />
+      <FinalPaymentCard
+        finalAmount={payoutAmount}
+        title={
+          invType === "tgt" ? "Monthly investment required" : "Maturity amount"
+        }
+      />
     </>
   );
 };

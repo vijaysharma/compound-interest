@@ -5,7 +5,7 @@ const Tabs = ({ name, children, height, width }) => {
   const [selectedId, setSelectedId] = useState(1);
 
   return children instanceof Array ? (
-    <div role="tablist" className="tabs tabs-lg tabs-bordered w-full">
+    <div role="tablist" className="tabs tabs-lifted w-full">
       {children.map((child) => (
         <Tab
           key={child.props.id}
