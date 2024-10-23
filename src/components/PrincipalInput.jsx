@@ -31,7 +31,7 @@ const PrincipalInput = ({
       <div className={`form-control w-full ${className}`}>
         <h5>{title || "Invested amount"}</h5>
         <div className="focus-within:outline-primary rounded-lg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
-          <div className="join mb-0">
+          <div className="join mb-0 w-full">
             <strong className="join-item w-12 pt-2 bg-primary text-primary-content inline-block rounded-r-full border border-primary text-center align-middle text-lg rounded-bl-none">
               &nbsp;&nbsp;₹&nbsp;&nbsp;
             </strong>
@@ -39,7 +39,7 @@ const PrincipalInput = ({
               type="number"
               min="0"
               placeholder="Type here"
-              className="join-item input input-bordered input-primary w-full focus:outline-none"
+              className="join-item grow input input-bordered input-primary w-full focus:outline-none"
               value={principalAmount.toString().replace(/^0+/, "") || 0}
               onChange={(e) => setPrincipalAmount(Math.abs(e.target.value))}
             />
