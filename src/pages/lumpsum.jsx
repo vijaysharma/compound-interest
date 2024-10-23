@@ -16,6 +16,15 @@ const Lumpsum = () => {
   const [mode, setMode] = useState(1);
   const [frequency, setFrequency] = useState(4);
   const [payoutAmount, setPayoutAmount] = useState(0);
+  const stepData = [
+    { id: "p1", value: 50000000, title: "5Cr" },
+    { id: "p2", value: 5000000, title: "50L" },
+    { id: "p3", value: 500000, title: "5L" },
+    { id: "p4", value: 50000, title: "50K" },
+    { id: "p5", value: 5000, title: "5K" },
+    { id: "p6", value: 500, title: "500" },
+    { id: "p7", value: 50, title: "50" },
+  ];
   const calculateInterest = (p, r, m, f, t, tf) => {
     t = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
     m = m === 100 ? t : m;
@@ -26,6 +35,7 @@ const Lumpsum = () => {
 
     return sanctnum(p * (1 + r / f / 100) ** ((f * m) / 12) - p);
   };
+
   useEffect(() => {
     const interestAmount = calculateInterest(
       pa,
@@ -45,6 +55,7 @@ const Lumpsum = () => {
         className="mb-3"
         principalAmount={pa}
         setPrincipalAmount={setPa}
+        stepData={stepData}
       />
       <RateOfInterest className="mb-3" rt={rt} setRt={setRt} />
       <Tenure className="mb-3" rt={rt} setRt={setRt} />

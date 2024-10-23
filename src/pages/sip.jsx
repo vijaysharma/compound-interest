@@ -15,6 +15,15 @@ const SIP = () => {
   });
   const [type, setType] = useState("rd");
   const [payoutAmount, setPayoutAmount] = useState(0);
+  const stepData = [
+    { id: "p1", value: 50000000, title: "5Cr" },
+    { id: "p2", value: 5000000, title: "50L" },
+    { id: "p3", value: 500000, title: "5L" },
+    { id: "p4", value: 50000, title: "50K" },
+    { id: "p5", value: 5000, title: "5K" },
+    { id: "p6", value: 500, title: "500" },
+    { id: "p7", value: 50, title: "50" },
+  ];
   const calculate = (p, r, t, tf, type) => {
     t = tf === "y" ? sanctnum(t) : sanctnum(t) / 12;
     p = sanctnum(p);
@@ -55,6 +64,7 @@ const SIP = () => {
         principalAmount={pa}
         title="Monthly Investment"
         setPrincipalAmount={setPa}
+        stepData={stepData}
       />
       <RateOfInterest className="mb-3" rt={rt} setRt={setRt} />
       <Tenure className="mb-3" rt={rt} setRt={setRt} />

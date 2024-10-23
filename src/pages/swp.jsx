@@ -6,16 +6,34 @@ import PrincipalInput from "../components/PrincipalInput";
 import { sanctnum } from "../utilities/numSanitity";
 
 const SWP = () => {
-  const [pa, setPa] = useState(10000000);
-  const [rt, setRt] = useState(12);
+  const [pa, setPa] = useState(35000000);
+  const [rt, setRt] = useState(10);
   const [irt, setIRt] = useState(7);
   const [t, setT] = useState({
-    tenure: 20,
+    tenure: 40,
     tenureFormat: "y",
   });
-  const [wa, setWa] = useState(50000);
+  const [wa, setWa] = useState(120000);
   const [remainingAmount, setRAmount] = useState(0);
   const [lwa, setLwa] = useState(0);
+  const invStepData = [
+    { id: "ip1", value: 50000000, title: "5Cr" },
+    { id: "ip2", value: 5000000, title: "50L" },
+    { id: "ip3", value: 500000, title: "5L" },
+    { id: "ip4", value: 50000, title: "50K" },
+    { id: "ip5", value: 5000, title: "5K" },
+    { id: "ip6", value: 500, title: "500" },
+    { id: "ip7", value: 50, title: "50" },
+  ];
+  const wdStepData = [
+    { id: "wp1", value: 1000000, title: "10L" },
+    { id: "wp2", value: 100000, title: "1L" },
+    { id: "wp3", value: 50000, title: "50K" },
+    { id: "wp4", value: 10000, title: "10K" },
+    { id: "wp5", value: 1000, title: "1K" },
+    { id: "wp6", value: 100, title: "100" },
+    { id: "wp7", value: 10, title: "10" },
+  ];
   const calculateRemainingAmount = (p, r, ir, t, tf, w) => {
     t = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
     p = sanctnum(p);
@@ -49,11 +67,13 @@ const SWP = () => {
         principalAmount={pa}
         setPrincipalAmount={setPa}
         className="mb-3"
+        stepData={invStepData}
       />
       <PrincipalInput
         className="mb-3"
         principalAmount={wa}
         setPrincipalAmount={setWa}
+        stepData={wdStepData}
         title="Withdrawal amount per month"
       />
       <ROI
@@ -70,6 +90,7 @@ const SWP = () => {
       />
       <Tenure className="mb-3" rt={t} setRt={setT} />
       <FinalPaymentCard
+        color={`${remainingAmount < pa ? "text-error" : "text-primary"}`}
         finalAmount={remainingAmount}
         additonalAmount={{ title: "Last monthly withdrawal", amount: lwa }}
       />

@@ -1,10 +1,12 @@
 import { useState } from "react";
+import HoriJoinedPill from "./HoriJoinedPill";
 import convertToWords from "../utilities/currency";
 import { sanctnum } from "../utilities/numSanitity";
 
 const PrincipalInput = ({
   principalAmount,
   setPrincipalAmount,
+  stepData,
   title,
   className,
 }) => {
@@ -14,7 +16,7 @@ const PrincipalInput = ({
     if (sum === "+") total += amnt;
     if (sum === "-") {
       total -= amnt;
-      if (total < 0) {
+      if (total <= 0) {
         total = 0;
         setPrincipalAmount(total);
         setSum("+");
@@ -69,51 +71,11 @@ const PrincipalInput = ({
         <div className="label-text text-primary text-sm/3 mb-1">
           {convertToWords(sanctnum(principalAmount))}
         </div>
-        <div className="join justify-center">
-          <button
-            className="join-item btn border-primary"
-            onClick={() => setSumValue(50000000)}
-          >
-            5Cr
-          </button>
-          <button
-            className="join-item btn border-primary"
-            onClick={() => setSumValue(5000000)}
-          >
-            50L
-          </button>
-
-          <button
-            className="join-item btn border-primary"
-            onClick={() => setSumValue(500000)}
-          >
-            5L
-          </button>
-          <button
-            className="join-item btn border-primary"
-            onClick={() => setSumValue(50000)}
-          >
-            50K
-          </button>
-          <button
-            className="join-item btn border-primary"
-            onClick={() => setSumValue(5000)}
-          >
-            5K
-          </button>
-          <button
-            className="join-item btn border-primary"
-            onClick={() => setSumValue(500)}
-          >
-            500
-          </button>
-          <button
-            className="join-item btn border-primary"
-            onClick={() => setSumValue(50)}
-          >
-            50
-          </button>
-        </div>
+        <HoriJoinedPill
+          data={stepData}
+          selectedValue={sum}
+          updateSelectedValue={setSumValue}
+        />
       </div>
     </>
   );
