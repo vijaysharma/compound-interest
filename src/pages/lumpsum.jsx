@@ -76,6 +76,7 @@ const Lumpsum = () => {
         principalAmount={pa}
         setPrincipalAmount={setPa}
         stepData={stepData}
+        stepSize={"sm"}
         title={invType === "tgt" && "Target amount"}
       />
       <RateOfInterest className="mb-3" rt={rt} setRt={setRt} />

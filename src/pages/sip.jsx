@@ -93,6 +93,7 @@ const SIP = () => {
         principalAmount={pa}
         setPrincipalAmount={setPa}
         stepData={stepData}
+        stepSize={"sm"}
         title={invType === "my" ? "Monthly Investment" : "Target amount"}
       />
       <RateOfInterest className="mb-3" rt={rt} setRt={setRt} />

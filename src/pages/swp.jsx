@@ -68,12 +68,14 @@ const SWP = () => {
         setPrincipalAmount={setPa}
         className="mb-3"
         stepData={invStepData}
+        stepSize={"sm"}
       />
       <PrincipalInput
         className="mb-3"
         principalAmount={wa}
         setPrincipalAmount={setWa}
         stepData={wdStepData}
+        stepSize={"sm"}
         title="Withdrawal amount per month"
       />
       <ROI
