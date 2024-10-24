@@ -7,7 +7,7 @@ import Inflation from "./inflation";
 
 const Home = () => {
   const wheight = window.document.documentElement.clientHeight;
-  const wwidth = window.document.documentElement.clientWidth;
+  const wwidth = Math.min(window.document.documentElement.clientWidth, 512);
   return (
     <>
       <Logo />

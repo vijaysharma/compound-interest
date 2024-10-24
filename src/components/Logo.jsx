@@ -1,43 +1,27 @@
 import { useEffect, useState } from "react";
 const themes = [
+  "fantasy",
   "light",
-  "dark",
-  "cupcake",
-  "bumblebee",
   "emerald",
   "corporate",
-  "synthwave",
-  "retro",
-  "cyberpunk",
-  "valentine",
-  "halloween",
-  "garden",
-  "forest",
-  "aqua",
   "lofi",
-  "pastel",
   "fantasy",
   "wireframe",
-  "black",
   "luxury",
-  "dracula",
   "cmyk",
-  "autumn",
-  "business",
-  "acid",
   "lemonade",
+  "fantasy",
   "night",
-  "coffee",
   "winter",
   "dim",
   "nord",
-  "sunset",
+  "fantasy",
 ];
 const Logo = () => {
   const getRandomNumber = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
-  const [theme, setTheme] = useState(localStorage.getItem("th") || "cupcake");
+  const [theme, setTheme] = useState(localStorage.getItem("th") || "fantasy");
   useEffect(() => {
     window.document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("th", theme);

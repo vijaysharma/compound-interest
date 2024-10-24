@@ -120,7 +120,7 @@ const Inflation = () => {
         stepSize="sm"
       />
       <div className="join mb-3 w-full">
-        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-base/[44px]">
+        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
           Start Year
         </div>
         <select
@@ -150,7 +150,7 @@ const Inflation = () => {
           ))}
         </select>
 
-        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-base/[44px]">
+        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
           End Year
         </div>
       </div>
