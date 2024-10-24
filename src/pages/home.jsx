@@ -3,6 +3,7 @@ import Logo from "../components/Logo";
 import Lumpsum from "./lumpsum";
 import SWP from "./swp";
 import SIP from "./sip";
+import Inflation from "./inflation";
 
 const Home = () => {
   const wheight = window.document.documentElement.clientHeight;
@@ -24,6 +25,9 @@ const Home = () => {
           </div>
           <div id={3} title="SWP">
             <SWP />
+          </div>
+          <div id={4} title="Inflation">
+            <Inflation />
           </div>
         </Tabs>
       </div>
