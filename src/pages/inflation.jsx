@@ -86,7 +86,7 @@ const Inflation = () => {
         typeData={[
           { id: "ty1", value: "India", title: "India" },
           { id: "ty2", value: "World", title: "World" },
-          { id: "ty2", value: "USA", title: "USA" },
+          { id: "ty3", value: "USA", title: "USA" },
           { id: "ty4", value: "EU", title: "EU" },
         ]}
         stepData={[
