@@ -8,14 +8,15 @@ const FinalPaymentCard = ({
   currencySymbol,
   locale = "en-IN",
 }) => {
+  console.log(locale);
   return (
     <div className="stats stats-vertical border-solid border border-primary w-full text-center">
       <div className="stat">
-        <div className="stat-title text-base/[12px]">
+        <div className="stat-title text-wrap text-base/[16px]">
           {title || "Balance amount"}
         </div>
         <div className={`stat-value text-3xl ${color || "text-primary"}`}>
-          {currencySymbol || "₹"}
+          <span className="text-lg">{currencySymbol || "₹"}&nbsp;</span>
           {finalAmount.toLocaleString(locale)}
         </div>
         <div className="stat-desc text-xs/[1] text-wrap">
@@ -24,11 +25,11 @@ const FinalPaymentCard = ({
       </div>
       {additonalAmount && (
         <div className="stat">
-          <div className="stat-title text-base/[12px]">
+          <div className="stat-title text-wrap text-base/[12px]">
             {additonalAmount.title}
           </div>
           <div className="stat-value text-2xl text-primary">
-            {currencySymbol || "₹"}
+            <span className="text-lg">{currencySymbol || "₹"}&nbsp;</span>
             {additonalAmount.amount.toLocaleString(locale)}
           </div>
           <div className="stat-desc text-xs/[1] text-wrap">

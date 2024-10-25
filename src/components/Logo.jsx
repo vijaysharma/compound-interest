@@ -27,12 +27,7 @@ const Logo = () => {
     localStorage.setItem("th", theme);
   }, [theme]);
   return (
-    <div
-      className="text-center py-2 bg-primary text-primary-content fill-primary-content"
-      onClick={(e) => {
-        setTheme(themes[getRandomNumber(0, themes.length)]);
-      }}
-    >
+    <div className="text-center py-2">
       <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"
@@ -40,7 +35,11 @@ const Logo = () => {
         height="32"
         viewBox="0 0 139.000000 126.000000"
         preserveAspectRatio="xMidYMid meet"
-        className="inline-block"
+        className="inline-block animate-jiggle hover:animate-wiggle"
+        fill="oklch(var(--p))"
+        onClick={(e) => {
+          setTheme(themes[getRandomNumber(0, themes.length)]);
+        }}
       >
         <g
           transform="translate(0.000000,126.000000) scale(0.100000,-0.100000)"

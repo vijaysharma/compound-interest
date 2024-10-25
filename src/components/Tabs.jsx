@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import Tab from "./Tab";
 
-const Tabs = ({ name, children, height, width }) => {
+const Tabs = ({ name, children, height, width, className }) => {
   const [selectedId, setSelectedId] = useState(1);
 
   return children instanceof Array ? (
-    <div role="tablist" className="tabs tabs-lifted w-full">
+    <div
+      role="tablist"
+      className={`tabs tabs-lifted w-full ${className || ""}`}
+    >
       {children.map((child) => (
         <Tab
           key={child.props.id}
@@ -13,8 +16,6 @@ const Tabs = ({ name, children, height, width }) => {
           child={child}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
-          height={height}
-          width={width / children.length}
         />
       ))}
     </div>

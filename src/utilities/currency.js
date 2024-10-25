@@ -68,7 +68,7 @@ const convertToWords = (values, i18N = "en-IN") => {
       break;
     default:
       toWords = new ToWords({
-        localeCode: "en-IN",
+        localeCode: "en-US",
         converterOptions: {
           currency: true,
           ignoreDecimal: false,
@@ -88,6 +88,17 @@ const convertToWords = (values, i18N = "en-IN") => {
       });
   }
   return toWords.convert(values, { currency: false });
+};
+export const getCurrencySymbol = (locale, currency) => {
+  return (0)
+    .toLocaleString(locale, {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })
+    .replace(/\d/g, "")
+    .trim();
 };
 
 export default convertToWords;
