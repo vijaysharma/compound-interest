@@ -8,7 +8,6 @@ const FinalPaymentCard = ({
   currencySymbol,
   locale = "en-IN",
 }) => {
-  console.log(locale);
   return (
     <div className="stats stats-vertical border-solid border border-primary w-full text-center">
       <div className="stat">

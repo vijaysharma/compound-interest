@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import Tab from "./Tab";
 
-const Tabs = ({ name, children, height, width, className }) => {
-  const [selectedId, setSelectedId] = useState(1);
-
+const Tabs = ({ name, children, activeId = 1, className }) => {
+  const [selectedId, setSelectedId] = useState(activeId);
   return children instanceof Array ? (
     <div
       role="tablist"
@@ -20,9 +19,7 @@ const Tabs = ({ name, children, height, width, className }) => {
       ))}
     </div>
   ) : (
-    <div className="p-4 w-full overflow-y-auto" style={{ height }}>
-      {children}
-    </div>
+    <div className="p-4 w-full overflow-y-auto">{children}</div>
   );
 };
 

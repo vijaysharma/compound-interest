@@ -1,4 +1,4 @@
-const Tab = ({ name, child, selectedId, setSelectedId, height, width }) => {
+const Tab = ({ name, child, selectedId, setSelectedId }) => {
   return (
     <>
       <input
@@ -12,7 +12,10 @@ const Tab = ({ name, child, selectedId, setSelectedId, height, width }) => {
         }`}
         aria-label={child.props.title}
         checked={selectedId === child.props.id}
-        onChange={() => setSelectedId(child.props.id)}
+        onChange={() => {
+          setSelectedId(child.props.id);
+          window.localStorage.setItem("aid", child.props.id);
+        }}
       />
       <div role="tabpanel" className="tab-content p-4 w-full overflow-y-auto">
         {child}

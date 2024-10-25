@@ -8,7 +8,7 @@ const PPP = () => {
   const [data, setData] = useState([]);
   const [srcCountry, setSrcCountry] = useState("India");
   const [tgtCountry, setTgtCountry] = useState("United States");
-  const [srcAmt, setSrcAmt] = useState(100);
+  const [srcAmt, setSrcAmt] = useState(10000);
   const [tgtAmt, setTgtAmt] = useState(0);
   const [targetCurrencySymbol, setTargetCurrencySymbol] = useState("XYZ");
   const [sourceCurrencySymbol, setSourceCurrencySymbol] = useState("XYZ");

@@ -5,13 +5,21 @@ import SWP from "./swp";
 import SIP from "./sip";
 import Inflation from "./inflation";
 import PPP from "./ppp";
+import { useEffect, useState } from "react";
 
 const Home = () => {
+  const [activeId, setActiveId] = useState(() =>
+    parseInt(window.localStorage.getItem("aid"))
+  );
+  useEffect(() => {
+    setActiveId(parseInt(window.localStorage.getItem("aid")));
+  }, [activeId]);
+
   return (
     <>
       <div id="container" className="w-full max-w-lg bg-primary/5 mx-auto py-2">
         <Logo />
-        <Tabs name="tab" className={"calc-tabs"}>
+        <Tabs name="tab" className={"calc-tabs"} activeId={activeId}>
           <div id={1} title="Lumpsum">
             <Lumpsum />
           </div>
