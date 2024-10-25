@@ -178,7 +178,7 @@ const CURRENCY_CODES = [
   { name: "KUWAIT", currency_name: "KWD", currency_code: "ar-KW" },
   { name: "KYRGYZSTAN", currency_name: "KGS", currency_code: "ky-KG" },
   {
-    name: "LAO PEOPLE’S DEMOCRATIC REPUBLIC (THE)",
+    name: "LAO PEOPLE'S DEMOCRATIC REPUBLIC (THE)",
     currency_name: "LAK",
     currency_code: "lo-LA",
   },
@@ -276,23 +276,23 @@ const CURRENCY_CODES = [
     currency_code: "en-SH",
   },
   {
-    name: "SAINT KITTS AND NEVIS",
+    name: "St. KITTS AND NEVIS",
     currency_name: "XCD",
     currency_code: "en-KN",
   },
-  { name: "SAINT LUCIA", currency_name: "XCD", currency_code: "en-LC" },
+  { name: "St. LUCIA", currency_name: "XCD", currency_code: "en-LC" },
   {
-    name: "SAINT MARTIN (FRENCH PART)",
+    name: "St. MARTIN (FRENCH PART)",
     currency_name: "EUR",
     currency_code: "fr-MF",
   },
   {
-    name: "SAINT PIERRE AND MIQUELON",
+    name: "St. PIERRE AND MIQUELON",
     currency_name: "EUR",
     currency_code: "fr-PM",
   },
   {
-    name: "SAINT VINCENT AND THE GRENADINES",
+    name: "St. Vincent and the Grenadines",
     currency_name: "XCD",
     currency_code: "en-VC",
   },
