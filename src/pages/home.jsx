@@ -8,8 +8,8 @@ import PPP from "./ppp";
 import { useEffect, useState } from "react";
 
 const Home = () => {
-  const [activeId, setActiveId] = useState(() =>
-    parseInt(window.localStorage.getItem("aid"))
+  const [activeId, setActiveId] = useState(
+    () => parseInt(window.localStorage.getItem("aid")) || 1
   );
   useEffect(() => {
     setActiveId(parseInt(window.localStorage.getItem("aid")));
