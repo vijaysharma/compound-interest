@@ -64,12 +64,13 @@ const Lumpsum = () => {
   };
 
   useEffect(() => {
+    const rtRoi = rt.roi ? rt.roi : "0";
     const finalAmount =
       invType === "tgt"
-        ? calculatePrincipal(pa, rt.roi, frequency, rt.tenure, rt.tenureFormat)
+        ? calculatePrincipal(pa, rtRoi, frequency, rt.tenure, rt.tenureFormat)
         : calculateInterest(
             pa,
-            rt.roi,
+            rtRoi,
             mode,
             frequency,
             rt.tenure,

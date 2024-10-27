@@ -10,7 +10,7 @@ const RateOfInterest = ({
 }: RateOfInterestType) => {
   const [expROI, setExpROI] = useState("+");
   const setROI = (n: number) => {
-    let roi = parseFloat(rt.roi);
+    let roi = rt.roi ? parseFloat(rt.roi) : 0;
     if (expROI === "+") {
       roi += n;
     }
@@ -51,7 +51,7 @@ const RateOfInterest = ({
           placeholder="Type here"
           min="0"
           className="join-item input input-sm input-bordered focus:outline-none text-center input-primary w-24"
-          value={rt.roi.toString().replace(/^0+/, "") || 0}
+          value={rt.roi ? rt.roi.toString().replace(/^0+/, "") : "0"}
           onChange={(e) => {
             const iv = e.target.value;
             if (sanctnum(iv) < 0) {
