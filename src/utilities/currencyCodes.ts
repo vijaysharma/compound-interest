@@ -414,4 +414,23 @@ const CURRENCY_CODES = [
   { name: "ÅLAND ISLANDS", currency_name: "EUR", currency_code: "sv-FI" },
 ];
 
+export const IndianFormat = [
+  "en-IN",
+  "hi-IN",
+  "bn-IN",
+  "te-IN",
+  "en-PK",
+  "ur-PK",
+  "bn-BD",
+  "en-BD",
+  "ne-NP",
+  "si-LK",
+  "ta-LK",
+  "dz-BT",
+  "dv-MV",
+  "en-MV",
+  "my-MM",
+  "th-TH",
+];
+
 export default CURRENCY_CODES;

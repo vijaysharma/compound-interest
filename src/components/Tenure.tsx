@@ -29,7 +29,7 @@ const Tenure = ({ rt, setRt, className }: TenureType) => {
         <input
           type="number"
           placeholder="Type here"
-          className="input input-bordered input-sm input-primary focus:outline-none join-item w-12 text-center"
+          className="input input-bordered input-sm input-primary focus:outline-none join-item w-24 text-center"
           value={rt.tenure.toString().replace(/^0+/, "") || 0}
           onChange={(e) => setRt({ ...rt, tenure: e.target.value })}
         />

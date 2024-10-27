@@ -1,4 +1,5 @@
 import { ToWords } from "to-words";
+import { IndianFormat } from "./currencyCodes";
 
 const convertToWords = (values: number, i18N = "en-IN"): string => {
   const validLocales = [
@@ -26,9 +27,12 @@ const convertToWords = (values: number, i18N = "en-IN"): string => {
     "tr-TR",
     "ko-KR",
   ];
-  const toWords = new ToWords({
-    localeCode: validLocales.includes(i18N) ? i18N : "en-US",
-  });
+  const localeCode = validLocales.includes(i18N)
+    ? i18N
+    : IndianFormat.includes(i18N)
+    ? "en-IN"
+    : "en-US";
+  const toWords = new ToWords({ localeCode });
   return toWords.convert(values, { currency: false });
 };
 export const getCurrencySymbol = (locale: string, currency: string): string => {

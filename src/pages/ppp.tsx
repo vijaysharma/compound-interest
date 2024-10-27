@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import PPP_DATA from "../utilities/pppData";
 import InputAmount from "../components/InputAmount";
 import DisplayCard from "../components/DisplayCard";
-import CURRENCY_CODES from "../utilities/currencyCodes";
+import CURRENCY_CODES, { IndianFormat } from "../utilities/currencyCodes";
 import { getCurrencySymbol } from "../utilities/currency";
 import { CountryPPPType } from "../types/types";
 const PPP = () => {
@@ -124,22 +124,22 @@ const PPP = () => {
         inputAmount={srcAmt}
         setInputAmount={setSrcAmt}
         className="mb-3"
-        title="Amount at source country"
+        title="Amount in the source country"
         stepData={[
           {
             id: "ip1",
             value: "50000000",
-            title: `${sourceLocale !== "en-IN" ? "50M" : "5Cr"}`,
+            title: `${IndianFormat.includes(sourceLocale) ? "5Cr" : "50M"}`,
           },
           {
             id: "ip2",
             value: "5000000",
-            title: `${sourceLocale !== "en-IN" ? "5M" : "5OL"}`,
+            title: `${IndianFormat.includes(sourceLocale) ? "50L" : "5M"}`,
           },
           {
             id: "ip3",
             value: "500000",
-            title: `${sourceLocale !== "en-IN" ? "500K" : "5L"}`,
+            title: `${IndianFormat.includes(sourceLocale) ? "5L" : "500K"}`,
           },
           { id: "ip4", value: "50000", title: "50K" },
           { id: "ip5", value: "5000", title: "5K" },

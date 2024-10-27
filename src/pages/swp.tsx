@@ -5,6 +5,7 @@ import DisplayCard from "../components/DisplayCard.tsx";
 import InputAmount from "../components/InputAmount.tsx";
 import { sanctnum } from "../utilities/numSanitity.ts";
 import { RT } from "../types/types.ts";
+import JoinedButtonGroup from "../components/JoinedButtonGroup.tsx";
 
 const SWP = () => {
   const [pa, setPa] = useState("35000000");
@@ -17,6 +18,7 @@ const SWP = () => {
   const [wa, setWa] = useState("120000");
   const [remainingAmount, setRAmount] = useState("0");
   const [lwa, setLwa] = useState("0");
+  const [inflationFreq, setInflationFreq] = useState("12");
   const invStepData = [
     { id: "ip1", value: "50000000", title: "5Cr" },
     { id: "ip2", value: "5000000", title: "50L" },
@@ -39,6 +41,7 @@ const SWP = () => {
     p: string,
     r: string,
     ir: string,
+    irf: string,
     t: string,
     tf: string,
     w: string
@@ -48,12 +51,13 @@ const SWP = () => {
     const rate = sanctnum(r);
     const withdrawal = sanctnum(w);
     const inflationRate = sanctnum(ir);
+    const inflationFreq = sanctnum(irf);
     let fa = principal;
     let wa = withdrawal;
     if (tenure <= 0) setLwa("0");
     for (let i = 1; i <= tenure; i++) {
       wa =
-        inflationRate && i > 12 && (i - 1) % 12 === 0
+        inflationRate && i > inflationFreq && (i - 1) % inflationFreq === 0
           ? wa * (1 + inflationRate / 100)
           : wa;
       fa = fa * (1 + rate / 100) ** (1 / 12) - wa;
@@ -65,13 +69,14 @@ const SWP = () => {
       pa,
       rt,
       irt,
+      inflationFreq,
       t.tenure,
       t.tenureFormat,
       wa
     );
     setLwa(withdrawalAmount);
     setRAmount(remainingAmount);
-  }, [pa, rt, irt, t, wa]);
+  }, [pa, rt, irt, inflationFreq, t, wa]);
   return (
     <>
       <InputAmount
@@ -99,15 +104,34 @@ const SWP = () => {
         className="mb-3"
         rt={irt}
         setRt={setIRt}
-        title={"Inflation per annum (%)"}
+        title={"Inflation rate (%)"}
+      />
+      <JoinedButtonGroup
+        title="Inflation calculated per"
+        className="mb-3"
+        selectedValue={inflationFreq}
+        updateSelectedValue={setInflationFreq}
+        sizePrefix="sm"
+        data={[
+          { id: "ir1", title: "6M", value: "6" },
+          { id: "ir2", title: "1Y", value: "12" },
+          { id: "ir3", title: "2Y", value: "24" },
+          { id: "ir4", title: "3Y", value: "36" },
+          { id: "ir5", title: "4Y", value: "48" },
+          { id: "ir6", title: "5Y", value: "60" },
+        ]}
       />
       <Tenure className="mb-3" rt={t} setRt={setT} />
       <DisplayCard
-        colorClass={`${remainingAmount < pa ? "text-error" : "text-primary"}`}
-        primaryAmount={parseFloat(remainingAmount)}
+        colorClass={`${
+          parseInt(remainingAmount) < parseInt(pa)
+            ? "text-error"
+            : "text-primary"
+        }`}
+        primaryAmount={parseInt(remainingAmount)}
         secondaryInfo={{
           title: "Last monthly withdrawal",
-          amount: parseFloat(lwa),
+          amount: parseInt(lwa),
         }}
       />
     </>
