@@ -1,92 +1,34 @@
 import { ToWords } from "to-words";
 
 const convertToWords = (values: number, i18N = "en-IN"): string => {
-  let toWords;
-  switch (i18N) {
-    case "en-IN":
-      toWords = new ToWords({
-        localeCode: "en-IN",
-        converterOptions: {
-          currency: true,
-          ignoreDecimal: false,
-          ignoreZeroCurrency: false,
-          doNotAddOnly: true,
-          currencyOptions: {
-            name: "Rupee",
-            plural: "Rupees",
-            symbol: "₹",
-            fractionalUnit: {
-              name: "Paisa",
-              plural: "Paise",
-              symbol: "",
-            },
-          },
-        },
-      });
-      break;
-    case "en-US":
-      toWords = new ToWords({
-        localeCode: "en-US",
-        converterOptions: {
-          currency: true,
-          ignoreDecimal: false,
-          ignoreZeroCurrency: false,
-          doNotAddOnly: true,
-          currencyOptions: {
-            name: "Dollar",
-            plural: "Dollars",
-            symbol: "$",
-            fractionalUnit: {
-              name: "Cent",
-              plural: "Cents",
-              symbol: "",
-            },
-          },
-        },
-      });
-      break;
-    case "en-EU":
-      toWords = new ToWords({
-        localeCode: "en-GB",
-        converterOptions: {
-          currency: true,
-          ignoreDecimal: false,
-          ignoreZeroCurrency: false,
-          doNotAddOnly: true,
-          currencyOptions: {
-            name: "Euro",
-            plural: "Euros",
-            symbol: "€",
-            fractionalUnit: {
-              name: "Euro Cent",
-              plural: "Euro Cents",
-              symbol: "",
-            },
-          },
-        },
-      });
-      break;
-    default:
-      toWords = new ToWords({
-        localeCode: "en-US",
-        converterOptions: {
-          currency: true,
-          ignoreDecimal: false,
-          ignoreZeroCurrency: false,
-          doNotAddOnly: true,
-          currencyOptions: {
-            name: "Rupee",
-            plural: "Rupees",
-            symbol: "₹",
-            fractionalUnit: {
-              name: "Paisa",
-              plural: "Paise",
-              symbol: "",
-            },
-          },
-        },
-      });
-  }
+  const validLocales = [
+    "en-AE",
+    "en-BD",
+    "en-GB",
+    "en-GH",
+    "en-IE",
+    "en-IN",
+    "en-MM",
+    "en-MU",
+    "en-NG",
+    "en-NP",
+    "en-US",
+    "en-PH",
+    "ee-EE",
+    "fa-IR",
+    "fr-BE",
+    "fr-FR",
+    "gu-IN",
+    "hi-IN",
+    "mr-IN",
+    "nl-SR",
+    "pt-BR",
+    "tr-TR",
+    "ko-KR",
+  ];
+  const toWords = new ToWords({
+    localeCode: validLocales.includes(i18N) ? i18N : "en-US",
+  });
   return toWords.convert(values, { currency: false });
 };
 export const getCurrencySymbol = (locale: string, currency: string): string => {

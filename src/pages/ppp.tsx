@@ -81,7 +81,6 @@ const PPP = () => {
           ),
         });
       }, {});
-    console.log(data);
     setData(data);
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);
     setTgtAmt(calculateTargetAmount(srcAmt, sourcePPP, targetPPP));
