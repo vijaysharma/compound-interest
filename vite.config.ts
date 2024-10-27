@@ -7,4 +7,9 @@ export default defineConfig({
   server: {
     hmr: { overlay: true },
   },
+  root: "./",
+  build: {
+    outDir: "./build",
+    emptyOutDir: true,
+  },
 });
