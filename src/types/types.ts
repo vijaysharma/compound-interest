@@ -124,3 +124,7 @@ export interface CountryPPPType {
   currencyCode: string;
   currencyName: string;
 }
+
+export interface ExchangeRateType {
+  [key: string]: number;
+}

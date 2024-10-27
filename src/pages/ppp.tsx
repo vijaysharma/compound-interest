@@ -4,17 +4,21 @@ import InputAmount from "../components/InputAmount";
 import DisplayCard from "../components/DisplayCard";
 import CURRENCY_CODES, { IndianFormat } from "../utilities/currencyCodes";
 import { getCurrencySymbol } from "../utilities/currency";
-import { CountryPPPType } from "../types/types";
+import { CountryPPPType, ExchangeRateType } from "../types/types";
 const PPP = () => {
   const [data, setData] = useState<{ [key: string]: CountryPPPType }>({});
   const [srcCountry, setSrcCountry] = useState("India");
   const [tgtCountry, setTgtCountry] = useState("United States");
   const [srcAmt, setSrcAmt] = useState("10000");
   const [tgtAmt, setTgtAmt] = useState("0");
+  const [tgtExAmt, setTgtExAmt] = useState(0);
   const [targetCurrencySymbol, setTargetCurrencySymbol] = useState("XYZ");
   const [sourceCurrencySymbol, setSourceCurrencySymbol] = useState("XYZ");
+  const [targetCurrencyName, setTargetCurrencyName] = useState("USD");
+  const [sourceCurrencyName, setSourceCurrencyName] = useState("INR");
   const [targetLocale, setTargetLocale] = useState("en-IN");
   const [sourceLocale, setSourceLocale] = useState("en-IN");
+  const [fetchedExData, setFetchExData] = useState<ExchangeRateType>();
   const calculatePPP = (
     srcCountry: string,
     tgtCountry: string,
@@ -84,6 +88,7 @@ const PPP = () => {
     setData(data);
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);
     setTgtAmt(calculateTargetAmount(srcAmt, sourcePPP, targetPPP));
+    setTargetCurrencyName(data[tgtCountry].currencyName);
     setTargetCurrencySymbol(
       getCurrencySymbol(
         data[tgtCountry].currencyCode,
@@ -91,6 +96,7 @@ const PPP = () => {
       )
     );
     setTargetLocale(data[tgtCountry].currencyCode);
+    setSourceCurrencyName(data[srcCountry].currencyName);
     setSourceCurrencySymbol(
       getCurrencySymbol(
         data[srcCountry].currencyCode,
@@ -98,7 +104,36 @@ const PPP = () => {
       )
     );
     setSourceLocale(data[srcCountry].currencyCode);
-  }, [srcCountry, tgtCountry, srcAmt]);
+    const getExchangeRates = async () => {
+      if (!fetchedExData) {
+        const res = await fetch(`https://open.er-api.com/v6/latest`);
+        const data = await res.json();
+        const fetchedData = data.rates;
+        setFetchExData(fetchedData);
+        setTgtExAmt(
+          fetchedData[targetCurrencyName] && fetchedData[sourceCurrencyName]
+            ? (parseFloat(srcAmt) * fetchedData[targetCurrencyName]) /
+                fetchedData[sourceCurrencyName]
+            : 0
+        );
+      } else {
+        const exhangeAmt =
+          fetchedExData[targetCurrencyName] && fetchedExData[sourceCurrencyName]
+            ? (parseFloat(srcAmt) * fetchedExData[targetCurrencyName]) /
+              fetchedExData[sourceCurrencyName]
+            : 0;
+        setTgtExAmt(exhangeAmt);
+      }
+    };
+    getExchangeRates();
+  }, [
+    srcCountry,
+    tgtCountry,
+    sourceCurrencyName,
+    targetCurrencyName,
+    fetchedExData,
+    srcAmt,
+  ]);
   return (
     <>
       <div className="join mb-3 w-full">
@@ -170,10 +205,22 @@ const PPP = () => {
       </div>
 
       <DisplayCard
-        primaryAmount={Math.round(parseFloat(tgtAmt))}
+        primaryAmount={parseFloat(parseFloat(tgtAmt).toFixed(2))}
         currencySymbol={targetCurrencySymbol}
         locale={targetLocale}
         title={`Equivalent amount in ${tgtCountry}'s local currency`}
+      />
+      <br />
+      <br />
+      <DisplayCard
+        primaryAmount={parseFloat(tgtExAmt.toFixed(2))}
+        currencySymbol={targetCurrencySymbol}
+        locale={targetLocale}
+        title={`${
+          tgtExAmt === 0
+            ? `No exhange data available for ${tgtCountry}'s local currency`
+            : `Converted value in ${tgtCountry}'s local currency`
+        }`}
       />
     </>
   );
