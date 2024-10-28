@@ -21,7 +21,8 @@ const Inflation = () => {
     endYear: string,
     place: string,
     data: INFLATION_TYPE[]
-  ) => {
+  ): number[] => {
+    principal = principal || "0";
     const stYear = parseInt(startYear);
     const edYear = parseInt(endYear);
     const splitData = data.filter((d) => {
@@ -61,10 +62,6 @@ const Inflation = () => {
         sym = "€";
         locale = "en-EU";
         break;
-      case "World":
-        sym = "₹";
-        locale = "en-IN";
-        break;
       default:
         sym = "₹";
         locale = "en-IN";
@@ -84,7 +81,7 @@ const Inflation = () => {
     setDeflatedAmount(da);
     setCurrencySymbol(sym);
     setLocale(locale);
-  }, [startYear, endYear, place, principal]);
+  }, [principal, startYear, endYear, place]);
   return (
     <>
       <InputAmount

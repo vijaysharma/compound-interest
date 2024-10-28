@@ -51,6 +51,7 @@ const PPP = () => {
     srcPPP: number,
     tgtPPP: number
   ) => {
+    srcAmt = srcAmt || "0";
     const targetAmount = (parseFloat(srcAmt) / srcPPP) * tgtPPP;
     return `${targetAmount}`;
   };
@@ -87,6 +88,7 @@ const PPP = () => {
       }, {});
     setData(data);
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);
+
     setTgtAmt(calculateTargetAmount(srcAmt, sourcePPP, targetPPP));
     setTargetCurrencyName(data[tgtCountry].currencyName);
     setTargetCurrencySymbol(
@@ -105,6 +107,7 @@ const PPP = () => {
     );
     setSourceLocale(data[srcCountry].currencyCode);
     const getExchangeRates = async () => {
+      const sAmt = srcAmt || "0";
       if (!fetchedExData) {
         const res = await fetch(`https://open.er-api.com/v6/latest`);
         const data = await res.json();
@@ -112,14 +115,14 @@ const PPP = () => {
         setFetchExData(fetchedData);
         setTgtExAmt(
           fetchedData[targetCurrencyName] && fetchedData[sourceCurrencyName]
-            ? (parseFloat(srcAmt) * fetchedData[targetCurrencyName]) /
+            ? (parseFloat(sAmt) * fetchedData[targetCurrencyName]) /
                 fetchedData[sourceCurrencyName]
             : 0
         );
       } else {
         const exhangeAmt =
           fetchedExData[targetCurrencyName] && fetchedExData[sourceCurrencyName]
-            ? (parseFloat(srcAmt) * fetchedExData[targetCurrencyName]) /
+            ? (parseFloat(sAmt) * fetchedExData[targetCurrencyName]) /
               fetchedExData[sourceCurrencyName]
             : 0;
         setTgtExAmt(exhangeAmt);
