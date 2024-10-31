@@ -30,16 +30,15 @@ const Lumpsum = () => {
   const calculateInterest = (
     p: string,
     r: string,
-    m: string | number,
+    m: string,
     f: string,
     t: string,
     tf: "m" | "y"
   ) => {
     const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
-    let mode = m === 100 ? tenure : m;
+    const mode = m === "100" ? tenure : sanctnum(m);
     const principal = sanctnum(p);
     const rate = sanctnum(r);
-    mode = sanctnum(m);
     const frequency = sanctnum(f);
     return sanctnum(
       principal * (1 + rate / frequency / 100) ** ((frequency * mode) / 12) -
@@ -81,7 +80,7 @@ const Lumpsum = () => {
     } else {
       setPayoutAmount(Math.round(finalAmount));
     }
-  }, [pa, rt, mode, invType, frequency]);
+  }, [pa, rt, rt.tenure, rt.tenureFormat, mode, invType, frequency]);
   return (
     <>
       <InputAmount
