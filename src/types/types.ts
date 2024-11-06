@@ -128,3 +128,16 @@ export interface CountryPPPType {
 export interface ExchangeRateType {
   [key: string]: number;
 }
+
+export interface MFType {
+  default?: boolean;
+  id: string;
+  value: number;
+  name: string;
+}
+
+export interface MFJSONType {
+  default?: boolean;
+  schemeCode: number;
+  schemeName: string;
+}

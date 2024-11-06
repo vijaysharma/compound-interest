@@ -6,10 +6,12 @@ import SIP from "./sip";
 import Inflation from "./inflation";
 import PPP from "./ppp";
 import { useEffect, useState } from "react";
+import MF from "./mf";
 
 const Home = () => {
   const getStoredId = (): string => window.localStorage.getItem("aid") || "1";
   const [activeId, setActiveId] = useState(() => getStoredId());
+
   useEffect(() => {
     setActiveId(() => getStoredId());
   }, [activeId]);
@@ -33,6 +35,9 @@ const Home = () => {
           </div>
           <div id="5" title="PPP">
             <PPP />
+          </div>
+          <div id="6" title="MF">
+            <MF />
           </div>
         </Tabs>
       </div>
