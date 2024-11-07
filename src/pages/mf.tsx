@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { MFJSONType, MFType } from "../types/types";
 import JoinedButtonGroup from "../components/JoinedButtonGroup";
 import InputAmount from "../components/InputAmount";
+import { getDuration } from "../utilities/utility";
 
 const MF = () => {
   const [jsonAllData, setJsonAllData] = useState<MFJSONType[]>([]);
@@ -11,6 +12,7 @@ const MF = () => {
   >([]);
   const [mfs, setMfs] = useState<MFType[]>([]);
   const [searchKey, setSearchKey] = useState<string>("ICICI Equity Debt");
+  const deferredSearchKey = useDeferredValue(searchKey);
   const [selectedType, setSelectedType] = useState("Direct");
   const [selectedGrowth, setSelectedGrowth] = useState("Growth");
 
@@ -40,15 +42,15 @@ const MF = () => {
   }, []);
   useEffect(() => {
     const tempArr = [];
-    tempArr.push(searchKey.split(" ").join("\\b)(?=.*?\\b"));
+    tempArr.push(deferredSearchKey.split(" ").join(")(?=.*?\\b"));
     tempArr.unshift("(?=.*?\\b");
-    tempArr.push("\\b)");
-    const exp = RegExp(tempArr.join(""), "i");
+    tempArr.push(")");
+    const exp = RegExp(tempArr.join(""), "ig");
     const updatedData = jsonAllData.filter((mf) => {
       return exp.test(mf.schemeName);
     });
     setJsonData(updatedData);
-  }, [searchKey, jsonAllData]);
+  }, [deferredSearchKey, jsonAllData]);
 
   useEffect(() => {
     let updatedData: MFType[] = jsonData.map((d: MFJSONType, i: number) => {
@@ -85,10 +87,9 @@ const MF = () => {
     setEndNav(e);
     setStartNav(s);
     if (e && s) {
+      const trueDuration = getDuration({ startDate: s.date, endDate: e.date });
       const percentage =
-        ((parseFloat(e.nav) / parseFloat(s.nav)) **
-          (365 / parseFloat(duration)) -
-          1) *
+        ((parseFloat(e.nav) / parseFloat(s.nav)) ** (1 / trueDuration) - 1) *
         100;
       setProfit(percentage);
 
@@ -241,7 +242,7 @@ const MF = () => {
           {
             id: "ty20",
             title: "5Y",
-            value: "1215",
+            value: "1235",
           },
           {
             id: "ty21",

@@ -18,7 +18,7 @@ const JoinedButtonGroup = ({
           data.map((p) => (
             <button
               key={p.id}
-              className={`join-item btn border-primary grow ${
+              className={`join-item btn border-primary grow flex-1 ${
                 selectedValue === p.value && "btn-primary"
               } ${sizePrefix && `btn-${sizePrefix}`} ${btnClass}`}
               onClick={() => updateSelectedValue(p.value)}

@@ -22,7 +22,7 @@
   content: none;
 }
 .mf-container {
-  height: 36dvh;
+  height: 36vh;
   overflow-y: auto;
   margin-bottom: 0.5rem;
 }
