@@ -22,7 +22,7 @@
   content: none;
 }
 .mf-container {
-  height: 36vh;
+  height: calc(100dvh - 577px);
   overflow-y: auto;
   margin-bottom: 0.5rem;
 }
