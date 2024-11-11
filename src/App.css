@@ -6,7 +6,7 @@
   height: calc(100vh);
 }
 .calc-tabs .tab-content {
-  height: calc(100vh - 88px);
+  height: calc(100vh - 80px);
 }
 
 .calc-tabs .tab.calc-tab {
@@ -22,7 +22,8 @@
   content: none;
 }
 .mf-container {
-  height: calc(100dvh - 577px);
+  height: calc(100dvh - 556px);
+  min-height: 6rem;
   overflow-y: auto;
   margin-bottom: 0.5rem;
 }

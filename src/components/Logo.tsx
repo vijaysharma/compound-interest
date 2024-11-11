@@ -27,7 +27,7 @@ const Logo = () => {
     localStorage.setItem("th", theme);
   }, [theme]);
   return (
-    <div className="text-center py-2">
+    <div className="text-center pb-2">
       <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"

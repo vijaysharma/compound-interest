@@ -19,7 +19,10 @@ const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
           window.localStorage.setItem("aid", child.props.id);
         }}
       />
-      <div role="tabpanel" className="tab-content p-4 w-full overflow-y-auto">
+      <div
+        role="tabpanel"
+        className="tab-content px-4 py-2 w-full overflow-y-auto"
+      >
         {child}
       </div>
     </>
