@@ -12,6 +12,12 @@ const Chart = ({
   color?: string;
 }) => {
   const chartOptions: AgChartOptions = {
+    zoom: {
+      enableAxisDragging: false,
+      enablePanning: false,
+      enableScrolling: false,
+      enableSelecting: true,
+    },
     background: {
       visible: false,
     },
