@@ -30,6 +30,6 @@
 .mf-container {
   overflow-y: auto;
 }
-.chart-container > .chart {
-  padding: 0;
+.chart-container {
+  min-height: 290px;
 }
