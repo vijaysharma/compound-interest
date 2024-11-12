@@ -141,3 +141,8 @@ export interface MFJSONType {
   schemeCode: number;
   schemeName: string;
 }
+
+export interface NavType {
+  date: string;
+  nav: string;
+}

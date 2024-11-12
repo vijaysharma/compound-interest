@@ -1,25 +1,31 @@
 import { useDeferredValue, useEffect, useState } from "react";
-import { MFJSONType, MFType } from "../types/types";
+import { MFJSONType, MFType, NavType } from "../types/types";
 import JoinedButtonGroup from "../components/JoinedButtonGroup";
 import InputAmount from "../components/InputAmount";
 import { getDuration } from "../utilities/utility";
+import Chart from "./chart";
+import { getStyleVariable, lch_to_rgba } from "../utilities/color-util";
 
 const MF = () => {
   const [jsonAllData, setJsonAllData] = useState<MFJSONType[]>([]);
   const [jsonData, setJsonData] = useState<MFJSONType[]>([]);
-  const [jsonNavData, setJsonNavData] = useState<
-    { date: string; nav: string }[]
-  >([]);
+  const [jsonNavData, setJsonNavData] = useState<NavType[]>([]);
   const [mfs, setMfs] = useState<MFType[]>([]);
   const [searchKey, setSearchKey] = useState<string>("ICICI Equity Debt");
   const deferredSearchKey = useDeferredValue(searchKey);
   const [selectedType, setSelectedType] = useState("Direct");
   const [selectedGrowth, setSelectedGrowth] = useState("Growth");
+  const [viewChart, setViewChart] = useState(false);
+  const [chartData, setChartData] = useState<{ date: string; nav: number }[]>(
+    []
+  );
+  const [chartLineColor, setChartLineColor] = useState("black");
 
   const [selectedCode, setSelectedCode] = useState("0");
+  const [selectedMF, setSelectedMF] = useState("");
   const [duration, setDuration] = useState("1");
-  const [startNav, setStartNav] = useState<{ date: string; nav: string }>();
-  const [endNav, setEndNav] = useState<{ date: string; nav: string }>();
+  const [startNav, setStartNav] = useState<NavType>();
+  const [endNav, setEndNav] = useState<NavType>();
   const [profit, setProfit] = useState(0);
   const [absProfit, setAbsProfit] = useState(0);
   const [invAmt, setInvAmt] = useState("100000");
@@ -41,15 +47,18 @@ const MF = () => {
     fetchMFData();
   }, []);
   useEffect(() => {
-    const tempArr = [];
-    tempArr.push(deferredSearchKey.split(" ").join(")(?=.*?\\b"));
-    tempArr.unshift("(?=.*?\\b");
-    tempArr.push(")");
-    const exp = RegExp(tempArr.join(""), "ig");
-    const updatedData = jsonAllData.filter((mf) => {
-      return exp.test(mf.schemeName);
-    });
-    setJsonData(updatedData);
+    if (deferredSearchKey.trim().length > 0) {
+      // Search Logic -- filtering the entire data
+      const tempArr = [];
+      tempArr.push(deferredSearchKey.split(" ").join(")(?=.*?\\b"));
+      tempArr.unshift("(?=.*?\\b");
+      tempArr.push(")");
+      const exp = RegExp(tempArr.join(""), "ig");
+      const updatedData = jsonAllData.filter((mf) => {
+        return exp.test(mf.schemeName);
+      });
+      setJsonData(updatedData);
+    }
   }, [deferredSearchKey, jsonAllData]);
 
   useEffect(() => {
@@ -65,6 +74,7 @@ const MF = () => {
     if (updatedData.length > 0) {
       updatedData[0].default = true;
       setSelectedCode(`${updatedData[0].value}`);
+      setSelectedMF(`${updatedData[0].name}`);
     }
     setMfs(updatedData);
   }, [jsonData, selectedType, selectedGrowth]);
@@ -103,6 +113,17 @@ const MF = () => {
 
       const profitAmount = matureAmount - parseFloat(invAmt);
       setProfitAmt(parseFloat(profitAmount.toFixed(2)));
+
+      const chartJsonData = jsonNavData
+        .slice(0, jsonNavData.findIndex((jd) => jd.date === s.date) + 1)
+        .map((d) => ({ date: d.date, nav: parseFloat(d.nav) }))
+        .reverse();
+      setChartData(chartJsonData);
+      setChartLineColor(
+        parseFloat(e.nav) > parseFloat(s.nav)
+          ? lch_to_rgba(getStyleVariable(".stat", "--su"))
+          : lch_to_rgba(getStyleVariable(".stat", "--er"))
+      );
     }
   }, [jsonNavData, duration, invAmt]);
   return (
@@ -276,32 +297,51 @@ const MF = () => {
         className="mb-2"
         btnClass="rounded-tl-none rounded-tr-none"
       />
-
-      <input
-        type="text"
-        placeholder="Type here"
-        className="input input-sm input-primary w-full mb-2"
-        value={searchKey}
-        onChange={(e) => setSearchKey(e.target?.value)}
-      />
-      <div className="mf-container">
-        {mfs.map((mf) => (
-          <label
-            className="label px-0 py-0 pb-2 cursor-pointer justify-start gap-2"
-            key={mf.id}
-          >
-            <input
-              type="radio"
-              name="mf"
-              className="radio radio-primary"
-              value={mf.value}
-              defaultChecked={mf.default}
-              onChange={(e) => setSelectedCode(e.target.value)}
-            />
-            <span className="label-text">{mf.name}</span>
-          </label>
-        ))}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="Type here"
+          className="input input-sm input-primary w-full mb-2"
+          value={searchKey}
+          onChange={(e) => setSearchKey(e.target?.value)}
+        />
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={() => setViewChart(() => !viewChart)}
+        >
+          Chart
+        </button>
       </div>
+      {viewChart ? (
+        <Chart
+          className="chart-container"
+          jsonData={chartData}
+          mf={selectedMF}
+          color={chartLineColor}
+        />
+      ) : (
+        <div className="mf-container">
+          {mfs.map((mf) => (
+            <label
+              className="label px-0 py-0 pb-2 cursor-pointer justify-start gap-2"
+              key={mf.id}
+            >
+              <input
+                type="radio"
+                name="mf"
+                className="radio radio-primary"
+                value={mf.value}
+                defaultChecked={mf.default}
+                onChange={(e) => {
+                  setSelectedCode(e.target.value);
+                  setSelectedMF(mf.name);
+                }}
+              />
+              <span className="label-text">{mf.name}</span>
+            </label>
+          ))}
+        </div>
+      )}
       <InputAmount
         inputAmount={invAmt}
         setInputAmount={setInvAmt}
@@ -347,7 +387,7 @@ const MF = () => {
             {matureAmt && matureAmt.toLocaleString("en-IN")}
           </div>
           <div
-            className={`stat-value text-xl ${
+            className={`stat-value text-xl check ${
               profitAmt > 0 ? "text-success" : "text-error"
             }`}
           >

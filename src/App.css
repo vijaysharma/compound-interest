@@ -21,9 +21,15 @@
 .tabs-lifted > .tab:is(input:checked):before {
   content: none;
 }
+.chart-container,
 .mf-container {
   height: calc(100dvh - 556px);
   min-height: 6rem;
-  overflow-y: auto;
   margin-bottom: 0.5rem;
+}
+.mf-container {
+  overflow-y: auto;
+}
+.chart-container > .chart {
+  padding: 0;
 }
