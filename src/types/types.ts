@@ -82,9 +82,9 @@ export interface TabType {
 
 export interface TabsType {
   name: string;
-  children: ReactElement[];
-  activeId: string;
-  className: string;
+  children: ReactElement | ReactElement[];
+  activeId?: string;
+  className?: string;
 }
 
 export interface TenureType {
