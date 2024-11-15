@@ -15,7 +15,6 @@ const Home = () => {
   const [accessToken, setAccessToken] = useState("");
 
   useEffect(() => {
-    console.log(import.meta.env.VITE_ACCESS_TOKEN);
     setActiveId(() => getStoredId());
     const a_t = localStorage.getItem("at");
     if (a_t && a_t?.length > 0) setAccessToken(a_t);
