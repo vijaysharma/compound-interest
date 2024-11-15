@@ -15,6 +15,7 @@ const Home = () => {
   const [accessToken, setAccessToken] = useState("");
 
   useEffect(() => {
+    console.log(import.meta.env.VITE_ACCESS_TOKEN);
     setActiveId(() => getStoredId());
     const a_t = localStorage.getItem("at");
     if (a_t && a_t?.length > 0) setAccessToken(a_t);
@@ -22,9 +23,12 @@ const Home = () => {
 
   return (
     <>
-      <div id="container" className="w-full max-w-lg bg-primary/5 mx-auto py-2">
+      <div
+        id="container"
+        className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2"
+      >
         <Logo />
-        {accessToken === "you##R##Great" ? (
+        {accessToken === import.meta.env.VITE_ACCESS_TOKEN ? (
           <Tabs name="tab" className={"calc-tabs"} activeId={activeId}>
             <div id="1" title="Lumpsum">
               <Lumpsum />

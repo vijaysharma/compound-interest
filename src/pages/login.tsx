@@ -7,9 +7,9 @@ const Login = ({
 }) => {
   const [at, setAT] = useState("");
   const login = () => {
-    if (at === "yrg@gry.com") {
-      localStorage.setItem("at", "you##R##Great");
-      action("you##R##Great");
+    if (at === import.meta.env.VITE_ALLOWED_EMAIL) {
+      localStorage.setItem("at", import.meta.env.VITE_ACCESS_TOKEN);
+      action(import.meta.env.VITE_ACCESS_TOKEN);
     }
   };
   return (
