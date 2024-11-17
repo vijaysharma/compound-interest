@@ -42,7 +42,27 @@ const MF = () => {
     const fetchMFData = async () => {
       const res = await fetch(`https://api.mfapi.in/mf`);
       const data = await res.json();
-      setJsonAllData(data);
+      const filteredData = data.filter(
+        (fd: { schemeCode: number }, i: number) => {
+          if (i === 0) return true;
+
+          if (i > 0) return fd.schemeCode !== data[i - 1].schemeCode;
+        }
+      );
+      const sortedData = filteredData.sort(
+        (a: { schemeName: string }, b: { schemeName: string }) => {
+          if (a.schemeName < b.schemeName) {
+            return -1;
+          }
+          if (a.schemeName > b.schemeName) {
+            return 1;
+          }
+          return 0;
+        }
+      );
+      console.log(sortedData);
+      console.log(filteredData.length, sortedData.length);
+      setJsonAllData(sortedData);
     };
     fetchMFData();
   }, []);

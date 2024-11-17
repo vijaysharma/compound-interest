@@ -7,7 +7,7 @@ import { sanctnum } from "../utilities/numSanitity.ts";
 import JoinedButtonGroup from "../components/JoinedButtonGroup.tsx";
 import { RT } from "../types/types.ts";
 
-const SIP = () => {
+const SIP = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState("10000");
   const [rt, setRt] = useState<RT>({
     roi: "7.1",
@@ -86,7 +86,8 @@ const SIP = () => {
     setPayoutAmount(Math.ceil(maturityAmount));
   }, [pa, rt, type, invType]);
   return (
-    <>
+    <div className={className}>
+      {title && <h5>{title}</h5>}
       <InputAmount
         className="mb-3"
         inputAmount={pa}
@@ -119,7 +120,7 @@ const SIP = () => {
           invType === "tgt" ? "Monthly investment required" : "Maturity amount"
         }
       />
-    </>
+    </div>
   );
 };
 export default SIP;

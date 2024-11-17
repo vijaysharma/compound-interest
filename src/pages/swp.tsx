@@ -7,7 +7,7 @@ import { sanctnum } from "../utilities/numSanitity.ts";
 import { RT } from "../types/types.ts";
 import JoinedButtonGroup from "../components/JoinedButtonGroup.tsx";
 
-const SWP = () => {
+const SWP = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState("35000000");
   const [rt, setRt] = useState("10");
   const [irt, setIRt] = useState("7");
@@ -78,11 +78,15 @@ const SWP = () => {
     setRAmount(remainingAmount);
   }, [pa, rt, irt, inflationFreq, t, wa]);
   return (
-    <>
+    <div className={className}>
+      {title && <h5>{title}</h5>}
       <InputAmount
+        className="mb-3"
         inputAmount={pa}
         setInputAmount={setPa}
-        className="mb-3"
+        type={pa}
+        setType={setPa}
+        typeData={[{ id: "abc", title: "Invested Amount", value: pa }]}
         stepData={invStepData}
         stepSizePrefix={"sm"}
       />
@@ -134,7 +138,7 @@ const SWP = () => {
           amount: parseInt(lwa),
         }}
       />
-    </>
+    </div>
   );
 };
 

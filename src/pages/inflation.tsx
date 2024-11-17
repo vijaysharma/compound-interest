@@ -3,7 +3,13 @@ import InputAmount from "../components/InputAmount";
 import INFLATION from "../utilities/inflationData";
 import DisplayCard from "../components/DisplayCard";
 import { INFLATION_TYPE } from "../types/types";
-const Inflation = () => {
+const Inflation = ({
+  className,
+  title,
+}: {
+  className?: string;
+  title?: string;
+}) => {
   const [place, setPlace] = useState("India");
   const [principal, setPrincipal] = useState("100");
   const [startYear, setStartYear] = useState("2004");
@@ -83,7 +89,8 @@ const Inflation = () => {
     setLocale(locale);
   }, [principal, startYear, endYear, place]);
   return (
-    <>
+    <div className={className}>
+      {title && <h5>{title}</h5>}
       <InputAmount
         className="mb-3"
         inputAmount={principal}
@@ -172,7 +179,7 @@ const Inflation = () => {
           amount: Math.round(deflatedAmount),
         }}
       />
-    </>
+    </div>
   );
 };
 

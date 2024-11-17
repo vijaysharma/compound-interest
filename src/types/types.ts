@@ -77,14 +77,16 @@ export interface TabType {
   name: string;
   child: ReactElement;
   selectedId: string;
-  setSelectedId: React.Dispatch<SetStateAction<string>>;
+  setSelectedId?: React.Dispatch<SetStateAction<string>>;
 }
 
 export interface TabsType {
   name: string;
   children: ReactElement | ReactElement[];
   activeId?: string;
+  setActiveId?: React.Dispatch<SetStateAction<string>>;
   className?: string;
+  type?: string;
 }
 
 export interface TenureType {

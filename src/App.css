@@ -13,9 +13,6 @@
   width: calc(100vw / 6);
   max-width: 85px;
 }
-.calc-tabs .tab.calc-tab::before,
-.calc-tabs .tab.calc-tab::after {
-}
 
 .tabs-lifted > .tab.tab-active:not(.tab-disabled):not([disabled]):before,
 .tabs-lifted > .tab:is(input:checked):before {

@@ -5,7 +5,7 @@ import DisplayCard from "../components/DisplayCard";
 import CURRENCY_CODES, { IndianFormat } from "../utilities/currencyCodes";
 import { getCurrencySymbol } from "../utilities/currency";
 import { CountryPPPType, ExchangeRateType } from "../types/types";
-const PPP = () => {
+const PPP = ({ className, title }: { className?: string; title?: string }) => {
   const [data, setData] = useState<{ [key: string]: CountryPPPType }>({});
   const [srcCountry, setSrcCountry] = useState("India");
   const [tgtCountry, setTgtCountry] = useState("United States");
@@ -138,7 +138,8 @@ const PPP = () => {
     srcAmt,
   ]);
   return (
-    <>
+    <div className={className}>
+      {title && <h5>{title}</h5>}
       <div className="join mb-3 w-full">
         <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
           Source Country
@@ -225,7 +226,7 @@ const PPP = () => {
             : `Converted value in ${tgtCountry}'s local currency`
         }`}
       />
-    </>
+    </div>
   );
 };
 export default PPP;

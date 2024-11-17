@@ -1,21 +1,26 @@
-import { useState } from "react";
 import Tab from "./Tab";
 import { TabsType } from "../types/types";
 
-const Tabs = ({ name, children, activeId = "1", className }: TabsType) => {
-  const [selectedId, setSelectedId] = useState(activeId);
+const Tabs = ({
+  name,
+  children,
+  activeId,
+  setActiveId,
+  className,
+  type,
+}: TabsType) => {
   return children instanceof Array ? (
     <div
       role="tablist"
-      className={`tabs tabs-lifted w-full ${className || ""}`}
+      className={`tabs w-full ${className || ""} ${type || "tabs-lifted"}`}
     >
       {children.map((child) => (
         <Tab
           key={child.props.id}
           name={name}
           child={child}
-          selectedId={selectedId}
-          setSelectedId={setSelectedId}
+          selectedId={activeId || "1"}
+          setSelectedId={setActiveId}
         />
       ))}
     </div>

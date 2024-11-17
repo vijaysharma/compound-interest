@@ -37,6 +37,15 @@ const Chart = ({
         marker: {
           enabled: false,
         },
+        tooltip: {
+          showArrow: false,
+          renderer: function ({ datum, xKey, yKey }) {
+            return {
+              content: `<b>₹${datum[yKey].toFixed(4)}</b>`,
+              title: datum[xKey],
+            };
+          },
+        },
       },
     ],
     axes: [

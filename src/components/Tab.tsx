@@ -9,14 +9,16 @@ const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
         role="tab"
         className={`tab calc-tab ${
           selectedId === child.props.id
-            ? "tab-active text-primary-content [--tab-bg:oklch(var(--p))] [--tab-border-color:oklch(var(--p))]"
+            ? "tab-active bg-primary text-primary-content [--tab-bg:oklch(var(--p))] [--tab-border-color:oklch(var(--p))]"
             : ""
         }`}
-        aria-label={child.props.title}
+        aria-label={child.props["data-label"]}
         checked={selectedId === child.props.id}
         onChange={() => {
-          setSelectedId(child.props.id);
-          window.localStorage.setItem("aid", child.props.id);
+          if (setSelectedId) {
+            setSelectedId(child.props.id);
+            window.localStorage.setItem("aid", child.props.id);
+          }
         }}
       />
       <div
