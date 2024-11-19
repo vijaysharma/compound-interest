@@ -37,16 +37,14 @@ const MF = () => {
       filterKey = filterKey.substring(1, filterKey.length);
       return mfs.filter((mf) => !RegExp(filterKey, "i").test(mf.name));
     }
-    const result = mfs.filter((mf) => RegExp(filterKey, "i").test(mf.name));
-    console.log(filterKey, result);
-    return result;
+    return mfs.filter((mf) => RegExp(filterKey, "i").test(mf.name));
   };
   useEffect(() => {
     const fetchMFData = async () => {
       const res = await fetch(`https://api.mfapi.in/mf`);
       const data = await res.json();
       const filteredData = data.filter(
-        (fd: { schemeCode: number; schemeName: string }, i: number) => {
+        (fd: { schemeCode: number }, i: number) => {
           if (i === 0) return true;
 
           if (i > 0) return fd.schemeCode !== data[i - 1].schemeCode;
@@ -63,7 +61,6 @@ const MF = () => {
           return 0;
         }
       );
-      console.log(sortedData);
       setJsonAllData(sortedData);
     };
     fetchMFData();
@@ -79,7 +76,6 @@ const MF = () => {
       const updatedData = jsonAllData.filter((mf) => {
         return exp.test(mf.schemeName);
       });
-      console.log(updatedData);
       setJsonData(updatedData);
     }
   }, [deferredSearchKey, jsonAllData]);
