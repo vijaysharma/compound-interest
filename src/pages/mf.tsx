@@ -32,18 +32,21 @@ const MF = () => {
   const [matureAmt, setMatureAmt] = useState(0);
   const [profitAmt, setProfitAmt] = useState(0);
   const filterMfs = (mfs: MFType[], filterKey: string) => {
+    if (filterKey === "Growth") filterKey = "Growth|Cumulative";
     if (filterKey[0] === "!") {
       filterKey = filterKey.substring(1, filterKey.length);
       return mfs.filter((mf) => !RegExp(filterKey, "i").test(mf.name));
     }
-    return mfs.filter((mf) => RegExp(filterKey, "i").test(mf.name));
+    const result = mfs.filter((mf) => RegExp(filterKey, "i").test(mf.name));
+    console.log(filterKey, result);
+    return result;
   };
   useEffect(() => {
     const fetchMFData = async () => {
       const res = await fetch(`https://api.mfapi.in/mf`);
       const data = await res.json();
       const filteredData = data.filter(
-        (fd: { schemeCode: number }, i: number) => {
+        (fd: { schemeCode: number; schemeName: string }, i: number) => {
           if (i === 0) return true;
 
           if (i > 0) return fd.schemeCode !== data[i - 1].schemeCode;
@@ -61,7 +64,6 @@ const MF = () => {
         }
       );
       console.log(sortedData);
-      console.log(filteredData.length, sortedData.length);
       setJsonAllData(sortedData);
     };
     fetchMFData();
@@ -77,6 +79,7 @@ const MF = () => {
       const updatedData = jsonAllData.filter((mf) => {
         return exp.test(mf.schemeName);
       });
+      console.log(updatedData);
       setJsonData(updatedData);
     }
   }, [deferredSearchKey, jsonAllData]);
