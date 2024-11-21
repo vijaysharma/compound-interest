@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import InputAmount from "../components/InputAmount";
-import INFLATION from "../utilities/inflationData";
+import INFLATION from "../data/inflationData";
 import DisplayCard from "../components/DisplayCard";
 import { INFLATION_TYPE } from "../types/types";
 const Inflation = ({

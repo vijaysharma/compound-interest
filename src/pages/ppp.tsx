@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import PPP_DATA from "../utilities/pppData";
+import PPP_DATA from "../data/pppData";
 import InputAmount from "../components/InputAmount";
 import DisplayCard from "../components/DisplayCard";
-import CURRENCY_CODES, { IndianFormat } from "../utilities/currencyCodes";
+import CURRENCY_CODES, { IndianFormat } from "../data/currencyCodes";
 import { getCurrencySymbol } from "../utilities/currency";
 import { CountryPPPType, ExchangeRateType } from "../types/types";
 const PPP = ({ className, title }: { className?: string; title?: string }) => {

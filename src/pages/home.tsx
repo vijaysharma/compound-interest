@@ -68,7 +68,7 @@ const Home = () => {
               </div>
               <div id="4" data-label="MF">
                 <div className="w-2/3 max-w-3xl justify-self-center">
-                  <MF />
+                  <MF showDate={true} />
                 </div>
               </div>
             </Tabs>

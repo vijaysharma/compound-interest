@@ -1,5 +1,5 @@
 import { ToWords } from "to-words";
-import { IndianFormat } from "./currencyCodes";
+import { IndianFormat } from "../data/currencyCodes";
 
 const convertToWords = (values: number, i18N = "en-IN"): string => {
   const validLocales = [

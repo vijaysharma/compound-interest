@@ -1,3 +1,5 @@
+import { NavType } from "../types/types";
+
 type DurationType = {
   startDate: string;
   endDate: string;
@@ -42,4 +44,21 @@ export const getDuration = ({
       break;
   }
   return result;
+};
+export const getDateAsISO = (minusDays = 0, date = new Date()) => {
+  return new Date(date.getTime() - minusDays * 1000 * 60 * 60 * 24)
+    .toISOString()
+    .substring(0, 10);
+};
+export const getNearest = (dateString: string, data: NavType[]) => {
+  let i = 0;
+  const getNav = (dateStr: string) => {
+    const drs = dateStr.split("-").reverse().join("-");
+    const nav = data.find((d) => d.date === drs);
+
+    if (nav || i === 5) return nav || data[data.length - 1];
+    i++;
+    return getNav(getDateAsISO(1, new Date(dateStr)));
+  };
+  return getNav(dateString);
 };

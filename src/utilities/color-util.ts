@@ -22,8 +22,3 @@ export const lch_to_rgba = (lchcolor: string) => {
 
   return `rgba(${color})`;
 };
-
-// const rgba = cssColor_to_rgba255Color(myCssColor);
-
-// console.log(rgba[0], rgba[1], rgba[2], rgba[3]);
-// 33 51 56 255

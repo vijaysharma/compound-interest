@@ -5,13 +5,14 @@ import InputAmount from "../components/InputAmount";
 import { getDuration } from "../utilities/utility";
 import Chart from "./chart";
 import { getStyleVariable, lch_to_rgba } from "../utilities/color-util";
+import StartEndDate from "../components/Date";
 
-const MF = () => {
+const MF = ({ showDate }: { showDate?: boolean }) => {
   const [jsonAllData, setJsonAllData] = useState<MFJSONType[]>([]);
   const [jsonData, setJsonData] = useState<MFJSONType[]>([]);
   const [jsonNavData, setJsonNavData] = useState<NavType[]>([]);
   const [mfs, setMfs] = useState<MFType[]>([]);
-  const [searchKey, setSearchKey] = useState<string>("ICICI Equity Debt");
+  const [searchKey, setSearchKey] = useState<string>("SBI Magnum Gilt");
   const deferredSearchKey = useDeferredValue(searchKey);
   const [selectedType, setSelectedType] = useState("Direct");
   const [selectedGrowth, setSelectedGrowth] = useState("Growth");
@@ -20,7 +21,6 @@ const MF = () => {
     []
   );
   const [chartLineColor, setChartLineColor] = useState("black");
-
   const [selectedCode, setSelectedCode] = useState("0");
   const [selectedMF, setSelectedMF] = useState("");
   const [duration, setDuration] = useState("1");
@@ -79,7 +79,6 @@ const MF = () => {
       setJsonData(updatedData);
     }
   }, [deferredSearchKey, jsonAllData]);
-
   useEffect(() => {
     let updatedData: MFType[] = jsonData.map((d: MFJSONType, i: number) => {
       return {
@@ -97,7 +96,6 @@ const MF = () => {
     }
     setMfs(updatedData);
   }, [jsonData, selectedType, selectedGrowth]);
-
   useEffect(() => {
     const fetchMFByCode = async (schemeCode: string) => {
       const res = await fetch(
@@ -108,15 +106,15 @@ const MF = () => {
     };
     if (selectedCode !== "0") fetchMFByCode(selectedCode);
   }, [selectedCode]);
-
   useEffect(() => {
-    const s =
-      jsonNavData[parseInt(duration)] || jsonNavData[jsonNavData.length - 1];
-    const e = jsonNavData[0];
-    setEndNav(e);
-    setStartNav(s);
+    const e = endNav;
+    const s = startNav;
     if (e && s) {
-      const trueDuration = getDuration({ startDate: s.date, endDate: e.date });
+      const trueDuration =
+        (startNav &&
+          endNav &&
+          getDuration({ startDate: s.date, endDate: e.date })) ||
+        1;
       const percentage =
         ((parseFloat(e.nav) / parseFloat(s.nav)) ** (1 / trueDuration) - 1) *
         100;
@@ -132,19 +130,32 @@ const MF = () => {
 
       const profitAmount = matureAmount - parseFloat(invAmt);
       setProfitAmt(parseFloat(profitAmount.toFixed(2)));
-
+    }
+  }, [duration, startNav, endNav, invAmt]);
+  useEffect(() => {
+    const s =
+      jsonNavData[parseInt(duration)] || jsonNavData[jsonNavData.length - 1];
+    const e = jsonNavData[0];
+    setEndNav(e);
+    setStartNav(s);
+  }, [duration, jsonNavData]);
+  useEffect(() => {
+    if (startNav && endNav) {
       const chartJsonData = jsonNavData
-        .slice(0, jsonNavData.findIndex((jd) => jd.date === s.date) + 1)
+        .slice(
+          jsonNavData.findIndex((jd) => jd.date === endNav.date),
+          jsonNavData.findIndex((jd) => jd.date === startNav.date) + 1
+        )
         .map((d) => ({ date: d.date, nav: parseFloat(d.nav) }))
         .reverse();
       setChartData(chartJsonData);
       setChartLineColor(
-        parseFloat(e.nav) > parseFloat(s.nav)
+        parseFloat(endNav.nav) > parseFloat(startNav.nav)
           ? lch_to_rgba(getStyleVariable(".stat", "--su"))
           : lch_to_rgba(getStyleVariable(".stat", "--er"))
       );
     }
-  }, [jsonNavData, duration, invAmt]);
+  }, [jsonNavData, startNav, endNav]);
   return (
     <div>
       <div className="flex gap-2">
@@ -170,152 +181,166 @@ const MF = () => {
           sizePrefix="sm"
         />
       </div>
-      <JoinedButtonGroup
-        data={[
-          {
-            id: "ty1",
-            title: "1D",
-            value: "1",
-          },
-          {
-            id: "ty2",
-            title: "3D",
-            value: "3",
-          },
-          {
-            id: "ty3",
-            title: "1W",
-            value: "5",
-          },
-          {
-            id: "ty4",
-            title: "2W",
-            value: "10",
-          },
-          {
-            id: "ty5",
-            title: "3W",
-            value: "15",
-          },
-          {
-            id: "ty6",
-            title: "1M",
-            value: "20",
-          },
-          {
-            id: "ty7",
-            title: "5W",
-            value: "26",
-          },
-          {
-            id: "ty8",
-            title: "6W",
-            value: "30",
-          },
-        ]}
-        selectedValue={duration}
-        updateSelectedValue={setDuration}
-        btnClass="rounded-bl-none rounded-br-none border-b-0"
-        sizePrefix="sm"
-      />
+      {!showDate && (
+        <>
+          <JoinedButtonGroup
+            data={[
+              {
+                id: "ty1",
+                title: "1D",
+                value: "1",
+              },
+              {
+                id: "ty2",
+                title: "3D",
+                value: "3",
+              },
+              {
+                id: "ty3",
+                title: "1W",
+                value: "5",
+              },
+              {
+                id: "ty4",
+                title: "2W",
+                value: "10",
+              },
+              {
+                id: "ty5",
+                title: "3W",
+                value: "15",
+              },
+              {
+                id: "ty6",
+                title: "1M",
+                value: "20",
+              },
+              {
+                id: "ty7",
+                title: "5W",
+                value: "26",
+              },
+              {
+                id: "ty8",
+                title: "6W",
+                value: "30",
+              },
+            ]}
+            selectedValue={duration}
+            updateSelectedValue={setDuration}
+            btnClass="rounded-bl-none rounded-br-none border-b-0"
+            sizePrefix="sm"
+          />
+          <JoinedButtonGroup
+            data={[
+              {
+                id: "ty9",
+                title: "2M",
+                value: "39",
+              },
+              {
+                id: "ty10",
+                title: "3M",
+                value: "63",
+              },
+              {
+                id: "ty11",
+                title: "4M",
+                value: "84",
+              },
+              {
+                id: "ty12",
+                title: "5M",
+                value: "105",
+              },
+              {
+                id: "ty13",
+                title: "6M",
+                value: "126",
+              },
+              {
+                id: "ty14",
+                title: "1Y",
+                value: "243",
+              },
+              {
+                id: "ty15",
+                title: "1.5Y",
+                value: "366",
+              },
+              {
+                id: "ty16",
+                title: "2Y",
+                value: "485",
+              },
+            ]}
+            selectedValue={duration}
+            updateSelectedValue={setDuration}
+            btnClass="rounded-l-none rounded-r-none border-b-0"
+            sizePrefix="sm"
+          />
+          <JoinedButtonGroup
+            data={[
+              {
+                id: "ty18",
+                title: "3Y",
+                value: "740",
+              },
+              {
+                id: "ty19",
+                title: "4Y",
+                value: "985",
+              },
+              {
+                id: "ty20",
+                title: "5Y",
+                value: "1235",
+              },
+              {
+                id: "ty21",
+                title: "6Y",
+                value: "1476",
+              },
+              {
+                id: "ty22",
+                title: "7Y",
+                value: "1725",
+              },
+              {
+                id: "ty23",
+                title: "10Y",
+                value: "2464",
+              },
+              {
+                id: "ty24",
+                title: "15Y",
+                value: "3695",
+              },
+              {
+                id: "ty25",
+                title: "20Y",
+                value: "4928",
+              },
+            ]}
+            selectedValue={duration}
+            updateSelectedValue={setDuration}
+            sizePrefix="sm"
+            className="mb-2"
+            btnClass="rounded-tl-none rounded-tr-none"
+          />
+        </>
+      )}
 
-      <JoinedButtonGroup
-        data={[
-          {
-            id: "ty9",
-            title: "2M",
-            value: "39",
-          },
-          {
-            id: "ty10",
-            title: "3M",
-            value: "63",
-          },
-          {
-            id: "ty11",
-            title: "4M",
-            value: "84",
-          },
-          {
-            id: "ty12",
-            title: "5M",
-            value: "105",
-          },
-          {
-            id: "ty13",
-            title: "6M",
-            value: "126",
-          },
-          {
-            id: "ty14",
-            title: "1Y",
-            value: "243",
-          },
-          {
-            id: "ty15",
-            title: "1.5Y",
-            value: "366",
-          },
-          {
-            id: "ty16",
-            title: "2Y",
-            value: "485",
-          },
-        ]}
-        selectedValue={duration}
-        updateSelectedValue={setDuration}
-        btnClass="rounded-l-none rounded-r-none border-b-0"
-        sizePrefix="sm"
-      />
-      <JoinedButtonGroup
-        data={[
-          {
-            id: "ty18",
-            title: "3Y",
-            value: "740",
-          },
-          {
-            id: "ty19",
-            title: "4Y",
-            value: "985",
-          },
-          {
-            id: "ty20",
-            title: "5Y",
-            value: "1235",
-          },
-          {
-            id: "ty21",
-            title: "6Y",
-            value: "1476",
-          },
-          {
-            id: "ty22",
-            title: "7Y",
-            value: "1725",
-          },
-          {
-            id: "ty23",
-            title: "10Y",
-            value: "2464",
-          },
-          {
-            id: "ty24",
-            title: "15Y",
-            value: "3695",
-          },
-          {
-            id: "ty25",
-            title: "20Y",
-            value: "4928",
-          },
-        ]}
-        selectedValue={duration}
-        updateSelectedValue={setDuration}
-        sizePrefix="sm"
-        className="mb-2"
-        btnClass="rounded-tl-none rounded-tr-none"
-      />
+      {showDate && startNav && endNav && (
+        <StartEndDate
+          data={jsonNavData}
+          startNav={startNav}
+          endNav={endNav}
+          setStartNav={setStartNav}
+          setEndNav={setEndNav}
+        />
+      )}
+
       <div className="flex gap-2">
         <input
           type="text"
@@ -331,7 +356,8 @@ const MF = () => {
           Chart
         </button>
       </div>
-      {viewChart ? (
+
+      {viewChart && chartData.length > 0 ? (
         <Chart
           className="chart-container"
           jsonData={chartData}
@@ -390,7 +416,6 @@ const MF = () => {
         typeSizePrefix="sm"
         stepSizePrefix="sm"
       />
-
       <div className="stats border-solid border border-primary rounded-bl-none rounded-br-none border-b-0 w-full">
         <div className="stat px-2 py-2">
           <div
