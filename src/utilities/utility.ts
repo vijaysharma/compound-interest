@@ -1,4 +1,4 @@
-import { NavType } from "../types/types";
+import { INFLATION_TYPE, NavType } from "../types/types";
 
 type DurationType = {
   startDate: string;
@@ -61,4 +61,104 @@ export const getNearest = (dateString: string, data: NavType[]) => {
     return getNav(getDateAsISO(1, new Date(dateStr)));
   };
   return getNav(dateString);
+};
+
+export const sanctnum = (inputValue: string | number): number => {
+  // parseFloat the input value
+  let intValue =
+    typeof inputValue === "string" ? parseFloat(inputValue) : inputValue;
+  // check if the input value is finite or not
+  intValue = isFinite(intValue) ? intValue : 0;
+  return intValue;
+};
+
+export const calculateInterest = (
+  p: string,
+  r: string,
+  m: string,
+  f: string,
+  t: string,
+  tf: "m" | "y"
+) => {
+  const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
+  const mode = m === "100" ? tenure : sanctnum(m);
+  const principal = sanctnum(p);
+  const rate = sanctnum(r);
+  const frequency = sanctnum(f);
+  return sanctnum(
+    principal * (1 + rate / frequency / 100) ** ((frequency * mode) / 12) -
+      principal
+  );
+};
+
+export const calculatePrincipal = (
+  tgt: string,
+  r: string,
+  f: string,
+  t: string,
+  tf: "m" | "y"
+) => {
+  const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
+  const targetAmount = sanctnum(tgt);
+  const rate = sanctnum(r);
+  const frequency = sanctnum(f);
+  return sanctnum(
+    targetAmount / (1 + rate / frequency / 100) ** ((frequency * tenure) / 12)
+  );
+};
+
+export const checkNAYear = (d: INFLATION_TYPE, p: string): boolean =>
+  d[p as "India" | "USA" | "EU" | "World"] !== "n/a";
+export const calculateInflatedPrice = (
+  principal: string,
+  startYear: string,
+  endYear: string,
+  place: string,
+  data: INFLATION_TYPE[]
+): number[] => {
+  principal = principal || "0";
+  const stYear = parseInt(startYear);
+  const edYear = parseInt(endYear);
+  const splitData = data.filter((d) => {
+    return d.Year >= stYear && d.Year < edYear && checkNAYear(d, place);
+  });
+  const updatedSplitData = splitData
+    .map((d) => ({
+      year: d.Year,
+      ir: parseFloat(
+        d[place as "India" | "USA" | "EU" | "World"].replace("%", "")
+      ),
+    }))
+    .reverse();
+  let ia = parseFloat(principal);
+  for (let i = 0; i < updatedSplitData.length; i++) {
+    ia = ia * (1 + updatedSplitData[i]["ir"] / 100);
+  }
+  let da = parseFloat(principal);
+  for (let i = 0; i < updatedSplitData.length; i++) {
+    da = da / (1 + updatedSplitData[i]["ir"] / 100);
+  }
+  return [ia, da];
+};
+export const getCurrencySymbolAndLocale = (place: string) => {
+  let sym = "₹";
+  let locale = "en-IN";
+  switch (place) {
+    case "India":
+      sym = "₹";
+      locale = "en-IN";
+      break;
+    case "USA":
+      sym = "$";
+      locale = "en-US";
+      break;
+    case "EU":
+      sym = "€";
+      locale = "en-EU";
+      break;
+    default:
+      sym = "₹";
+      locale = "en-IN";
+  }
+  return [sym, locale];
 };

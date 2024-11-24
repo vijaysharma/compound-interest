@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import InputAmount from "../components/InputAmount";
 import INFLATION from "../data/inflationData";
 import DisplayCard from "../components/DisplayCard";
-import { INFLATION_TYPE } from "../types/types";
+import {
+  calculateInflatedPrice,
+  checkNAYear,
+  getCurrencySymbolAndLocale,
+} from "../utilities/utility";
 const Inflation = ({
   className,
   title,
@@ -18,62 +22,6 @@ const Inflation = ({
   const [deflatedAmount, setDeflatedAmount] = useState(0);
   const [currencySymbol, setCurrencySymbol] = useState("₹");
   const [locale, setLocale] = useState("en-IN");
-
-  const checkNAYear = (d: INFLATION_TYPE, p: string): boolean =>
-    d[p as "India" | "USA" | "EU" | "World"] !== "n/a";
-  const calculateInflatedPrice = (
-    principal: string,
-    startYear: string,
-    endYear: string,
-    place: string,
-    data: INFLATION_TYPE[]
-  ): number[] => {
-    principal = principal || "0";
-    const stYear = parseInt(startYear);
-    const edYear = parseInt(endYear);
-    const splitData = data.filter((d) => {
-      return d.Year >= stYear && d.Year < edYear && checkNAYear(d, place);
-    });
-    const updatedSplitData = splitData
-      .map((d) => ({
-        year: d.Year,
-        ir: parseFloat(
-          d[place as "India" | "USA" | "EU" | "World"].replace("%", "")
-        ),
-      }))
-      .reverse();
-    let ia = parseFloat(principal);
-    for (let i = 0; i < updatedSplitData.length; i++) {
-      ia = ia * (1 + updatedSplitData[i]["ir"] / 100);
-    }
-    let da = parseFloat(principal);
-    for (let i = 0; i < updatedSplitData.length; i++) {
-      da = da / (1 + updatedSplitData[i]["ir"] / 100);
-    }
-    return [ia, da];
-  };
-  const getCurrencySymbol = (place: string) => {
-    let sym = "₹";
-    let locale = "en-IN";
-    switch (place) {
-      case "India":
-        sym = "₹";
-        locale = "en-IN";
-        break;
-      case "USA":
-        sym = "$";
-        locale = "en-US";
-        break;
-      case "EU":
-        sym = "€";
-        locale = "en-EU";
-        break;
-      default:
-        sym = "₹";
-        locale = "en-IN";
-    }
-    return [sym, locale];
-  };
   useEffect(() => {
     const [ia, da] = calculateInflatedPrice(
       principal,
@@ -82,7 +30,7 @@ const Inflation = ({
       place,
       INFLATION
     );
-    const [sym, locale] = getCurrencySymbol(place);
+    const [sym, locale] = getCurrencySymbolAndLocale(place);
     setInflatedAmount(ia);
     setDeflatedAmount(da);
     setCurrencySymbol(sym);

@@ -1,19 +1,20 @@
 import Tabs from "../components/Tabs";
 import Logo from "../components/Logo";
 import Lumpsum from "./lumpsum";
-import SWP from "./swp";
-import SIP from "./sip";
+import SystemacticWithdrawalPlan from "./systematic_withdrawal_plan";
 import Inflation from "./inflation";
-import PPP from "./ppp";
 import { useEffect, useState } from "react";
-import MF from "./mf";
+import MutualFund from "./mutual_fund";
 import Login from "./login";
+import SystematicInvestmentPlan from "./systematic_investment_plan";
+import PurchasingPowerParity from "./purchasing_power_parity";
 
 const Home = () => {
   const getStoredId = (): string => window.localStorage.getItem("aid") || "1";
   const [activeId, setActiveId] = useState(() => getStoredId());
   const [accessToken, setAccessToken] = useState("");
   const [screenWidth, setSWidth] = useState(1024);
+  const [showDate, setShowDate] = useState(false);
 
   useEffect(() => {
     setActiveId(() => getStoredId());
@@ -23,6 +24,7 @@ const Home = () => {
 
     const sWidth = window.innerWidth;
     setSWidth(sWidth);
+    if (sWidth >= 1024) setShowDate(true);
   }, [activeId]);
 
   return (
@@ -47,11 +49,11 @@ const Home = () => {
               </div>
               <div id="2" data-label="SIP & SWP">
                 <div className="w-2/3 max-w-3xl gap-4 flex justify-self-center">
-                  <SIP
+                  <SystematicInvestmentPlan
                     title="Systematic Investment Plan"
                     className="grow basis-1"
                   />
-                  <SWP
+                  <SystemacticWithdrawalPlan
                     title="Systematic Withdrwal Plan"
                     className="grow basis-1"
                   />
@@ -60,7 +62,7 @@ const Home = () => {
               <div id="3" data-label="Inflation & PPP">
                 <div className="w-2/3 max-w-3xl gap-4 flex justify-self-center">
                   <Inflation title="Inflation" className="grow basis-1" />
-                  <PPP
+                  <PurchasingPowerParity
                     title="Purchasing Power Parity"
                     className="grow basis-1"
                   />
@@ -68,7 +70,7 @@ const Home = () => {
               </div>
               <div id="4" data-label="MF">
                 <div className="w-2/3 max-w-3xl justify-self-center">
-                  <MF showDate={true} />
+                  <MutualFund showDate={showDate} setShowDate={setShowDate} />
                 </div>
               </div>
             </Tabs>
@@ -83,19 +85,19 @@ const Home = () => {
                 <Lumpsum />
               </div>
               <div id="2" data-label="SIP">
-                <SIP />
+                <SystematicInvestmentPlan />
               </div>
               <div id="3" data-label="SWP">
-                <SWP />
+                <SystemacticWithdrawalPlan />
               </div>
               <div id="4" data-label="Inflation">
                 <Inflation />
               </div>
               <div id="5" data-label="PPP">
-                <PPP />
+                <PurchasingPowerParity />
               </div>
               <div id="6" data-label="MF">
-                <MF />
+                <MutualFund showDate={showDate} setShowDate={setShowDate} />
               </div>
             </Tabs>
           )

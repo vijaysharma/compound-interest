@@ -3,65 +3,25 @@ import DisplayCard from "../components/DisplayCard.tsx";
 import InputAmount from "../components/InputAmount.tsx";
 import RateOfInterest from "../components/RateOfInterest.tsx";
 import Tenure from "../components/Tenure.tsx";
-import { sanctnum } from "../utilities/numSanitity.ts";
 import JoinedButtonGroup from "../components/JoinedButtonGroup.tsx";
-import { ButtonDataType, RT } from "../types/types.ts";
+import { RT, StepAmountType } from "../types/types.ts";
+import { calculateInterest, calculatePrincipal } from "../utilities/utility.ts";
+import {
+  FREQUENCY_DATA,
+  PA,
+  PAYOUT_MODE_DATA,
+  RATE_TENURE,
+  STEP_AMOUNT,
+} from "../data/default_data.ts";
 
 const Lumpsum = () => {
-  const [pa, setPa] = useState("3000000");
-  const [rt, setRt] = useState<RT>({
-    roi: "7.1",
-    tenure: "2",
-    tenureFormat: "y",
-  });
+  const [pa, setPa] = useState(PA);
+  const [rt, setRt] = useState<RT>(RATE_TENURE);
   const [mode, setMode] = useState("1");
   const [frequency, setFrequency] = useState("4");
   const [payoutAmount, setPayoutAmount] = useState(0);
   const [invType, setInvType] = useState("inv");
-  const stepData: ButtonDataType[] = [
-    { id: "p1", value: "50000000", title: "5Cr" },
-    { id: "p2", value: "5000000", title: "50L" },
-    { id: "p3", value: "500000", title: "5L" },
-    { id: "p4", value: "50000", title: "50K" },
-    { id: "p5", value: "5000", title: "5K" },
-    { id: "p6", value: "500", title: "500" },
-    { id: "p7", value: "50", title: "50" },
-  ];
-  const calculateInterest = (
-    p: string,
-    r: string,
-    m: string,
-    f: string,
-    t: string,
-    tf: "m" | "y"
-  ) => {
-    const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
-    const mode = m === "100" ? tenure : sanctnum(m);
-    const principal = sanctnum(p);
-    const rate = sanctnum(r);
-    const frequency = sanctnum(f);
-    return sanctnum(
-      principal * (1 + rate / frequency / 100) ** ((frequency * mode) / 12) -
-        principal
-    );
-  };
-
-  const calculatePrincipal = (
-    tgt: string,
-    r: string,
-    f: string,
-    t: string,
-    tf: "m" | "y"
-  ) => {
-    const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
-    const targetAmount = sanctnum(tgt);
-    const rate = sanctnum(r);
-    const frequency = sanctnum(f);
-    return sanctnum(
-      targetAmount / (1 + rate / frequency / 100) ** ((frequency * tenure) / 12)
-    );
-  };
-
+  const stepData: StepAmountType[] = STEP_AMOUNT;
   useEffect(() => {
     const rtRoi = rt.roi ? rt.roi : "0";
     const finalAmount =
@@ -101,11 +61,7 @@ const Lumpsum = () => {
       <Tenure className="mb-3" rt={rt} setRt={setRt} />
       <JoinedButtonGroup
         className="mb-3"
-        data={[
-          { id: "fr1", value: "12", title: "Monthly" },
-          { id: "fr2", value: "4", title: "Quarterly" },
-          { id: "fr3", value: "1", title: "Yearly" },
-        ]}
+        data={FREQUENCY_DATA}
         sizePrefix="sm"
         selectedValue={frequency}
         updateSelectedValue={setFrequency}
@@ -114,12 +70,7 @@ const Lumpsum = () => {
       {invType === "inv" && (
         <JoinedButtonGroup
           className="mb-3"
-          data={[
-            { id: "pm1", value: "1", title: "Monthly" },
-            { id: "pm2", value: "3", title: "Quarterly" },
-            { id: "pm3", value: "12", title: "Yearly" },
-            { id: "pm4", value: "100", title: "Cumulative" },
-          ]}
+          data={PAYOUT_MODE_DATA}
           sizePrefix="sm"
           selectedValue={mode}
           updateSelectedValue={setMode}

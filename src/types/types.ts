@@ -39,6 +39,12 @@ export interface ButtonDataType {
   title: string;
 }
 
+export interface StepAmountType {
+  id: string;
+  value: string;
+  title: string;
+}
+
 export interface JoinedButtonType {
   data: ButtonDataType[];
   selectedValue: string;
