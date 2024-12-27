@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+import daisyui from "daisyui"; // Correct way to import daisyui
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
@@ -599,8 +600,7 @@ export default {
             zIndex: "999",
           },
           "50%": {
-            transform:
-              "translateX(-105%) rotateY(35deg) rotateX(10deg) translateZ(-10px)",
+            transform: "translateX(-105%) rotateY(35deg) rotateX(10deg) translateZ(-10px)",
             zIndex: "-1",
           },
           "80%": {
@@ -609,8 +609,7 @@ export default {
           "100%": {
             zIndex: "-1",
             opacity: "0",
-            transform:
-              "translateX(0%) rotateY(0deg) rotateX(0deg) translateZ(-10px)",
+            transform: "translateX(0%) rotateY(0deg) rotateX(0deg) translateZ(-10px)",
           },
         },
         "browse-out-left": {
@@ -619,8 +618,7 @@ export default {
             zIndex: "999",
           },
           "50%": {
-            transform:
-              "translateX(-105%) rotateY(35deg) rotateX(10deg) translateZ(-10px)",
+            transform: "translateX(-105%) rotateY(35deg) rotateX(10deg) translateZ(-10px)",
             zIndex: "-1",
           },
           "80%": {
@@ -629,8 +627,7 @@ export default {
           "100%": {
             zIndex: "-1",
             opacity: "0",
-            transform:
-              "translateX(0%) rotateY(0deg) rotateX(0deg) translateZ(-10px)",
+            transform: "translateX(0%) rotateY(0deg) rotateX(0deg) translateZ(-10px)",
           },
         },
         "browse-out-right": {
@@ -639,8 +636,7 @@ export default {
             zIndex: "999",
           },
           "50%": {
-            transform:
-              "translateX(105%) rotateY(35deg) rotateX(10deg) translateZ(-10px)",
+            transform: "translateX(105%) rotateY(35deg) rotateX(10deg) translateZ(-10px)",
             zIndex: "1",
           },
           "80%": {
@@ -649,8 +645,7 @@ export default {
           "100%": {
             zIndex: "1",
             opacity: "0",
-            transform:
-              "translateX(0%) rotateY(0deg) rotateX(0deg) translateZ(-10px)",
+            transform: "translateX(0%) rotateY(0deg) rotateX(0deg) translateZ(-10px)",
           },
         },
         jiggle: {
@@ -1210,22 +1205,8 @@ export default {
       },
     },
   },
-  plugins: [require("daisyui")],
+  plugins: [daisyui],
   daisyui: {
-    themes: [
-      "light",
-      "emerald",
-      "corporate",
-      "lofi",
-      "fantasy",
-      "wireframe",
-      "luxury",
-      "cmyk",
-      "lemonade",
-      "night",
-      "winter",
-      "dim",
-      "nord",
-    ],
+    themes: ["light", "emerald", "corporate", "lofi", "fantasy", "wireframe", "luxury", "cmyk", "lemonade", "night", "winter", "dim", "nord"],
   },
 };

@@ -15,12 +15,8 @@ const StartEndDate = ({
   setStartNav: React.Dispatch<SetStateAction<NavType | undefined>>;
   setEndNav: React.Dispatch<SetStateAction<NavType | undefined>>;
 }) => {
-  const [sDate, setSDate] = useState<string>(() =>
-    startNav ? startNav.date.split("-").reverse().join("-") : ""
-  );
-  const [eDate, setEDate] = useState<string>(() =>
-    endNav ? endNav.date.split("-").reverse().join("-") : ""
-  );
+  const [sDate, setSDate] = useState<string>(() => (startNav ? startNav.date.split("-").reverse().join("-") : ""));
+  const [eDate, setEDate] = useState<string>(() => (endNav ? endNav.date.split("-").reverse().join("-") : ""));
 
   useEffect(() => {
     if (sDate.length > 0 && eDate.length > 0) {
@@ -32,9 +28,7 @@ const StartEndDate = ({
   }, [sDate, eDate, data, setStartNav, setEndNav]);
   return (
     <div className="join mb-3 w-full">
-      <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">
-        Start Date
-      </div>
+      <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">Start</div>
       <div className="grow ">
         <input
           type="date"
@@ -55,9 +49,7 @@ const StartEndDate = ({
           onChange={(e) => setEDate(getDateAsISO(0, new Date(e.target.value)))}
         />
       </div>
-      <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">
-        End Date
-      </div>
+      <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">End</div>
     </div>
   );
 };
