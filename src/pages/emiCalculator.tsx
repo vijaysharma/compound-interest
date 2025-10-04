@@ -90,10 +90,6 @@ const EmiCalculator: React.FC = () => {
     return d;
   };
 
-  const isSameDay = (date1: Date, date2: Date): boolean => {
-    return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
-  };
-
   const calculateSchedule = (): void => {
     if (!disbursementDate) return;
 
@@ -449,7 +445,7 @@ const EmiCalculator: React.FC = () => {
                     name={`mode-${idx}`}
                     value="emi"
                     checked={p.mode === "emi"}
-                    onChange={(e) => updatePartPayment(idx, "mode", "emi")}
+                    onChange={() => updatePartPayment(idx, "mode", "emi")}
                     className="w-4 h-4 text-blue-600"
                     disabled={!p.enabled}
                   />
@@ -462,7 +458,7 @@ const EmiCalculator: React.FC = () => {
                     name={`mode-${idx}`}
                     value="tenure"
                     checked={p.mode === "tenure"}
-                    onChange={(e) => updatePartPayment(idx, "mode", "tenure")}
+                    onChange={() => updatePartPayment(idx, "mode", "tenure")}
                     className="w-4 h-4 text-blue-600"
                     disabled={!p.enabled}
                   />
@@ -518,7 +514,7 @@ const EmiCalculator: React.FC = () => {
                     name={`rate-mode-${idx}`}
                     value="emi"
                     checked={r.mode === "emi"}
-                    onChange={(e) => updateRateChange(idx, "mode", "emi")}
+                    onChange={() => updateRateChange(idx, "mode", "emi")}
                     className="w-4 h-4 text-blue-600"
                     disabled={!r.enabled}
                   />
@@ -531,7 +527,7 @@ const EmiCalculator: React.FC = () => {
                     name={`rate-mode-${idx}`}
                     value="tenure"
                     checked={r.mode === "tenure"}
-                    onChange={(e) => updateRateChange(idx, "mode", "tenure")}
+                    onChange={() => updateRateChange(idx, "mode", "tenure")}
                     className="w-4 h-4 text-blue-600"
                     disabled={!r.enabled}
                   />
