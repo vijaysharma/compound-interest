@@ -6,12 +6,7 @@ const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
       <input
         type="radio"
         name={name}
-        role="tab"
-        className={`tab calc-tab ${
-          selectedId === child.props.id
-            ? "tab-active bg-primary text-primary-content [--tab-bg:oklch(var(--p))] [--tab-border-color:oklch(var(--p))]"
-            : ""
-        }`}
+        className={`tab calc-tab ${selectedId === child.props.id ? "tab-active bg-primary text-primary-content [--tab-bg:oklch(var(--p))] [--tab-border-color:oklch(var(--p))]" : ""}`}
         aria-label={child.props["data-label"]}
         checked={selectedId === child.props.id}
         onChange={() => {
@@ -21,10 +16,7 @@ const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
           }
         }}
       />
-      <div
-        role="tabpanel"
-        className="tab-content px-4 py-2 w-full overflow-y-auto"
-      >
+      <div role="tabpanel" className="tab-content px-4 py-2 w-full overflow-y-auto">
         {child}
       </div>
     </>
