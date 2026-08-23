@@ -142,8 +142,11 @@ async function fetchWorldBankRecords(): Promise<WorldBankInflationRecord[]> {
   return records ?? [];
 }
 
+// Use a public CORS proxy
+const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
+const URL = `${PROXY_URL}https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD`;
 async function fetchIMFEstimates(): Promise<IMFDataMapperResponse> {
-  const urls = [IMF_INFLATION_URL, IMF_URL];
+  const urls = [IMF_INFLATION_URL, URL];
   
   for (const url of urls) {
     try {
