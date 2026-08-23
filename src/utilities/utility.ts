@@ -78,7 +78,7 @@ export const calculateInterest = (
   m: string,
   f: string,
   t: string,
-  tf: "m" | "y"
+  tf: "m" | "y",
 ) => {
   const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
   const mode = m === "100" ? tenure : sanctnum(m);
@@ -87,7 +87,7 @@ export const calculateInterest = (
   const frequency = sanctnum(f);
   return sanctnum(
     principal * (1 + rate / frequency / 100) ** ((frequency * mode) / 12) -
-      principal
+      principal,
   );
 };
 
@@ -96,14 +96,14 @@ export const calculatePrincipal = (
   r: string,
   f: string,
   t: string,
-  tf: "m" | "y"
+  tf: "m" | "y",
 ) => {
   const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
   const targetAmount = sanctnum(tgt);
   const rate = sanctnum(r);
   const frequency = sanctnum(f);
   return sanctnum(
-    targetAmount / (1 + rate / frequency / 100) ** ((frequency * tenure) / 12)
+    targetAmount / (1 + rate / frequency / 100) ** ((frequency * tenure) / 12),
   );
 };
 
@@ -114,7 +114,7 @@ export const calculateInflatedPrice = (
   startYear: string,
   endYear: string,
   place: string,
-  data: INFLATION_TYPE[]
+  data: INFLATION_TYPE[],
 ): number[] => {
   principal = principal || "0";
   const stYear = parseInt(startYear);
@@ -126,7 +126,7 @@ export const calculateInflatedPrice = (
     .map((d) => ({
       year: d.Year,
       ir: parseFloat(
-        d[place as "India" | "USA" | "EU" | "World"].replace("%", "")
+        d[place as "India" | "USA" | "EU" | "World"].replace("%", ""),
       ),
     }))
     .reverse();

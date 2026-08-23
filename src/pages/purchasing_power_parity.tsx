@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import PPP_DATA from "../data/pppData";
 import InputAmount from "../components/InputAmount";
 import DisplayCard from "../components/DisplayCard";
 import CURRENCY_CODES, { IndianFormat } from "../data/currencyCodes";
 import { getCurrencySymbol } from "../utilities/currency";
 import { CountryPPPType, ExchangeRateType } from "../types/types";
-import { fetchExchangeRates } from "../data/api_data";
+import { fetchExchangeRates, fetchPPPData } from "../data/api_data";
+
 const PurchasingPowerParity = ({
   className,
   title,
@@ -14,6 +14,9 @@ const PurchasingPowerParity = ({
   title?: string;
 }) => {
   const [data, setData] = useState<{ [key: string]: CountryPPPType }>({});
+  const [pppLoading, setPppLoading] = useState(true);
+  const [pppError, setPppError] = useState<string | null>(null);
+
   const [srcCountry, setSrcCountry] = useState("India");
   const [tgtCountry, setTgtCountry] = useState("United States");
   const [srcAmt, setSrcAmt] = useState("10000");
@@ -26,10 +29,11 @@ const PurchasingPowerParity = ({
   const [targetLocale, setTargetLocale] = useState("en-IN");
   const [sourceLocale, setSourceLocale] = useState("en-IN");
   const [fetchedExData, setFetchExData] = useState<ExchangeRateType>();
+
   const calculatePPP = (
     srcCountry: string,
     tgtCountry: string,
-    pppData: { [key: string]: CountryPPPType }
+    pppData: { [key: string]: CountryPPPType },
   ) => {
     const sourceCountry = srcCountry;
     const targetCountry = tgtCountry;
@@ -39,7 +43,7 @@ const PurchasingPowerParity = ({
         Math.max(
           ...Object.keys(pppData[sourceCountry])
             .filter((x) => x !== "currencyName" && x !== "currencyCode")
-            .map((x) => parseInt(x))
+            .map((x) => parseInt(x)),
         )
       ];
     const TargetPPP =
@@ -47,7 +51,7 @@ const PurchasingPowerParity = ({
         Math.max(
           ...Object.keys(pppData[targetCountry])
             .filter((x) => x !== "currencyName" && x !== "currencyCode")
-            .map((x) => parseInt(x))
+            .map((x) => parseInt(x)),
         )
       ];
     return [SourcePPP, TargetPPP];
@@ -56,44 +60,86 @@ const PurchasingPowerParity = ({
   const calculateTargetAmount = (
     srcAmt: string,
     srcPPP: number,
-    tgtPPP: number
+    tgtPPP: number,
   ) => {
     srcAmt = srcAmt || "0";
     const targetAmount = (parseFloat(srcAmt) / srcPPP) * tgtPPP;
     return `${targetAmount}`;
   };
+
+  // Fetch PPP data from the World Bank API once on mount. This replaces the
+  // old static PPP_DATA import — the API's response shape already matches
+  // what the transform below expects (country.value / date / value).
   useEffect(() => {
-    const data: { [key: string]: CountryPPPType } = PPP_DATA.filter(
-      (x) => x.value != null
-    )
-      .map((x) => {
-        return { country: x.country.value, date: x.date, ppp: x.value };
-      })
-      .reduce((acc, curr) => {
-        return Object.assign(Object.assign({}, acc), {
-          [curr.country]: Object.assign(
-            Object.assign({}, acc[curr.country as keyof typeof acc] || []),
-            {
-              [curr.date]: curr.ppp,
-              currencyName: CURRENCY_CODES.find(
-                (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-              )
-                ? CURRENCY_CODES.find(
-                    (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-                  )?.currency_name
-                : curr.country.substring(0, 3).toUpperCase(),
-              currencyCode: CURRENCY_CODES.find(
-                (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-              )
-                ? CURRENCY_CODES.find(
-                    (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-                  )?.currency_code
-                : "en-US",
-            }
-          ),
-        });
-      }, {});
-    setData(data);
+    let cancelled = false;
+
+    const loadPPPData = async () => {
+      setPppLoading(true);
+      setPppError(null);
+      try {
+        const records = await fetchPPPData();
+        if (cancelled) return;
+
+        const transformed: { [key: string]: CountryPPPType } = records
+          .filter((x) => x.value != null)
+          .map((x) => {
+            return { country: x.country.value, date: x.date, ppp: x.value };
+          })
+          .reduce((acc, curr) => {
+            return Object.assign(Object.assign({}, acc), {
+              [curr.country]: Object.assign(
+                Object.assign({}, acc[curr.country as keyof typeof acc] || []),
+                {
+                  [curr.date]: curr.ppp,
+                  currencyName: CURRENCY_CODES.find(
+                    (cc) =>
+                      cc.name.toLowerCase() === curr.country.toLowerCase(),
+                  )
+                    ? CURRENCY_CODES.find(
+                        (cc) =>
+                          cc.name.toLowerCase() === curr.country.toLowerCase(),
+                      )?.currency_name
+                    : curr.country.substring(0, 3).toUpperCase(),
+                  currencyCode: CURRENCY_CODES.find(
+                    (cc) =>
+                      cc.name.toLowerCase() === curr.country.toLowerCase(),
+                  )
+                    ? CURRENCY_CODES.find(
+                        (cc) =>
+                          cc.name.toLowerCase() === curr.country.toLowerCase(),
+                      )?.currency_code
+                    : "en-US",
+                },
+              ),
+            });
+          }, {});
+
+        setData(transformed);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to fetch PPP data:", err);
+          setPppError(
+            "Unable to load purchasing power data right now. Please try again shortly.",
+          );
+        }
+      } finally {
+        if (!cancelled) setPppLoading(false);
+      }
+    };
+
+    loadPPPData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Recalculate amounts whenever the selected countries, amount, or the
+  // fetched PPP data itself changes. Guarded until PPP data has loaded and
+  // both selected countries exist in it.
+  useEffect(() => {
+    if (pppLoading || pppError) return;
+    if (!data[srcCountry] || !data[tgtCountry]) return;
+
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);
 
     setTgtAmt(calculateTargetAmount(srcAmt, sourcePPP, targetPPP));
@@ -101,18 +147,19 @@ const PurchasingPowerParity = ({
     setTargetCurrencySymbol(
       getCurrencySymbol(
         data[tgtCountry].currencyCode,
-        data[tgtCountry]?.currencyName
-      )
+        data[tgtCountry]?.currencyName,
+      ),
     );
     setTargetLocale(data[tgtCountry].currencyCode);
     setSourceCurrencyName(data[srcCountry].currencyName);
     setSourceCurrencySymbol(
       getCurrencySymbol(
         data[srcCountry].currencyCode,
-        data[srcCountry].currencyName
-      )
+        data[srcCountry].currencyName,
+      ),
     );
     setSourceLocale(data[srcCountry].currencyCode);
+
     const getExchangeRates = async () => {
       const sAmt = srcAmt || "0";
       if (!fetchedExData) {
@@ -122,7 +169,7 @@ const PurchasingPowerParity = ({
           fetchedData[targetCurrencyName] && fetchedData[sourceCurrencyName]
             ? (parseFloat(sAmt) * fetchedData[targetCurrencyName]) /
                 fetchedData[sourceCurrencyName]
-            : 0
+            : 0,
         );
       } else {
         const exhangeAmt =
@@ -141,7 +188,29 @@ const PurchasingPowerParity = ({
     targetCurrencyName,
     fetchedExData,
     srcAmt,
+    data,
+    pppLoading,
+    pppError,
   ]);
+
+  if (pppLoading) {
+    return (
+      <div className={className}>
+        {title && <h5>{title}</h5>}
+        <p className="text-sm opacity-70">Loading purchasing power data…</p>
+      </div>
+    );
+  }
+
+  if (pppError) {
+    return (
+      <div className={className}>
+        {title && <h5>{title}</h5>}
+        <p className="text-sm text-error">{pppError}</p>
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       {title && <h5>{title}</h5>}

@@ -5,6 +5,14 @@ const VITE_CONFIGS = {
   plugins: [react()],
   server: {
     hmr: { overlay: true },
+     proxy: {
+      "/api/imf-inflation": {
+        target: "https://www.imf.org",
+        changeOrigin: true,
+        rewrite: () =>
+          "/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD",
+      },
+    },
   },
   root: "./",
   build: {

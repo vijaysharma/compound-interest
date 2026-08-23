@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import InputAmount from "../components/InputAmount";
-import INFLATION from "../data/inflationData";
 import DisplayCard from "../components/DisplayCard";
 import {
   calculateInflatedPrice,
   checkNAYear,
   getCurrencySymbolAndLocale,
 } from "../utilities/utility";
+import { fetchInflationData, InflationRow } from "../data/api_data";
+
+const YEAR = new Date().getFullYear();
+const START_YEAR = (YEAR - 30).toString();
+const CURRENT_YEAR = YEAR.toString();
+
 const Inflation = ({
   className,
   title,
@@ -14,28 +19,113 @@ const Inflation = ({
   className?: string;
   title?: string;
 }) => {
+  const [inflationData, setInflationData] = useState<InflationRow[]>([]);
+  const [inflationLoading, setInflationLoading] = useState(true);
+  const [inflationError, setInflationError] = useState<string | null>(null);
+
   const [place, setPlace] = useState("India");
   const [principal, setPrincipal] = useState("100");
-  const [startYear, setStartYear] = useState("2004");
-  const [endYear, setEndYear] = useState("2025");
+  const [startYear, setStartYear] = useState(START_YEAR);
+  const [endYear, setEndYear] = useState(CURRENT_YEAR);
   const [inflatedAmount, setInflatedAmount] = useState(0);
   const [deflatedAmount, setDeflatedAmount] = useState(0);
   const [currencySymbol, setCurrencySymbol] = useState("₹");
   const [locale, setLocale] = useState("en-IN");
+
+  // Fetch inflation data from the World Bank API once on mount.
   useEffect(() => {
+    let cancelled = false;
+
+    const loadInflationData = async () => {
+      setInflationLoading(true);
+      setInflationError(null);
+      try {
+        const rows = await fetchInflationData();
+        if (cancelled) return;
+
+        setInflationData(rows);
+
+        // Keep startYear/endYear valid for whatever range actually came back,
+        // rather than assuming 2004/2025 exist in the fetched data.
+        if (rows.length > 0) {
+          const years = rows.map((r) => r.Year);
+          const earliest = Math.min(...years);
+          const latest = Math.max(...years);
+          setStartYear((prev) =>
+            years.includes(parseInt(prev, 10)) ? prev : String(earliest)
+          );
+          setEndYear((prev) =>
+            years.includes(parseInt(prev, 10)) ? prev : String(latest)
+          );
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to fetch inflation data:", err);
+          setInflationError(
+            "Unable to load inflation data right now. Please try again shortly."
+          );
+        }
+      } finally {
+        if (!cancelled) setInflationLoading(false);
+      }
+    };
+
+    loadInflationData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const endYearIsEstimate = (() => {
+    const row = inflationData.find((r) => String(r.Year) === endYear);
+    const value = row?.[place as keyof Omit<InflationRow, "Year" | "id">];
+    return typeof value === "string" && value.endsWith("*");
+  })();
+
+  useEffect(() => {
+    if (inflationLoading || inflationError || inflationData.length === 0)
+      return;
+
     const [ia, da] = calculateInflatedPrice(
       principal,
       startYear,
       endYear,
       place,
-      INFLATION
+      inflationData
     );
-    const [sym, locale] = getCurrencySymbolAndLocale(place);
+    const [sym, loc] = getCurrencySymbolAndLocale(place);
     setInflatedAmount(ia);
     setDeflatedAmount(da);
     setCurrencySymbol(sym);
-    setLocale(locale);
-  }, [principal, startYear, endYear, place]);
+    setLocale(loc);
+  }, [
+    principal,
+    startYear,
+    endYear,
+    place,
+    inflationData,
+    inflationLoading,
+    inflationError,
+  ]);
+
+  if (inflationLoading) {
+    return (
+      <div className={className}>
+        {title && <h5>{title}</h5>}
+        <p className="text-sm opacity-70">Loading inflation data…</p>
+      </div>
+    );
+  }
+
+  if (inflationError) {
+    return (
+      <div className={className}>
+        {title && <h5>{title}</h5>}
+        <p className="text-sm text-error">{inflationError}</p>
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       {title && <h5>{title}</h5>}
@@ -90,7 +180,7 @@ const Inflation = ({
           value={startYear}
           onChange={(e) => setStartYear(e.target.value)}
         >
-          {INFLATION.map((inf) => {
+          {inflationData.map((inf) => {
             return (
               checkNAYear(inf, place) && (
                 <option key={`s-${inf.id}`} value={inf.Year}>
@@ -105,7 +195,7 @@ const Inflation = ({
           value={endYear}
           onChange={(e) => setEndYear(e.target.value)}
         >
-          {INFLATION.map((inf) => (
+          {inflationData.map((inf) => (
             <option key={`e-${inf.id}`} value={inf.Year}>
               {inf.Year}
             </option>
@@ -127,6 +217,12 @@ const Inflation = ({
           amount: Math.round(deflatedAmount),
         }}
       />
+      {endYearIsEstimate && (
+        <p className="text-xs opacity-60 mt-2">
+          * {endYear} figure for {place} is an IMF projection — the World
+          Bank hasn't published a confirmed value for this year yet.
+        </p>
+      )}
     </div>
   );
 };

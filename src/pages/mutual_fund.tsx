@@ -8,17 +8,25 @@ import { getStyleVariable, lch_to_rgba } from "../utilities/color-util";
 import StartEndDate from "../components/Date";
 import { fetchAllMfs, fetchMFbySchemeCode } from "../data/api_data";
 
-const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate: React.Dispatch<SetStateAction<boolean>> }) => {
+const MutualFund = ({
+  showDate,
+  setShowDate,
+}: {
+  showDate?: boolean;
+  setShowDate: React.Dispatch<SetStateAction<boolean>>;
+}) => {
   const [jsonAllData, setJsonAllData] = useState<MFJSONType[]>([]);
   const [jsonData, setJsonData] = useState<MFJSONType[]>([]);
   const [jsonNavData, setJsonNavData] = useState<NavType[]>([]);
   const [mfs, setMfs] = useState<MFType[]>([]);
-  const [searchKey, setSearchKey] = useState<string>("SBI Magnum Gilt");
+  const [searchKey, setSearchKey] = useState<string>("Kotak Arbitrage Fund");
   const deferredSearchKey = useDeferredValue(searchKey);
   const [selectedType, setSelectedType] = useState("Direct");
   const [selectedGrowth, setSelectedGrowth] = useState("Growth");
   const [viewChart, setViewChart] = useState(false);
-  const [chartData, setChartData] = useState<{ date: string; nav: number }[]>([]);
+  const [chartData, setChartData] = useState<{ date: string; nav: number }[]>(
+    [],
+  );
   const [chartLineColor, setChartLineColor] = useState("black");
   const [selectedCode, setSelectedCode] = useState("0");
   const [selectedMF, setSelectedMF] = useState("");
@@ -79,20 +87,29 @@ const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate
     setMfs(updatedData);
   }, [jsonData, selectedType, selectedGrowth]);
   useEffect(() => {
-    if (selectedCode !== "0") fetchMFbySchemeCode(selectedCode).then((d) => setJsonNavData(d));
+    if (selectedCode !== "0")
+      fetchMFbySchemeCode(selectedCode).then((d) => setJsonNavData(d));
   }, [selectedCode]);
   useEffect(() => {
     const e = endNav;
     const s = startNav;
     if (e && s) {
-      const trueDuration = (startNav && endNav && getDuration({ startDate: s.date, endDate: e.date })) || 1;
-      const percentage = ((parseFloat(e.nav) / parseFloat(s.nav)) ** (1 / trueDuration) - 1) * 100;
+      const trueDuration =
+        (startNav &&
+          endNav &&
+          getDuration({ startDate: s.date, endDate: e.date })) ||
+        1;
+      const percentage =
+        ((parseFloat(e.nav) / parseFloat(s.nav)) ** (1 / trueDuration) - 1) *
+        100;
       setProfit(percentage);
 
-      const abPercent = ((parseFloat(e.nav) - parseFloat(s.nav)) / parseFloat(s.nav)) * 100;
+      const abPercent =
+        ((parseFloat(e.nav) - parseFloat(s.nav)) / parseFloat(s.nav)) * 100;
       setAbsProfit(abPercent);
 
-      const matureAmount = (parseFloat(invAmt) / parseFloat(s.nav)) * parseFloat(e.nav);
+      const matureAmount =
+        (parseFloat(invAmt) / parseFloat(s.nav)) * parseFloat(e.nav);
       setMatureAmt(parseFloat(matureAmount.toFixed(2)));
 
       const profitAmount = matureAmount - parseFloat(invAmt);
@@ -100,7 +117,8 @@ const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate
     }
   }, [duration, startNav, endNav, invAmt]);
   useEffect(() => {
-    const s = jsonNavData[parseInt(duration)] || jsonNavData[jsonNavData.length - 1];
+    const s =
+      jsonNavData[parseInt(duration)] || jsonNavData[jsonNavData.length - 1];
     const e = jsonNavData[0];
     setEndNav(e);
     setStartNav(s);
@@ -110,12 +128,16 @@ const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate
       const chartJsonData = jsonNavData
         .slice(
           jsonNavData.findIndex((jd) => jd.date === endNav.date),
-          jsonNavData.findIndex((jd) => jd.date === startNav.date) + 1
+          jsonNavData.findIndex((jd) => jd.date === startNav.date) + 1,
         )
         .map((d) => ({ date: d.date, nav: parseFloat(d.nav) }))
         .reverse();
       setChartData(chartJsonData);
-      setChartLineColor(parseFloat(endNav.nav) > parseFloat(startNav.nav) ? lch_to_rgba(getStyleVariable(".stat", "--su")) : lch_to_rgba(getStyleVariable(".stat", "--er")));
+      setChartLineColor(
+        parseFloat(endNav.nav) > parseFloat(startNav.nav)
+          ? lch_to_rgba(getStyleVariable(".stat", "--su"))
+          : lch_to_rgba(getStyleVariable(".stat", "--er")),
+      );
     }
   }, [jsonNavData, startNav, endNav]);
 
@@ -296,24 +318,54 @@ const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate
         </>
       )}
 
-      {showDate && startNav && endNav && <StartEndDate data={jsonNavData} startNav={startNav} endNav={endNav} setStartNav={setStartNav} setEndNav={setEndNav} />}
+      {showDate && startNav && endNav && (
+        <StartEndDate
+          data={jsonNavData}
+          startNav={startNav}
+          endNav={endNav}
+          setStartNav={setStartNav}
+          setEndNav={setEndNav}
+        />
+      )}
 
       <div className="flex gap-2">
-        <input type="text" placeholder="Type here" className="input input-sm input-primary w-full mb-2" value={searchKey} onChange={(e) => setSearchKey(e.target?.value)} />
-        <button className="btn btn-outline btn-primary btn-sm" onClick={() => setShowDate(() => !showDate)}>
+        <input
+          type="text"
+          placeholder="Type here"
+          className="input input-sm input-primary w-full mb-2"
+          value={searchKey}
+          onChange={(e) =>
+            setSearchKey(e.target?.value.replace(/[.*+?^${}()|[\]\\]/g, ""))
+          }
+        />
+        <button
+          className="btn btn-outline btn-primary btn-sm"
+          onClick={() => setShowDate(() => !showDate)}
+        >
           {showDate ? "Time Slots" : "Date Picker"}
         </button>
-        <button className="btn btn-outline btn-primary btn-sm" onClick={() => setViewChart(() => !viewChart)}>
+        <button
+          className="btn btn-outline btn-primary btn-sm"
+          onClick={() => setViewChart(() => !viewChart)}
+        >
           {viewChart ? "List View" : "Chart View"}
         </button>
       </div>
 
       {viewChart && chartData.length > 0 ? (
-        <Chart className="chart-container" jsonData={chartData} mf={selectedMF} color={chartLineColor} />
+        <Chart
+          className="chart-container"
+          jsonData={chartData}
+          mf={selectedMF}
+          color={chartLineColor}
+        />
       ) : (
         <div className="mf-container">
           {mfs.map((mf) => (
-            <label className="label px-0 py-0 pb-2 cursor-pointer justify-start gap-2" key={mf.id}>
+            <label
+              className="label px-0 py-0 pb-2 cursor-pointer justify-start gap-2"
+              key={mf.id}
+            >
               <input
                 type="radio"
                 name="mf"
@@ -361,7 +413,9 @@ const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate
       />
       <div className="stats border-solid border border-primary rounded-bl-none rounded-br-none border-b-0 w-full">
         <div className="stat px-2 py-2">
-          <div className={`stat-value text-xl ${matureAmt > parseFloat(invAmt) ? "text-success" : "text-error"}`}>
+          <div
+            className={`stat-value text-xl ${matureAmt > parseFloat(invAmt) ? "text-success" : "text-error"}`}
+          >
             <span className="stat-title text-xs">
               {`Total Amount on ${endNav?.date}`}
               &nbsp;
@@ -369,7 +423,9 @@ const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate
             <span className="text-sm">₹</span>
             {matureAmt && matureAmt.toLocaleString("en-IN")}
           </div>
-          <div className={`stat-value text-xl check ${profitAmt > 0 ? "text-success" : "text-error"}`}>
+          <div
+            className={`stat-value text-xl check ${profitAmt > 0 ? "text-success" : "text-error"}`}
+          >
             <span className="stat-title text-xs">Amount gained/lost&nbsp;</span>
             <span className="text-sm">₹</span>
             {profitAmt && profitAmt.toLocaleString("en-IN")}
@@ -379,22 +435,32 @@ const MutualFund = ({ showDate, setShowDate }: { showDate?: boolean; setShowDate
       <div className="stats border-solid border border-primary rounded-tl-none rounded-tr-none w-full">
         <div className="stat px-2 py-2">
           <div className="stat-value text-secondary text-xl">
-            <span className="stat-title text-xs">{`Nav on ${startNav?.date}`}&nbsp;</span>
+            <span className="stat-title text-xs">
+              {`Nav on ${startNav?.date}`}&nbsp;
+            </span>
             <span className="text-sm">₹</span>
             {startNav && parseFloat(startNav.nav).toFixed(2)}
           </div>
-          <div className={`stat-value text-xl ${endNav && startNav && parseFloat(endNav.nav) > parseFloat(startNav.nav) ? "text-success" : "text-error"}`}>
-            <span className="stat-title text-xs">{`Nav on ${endNav?.date}`}&nbsp;</span>
+          <div
+            className={`stat-value text-xl ${endNav && startNav && parseFloat(endNav.nav) > parseFloat(startNav.nav) ? "text-success" : "text-error"}`}
+          >
+            <span className="stat-title text-xs">
+              {`Nav on ${endNav?.date}`}&nbsp;
+            </span>
             <span className="text-sm">₹</span>
             {endNav && parseFloat(endNav.nav).toFixed(2)}
           </div>
         </div>
         <div className="stat px-2 py-2">
-          <div className={`stat-value text-xl ${profit > 0 ? "text-success" : "text-error"}`}>
+          <div
+            className={`stat-value text-xl ${profit > 0 ? "text-success" : "text-error"}`}
+          >
             <span className="stat-title text-xs">CAGR&nbsp;</span>
             {profit.toFixed(2)}%
           </div>
-          <div className={`stat-value text-xl ${absProfit > 0 ? "text-success" : "text-error"}`}>
+          <div
+            className={`stat-value text-xl ${absProfit > 0 ? "text-success" : "text-error"}`}
+          >
             <span className="stat-title text-xs">Absolute&nbsp;</span>
             {absProfit.toFixed(2)}%
           </div>

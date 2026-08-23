@@ -1,6 +1,28 @@
 const INFLATION = [
-  { Year: 2025, id: 2025, India: "", EU: "", USA: "", World: "" },
-  { Year: 2024, id: 2024, India: "4.40%", EU: "2.60%", USA: "3.00%", World: "5.80%" },
+  {
+    Year: 2026,
+    id: 2026,
+    India: "4.45%",
+    EU: "2.9%",
+    USA: "3.4%",
+    World: "4.7%",
+  },
+  {
+    Year: 2025,
+    id: 2025,
+    India: "3.28%",
+    EU: "2.5%",
+    USA: "2.65%",
+    World: "4.01%",
+  },
+  {
+    Year: 2024,
+    id: 2024,
+    India: "4.953%",
+    EU: "2.4353%",
+    USA: "3.00%",
+    World: "5.80%",
+  },
   {
     Year: 2023,
     id: 2023,
