@@ -67,6 +67,12 @@ const PurchasingPowerParity = ({
     return `${targetAmount}`;
   };
 
+  // Handle swap: swap source and target countries
+  const handleSwapCountries = () => {
+    setSrcCountry(tgtCountry);
+    setTgtCountry(srcCountry);
+  };
+
   // Fetch PPP data from the World Bank API once on mount. This replaces the
   // old static PPP_DATA import — the API's response shape already matches
   // what the transform below expects (country.value / date / value).
@@ -216,10 +222,10 @@ const PurchasingPowerParity = ({
       {title && <h5>{title}</h5>}
       <div className="join mb-3 w-full">
         <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
-          Source Country
+          Source
         </div>
         <select
-          className="join-item grow w-60 select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
+          className="join-item grow w-24 select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
           value={srcCountry}
           onChange={(e) => setSrcCountry(e.target.value)}
         >
@@ -231,6 +237,30 @@ const PurchasingPowerParity = ({
             );
           })}
         </select>
+        <select
+          className="join-item w-24 grow select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
+          value={tgtCountry}
+          onChange={(e) => setTgtCountry(e.target.value)}
+        >
+          {Object.keys(data).map((c) => (
+            <option key={`tgt-${c}`} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
+          Target
+        </div>
+      </div>
+
+      {/* Swap link */}
+      <div className="text-center mb-3">
+        <button
+          onClick={handleSwapCountries}
+          className="text-sm text-primary hover:underline focus:outline-none"
+        >
+          Swap source & target countries
+        </button>
       </div>
 
       <InputAmount
@@ -264,24 +294,6 @@ const PurchasingPowerParity = ({
         typeSizePrefix="base"
         stepSizePrefix="sm"
       />
-
-      <div className="join mb-3 w-full">
-        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
-          Target Country
-        </div>
-        <select
-          className="join-item w-60 grow select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
-          value={tgtCountry}
-          onChange={(e) => setTgtCountry(e.target.value)}
-        >
-          {Object.keys(data).map((c) => (
-            <option key={`tgt-${c}`} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-
       <DisplayCard
         primaryAmount={parseFloat(parseFloat(tgtAmt).toFixed(2))}
         currencySymbol={targetCurrencySymbol}
@@ -296,7 +308,7 @@ const PurchasingPowerParity = ({
         locale={targetLocale}
         title={`${
           tgtExAmt === 0
-            ? `No exhange data available for ${tgtCountry}'s local currency`
+            ? `No exchange data available for ${tgtCountry}'s local currency`
             : `Converted value in ${tgtCountry}'s local currency`
         }`}
       />
