@@ -1,4 +1,4 @@
-import { EXCHANGE_URL, getMFSchemeCodeUrl, IMF_INFLATION_URL, MF_URL, WORLD_BANK_INFLATION_URL, WORLD_BANK_PPP_URL } from "./API_LIST";
+import { EXCHANGE_URL, getMFSchemeCodeUrl, IMF_INFLATION_URL, IMF_URL, MF_URL, WORLD_BANK_INFLATION_URL, WORLD_BANK_PPP_URL } from "./API_LIST";
 
 export const fetchAllMfs = async () => {
   try {
@@ -143,20 +143,21 @@ async function fetchWorldBankRecords(): Promise<WorldBankInflationRecord[]> {
 }
 
 async function fetchIMFEstimates(): Promise<IMFDataMapperResponse> {
-  try {
-    const res = await fetch(IMF_INFLATION_URL);
-    if (!res.ok) {
-      console.warn(`IMF DataMapper request failed: ${res.status}`);
-      return {};
+  const urls = [IMF_INFLATION_URL, IMF_URL];
+  
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        return (await res.json()) as IMFDataMapperResponse;
+      }
+      console.warn(`IMF request to ${url} failed: ${res.status}`);
+    } catch (err) {
+      console.warn(`IMF request to ${url} failed (network error):`, err);
     }
-    return (await res.json()) as IMFDataMapperResponse;
-  } catch (err) {
-    // Covers network errors, CORS rejections, etc. This is a supplementary
-    // source (just fills in the current year) — don't let its failure take
-    // down the whole inflation fetch, which works fine with World Bank alone.
-    console.warn("IMF DataMapper request failed (network/CORS error):", err);
-    return {};
   }
+  
+  return {};
 }
 
 /**
