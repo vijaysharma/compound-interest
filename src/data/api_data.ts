@@ -1,4 +1,4 @@
-import { EXCHANGE_URL, getMFSchemeCodeUrl, IMF_INFLATION_URL, IMF_URL, MF_URL, WORLD_BANK_INFLATION_URL, WORLD_BANK_PPP_URL } from "./API_LIST";
+import { EXCHANGE_URL, getMFSchemeCodeUrl, IMF_INFLATION_URL, MF_URL, WORLD_BANK_INFLATION_URL, WORLD_BANK_PPP_URL } from "./API_LIST";
 
 export const fetchAllMfs = async () => {
   try {
