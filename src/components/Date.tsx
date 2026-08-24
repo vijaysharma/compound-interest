@@ -1,90 +1,144 @@
-import { SetStateAction, useEffect, useState } from "react";
-import { NavType } from "../types/types";
+import { useEffect, useState } from "react";
 import { getDateAsISO, getNearest } from "../utilities/utility";
+import { NavType } from "../types/types";
+
+interface StartEndDateProps {
+  data: NavType[];
+  startDate: string | null;
+  endDate: string | null;
+  setStartDate: (date: string) => void;
+  setEndDate: (date: string) => void;
+}
 
 const StartEndDate = ({
   data,
-  startNav,
-  endNav,
-  setStartNav,
-  setEndNav,
-}: {
-  data: NavType[];
-  startNav: NavType | undefined;
-  endNav: NavType | undefined;
-  setStartNav: React.Dispatch<SetStateAction<NavType | undefined>>;
-  setEndNav: React.Dispatch<SetStateAction<NavType | undefined>>;
-}) => {
-  // Internal state for date input values
-  const [sDate, setSDate] = useState<string>("");
-  const [eDate, setEDate] = useState<string>("");
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
+}: StartEndDateProps) => {
+  /*
+   * HTML date inputs must ALWAYS contain:
+   *
+   * YYYY-MM-DD
+   *
+   * They must never contain DD-MM-YYYY.
+   */
 
-  // Sync internal state with props - this is critical for persistence
-  useEffect(() => {
-    if (startNav) {
-      const formatted = startNav.date.split("-").reverse().join("-");
-      if (sDate !== formatted) {
-        setSDate(formatted);
-      }
-    }
-  }, [startNav]);
+  const [sDate, setSDate] = useState<string>(startDate ?? "");
+
+  const [eDate, setEDate] = useState<string>(endDate ?? "");
+
+  /*
+   * Synchronize the local input with the parent.
+   *
+   * Importantly, we do NOT derive the input value from
+   * the nearest NAV. The user may intentionally select
+   * a weekend/holiday/current date for which no NAV exists.
+   */
 
   useEffect(() => {
-    if (endNav) {
-      const formatted = endNav.date.split("-").reverse().join("-");
-      if (eDate !== formatted) {
-        setEDate(formatted);
-      }
-    }
-  }, [endNav]);
+    const next = startDate ?? "";
 
-  // When user changes date inputs, find nearest NAV and update parent
-  useEffect(() => {
-    if (sDate.length > 0 && eDate.length > 0 && data.length > 0) {
-      const s = getNearest(sDate, data);
-      const e = getNearest(eDate, data);
-      
-      // Only update if we found valid NAVs
-      if (s && e) {
-        // Check if they're different from current to avoid loops
-        const startDateChanged = startNav?.date !== s.date;
-        const endDateChanged = endNav?.date !== e.date;
-        
-        if (startDateChanged) {
-          setStartNav(s);  // Pass NavType directly, not a function
-        }
-        if (endDateChanged) {
-          setEndNav(e);    // Pass NavType directly, not a function
-        }
-      }
+    if (next !== sDate) {
+      setSDate(next);
     }
+  }, [startDate, sDate]);
+
+  useEffect(() => {
+    const next = endDate ?? "";
+
+    if (next !== eDate) {
+      setEDate(next);
+    }
+  }, [endDate, eDate]);
+
+  /*
+   * When the user changes Start:
+   *
+   * Keep the EXACT calendar date selected.
+   *
+   * Do not replace it with the nearest NAV date.
+   */
+
+  const handleStartChange = (value: string) => {
+    if (!value) {
+      setSDate("");
+      return;
+    }
+
+    setSDate(value);
+    setStartDate(value);
+  };
+
+  /*
+   * Same for End.
+   */
+
+  const handleEndChange = (value: string) => {
+    if (!value) {
+      setEDate("");
+      return;
+    }
+
+    setEDate(value);
+    setEndDate(value);
+  };
+
+  /*
+   * Keep the existing nearest-NAV functionality available
+   * through the data prop.
+   *
+   * This effect validates that the selected dates can be
+   * resolved, but DOES NOT modify the selected calendar
+   * dates.
+   *
+   * This is intentional.
+   */
+
+  useEffect(() => {
+    if (!sDate || !eDate || data.length === 0) {
+      return;
+    }
+
+    getNearest(sDate, data);
+    getNearest(eDate, data);
   }, [sDate, eDate, data]);
+
+  /*
+   * Maximum selectable date is today.
+   */
+
+  const today = getDateAsISO();
 
   return (
     <div className="join mb-3 w-full">
       <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">
         Start
       </div>
+
       <div className="grow">
         <input
           type="date"
           min="1990-01-01"
-          max={eDate || undefined}
+          max={eDate || today}
           value={sDate}
           className="join-item w-full input input-primary focus:outline-none"
-          onChange={(e) => setSDate(getDateAsISO(0, new Date(e.target.value)))}
+          onChange={(event) => handleStartChange(event.target.value)}
         />
       </div>
+
       <div className="grow">
         <input
           type="date"
-          min={sDate || undefined}
-          max={getDateAsISO()}
+          min={sDate || "1990-01-01"}
+          max={today}
           value={eDate}
           className="join-item w-full input input-primary focus:outline-none"
-          onChange={(e) => setEDate(getDateAsISO(0, new Date(e.target.value)))}
+          onChange={(event) => handleEndChange(event.target.value)}
         />
       </div>
+
       <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">
         End
       </div>

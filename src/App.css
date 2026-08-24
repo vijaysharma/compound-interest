@@ -20,7 +20,7 @@
 }
 .chart-container,
 .mf-container {
-  height: calc(100dvh - 556px);
+  height: calc(100dvh - 686px);
   min-height: 6rem;
   margin-bottom: 0.5rem;
 }
@@ -28,5 +28,5 @@
   overflow-y: auto;
 }
 .chart-container {
-  min-height: 290px;
+  min-height: 180px;
 }
