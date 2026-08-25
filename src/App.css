@@ -2,12 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-#container {
-  height: calc(100dvh);
-}
-
 .calc-tabs .tab.calc-tab {
-  /* width: calc(100dvw / 5); */
   max-width: 90px;
   padding: 0 16px;
 }
