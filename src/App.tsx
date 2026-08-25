@@ -1,7 +1,13 @@
 import "./App.css";
-import Home from "./pages/home";
+import { Outlet } from "react-router-dom";
+import TopBar from "./components/TopBar";
 
 function App() {
-  return <Home />;
+  return (
+    <>
+      <TopBar />
+      <Outlet />
+    </>
+  );
 }
 export default App;

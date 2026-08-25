@@ -2,16 +2,23 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.tsx";
 import EmiCalculator from "./pages/emiCalculator.tsx";
+import Home from "./pages/home.tsx";
 import "./index.css";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-  },
-  {
-    path: "/emi",
-    element: <EmiCalculator />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: "emi",
+        element: <EmiCalculator />,
+      },
+    ],
   },
 ]);
 
