@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 
 const TopBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+  const title = pathname === "/emi" ? "EMI Calculator" : "Investment Calculator";
 
   return (
     <>
@@ -22,7 +24,7 @@ const TopBar = () => {
             <span className="block h-0.5 w-5 bg-current" />
           </span>
         </button>
-        <Logo /> Financial Calculator
+        <Logo /> {title}
       </div>
       {isMenuOpen && (
         <div className="fixed inset-0 z-50" role="presentation">
@@ -38,7 +40,7 @@ const TopBar = () => {
             aria-label="Navigation menu"
           >
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Navigation</h2>
+              <h2 className="text-lg font-semibold">Financial Calculator</h2>
               <button
                 type="button"
                 className="btn btn-ghost btn-sm btn-square"
