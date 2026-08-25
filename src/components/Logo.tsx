@@ -27,24 +27,21 @@ const Logo = () => {
     localStorage.setItem("th", theme);
   }, [theme]);
   return (
-    <div className="text-center pb-2">
+    <div className="text-center ">
       <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"
         width="60"
-        height="32"
+        height="24"
         viewBox="0 0 139.000000 126.000000"
         preserveAspectRatio="xMidYMid meet"
         className="inline-block animate-jiggle hover:animate-wiggle"
-        fill="oklch(var(--p))"
+        fill="oklch(var(--pc))"
         onClick={() => {
           setTheme(themes[getRandomNumber(0, themes.length)]);
         }}
       >
-        <g
-          transform="translate(0.000000,126.000000) scale(0.100000,-0.100000)"
-          stroke="none"
-        >
+        <g transform="translate(0.000000,126.000000) scale(0.100000,-0.100000)" stroke="none">
           <path
             d="M222 1234 c-23 -10 -34 -54 -22 -90 11 -32 71 -94 91 -94 6 0 8 16 4
 44 -6 36 -3 52 16 85 12 23 20 44 16 47 -9 9 -89 15 -105 8z"

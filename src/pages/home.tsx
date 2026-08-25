@@ -29,10 +29,11 @@ const Home = () => {
 
   return (
     <>
-      <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2">
-        <nav>
-          <Logo />
-        </nav>
+      <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto">
+        <div className="flex items-center gap-2 bg-primary text-primary-content font-semibold py-1 mb-2">
+          <Logo /> Financial Calculator
+        </div>
+
         {accessToken === import.meta.env.VITE_ACCESS_TOKEN ? (
           screenWidth >= 1024 ? (
             <Tabs name="tab" activeId={activeId} setActiveId={setActiveId} type="tabs-bordered">
