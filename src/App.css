@@ -3,15 +3,13 @@
 @tailwind utilities;
 
 #container {
-  height: calc(100vh);
-}
-.calc-tabs .tab-content {
-  height: calc(100vh - 80px);
+  height: calc(100dvh);
 }
 
 .calc-tabs .tab.calc-tab {
-  width: calc(100vw / 6);
-  max-width: 85px;
+  /* width: calc(100dvw / 5); */
+  max-width: 90px;
+  padding: 0 16px;
 }
 
 .tabs-lifted > .tab.tab-active:not(.tab-disabled):not([disabled]):before,

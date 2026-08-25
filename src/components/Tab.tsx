@@ -16,7 +16,7 @@ const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
           }
         }}
       />
-      <div role="tabpanel" className="tab-content px-4 py-2 w-full overflow-y-auto">
+      <div role="tabpanel" className="tab-content px-2 py-2 w-full overflow-y-auto">
         {child}
       </div>
     </>

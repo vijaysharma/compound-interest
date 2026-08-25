@@ -29,19 +29,11 @@ const Home = () => {
 
   return (
     <>
-      <div
-        id="container"
-        className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2"
-      >
+      <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2">
         <Logo />
         {accessToken === import.meta.env.VITE_ACCESS_TOKEN ? (
           screenWidth >= 1024 ? (
-            <Tabs
-              name="tab"
-              activeId={activeId}
-              setActiveId={setActiveId}
-              type="tabs-bordered"
-            >
+            <Tabs name="tab" activeId={activeId} setActiveId={setActiveId} type="tabs-bordered">
               <div id="1" data-label="Lumpsum">
                 <div className="w-2/3 max-w-lg justify-self-center">
                   <Lumpsum />
@@ -62,10 +54,7 @@ const Home = () => {
               <div id="3" data-label="Inflation & PPP">
                 <div className="w-2/3 max-w-3xl gap-4 flex justify-self-center">
                   <Inflation title="Inflation" className="grow basis-1" />
-                  <PurchasingPowerParity
-                    title="Purchasing Power Parity"
-                    className="grow basis-1"
-                  />
+                  <PurchasingPowerParity title="Purchasing Power Parity" className="grow basis-1" />
                 </div>
               </div>
               <div id="4" data-label="MF">
@@ -75,12 +64,7 @@ const Home = () => {
               </div>
             </Tabs>
           ) : (
-            <Tabs
-              name="tab"
-              className="calc-tabs"
-              activeId={activeId}
-              setActiveId={setActiveId}
-            >
+            <Tabs name="tab" className="calc-tabs" activeId={activeId} setActiveId={setActiveId}>
               <div id="1" data-label="Lumpsum">
                 <Lumpsum />
               </div>
