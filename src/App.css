@@ -20,13 +20,20 @@
 }
 .chart-container,
 .mf-container {
-  height: calc(100dvh - 686px);
-  min-height: 6rem;
+  height: 240px;
   margin-bottom: 0.5rem;
 }
 .mf-container {
   overflow-y: auto;
 }
-.chart-container {
-  min-height: 180px;
+
+.fund-name {
+  white-space: nowrap;
+  width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-picker .label {
+  line-height: 1;
 }

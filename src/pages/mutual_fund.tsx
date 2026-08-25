@@ -1058,8 +1058,8 @@ const MutualFund = ({
             aria-hidden="true"
           />
 
-          <span title={title} className="inline-block max-w-full align-bottom">
-            {title && title.substring(0, title.length - 32)}...
+          <span title={title} className="inline-block fund-name max-w-full align-bottom">
+            {title}
           </span>
         </div>
 
@@ -1387,7 +1387,7 @@ const MutualFund = ({
           className="btn btn-outline btn-primary btn-sm"
           onClick={toggleViewChart}
         >
-          {viewChart ? "List View" : "Chart View"}
+          {viewChart ? "List" : "Chart"}
         </button>
       </div>
 

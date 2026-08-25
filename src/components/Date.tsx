@@ -112,8 +112,8 @@ const StartEndDate = ({
   const today = getDateAsISO();
 
   return (
-    <div className="join mb-3 w-full">
-      <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">
+    <div className="join mb-2 w-full date-picker">
+      <div className="label join-item px-2 w-12 bg-primary text-primary-content border-primary text-center text-sm">
         Start
       </div>
 
@@ -123,7 +123,7 @@ const StartEndDate = ({
           min="1990-01-01"
           max={eDate || today}
           value={sDate}
-          className="join-item w-full input input-primary focus:outline-none"
+          className="join-item w-full input input-sm input-primary focus:outline-none"
           onChange={(event) => handleStartChange(event.target.value)}
         />
       </div>
@@ -134,12 +134,12 @@ const StartEndDate = ({
           min={sDate || "1990-01-01"}
           max={today}
           value={eDate}
-          className="join-item w-full input input-primary focus:outline-none"
+          className="join-item w-full input input-sm input-primary focus:outline-none"
           onChange={(event) => handleEndChange(event.target.value)}
         />
       </div>
 
-      <div className="join-item px-4 w-24 bg-primary text-primary-content border-primary text-center text-sm/[46px]">
+      <div className="label join-item px-2 w-12 bg-primary text-primary-content border-primary text-center text-sm">
         End
       </div>
     </div>
