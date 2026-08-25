@@ -1399,7 +1399,11 @@ const MutualFund = ({
 
       {viewChart ? (
         pinnedFunds.length > 0 ? (
-          <Chart className="chart-container" datasets={chartDatasets} />
+          <Chart
+            className="chart-container"
+            datasets={chartDatasets}
+            investmentAmount={parseFloat(invAmt) || 0}
+          />
         ) : (
           <div className="text-center py-4 text-sm opacity-60">
             Select up to 4 funds to see comparison

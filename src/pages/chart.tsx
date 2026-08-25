@@ -15,6 +15,7 @@ interface ChartDataset {
 interface ChartProps {
   className: string;
   datasets: ChartDataset[];
+  investmentAmount: number;
 }
 
 /*
@@ -26,7 +27,6 @@ interface ChartProps {
  *
  * because that format is not reliably parsed by JavaScript.
  */
-
 const getDateTime = (date: string): number => {
   const parts = date.split("-");
 
@@ -35,9 +35,7 @@ const getDateTime = (date: string): number => {
   }
 
   const day = Number(parts[0]);
-
   const month = Number(parts[1]) - 1;
-
   const year = Number(parts[2]);
 
   if (!Number.isFinite(day) || !Number.isFinite(month) || !Number.isFinite(year)) {
@@ -47,7 +45,15 @@ const getDateTime = (date: string): number => {
   return new Date(year, month, day).getTime();
 };
 
-const Chart = ({ className, datasets }: ChartProps) => {
+/*
+ * Format investment values for tooltips.
+ */
+const formatCurrency = (value: number): string =>
+  `₹${value.toLocaleString("en-IN", {
+    maximumFractionDigits: 0,
+  })}`;
+
+const Chart = ({ className, datasets, investmentAmount }: ChartProps) => {
   if (datasets.length === 0) {
     return (
       <div className={`${className} flex items-center justify-center`}>
@@ -58,12 +64,115 @@ const Chart = ({ className, datasets }: ChartProps) => {
 
   /*
    * ==========================================================
+   * VALID INVESTMENT AMOUNT
+   * ==========================================================
+   */
+
+  const initialInvestment =
+    Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
+
+  if (initialInvestment <= 0) {
+    return (
+      <div className={`${className} flex items-center justify-center`}>
+        <span className="text-sm opacity-60">Enter an investment amount to view growth</span>
+      </div>
+    );
+  }
+
+  /*
+   * ==========================================================
+   * PREPARE EACH FUND INDEPENDENTLY
+   * ==========================================================
+   *
+   * Every fund has a different starting NAV.
+   *
+   * Example:
+   *
+   * Fund A:
+   *   Start NAV = 20
+   *   NAV today = 40
+   *
+   * Fund B:
+   *   Start NAV = 50
+   *   NAV today = 75
+   *
+   * For ₹1,00,000:
+   *
+   * Fund A:
+   *   1,00,000 × (40 / 20)
+   *   = 2,00,000
+   *
+   * Fund B:
+   *   1,00,000 × (75 / 50)
+   *   = 1,50,000
+   *
+   * Both lines therefore start at ₹1,00,000.
+   *
+   * This makes the chart a true investment-growth comparison.
+   * ==========================================================
+   */
+
+  const normalizedDatasets = datasets.map((dataset) => {
+    /*
+     * Sort the fund's own data first.
+     */
+
+    const sortedData = [...dataset.data]
+      .filter(
+        (point) =>
+          Number.isFinite(point.nav) && point.nav > 0 && Number.isFinite(getDateTime(point.date))
+      )
+      .sort((a, b) => getDateTime(a.date) - getDateTime(b.date));
+
+    if (sortedData.length === 0) {
+      return {
+        ...dataset,
+        data: [],
+      };
+    }
+
+    /*
+     * The first NAV in the selected range is the
+     * reference NAV for this particular fund.
+     */
+
+    const startingNav = sortedData[0].nav;
+
+    if (!Number.isFinite(startingNav) || startingNav <= 0) {
+      return {
+        ...dataset,
+        data: [],
+      };
+    }
+
+    /*
+     * Convert NAV -> investment value.
+     *
+     * investmentValue =
+     *
+     * initialInvestment *
+     * (currentNAV / startingNAV)
+     */
+
+    const growthData = sortedData.map((point) => ({
+      date: point.date,
+      nav: Number((initialInvestment * (point.nav / startingNav)).toFixed(2)),
+    }));
+
+    return {
+      ...dataset,
+      data: growthData,
+    };
+  });
+
+  /*
+   * ==========================================================
    * COLLECT ALL DATES
    * ==========================================================
    */
 
   const dates = Array.from(
-    new Set(datasets.flatMap((dataset) => dataset.data.map((point) => point.date)))
+    new Set(normalizedDatasets.flatMap((dataset) => dataset.data.map((point) => point.date)))
   );
 
   /*
@@ -85,7 +194,7 @@ const Chart = ({ className, datasets }: ChartProps) => {
       date,
     };
 
-    datasets.forEach((dataset, index) => {
+    normalizedDatasets.forEach((dataset, index) => {
       const point = dataset.data.find((item) => item.date === date);
 
       row[`fund_${index}`] = point?.nav ?? NaN;
@@ -100,17 +209,14 @@ const Chart = ({ className, datasets }: ChartProps) => {
    * ==========================================================
    */
 
-  const series = datasets.map((dataset, index) => ({
+  const series = normalizedDatasets.map((dataset, index) => ({
     type: "line" as const,
     xKey: "date",
     xName: "Date",
     yKey: `fund_${index}`,
     yName: dataset.label,
     /*
-     * Color is explicitly supplied by mutual_fund.tsx.
-     *
-     * Four pinned funds therefore get four different
-     * colors.
+     * Color comes from mutual_fund.tsx.
      */
     stroke: dataset.color,
     marker: {
@@ -123,7 +229,7 @@ const Chart = ({ className, datasets }: ChartProps) => {
         return {
           title: dataset.label,
           content:
-            typeof value === "number" && Number.isFinite(value) ? `₹${value.toFixed(4)}` : "N/A",
+            typeof value === "number" && Number.isFinite(value) ? formatCurrency(value) : "N/A",
         };
       },
     },
@@ -148,9 +254,11 @@ const Chart = ({ className, datasets }: ChartProps) => {
       enableSelecting: true,
     },
     /*
-     * Display-only legend.
+     * We keep the AG Charts legend disabled because
+     * you wanted a display-only legend.
      *
-     * Clicking a legend item will NOT hide/show its line.
+     * The custom legend below is therefore completely
+     * non-clickable.
      */
 
     legend: {
@@ -178,11 +286,11 @@ const Chart = ({ className, datasets }: ChartProps) => {
           avoidCollisions: true,
           fontSize: 9,
           fontWeight: "bold",
+          formatter: ({ value }: { value: number }) => formatCurrency(value),
         },
       },
     ],
   };
-
   return (
     <div className={className}>
       <AgCharts className="chart" options={chartOptions} />
