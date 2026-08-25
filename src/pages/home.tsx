@@ -30,7 +30,9 @@ const Home = () => {
   return (
     <>
       <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2">
-        <Logo />
+        <nav>
+          <Logo />
+        </nav>
         {accessToken === import.meta.env.VITE_ACCESS_TOKEN ? (
           screenWidth >= 1024 ? (
             <Tabs name="tab" activeId={activeId} setActiveId={setActiveId} type="tabs-bordered">

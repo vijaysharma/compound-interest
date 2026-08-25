@@ -1,5 +1,5 @@
 export const config = {
-  runtime: "nodejs",
+  runtime: "edge",
 };
 
 const IMF_URL = "https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD";
