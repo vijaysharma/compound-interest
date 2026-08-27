@@ -3,7 +3,7 @@ import Lumpsum from "./lumpsum";
 import SystemacticWithdrawalPlan from "./systematic_withdrawal_plan";
 import Inflation from "./inflation";
 import { useEffect, useState } from "react";
-import MutualFund from "./mutual_fund";
+import MutualFund from "./mutual_fund.tsx";
 import Login from "./login";
 import SystematicInvestmentPlan from "./systematic_investment_plan";
 import PurchasingPowerParity from "./purchasing_power_parity";

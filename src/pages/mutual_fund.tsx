@@ -1,32 +1,13 @@
-import { SetStateAction, useDeferredValue, useEffect, useMemo, useState } from "react";
-
+import React, { SetStateAction, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { MFJSONType, MFType, NavType } from "../types/types";
-
 import JoinedButtonGroup from "../components/JoinedButtonGroup";
 import InputAmount from "../components/InputAmount";
 import StartEndDate from "../components/Date";
-
 import { getDuration, getNearest, navDateToISO } from "../utilities/utility";
-
 import { fetchAllMfs, fetchMFbySchemeCode } from "../data/api_data";
-
 import Chart from "./chart";
 
-/*
- * ============================================================
- * CONSTANTS
- * ============================================================
- */
-
 const STORAGE_KEY = "mutual_fund_last_state";
-
-/*
- * Four deliberately distinct colors.
- *
- * These colors are also persisted with the pinned fund,
- * so the same fund keeps the same chart/indicator color
- * across re-renders and refreshes.
- */
 
 const CHART_COLORS = [
   "#2563eb", // Blue
@@ -35,16 +16,17 @@ const CHART_COLORS = [
   "#ea580c", // Orange
 ];
 
-/*
- * ============================================================
- * TYPES
- * ============================================================
- */
-
 interface PinnedFund {
   schemeCode: string;
   schemeName: string;
   color: string;
+}
+
+export interface MutualFundSelection {
+  funds: PinnedFund[];
+  navData: Record<string, NavType[]>;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 interface SavedState {
@@ -65,64 +47,33 @@ interface FundAnalysis {
   schemeCode: string;
   schemeName: string;
   color: string;
-
   startNav: NavType | undefined;
-
   endNav: NavType | undefined;
-
   profit: number;
   absProfit: number;
-
   matureAmt: number;
   profitAmt: number;
-
   chartData: {
     date: string;
     nav: number;
   }[];
 }
 
-/*
- * ============================================================
- * DEFAULT STATE
- * ============================================================
- */
-
 const getDefaultState = (): SavedState => ({
   searchKey: "Kotak Arbitrage Fund",
-
   selectedType: "Direct",
-
   selectedGrowth: "Growth",
-
   selectedCode: "0",
-
   duration: "1",
-
   invAmt: "100000",
-
   showDate: false,
-
   viewChart: false,
-
   pinnedFunds: [],
-
   startDate: null,
-
   endDate: null,
 });
 
-/*
- * ============================================================
- * LOAD PERSISTED STATE
- * ============================================================
- */
-
 const loadSavedState = (): SavedState => {
-  /*
-   * SSR guard.
-   */
-
   if (typeof window === "undefined") {
     return getDefaultState();
   }
@@ -163,16 +114,6 @@ const loadSavedState = (): SavedState => {
   }
 };
 
-/*
- * ============================================================
- * NAV DATE -> TIMESTAMP
- *
- * NAV API format:
- *
- * DD-MM-YYYY
- * ============================================================
- */
-
 const getNavDateTime = (date: string): number => {
   const parts = date.split("-");
 
@@ -193,100 +134,31 @@ const getNavDateTime = (date: string): number => {
   return new Date(year, month, day).getTime();
 };
 
-/*
- * ============================================================
- * COMPONENT
- * ============================================================
- */
-
 const MutualFund = ({
   setShowDate: propSetShowDate,
+  onSelectionChange,
 }: {
   showDate?: boolean;
   setShowDate: React.Dispatch<SetStateAction<boolean>>;
+  onSelectionChange?: (selection: MutualFundSelection) => void;
 }) => {
-  /*
-   * Restore UI state ONCE.
-   */
-
   const savedState = useMemo(() => loadSavedState(), []);
-
-  /*
-   * ==========================================================
-   * MASTER MUTUAL FUND DATA
-   * ==========================================================
-   */
-
   const [jsonAllData, setJsonAllData] = useState<MFJSONType[]>([]);
-
   const [mfs, setMfs] = useState<MFType[]>([]);
-
-  /*
-   * ==========================================================
-   * SEARCH / FILTER STATE
-   * ==========================================================
-   */
-
   const [searchKey, setSearchKey] = useState<string>(savedState.searchKey);
-
   const deferredSearchKey = useDeferredValue(searchKey);
-
   const [selectedType, setSelectedType] = useState<string>(savedState.selectedType);
-
   const [selectedGrowth, setSelectedGrowth] = useState<string>(savedState.selectedGrowth);
-
-  /*
-   * ==========================================================
-   * ACTIVE FUND
-   * ==========================================================
-   */
-
   const [selectedCode, setSelectedCode] = useState<string>(savedState.selectedCode);
-
   const [jsonNavData, setJsonNavData] = useState<NavType[]>([]);
-
-  /*
-   * ==========================================================
-   * PINNED FUNDS
-   * ==========================================================
-   */
-
   const [pinnedFunds, setPinnedFunds] = useState<PinnedFund[]>(savedState.pinnedFunds);
-
-  /*
-   * ==========================================================
-   * INDEPENDENT NAV CACHE
-   *
-   * schemeCode -> NAV[]
-   * ==========================================================
-   */
-
   const [pinnedNavData, setPinnedNavData] = useState<Record<string, NavType[]>>({});
-
-  /*
-   * ==========================================================
-   * GLOBAL COMPARISON DATE RANGE
-   * ==========================================================
-   */
-
   const [startDate, setStartDate] = useState<string | null>(savedState.startDate);
-
   const [endDate, setEndDate] = useState<string | null>(savedState.endDate);
-
-  /*
-   * ==========================================================
-   * OTHER UI STATE
-   * ==========================================================
-   */
-
   const [duration, setDuration] = useState<string>(savedState.duration);
-
   const [showDate, setShowDate] = useState<boolean>(savedState.showDate);
-
   const [invAmt, setInvAmt] = useState<string>(savedState.invAmt);
-
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
-
   const [error, setError] = useState<{
     status: string;
     message: string;
@@ -295,11 +167,14 @@ const MutualFund = ({
     message: "",
   });
 
-  /*
-   * ==========================================================
-   * PERSIST STATE
-   * ==========================================================
-   */
+  useEffect(() => {
+    onSelectionChange?.({
+      funds: pinnedFunds,
+      navData: pinnedNavData,
+      startDate,
+      endDate,
+    });
+  }, [onSelectionChange, pinnedFunds, pinnedNavData, startDate, endDate]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -315,13 +190,7 @@ const MutualFund = ({
       invAmt,
       showDate,
       viewChart,
-
-      /*
-       * Persist up to four funds.
-       */
-
       pinnedFunds: pinnedFunds.slice(0, 4),
-
       startDate,
       endDate,
     };
@@ -344,12 +213,6 @@ const MutualFund = ({
     startDate,
     endDate,
   ]);
-
-  /*
-   * ==========================================================
-   * FETCH ALL MUTUAL FUNDS
-   * ==========================================================
-   */
 
   useEffect(() => {
     let cancelled = false;
@@ -378,12 +241,6 @@ const MutualFund = ({
     };
   }, []);
 
-  /*
-   * ==========================================================
-   * FILTER HELPER
-   * ==========================================================
-   */
-
   const filterMfs = (funds: MFType[], filterKey: string): MFType[] => {
     let expression = filterKey;
 
@@ -400,14 +257,6 @@ const MutualFund = ({
     return funds.filter((mf) => RegExp(expression, "i").test(mf.name));
   };
 
-  /*
-   * ==========================================================
-   * BUILD FUND LIST
-   *
-   * Pinned funds are ALWAYS FIRST.
-   * ==========================================================
-   */
-
   useEffect(() => {
     const allFunds: MFType[] = jsonAllData.map((fund: MFJSONType, index: number) => ({
       id: `${index}`,
@@ -416,17 +265,9 @@ const MutualFund = ({
     }));
 
     let filtered = filterMfs(allFunds, selectedType);
-
     filtered = filterMfs(filtered, selectedGrowth);
-
-    /*
-     * Search.
-     */
-
     const search = deferredSearchKey.trim();
-
     let searched = filtered;
-
     if (search) {
       const searchParts = search
         .split(/\s+/)
@@ -439,35 +280,18 @@ const MutualFund = ({
           searchParts.map((part) => `(?=.*?\\b${part})`).join("") + ".*",
           "i"
         );
-
         searched = filtered.filter((fund) => expression.test(fund.name));
       }
     }
-
-    /*
-     * Pinned funds.
-     */
-
     const pinned = pinnedFunds
       .map((pinnedFund) => filtered.find((fund) => String(fund.value) === pinnedFund.schemeCode))
       .filter((fund): fund is MFType => Boolean(fund));
-
-    /*
-     * Remove pinned funds from normal search results.
-     */
-
     const unpinned = searched.filter(
       (fund) => !pinnedFunds.some((pinnedFund) => pinnedFund.schemeCode === String(fund.value))
     );
 
     setMfs([...pinned, ...unpinned]);
   }, [jsonAllData, deferredSearchKey, selectedType, selectedGrowth, pinnedFunds]);
-
-  /*
-   * ==========================================================
-   * RESTORE ALL PINNED NAV DATA AFTER REFRESH
-   * ==========================================================
-   */
 
   useEffect(() => {
     if (pinnedFunds.length === 0) {
@@ -498,12 +322,6 @@ const MutualFund = ({
         return;
       }
 
-      /*
-       * MERGE.
-       *
-       * Never replace another pinned fund's data.
-       */
-
       setPinnedNavData((previous) => {
         const next = {
           ...previous,
@@ -528,25 +346,13 @@ const MutualFund = ({
     };
   }, [pinnedFunds]);
 
-  /*
-   * ==========================================================
-   * LOAD ACTIVE FUND
-   * ==========================================================
-   */
-
   useEffect(() => {
     if (!selectedCode || selectedCode === "0") {
       setJsonNavData([]);
-
       return;
     }
 
     let cancelled = false;
-
-    /*
-     * Show cached data immediately.
-     */
-
     const cached = pinnedNavData[selectedCode];
 
     if (cached) {

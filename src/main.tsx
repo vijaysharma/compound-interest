@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.tsx";
 import EmiCalculator from "./pages/emiCalculator.tsx";
 import Home from "./pages/home.tsx";
+import MutualFunds from "./pages/mutualFunds.tsx";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
       {
         path: "emi",
         element: <EmiCalculator />,
+      },
+      {
+        path: "mutual-funds",
+        element: <MutualFunds />,
       },
     ],
   },

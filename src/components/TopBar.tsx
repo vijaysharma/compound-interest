@@ -5,7 +5,12 @@ import Logo from "./Logo";
 const TopBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
-  const title = pathname === "/emi" ? "EMI Calculator" : "Investment Calculator";
+  const title =
+    pathname === "/emi"
+      ? "EMI Calculator"
+      : pathname === "/mutual-funds"
+        ? "Mutual Funds"
+        : "Investment Calculator";
 
   return (
     <>
@@ -66,6 +71,13 @@ const TopBar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 EMI Calculator
+              </Link>
+              <Link
+                to="/mutual-funds"
+                className="btn btn-ghost w-full justify-start"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Mutual Funds
               </Link>
             </nav>
           </aside>

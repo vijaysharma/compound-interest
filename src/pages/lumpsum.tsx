@@ -27,14 +27,7 @@ const Lumpsum = () => {
     const finalAmount =
       invType === "tgt"
         ? calculatePrincipal(pa, rtRoi, frequency, rt.tenure, rt.tenureFormat)
-        : calculateInterest(
-            pa,
-            rtRoi,
-            mode,
-            frequency,
-            rt.tenure,
-            rt.tenureFormat
-          );
+        : calculateInterest(pa, rtRoi, mode, frequency, rt.tenure, rt.tenureFormat);
     if (mode === "100" && invType === "inv") {
       setPayoutAmount(Math.round(finalAmount) + Math.round(parseFloat(pa)));
     } else {
