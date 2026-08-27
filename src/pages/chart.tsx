@@ -1,5 +1,5 @@
 import { AgCharts } from "ag-charts-react";
-import { AgChartOptions } from "ag-charts-types";
+import { AgCartesianChartOptions } from "ag-charts-types";
 
 interface ChartPoint {
   date: string;
@@ -241,7 +241,7 @@ const Chart = ({ className, datasets, investmentAmount }: ChartProps) => {
    * ==========================================================
    */
 
-  const chartOptions: AgChartOptions = {
+  const chartOptions: AgCartesianChartOptions = {
     background: {
       visible: false,
     },
@@ -267,8 +267,12 @@ const Chart = ({ className, datasets, investmentAmount }: ChartProps) => {
       toggleSeries: false,
     },
     series,
-    axes: [
-      {
+    /*
+     * AG Charts v14 keys axes by name instead of taking an array.
+     * `x` and `y` are the default cartesian keys the series bind to.
+     */
+    axes: {
+      x: {
         type: "category",
         position: "bottom",
         label: {
@@ -279,7 +283,7 @@ const Chart = ({ className, datasets, investmentAmount }: ChartProps) => {
           fontWeight: "bold",
         },
       },
-      {
+      y: {
         type: "number",
         position: "left",
         label: {
@@ -289,7 +293,7 @@ const Chart = ({ className, datasets, investmentAmount }: ChartProps) => {
           formatter: ({ value }: { value: number }) => formatCurrency(value),
         },
       },
-    ],
+    },
   };
   return (
     <div className={className}>

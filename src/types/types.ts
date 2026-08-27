@@ -79,16 +79,27 @@ export interface ROIType {
   className?: string;
 }
 
+/**
+ * Props every tab panel must carry. React 19 types default `ReactElement`'s
+ * prop parameter to `unknown`, so tab children are explicitly typed.
+ */
+export interface TabChildProps {
+  id: string;
+  "data-label"?: string;
+}
+
+export type TabChild = ReactElement<TabChildProps>;
+
 export interface TabType {
   name: string;
-  child: ReactElement;
+  child: TabChild;
   selectedId: string;
   setSelectedId?: React.Dispatch<SetStateAction<string>>;
 }
 
 export interface TabsType {
   name: string;
-  children: ReactElement | ReactElement[];
+  children: TabChild | TabChild[];
   activeId?: string;
   setActiveId?: React.Dispatch<SetStateAction<string>>;
   className?: string;

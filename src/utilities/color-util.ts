@@ -6,7 +6,8 @@ export const getStyleVariable = (
     document.querySelector(selectorClass) || document.body
   );
   if (variable) {
-    return `oklch(${style.getPropertyValue(variable)})`;
+    // daisyUI v5 theme variables hold complete colors, not bare oklch components.
+    return style.getPropertyValue(variable);
   }
   return style.color;
 };

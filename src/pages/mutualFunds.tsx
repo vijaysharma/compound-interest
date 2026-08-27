@@ -107,7 +107,7 @@ const MutualFunds = () => {
       {error && <div className="alert alert-error mt-3">{error}</div>}
       <Tabs
         name="mutual-fund-plan"
-        type="tabs-bordered"
+        type="tabs-border"
         activeId={activeTab}
         setActiveId={(id) => {
           setActiveTab(id);
@@ -115,20 +115,20 @@ const MutualFunds = () => {
         }}
       >
         <div id="sip" data-label="SIP">
-          <label className="form-control mb-3">
-            <span className="label-text mb-1">Monthly investment</span>
+          <label className="flex flex-col mb-3">
+            <span className="text-sm mb-1">Monthly investment</span>
             <input
-              className="input input-bordered input-primary"
+              className="input input-primary"
               type="number"
               min="1"
               value={monthlyAmount}
               onChange={(event) => setMonthlyAmount(event.target.value)}
             />
           </label>
-          <label className="form-control mb-3">
-            <span className="label-text mb-1">Yearly investment increase (%)</span>
+          <label className="flex flex-col mb-3">
+            <span className="text-sm mb-1">Yearly investment increase (%)</span>
             <input
-              className="input input-bordered input-primary"
+              className="input input-primary"
               type="number"
               min="0"
               value={investmentStepUp}
@@ -141,30 +141,30 @@ const MutualFunds = () => {
           {renderResults("sip")}
         </div>
         <div id="swp" data-label="SWP">
-          <label className="form-control mb-3">
-            <span className="label-text mb-1">Initial investment</span>
+          <label className="flex flex-col mb-3">
+            <span className="text-sm mb-1">Initial investment</span>
             <input
-              className="input input-bordered input-primary"
+              className="input input-primary"
               type="number"
               min="1"
               value={initialInvestment}
               onChange={(event) => setInitialInvestment(event.target.value)}
             />
           </label>
-          <label className="form-control mb-3">
-            <span className="label-text mb-1">Monthly withdrawal</span>
+          <label className="flex flex-col mb-3">
+            <span className="text-sm mb-1">Monthly withdrawal</span>
             <input
-              className="input input-bordered input-primary"
+              className="input input-primary"
               type="number"
               min="1"
               value={monthlyWithdrawal}
               onChange={(event) => setMonthlyWithdrawal(event.target.value)}
             />
           </label>
-          <label className="form-control mb-3">
-            <span className="label-text mb-1">Yearly withdrawal increase (%)</span>
+          <label className="flex flex-col mb-3">
+            <span className="text-sm mb-1">Yearly withdrawal increase (%)</span>
             <input
-              className="input input-bordered input-primary"
+              className="input input-primary"
               type="number"
               min="0"
               value={withdrawalStepUp}

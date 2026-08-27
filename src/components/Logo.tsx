@@ -36,7 +36,7 @@ const Logo = () => {
         viewBox="0 0 139.000000 126.000000"
         preserveAspectRatio="xMidYMid meet"
         className="inline-block animate-jiggle hover:animate-wiggle"
-        fill="oklch(var(--pc))"
+        fill="var(--color-primary-content)"
         onClick={() => {
           setTheme(themes[getRandomNumber(0, themes.length)]);
         }}

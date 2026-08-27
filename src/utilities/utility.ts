@@ -72,7 +72,7 @@ export const getDuration = ({
 
   const dMS = inclusive ? eDate - sDate + 86400000 : eDate - sDate;
 
-  let result = 0;
+  let result: number;
 
   switch (type) {
     case "Y":
@@ -309,8 +309,8 @@ export const calculateInflatedPrice = (
 };
 
 export const getCurrencySymbolAndLocale = (place: string) => {
-  let sym = "₹";
-  let locale = "en-IN";
+  let sym: string;
+  let locale: string;
 
   switch (place) {
     case "India":

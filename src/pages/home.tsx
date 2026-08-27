@@ -31,7 +31,7 @@ const Home = () => {
       <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto">
         {accessToken === import.meta.env.VITE_ACCESS_TOKEN ? (
           screenWidth >= 1024 ? (
-            <Tabs name="tab" activeId={activeId} setActiveId={setActiveId} type="tabs-bordered">
+            <Tabs name="tab" activeId={activeId} setActiveId={setActiveId} type="tabs-border">
               <div id="1" data-label="Lumpsum">
                 <div className="w-2/3 max-w-lg justify-self-center">
                   <Lumpsum />

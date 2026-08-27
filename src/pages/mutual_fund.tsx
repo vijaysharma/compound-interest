@@ -1249,7 +1249,7 @@ const MutualFund = ({
                   />
                 )}
 
-                <span className="label-text flex-1">{mf.name}</span>
+                <span className="text-sm flex-1">{mf.name}</span>
               </label>
             );
           })}

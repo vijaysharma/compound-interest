@@ -50,7 +50,7 @@ const RateOfInterest = ({
           type="number"
           placeholder="Type here"
           min="0"
-          className="join-item input input-sm input-bordered focus:outline-none text-center input-primary w-24"
+          className="join-item input input-sm focus:outline-none text-center input-primary w-24"
           value={rt.roi ? rt.roi.toString().replace(/^0+/, "") : "0"}
           onChange={(e) => {
             const iv = e.target.value;

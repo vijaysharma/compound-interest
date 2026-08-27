@@ -225,7 +225,7 @@ const PurchasingPowerParity = ({
           Source
         </div>
         <select
-          className="join-item grow w-24 select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
+          className="join-item grow w-24 select border-primary focus:border-primary focus:outline-none shadow-none"
           value={srcCountry}
           onChange={(e) => setSrcCountry(e.target.value)}
         >
@@ -238,7 +238,7 @@ const PurchasingPowerParity = ({
           })}
         </select>
         <select
-          className="join-item w-24 grow select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
+          className="join-item w-24 grow select border-primary focus:border-primary focus:outline-none shadow-none"
           value={tgtCountry}
           onChange={(e) => setTgtCountry(e.target.value)}
         >

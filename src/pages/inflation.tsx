@@ -176,7 +176,7 @@ const Inflation = ({
           Start Year
         </div>
         <select
-          className="join-item w-24 grow select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
+          className="join-item w-24 grow select border-primary focus:border-primary focus:outline-none shadow-none"
           value={startYear}
           onChange={(e) => setStartYear(e.target.value)}
         >
@@ -191,7 +191,7 @@ const Inflation = ({
           })}
         </select>
         <select
-          className="join-item w-24 grow select select-bordered border-primary focus:border-primary focus:outline-none shadow-none"
+          className="join-item w-24 grow select border-primary focus:border-primary focus:outline-none shadow-none"
           value={endYear}
           onChange={(e) => setEndYear(e.target.value)}
         >

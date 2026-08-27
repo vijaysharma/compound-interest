@@ -10,7 +10,7 @@ const JoinedButtonGroup = ({
   btnClass,
 }: JoinedButtonType) => {
   return (
-    <div className={`form-control w-full text-center ${className}`}>
+    <div className={`flex flex-col w-full text-center ${className}`}>
       {title && <h5>{title}</h5>}
 
       <div className="join mx-auto w-full">

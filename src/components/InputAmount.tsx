@@ -35,7 +35,7 @@ const InputAmount = ({
     setInputAmount(total.toString());
   };
   return (
-    <div className={`form-control w-full ${className}`}>
+    <div className={`flex flex-col w-full ${className}`}>
       {!type && <h5>{title}</h5>}
       <div className="focus-within:outline-primary rounded-lg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
         {type && typeData && setType && (
@@ -59,14 +59,14 @@ const InputAmount = ({
             type="number"
             min="0"
             placeholder="Type here"
-            className={`join-item grow input input-bordered input-primary w-full focus:outline-none ${
+            className={`join-item grow input input-primary w-full focus:outline-none ${
               typeSizePrefix ? `input-${typeSizePrefix}` : "input-sm"
             }`}
             value={inputAmount?.replace(/^0+/, "") || 0}
             onChange={(e) => setInputAmount(e.target?.value)}
           />
           <button
-            className={`join-item input-bordered input-primary btn grow ${
+            className={`join-item input-primary btn grow ${
               typeSizePrefix ? `btn-${typeSizePrefix}` : "btn-sm"
             }`}
             onClick={() => {
@@ -104,7 +104,7 @@ const InputAmount = ({
           btnClass="rounded-tl-none rounded-tr-none border-t-0"
         />
       </div>
-      <div className="label-text text-primary text-sm/3 mt-2">
+      <div className="text-primary text-sm/3 mt-2">
         {convertToWords(sanctnum(inputAmount), locale)}
       </div>
     </div>

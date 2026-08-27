@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 #container {
   min-height: calc(100dvh - 48px);
 }
@@ -12,8 +8,8 @@
   padding: 0 16px;
 }
 
-.tabs-lifted > .tab.tab-active:not(.tab-disabled):not([disabled]):before,
-.tabs-lifted > .tab:is(input:checked):before {
+.tabs-lift > .tab.tab-active:not(.tab-disabled):not([disabled]):before,
+.tabs-lift > .tab:is(input:checked):before {
   content: none;
 }
 .chart-container,

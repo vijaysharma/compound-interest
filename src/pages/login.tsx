@@ -21,13 +21,13 @@ const Login = ({
 
       <div className="join w-full">
         <input
-          className="join-item grow input input-bordered input-primary w-full focus:outline-none"
+          className="join-item grow input input-primary w-full focus:outline-none"
           placeholder="Email"
           value={at}
           onChange={(e) => setAT(e.target.value)}
         />
         <button
-          className="join-item btn-bordered btn-primary btn grow"
+          className="join-item btn-primary btn grow"
           onClick={() => login()}
         >
           Login

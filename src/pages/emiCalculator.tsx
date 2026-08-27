@@ -300,9 +300,13 @@ const EmiCalculator: React.FC = () => {
     setPartPayments(updated);
   };
 
-  const updatePartPayment = (index: number, field: keyof PartPayment, value: string | number | boolean) => {
+  const updatePartPayment = <K extends keyof PartPayment>(
+    index: number,
+    field: K,
+    value: PartPayment[K]
+  ) => {
     const updated = [...partPayments];
-    (updated[index] as any)[field] = value;
+    updated[index] = { ...updated[index], [field]: value };
     setPartPayments(updated);
   };
 
@@ -316,9 +320,13 @@ const EmiCalculator: React.FC = () => {
     setRateChanges(updated);
   };
 
-  const updateRateChange = (index: number, field: keyof RateChange, value: string | number | boolean) => {
+  const updateRateChange = <K extends keyof RateChange>(
+    index: number,
+    field: K,
+    value: RateChange[K]
+  ) => {
     const updated = [...rateChanges];
-    (updated[index] as any)[field] = value;
+    updated[index] = { ...updated[index], [field]: value };
     setRateChanges(updated);
   };
 
