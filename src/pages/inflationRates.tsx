@@ -10,7 +10,7 @@ import { fetchInflationData, InflationRow } from '../data/api_data';
 const YEAR = new Date().getFullYear();
 const START_YEAR = (YEAR - 30).toString();
 const CURRENT_YEAR = YEAR.toString();
-const Inflation = ({ className, title }: { className?: string; title?: string }) => {
+const InflationRates = ({ className, title }: { className?: string; title?: string }) => {
   const [inflationData, setInflationData] = useState<InflationRow[]>([]);
   const [inflationLoading, setInflationLoading] = useState(true);
   const [inflationError, setInflationError] = useState<string | null>(null);
@@ -171,4 +171,4 @@ const Inflation = ({ className, title }: { className?: string; title?: string })
     </div>
   );
 };
-export default Inflation;
+export default InflationRates;

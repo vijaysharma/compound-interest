@@ -6,13 +6,7 @@ import InputAmount from '../components/InputAmount.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import { RT } from '../types/types.ts';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
-const SystemacticWithdrawalPlan = ({
-  className,
-  title,
-}: {
-  className?: string;
-  title?: string;
-}) => {
+const FixedRateSWP = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState('35000000');
   const [rt, setRt] = useState('10');
   const [irt, setIRt] = useState('7');
@@ -121,4 +115,4 @@ const SystemacticWithdrawalPlan = ({
     </div>
   );
 };
-export default SystemacticWithdrawalPlan;
+export default FixedRateSWP;

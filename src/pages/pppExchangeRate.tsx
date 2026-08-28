@@ -5,7 +5,7 @@ import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
 import { CountryPPPType, ExchangeRateType } from '../types/types';
 import { fetchExchangeRates, fetchPPPData } from '../data/api_data';
-const PurchasingPowerParity = ({ className, title }: { className?: string; title?: string }) => {
+const PPPExchangeRate = ({ className, title }: { className?: string; title?: string }) => {
   const [data, setData] = useState<{ [key: string]: CountryPPPType }>({});
   const [pppLoading, setPppLoading] = useState(true);
   const [pppError, setPppError] = useState<string | null>(null);
@@ -255,4 +255,4 @@ const PurchasingPowerParity = ({ className, title }: { className?: string; title
     </div>
   );
 };
-export default PurchasingPowerParity;
+export default PPPExchangeRate;

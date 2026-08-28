@@ -6,7 +6,7 @@ import Tenure from '../components/Tenure.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import { RT } from '../types/types.ts';
-const SystematicInvestmentPlan = ({ className, title }: { className?: string; title?: string }) => {
+const RD = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState('10000');
   const [rt, setRt] = useState<RT>({
     roi: '7.1',
@@ -108,4 +108,4 @@ const SystematicInvestmentPlan = ({ className, title }: { className?: string; ti
     </div>
   );
 };
-export default SystematicInvestmentPlan;
+export default RD;

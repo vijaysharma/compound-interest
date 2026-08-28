@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Tabs from '../components/Tabs';
-import MutualFund, { MutualFundSelection } from './mutual_fund.tsx';
+import MutualFund, { MutualFundSelection } from './lumpsum';
 import { calculateSip, calculateSwp, SimulationResult } from '../utilities/mutualFundCalculations';
 const formatCurrency = (value: number) =>
   value.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
@@ -32,7 +32,6 @@ const MutualFunds = () => {
     startDate: null,
     endDate: null,
   });
-  const [showDate, setShowDate] = useState(false);
   const [activeTab, setActiveTab] = useState('sip');
   const [monthlyAmount, setMonthlyAmount] = useState('10000');
   const [initialInvestment, setInitialInvestment] = useState('1000000');
@@ -94,8 +93,8 @@ const MutualFunds = () => {
       </div>
     );
   return (
-    <div className="mx-auto w-full max-w-3xl p-2">
-      <MutualFund showDate={showDate} setShowDate={setShowDate} onSelectionChange={setSelection} />
+    <>
+      <MutualFund onSelectionChange={setSelection} />
       {error && <div className="alert alert-error mt-3">{error}</div>}
       <Tabs
         name="mutual-fund-plan"
@@ -169,7 +168,7 @@ const MutualFunds = () => {
           {renderResults('swp')}
         </div>
       </Tabs>
-    </div>
+    </>
   );
 };
 export default MutualFunds;
