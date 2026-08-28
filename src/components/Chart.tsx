@@ -1,5 +1,7 @@
 import { AgCharts } from 'ag-charts-react';
+import { AllCommunityModule, ModuleRegistry } from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
+ModuleRegistry.registerModules([AllCommunityModule]);
 interface ChartPoint {
   date: string;
   nav: number;

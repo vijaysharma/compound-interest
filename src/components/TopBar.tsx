@@ -36,20 +36,20 @@ const TopBar = ({ className }: { className?: string }) => {
         <div className="fixed inset-0 z-50" role="presentation">
           <button
             type="button"
-            className="absolute inset-0 h-full w-full cursor-default bg-black/40"
+            className="absolute inset-0 h-full w-full cursor-default"
             aria-label="Close navigation menu"
             onClick={() => setIsMenuOpen(false)}
           />
           <aside
             id="navigation-drawer"
-            className="relative h-full w-72 max-w-[85vw] bg-base-100 p-4 text-base-content shadow-xl"
+            className="bg-primary relative h-full w-72 max-w-[85vw] p-4 text-primary-content shadow-xl"
             aria-label="Navigation menu"
           >
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Financial Calculator</h2>
               <button
                 type="button"
-                className="btn btn-ghost btn-sm btn-square"
+                className="btn btn-ghost btn-sm btn-square text-primary-content"
                 aria-label="Close navigation menu"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -58,10 +58,9 @@ const TopBar = ({ className }: { className?: string }) => {
                 </span>
               </button>
             </div>
-            <nav aria-label="Calculator pages">
+            <nav aria-label="Calculator pages" className="text-primary-content">
               <Link
                 to="/"
-                className="btn btn-ghost w-full justify-start"
                 onClick={() => {
                   setNavTitle('Investment Calculator');
                   setIsMenuOpen(false);
@@ -71,7 +70,6 @@ const TopBar = ({ className }: { className?: string }) => {
               </Link>
               <Link
                 to="/emi"
-                className="btn btn-ghost w-full justify-start"
                 onClick={() => {
                   setNavTitle('EMI Calculator');
                   setIsMenuOpen(false);
@@ -79,96 +77,99 @@ const TopBar = ({ className }: { className?: string }) => {
               >
                 EMI Calculator
               </Link>
-              <Link
-                to="/deposits/fd"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('Fixed Deposits');
-                  setIsMenuOpen(false);
-                }}
-              >
-                Fixed Deposits
-              </Link>
-              <Link
-                to="/deposits/rd"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('Recurring Deposits');
-                  setIsMenuOpen(false);
-                }}
-              >
-                Recurring Deposits
-              </Link>
-              <Link
-                to="/economics/inflation-rates"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('Inflation Rates');
-                  setIsMenuOpen(false);
-                }}
-              >
-                Inflation Rates
-              </Link>
-              <Link
-                to="/economics/ppp-exchange-rate"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('PPP Exchange Rate');
-                  setIsMenuOpen(false);
-                }}
-              >
-                PPP Exchange Rate
-              </Link>
-              <Link
-                to="/fixed-plans/fixed-rate-sip"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('Fixed Rate SIP');
-                  setIsMenuOpen(false);
-                }}
-              >
-                Fixed Rate SIP
-              </Link>
-              <Link
-                to="/fixed-plans/fixed-rate-swp"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('Fixed Rate SWP');
-                  setIsMenuOpen(false);
-                }}
-              >
-                Fixed Rate SWP
-              </Link>
-              <Link
-                to="/mutual-funds/lumpsum"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('Lumpsum');
-                  setIsMenuOpen(false);
-                }}
-              >
-                Lumpsum
-              </Link>
-              <Link
-                to="/mutual-funds/sip"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('SIP');
-                  setIsMenuOpen(false);
-                }}
-              >
-                SIP
-              </Link>
-              <Link
-                to="/mutual-funds/swp"
-                className="btn btn-ghost w-full justify-start"
-                onClick={() => {
-                  setNavTitle('SWP');
-                  setIsMenuOpen(false);
-                }}
-              >
-                SWP
-              </Link>
+              <div className="mt-4">
+                <h3 className="px-4 text-xs font-bold uppercase tracking-wide ">Deposits</h3>
+                <Link
+                  to="/deposits/fd"
+                  onClick={() => {
+                    setNavTitle('Fixed Deposits');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Fixed Deposits
+                </Link>
+                <Link
+                  to="/deposits/rd"
+                  onClick={() => {
+                    setNavTitle('Recurring Deposits');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Recurring Deposits
+                </Link>
+              </div>
+              <div className="mt-4">
+                <h3 className="px-4 text-xs font-bold uppercase tracking-wide">Economics</h3>
+                <Link
+                  to="/economics/inflation-rates"
+                  onClick={() => {
+                    setNavTitle('Inflation Rates');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Inflation Rates
+                </Link>
+                <Link
+                  to="/economics/ppp-exchange-rate"
+                  onClick={() => {
+                    setNavTitle('PPP Exchange Rate');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  PPP Exchange Rate
+                </Link>
+              </div>
+              <div className="mt-4">
+                <h3 className="px-4 text-xs font-bold uppercase tracking-wide">Fixed Plans</h3>
+                <Link
+                  to="/fixed-plans/fixed-rate-sip"
+                  onClick={() => {
+                    setNavTitle('Fixed Rate SIP');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Fixed Rate SIP
+                </Link>
+                <Link
+                  to="/fixed-plans/fixed-rate-swp"
+                  onClick={() => {
+                    setNavTitle('Fixed Rate SWP');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Fixed Rate SWP
+                </Link>
+              </div>
+              <div className="mt-4">
+                <h3 className="px-4 text-xs font-bold uppercase tracking-wide">Mutual Funds</h3>
+                <Link
+                  to="/mutual-funds/lumpsum"
+                  onClick={() => {
+                    setNavTitle('Lumpsum');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Lumpsum
+                </Link>
+                <Link
+                  to="/mutual-funds/sip"
+                  onClick={() => {
+                    setNavTitle('SIP');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  SIP
+                </Link>
+                <Link
+                  to="/mutual-funds/swp"
+                  onClick={() => {
+                    setNavTitle('SWP');
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  SWP
+                </Link>
+              </div>
             </nav>
           </aside>
         </div>

@@ -5,7 +5,7 @@ import InputAmount from '../components/InputAmount';
 import StartEndDate from '../components/Date';
 import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
-import Chart from '../components/chart';
+import Chart from '../components/Chart';
 const STORAGE_KEY = 'mutual_fund_last_state';
 const CHART_COLORS = [
   '#2563eb', // Blue
