@@ -1,9 +1,7 @@
 export const config = {
   runtime: "edge",
 };
-
 const IMF_URL = "https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD";
-
 export default async function handler(): Promise<Response> {
   try {
     const imfRes = await fetch(IMF_URL, {
@@ -16,7 +14,6 @@ export default async function handler(): Promise<Response> {
       });
     }
     const data = await imfRes.json();
-
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: {

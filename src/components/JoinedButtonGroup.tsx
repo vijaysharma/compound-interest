@@ -1,5 +1,4 @@
 import { JoinedButtonType } from "../types/types";
-
 const JoinedButtonGroup = ({
   data,
   selectedValue,
@@ -12,7 +11,6 @@ const JoinedButtonGroup = ({
   return (
     <div className={`flex flex-col w-full text-center ${className}`}>
       {title && <h5>{title}</h5>}
-
       <div className="join mx-auto w-full">
         {data &&
           data.map((p) => (
@@ -30,5 +28,4 @@ const JoinedButtonGroup = ({
     </div>
   );
 };
-
 export default JoinedButtonGroup;

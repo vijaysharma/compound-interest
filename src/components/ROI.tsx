@@ -1,6 +1,5 @@
 import { sanctnum } from "../utilities/numSanitity";
 import { ROIType } from "../types/types";
-
 const ROI = ({ rt, setRt, title, className }: ROIType) => {
   const setROI = (n: number) => {
     let roi = parseFloat(rt);

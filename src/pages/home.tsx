@@ -1,31 +1,18 @@
-import Tabs from "../components/Tabs";
-import Lumpsum from "./lumpsum";
-import SystemacticWithdrawalPlan from "./systematic_withdrawal_plan";
-import Inflation from "./inflation";
-import { useEffect, useState } from "react";
-import MutualFund from "./mutual_fund.tsx";
-import Login from "./login";
-import SystematicInvestmentPlan from "./systematic_investment_plan";
-import PurchasingPowerParity from "./purchasing_power_parity";
-
+import Tabs from '../components/Tabs';
+import Lumpsum from './lumpsum';
+import SystemacticWithdrawalPlan from './systematic_withdrawal_plan';
+import Inflation from './inflation';
+import { useState } from 'react';
+import MutualFund from './mutual_fund.tsx';
+import Login from './login';
+import SystematicInvestmentPlan from './systematic_investment_plan';
+import PurchasingPowerParity from './purchasing_power_parity';
 const Home = () => {
-  const getStoredId = (): string => window.localStorage.getItem("aid") || "1";
+  const getStoredId = (): string => window.localStorage.getItem('aid') || '1';
   const [activeId, setActiveId] = useState(() => getStoredId());
-  const [accessToken, setAccessToken] = useState("");
-  const [screenWidth, setSWidth] = useState(1024);
-  const [showDate, setShowDate] = useState(false);
-
-  useEffect(() => {
-    setActiveId(() => getStoredId());
-
-    const a_t = localStorage.getItem("at");
-    if (a_t && a_t?.length > 0) setAccessToken(a_t);
-
-    const sWidth = window.innerWidth;
-    setSWidth(sWidth);
-    if (sWidth >= 1024) setShowDate(true);
-  }, [activeId]);
-
+  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('at') || '');
+  const [screenWidth] = useState(() => window.innerWidth);
+  const [showDate, setShowDate] = useState(() => window.innerWidth >= 1024);
   return (
     <>
       <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto">
@@ -92,5 +79,4 @@ const Home = () => {
     </>
   );
 };
-
 export default Home;

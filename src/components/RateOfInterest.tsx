@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { sanctnum } from "../utilities/numSanitity";
 import { RateOfInterestType } from "../types/types";
-
 const RateOfInterest = ({
   rt,
   setRt,
@@ -82,5 +81,4 @@ const RateOfInterest = ({
     </div>
   );
 };
-
 export default RateOfInterest;

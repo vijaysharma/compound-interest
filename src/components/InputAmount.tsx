@@ -3,7 +3,6 @@ import JoinedButtonGroup from "./JoinedButtonGroup";
 import convertToWords from "../utilities/currency";
 import { sanctnum } from "../utilities/numSanitity";
 import { InputType } from "../types/types";
-
 const InputAmount = ({
   inputAmount,
   setInputAmount,
@@ -110,5 +109,4 @@ const InputAmount = ({
     </div>
   );
 };
-
 export default InputAmount;

@@ -1,5 +1,4 @@
 import { ReactElement, SetStateAction } from "react";
-
 export interface DisplayType {
   primaryAmount: number;
   title?: string;
@@ -11,7 +10,6 @@ export interface DisplayType {
   currencySymbol?: string;
   locale?: string;
 }
-
 export interface InputType {
   title?: string;
   className?: string;
@@ -32,19 +30,16 @@ export interface InputType {
   stepSizePrefix?: string;
   locale?: string;
 }
-
 export interface ButtonDataType {
   id: string;
   value: string;
   title: string;
 }
-
 export interface StepAmountType {
   id: string;
   value: string;
   title: string;
 }
-
 export interface JoinedButtonType {
   data: ButtonDataType[];
   selectedValue: string;
@@ -59,7 +54,6 @@ export interface JoinedButtonType {
   className?: string;
   btnClass?: string;
 }
-
 export interface RT {
   roi?: string;
   tenure: string;
@@ -71,14 +65,12 @@ export interface RateOfInterestType {
   title?: string;
   className?: string;
 }
-
 export interface ROIType {
   rt: string;
   setRt: React.Dispatch<SetStateAction<string>>;
   title?: string;
   className?: string;
 }
-
 /**
  * Props every tab panel must carry. React 19 types default `ReactElement`'s
  * prop parameter to `unknown`, so tab children are explicitly typed.
@@ -87,16 +79,13 @@ export interface TabChildProps {
   id: string;
   "data-label"?: string;
 }
-
 export type TabChild = ReactElement<TabChildProps>;
-
 export interface TabType {
   name: string;
   child: TabChild;
   selectedId: string;
   setSelectedId?: React.Dispatch<SetStateAction<string>>;
 }
-
 export interface TabsType {
   name: string;
   children: TabChild | TabChild[];
@@ -105,13 +94,11 @@ export interface TabsType {
   className?: string;
   type?: string;
 }
-
 export interface TenureType {
   rt: RT;
   setRt: React.Dispatch<SetStateAction<RT>>;
   className: string;
 }
-
 export interface INFLATION_TYPE {
   Year: number;
   id: number;
@@ -120,7 +107,6 @@ export interface INFLATION_TYPE {
   USA: string;
   World: string;
 }
-
 export interface PPPDataType {
   indicator: {
     id: string;
@@ -137,30 +123,25 @@ export interface PPPDataType {
   obs_status: string;
   decimal: number;
 }
-
 export interface CountryPPPType {
   [key: number]: number;
   currencyCode: string;
   currencyName: string;
 }
-
 export interface ExchangeRateType {
   [key: string]: number;
 }
-
 export interface MFType {
   default?: boolean;
   id: string;
   value: number;
   name: string;
 }
-
 export interface MFJSONType {
   default?: boolean;
   schemeCode: number;
   schemeName: string;
 }
-
 export interface NavType {
   date: string;
   nav: string;

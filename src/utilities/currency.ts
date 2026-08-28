@@ -1,6 +1,5 @@
 import { ToWords } from "to-words";
 import { IndianFormat } from "../data/currencyCodes";
-
 const convertToWords = (values: number, i18N = "en-IN"): string => {
   const validLocales = [
     "en-AE",
@@ -46,5 +45,4 @@ export const getCurrencySymbol = (locale: string, currency: string): string => {
     .replace(/\d/g, "")
     .trim();
 };
-
 export default convertToWords;

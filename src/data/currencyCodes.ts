@@ -413,7 +413,6 @@ const CURRENCY_CODES = [
   { name: "ZIMBABWE", currency_name: "ZWL", currency_code: "en-ZW" },
   { name: "ÅLAND ISLANDS", currency_name: "EUR", currency_code: "sv-FI" },
 ];
-
 export const IndianFormat = [
   "en-IN",
   "hi-IN",
@@ -432,5 +431,4 @@ export const IndianFormat = [
   "my-MM",
   "th-TH",
 ];
-
 export default CURRENCY_CODES;

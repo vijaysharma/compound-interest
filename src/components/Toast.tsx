@@ -13,5 +13,4 @@ const Toast = ({
     </div>
   );
 };
-
 export default Toast;

@@ -1,5 +1,4 @@
 import { TabType } from "../types/types";
-
 const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
   return (
     <>
@@ -22,5 +21,4 @@ const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
     </>
   );
 };
-
 export default Tab;

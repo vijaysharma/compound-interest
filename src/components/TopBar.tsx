@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
-
 const TopBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
@@ -11,7 +10,6 @@ const TopBar = () => {
       : pathname === "/mutual-funds"
         ? "Mutual Funds"
         : "Investment Calculator";
-
   return (
     <>
       <div className="flex items-center gap-2 bg-primary text-primary-content font-semibold py-1 mb-2">
@@ -86,5 +84,4 @@ const TopBar = () => {
     </>
   );
 };
-
 export default TopBar;

@@ -92,5 +92,4 @@ l-60 0 0 -59z"
     </div>
   );
 };
-
 export default Logo;

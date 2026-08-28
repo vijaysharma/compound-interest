@@ -1,11 +1,9 @@
 import { NavType } from "../types/types";
 import { getNearest } from "./utility";
-
 export interface NavPoint {
   date: string;
   nav: number;
 }
-
 export interface SimulationResult {
   invested: number;
   withdrawn: number;
@@ -14,19 +12,16 @@ export interface SimulationResult {
   lastNav: number;
   installments: number;
 }
-
 const toDate = (date: string): Date => {
   const [year, month, day] = date.split("-").map(Number);
   return new Date(year, month - 1, day);
 };
-
 const toISO = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
-
 const addMonths = (date: Date, months: number): Date => {
   const next = new Date(date);
   next.setDate(1);
@@ -35,13 +30,11 @@ const addMonths = (date: Date, months: number): Date => {
   next.setDate(Math.min(date.getDate(), lastDay));
   return next;
 };
-
 const getNav = (isoDate: string, data: NavType[]): NavPoint | undefined => {
   const nearest = getNearest(isoDate, data);
   const nav = Number(nearest?.nav);
   return nearest && Number.isFinite(nav) && nav > 0 ? { date: nearest.date, nav } : undefined;
 };
-
 const getMonthlyDates = (startDate: string, endDate: string): string[] => {
   const start = toDate(startDate);
   const end = toDate(endDate);
@@ -53,7 +46,6 @@ const getMonthlyDates = (startDate: string, endDate: string): string[] => {
   }
   return dates;
 };
-
 const validateInputs = (startDate: string, endDate: string, amount: number) => {
   if (!startDate || !endDate || toDate(startDate) > toDate(endDate)) {
     throw new Error("Choose a valid start and end date.");
@@ -62,7 +54,6 @@ const validateInputs = (startDate: string, endDate: string, amount: number) => {
     throw new Error("Enter an amount greater than zero.");
   }
 };
-
 export const calculateSip = (
   navData: NavType[],
   startDate: string,
@@ -75,7 +66,6 @@ export const calculateSip = (
   let invested = 0;
   let units = 0;
   let lastNav = 0;
-
   for (const [index, date] of dates.entries()) {
     const nav = getNav(date, navData);
     if (!nav) continue;
@@ -84,7 +74,6 @@ export const calculateSip = (
     units += amount / nav.nav;
     lastNav = nav.nav;
   }
-
   if (!units || !lastNav) throw new Error("No NAV data is available for the selected dates.");
   const finalNav = getNav(endDate, navData)?.nav ?? lastNav;
   return {
@@ -96,7 +85,6 @@ export const calculateSip = (
     installments: dates.length,
   };
 };
-
 export const calculateSwp = (
   navData: NavType[],
   startDate: string,
@@ -109,12 +97,10 @@ export const calculateSwp = (
   validateInputs(startDate, endDate, monthlyWithdrawal);
   const startNav = getNav(startDate, navData);
   if (!startNav) throw new Error("No NAV data is available for the selected start date.");
-
   let units = initialInvestment / startNav.nav;
   let withdrawn = 0;
   let lastNav = startNav.nav;
   const dates = getMonthlyDates(startDate, endDate).slice(1);
-
   for (const [index, date] of dates.entries()) {
     const nav = getNav(date, navData);
     if (!nav) continue;
@@ -127,7 +113,6 @@ export const calculateSwp = (
       break;
     }
   }
-
   const finalNav = getNav(endDate, navData)?.nav ?? lastNav;
   return {
     invested: initialInvestment,

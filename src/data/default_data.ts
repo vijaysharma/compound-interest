@@ -1,5 +1,4 @@
 import { RT, StepAmountType } from "../types/types";
-
 // Lumpsum Calculation
 export const PA = "3000000";
 export const RATE_TENURE: RT = {
@@ -16,14 +15,12 @@ export const STEP_AMOUNT: StepAmountType[] = [
   { id: "p6", value: "500", title: "500" },
   { id: "p7", value: "50", title: "50" },
 ];
-
 export const PAYOUT_MODE_DATA = [
   { id: "pm1", value: "1", title: "Monthly" },
   { id: "pm2", value: "3", title: "Quarterly" },
   { id: "pm3", value: "12", title: "Yearly" },
   { id: "pm4", value: "100", title: "Cumulative" },
 ];
-
 export const FREQUENCY_DATA = [
   { id: "fr1", value: "12", title: "Monthly" },
   { id: "fr2", value: "4", title: "Quarterly" },
