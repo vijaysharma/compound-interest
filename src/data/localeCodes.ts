@@ -687,5 +687,4 @@ const LOCALE_CODES = [
   { name: "ZAMBIA", code: "zh-XC" },
   { name: "ZIMBABWE", code: "en-US" },
 ];
-
 export default LOCALE_CODES;

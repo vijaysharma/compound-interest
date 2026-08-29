@@ -1,7 +1,10 @@
-/** @type {import('tailwindcss').Config} */
-import daisyui from "daisyui"; // Correct way to import daisyui
+/**
+ * Loaded from src/index.css via `@config`.
+ * Tailwind v4 owns content detection, and daisyUI v5 is registered as a CSS
+ * plugin in src/index.css, so this file only carries the custom animations.
+ * @type {import('tailwindcss').Config}
+ */
 export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       keyframes: {
@@ -1204,9 +1207,5 @@ export default {
         wiggle: "wiggle 0.8s ease 0.25s 2",
       },
     },
-  },
-  plugins: [daisyui],
-  daisyui: {
-    themes: ["light", "emerald", "corporate", "lofi", "fantasy", "wireframe", "luxury", "cmyk", "lemonade", "night", "winter", "dim", "nord"],
   },
 };

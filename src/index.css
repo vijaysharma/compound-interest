@@ -1,3 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Custom keyframes/animations still live in the JS config. */
+@config "../tailwind.config.js";
+
+@plugin "daisyui" {
+  themes:
+    light --default, emerald, corporate, lofi, fantasy, wireframe, luxury, cmyk,
+    lemonade, night, winter, dim, nord;
+}
+
+/*
+ * InputAmount/JoinedButtonGroup build these size classes at runtime
+ * (`btn-${sizePrefix}`), so Tailwind's source scanner cannot see them.
+ */
+@source inline("{btn,input,select}-{xs,sm,md,lg,xl}");

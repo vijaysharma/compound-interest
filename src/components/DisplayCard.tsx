@@ -1,6 +1,5 @@
 import convertToWords from "../utilities/currency";
 import { DisplayType } from "../types/types";
-
 const DisplayCard = ({
   primaryAmount,
   title,
@@ -40,5 +39,4 @@ const DisplayCard = ({
     </div>
   );
 };
-
 export default DisplayCard;

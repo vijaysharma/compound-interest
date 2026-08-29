@@ -1,9 +1,8 @@
 import Tab from "./Tab";
 import { TabsType } from "../types/types";
-
 const Tabs = ({ name, children, activeId, setActiveId, className, type }: TabsType) => {
   return children instanceof Array ? (
-    <div className={`tabs w-full ${className || ""} ${type || "tabs-lifted"}`}>
+    <div className={`tabs w-full ${className || ""} ${type || "tabs-lift"}`}>
       {children.map((child) => (
         <Tab key={child.props.id} name={name} child={child} selectedId={activeId || "1"} setSelectedId={setActiveId} />
       ))}
@@ -12,5 +11,4 @@ const Tabs = ({ name, children, activeId, setActiveId, className, type }: TabsTy
     <div className="p-4 w-full overflow-y-auto">{children}</div>
   );
 };
-
 export default Tabs;

@@ -1,6 +1,5 @@
 import { sanctnum } from "../utilities/numSanitity";
 import { ROIType } from "../types/types";
-
 const ROI = ({ rt, setRt, title, className }: ROIType) => {
   const setROI = (n: number) => {
     let roi = parseFloat(rt);
@@ -31,7 +30,7 @@ const ROI = ({ rt, setRt, title, className }: ROIType) => {
           type="number"
           placeholder="Type here"
           min="0"
-          className="join-item input input-sm grow input-bordered focus:outline-none text-center input-primary w-24"
+          className="join-item input input-sm grow focus:outline-none text-center input-primary w-24"
           value={rt.toString().replace(/^0+/, "") || 0}
           onChange={(e) => {
             const iv = e.target.value;

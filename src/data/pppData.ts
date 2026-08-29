@@ -3288,5 +3288,4 @@ const PPP_DATA = [
     decimal: 2,
   },
 ];
-
 export default PPP_DATA;

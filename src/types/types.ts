@@ -1,5 +1,4 @@
-import { ReactElement, SetStateAction } from "react";
-
+import { ReactElement, SetStateAction } from 'react';
 export interface DisplayType {
   primaryAmount: number;
   title?: string;
@@ -11,7 +10,6 @@ export interface DisplayType {
   currencySymbol?: string;
   locale?: string;
 }
-
 export interface InputType {
   title?: string;
   className?: string;
@@ -20,10 +18,7 @@ export interface InputType {
   typeSizePrefix?: string;
   setType?: (
     amnt: string
-  ) =>
-    | void
-    | React.Dispatch<SetStateAction<number>>
-    | React.Dispatch<SetStateAction<string>>;
+  ) => void | React.Dispatch<SetStateAction<number>> | React.Dispatch<SetStateAction<string>>;
   inputAmount: string;
   setInputAmount: React.Dispatch<SetStateAction<string>>;
   currencySymbol?: string;
@@ -31,39 +26,33 @@ export interface InputType {
   stepData: ButtonDataType[];
   stepSizePrefix?: string;
   locale?: string;
+  compact?: boolean;
 }
-
 export interface ButtonDataType {
   id: string;
   value: string;
   title: string;
 }
-
 export interface StepAmountType {
   id: string;
   value: string;
   title: string;
 }
-
 export interface JoinedButtonType {
   data: ButtonDataType[];
   selectedValue: string;
   updateSelectedValue: (
     amnt: string
-  ) =>
-    | void
-    | React.Dispatch<SetStateAction<string>>
-    | React.Dispatch<SetStateAction<number>>;
+  ) => void | React.Dispatch<SetStateAction<string>> | React.Dispatch<SetStateAction<number>>;
   title?: string;
   sizePrefix?: string;
   className?: string;
   btnClass?: string;
 }
-
 export interface RT {
   roi?: string;
   tenure: string;
-  tenureFormat: "m" | "y";
+  tenureFormat: 'm' | 'y';
 }
 export interface RateOfInterestType {
   rt: RT;
@@ -71,36 +60,40 @@ export interface RateOfInterestType {
   title?: string;
   className?: string;
 }
-
 export interface ROIType {
   rt: string;
   setRt: React.Dispatch<SetStateAction<string>>;
   title?: string;
   className?: string;
 }
-
+/**
+ * Props every tab panel must carry. React 19 types default `ReactElement`'s
+ * prop parameter to `unknown`, so tab children are explicitly typed.
+ */
+export interface TabChildProps {
+  id: string;
+  'data-label'?: string;
+}
+export type TabChild = ReactElement<TabChildProps>;
 export interface TabType {
   name: string;
-  child: ReactElement;
+  child: TabChild;
   selectedId: string;
   setSelectedId?: React.Dispatch<SetStateAction<string>>;
 }
-
 export interface TabsType {
   name: string;
-  children: ReactElement | ReactElement[];
+  children: TabChild | TabChild[];
   activeId?: string;
   setActiveId?: React.Dispatch<SetStateAction<string>>;
   className?: string;
   type?: string;
 }
-
 export interface TenureType {
   rt: RT;
   setRt: React.Dispatch<SetStateAction<RT>>;
   className: string;
 }
-
 export interface INFLATION_TYPE {
   Year: number;
   id: number;
@@ -109,7 +102,6 @@ export interface INFLATION_TYPE {
   USA: string;
   World: string;
 }
-
 export interface PPPDataType {
   indicator: {
     id: string;
@@ -126,30 +118,25 @@ export interface PPPDataType {
   obs_status: string;
   decimal: number;
 }
-
 export interface CountryPPPType {
   [key: number]: number;
   currencyCode: string;
   currencyName: string;
 }
-
 export interface ExchangeRateType {
   [key: string]: number;
 }
-
 export interface MFType {
   default?: boolean;
   id: string;
   value: number;
   name: string;
 }
-
 export interface MFJSONType {
   default?: boolean;
   schemeCode: number;
   schemeName: string;
 }
-
 export interface NavType {
   date: string;
   nav: string;

@@ -1,9 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-#container {
-  min-height: calc(100dvh - 48px);
+.container {
+  height: calc(100dvh - 32px);
+  padding: 0.5rem;
 }
 
 .calc-tabs .tab.calc-tab {
@@ -12,8 +9,8 @@
   padding: 0 16px;
 }
 
-.tabs-lifted > .tab.tab-active:not(.tab-disabled):not([disabled]):before,
-.tabs-lifted > .tab:is(input:checked):before {
+.tabs-lift > .tab.tab-active:not(.tab-disabled):not([disabled]):before,
+.tabs-lift > .tab:is(input:checked):before {
   content: none;
 }
 .chart-container,
@@ -34,4 +31,33 @@
 
 .date-picker .label {
   line-height: 1;
+}
+#navigation-drawer nav h3 {
+  color: color-mix(in srgb, var(--color-primary) 40%, rgb(255, 255, 255));
+  font-size: 1rem;
+}
+#navigation-drawer nav a {
+  display: block;
+  padding: 0.25rem 0 0.25rem 2rem;
+  text-decoration: none;
+  color: inherit;
+}
+.mf-display-grid > div {
+  border: 1px solid var(--color-primary);
+  border-bottom: 0 none;
+}
+
+.mf-display-grid > div:first-child {
+  border-bottom-left-radius: 0;
+}
+.mf-display-grid > div:nth-child(2) {
+  border-top-right-radius: 0.5rem;
+}
+.mf-display-grid > div:nth-last-child(2) {
+  border-bottom-left-radius: 0.5rem;
+  border-bottom: 1px solid var(--color-primary);
+}
+.mf-display-grid > div:last-child {
+  border-top-right-radius: 0;
+  border-bottom: 1px solid var(--color-primary);
 }

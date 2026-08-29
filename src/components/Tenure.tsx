@@ -1,5 +1,4 @@
 import { TenureType } from "../types/types";
-
 const Tenure = ({ rt, setRt, className }: TenureType) => {
   const setTenure = (n: string) => {
     let tenure = parseInt(rt.tenure);
@@ -29,7 +28,7 @@ const Tenure = ({ rt, setRt, className }: TenureType) => {
         <input
           type="number"
           placeholder="Type here"
-          className="input input-bordered input-sm input-primary focus:outline-none join-item w-24 text-center"
+          className="input input-sm input-primary focus:outline-none join-item w-24 text-center"
           value={rt.tenure.toString().replace(/^0+/, "") || 0}
           onChange={(e) => setRt({ ...rt, tenure: e.target.value })}
         />
@@ -45,7 +44,6 @@ const Tenure = ({ rt, setRt, className }: TenureType) => {
         >
           +10
         </button>
-
         <button
           className={`join-item grow btn btn-sm border-primary ${
             rt.tenureFormat === "m" ? "btn-primary" : ""
@@ -84,5 +82,4 @@ const Tenure = ({ rt, setRt, className }: TenureType) => {
     </div>
   );
 };
-
 export default Tenure;
