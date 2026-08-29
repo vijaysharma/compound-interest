@@ -146,8 +146,8 @@ const SIP = ({
   const [duration, setDuration] = useState<string>(savedState.duration);
   const [showDate, setShowDate] = useState<boolean>(savedState.showDate);
   const [monthlyAmount, setMonthlyAmount] = useState<string>(savedState.monthlyAmount);
-  const [dayOfMonth, setDayOfMonth] = useState<string>('1');
-  const [investmentStepUp, setInvestmentStepUp] = useState('10');
+  const [dayOfMonth, setDayOfMonth] = useState<string>('3');
+  const [investmentStepUp, setInvestmentStepUp] = useState('0');
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [error, setError] = useState<{
@@ -969,15 +969,19 @@ const SIP = ({
           ))}
         </select>
         <span className="join-item label bg-primary px-2 py-1 text-sm text-primary-content">
-          Yearly increase (%)
+          Yearly increase
         </span>
-        <input
+        <select
           className="join-item input input-sm input-primary w-full"
-          type="number"
-          min="0"
           value={investmentStepUp}
           onChange={(event) => setInvestmentStepUp(event.target.value)}
-        />
+        >
+          {Array.from({ length: 21 }, (_, i) => (
+            <option key={i + 1} value={i + 1}>
+              {i}%
+            </option>
+          ))}
+        </select>
       </div>
       {pinnedFunds.length > 0 && (
         <div className="mf-display-grid grid grid-cols-2 w-full join join-horizontal">

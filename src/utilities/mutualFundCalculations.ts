@@ -210,16 +210,18 @@ export const calculateSwp = (
   endDate: string,
   initialInvestment: number,
   monthlyWithdrawal: number,
-  annualStepUp: number
+  annualStepUp: number,
+  installmentDay?: number
 ): SimulationResult => {
   validateInputs(startDate, endDate, initialInvestment);
   validateInputs(startDate, endDate, monthlyWithdrawal);
-  const startNav = getNav(startDate, navData);
+  const effectiveStartDate = getEffectiveStartDate(startDate, navData);
+  const startNav = getNav(effectiveStartDate, navData);
   if (!startNav) throw new Error('No NAV data is available for the selected start date.');
   let units = initialInvestment / startNav.nav;
   let withdrawn = 0;
   let lastNav = startNav.nav;
-  const dates = getMonthlyDates(startDate, endDate).slice(1);
+  const dates = getMonthlyDates(effectiveStartDate, endDate, installmentDay).slice(1);
   for (const [index, date] of dates.entries()) {
     const nav = getNav(date, navData);
     if (!nav) continue;
@@ -241,4 +243,61 @@ export const calculateSwp = (
     lastNav: finalNav,
     installments: dates.length,
   };
+};
+export const calculateSwpGrowth = (
+  navData: NavType[],
+  startDate: string,
+  endDate: string,
+  initialInvestment: number,
+  monthlyWithdrawal: number,
+  annualStepUp: number,
+  installmentDay?: number
+): NavPoint[] => {
+  validateInputs(startDate, endDate, initialInvestment);
+  validateInputs(startDate, endDate, monthlyWithdrawal);
+  const effectiveStartDate = getEffectiveStartDate(startDate, navData);
+  const startNav = getNav(effectiveStartDate, navData);
+  const endNav = getNav(endDate, navData);
+  if (!startNav || !endNav) {
+    throw new Error('No NAV data is available for the selected dates.');
+  }
+  let units = initialInvestment / startNav.nav;
+  let withdrawalIndex = 0;
+  const withdrawals = getMonthlyDates(effectiveStartDate, endDate, installmentDay)
+    .slice(1)
+    .map((date, index) => {
+      const nav = getNav(date, navData);
+      return nav
+        ? {
+            date: nav.date,
+            units:
+              (monthlyWithdrawal * Math.pow(1 + annualStepUp / 100, Math.floor(index / 12))) /
+              nav.nav,
+          }
+        : undefined;
+    })
+    .filter((withdrawal): withdrawal is { date: string; units: number } => Boolean(withdrawal));
+  const startTime = toDate(startNav.date).getTime();
+  const endTime = toDate(endNav.date).getTime();
+  return [...navData]
+    .map((point) => ({ point, time: toDate(point.date).getTime(), nav: Number(point.nav) }))
+    .filter(
+      ({ time, nav }) =>
+        Number.isFinite(time) &&
+        Number.isFinite(nav) &&
+        nav > 0 &&
+        time >= startTime &&
+        time <= endTime
+    )
+    .sort((a, b) => a.time - b.time)
+    .map(({ point, time, nav }) => {
+      while (
+        withdrawalIndex < withdrawals.length &&
+        toDate(withdrawals[withdrawalIndex].date).getTime() <= time
+      ) {
+        units = Math.max(0, units - withdrawals[withdrawalIndex].units);
+        withdrawalIndex += 1;
+      }
+      return { date: point.date, nav: Number((units * nav).toFixed(2)) };
+    });
 };
