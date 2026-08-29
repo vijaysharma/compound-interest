@@ -16,3 +16,6 @@ CREATE TABLE IF NOT EXISTS inflation_sources (
   payload JSONB NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS mutual_fund_schemes_name_idx
+  ON mutual_fund_schemes (scheme_name);

@@ -8,7 +8,7 @@ import { RT } from '../types/types.ts';
 const FixedRateSIP = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState('10000');
   const [rt, setRt] = useState<RT>({
-    roi: '7.1',
+    roi: '12',
     tenure: '5',
     tenureFormat: 'y',
   });

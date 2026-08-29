@@ -300,11 +300,10 @@ const Lumpsum = ({
     let cancelled = false;
     const cached = pinnedNavDataRef.current[selectedCode];
     if (cached) {
-      queueMicrotask(() => {
-        if (!cancelled) {
-          setJsonNavData(cached);
-        }
-      });
+      setJsonNavData(cached);
+      return () => {
+        cancelled = true;
+      };
     }
     /*
      * Fetch latest data.

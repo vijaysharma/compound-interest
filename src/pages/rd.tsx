@@ -22,13 +22,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
     { id: 'p6', value: '500', title: '500' },
     { id: 'p7', value: '50', title: '50' },
   ];
-  const calculate = (
-    p: string,
-    t: string,
-    tf: string,
-    invType: string,
-    r?: string
-  ) => {
+  const calculate = (p: string, t: string, tf: string, invType: string, r?: string) => {
     const tenure = tf === 'y' ? sanctnum(t) : sanctnum(t) / 12;
     const principal = sanctnum(p);
     const rate = r ? sanctnum(r) / 100 : 0;
