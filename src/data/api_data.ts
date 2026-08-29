@@ -34,6 +34,12 @@ export const fetchAllMfs = async (search = '') => {
 export const fetchMFbySchemeCode = async (schemeCode: string) => {
   const response = await fetch(getMFSchemeCodeUrl(schemeCode));
   const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error ?? `Mutual fund request failed: ${response.status}`);
+  }
+  if (!Array.isArray(data.data)) {
+    throw new Error('Mutual fund response did not contain NAV data');
+  }
   return data.data;
 };
 export const fetchExchangeRates = async () => {

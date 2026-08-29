@@ -42,3 +42,22 @@
   text-decoration: none;
   color: inherit;
 }
+.mf-display-grid > div {
+  border: 1px solid var(--color-primary);
+  border-bottom: 0 none;
+}
+
+.mf-display-grid > div:first-child {
+  border-bottom-left-radius: 0;
+}
+.mf-display-grid > div:nth-child(2) {
+  border-top-right-radius: 0.5rem;
+}
+.mf-display-grid > div:nth-child(7) {
+  border-bottom-left-radius: 0.5rem;
+  border-bottom: 1px solid var(--color-primary);
+}
+.mf-display-grid > div:last-child {
+  border-top-right-radius: 0;
+  border-bottom: 1px solid var(--color-primary);
+}

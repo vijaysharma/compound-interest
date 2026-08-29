@@ -1,4 +1,4 @@
-import { ReactElement, SetStateAction } from "react";
+import { ReactElement, SetStateAction } from 'react';
 export interface DisplayType {
   primaryAmount: number;
   title?: string;
@@ -18,10 +18,7 @@ export interface InputType {
   typeSizePrefix?: string;
   setType?: (
     amnt: string
-  ) =>
-    | void
-    | React.Dispatch<SetStateAction<number>>
-    | React.Dispatch<SetStateAction<string>>;
+  ) => void | React.Dispatch<SetStateAction<number>> | React.Dispatch<SetStateAction<string>>;
   inputAmount: string;
   setInputAmount: React.Dispatch<SetStateAction<string>>;
   currencySymbol?: string;
@@ -29,6 +26,7 @@ export interface InputType {
   stepData: ButtonDataType[];
   stepSizePrefix?: string;
   locale?: string;
+  compact?: boolean;
 }
 export interface ButtonDataType {
   id: string;
@@ -45,10 +43,7 @@ export interface JoinedButtonType {
   selectedValue: string;
   updateSelectedValue: (
     amnt: string
-  ) =>
-    | void
-    | React.Dispatch<SetStateAction<string>>
-    | React.Dispatch<SetStateAction<number>>;
+  ) => void | React.Dispatch<SetStateAction<string>> | React.Dispatch<SetStateAction<number>>;
   title?: string;
   sizePrefix?: string;
   className?: string;
@@ -57,7 +52,7 @@ export interface JoinedButtonType {
 export interface RT {
   roi?: string;
   tenure: string;
-  tenureFormat: "m" | "y";
+  tenureFormat: 'm' | 'y';
 }
 export interface RateOfInterestType {
   rt: RT;
@@ -77,7 +72,7 @@ export interface ROIType {
  */
 export interface TabChildProps {
   id: string;
-  "data-label"?: string;
+  'data-label'?: string;
 }
 export type TabChild = ReactElement<TabChildProps>;
 export interface TabType {

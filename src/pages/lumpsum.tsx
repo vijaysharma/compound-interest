@@ -6,12 +6,17 @@ import StartEndDate from '../components/Date';
 import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import Chart from '../components/Chart';
+import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 const STORAGE_KEY = 'mutual_fund_last_state';
 const CHART_COLORS = [
   '#2563eb', // Blue
   '#16a34a', // Green
   '#9333ea', // Purple
   '#ea580c', // Orange
+  '#0891b2', // Cyan
+  '#db2777', // Pink
+  '#65a30d', // Lime
+  '#7c3aed', // Violet
 ];
 interface PinnedFund {
   schemeCode: string;
@@ -80,7 +85,7 @@ const loadSavedState = (): SavedState => {
       ...defaultState,
       ...parsed,
       pinnedFunds: Array.isArray(parsed.pinnedFunds)
-        ? parsed.pinnedFunds.filter((fund: PinnedFund) => Boolean(fund?.schemeCode)).slice(0, 4)
+        ? parsed.pinnedFunds.filter((fund: PinnedFund) => Boolean(fund?.schemeCode)).slice(0, 8)
         : [],
       startDate: typeof parsed.startDate === 'string' ? parsed.startDate : null,
       endDate: typeof parsed.endDate === 'string' ? parsed.endDate : null,
@@ -131,6 +136,7 @@ const Lumpsum = ({
   const [showDate, setShowDate] = useState<boolean>(savedState.showDate);
   const [invAmt, setInvAmt] = useState<string>(savedState.invAmt);
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
+  const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [error, setError] = useState<{
     status: string;
     message: string;
@@ -159,7 +165,7 @@ const Lumpsum = ({
       invAmt,
       showDate,
       viewChart,
-      pinnedFunds: pinnedFunds.slice(0, 4),
+      pinnedFunds: pinnedFunds.slice(0, 8),
       startDate,
       endDate,
     };
@@ -417,7 +423,7 @@ const Lumpsum = ({
       }
       return;
     }
-    if (pinnedFunds.length >= 4) {
+    if (pinnedFunds.length >= 8) {
       return;
     }
     try {
@@ -658,7 +664,7 @@ const Lumpsum = ({
               </div>
             </div>
             <div className="stat-title text-xs">Final Amount</div>
-            <span className="text-xl font-semibold">
+            <span className="text-xl text-primary font-semibold">
               ₹ {Math.round(matureAmount).toLocaleString('en-IN')}
             </span>
             <div className={`font-semibold ${profitAmount >= 0 ? 'text-success' : 'text-error'}`}>
@@ -695,53 +701,28 @@ const Lumpsum = ({
    */
   return (
     <div>
-      {/*
-       * ======================================================
-       * DIRECT / REGULAR
-       * ======================================================
-       */}
       <div className="flex gap-2">
-        <JoinedButtonGroup
-          data={[
-            {
-              id: 't1',
-              title: 'Direct',
-              value: 'Direct',
-            },
-            {
-              id: 't2',
-              title: 'Regular',
-              value: '!Direct',
-            },
-          ]}
-          selectedValue={selectedType}
-          updateSelectedValue={setSelectedType}
-          className="mb-2"
-          sizePrefix="sm"
-        />
-        <JoinedButtonGroup
-          data={[
-            {
-              id: 'g1',
-              title: 'Growth',
-              value: 'Growth',
-            },
-            {
-              id: 'g2',
-              title: 'Dividend',
-              value: 'Dividend',
-            },
-            {
-              id: 'g3',
-              title: 'IDCW',
-              value: 'IDCW',
-            },
-          ]}
-          selectedValue={selectedGrowth}
-          updateSelectedValue={setSelectedGrowth}
-          className="mb-2"
-          sizePrefix="sm"
-        />
+        <button
+          type="button"
+          className="btn btn-primary btn-sm mb-2 "
+          onClick={() => setIsFundSelectorOpen(true)}
+        >
+          Select mutual funds ({pinnedFunds.length}/8)
+        </button>
+        <button
+          type="button"
+          className="btn btn-outline btn-primary btn-sm"
+          onClick={toggleShowDate}
+        >
+          {showDate ? 'Time Slots' : 'Date Picker'}
+        </button>
+        <button
+          type="button"
+          className="btn btn-outline btn-primary btn-sm"
+          onClick={toggleViewChart}
+        >
+          {viewChart ? 'Hide Chart' : 'Show Chart'}
+        </button>
       </div>
       {/*
        * ======================================================
@@ -913,39 +894,11 @@ const Lumpsum = ({
       )}
       {/*
        * ======================================================
-       * SEARCH / VIEW CONTROLS
-       * ======================================================
-       */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Search Mutual Funds..."
-          className="input input-sm input-primary w-full mb-2"
-          value={searchKey}
-          onChange={(event) => setSearchKey(event.target.value.replace(/[.*+?^${}()|[\]\\]/g, ''))}
-        />
-        <button
-          type="button"
-          className="btn btn-outline btn-primary btn-sm"
-          onClick={toggleShowDate}
-        >
-          {showDate ? 'Time Slots' : 'Date Picker'}
-        </button>
-        <button
-          type="button"
-          className="btn btn-outline btn-primary btn-sm"
-          onClick={toggleViewChart}
-        >
-          {viewChart ? 'List' : 'Chart'}
-        </button>
-      </div>
-      {/*
-       * ======================================================
        * FUND LIST / CHART
        * ======================================================
        */}
-      {viewChart ? (
-        pinnedFunds.length > 0 ? (
+      {viewChart &&
+        (pinnedFunds.length > 0 ? (
           <Chart
             className="chart-container"
             datasets={chartDatasets}
@@ -953,44 +906,22 @@ const Lumpsum = ({
           />
         ) : (
           <div className="text-center py-4 text-sm opacity-60">
-            Select up to 4 funds to see comparison
+            Select up to 8 funds to see comparison
           </div>
-        )
-      ) : (
-        <div className="mf-container max-h-60 overflow-y-auto">
-          {mfs.map((mf) => {
-            const schemeCode = String(mf.value);
-            const pinnedFund = pinnedFunds.find((fund) => fund.schemeCode === schemeCode);
-            const isPinned = Boolean(pinnedFund);
-            return (
-              <label
-                key={mf.id}
-                className={`label px-0 py-1 cursor-pointer justify-start gap-2 ${
-                  isPinned ? 'font-semibold' : ''
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-primary checkbox-sm"
-                  checked={isPinned}
-                  disabled={!isPinned && pinnedFunds.length >= 4}
-                  onChange={() => void togglePinFund(mf)}
-                />
-                {pinnedFund && (
-                  <span
-                    className="inline-block w-2 h-2 rounded-full shrink-0"
-                    style={{
-                      backgroundColor: pinnedFund.color,
-                    }}
-                    aria-hidden="true"
-                  />
-                )}
-                <span className="text-sm flex-1">{mf.name}</span>
-              </label>
-            );
-          })}
-        </div>
-      )}
+        ))}
+      <MutualFundSelectorModal
+        open={isFundSelectorOpen}
+        onClose={() => setIsFundSelectorOpen(false)}
+        searchKey={searchKey}
+        setSearchKey={setSearchKey}
+        selectedType={selectedType}
+        setSelectedType={setSelectedType}
+        selectedGrowth={selectedGrowth}
+        setSelectedGrowth={setSelectedGrowth}
+        funds={mfs}
+        pinnedFunds={pinnedFunds}
+        togglePinFund={togglePinFund}
+      />
       {/*
        * ======================================================
        * INVESTMENT AMOUNT
@@ -1000,7 +931,7 @@ const Lumpsum = ({
         inputAmount={invAmt}
         setInputAmount={setInvAmt}
         className="mb-2"
-        title="Invested Amount"
+        title="Invested"
         stepData={[
           {
             id: 'ip1',
@@ -1052,9 +983,9 @@ const Lumpsum = ({
        * ======================================================
        */}
       {pinnedFunds.length > 0 && (
-        <div className="grid grid-cols-2 w-full">
+        <div className="mf-display-grid grid grid-cols-2 w-full join join-horizontal">
           {fundAnalyses.map((fund) => (
-            <div key={fund.schemeCode} className="border border-primary p-1 min-w-0">
+            <div key={fund.schemeCode} className="join-item p-1 min-w-0">
               {renderStatsCard(
                 fund.startNav,
                 fund.endNav,
