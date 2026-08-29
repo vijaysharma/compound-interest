@@ -70,14 +70,14 @@ const TopBar = ({ className }: { className?: string }) => {
               </button>
             </div>
             <nav aria-label="Calculator pages" className="text-primary-content">
-              <Link
+              {/* <Link
                 to="/"
                 onClick={() => {
                   setIsMenuOpen(false);
                 }}
               >
                 Investment Calculator
-              </Link>
+              </Link> */}
               <Link
                 to="/admin"
                 onClick={() => {

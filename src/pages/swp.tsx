@@ -157,20 +157,31 @@ const SWP = ({
     pinnedFundsRef.current = pinnedFunds;
     pinnedNavDataRef.current = pinnedNavData;
   }, [pinnedFunds, pinnedNavData]);
-  const [startSwpDate, setStartSwpDate] = useState<string | null>(savedState.startSwpDate);
-  const [endSwpDate, setEndSwpDate] = useState<string | null>(savedState.endSwpDate);
+  // Helper function to get date minus N years in YYYY-MM-DD format
+  const getDateMinusYears = (years: number): string => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - years);
+    return date.toISOString().split('T')[0];
+  };
+  // Helper function to get today's date in YYYY-MM-DD format
+  const getTodayDate = (): string => {
+    return new Date().toISOString().split('T')[0];
+  };
+  const [startSwpDate, setStartSwpDate] = useState<string | null>(
+    savedState.startSwpDate || getDateMinusYears(3)
+  );
+  const [endSwpDate, setEndSwpDate] = useState<string | null>(
+    savedState.endSwpDate || getTodayDate()
+  );
   const [monthlyWithdrawalAmount, setMonthlyWithdrawalAmount] = useState<string>(
     savedState.monthlyWithdrawalAmount
   );
   const [lumpSumInvestmentAmount, setLumpSumInvestmentAmount] = useState<string>(
     savedState.lumpSumInvestmentAmount
   );
-  const [lumpsumStartDate, setLumpsumStartDate] = useState<string | null>(() => {
-    if (savedState.lumpsumStartDate) return savedState.lumpsumStartDate;
-    const date = new Date();
-    date.setFullYear(date.getFullYear() - 5);
-    return date.toISOString().split('T')[0];
-  });
+  const [lumpsumStartDate, setLumpsumStartDate] = useState<string | null>(
+    savedState.lumpsumStartDate || getDateMinusYears(5)
+  );
   const [dayOfMonth, setDayOfMonth] = useState<string>(savedState.dayOfMonth);
   const [investmentStepUp, setInvestmentStepUp] = useState(savedState.investmentStepUp);
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
