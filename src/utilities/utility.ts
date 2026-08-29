@@ -1,8 +1,8 @@
-import { INFLATION_TYPE, NavType } from "../types/types";
+import { INFLATION_TYPE, NavType } from '../types/types';
 type DurationType = {
   startDate: string;
   endDate: string;
-  type?: "Y" | "M" | "D" | "H" | "MM" | "S" | "MS";
+  type?: 'Y' | 'M' | 'D' | 'H' | 'MM' | 'S' | 'MS';
   inclusive?: boolean;
 };
 /**
@@ -13,7 +13,7 @@ type DurationType = {
  * which is not reliably parsed by JavaScript.
  */
 const parseNavDate = (date: string): Date => {
-  const parts = date.split("-");
+  const parts = date.split('-');
   if (parts.length !== 3) {
     return new Date(NaN);
   }
@@ -31,7 +31,7 @@ const parseNavDate = (date: string): Date => {
  * into a local Date object.
  */
 const parseAnyDate = (date: string): Date => {
-  const parts = date.split("-");
+  const parts = date.split('-');
   if (parts.length !== 3) {
     return new Date(NaN);
   }
@@ -49,6 +49,23 @@ const parseAnyDate = (date: string): Date => {
    */
   return parseNavDate(date);
 };
+interface TimedNav {
+  nav: NavType;
+  time: number;
+}
+const sortedNavCache = new WeakMap<NavType[], TimedNav[]>();
+const getSortedNavData = (data: NavType[]): TimedNav[] => {
+  const cached = sortedNavCache.get(data);
+  if (cached) {
+    return cached;
+  }
+  const sorted = data
+    .map((nav) => ({ nav, time: parseNavDate(nav.date).getTime() }))
+    .filter(({ time }) => Number.isFinite(time))
+    .sort((a, b) => a.time - b.time);
+  sortedNavCache.set(data, sorted);
+  return sorted;
+};
 export const getDuration = ({
   startDate,
   endDate,
@@ -60,25 +77,25 @@ export const getDuration = ({
   const dMS = inclusive ? eDate - sDate + 86400000 : eDate - sDate;
   let result: number;
   switch (type) {
-    case "Y":
+    case 'Y':
       result = dMS / (1000 * 60 * 60 * 24 * 365);
       break;
-    case "M":
+    case 'M':
       result = dMS / (1000 * 60 * 60 * 24 * 30);
       break;
-    case "D":
+    case 'D':
       result = dMS / (1000 * 60 * 60 * 24);
       break;
-    case "H":
+    case 'H':
       result = dMS / (1000 * 60 * 60);
       break;
-    case "MM":
+    case 'MM':
       result = dMS / (1000 * 60);
       break;
-    case "S":
+    case 'S':
       result = dMS / 1000;
       break;
-    case "MS":
+    case 'MS':
       result = dMS;
       break;
     default:
@@ -97,8 +114,8 @@ export const getDuration = ({
 export const getDateAsISO = (minusDays = 0, date = new Date()): string => {
   const result = new Date(date.getFullYear(), date.getMonth(), date.getDate() - minusDays);
   const year = result.getFullYear();
-  const month = String(result.getMonth() + 1).padStart(2, "0");
-  const day = String(result.getDate()).padStart(2, "0");
+  const month = String(result.getMonth() + 1).padStart(2, '0');
+  const day = String(result.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 /**
@@ -111,9 +128,9 @@ export const getDateAsISO = (minusDays = 0, date = new Date()): string => {
  * YYYY-MM-DD
  */
 export const navDateToISO = (navDate: string): string => {
-  const parts = navDate.split("-");
+  const parts = navDate.split('-');
   if (parts.length !== 3) {
-    return "";
+    return '';
   }
   return `${parts[2]}-${parts[1]}-${parts[0]}`;
 };
@@ -127,9 +144,9 @@ export const navDateToISO = (navDate: string): string => {
  * DD-MM-YYYY
  */
 export const isoDateToNavDate = (isoDate: string): string => {
-  const parts = isoDate.split("-");
+  const parts = isoDate.split('-');
   if (parts.length !== 3) {
-    return "";
+    return '';
   }
   return `${parts[2]}-${parts[1]}-${parts[0]}`;
 };
@@ -158,30 +175,32 @@ export const getNearest = (dateString: string, data: NavType[]): NavType | undef
   /*
    * Sort a copy so we never mutate the API data.
    */
-  const sortedData = [...data].sort(
-    (a, b) => parseNavDate(a.date).getTime() - parseNavDate(b.date).getTime()
-  );
+  const sortedData = getSortedNavData(data);
   /*
    * First look for the latest NAV that is
    * on or before the requested date.
    */
-  let nearest: NavType | undefined;
-  for (const nav of sortedData) {
-    const navTime = parseNavDate(nav.date).getTime();
-    if (navTime <= targetDate.getTime()) {
-      nearest = nav;
+  const targetTime = targetDate.getTime();
+  let low = 0;
+  let high = sortedData.length - 1;
+  let nearestIndex = -1;
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    if (sortedData[middle].time <= targetTime) {
+      nearestIndex = middle;
+      low = middle + 1;
     } else {
-      break;
+      high = middle - 1;
     }
   }
   /*
    * If requested date is before the earliest
    * available NAV, use the earliest available.
    */
-  return nearest ?? sortedData[0];
+  return sortedData[nearestIndex < 0 ? 0 : nearestIndex]?.nav;
 };
 export const sanctnum = (inputValue: string | number): number => {
-  let intValue = typeof inputValue === "string" ? parseFloat(inputValue) : inputValue;
+  let intValue = typeof inputValue === 'string' ? parseFloat(inputValue) : inputValue;
   intValue = isFinite(intValue) ? intValue : 0;
   return intValue;
 };
@@ -191,10 +210,10 @@ export const calculateInterest = (
   m: string,
   f: string,
   t: string,
-  tf: "m" | "y"
+  tf: 'm' | 'y'
 ) => {
-  const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
-  const mode = m === "100" ? tenure : sanctnum(m);
+  const tenure = tf === 'y' ? sanctnum(t) * 12 : sanctnum(t);
+  const mode = m === '100' ? tenure : sanctnum(m);
   const principal = sanctnum(p);
   const rate = sanctnum(r);
   const frequency = sanctnum(f);
@@ -202,15 +221,15 @@ export const calculateInterest = (
     principal * (1 + rate / frequency / 100) ** ((frequency * mode) / 12) - principal
   );
 };
-export const calculatePrincipal = (tgt: string, r: string, f: string, t: string, tf: "m" | "y") => {
-  const tenure = tf === "y" ? sanctnum(t) * 12 : sanctnum(t);
+export const calculatePrincipal = (tgt: string, r: string, f: string, t: string, tf: 'm' | 'y') => {
+  const tenure = tf === 'y' ? sanctnum(t) * 12 : sanctnum(t);
   const targetAmount = sanctnum(tgt);
   const rate = sanctnum(r);
   const frequency = sanctnum(f);
   return sanctnum(targetAmount / (1 + rate / frequency / 100) ** ((frequency * tenure) / 12));
 };
 export const checkNAYear = (d: INFLATION_TYPE, p: string): boolean =>
-  d[p as "India" | "USA" | "EU" | "World"] !== "n/a";
+  d[p as 'India' | 'USA' | 'EU' | 'World'] !== 'n/a';
 export const calculateInflatedPrice = (
   principal: string,
   startYear: string,
@@ -218,7 +237,7 @@ export const calculateInflatedPrice = (
   place: string,
   data: INFLATION_TYPE[]
 ): number[] => {
-  principal = principal || "0";
+  principal = principal || '0';
   const stYear = parseInt(startYear);
   const edYear = parseInt(endYear);
   const splitData = data.filter((d) => {
@@ -227,7 +246,7 @@ export const calculateInflatedPrice = (
   const updatedSplitData = splitData
     .map((d) => ({
       year: d.Year,
-      ir: parseFloat(d[place as "India" | "USA" | "EU" | "World"].replace("%", "")),
+      ir: parseFloat(d[place as 'India' | 'USA' | 'EU' | 'World'].replace('%', '')),
     }))
     .reverse();
   let ia = parseFloat(principal);
@@ -244,21 +263,21 @@ export const getCurrencySymbolAndLocale = (place: string) => {
   let sym: string;
   let locale: string;
   switch (place) {
-    case "India":
-      sym = "₹";
-      locale = "en-IN";
+    case 'India':
+      sym = '₹';
+      locale = 'en-IN';
       break;
-    case "USA":
-      sym = "$";
-      locale = "en-US";
+    case 'USA':
+      sym = '$';
+      locale = 'en-US';
       break;
-    case "EU":
-      sym = "€";
-      locale = "en-EU";
+    case 'EU':
+      sym = '€';
+      locale = 'en-EU';
       break;
     default:
-      sym = "₹";
-      locale = "en-IN";
+      sym = '₹';
+      locale = 'en-IN';
   }
   return [sym, locale];
 };

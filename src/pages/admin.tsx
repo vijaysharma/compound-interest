@@ -33,10 +33,26 @@ const Admin = () => {
       setMessage('Paste valid JSON before syncing IMF data.');
     }
   };
+  const resetUserData = () => {
+    if (!window.confirm('Clear all saved user data from this browser?')) {
+      return;
+    }
+    window.localStorage.clear();
+    setMessage('All saved user data was cleared from this browser.');
+  };
   return (
     <main className="mx-auto max-w-3xl p-4">
       <h1 className="mb-2 text-2xl font-semibold">Data administration</h1>
       <p className="mb-6 text-sm opacity-70">Sync the datasets used by the calculators.</p>
+      <section className="mb-6 border border-error p-4">
+        <h2 className="mb-2 text-lg font-medium">User data</h2>
+        <p className="mb-4 text-sm opacity-70">
+          Clear all calculator preferences and saved selections from this browser.
+        </p>
+        <button className="btn btn-error" type="button" onClick={resetUserData}>
+          Reset all user data
+        </button>
+      </section>
       <label className="mb-6 block">
         <span className="mb-1 block text-sm font-medium">Admin token</span>
         <input

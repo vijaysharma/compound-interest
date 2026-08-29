@@ -8,7 +8,7 @@ import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
-const STORAGE_KEY = 'mutual_fund_last_state';
+const STORAGE_KEY = 'mutual_fund_swp_state';
 interface PinnedFund {
   schemeCode: string;
   schemeName: string;
@@ -32,6 +32,9 @@ interface SavedState {
   pinnedFunds: StoredPinnedFund[];
   startSwpDate: string | null;
   endSwpDate: string | null;
+  lumpsumStartDate: string | null;
+  dayOfMonth: string;
+  investmentStepUp: string;
 }
 interface FundAnalysis {
   schemeCode: string;
@@ -71,6 +74,9 @@ const getDefaultState = (): SavedState => ({
   pinnedFunds: [],
   startSwpDate: null,
   endSwpDate: null,
+  lumpsumStartDate: null,
+  dayOfMonth: '3',
+  investmentStepUp: '0',
 });
 const loadSavedState = (): SavedState => {
   if (typeof window === 'undefined') {
@@ -115,6 +121,16 @@ const getNavDateTime = (date: string): number => {
     ? new Date(year, month - 1, day).getTime()
     : Number.NaN;
 };
+const getLatestNav = (data: NavType[]): NavType | undefined => {
+  return data.reduce<NavType | undefined>((latest, nav) => {
+    const navTime = getNavDateTime(nav.date);
+    return Number.isFinite(Number(nav.nav)) &&
+      Number.isFinite(navTime) &&
+      (!latest || navTime > getNavDateTime(latest.date))
+      ? nav
+      : latest;
+  }, undefined);
+};
 const SWP = ({
   onSelectionChange,
 }: {
@@ -150,12 +166,13 @@ const SWP = ({
     savedState.lumpSumInvestmentAmount
   );
   const [lumpsumStartDate, setLumpsumStartDate] = useState<string | null>(() => {
+    if (savedState.lumpsumStartDate) return savedState.lumpsumStartDate;
     const date = new Date();
     date.setFullYear(date.getFullYear() - 5);
-    return date.toISOString().split('T')[0]; // Returns 'YYYY-MM-DD'
+    return date.toISOString().split('T')[0];
   });
-  const [dayOfMonth, setDayOfMonth] = useState<string>('3');
-  const [investmentStepUp, setInvestmentStepUp] = useState('0');
+  const [dayOfMonth, setDayOfMonth] = useState<string>(savedState.dayOfMonth);
+  const [investmentStepUp, setInvestmentStepUp] = useState(savedState.investmentStepUp);
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [error, setError] = useState<{
@@ -190,6 +207,9 @@ const SWP = ({
         .map(({ schemeCode, schemeName }) => ({ schemeCode, schemeName })),
       startSwpDate,
       endSwpDate,
+      lumpsumStartDate,
+      dayOfMonth,
+      investmentStepUp,
     };
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -207,6 +227,9 @@ const SWP = ({
     pinnedFunds,
     startSwpDate,
     endSwpDate,
+    lumpsumStartDate,
+    dayOfMonth,
+    investmentStepUp,
   ]);
   useEffect(() => {
     const search = deferredSearchKey.trim();
@@ -496,11 +519,7 @@ const SWP = ({
         };
       }
       const matureAmount = simulation.currentValue;
-      const latestNav = [...navData]
-        .filter(
-          (nav) => Number.isFinite(Number(nav.nav)) && Number.isFinite(getNavDateTime(nav.date))
-        )
-        .sort((a, b) => getNavDateTime(b.date) - getNavDateTime(a.date))[0];
+      const latestNav = getLatestNav(navData);
       const latestValue = latestNav
         ? Number((simulation.units * Number(latestNav.nav)).toFixed(2))
         : undefined;

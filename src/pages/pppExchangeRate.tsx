@@ -196,7 +196,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
         inputAmount={srcAmt}
         setInputAmount={setSrcAmt}
         className="mb-3"
-        title="Amount in the source country"
+        title="Source"
         stepData={[
           {
             id: 'ip1',
