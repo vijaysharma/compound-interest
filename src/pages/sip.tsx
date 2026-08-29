@@ -9,7 +9,7 @@ import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSip, calculateSipGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
-const STORAGE_KEY = 'mutual_fund_last_state';
+const STORAGE_KEY = 'mutual_fund_sip_state';
 interface PinnedFund {
   schemeCode: string;
   schemeName: string;
@@ -34,6 +34,8 @@ interface SavedState {
   pinnedFunds: StoredPinnedFund[];
   startDate: string | null;
   endDate: string | null;
+  dayOfMonth: string;
+  investmentStepUp: string;
 }
 interface FundAnalysis {
   schemeCode: string;
@@ -70,6 +72,8 @@ const getDefaultState = (): SavedState => ({
   pinnedFunds: [],
   startDate: null,
   endDate: null,
+  dayOfMonth: '3',
+  investmentStepUp: '0',
 });
 const loadSavedState = (): SavedState => {
   if (typeof window === 'undefined') {
@@ -114,6 +118,16 @@ const getNavDateTime = (date: string): number => {
     ? new Date(year, month - 1, day).getTime()
     : Number.NaN;
 };
+const getLatestNav = (data: NavType[]): NavType | undefined => {
+  return data.reduce<NavType | undefined>((latest, nav) => {
+    const navTime = getNavDateTime(nav.date);
+    return Number.isFinite(Number(nav.nav)) &&
+      Number.isFinite(navTime) &&
+      (!latest || navTime > getNavDateTime(latest.date))
+      ? nav
+      : latest;
+  }, undefined);
+};
 const SIP = ({
   onSelectionChange,
 }: {
@@ -146,8 +160,8 @@ const SIP = ({
   const [duration, setDuration] = useState<string>(savedState.duration);
   const [showDate, setShowDate] = useState<boolean>(savedState.showDate);
   const [monthlyAmount, setMonthlyAmount] = useState<string>(savedState.monthlyAmount);
-  const [dayOfMonth, setDayOfMonth] = useState<string>('3');
-  const [investmentStepUp, setInvestmentStepUp] = useState('0');
+  const [dayOfMonth, setDayOfMonth] = useState<string>(savedState.dayOfMonth);
+  const [investmentStepUp, setInvestmentStepUp] = useState(savedState.investmentStepUp);
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [error, setError] = useState<{
@@ -183,6 +197,8 @@ const SIP = ({
         .map(({ schemeCode, schemeName }) => ({ schemeCode, schemeName })),
       startDate,
       endDate,
+      dayOfMonth,
+      investmentStepUp,
     };
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -201,6 +217,8 @@ const SIP = ({
     pinnedFunds,
     startDate,
     endDate,
+    dayOfMonth,
+    investmentStepUp,
   ]);
   useEffect(() => {
     const search = deferredSearchKey.trim();
@@ -533,11 +551,7 @@ const SIP = ({
         };
       }
       const matureAmount = simulation.currentValue;
-      const latestNav = [...navData]
-        .filter(
-          (nav) => Number.isFinite(Number(nav.nav)) && Number.isFinite(getNavDateTime(nav.date))
-        )
-        .sort((a, b) => getNavDateTime(b.date) - getNavDateTime(a.date))[0];
+      const latestNav = getLatestNav(navData);
       const latestValue = latestNav
         ? Number((simulation.units * Number(latestNav.nav)).toFixed(2))
         : undefined;

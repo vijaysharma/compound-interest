@@ -8,7 +8,7 @@ import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { CHART_COLORS } from '../data/chartColors';
-const STORAGE_KEY = 'mutual_fund_last_state';
+const STORAGE_KEY = 'mutual_fund_lumpsum_state';
 interface PinnedFund {
   schemeCode: string;
   schemeName: string;
