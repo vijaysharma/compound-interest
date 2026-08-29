@@ -1,4 +1,4 @@
-import { ensureTables, getDb, jsonResponse, MF_URL } from '../_db.ts';
+import { ensureTables, getDb, jsonResponse, MF_URL } from '../_db';
 export const config = { runtime: 'edge' };
 export default async function handler(request: Request): Promise<Response> {
   const schemeCode = decodeURIComponent(new URL(request.url).pathname.split('/').pop() ?? '');

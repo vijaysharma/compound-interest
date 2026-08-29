@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+declare const process: { env: Record<string, string | undefined> };
 export const MF_URL = 'https://api.mfapi.in/mf';
 export const IMF_URL = 'https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD';
 type Query = ReturnType<typeof neon>;

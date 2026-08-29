@@ -1,4 +1,4 @@
-import { ensureTables, getDb, isAuthorized, jsonResponse, MF_URL, unauthorized } from '../_db.ts';
+import { ensureTables, getDb, isAuthorized, jsonResponse, MF_URL, unauthorized } from '../_db';
 export const config = { runtime: 'edge' };
 export default async function handler(request: Request): Promise<Response> {
   if (!isAuthorized(request)) return unauthorized();
