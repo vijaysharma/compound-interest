@@ -7,6 +7,7 @@ import {
   getCurrencySymbolAndLocale,
 } from '../utilities/utility';
 import { fetchInflationData, InflationRow } from '../data/api_data';
+import StartEndDate from '../components/Date';
 const YEAR = new Date().getFullYear();
 const START_YEAR = (YEAR - 30).toString();
 const CURRENT_YEAR = YEAR.toString();
@@ -61,6 +62,10 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
       ? calculateInflatedPrice(principal, startYear, endYear, place, inflationData)
       : [0, 0];
   const [currencySymbol, locale] = getCurrencySymbolAndLocale(place);
+  const startYearOptions = inflationData
+    .filter((inflation) => checkNAYear(inflation, place))
+    .map((inflation) => String(inflation.Year));
+  const endYearOptions = inflationData.map((inflation) => String(inflation.Year));
   if (inflationLoading) {
     return (
       <div className={className}>
@@ -118,40 +123,15 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
         typeSizePrefix="base"
         stepSizePrefix="sm"
       />
-      <div className="join mb-3 w-full">
-        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
-          Start Year
-        </div>
-        <select
-          className="join-item w-24 grow select border-primary focus:border-primary focus:outline-none shadow-none"
-          value={startYear}
-          onChange={(e) => setStartYear(e.target.value)}
-        >
-          {inflationData.map((inf) => {
-            return (
-              checkNAYear(inf, place) && (
-                <option key={`s-${inf.id}`} value={inf.Year}>
-                  {inf.Year}
-                </option>
-              )
-            );
-          })}
-        </select>
-        <select
-          className="join-item w-24 grow select border-primary focus:border-primary focus:outline-none shadow-none"
-          value={endYear}
-          onChange={(e) => setEndYear(e.target.value)}
-        >
-          {inflationData.map((inf) => (
-            <option key={`e-${inf.id}`} value={inf.Year}>
-              {inf.Year}
-            </option>
-          ))}
-        </select>
-        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
-          End Year
-        </div>
-      </div>
+      <StartEndDate
+        mode="year"
+        startDate={startYear}
+        endDate={endYear}
+        setStartDate={setStartYear}
+        setEndDate={setEndYear}
+        startOptions={startYearOptions}
+        endOptions={endYearOptions}
+      />
       <DisplayCard
         currencySymbol={currencySymbol}
         locale={locale}

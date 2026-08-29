@@ -5,6 +5,7 @@ import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
 import { CountryPPPType, ExchangeRateType } from '../types/types';
 import { fetchExchangeRates, fetchPPPData } from '../data/api_data';
+import CountrySelect from '../components/CountrySelect';
 const PPPExchangeRate = ({ className, title }: { className?: string; title?: string }) => {
   const [data, setData] = useState<{ [key: string]: CountryPPPType }>({});
   const [pppLoading, setPppLoading] = useState(true);
@@ -163,34 +164,22 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
     <div className={className}>
       {title && <h5>{title}</h5>}
       <div className="join mb-3 w-full">
-        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
+        <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-sm">
           Source
         </div>
-        <select
-          className="join-item grow w-24 select border-primary focus:border-primary focus:outline-none shadow-none"
+        <CountrySelect
+          label="source"
           value={srcCountry}
-          onChange={(e) => setSrcCountry(e.target.value)}
-        >
-          {Object.keys(data).map((c) => {
-            return (
-              <option key={`src-${c}`} value={c}>
-                {c}
-              </option>
-            );
-          })}
-        </select>
-        <select
-          className="join-item w-24 grow select border-primary focus:border-primary focus:outline-none shadow-none"
+          countries={Object.keys(data)}
+          onChange={setSrcCountry}
+        />
+        <CountrySelect
+          label="target"
           value={tgtCountry}
-          onChange={(e) => setTgtCountry(e.target.value)}
-        >
-          {Object.keys(data).map((c) => (
-            <option key={`tgt-${c}`} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <div className="join-item px-2 grow bg-primary text-primary-content border-primary text-center text-sm/[46px]">
+          countries={Object.keys(data)}
+          onChange={setTgtCountry}
+        />
+        <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-sm">
           Target
         </div>
       </div>

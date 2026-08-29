@@ -2,11 +2,14 @@ import { useEffect } from 'react';
 import { getDateAsISO, getNearest } from '../utilities/utility';
 import { NavType } from '../types/types';
 interface StartEndDateProps {
-  data: NavType[];
+  data?: NavType[];
   startDate: string | null;
   endDate: string | null;
   setStartDate: (date: string) => void;
   setEndDate: (date: string) => void;
+  mode?: 'date' | 'year';
+  startOptions?: string[];
+  endOptions?: string[];
 }
 const StartEndDate = ({
   data,
@@ -14,50 +17,57 @@ const StartEndDate = ({
   endDate,
   setStartDate,
   setEndDate,
+  mode = 'date',
+  startOptions = [],
+  endOptions = [],
 }: StartEndDateProps) => {
-  /*
-   * HTML date inputs must ALWAYS contain:
-   *
-   * YYYY-MM-DD
-   *
-   * They must never contain DD-MM-YYYY.
-   */
-  /*
-   * When the user changes Start:
-   *
-   * Keep the EXACT calendar date selected.
-   *
-   * Do not replace it with the nearest NAV date.
-   */
-  const handleStartChange = (value: string) => {
-    setStartDate(value);
-  };
-  /*
-   * Same for End.
-   */
-  const handleEndChange = (value: string) => {
-    setEndDate(value);
-  };
-  /*
-   * Keep the existing nearest-NAV functionality available
-   * through the data prop.
-   *
-   * This effect validates that the selected dates can be
-   * resolved, but DOES NOT modify the selected calendar
-   * dates.
-   *
-   * This is intentional.
-   */
   useEffect(() => {
-    if (!startDate || !endDate || data.length === 0) {
+    if (mode !== 'date' || !startDate || !endDate || !data || data.length === 0) {
       return;
     }
     getNearest(startDate, data);
     getNearest(endDate, data);
-  }, [startDate, endDate, data]);
-  /*
-   * Maximum selectable date is today.
-   */
+  }, [startDate, endDate, data, mode]);
+  if (mode === 'year') {
+    return (
+      <div className="join mb-2 w-full date-picker">
+        <div className="label join-item px-2 w-20 bg-primary text-primary-content border-primary text-center text-sm">
+          Start Year
+        </div>
+        <select
+          className="join-item grow select border-primary focus:border-primary focus:outline-none shadow-none"
+          value={startDate ?? ''}
+          onChange={(event) => setStartDate(event.target.value)}
+        >
+          {startOptions.map((year) => (
+            <option key={`s-${year}`} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+        <select
+          className="join-item grow select border-primary focus:border-primary focus:outline-none shadow-none"
+          value={endDate ?? ''}
+          onChange={(event) => setEndDate(event.target.value)}
+        >
+          {endOptions.map((year) => (
+            <option key={`e-${year}`} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+        <div className="label join-item px-2 w-20 bg-primary text-primary-content border-primary text-center text-sm">
+          End Year
+        </div>
+      </div>
+    );
+  }
+  const handleStartChange = (value: string) => {
+    setStartDate(value);
+  };
+  const handleEndChange = (value: string) => {
+    setEndDate(value);
+  };
   const today = getDateAsISO();
   return (
     <div className="join mb-2 w-full date-picker">

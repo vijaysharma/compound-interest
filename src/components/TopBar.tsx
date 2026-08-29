@@ -1,16 +1,27 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
+const getNavTitle = (pathname: string) => {
+  const titles: Record<string, string> = {
+    '/': 'Investment Calculator',
+    '/admin': 'Data administration',
+    '/emi': 'EMI Calculator',
+    '/deposits/fd': 'Fixed Deposits',
+    '/deposits/rd': 'Recurring Deposits',
+    '/economics/inflation-rates': 'Inflation Rates',
+    '/economics/ppp-exchange-rate': 'PPP Exchange Rate',
+    '/fixed-plans/fixed-rate-sip': 'Fixed Rate SIP',
+    '/fixed-plans/fixed-rate-swp': 'Fixed Rate SWP',
+    '/mutual-funds/lumpsum': 'Lumpsum',
+    '/mutual-funds/sip': 'SIP',
+    '/mutual-funds/swp': 'SWP',
+  };
+  return titles[pathname] ?? 'Investment Calculator';
+};
 const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
-  const title =
-    pathname === '/emi'
-      ? 'EMI Calculator'
-      : pathname === '/mutual-funds'
-        ? 'Mutual Funds'
-        : 'Investment Calculator';
-  const [navTitle, setNavTitle] = useState(title);
+  const navTitle = getNavTitle(pathname);
   return (
     <>
       <div
@@ -62,7 +73,6 @@ const TopBar = ({ className }: { className?: string }) => {
               <Link
                 to="/"
                 onClick={() => {
-                  setNavTitle('Investment Calculator');
                   setIsMenuOpen(false);
                 }}
               >
@@ -71,7 +81,6 @@ const TopBar = ({ className }: { className?: string }) => {
               <Link
                 to="/admin"
                 onClick={() => {
-                  setNavTitle('Data administration');
                   setIsMenuOpen(false);
                 }}
               >
@@ -80,7 +89,6 @@ const TopBar = ({ className }: { className?: string }) => {
               <Link
                 to="/emi"
                 onClick={() => {
-                  setNavTitle('EMI Calculator');
                   setIsMenuOpen(false);
                 }}
               >
@@ -91,7 +99,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/deposits/fd"
                   onClick={() => {
-                    setNavTitle('Fixed Deposits');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -100,7 +107,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/deposits/rd"
                   onClick={() => {
-                    setNavTitle('Recurring Deposits');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -112,7 +118,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/economics/inflation-rates"
                   onClick={() => {
-                    setNavTitle('Inflation Rates');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -121,7 +126,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/economics/ppp-exchange-rate"
                   onClick={() => {
-                    setNavTitle('PPP Exchange Rate');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -133,7 +137,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/fixed-plans/fixed-rate-sip"
                   onClick={() => {
-                    setNavTitle('Fixed Rate SIP');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -142,7 +145,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/fixed-plans/fixed-rate-swp"
                   onClick={() => {
-                    setNavTitle('Fixed Rate SWP');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -154,7 +156,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/mutual-funds/lumpsum"
                   onClick={() => {
-                    setNavTitle('Lumpsum');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -163,7 +164,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/mutual-funds/sip"
                   onClick={() => {
-                    setNavTitle('SIP');
                     setIsMenuOpen(false);
                   }}
                 >
@@ -172,7 +172,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 <Link
                   to="/mutual-funds/swp"
                   onClick={() => {
-                    setNavTitle('SWP');
                     setIsMenuOpen(false);
                   }}
                 >
