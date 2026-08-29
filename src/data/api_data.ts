@@ -6,16 +6,15 @@ import {
   WORLD_BANK_INFLATION_URL,
   WORLD_BANK_PPP_URL,
 } from './API_LIST';
-export const fetchAllMfs = async (search = '') => {
+import { MFJSONType } from '../types/types';
+export const fetchAllMfs = async (search = ''): Promise<MFJSONType[]> => {
   try {
     const query = search.trim() ? `?q=${encodeURIComponent(search.trim())}` : '';
     const response = await fetch(`${MF_URL}${query}`);
-    const data = await response.json();
-    //    Filter data for duplicate schemeCodes
-    const filteredData = data.filter((fd: { schemeCode: number }, i: number) => {
-      if (i === 0) return true;
-      if (i > 0) return fd.schemeCode !== data[i - 1].schemeCode;
-    });
+    const data = (await response.json()) as MFJSONType[];
+    const filteredData = Array.from(
+      new Map(data.map((fund: MFJSONType) => [fund.schemeCode, fund])).values()
+    );
     //   Sort the data alphabetically by schemeName
     const sortedData = filteredData.sort((a: { schemeName: string }, b: { schemeName: string }) => {
       if (a.schemeName < b.schemeName) {

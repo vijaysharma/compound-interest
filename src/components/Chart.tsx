@@ -15,6 +15,7 @@ interface ChartProps {
   className: string;
   datasets: ChartDataset[];
   investmentAmount: number;
+  dataMode?: 'nav' | 'value';
 }
 /*
  * NAV dates are DD-MM-YYYY.
@@ -45,7 +46,7 @@ const formatCurrency = (value: number): string =>
   `₹${value.toLocaleString('en-IN', {
     maximumFractionDigits: 0,
   })}`;
-const Chart = ({ className, datasets, investmentAmount }: ChartProps) => {
+const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: ChartProps) => {
   if (datasets.length === 0) {
     return (
       <div className={`${className} flex items-center justify-center`}>
@@ -119,6 +120,12 @@ const Chart = ({ className, datasets, investmentAmount }: ChartProps) => {
      * The first NAV in the selected range is the
      * reference NAV for this particular fund.
      */
+    if (dataMode === 'value') {
+      return {
+        ...dataset,
+        data: sortedData,
+      };
+    }
     const startingNav = sortedData[0].nav;
     if (!Number.isFinite(startingNav) || startingNav <= 0) {
       return {

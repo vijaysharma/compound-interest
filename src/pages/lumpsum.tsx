@@ -7,17 +7,8 @@ import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
+import { CHART_COLORS } from '../data/chartColors';
 const STORAGE_KEY = 'mutual_fund_last_state';
-const CHART_COLORS = [
-  '#2563eb', // Blue
-  '#16a34a', // Green
-  '#9333ea', // Purple
-  '#ea580c', // Orange
-  '#0891b2', // Cyan
-  '#db2777', // Pink
-  '#65a30d', // Lime
-  '#7c3aed', // Violet
-];
 interface PinnedFund {
   schemeCode: string;
   schemeName: string;
@@ -81,12 +72,15 @@ const loadSavedState = (): SavedState => {
     }
     const parsed = JSON.parse(saved);
     const defaultState = getDefaultState();
+    const pinnedFunds = Array.isArray(parsed.pinnedFunds)
+      ? parsed.pinnedFunds.filter((fund: PinnedFund) => Boolean(fund?.schemeCode))
+      : [];
     return {
       ...defaultState,
       ...parsed,
-      pinnedFunds: Array.isArray(parsed.pinnedFunds)
-        ? parsed.pinnedFunds.filter((fund: PinnedFund) => Boolean(fund?.schemeCode)).slice(0, 8)
-        : [],
+      pinnedFunds: Array.from(
+        new Map(pinnedFunds.map((fund: PinnedFund) => [fund.schemeCode, fund])).values()
+      ).slice(0, 8),
       startDate: typeof parsed.startDate === 'string' ? parsed.startDate : null,
       endDate: typeof parsed.endDate === 'string' ? parsed.endDate : null,
     };
