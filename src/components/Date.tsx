@@ -12,6 +12,7 @@ interface StartEndDateProps {
   endOptions?: string[];
   startTitle?: string;
   endTitle?: string;
+  startMinDate?: string;
 }
 const StartEndDate = ({
   data,
@@ -24,6 +25,7 @@ const StartEndDate = ({
   endOptions = [],
   startTitle = 'Start',
   endTitle = 'End',
+  startMinDate,
 }: StartEndDateProps) => {
   useEffect(() => {
     if (mode !== 'date' || !data || data.length === 0) {
@@ -83,6 +85,7 @@ const StartEndDate = ({
           <div className="grow">
             <input
               type="date"
+              min={startMinDate || undefined}
               max={endDate || today}
               value={startDate ?? ''}
               className="join-item w-full input input-sm input-primary focus:outline-none"

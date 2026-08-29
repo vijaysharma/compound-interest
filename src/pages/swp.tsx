@@ -1,9 +1,8 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { MFJSONType, MFType, NavType } from '../types/types';
-import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import InputAmount from '../components/InputAmount';
 import StartEndDate from '../components/Date';
-import { getNearest, navDateToISO } from '../utilities/utility';
+import { getNearest } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
@@ -27,10 +26,8 @@ interface SavedState {
   selectedType: string;
   selectedGrowth: string;
   selectedCode: string;
-  duration: string;
   monthlyWithdrawalAmount: string;
   lumpSumInvestmentAmount: string;
-  showDate: boolean;
   viewChart: boolean;
   pinnedFunds: StoredPinnedFund[];
   startSwpDate: string | null;
@@ -48,6 +45,10 @@ interface FundAnalysis {
   latestValue?: number;
   latestNavDate?: string;
   latestXirr?: number;
+  totalWithdrawn?: number;
+  lastWithdrawalAmount?: number;
+  lastWithdrawalDate?: string;
+  remainingInvested?: number;
   profitAmt: number;
   invested: number;
   units: number;
@@ -64,10 +65,8 @@ const getDefaultState = (): SavedState => ({
   selectedType: 'Direct',
   selectedGrowth: 'Growth',
   selectedCode: '0',
-  duration: '1',
   monthlyWithdrawalAmount: '100000',
   lumpSumInvestmentAmount: '30000000',
-  showDate: false,
   viewChart: false,
   pinnedFunds: [],
   startSwpDate: null,
@@ -119,7 +118,6 @@ const getNavDateTime = (date: string): number => {
 const SWP = ({
   onSelectionChange,
 }: {
-  showDate?: boolean;
   onSelectionChange?: (selection: MutualFundSelection) => void;
 }) => {
   const savedState = useMemo(() => loadSavedState(), []);
@@ -145,8 +143,6 @@ const SWP = ({
   }, [pinnedFunds, pinnedNavData]);
   const [startSwpDate, setStartSwpDate] = useState<string | null>(savedState.startSwpDate);
   const [endSwpDate, setEndSwpDate] = useState<string | null>(savedState.endSwpDate);
-  const [duration, setDuration] = useState<string>(savedState.duration);
-  const [showDate, setShowDate] = useState<boolean>(savedState.showDate);
   const [monthlyWithdrawalAmount, setMonthlyWithdrawalAmount] = useState<string>(
     savedState.monthlyWithdrawalAmount
   );
@@ -186,10 +182,8 @@ const SWP = ({
       selectedType,
       selectedGrowth,
       selectedCode,
-      duration,
       monthlyWithdrawalAmount,
       lumpSumInvestmentAmount,
-      showDate,
       viewChart,
       pinnedFunds: pinnedFunds
         .slice(0, 8)
@@ -207,10 +201,8 @@ const SWP = ({
     selectedType,
     selectedGrowth,
     selectedCode,
-    duration,
     monthlyWithdrawalAmount,
     lumpSumInvestmentAmount,
-    showDate,
     viewChart,
     pinnedFunds,
     startSwpDate,
@@ -363,39 +355,6 @@ const SWP = ({
       cancelled = true;
     };
   }, [selectedCode]);
-  useEffect(() => {
-    if (jsonNavData.length === 0 || startSwpDate || endSwpDate) {
-      return;
-    }
-    const durationIndex = Math.max(parseInt(duration, 10) || 1, 0);
-    const index = Math.min(durationIndex, jsonNavData.length - 1);
-    const start = jsonNavData[index];
-    const end = jsonNavData[0];
-    Promise.resolve().then(() => {
-      if (start) {
-        setStartSwpDate(navDateToISO(start.date));
-      }
-      if (end) {
-        setEndSwpDate(navDateToISO(end.date));
-      }
-    });
-  }, [jsonNavData, startSwpDate, endSwpDate, duration]);
-  const handleDurationChange = (value: string) => {
-    setDuration(value);
-    if (jsonNavData.length === 0) {
-      return;
-    }
-    const durationIndex = Math.max(parseInt(value, 10) || 1, 0);
-    const index = Math.min(durationIndex, jsonNavData.length - 1);
-    const start = jsonNavData[index];
-    const end = jsonNavData[0];
-    if (start) {
-      setStartSwpDate(navDateToISO(start.date));
-    }
-    if (end) {
-      setEndSwpDate(navDateToISO(end.date));
-    }
-  };
   const togglePinFund = async (mf: MFType) => {
     const schemeCode = String(mf.value);
     const existing = pinnedFunds.find((fund) => fund.schemeCode === schemeCode);
@@ -438,18 +397,6 @@ const SWP = ({
       }));
       setSelectedCode(schemeCode);
       setJsonNavData(navData);
-      if (!startSwpDate || !endSwpDate) {
-        const durationIndex = Math.max(parseInt(duration, 10) || 1, 0);
-        const index = Math.min(durationIndex, navData.length - 1);
-        const start = navData[index];
-        const end = navData[0];
-        if (start) {
-          setStartSwpDate(navDateToISO(start.date));
-        }
-        if (end) {
-          setEndSwpDate(navDateToISO(end.date));
-        }
-      }
     } catch (err) {
       console.error('Failed to pin mutual fund:', err);
     }
@@ -521,6 +468,7 @@ const SWP = ({
       try {
         simulation = calculateSwp(
           navData,
+          lumpsumStartDate ?? '',
           startSwpDate ?? '',
           endSwpDate ?? '',
           Number(lumpSumInvestmentAmount),
@@ -559,10 +507,11 @@ const SWP = ({
       const absoluteReturn =
         ((latestValue ?? simulation.currentValue) / simulation.invested - 1) * 100;
       const profitAmount = Math.round(
-        (latestValue ?? simulation.currentValue) - simulation.invested
+        simulation.withdrawn + (latestValue ?? simulation.currentValue) - simulation.invested
       );
       const chartData = calculateSwpGrowth(
         navData,
+        lumpsumStartDate ?? '',
         startSwpDate ?? '',
         endSwpDate ?? '',
         Number(lumpSumInvestmentAmount),
@@ -582,10 +531,16 @@ const SWP = ({
         latestValue,
         latestNavDate: latestNav?.date,
         latestXirr: simulation.latestXirr,
+        totalWithdrawn: simulation.withdrawn,
+        lastWithdrawalAmount: simulation.lastWithdrawalAmount,
+        lastWithdrawalDate: simulation.lastWithdrawalDate,
         profitAmt: Number(profitAmount.toFixed(2)),
         invested: simulation.invested,
         units: simulation.units,
-        averageNav: simulation.invested / simulation.units,
+        averageNav:
+          simulation.units > 0
+            ? (simulation.remainingInvested ?? simulation.invested) / simulation.units
+            : 0,
         installments: simulation.installments,
         xirr: simulation.xirr,
         chartData,
@@ -598,6 +553,7 @@ const SWP = ({
     endSwpDate,
     monthlyWithdrawalAmount,
     lumpSumInvestmentAmount,
+    lumpsumStartDate,
     investmentStepUp,
     dayOfMonth,
   ]);
@@ -612,10 +568,6 @@ const SWP = ({
         })),
     [fundAnalyses]
   );
-  const toggleShowDate = () => {
-    const next = !showDate;
-    setShowDate(next);
-  };
   const toggleViewChart = () => {
     setViewChart((previous) => !previous);
   };
@@ -623,16 +575,14 @@ const SWP = ({
     start: NavType | undefined,
     end: NavType | undefined,
     matureAmount: number,
-    profitAmount: number,
     installments: number,
     invested: number,
     units: number,
     averageNav: number,
     xirr: number | undefined,
-    absoluteReturn: number,
-    latestValue: number | undefined,
-    latestNavDate: string | undefined,
-    latestXirr: number | undefined,
+    totalWithdrawn: number | undefined,
+    lastWithdrawalAmount: number | undefined,
+    lastWithdrawalDate: string | undefined,
     title: string,
     color: string
   ) => {
@@ -670,9 +620,21 @@ const SWP = ({
                 {formatNav(end.nav)}
               </div>
             </div>
-            <div className="stat-title text-xs">Invested Amount</div>
+            <div className="stat-title text-xs">Initial Investment</div>
             <span className="text-lg text-secondary font-semibold">
               {Math.round(invested).toLocaleString('en-IN')}
+            </span>
+            <div className="stat-title text-xs">No. of Monthly Installments</div>
+            <span className="text-lg font-semibold text-primary">{installments}</span>
+            <div className="stat-title text-xs">Total Withdrawal Amount</div>
+            <span className="text-lg font-semibold text-primary">
+              {Math.round(totalWithdrawn ?? 0).toLocaleString('en-IN')}
+            </span>
+            <div className="stat-title text-xs">Last Withdrawal {lastWithdrawalDate ?? 'N/A'}</div>
+            <span className="text-lg font-semibold text-primary">
+              {lastWithdrawalAmount === undefined
+                ? 'N/A'
+                : Math.round(lastWithdrawalAmount).toLocaleString('en-IN')}
             </span>
             <div className="stat-title text-xs">Value as on {end.date}</div>
             <span className="text-lg font-semibold text-primary">
@@ -681,35 +643,14 @@ const SWP = ({
                 &nbsp;({xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`})
               </span>
             </span>
-            {latestValue !== undefined && latestNavDate && (
-              <>
-                <div className="stat-title text-xs">Value as on ({latestNavDate})</div>
-                <span className="text-xl font-semibold text-primary">
-                  {Math.round(latestValue).toLocaleString('en-IN')}
-                </span>
-              </>
-            )}
-            <div className={`font-semibold ${profitAmount >= 0 ? 'text-success' : 'text-error'}`}>
-              {profitAmount < 0 ? '-' : '+'}
-              &nbsp;₹
-              {Math.abs(profitAmount).toLocaleString('en-IN')}
-            </div>
+            <div className="stat-title text-xs">Return (%) as on {end.date}</div>
+            <span
+              className={`text-lg font-semibold ${(xirr ?? 0) >= 0 ? 'text-success' : 'text-error'}`}
+            >
+              {xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`}
+            </span>
             <div className="stat-title font-semibold">
-              <span className="text-xs">X:</span>{' '}
-              <span className={(latestXirr ?? 0) >= 0 ? 'text-success' : 'text-error'}>
-                {latestXirr === undefined ? 'N/A' : `${(latestXirr * 100).toFixed(2)}%`}
-              </span>
-              &nbsp;|&nbsp;
-              <span className="text-xs">A:</span>{' '}
-              <span className={absoluteReturn >= 0 ? 'text-success' : 'text-error'}>
-                {absoluteReturn.toFixed(2)}%
-              </span>
-            </div>
-            <div className="stat-title font-semibold">
-              <span className="text-xs">Insts.: </span>
-              <span className="text-primary text-sm">{installments}</span>
-              &nbsp;|&nbsp;
-              <span className="text-xs">Units: </span>
+              <span className="text-xs">Units Left: </span>
               <span className="text-primary text-sm">{units.toFixed(2)}</span>
             </div>
             <div className="stat-title font-semibold">
@@ -725,7 +666,7 @@ const SWP = ({
     return <h3 className="text-error">{error.message}</h3>;
   }
   return (
-    <div>
+    <>
       <div className="flex gap-2">
         <button
           type="button"
@@ -733,13 +674,6 @@ const SWP = ({
           onClick={() => setIsFundSelectorOpen(true)}
         >
           Select mutual funds ({pinnedFunds.length}/8)
-        </button>
-        <button
-          type="button"
-          className="btn btn-outline btn-primary btn-sm"
-          onClick={toggleShowDate}
-        >
-          {showDate ? 'Time Slots' : 'Date Picker'}
         </button>
         <button
           type="button"
@@ -800,162 +734,16 @@ const SWP = ({
         typeSizePrefix="sm"
         stepSizePrefix="sm"
       />
-      {!showDate && (
-        <>
-          <JoinedButtonGroup
-            data={[
-              {
-                id: 'ty1',
-                title: '1D',
-                value: '1',
-              },
-              {
-                id: 'ty2',
-                title: '3D',
-                value: '3',
-              },
-              {
-                id: 'ty3',
-                title: '1W',
-                value: '5',
-              },
-              {
-                id: 'ty4',
-                title: '2W',
-                value: '10',
-              },
-              {
-                id: 'ty5',
-                title: '3W',
-                value: '15',
-              },
-              {
-                id: 'ty6',
-                title: '1M',
-                value: '20',
-              },
-              {
-                id: 'ty7',
-                title: '5W',
-                value: '26',
-              },
-              {
-                id: 'ty8',
-                title: '6W',
-                value: '30',
-              },
-            ]}
-            selectedValue={duration}
-            updateSelectedValue={handleDurationChange}
-            btnClass="rounded-bl-none rounded-br-none border-b-0"
-            sizePrefix="sm"
-          />
-          <JoinedButtonGroup
-            data={[
-              {
-                id: 'ty9',
-                title: '2M',
-                value: '39',
-              },
-              {
-                id: 'ty10',
-                title: '3M',
-                value: '63',
-              },
-              {
-                id: 'ty11',
-                title: '4M',
-                value: '84',
-              },
-              {
-                id: 'ty12',
-                title: '5M',
-                value: '105',
-              },
-              {
-                id: 'ty13',
-                title: '6M',
-                value: '126',
-              },
-              {
-                id: 'ty14',
-                title: '1Y',
-                value: '243',
-              },
-              {
-                id: 'ty15',
-                title: '1.5Y',
-                value: '366',
-              },
-              {
-                id: 'ty16',
-                title: '2Y',
-                value: '485',
-              },
-            ]}
-            selectedValue={duration}
-            updateSelectedValue={handleDurationChange}
-            btnClass="rounded-l-none rounded-r-none border-b-0"
-            sizePrefix="sm"
-          />
-          <JoinedButtonGroup
-            data={[
-              {
-                id: 'ty18',
-                title: '3Y',
-                value: '740',
-              },
-              {
-                id: 'ty19',
-                title: '4Y',
-                value: '985',
-              },
-              {
-                id: 'ty20',
-                title: '5Y',
-                value: '1235',
-              },
-              {
-                id: 'ty21',
-                title: '6Y',
-                value: '1476',
-              },
-              {
-                id: 'ty22',
-                title: '7Y',
-                value: '1725',
-              },
-              {
-                id: 'ty23',
-                title: '10Y',
-                value: '2464',
-              },
-              {
-                id: 'ty24',
-                title: '15Y',
-                value: '3695',
-              },
-              {
-                id: 'ty25',
-                title: '20Y',
-                value: '4928',
-              },
-            ]}
-            selectedValue={duration}
-            updateSelectedValue={handleDurationChange}
-            sizePrefix="sm"
-            className="mb-2"
-            btnClass="rounded-tl-none rounded-tr-none"
-          />
-        </>
-      )}
-      {showDate && jsonNavData.length > 0 && (
+      {jsonNavData.length > 0 && (
         <StartEndDate
           data={jsonNavData}
           startDate={startSwpDate}
+          startTitle="Start SWP"
           endDate={endSwpDate}
           setStartDate={setStartSwpDate}
           setEndDate={setEndSwpDate}
+          endTitle="End SWP"
+          startMinDate={lumpsumStartDate ?? undefined}
         />
       )}
       {viewChart &&
@@ -1031,7 +819,7 @@ const SWP = ({
       />
       <div className="join join-horizontal mb-3 w-full">
         <span className="join-item label bg-primary px-2 py-1 text-sm text-primary-content">
-          Invested on
+          Withdrawal on
         </span>
         <select
           className="join-item input input-sm input-primary w-full rounded-t-none"
@@ -1053,30 +841,28 @@ const SWP = ({
           onChange={(event) => setInvestmentStepUp(event.target.value)}
         >
           {Array.from({ length: 21 }, (_, i) => (
-            <option key={i + 1} value={i + 1}>
+            <option key={i} value={i}>
               {i}%
             </option>
           ))}
         </select>
       </div>
       {pinnedFunds.length > 0 && (
-        <div className="mf-display-grid grid grid-cols-2 w-full join join-horizontal">
+        <div className="mf-display-grid grid grid-cols-2 pb-3 w-full join join-horizontal">
           {fundAnalyses.map((fund) => (
             <div key={fund.schemeCode} className="join-item p-1 min-w-0">
               {renderStatsCard(
                 fund.startNav,
                 fund.endNav,
                 fund.matureAmt,
-                fund.profitAmt,
                 fund.installments,
                 fund.invested,
                 fund.units,
                 fund.averageNav,
                 fund.xirr,
-                fund.absProfit,
-                fund.latestValue,
-                fund.latestNavDate,
-                fund.latestXirr,
+                fund.totalWithdrawn,
+                fund.lastWithdrawalAmount,
+                fund.lastWithdrawalDate,
                 fund.schemeName,
                 fund.color
               )}
@@ -1084,7 +870,7 @@ const SWP = ({
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 };
 export default SWP;

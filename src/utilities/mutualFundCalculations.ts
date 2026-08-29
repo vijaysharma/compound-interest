@@ -13,6 +13,9 @@ export interface SimulationResult {
   installments: number;
   xirr?: number;
   latestXirr?: number;
+  lastWithdrawalAmount?: number;
+  lastWithdrawalDate?: string;
+  remainingInvested?: number;
 }
 interface CashFlow {
   date: string;
@@ -206,65 +209,88 @@ export const calculateSipGrowth = (
 };
 export const calculateSwp = (
   navData: NavType[],
-  startDate: string,
+  investmentDate: string,
+  withdrawalStartDate: string,
   endDate: string,
   initialInvestment: number,
   monthlyWithdrawal: number,
   annualStepUp: number,
   installmentDay?: number
 ): SimulationResult => {
-  validateInputs(startDate, endDate, initialInvestment);
-  validateInputs(startDate, endDate, monthlyWithdrawal);
-  const effectiveStartDate = getEffectiveStartDate(startDate, navData);
-  const startNav = getNav(effectiveStartDate, navData);
+  validateInputs(investmentDate, endDate, initialInvestment);
+  validateInputs(withdrawalStartDate, endDate, monthlyWithdrawal);
+  if (toDate(withdrawalStartDate) < toDate(investmentDate)) {
+    throw new Error('SWP start date cannot be before the investment date.');
+  }
+  const effectiveInvestmentDate = getEffectiveStartDate(investmentDate, navData);
+  const startNav = getNav(effectiveInvestmentDate, navData);
   if (!startNav) throw new Error('No NAV data is available for the selected start date.');
   let units = initialInvestment / startNav.nav;
+  let remainingInvested = initialInvestment;
   let withdrawn = 0;
+  let installments = 0;
+  let lastWithdrawalAmount = 0;
+  let lastWithdrawalDate: string | undefined;
   let lastNav = startNav.nav;
-  const dates = getMonthlyDates(effectiveStartDate, endDate, installmentDay).slice(1);
+  const cashFlows: CashFlow[] = [{ date: startNav.date, amount: -initialInvestment }];
+  const dates = getMonthlyDates(withdrawalStartDate, endDate, installmentDay);
   for (const [index, date] of dates.entries()) {
     const nav = getNav(date, navData);
     if (!nav) continue;
     const amount = monthlyWithdrawal * Math.pow(1 + annualStepUp / 100, Math.floor(index / 12));
-    units -= amount / nav.nav;
-    withdrawn += amount;
-    lastNav = nav.nav;
-    if (units <= 0) {
-      units = 0;
+    const withdrawalUnits = amount / nav.nav;
+    if (withdrawalUnits > units) {
       break;
     }
+    units -= withdrawalUnits;
+    remainingInvested -= withdrawalUnits * startNav.nav;
+    withdrawn += amount;
+    lastNav = nav.nav;
+    installments += 1;
+    lastWithdrawalAmount = amount;
+    lastWithdrawalDate = nav.date;
+    cashFlows.push({ date: nav.date, amount });
   }
   const finalNav = getNav(endDate, navData)?.nav ?? lastNav;
+  const currentValue = units * finalNav;
+  cashFlows.push({ date: endDate, amount: currentValue });
   return {
     invested: initialInvestment,
     withdrawn,
     units,
-    currentValue: units * finalNav,
+    currentValue,
     lastNav: finalNav,
-    installments: dates.length,
+    installments,
+    lastWithdrawalAmount,
+    lastWithdrawalDate,
+    remainingInvested: Math.max(0, remainingInvested),
+    xirr: calculateXirr(cashFlows),
   };
 };
 export const calculateSwpGrowth = (
   navData: NavType[],
-  startDate: string,
+  investmentDate: string,
+  withdrawalStartDate: string,
   endDate: string,
   initialInvestment: number,
   monthlyWithdrawal: number,
   annualStepUp: number,
   installmentDay?: number
 ): NavPoint[] => {
-  validateInputs(startDate, endDate, initialInvestment);
-  validateInputs(startDate, endDate, monthlyWithdrawal);
-  const effectiveStartDate = getEffectiveStartDate(startDate, navData);
-  const startNav = getNav(effectiveStartDate, navData);
+  validateInputs(investmentDate, endDate, initialInvestment);
+  validateInputs(withdrawalStartDate, endDate, monthlyWithdrawal);
+  if (toDate(withdrawalStartDate) < toDate(investmentDate)) {
+    throw new Error('SWP start date cannot be before the investment date.');
+  }
+  const effectiveInvestmentDate = getEffectiveStartDate(investmentDate, navData);
+  const startNav = getNav(effectiveInvestmentDate, navData);
   const endNav = getNav(endDate, navData);
   if (!startNav || !endNav) {
     throw new Error('No NAV data is available for the selected dates.');
   }
   let units = initialInvestment / startNav.nav;
   let withdrawalIndex = 0;
-  const withdrawals = getMonthlyDates(effectiveStartDate, endDate, installmentDay)
-    .slice(1)
+  const withdrawals = getMonthlyDates(withdrawalStartDate, endDate, installmentDay)
     .map((date, index) => {
       const nav = getNav(date, navData);
       return nav
