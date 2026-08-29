@@ -6,9 +6,10 @@ import {
   WORLD_BANK_INFLATION_URL,
   WORLD_BANK_PPP_URL,
 } from './API_LIST';
-export const fetchAllMfs = async () => {
+export const fetchAllMfs = async (search = '') => {
   try {
-    const response = await fetch(MF_URL);
+    const query = search.trim() ? `?q=${encodeURIComponent(search.trim())}` : '';
+    const response = await fetch(`${MF_URL}${query}`);
     const data = await response.json();
     //    Filter data for duplicate schemeCodes
     const filteredData = data.filter((fd: { schemeCode: number }, i: number) => {

@@ -182,27 +182,30 @@ const Lumpsum = ({
     endDate,
   ]);
   useEffect(() => {
+    const search = deferredSearchKey.trim();
+    if (!search) {
+      return;
+    }
     let cancelled = false;
-    fetchAllMfs()
-      .then((data) => {
-        if (cancelled) {
-          return;
-        }
-        setJsonAllData(data);
-      })
-      .catch((err) => {
-        if (cancelled) {
-          return;
-        }
-        setError({
-          status: 'error',
-          message: err instanceof Error ? err.message : 'Failed to fetch mutual funds',
+    const timeout = window.setTimeout(() => {
+      fetchAllMfs(search)
+        .then((data) => {
+          if (cancelled) return;
+          setJsonAllData(data);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setError({
+            status: 'error',
+            message: err instanceof Error ? err.message : 'Failed to fetch mutual funds',
+          });
         });
-      });
+    }, 250);
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
     };
-  }, []);
+  }, [deferredSearchKey]);
   const filterMfs = (funds: MFType[], filterKey: string): MFType[] => {
     let expression = filterKey;
     if (expression === 'Growth') {
@@ -215,6 +218,9 @@ const Lumpsum = ({
     return funds.filter((mf) => RegExp(expression, 'i').test(mf.name));
   };
   const mfs = useMemo<MFType[]>(() => {
+    if (!deferredSearchKey.trim()) {
+      return [];
+    }
     const allFunds: MFType[] = jsonAllData.map((fund: MFJSONType, index: number) => ({
       id: `${index}`,
       value: fund.schemeCode,
@@ -680,7 +686,7 @@ const Lumpsum = ({
    * ERROR
    * ==========================================================
    */
-  if (error.status === 'error') {
+  if (error.status === 'error' && deferredSearchKey.trim()) {
     return <h3 className="text-error">{error.message}</h3>;
   }
   /*
