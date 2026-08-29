@@ -121,23 +121,12 @@ async function fetchWorldBankRecords(): Promise<WorldBankInflationRecord[]> {
   const [, records] = (await res.json()) as [unknown, WorldBankInflationRecord[] | null];
   return records ?? [];
 }
-// Use a public CORS proxy
-const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
-const URL = `${PROXY_URL}https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD`;
 async function fetchIMFEstimates(): Promise<IMFDataMapperResponse> {
-  const urls = [IMF_INFLATION_URL, URL];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        return (await res.json()) as IMFDataMapperResponse;
-      }
-      console.warn(`IMF request to ${url} failed: ${res.status}`);
-    } catch (err) {
-      console.warn(`IMF request to ${url} failed (network error):`, err);
-    }
+  const res = await fetch(IMF_INFLATION_URL);
+  if (!res.ok) {
+    throw new Error(`Stored IMF data request failed: ${res.status}`);
   }
-  return {};
+  return (await res.json()) as IMFDataMapperResponse;
 }
 /**
  * Fetches India/USA/EU/World inflation, blending two sources:

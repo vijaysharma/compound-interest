@@ -69,6 +69,15 @@ const TopBar = ({ className }: { className?: string }) => {
                 Investment Calculator
               </Link>
               <Link
+                to="/admin"
+                onClick={() => {
+                  setNavTitle('Data administration');
+                  setIsMenuOpen(false);
+                }}
+              >
+                Data administration
+              </Link>
+              <Link
                 to="/emi"
                 onClick={() => {
                   setNavTitle('EMI Calculator');

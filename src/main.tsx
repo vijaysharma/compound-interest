@@ -13,6 +13,7 @@ import FixedRateSWP from './pages/fixedRateSwp.tsx';
 import Lumpsum from './pages/lumpsum.tsx';
 import SIP from './pages/sip.tsx';
 import SWP from './pages/swp.tsx';
+import Admin from './pages/admin.tsx';
 import './index.css';
 const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <Home /> },
+      { path: 'admin', element: <Admin /> },
       { path: 'emi', element: <EmiCalculator /> },
       // Group 1: Deposits
       {
