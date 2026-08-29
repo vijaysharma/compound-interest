@@ -5,11 +5,15 @@ export default async function handler(request: Request): Promise<Response> {
     const sql = getDb();
     await ensureTables(sql);
     const search = new URL(request.url).searchParams.get('q')?.trim() ?? '';
+    const searchPatterns = search
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((term) => `%${term}%`);
     const rows = (await sql`
       SELECT payload FROM mutual_fund_schemes
-      WHERE ${search} = '' OR scheme_name ILIKE ${`%${search}%`}
+      WHERE ${searchPatterns.length === 0} OR scheme_name ILIKE ALL(${searchPatterns})
       ORDER BY scheme_name ASC
-      LIMIT 500
+      LIMIT 1000
     `) as Array<{ payload: unknown }>;
     return jsonResponse(rows.map((row) => row.payload));
   } catch (error) {
