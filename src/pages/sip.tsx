@@ -44,6 +44,9 @@ interface FundAnalysis {
   profit: number;
   absProfit: number;
   matureAmt: number;
+  latestValue?: number;
+  latestNavDate?: string;
+  latestXirr?: number;
   profitAmt: number;
   invested: number;
   units: number;
@@ -104,6 +107,12 @@ const loadSavedState = (): SavedState => {
 const formatNav = (nav: string): string => {
   const [whole, fraction] = nav.split('.');
   return fraction ? `${whole}.${fraction.slice(0, 2)}` : whole;
+};
+const getNavDateTime = (date: string): number => {
+  const [day, month, year] = date.split('-').map(Number);
+  return Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)
+    ? new Date(year, month - 1, day).getTime()
+    : Number.NaN;
 };
 const SIP = ({
   onSelectionChange,
@@ -523,9 +532,20 @@ const SIP = ({
           chartData: [],
         };
       }
-      const absoluteReturn = (simulation.currentValue / simulation.invested - 1) * 100;
       const matureAmount = simulation.currentValue;
-      const profitAmount = simulation.currentValue - simulation.invested;
+      const latestNav = [...navData]
+        .filter(
+          (nav) => Number.isFinite(Number(nav.nav)) && Number.isFinite(getNavDateTime(nav.date))
+        )
+        .sort((a, b) => getNavDateTime(b.date) - getNavDateTime(a.date))[0];
+      const latestValue = latestNav
+        ? Number((simulation.units * Number(latestNav.nav)).toFixed(2))
+        : undefined;
+      const absoluteReturn =
+        ((latestValue ?? simulation.currentValue) / simulation.invested - 1) * 100;
+      const profitAmount = Math.round(
+        (latestValue ?? simulation.currentValue) - simulation.invested
+      );
       const chartData = calculateSipGrowth(
         navData,
         startDate ?? '',
@@ -543,6 +563,9 @@ const SIP = ({
         profit: simulation.xirr ? simulation.xirr * 100 : 0,
         absProfit: absoluteReturn,
         matureAmt: Number(matureAmount.toFixed(2)),
+        latestValue,
+        latestNavDate: latestNav?.date,
+        latestXirr: simulation.latestXirr,
         profitAmt: Number(profitAmount.toFixed(2)),
         invested: simulation.invested,
         units: simulation.units,
@@ -582,6 +605,9 @@ const SIP = ({
     averageNav: number,
     xirr: number | undefined,
     absoluteReturn: number,
+    latestValue: number | undefined,
+    latestNavDate: string | undefined,
+    latestXirr: number | undefined,
     title: string,
     color: string
   ) => {
@@ -620,13 +646,24 @@ const SIP = ({
               </div>
             </div>
             <div className="stat-title text-xs">Invested Amount</div>
-            <span className="text-lg text-primary font-semibold">
+            <span className="text-lg text-secondary font-semibold">
               {Math.round(invested).toLocaleString('en-IN')}
             </span>
-            <div className="stat-title text-xs">Maturity Amount</div>
-            <span className="text-xl font-semibold text-primary">
+            <div className="stat-title text-xs">Value as on {end.date}</div>
+            <span className="text-lg font-semibold text-primary">
               {Math.round(matureAmount).toLocaleString('en-IN')}
+              <span className={`text-xs ${(xirr ?? 0) >= 0 ? 'text-success' : 'text-error'}`}>
+                &nbsp;({xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`})
+              </span>
             </span>
+            {latestValue !== undefined && latestNavDate && (
+              <>
+                <div className="stat-title text-xs">Value as on ({latestNavDate})</div>
+                <span className="text-xl font-semibold text-primary">
+                  {Math.round(latestValue).toLocaleString('en-IN')}
+                </span>
+              </>
+            )}
             <div className={`font-semibold ${profitAmount >= 0 ? 'text-success' : 'text-error'}`}>
               {profitAmount < 0 ? '-' : '+'}
               &nbsp;₹
@@ -634,8 +671,8 @@ const SIP = ({
             </div>
             <div className="stat-title font-semibold">
               <span className="text-xs">X:</span>{' '}
-              <span className={(xirr ?? 0) >= 0 ? 'text-success' : 'text-error'}>
-                {xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`}
+              <span className={(latestXirr ?? 0) >= 0 ? 'text-success' : 'text-error'}>
+                {latestXirr === undefined ? 'N/A' : `${(latestXirr * 100).toFixed(2)}%`}
               </span>
               &nbsp;|&nbsp;
               <span className="text-xs">A:</span>{' '}
@@ -957,6 +994,9 @@ const SIP = ({
                 fund.averageNav,
                 fund.xirr,
                 fund.absProfit,
+                fund.latestValue,
+                fund.latestNavDate,
+                fund.latestXirr,
                 fund.schemeName,
                 fund.color
               )}

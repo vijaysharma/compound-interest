@@ -77,7 +77,6 @@ const StartEndDate = ({
       <div className="grow">
         <input
           type="date"
-          min="1990-01-01"
           max={endDate || today}
           value={startDate ?? ''}
           className="join-item w-full input input-sm input-primary focus:outline-none"
@@ -87,7 +86,7 @@ const StartEndDate = ({
       <div className="grow">
         <input
           type="date"
-          min={startDate || '1990-01-01'}
+          min={startDate || undefined}
           max={today}
           value={endDate ?? ''}
           className="join-item w-full input input-sm input-primary focus:outline-none"

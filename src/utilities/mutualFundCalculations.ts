@@ -12,6 +12,7 @@ export interface SimulationResult {
   lastNav: number;
   installments: number;
   xirr?: number;
+  latestXirr?: number;
 }
 interface CashFlow {
   date: string;
@@ -44,6 +45,16 @@ const getNav = (isoDate: string, data: NavType[]): NavPoint | undefined => {
   const nearest = getNearest(isoDate, data);
   const nav = Number(nearest?.nav);
   return nearest && Number.isFinite(nav) && nav > 0 ? { date: nearest.date, nav } : undefined;
+};
+const getEffectiveStartDate = (startDate: string, data: NavType[]): string => {
+  const earliestNav = [...data]
+    .map((nav) => ({ ...nav, time: toDate(nav.date).getTime(), value: Number(nav.nav) }))
+    .filter(({ time, value }) => Number.isFinite(time) && Number.isFinite(value) && value > 0)
+    .sort((a, b) => a.time - b.time)[0];
+  if (!earliestNav || toDate(startDate).getTime() >= earliestNav.time) {
+    return startDate;
+  }
+  return earliestNav.date;
 };
 const calculateXirr = (cashFlows: CashFlow[]): number | undefined => {
   if (cashFlows.length < 2) return undefined;
@@ -102,7 +113,8 @@ export const calculateSip = (
   installmentDay?: number
 ): SimulationResult => {
   validateInputs(startDate, endDate, monthlyAmount);
-  const dates = getMonthlyDates(startDate, endDate, installmentDay);
+  const effectiveStartDate = getEffectiveStartDate(startDate, navData);
+  const dates = getMonthlyDates(effectiveStartDate, endDate, installmentDay);
   let invested = 0;
   let units = 0;
   let lastNav = 0;
@@ -120,7 +132,15 @@ export const calculateSip = (
   }
   if (!units || !lastNav) throw new Error('No NAV data is available for the selected dates.');
   const finalNav = getNav(endDate, navData)?.nav ?? lastNav;
-  cashFlows.push({ date: endDate, amount: units * finalNav });
+  const maturityCashFlows = [...cashFlows, { date: endDate, amount: units * finalNav }];
+  const latestNav = [...navData]
+    .map((nav) => ({ nav: Number(nav.nav), date: nav.date, time: toDate(nav.date).getTime() }))
+    .filter(({ nav, time }) => Number.isFinite(nav) && nav > 0 && Number.isFinite(time))
+    .sort((a, b) => b.time - a.time)[0];
+  const latestCashFlows =
+    latestNav && latestNav.time >= toDate(endDate).getTime()
+      ? [...cashFlows, { date: latestNav.date, amount: units * latestNav.nav }]
+      : maturityCashFlows;
   return {
     invested,
     withdrawn: 0,
@@ -128,7 +148,8 @@ export const calculateSip = (
     currentValue: units * finalNav,
     lastNav: finalNav,
     installments,
-    xirr: calculateXirr(cashFlows),
+    xirr: calculateXirr(maturityCashFlows),
+    latestXirr: calculateXirr(latestCashFlows),
   };
 };
 export const calculateSipGrowth = (
@@ -140,14 +161,15 @@ export const calculateSipGrowth = (
   installmentDay?: number
 ): NavPoint[] => {
   validateInputs(startDate, endDate, monthlyAmount);
-  const firstNav = getNav(startDate, navData);
+  const effectiveStartDate = getEffectiveStartDate(startDate, navData);
+  const firstNav = getNav(effectiveStartDate, navData);
   const lastNav = getNav(endDate, navData);
   if (!firstNav || !lastNav) {
     throw new Error('No NAV data is available for the selected dates.');
   }
   const startTime = toDate(firstNav.date).getTime();
   const endTime = toDate(lastNav.date).getTime();
-  const installmentDates = getMonthlyDates(startDate, endDate, installmentDay)
+  const installmentDates = getMonthlyDates(effectiveStartDate, endDate, installmentDay)
     .map((date, index) => {
       const nav = getNav(date, navData);
       if (!nav) return undefined;
