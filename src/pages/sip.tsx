@@ -991,7 +991,7 @@ const SIP = ({
           onChange={(event) => setInvestmentStepUp(event.target.value)}
         >
           {Array.from({ length: 21 }, (_, i) => (
-            <option key={i + 1} value={i + 1}>
+            <option key={i} value={i}>
               {i}%
             </option>
           ))}
