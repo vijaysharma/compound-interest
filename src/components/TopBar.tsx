@@ -59,7 +59,9 @@ const TopBar = ({ className }: { className?: string }) => {
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex flex-col items-end text-right leading-tight">
-                <span className="text-xs font-medium truncate max-w-[140px]">{user.name || user.email}</span>
+                <span className="text-xs font-medium truncate max-w-[140px]">
+                  {user.name || user.email}
+                </span>
                 {isAdmin && (
                   <span className="badge badge-accent badge-xs font-bold uppercase text-[9px] px-1 py-0 h-3.5">
                     Admin
@@ -123,7 +125,10 @@ const TopBar = ({ className }: { className?: string }) => {
                   </span>
                 </button>
               </div>
-              <nav aria-label="Calculator pages" className="text-primary-content flex flex-col gap-1">
+              <nav
+                aria-label="Calculator pages"
+                className="text-primary-content flex flex-col gap-1"
+              >
                 <Link
                   to="/"
                   className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors"
@@ -148,7 +153,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 )}
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Loans</h3>
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
+                    Loans
+                  </h3>
                   <Link
                     to="/emi"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
@@ -158,7 +165,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Deposits</h3>
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
+                    Deposits
+                  </h3>
                   <Link
                     to="/deposits/fd"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
@@ -175,7 +184,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Economics</h3>
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
+                    Economics
+                  </h3>
                   <Link
                     to="/economics/inflation-rates"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
@@ -192,7 +203,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Fixed Plans</h3>
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
+                    Fixed Plans
+                  </h3>
                   <Link
                     to="/fixed-plans/fixed-rate-sip"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
@@ -209,7 +222,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Mutual Funds</h3>
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
+                    Mutual Funds
+                  </h3>
                   <Link
                     to="/mutual-funds/lumpsum"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"

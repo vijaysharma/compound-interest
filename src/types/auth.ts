@@ -9,7 +9,9 @@ export interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  loginWithGoogle: (credential: string) => Promise<void>;
+  loginWithGoogle: (
+    authData: string | { credential?: string; email?: string; name?: string }
+  ) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;

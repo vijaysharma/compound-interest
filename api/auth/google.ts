@@ -13,52 +13,61 @@ export default async function handler(request: Request): Promise<Response> {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
   try {
-    const body = (await request.json()) as { credential?: string; email?: string; name?: string; picture?: string };
-    const { credential } = body;
-    if (!credential) {
-      return jsonResponse({ error: 'Google credential is required' }, 400);
-    }
-    let email = '';
-    let name = '';
-    let picture = '';
+    const body = (await request.json()) as {
+      credential?: string;
+      email?: string;
+      name?: string;
+      picture?: string;
+    };
+    let email = body.email ? body.email.toLowerCase().trim() : '';
+    let name = body.name || '';
+    let picture = body.picture || '';
     let sub = '';
-    // Verify credential with Google OAuth tokeninfo endpoint
-    try {
-      const verifyRes = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
-      );
-      if (verifyRes.ok) {
-        const info = (await verifyRes.json()) as GoogleTokenInfo;
-        if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
-          email = info.email.toLowerCase();
-          name = info.name || '';
-          picture = info.picture || '';
-          sub = info.sub || '';
-        }
-      }
-    } catch (err) {
-      console.warn('Google tokeninfo fetch error:', err);
-    }
-    // Fallback for JWT payload parsing if tokeninfo is unreachable or dev mock credential
-    if (!email) {
+    if (body.credential) {
+      // Verify credential with Google OAuth tokeninfo endpoint
       try {
-        const parts = credential.split('.');
-        if (parts.length === 3) {
-          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-          const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
-          if (payload.email) {
-            email = payload.email.toLowerCase();
-            name = payload.name || '';
-            picture = payload.picture || '';
-            sub = payload.sub || '';
+        const verifyRes = await fetch(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`
+        );
+        if (verifyRes.ok) {
+          const info = (await verifyRes.json()) as GoogleTokenInfo;
+          if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
+            email = info.email.toLowerCase();
+            name = info.name || name;
+            picture = info.picture || picture;
+            sub = info.sub || sub;
           }
         }
-      } catch {
-        // invalid jwt format
+      } catch (err) {
+        console.warn('Google tokeninfo fetch error:', err);
+      }
+      // Fallback for JWT payload parsing if tokeninfo is unreachable or client token
+      if (!email) {
+        try {
+          const parts = body.credential.split('.');
+          if (parts.length === 3) {
+            const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+            const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
+            if (payload.email) {
+              email = payload.email.toLowerCase();
+              name = payload.name || name;
+              picture = payload.picture || picture;
+              sub = payload.sub || sub;
+            }
+          }
+        } catch {
+          // invalid jwt format
+        }
       }
     }
-    if (!email) {
-      return jsonResponse({ error: 'Invalid or unverified Google account' }, 401);
+    if (!email || !email.includes('@')) {
+      return jsonResponse({ error: 'Valid Google email account is required' }, 400);
+    }
+    if (!name) {
+      name = email.split('@')[0];
+    }
+    if (!picture) {
+      picture = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name || email)}`;
     }
     const sql = getDb();
     await ensureTables(sql);

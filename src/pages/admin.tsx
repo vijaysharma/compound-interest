@@ -51,9 +51,7 @@ const Admin = () => {
           <p className="text-sm opacity-70">Sync the datasets used by the calculators.</p>
         </div>
         {user && (
-          <div className="badge badge-primary badge-outline text-xs">
-            Admin: {user.email}
-          </div>
+          <div className="badge badge-primary badge-outline text-xs">Admin: {user.email}</div>
         )}
       </div>
       <section className="mb-6 border border-error p-4">

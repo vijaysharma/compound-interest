@@ -5,7 +5,10 @@ import App from './App.tsx';
 import LoadingFallback from './components/LoadingFallback.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import './index.css';
-const protectedRoute = (importer: () => Promise<{ default: ComponentType }>, requireAdmin = false) => {
+const protectedRoute = (
+  importer: () => Promise<{ default: ComponentType }>,
+  requireAdmin = false
+) => {
   return async () => {
     const Component = (await importer()).default;
     const ProtectedComponent = () => (

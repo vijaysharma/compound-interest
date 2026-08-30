@@ -56,7 +56,8 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
           </div>
           <h2 className="mb-2 text-xl font-bold text-error">Admin Access Required</h2>
           <p className="mb-2 text-sm opacity-70">
-            You are signed in as <span className="font-semibold">{user?.email}</span> (role: {user?.role}).
+            You are signed in as <span className="font-semibold">{user?.email}</span> (role:{' '}
+            {user?.role}).
           </p>
           <p className="mb-6 text-xs opacity-60">
             This administration portal is restricted to accounts with administrator privileges.

@@ -60,7 +60,9 @@ const localApiPlugin = (): Plugin => ({
         });
         const handlerResponse = await handler(handlerRequest);
         response.statusCode = handlerResponse.status;
-        handlerResponse.headers.forEach((value: string, key: string) => response.setHeader(key, value));
+        handlerResponse.headers.forEach((value: string, key: string) =>
+          response.setHeader(key, value)
+        );
         response.end(Buffer.from(await handlerResponse.arrayBuffer()));
       } catch (error) {
         response.statusCode = 500;

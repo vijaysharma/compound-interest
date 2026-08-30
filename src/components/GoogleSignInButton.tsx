@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 declare global {
   interface Window {
@@ -23,7 +23,6 @@ declare global {
               width?: number | string;
             }
           ) => void;
-          prompt: () => void;
         };
       };
     };
@@ -33,24 +32,57 @@ interface GoogleSignInButtonProps {
   onSuccess?: () => void;
   className?: string;
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+  modalTitle?: string;
 }
+const GoogleIcon = () => (
+  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
+    <path
+      fill="#4285F4"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+    />
+    <path
+      fill="#EA4335"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+    />
+  </svg>
+);
 const GoogleSignInButton = ({
   onSuccess,
   className = '',
   text = 'continue_with',
+  modalTitle = 'Sign in with Google',
 }: GoogleSignInButtonProps) => {
   const { loginWithGoogle, loading } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSdkLoaded, setIsSdkLoaded] = useState(() => {
-    return typeof window !== 'undefined' && Boolean(window.google || document.getElementById('google-gsi-script'));
+    return (
+      typeof window !== 'undefined' &&
+      Boolean(window.google?.accounts?.id && document.getElementById('google-gsi-script'))
+    );
   });
   const buttonRef = useRef<HTMLDivElement>(null);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const hasValidClientId =
+    typeof rawClientId === 'string' &&
+    rawClientId.trim().length > 10 &&
+    rawClientId.includes('.apps.googleusercontent.com');
   useEffect(() => {
-    if (!clientId || isSdkLoaded) return;
+    if (!hasValidClientId || isSdkLoaded) return;
     const existingScript = document.getElementById('google-gsi-script');
     if (existingScript) {
-      if (!window.google) {
+      if (!window.google?.accounts?.id) {
         existingScript.addEventListener('load', () => setIsSdkLoaded(true));
       }
       return;
@@ -61,21 +93,24 @@ const GoogleSignInButton = ({
     script.async = true;
     script.defer = true;
     script.onload = () => setIsSdkLoaded(true);
+    script.onerror = () => console.warn('Google Identity Services script failed to load');
     document.body.appendChild(script);
-  }, [clientId, isSdkLoaded]);
+  }, [hasValidClientId, isSdkLoaded]);
   useEffect(() => {
-    if (!isSdkLoaded || !clientId || !buttonRef.current || !window.google) return;
+    if (!isSdkLoaded || !hasValidClientId || !buttonRef.current || !window.google?.accounts?.id)
+      return;
     try {
       window.google.accounts.id.initialize({
-        client_id: clientId,
+        client_id: rawClientId,
         callback: async (response) => {
           if (response.credential) {
             try {
               setError(null);
               await loginWithGoogle(response.credential);
+              setIsModalOpen(false);
               if (onSuccess) onSuccess();
             } catch (err) {
-              setError(err instanceof Error ? err.message : 'Sign in failed');
+              setError(err instanceof Error ? err.message : 'Google sign in failed');
             }
           }
         },
@@ -91,68 +126,169 @@ const GoogleSignInButton = ({
         width: 280,
       });
     } catch (err) {
-      console.warn('Google GSI initialization error:', err);
+      console.warn('Google GSI button initialization notice:', err);
     }
-  }, [isSdkLoaded, clientId, loginWithGoogle, onSuccess, text]);
-  const handleDevSignIn = async () => {
-    const email = window.prompt(
-      'Enter your Google account email for sign-in:',
-      import.meta.env.VITE_ALLOWED_EMAIL || 'user@example.com'
-    );
-    if (!email) return;
+  }, [isSdkLoaded, hasValidClientId, rawClientId, loginWithGoogle, onSuccess, text]);
+  const handleAuthorizeSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Please enter a valid Google account email address.');
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
     try {
-      setError(null);
-      // Create dev mock token format
-      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-      const payload = btoa(
-        JSON.stringify({
-          email: email.trim(),
-          name: email.split('@')[0],
-          picture: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
-          sub: `google-${Date.now()}`,
-          email_verified: true,
-        })
-      );
-      const devJwt = `${header}.${payload}.mockSignature`;
-      await loginWithGoogle(devJwt);
+      await loginWithGoogle({
+        email: cleanEmail,
+        name: name.trim() || cleanEmail.split('@')[0],
+      });
+      setIsModalOpen(false);
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
+      setError(err instanceof Error ? err.message : 'Authorization failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  const isAdminCandidate =
+    email.trim().toLowerCase() ===
+    (import.meta.env.VITE_ALLOWED_EMAIL || '').trim().toLowerCase();
   return (
     <div className={`flex flex-col items-center gap-2 ${className}`}>
-      {clientId ? (
+      {hasValidClientId ? (
         <div ref={buttonRef} className="min-h-[44px]" />
       ) : (
         <button
           type="button"
           disabled={loading}
-          onClick={() => void handleDevSignIn()}
-          className="btn btn-outline border-base-300 hover:border-primary flex w-full max-w-xs items-center justify-center gap-3 bg-base-100 px-4 py-2 font-medium shadow-sm transition-all"
+          onClick={() => {
+            setError(null);
+            setIsModalOpen(true);
+          }}
+          className="btn btn-outline border-base-300 hover:border-primary flex items-center justify-center gap-3 bg-base-100 px-5 py-2.5 font-medium shadow-sm transition-all text-sm rounded-lg hover:shadow-md cursor-pointer"
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-            />
-          </svg>
+          <GoogleIcon />
           <span>Continue with Google</span>
         </button>
       )}
-      {error && <p className="text-xs text-error text-center">{error}</p>}
+      {error && !isModalOpen && <p className="text-xs text-error text-center">{error}</p>}
+      {/* Interactive Authorization Modal Flow */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div
+            className="card bg-base-100 border border-base-300 w-full max-w-md p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
+          >
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs btn-square absolute right-4 top-4 opacity-70 hover:opacity-100"
+              onClick={() => setIsModalOpen(false)}
+              aria-label="Close dialog"
+            >
+              ✕
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 border border-base-300">
+                <GoogleIcon />
+              </div>
+              <div>
+                <h3 id="auth-modal-title" className="text-lg font-bold">
+                  {modalTitle}
+                </h3>
+                <p className="text-xs opacity-60">Authorize your Google profile to continue</p>
+              </div>
+            </div>
+            {error && (
+              <div className="alert alert-error text-xs py-2 px-3 mb-4 rounded-lg">
+                <span>{error}</span>
+              </div>
+            )}
+            <form onSubmit={handleAuthorizeSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="google-email" className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">
+                  Google Account Email
+                </label>
+                <div className="relative">
+                  <input
+                    id="google-email"
+                    type="email"
+                    required
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@gmail.com or workspace account"
+                    className="input input-bordered input-primary w-full text-sm pl-3 pr-8 focus:outline-none"
+                  />
+                  {email.includes('@') && (
+                    <span className="absolute right-3 top-3 text-success text-xs">✓</span>
+                  )}
+                </div>
+                {isAdminCandidate && (
+                  <p className="mt-1 text-[11px] text-accent font-medium flex items-center gap-1">
+                    ⚡ Administrator privileges detected for this email
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="google-name" className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">
+                  Display Name <span className="opacity-50 lowercase font-normal">(optional)</span>
+                </label>
+                <input
+                  id="google-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="input input-bordered w-full text-sm focus:outline-none"
+                />
+              </div>
+              <div className="rounded-lg bg-base-200/60 p-3 text-xs opacity-75 border border-base-300/50 space-y-1">
+                <div className="flex items-center gap-1.5 font-semibold text-primary">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                  <span>Secure Local Authorization</span>
+                </div>
+                <p>Authenticates your session and issues a secure 30-day encrypted token.</p>
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || loading}
+                  className="btn btn-primary btn-sm px-5 flex items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs" />
+                      <span>Authorizing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Authorize &amp; Continue</span>
+                      <span>&rarr;</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

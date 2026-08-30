@@ -50,13 +50,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       cancelled = true;
     };
   }, [token]);
-  const loginWithGoogle = async (credential: string) => {
+  const loginWithGoogle = async (
+    authData: string | { credential?: string; email?: string; name?: string }
+  ) => {
     setLoading(true);
     try {
+      const payload = typeof authData === 'string' ? { credential: authData } : authData;
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json()) as { token?: string; user?: AuthUser; error?: string };
       if (!res.ok || !data.token || !data.user) {

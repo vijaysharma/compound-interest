@@ -42,7 +42,9 @@ const Home = () => {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg opacity-80 leading-relaxed">
-            High-performance financial intelligence engine. Simulate Compound Interest, backtest SIP &amp; SWP scenarios, compare historical Mutual Fund NAVs, and model global Purchasing Power Parity in real time.
+            High-performance financial intelligence engine. Simulate Compound Interest, backtest SIP
+            &amp; SWP scenarios, compare historical Mutual Fund NAVs, and model global Purchasing
+            Power Parity in real time.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             {isAuthenticated ? (
@@ -55,7 +57,10 @@ const Home = () => {
             ) : (
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <GoogleSignInButton text="continue_with" />
-                <Link to="/investment-details" className="btn btn-outline btn-md sm:btn-lg font-semibold">
+                <Link
+                  to="/investment-details"
+                  className="btn btn-outline btn-md sm:btn-lg font-semibold"
+                >
                   Explore Live Demo
                 </Link>
               </div>
@@ -102,7 +107,10 @@ const Home = () => {
               <div>
                 <div className="flex justify-between items-center text-sm font-medium mb-1">
                   <span>Monthly Investment</span>
-                  <span className="text-primary font-bold">{currencySymbol}{monthlySip.toLocaleString('en-IN')}</span>
+                  <span className="text-primary font-bold">
+                    {currencySymbol}
+                    {monthlySip.toLocaleString('en-IN')}
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -154,7 +162,8 @@ const Home = () => {
                 Projected Maturity Value
               </div>
               <div className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
-                {currencySymbol}{quickCalc.maturityAmount.toLocaleString('en-IN')}
+                {currencySymbol}
+                {quickCalc.maturityAmount.toLocaleString('en-IN')}
               </div>
               <div className="text-xs opacity-75 mb-6 capitalize">
                 {convertToWords(quickCalc.maturityAmount, 'en-IN')}
@@ -162,16 +171,24 @@ const Home = () => {
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-base-300">
                 <div>
                   <div className="text-xs opacity-60">Total Invested</div>
-                  <div className="text-base font-bold">{currencySymbol}{quickCalc.totalInvested.toLocaleString('en-IN')}</div>
+                  <div className="text-base font-bold">
+                    {currencySymbol}
+                    {quickCalc.totalInvested.toLocaleString('en-IN')}
+                  </div>
                 </div>
                 <div>
                   <div className="text-xs opacity-60">Estimated Wealth Gained</div>
-                  <div className="text-base font-bold text-success">+{currencySymbol}{quickCalc.estimatedReturns.toLocaleString('en-IN')}</div>
+                  <div className="text-base font-bold text-success">
+                    +{currencySymbol}
+                    {quickCalc.estimatedReturns.toLocaleString('en-IN')}
+                  </div>
                 </div>
               </div>
               <div className="mt-4 pt-3 border-t border-base-300/50 flex items-center justify-between text-xs">
                 <span className="opacity-70">Wealth Multiplier:</span>
-                <span className="badge badge-primary font-bold">{quickCalc.wealthMultiple}x Capital</span>
+                <span className="badge badge-primary font-bold">
+                  {quickCalc.wealthMultiple}x Capital
+                </span>
               </div>
               <div className="mt-6">
                 <Link to="/investment-details" className="btn btn-primary btn-sm w-full">
@@ -198,9 +215,13 @@ const Home = () => {
               </div>
               <h3 className="text-lg font-bold mb-2">Mutual Fund Engine</h3>
               <p className="text-sm opacity-70 mb-4">
-                Search thousands of AMFI mutual funds with live NAV history. Analyze CAGR, benchmark growth, and visualize historical lumpsum and SIP performance.
+                Search thousands of AMFI mutual funds with live NAV history. Analyze CAGR, benchmark
+                growth, and visualize historical lumpsum and SIP performance.
               </p>
-              <Link to="/mutual-funds/lumpsum" className="text-xs text-primary font-semibold hover:underline mt-auto">
+              <Link
+                to="/mutual-funds/lumpsum"
+                className="text-xs text-primary font-semibold hover:underline mt-auto"
+              >
                 Explore Mutual Funds &rarr;
               </Link>
             </div>
@@ -210,9 +231,13 @@ const Home = () => {
               </div>
               <h3 className="text-lg font-bold mb-2">SIP &amp; SWP Planning</h3>
               <p className="text-sm opacity-70 mb-4">
-                Calculate forward systematic investments or retirement withdrawals. Model target capital accumulation or monthly income sustainability.
+                Calculate forward systematic investments or retirement withdrawals. Model target
+                capital accumulation or monthly income sustainability.
               </p>
-              <Link to="/fixed-plans/fixed-rate-sip" className="text-xs text-primary font-semibold hover:underline mt-auto">
+              <Link
+                to="/fixed-plans/fixed-rate-sip"
+                className="text-xs text-primary font-semibold hover:underline mt-auto"
+              >
                 Explore Systematic Plans &rarr;
               </Link>
             </div>
@@ -222,9 +247,13 @@ const Home = () => {
               </div>
               <h3 className="text-lg font-bold mb-2">Fixed &amp; Recurring Deposits</h3>
               <p className="text-sm opacity-70 mb-4">
-                High-precision compound interest calculator with support for monthly, quarterly, semi-annual, and annual compounding frequencies.
+                High-precision compound interest calculator with support for monthly, quarterly,
+                semi-annual, and annual compounding frequencies.
               </p>
-              <Link to="/deposits/fd" className="text-xs text-primary font-semibold hover:underline mt-auto">
+              <Link
+                to="/deposits/fd"
+                className="text-xs text-primary font-semibold hover:underline mt-auto"
+              >
                 Explore Deposit Plans &rarr;
               </Link>
             </div>
@@ -234,9 +263,13 @@ const Home = () => {
               </div>
               <h3 className="text-lg font-bold mb-2">Purchasing Power Parity (PPP)</h3>
               <p className="text-sm opacity-70 mb-4">
-                Convert salary and living costs across 150+ countries using real World Bank PPP conversion factors and currency mappings.
+                Convert salary and living costs across 150+ countries using real World Bank PPP
+                conversion factors and currency mappings.
               </p>
-              <Link to="/economics/ppp-exchange-rate" className="text-xs text-primary font-semibold hover:underline mt-auto">
+              <Link
+                to="/economics/ppp-exchange-rate"
+                className="text-xs text-primary font-semibold hover:underline mt-auto"
+              >
                 Calculate Global PPP &rarr;
               </Link>
             </div>
@@ -246,9 +279,13 @@ const Home = () => {
               </div>
               <h3 className="text-lg font-bold mb-2">Inflation Modeling</h3>
               <p className="text-sm opacity-70 mb-4">
-                Understand the true purchasing power erosion over decades with IMF historical inflation data and forward forecasts.
+                Understand the true purchasing power erosion over decades with IMF historical
+                inflation data and forward forecasts.
               </p>
-              <Link to="/economics/inflation-rates" className="text-xs text-primary font-semibold hover:underline mt-auto">
+              <Link
+                to="/economics/inflation-rates"
+                className="text-xs text-primary font-semibold hover:underline mt-auto"
+              >
                 Explore Inflation Rates &rarr;
               </Link>
             </div>
@@ -258,9 +295,13 @@ const Home = () => {
               </div>
               <h3 className="text-lg font-bold mb-2">EMI &amp; Loan Amortization</h3>
               <p className="text-sm opacity-70 mb-4">
-                Calculate home, personal, or vehicle loan EMIs with full month-by-month principal vs interest repayment breakdown schedules.
+                Calculate home, personal, or vehicle loan EMIs with full month-by-month principal vs
+                interest repayment breakdown schedules.
               </p>
-              <Link to="/emi" className="text-xs text-primary font-semibold hover:underline mt-auto">
+              <Link
+                to="/emi"
+                className="text-xs text-primary font-semibold hover:underline mt-auto"
+              >
                 Calculate Loan EMI &rarr;
               </Link>
             </div>
@@ -272,11 +313,15 @@ const Home = () => {
         <div className="mx-auto max-w-2xl">
           <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to Optimize Your Finances?</h2>
           <p className="mt-3 text-base sm:text-lg opacity-90">
-            Sign in with Google to start modeling your financial independence, investments, and compounding returns.
+            Sign in with Google to start modeling your financial independence, investments, and
+            compounding returns.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             {isAuthenticated ? (
-              <Link to="/investment-details" className="btn btn-secondary btn-md sm:btn-lg font-semibold">
+              <Link
+                to="/investment-details"
+                className="btn btn-secondary btn-md sm:btn-lg font-semibold"
+              >
                 Launch Calculators Suite &rarr;
               </Link>
             ) : (
@@ -287,8 +332,14 @@ const Home = () => {
       </section>
       {/* Footer */}
       <footer className="border-t border-base-300 py-8 px-4 text-center text-xs opacity-60 space-y-2">
-        <p>&copy; {new Date().getFullYear()} Rupee Calculator. Built for financial intelligence and precision.</p>
-        <p>Data sourced from AMFI India, World Bank Open Data, and IMF DataMapper. For educational and analytical purposes.</p>
+        <p>
+          &copy; {new Date().getFullYear()} Rupee Calculator. Built for financial intelligence and
+          precision.
+        </p>
+        <p>
+          Data sourced from AMFI India, World Bank Open Data, and IMF DataMapper. For educational
+          and analytical purposes.
+        </p>
       </footer>
     </div>
   );
