@@ -69,6 +69,33 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
       </div>
     );
   }
+  if (user?.isBlocked && !isAdmin) {
+    return (
+      <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
+        <div className="card bg-base-100 border border-warning/40 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning text-2xl">
+            ⚡
+          </div>
+          <h2 className="mb-2 text-xl font-bold">Free Trial Quota Reached</h2>
+          <p className="mb-2 text-xs sm:text-sm opacity-75">
+            You have used all {user.freeLimit || 15} free calculation runs for{' '}
+            <span className="font-semibold">{user.email}</span>.
+          </p>
+          <p className="mb-6 text-xs opacity-60">
+            Support the creator for just ₹19 to unlock unlimited calculations, live AMFI data, and real-time models.
+          </p>
+          <div className="space-y-2">
+            <Link to="/upgrade" className="btn btn-primary w-full font-bold shadow-md">
+              ⚡ Upgrade for ₹19 / Month &rarr;
+            </Link>
+            <Link to="/" className="btn btn-ghost btn-xs w-full opacity-70">
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return <>{children}</>;
 };
 export default ProtectedRoute;

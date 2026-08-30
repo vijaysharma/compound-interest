@@ -33,6 +33,10 @@ const localApiPlugin = (): Plugin => ({
         modulePath = '/api/payments/settings';
       } else if (path === '/api/payments/submit') {
         modulePath = '/api/payments/submit';
+      } else if (path === '/api/payments/razorpay/create-order') {
+        modulePath = '/api/payments/razorpay/create-order';
+      } else if (path === '/api/payments/razorpay/verify') {
+        modulePath = '/api/payments/razorpay/verify';
       } else if (path === '/api/admin/payments') {
         modulePath = '/api/admin/payments';
       } else if (path === '/api/admin/users') {

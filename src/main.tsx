@@ -34,6 +34,10 @@ const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('./pages/login.tsx')).default }),
       },
       {
+        path: 'upgrade',
+        lazy: async () => ({ Component: (await import('./pages/upgrade.tsx')).default }),
+      },
+      {
         path: 'investment-details',
         lazy: protectedRoute(() => import('./pages/investment_details.tsx')),
       },

@@ -267,8 +267,17 @@ const TopBar = ({ className }: { className?: string }) => {
               </nav>
             </div>
             {isAuthenticated && user && (
-              <div className="border-t border-primary-content/20 pt-4 mt-6">
-                <p className="text-xs truncate opacity-70 mb-2">{user.email}</p>
+              <div className="border-t border-primary-content/20 pt-4 mt-6 space-y-2">
+                <p className="text-xs truncate opacity-70 mb-1">{user.email}</p>
+                {user.subscription_status !== 'active' && user.role !== 'admin' && (
+                  <Link
+                    to="/upgrade"
+                    className="btn btn-warning btn-sm w-full font-bold shadow-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    ⚡ Unlock Pro (₹19/mo)
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => {

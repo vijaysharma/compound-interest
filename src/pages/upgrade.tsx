@@ -1,0 +1,287 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
+import Logo from '../components/Logo';
+import { PaymentSettings } from '../types/auth';
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void;
+      on: (event: string, handler: (response: unknown) => void) => void;
+    };
+  }
+}
+const Upgrade = () => {
+  const { user, isAuthenticated, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showQrFallback, setShowQrFallback] = useState(false);
+  const [settings, setSettings] = useState<PaymentSettings | null>(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    // Load Razorpay Checkout script
+    if (!document.getElementById('razorpay-checkout-script')) {
+      const script = document.createElement('script');
+      script.id = 'razorpay-checkout-script';
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/payments/settings');
+        if (res.ok) {
+          const data = (await res.json()) as { settings: PaymentSettings };
+          setSettings(data.settings);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch settings:', err);
+      }
+    };
+    void fetchSettings();
+  }, []);
+  const handleCopyUpi = () => {
+    if (!settings?.upi_id) return;
+    void navigator.clipboard.writeText(settings.upi_id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  const handleRazorpayPayment = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: '/upgrade' } } });
+      return;
+    }
+    setIsProcessing(true);
+    setMessage(null);
+    try {
+      const storedToken = localStorage.getItem('auth_token');
+      const orderRes = await fetch('/api/payments/razorpay/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${storedToken}`,
+        },
+        body: JSON.stringify({ amount: 19 }),
+      });
+      const orderData = (await orderRes.json()) as {
+        orderId?: string;
+        amount?: number;
+        currency?: string;
+        keyId?: string;
+        error?: string;
+        user?: { name?: string; email?: string };
+      };
+      if (!orderRes.ok || !orderData.orderId || !orderData.keyId) {
+        throw new Error(orderData.error || 'Failed to initialize payment gateway');
+      }
+      if (!window.Razorpay) {
+        throw new Error('Razorpay payment gateway script is still loading. Please try again.');
+      }
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'Rupee Calculator',
+        description: '30 Days Unlimited Pro Access',
+        order_id: orderData.orderId,
+        prefill: {
+          name: orderData.user?.name || user?.name || '',
+          email: orderData.user?.email || user?.email || '',
+        },
+        theme: {
+          color: '#10b981',
+        },
+        handler: async (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            setIsProcessing(true);
+            const verifyRes = await fetch('/api/payments/razorpay/verify', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${storedToken}`,
+              },
+              body: JSON.stringify(response),
+            });
+            const verifyData = (await verifyRes.json()) as { message?: string; error?: string };
+            if (!verifyRes.ok) {
+              throw new Error(verifyData.error || 'Payment signature verification failed');
+            }
+            setMessage({
+              type: 'success',
+              text: 'Payment successful! 30-day Pro Access has been activated for your account.',
+            });
+            await refreshUser();
+            setTimeout(() => {
+              navigate('/investment-details', { replace: true });
+            }, 1500);
+          } catch (err) {
+            setMessage({
+              type: 'error',
+              text: err instanceof Error ? err.message : 'Verification failed',
+            });
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+          },
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Unable to initiate payment. Please try again.',
+      });
+      setIsProcessing(false);
+    }
+  };
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 mb-3">
+          <Logo />
+          <span className="text-xs uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
+            Support the Creator
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+          Keep Rupee Calculator Alive
+        </h1>
+        <p className="mt-2 text-sm sm:text-base opacity-75 max-w-xl mx-auto">
+          Honest, transparent tools built with care for independent Indian investors and planners.
+        </p>
+      </div>
+      {message && (
+        <div
+          className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} text-sm py-3 px-4 mb-6 rounded-xl shadow-sm`}
+        >
+          <span>{message.text}</span>
+        </div>
+      )}
+      {/* Narrative Story Card */}
+      <div className="card bg-base-100 border border-base-300 p-6 sm:p-8 shadow-xl mb-8 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-warning/15 text-xl shrink-0">
+            ☕
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">Why we ask for just ₹19/month</h2>
+            <p className="text-xs opacity-60">A message from the developer</p>
+          </div>
+        </div>
+        <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
+          <p>
+            Building <strong>Rupee Calculator</strong> wasn&apos;t just about throwing together simple compound interest math. We engineered an institutional-grade financial computation suite that synchronizes <strong>thousands of AMFI mutual fund historical NAVs</strong> daily, indexes <strong>decades of historical IMF inflation rates</strong>, and models real inflation-adjusted SWP, SIP, and Purchasing Power Parity (PPP) trajectories.
+          </p>
+          <p>
+            Unlike other financial platforms, we don&apos;t sell your private financial data to credit card brokers, and we don&apos;t clutter your screen with intrusive banner ads or loan spam.
+          </p>
+          <p>
+            However, maintaining high-speed edge compute servers, PostgreSQL connection poolers, and live AMFI API synchronization incurs real monthly infrastructure costs.
+          </p>
+          <p className="font-semibold text-primary">
+            ₹19 is a meagre token amount—less than a single cup of tea ☕. Your support directly helps keep the servers running and motivates ongoing development of new calculators and features.
+          </p>
+        </div>
+      </div>
+      {/* Pricing & Checkout Card */}
+      <div className="card bg-gradient-to-br from-primary/10 via-base-100 to-base-200 border-2 border-primary/40 p-6 sm:p-8 shadow-2xl relative overflow-hidden mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="text-center sm:text-left">
+            <span className="badge badge-primary font-bold text-xs uppercase px-3 py-1 mb-2">
+              Pro Subscription
+            </span>
+            <div className="flex items-baseline justify-center sm:justify-start gap-1">
+              <span className="text-4xl sm:text-5xl font-extrabold text-primary">₹19</span>
+              <span className="text-sm opacity-70 font-medium">/ 30 Days</span>
+            </div>
+            <p className="mt-1.5 text-xs opacity-75">
+              Instant activation for <span className="font-semibold">{user?.email || 'your account'}</span>
+            </p>
+          </div>
+          <div className="w-full sm:w-auto">
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={() => void handleRazorpayPayment()}
+              className="btn btn-primary btn-lg w-full shadow-lg gap-2 text-sm sm:text-base font-bold"
+            >
+              {isProcessing ? (
+                <>
+                  <span className="loading loading-spinner loading-sm" />
+                  <span>Processing Payment...</span>
+                </>
+              ) : (
+                <>
+                  <span>⚡ Pay ₹19 &amp; Unlock Instantly</span>
+                </>
+              )}
+            </button>
+            <p className="mt-2 text-center text-[11px] opacity-60">
+              UPI (GPay, PhonePe, Paytm, BHIM) • Cards • NetBanking
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 pt-6 border-t border-base-300 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs opacity-80">
+          <div className="flex items-center gap-2">
+            <span className="text-success font-bold">✓</span>
+            <span>Unlimited Calculations</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-success font-bold">✓</span>
+            <span>Real-time AMFI Data Sync</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-success font-bold">✓</span>
+            <span>Zero Ads &amp; Complete Privacy</span>
+          </div>
+        </div>
+      </div>
+      {/* Optional Fallback Accordion */}
+      <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setShowQrFallback(!showQrFallback)}
+          className="flex items-center justify-between w-full text-xs font-semibold opacity-75 hover:opacity-100"
+        >
+          <span>Having trouble with the payment gateway? Pay via manual UPI QR &rarr;</span>
+          <span>{showQrFallback ? '▲' : '▼'}</span>
+        </button>
+        {showQrFallback && (
+          <div className="mt-4 pt-4 border-t border-base-300 flex flex-col items-center text-center space-y-3">
+            <p className="text-xs opacity-75">
+              Scan with any UPI App and pay ₹19 to the UPI ID:
+            </p>
+            {settings?.upi_qr_code_url && (
+              <img
+                src={settings.upi_qr_code_url}
+                alt="UPI QR"
+                className="h-40 w-40 object-contain bg-white p-2 rounded-lg border border-base-300"
+              />
+            )}
+            <div className="flex items-center gap-2 bg-base-200 px-3 py-1.5 rounded-lg border border-base-300 text-xs">
+              <span className="font-mono font-bold text-primary">{settings?.upi_id || 'rupeecalculator@upi'}</span>
+              <button
+                type="button"
+                onClick={handleCopyUpi}
+                className="btn btn-ghost btn-xs text-xs"
+              >
+                {copied ? '✓ Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+export default Upgrade;
