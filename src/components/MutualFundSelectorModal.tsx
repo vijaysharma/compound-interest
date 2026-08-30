@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import JoinedButtonGroup from './JoinedButtonGroup';
 import { MFType } from '../types/types';
 interface PinnedFund {
@@ -31,6 +32,10 @@ const MutualFundSelectorModal = ({
   pinnedFunds,
   togglePinFund,
 }: MutualFundSelectorModalProps) => {
+  const pinnedFundMap = useMemo(
+    () => new Map(pinnedFunds.map((f) => [f.schemeCode, f])),
+    [pinnedFunds]
+  );
   if (!open) return null;
   return (
     <div
@@ -117,7 +122,7 @@ const MutualFundSelectorModal = ({
           {funds.length > 0 ? (
             funds.map((fund) => {
               const schemeCode = String(fund.value);
-              const pinnedFund = pinnedFunds.find((pinned) => pinned.schemeCode === schemeCode);
+              const pinnedFund = pinnedFundMap.get(schemeCode);
               const isPinned = Boolean(pinnedFund);
               return (
                 <label

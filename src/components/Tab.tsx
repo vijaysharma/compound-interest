@@ -1,5 +1,5 @@
 import { TabType } from '../types/types';
-const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
+const Tab = ({ name, child, selectedId, setSelectedId, isVisited = true }: TabType) => {
   return (
     <>
       <input
@@ -16,7 +16,7 @@ const Tab = ({ name, child, selectedId, setSelectedId }: TabType) => {
         }}
       />
       <div role="tabpanel" className="tab-content py-2 w-full overflow-y-auto">
-        {child}
+        {isVisited ? child : null}
       </div>
     </>
   );

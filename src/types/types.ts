@@ -79,7 +79,8 @@ export interface TabType {
   name: string;
   child: TabChild;
   selectedId: string;
-  setSelectedId?: React.Dispatch<SetStateAction<string>>;
+  setSelectedId?: React.Dispatch<SetStateAction<string>> | ((id: string) => void);
+  isVisited?: boolean;
 }
 export interface TabsType {
   name: string;

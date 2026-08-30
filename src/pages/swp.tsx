@@ -1,13 +1,13 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import InputAmount from '../components/InputAmount';
 import StartEndDate from '../components/Date';
 import { getNearest } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
-import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
+const Chart = lazy(() => import('../components/Chart'));
 const STORAGE_KEY = 'mutual_fund_swp_state';
 interface PinnedFund {
   schemeCode: string;
@@ -58,10 +58,6 @@ interface FundAnalysis {
   averageNav: number;
   installments: number;
   xirr: number | undefined;
-  chartData: {
-    date: string;
-    nav: number;
-  }[];
 }
 const getDefaultState = (): SavedState => ({
   searchKey: 'Kotak Arbitrage Fund',
@@ -539,16 +535,6 @@ const SWP = ({
       const profitAmount = Math.round(
         simulation.withdrawn + (latestValue ?? simulation.currentValue) - simulation.invested
       );
-      const chartData = calculateSwpGrowth(
-        navData,
-        lumpsumStartDate ?? '',
-        startSwpDate ?? '',
-        endSwpDate ?? '',
-        Number(lumpSumInvestmentAmount),
-        Number(monthlyWithdrawalAmount),
-        Number(investmentStepUp),
-        Number(dayOfMonth)
-      );
       return {
         schemeCode: fund.schemeCode,
         schemeName: fund.schemeName,
@@ -573,7 +559,6 @@ const SWP = ({
             : 0,
         installments: simulation.installments,
         xirr: simulation.xirr,
-        chartData,
       };
     });
   }, [
@@ -587,17 +572,55 @@ const SWP = ({
     investmentStepUp,
     dayOfMonth,
   ]);
-  const chartDatasets = useMemo(
-    () =>
-      fundAnalyses
-        .filter((fund) => fund.chartData.length > 0)
-        .map((fund) => ({
+  const chartDatasets = useMemo(() => {
+    if (!viewChart) {
+      return [];
+    }
+    return pinnedFunds.map((fund) => {
+      const navData = pinnedNavData[fund.schemeCode] ?? [];
+      if (navData.length === 0 || !startSwpDate || !endSwpDate) {
+        return {
           label: fund.schemeName,
           color: fund.color,
-          data: fund.chartData,
-        })),
-    [fundAnalyses]
-  );
+          data: [],
+        };
+      }
+      try {
+        const chartData = calculateSwpGrowth(
+          navData,
+          lumpsumStartDate ?? '',
+          startSwpDate,
+          endSwpDate,
+          Number(lumpSumInvestmentAmount),
+          Number(monthlyWithdrawalAmount),
+          Number(investmentStepUp),
+          Number(dayOfMonth)
+        );
+        return {
+          label: fund.schemeName,
+          color: fund.color,
+          data: chartData,
+        };
+      } catch {
+        return {
+          label: fund.schemeName,
+          color: fund.color,
+          data: [],
+        };
+      }
+    });
+  }, [
+    viewChart,
+    pinnedFunds,
+    pinnedNavData,
+    lumpsumStartDate,
+    startSwpDate,
+    endSwpDate,
+    lumpSumInvestmentAmount,
+    monthlyWithdrawalAmount,
+    investmentStepUp,
+    dayOfMonth,
+  ]);
   const toggleViewChart = () => {
     setViewChart((previous) => !previous);
   };
@@ -776,12 +799,20 @@ const SWP = ({
       )}
       {viewChart &&
         (pinnedFunds.length > 0 ? (
-          <Chart
-            className="chart-container"
-            datasets={chartDatasets}
-            investmentAmount={parseFloat(monthlyWithdrawalAmount) || 0}
-            dataMode="value"
-          />
+          <Suspense
+            fallback={
+              <div className="h-[240px] flex items-center justify-center">
+                <span className="loading loading-spinner loading-md text-primary"></span>
+              </div>
+            }
+          >
+            <Chart
+              className="chart-container"
+              datasets={chartDatasets}
+              investmentAmount={parseFloat(monthlyWithdrawalAmount) || 0}
+              dataMode="value"
+            />
+          </Suspense>
         ) : (
           <div className="text-center py-4 text-sm opacity-60">
             Select up to 8 funds to see comparison

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
 import InputAmount from '../components/InputAmount.tsx';
 import RateOfInterest from '../components/RateOfInterest.tsx';
@@ -41,7 +41,10 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
     }
     return sanctnum(fa);
   };
-  const payoutAmount = Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi));
+  const payoutAmount = useMemo(
+    () => Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi)),
+    [pa, rt.tenure, rt.tenureFormat, invType, rt.roi]
+  );
   return (
     <div className={className}>
       {title && <h5>{title}</h5>}

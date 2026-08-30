@@ -1,13 +1,13 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import InputAmount from '../components/InputAmount';
 import StartEndDate from '../components/Date';
 import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
-import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { CHART_COLORS } from '../data/chartColors';
+const Chart = lazy(() => import('../components/Chart'));
 const STORAGE_KEY = 'mutual_fund_lumpsum_state';
 interface PinnedFund {
   schemeCode: string;
@@ -43,10 +43,6 @@ interface FundAnalysis {
   absProfit: number;
   matureAmt: number;
   profitAmt: number;
-  chartData: {
-    date: string;
-    nav: number;
-  }[];
 }
 const getDefaultState = (): SavedState => ({
   searchKey: 'Kotak Arbitrage Fund',
@@ -531,18 +527,50 @@ const Lumpsum = ({
        */
       const matureAmount = (investment / startValue) * endValue;
       const profitAmount = matureAmount - investment;
-      /*
-       * Chart range.
-       */
+      return {
+        schemeCode: fund.schemeCode,
+        schemeName: fund.schemeName,
+        color: fund.color,
+        startNav: start,
+        endNav: end,
+        profit: cagr * 100,
+        absProfit: absoluteReturn,
+        matureAmt: Number(matureAmount.toFixed(2)),
+        profitAmt: Number(profitAmount.toFixed(2)),
+      };
+    });
+  }, [pinnedFunds, pinnedNavData, startDate, endDate, invAmt]);
+  /*
+   * ==========================================================
+   * CHART DATASETS
+   * ==========================================================
+   */
+  const chartDatasets = useMemo(() => {
+    if (!viewChart) {
+      return [];
+    }
+    return pinnedFunds.map((fund) => {
+      const navData = pinnedNavData[fund.schemeCode] ?? [];
+      if (navData.length === 0 || !startDate || !endDate) {
+        return {
+          label: fund.schemeName,
+          color: fund.color,
+          data: [],
+        };
+      }
+      const start = getNearest(startDate, navData);
+      const end = getNearest(endDate, navData);
+      if (!start || !end) {
+        return {
+          label: fund.schemeName,
+          color: fund.color,
+          data: [],
+        };
+      }
       const startTime = getNavDateTime(start.date);
       const endTime = getNavDateTime(end.date);
       const lowerTime = Math.min(startTime, endTime);
       const upperTime = Math.max(startTime, endTime);
-      /*
-       * Chart data:
-       *
-       * Filter -> validate -> chronological sort.
-       */
       const chartData = navData
         .map((nav) => ({
           date: nav.date,
@@ -562,35 +590,12 @@ const Lumpsum = ({
           nav,
         }));
       return {
-        schemeCode: fund.schemeCode,
-        schemeName: fund.schemeName,
+        label: fund.schemeName,
         color: fund.color,
-        startNav: start,
-        endNav: end,
-        profit: cagr * 100,
-        absProfit: absoluteReturn,
-        matureAmt: Number(matureAmount.toFixed(2)),
-        profitAmt: Number(profitAmount.toFixed(2)),
-        chartData,
+        data: chartData,
       };
     });
-  }, [pinnedFunds, pinnedNavData, startDate, endDate, invAmt]);
-  /*
-   * ==========================================================
-   * CHART DATASETS
-   * ==========================================================
-   */
-  const chartDatasets = useMemo(
-    () =>
-      fundAnalyses
-        .filter((fund) => fund.chartData.length > 0)
-        .map((fund) => ({
-          label: fund.schemeName,
-          color: fund.color,
-          data: fund.chartData,
-        })),
-    [fundAnalyses]
-  );
+  }, [viewChart, pinnedFunds, pinnedNavData, startDate, endDate]);
   /*
    * ==========================================================
    * SHOW DATE / TIME SLOTS
@@ -893,11 +898,19 @@ const Lumpsum = ({
        */}
       {viewChart &&
         (pinnedFunds.length > 0 ? (
-          <Chart
-            className="chart-container"
-            datasets={chartDatasets}
-            investmentAmount={parseFloat(invAmt) || 0}
-          />
+          <Suspense
+            fallback={
+              <div className="h-[240px] flex items-center justify-center">
+                <span className="loading loading-spinner loading-md text-primary"></span>
+              </div>
+            }
+          >
+            <Chart
+              className="chart-container"
+              datasets={chartDatasets}
+              investmentAmount={parseFloat(invAmt) || 0}
+            />
+          </Suspense>
         ) : (
           <div className="text-center py-4 text-sm opacity-60">
             Select up to 8 funds to see comparison

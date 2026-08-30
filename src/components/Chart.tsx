@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { AgCharts } from 'ag-charts-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
@@ -46,7 +47,136 @@ const formatCurrency = (value: number): string =>
   `₹${value.toLocaleString('en-IN', {
     maximumFractionDigits: 0,
   })}`;
+const formatAxisCurrency = (value: number): string => {
+  const absoluteValue = Math.abs(value);
+  if (absoluteValue >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
+  if (absoluteValue >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+  if (absoluteValue >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
+  return `₹${Math.round(value)}`;
+};
 const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: ChartProps) => {
+  const initialInvestment =
+    Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
+  const chartOptions = useMemo<AgCartesianChartOptions | null>(() => {
+    if (datasets.length === 0 || initialInvestment <= 0) {
+      return null;
+    }
+    const uniqueDateTimes = new Map<string, number>();
+    const normalizedDatasets = datasets.map((dataset) => {
+      const validPoints: { date: string; time: number; nav: number }[] = [];
+      for (const point of dataset.data) {
+        if (Number.isFinite(point.nav) && point.nav > 0) {
+          const time = getDateTime(point.date);
+          if (Number.isFinite(time)) {
+            validPoints.push({ date: point.date, time, nav: point.nav });
+            if (!uniqueDateTimes.has(point.date)) {
+              uniqueDateTimes.set(point.date, time);
+            }
+          }
+        }
+      }
+      validPoints.sort((a, b) => a.time - b.time);
+      if (validPoints.length === 0) {
+        return {
+          label: dataset.label,
+          color: dataset.color,
+          valueMap: new Map<string, number>(),
+        };
+      }
+      const startingNav = validPoints[0].nav;
+      const valueMap = new Map<string, number>();
+      if (dataMode === 'value') {
+        for (const pt of validPoints) {
+          valueMap.set(pt.date, pt.nav);
+        }
+      } else if (Number.isFinite(startingNav) && startingNav > 0) {
+        const factor = initialInvestment / startingNav;
+        for (const pt of validPoints) {
+          valueMap.set(pt.date, Number((pt.nav * factor).toFixed(2)));
+        }
+      }
+      return {
+        label: dataset.label,
+        color: dataset.color,
+        valueMap,
+      };
+    });
+    const sortedDates = Array.from(uniqueDateTimes.entries())
+      .sort((a, b) => a[1] - b[1])
+      .map(([date]) => date);
+    const chartData = sortedDates.map((date) => {
+      const row: Record<string, string | number> = { date };
+      for (let i = 0; i < normalizedDatasets.length; i++) {
+        row[`fund_${i}`] = normalizedDatasets[i].valueMap.get(date) ?? NaN;
+      }
+      return row;
+    });
+    const series = normalizedDatasets.map((dataset, index) => ({
+      type: 'line' as const,
+      xKey: 'date',
+      xName: 'Date',
+      yKey: `fund_${index}`,
+      yName: dataset.label,
+      stroke: dataset.color,
+      marker: {
+        enabled: false,
+      },
+      tooltip: {
+        showArrow: false,
+        renderer: ({ datum }: { datum: Record<string, string | number> }) => {
+          const value = datum[`fund_${index}`];
+          return {
+            title: dataset.label,
+            data: [
+              {
+                label: 'Value',
+                value:
+                  typeof value === 'number' && Number.isFinite(value)
+                    ? formatCurrency(value)
+                    : 'N/A',
+              },
+            ],
+          };
+        },
+      },
+    }));
+    return {
+      background: {
+        visible: false,
+      },
+      data: chartData,
+      height: 240,
+      legend: {
+        enabled: false,
+        position: 'bottom',
+        toggleSeries: false,
+      },
+      series,
+      axes: {
+        x: {
+          type: 'category',
+          position: 'bottom',
+          label: {
+            enabled: false,
+            rotation: 0,
+            avoidCollisions: true,
+            fontSize: 9,
+            fontWeight: 'bold',
+          },
+        },
+        y: {
+          type: 'number',
+          position: 'left',
+          label: {
+            avoidCollisions: true,
+            fontSize: 9,
+            fontWeight: 'bold',
+            formatter: ({ value }: { value: number }) => formatAxisCurrency(value),
+          },
+        },
+      },
+    };
+  }, [datasets, initialInvestment, dataMode]);
   if (datasets.length === 0) {
     return (
       <div className={`${className} flex items-center justify-center`}>
@@ -54,225 +184,13 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
       </div>
     );
   }
-  /*
-   * ==========================================================
-   * VALID INVESTMENT AMOUNT
-   * ==========================================================
-   */
-  const initialInvestment =
-    Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
-  if (initialInvestment <= 0) {
+  if (initialInvestment <= 0 || !chartOptions) {
     return (
       <div className={`${className} flex items-center justify-center`}>
         <span className="text-sm opacity-60">Enter an investment amount to view growth</span>
       </div>
     );
   }
-  /*
-   * ==========================================================
-   * PREPARE EACH FUND INDEPENDENTLY
-   * ==========================================================
-   *
-   * Every fund has a different starting NAV.
-   *
-   * Example:
-   *
-   * Fund A:
-   *   Start NAV = 20
-   *   NAV today = 40
-   *
-   * Fund B:
-   *   Start NAV = 50
-   *   NAV today = 75
-   *
-   * For ₹1,00,000:
-   *
-   * Fund A:
-   *   1,00,000 × (40 / 20)
-   *   = 2,00,000
-   *
-   * Fund B:
-   *   1,00,000 × (75 / 50)
-   *   = 1,50,000
-   *
-   * Both lines therefore start at ₹1,00,000.
-   *
-   * This makes the chart a true investment-growth comparison.
-   * ==========================================================
-   */
-  const normalizedDatasets = datasets.map((dataset) => {
-    /*
-     * Sort the fund's own data first.
-     */
-    const sortedData = [...dataset.data]
-      .filter(
-        (point) =>
-          Number.isFinite(point.nav) && point.nav > 0 && Number.isFinite(getDateTime(point.date))
-      )
-      .sort((a, b) => getDateTime(a.date) - getDateTime(b.date));
-    if (sortedData.length === 0) {
-      return {
-        ...dataset,
-        data: [],
-      };
-    }
-    /*
-     * The first NAV in the selected range is the
-     * reference NAV for this particular fund.
-     */
-    if (dataMode === 'value') {
-      return {
-        ...dataset,
-        data: sortedData,
-      };
-    }
-    const startingNav = sortedData[0].nav;
-    if (!Number.isFinite(startingNav) || startingNav <= 0) {
-      return {
-        ...dataset,
-        data: [],
-      };
-    }
-    /*
-     * Convert NAV -> investment value.
-     *
-     * investmentValue =
-     *
-     * initialInvestment *
-     * (currentNAV / startingNAV)
-     */
-    const growthData = sortedData.map((point) => ({
-      date: point.date,
-      nav: Number((initialInvestment * (point.nav / startingNav)).toFixed(2)),
-    }));
-    return {
-      ...dataset,
-      data: growthData,
-    };
-  });
-  const formatAxisCurrency = (value: number): string => {
-    const absoluteValue = Math.abs(value);
-    if (absoluteValue >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
-    if (absoluteValue >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
-    if (absoluteValue >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
-    return `₹${Math.round(value)}`;
-  };
-  /*
-   * ==========================================================
-   * COLLECT ALL DATES
-   * ==========================================================
-   */
-  const dates = Array.from(
-    new Set(normalizedDatasets.flatMap((dataset) => dataset.data.map((point) => point.date)))
-  );
-  /*
-   * ==========================================================
-   * SORT OLDEST -> NEWEST
-   * ==========================================================
-   */
-  const sortedDates = [...dates].sort((a, b) => getDateTime(a) - getDateTime(b));
-  /*
-   * ==========================================================
-   * BUILD CHART DATA
-   * ==========================================================
-   */
-  const chartData = sortedDates.map((date) => {
-    const row: Record<string, string | number> = {
-      date,
-    };
-    normalizedDatasets.forEach((dataset, index) => {
-      const point = dataset.data.find((item) => item.date === date);
-      row[`fund_${index}`] = point?.nav ?? NaN;
-    });
-    return row;
-  });
-  /*
-   * ==========================================================
-   * BUILD SERIES
-   * ==========================================================
-   */
-  const series = normalizedDatasets.map((dataset, index) => ({
-    type: 'line' as const,
-    xKey: 'date',
-    xName: 'Date',
-    yKey: `fund_${index}`,
-    yName: dataset.label,
-    /*
-     * Color comes from mutual_fund.tsx.
-     */
-    stroke: dataset.color,
-    marker: {
-      enabled: false,
-    },
-    tooltip: {
-      showArrow: false,
-      renderer: ({ datum }: { datum: Record<string, string | number> }) => {
-        const value = datum[`fund_${index}`];
-        return {
-          title: dataset.label,
-          data: [
-            {
-              label: 'Value',
-              value:
-                typeof value === 'number' && Number.isFinite(value) ? formatCurrency(value) : 'N/A',
-            },
-          ],
-        };
-      },
-    },
-  }));
-  /*
-   * ==========================================================
-   * CHART OPTIONS
-   * ==========================================================
-   */
-  const chartOptions: AgCartesianChartOptions = {
-    background: {
-      visible: false,
-    },
-    data: chartData,
-    height: 240,
-    /*
-     * We keep the AG Charts legend disabled because
-     * you wanted a display-only legend.
-     *
-     * The custom legend below is therefore completely
-     * non-clickable.
-     */
-    legend: {
-      enabled: false,
-      position: 'bottom',
-      toggleSeries: false,
-    },
-    series,
-    /*
-     * AG Charts v14 keys axes by name instead of taking an array.
-     * `x` and `y` are the default cartesian keys the series bind to.
-     */
-    axes: {
-      x: {
-        type: 'category',
-        position: 'bottom',
-        label: {
-          enabled: false,
-          rotation: 0,
-          avoidCollisions: true,
-          fontSize: 9,
-          fontWeight: 'bold',
-        },
-      },
-      y: {
-        type: 'number',
-        position: 'left',
-        label: {
-          avoidCollisions: true,
-          fontSize: 9,
-          fontWeight: 'bold',
-          formatter: ({ value }: { value: number }) => formatAxisCurrency(value),
-        },
-      },
-    },
-  };
   return (
     <div className={className}>
       <AgCharts className="chart" options={chartOptions} />

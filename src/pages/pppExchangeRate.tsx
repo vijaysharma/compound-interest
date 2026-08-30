@@ -50,9 +50,12 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
     setSrcCountry(tgtCountry);
     setTgtCountry(srcCountry);
   };
-  // Fetch PPP data from the World Bank API once on mount. This replaces the
-  // old static PPP_DATA import — the API's response shape already matches
-  // what the transform below expects (country.value / date / value).
+  // Build a lookup map once for fast O(1) currency matching
+  const currencyLookup = useMemo(
+    () => new Map(CURRENCY_CODES.map((cc) => [cc.name.toLowerCase(), cc])),
+    []
+  );
+  // Fetch PPP data from the World Bank API once on mount.
   useEffect(() => {
     let cancelled = false;
     const loadPPPData = async () => {
@@ -61,35 +64,21 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       try {
         const records = await fetchPPPData();
         if (cancelled) return;
-        const transformed: { [key: string]: CountryPPPType } = records
-          .filter((x) => x.value != null)
-          .map((x) => {
-            return { country: x.country.value, date: x.date, ppp: x.value };
-          })
-          .reduce((acc, curr) => {
-            return Object.assign(Object.assign({}, acc), {
-              [curr.country]: Object.assign(
-                Object.assign({}, acc[curr.country as keyof typeof acc] || []),
-                {
-                  [curr.date]: curr.ppp,
-                  currencyName: CURRENCY_CODES.find(
-                    (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-                  )
-                    ? CURRENCY_CODES.find(
-                        (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-                      )?.currency_name
-                    : curr.country.substring(0, 3).toUpperCase(),
-                  currencyCode: CURRENCY_CODES.find(
-                    (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-                  )
-                    ? CURRENCY_CODES.find(
-                        (cc) => cc.name.toLowerCase() === curr.country.toLowerCase()
-                      )?.currency_code
-                    : 'en-US',
-                }
-              ),
-            });
-          }, {});
+        const transformed: { [key: string]: CountryPPPType } = {};
+        for (const record of records) {
+          if (record.value == null) continue;
+          const country = record.country.value;
+          if (!transformed[country]) {
+            const matchedCurrency = currencyLookup.get(country.toLowerCase());
+            transformed[country] = {
+              currencyName: matchedCurrency
+                ? matchedCurrency.currency_name
+                : country.substring(0, 3).toUpperCase(),
+              currencyCode: matchedCurrency ? matchedCurrency.currency_code : 'en-US',
+            };
+          }
+          transformed[country][parseInt(record.date, 10)] = record.value;
+        }
         setData(transformed);
       } catch (err) {
         if (!cancelled) {
@@ -104,7 +93,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currencyLookup]);
   const derivedValues = useMemo(() => {
     if (pppLoading || pppError || !data[srcCountry] || !data[tgtCountry]) return null;
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);

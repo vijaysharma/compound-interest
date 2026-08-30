@@ -50,7 +50,7 @@ const Home = () => {
                 <RD />
               </div>
               <div id="3" data-label="SWP">
-                <RD />
+                <FixedRateSWP />
               </div>
               <div id="4" data-label="Inflation">
                 <InflationRates />

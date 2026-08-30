@@ -1,59 +1,44 @@
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.tsx';
-import EmiCalculator from './pages/emiCalculator.tsx';
-import Home from './pages/home.tsx';
-// Group pages
-import FD from './pages/fd.tsx';
-import RD from './pages/rd.tsx';
-import InflationRates from './pages/inflationRates.tsx';
-import PPPExchangeRate from './pages/pppExchangeRate.tsx';
-import FixedRateSIP from './pages/fixedRateSip.tsx';
-import FixedRateSWP from './pages/fixedRateSwp.tsx';
-import Lumpsum from './pages/lumpsum.tsx';
-import SIP from './pages/sip.tsx';
-import SWP from './pages/swp.tsx';
-import Admin from './pages/admin.tsx';
+import LoadingFallback from './components/LoadingFallback.tsx';
 import './index.css';
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    HydrateFallback: LoadingFallback,
     children: [
-      { index: true, element: <Home /> },
-      { path: 'admin', element: <Admin /> },
-      { path: 'emi', element: <EmiCalculator /> },
-      // Group 1: Deposits
+      { index: true, lazy: async () => ({ Component: (await import('./pages/home.tsx')).default }) },
+      { path: 'admin', lazy: async () => ({ Component: (await import('./pages/admin.tsx')).default }) },
+      { path: 'emi', lazy: async () => ({ Component: (await import('./pages/emiCalculator.tsx')).default }) },
       {
         path: 'deposits',
         children: [
-          { path: 'fd', element: <FD /> },
-          { path: 'rd', element: <RD /> },
+          { path: 'fd', lazy: async () => ({ Component: (await import('./pages/fd.tsx')).default }) },
+          { path: 'rd', lazy: async () => ({ Component: (await import('./pages/rd.tsx')).default }) },
         ],
       },
-      // Group 2: Economics
       {
         path: 'economics',
         children: [
-          { path: 'inflation-rates', element: <InflationRates /> },
-          { path: 'ppp-exchange-rate', element: <PPPExchangeRate /> },
+          { path: 'inflation-rates', lazy: async () => ({ Component: (await import('./pages/inflationRates.tsx')).default }) },
+          { path: 'ppp-exchange-rate', lazy: async () => ({ Component: (await import('./pages/pppExchangeRate.tsx')).default }) },
         ],
       },
-      // Group 3: Fixed Plans
       {
         path: 'fixed-plans',
         children: [
-          { path: 'fixed-rate-sip', element: <FixedRateSIP /> },
-          { path: 'fixed-rate-swp', element: <FixedRateSWP /> },
+          { path: 'fixed-rate-sip', lazy: async () => ({ Component: (await import('./pages/fixedRateSip.tsx')).default }) },
+          { path: 'fixed-rate-swp', lazy: async () => ({ Component: (await import('./pages/fixedRateSwp.tsx')).default }) },
         ],
       },
-      // Group 4: Mutual Funds
       {
         path: 'mutual-funds',
         children: [
-          { path: 'lumpsum', element: <Lumpsum /> },
-          { path: 'sip', element: <SIP /> },
-          { path: 'swp', element: <SWP /> },
+          { path: 'lumpsum', lazy: async () => ({ Component: (await import('./pages/lumpsum.tsx')).default }) },
+          { path: 'sip', lazy: async () => ({ Component: (await import('./pages/sip.tsx')).default }) },
+          { path: 'swp', lazy: async () => ({ Component: (await import('./pages/swp.tsx')).default }) },
         ],
       },
     ],

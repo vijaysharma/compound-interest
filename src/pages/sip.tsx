@@ -1,14 +1,14 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import InputAmount from '../components/InputAmount';
 import StartEndDate from '../components/Date';
 import { getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
-import Chart from '../components/Chart';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSip, calculateSipGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
+const Chart = lazy(() => import('../components/Chart'));
 const STORAGE_KEY = 'mutual_fund_sip_state';
 interface PinnedFund {
   schemeCode: string;
@@ -55,10 +55,6 @@ interface FundAnalysis {
   averageNav: number;
   installments: number;
   xirr: number | undefined;
-  chartData: {
-    date: string;
-    nav: number;
-  }[];
 }
 const getDefaultState = (): SavedState => ({
   searchKey: 'Kotak Arbitrage Fund',
@@ -560,14 +556,6 @@ const SIP = ({
       const profitAmount = Math.round(
         (latestValue ?? simulation.currentValue) - simulation.invested
       );
-      const chartData = calculateSipGrowth(
-        navData,
-        startDate ?? '',
-        endDate ?? '',
-        Number(monthlyAmount),
-        Number(investmentStepUp),
-        Number(dayOfMonth)
-      );
       return {
         schemeCode: fund.schemeCode,
         schemeName: fund.schemeName,
@@ -586,21 +574,54 @@ const SIP = ({
         averageNav: simulation.invested / simulation.units,
         installments: simulation.installments,
         xirr: simulation.xirr,
-        chartData,
       };
     });
   }, [pinnedFunds, pinnedNavData, startDate, endDate, monthlyAmount, investmentStepUp, dayOfMonth]);
-  const chartDatasets = useMemo(
-    () =>
-      fundAnalyses
-        .filter((fund) => fund.chartData.length > 0)
-        .map((fund) => ({
+  const chartDatasets = useMemo(() => {
+    if (!viewChart) {
+      return [];
+    }
+    return pinnedFunds.map((fund) => {
+      const navData = pinnedNavData[fund.schemeCode] ?? [];
+      if (navData.length === 0 || !startDate || !endDate) {
+        return {
           label: fund.schemeName,
           color: fund.color,
-          data: fund.chartData,
-        })),
-    [fundAnalyses]
-  );
+          data: [],
+        };
+      }
+      try {
+        const chartData = calculateSipGrowth(
+          navData,
+          startDate,
+          endDate,
+          Number(monthlyAmount),
+          Number(investmentStepUp),
+          Number(dayOfMonth)
+        );
+        return {
+          label: fund.schemeName,
+          color: fund.color,
+          data: chartData,
+        };
+      } catch {
+        return {
+          label: fund.schemeName,
+          color: fund.color,
+          data: [],
+        };
+      }
+    });
+  }, [
+    viewChart,
+    pinnedFunds,
+    pinnedNavData,
+    startDate,
+    endDate,
+    monthlyAmount,
+    investmentStepUp,
+    dayOfMonth,
+  ]);
   const toggleShowDate = () => {
     const next = !showDate;
     setShowDate(next);
@@ -898,12 +919,20 @@ const SIP = ({
       )}
       {viewChart &&
         (pinnedFunds.length > 0 ? (
-          <Chart
-            className="chart-container"
-            datasets={chartDatasets}
-            investmentAmount={parseFloat(monthlyAmount) || 0}
-            dataMode="value"
-          />
+          <Suspense
+            fallback={
+              <div className="h-[240px] flex items-center justify-center">
+                <span className="loading loading-spinner loading-md text-primary"></span>
+              </div>
+            }
+          >
+            <Chart
+              className="chart-container"
+              datasets={chartDatasets}
+              investmentAmount={parseFloat(monthlyAmount) || 0}
+              dataMode="value"
+            />
+          </Suspense>
         ) : (
           <div className="text-center py-4 text-sm opacity-60">
             Select up to 8 funds to see comparison

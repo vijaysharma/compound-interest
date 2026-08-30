@@ -72,6 +72,31 @@ const VITE_CONFIGS = {
   build: {
     outDir: './build',
     emptyOutDir: true,
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (
+            id.includes('ag-charts-react') ||
+            id.includes('ag-charts-community') ||
+            id.includes('ag-charts-types')
+          ) {
+            return 'vendor-charts';
+          }
+          if (id.includes('node_modules/to-words/')) {
+            return 'vendor-to-words';
+          }
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/react-router') ||
+            id.includes('node_modules/react-router-dom/')
+          ) {
+            return 'vendor-react';
+          }
+        },
+      },
+    },
   },
 };
 export default defineConfig(({ mode }) => {
