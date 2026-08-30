@@ -18,6 +18,7 @@ const PaywallModal = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showQrFallback, setShowQrFallback] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [now] = useState(() => Date.now());
   useEffect(() => {
     if (!showPaywall) return;
     // Load Razorpay script if not already present
@@ -50,8 +51,25 @@ const PaywallModal = () => {
   };
   const handleCloseOrLater = () => {
     setShowPaywall(false);
-    navigate('/upgrade');
+    if (user?.isBlocked) {
+      navigate('/upgrade');
+    }
   };
+  const amount = settings?.amount ?? 29;
+  const upiId = settings?.upi_id || 'rupeecalculator@upi';
+  const qrCodeUrl = settings?.upi_qr_code_url || '';
+  const isTrialActive = user && !user.isBlocked && user.subscription_status !== 'active';
+  const remainingCalculations = Math.max(0, (user?.freeLimit || 10) - (user?.api_usage_count || 0));
+  const getRemainingHours = () => {
+    if (!user?.trial_expires_at) return null;
+    const diff = new Date(user.trial_expires_at).getTime() - now;
+    if (diff <= 0) return 0;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+  };
+  const remainingTimeStr = getRemainingHours();
   const handleRazorpayPayment = async () => {
     setIsProcessing(true);
     setMessage(null);
@@ -63,7 +81,7 @@ const PaywallModal = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${storedToken}`,
         },
-        body: JSON.stringify({ amount: settings?.amount || 19 }),
+        body: JSON.stringify({ amount }),
       });
       const orderData = (await orderRes.json()) as {
         orderId?: string;
@@ -114,7 +132,7 @@ const PaywallModal = () => {
             }
             setMessage({
               type: 'success',
-              text: 'Payment successful! 30-day Pro access is now activated.',
+              text: 'Payment successful! 30-day Pro access is now active.',
             });
             await refreshUser();
             setTimeout(() => {
@@ -146,9 +164,6 @@ const PaywallModal = () => {
       setIsProcessing(false);
     }
   };
-  const amount = settings?.amount ?? 19;
-  const upiId = settings?.upi_id || 'rupeecalculator@upi';
-  const qrCodeUrl = settings?.upi_qr_code_url || '';
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs overflow-y-auto">
       <div
@@ -166,16 +181,31 @@ const PaywallModal = () => {
           ✕
         </button>
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning font-bold text-xs uppercase tracking-wider mb-2">
-            <span>⚡</span> Free Trial Expired
-          </div>
+          {isTrialActive ? (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-info/15 text-info font-bold text-xs uppercase tracking-wider mb-2">
+              <span>⏱️</span> Free Trial Active
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning font-bold text-xs uppercase tracking-wider mb-2">
+              <span>⚡</span> Free Trial Expired
+            </div>
+          )}
           <h2 id="paywall-title" className="text-2xl font-extrabold">
-            Unlock 1 Month Unlimited Pro
+            {isTrialActive ? 'Get 30 Days Unlimited Pro' : 'Unlock 30 Days Pro Access'}
           </h2>
-          <p className="mt-1.5 text-xs sm:text-sm opacity-75">
-            Your free trial (10 calculations / 24 hours) has ended for{' '}
-            <span className="font-semibold">{user?.email}</span>. Support the independent
-            development of Rupee Calculator for just ₹{amount}/month.
+          <p className="mt-2 text-xs sm:text-sm opacity-80 leading-relaxed">
+            {isTrialActive ? (
+              <>
+                You have <span className="font-bold text-primary">{remainingCalculations} of {user?.freeLimit || 10}</span> free calculations remaining
+                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}.
+                Support this independent project for just ₹{amount}/month for unlimited access.
+              </>
+            ) : (
+              <>
+                Your free trial (10 calculations / 24 hours) has ended for{' '}
+                <span className="font-semibold">{user?.email}</span>. Support the independent development of Rupee Calculator for just ₹{amount}/month.
+              </>
+            )}
           </p>
         </div>
         {message && (
@@ -198,7 +228,7 @@ const PaywallModal = () => {
                 <span>Processing Payment...</span>
               </>
             ) : (
-              <span>⚡ Pay ₹{amount} &amp; Unlock Instantly</span>
+              <span>⚡ Pay ₹{amount} &amp; Unlock 30 Days</span>
             )}
           </button>
           <p className="text-center text-[11px] opacity-60">
@@ -242,7 +272,7 @@ const PaywallModal = () => {
             onClick={handleCloseOrLater}
             className="text-xs opacity-60 hover:opacity-100 underline"
           >
-            I&apos;ll do this later &rarr;
+            {isTrialActive ? 'Continue with Free Trial &rarr;' : "I'll do this later \u2192"}
           </button>
         </div>
       </div>

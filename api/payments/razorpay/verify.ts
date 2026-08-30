@@ -69,7 +69,7 @@ export default async function handler(request: Request): Promise<Response> {
     const newSubId = crypto.randomUUID();
     await sql`
       INSERT INTO payment_submissions (id, user_id, user_email, utr_ref, amount, status, created_at, updated_at)
-      VALUES (${newSubId}, ${user.id}, ${user.email}, ${razorpay_payment_id}, 19, 'approved', NOW(), NOW())
+      VALUES (${newSubId}, ${user.id}, ${user.email}, ${razorpay_payment_id}, 29, 'approved', NOW(), NOW())
     `;
     return jsonResponse({
       success: true,

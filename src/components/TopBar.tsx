@@ -67,18 +67,18 @@ const TopBar = ({ className }: { className?: string }) => {
                   👑 Pro Active
                 </span>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowPaywall(true)}
-                  className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} gap-1 font-normal`}
-                  title="Unlock 1 Month Unlimited for ₹19"
-                >
-                  <span>⚡</span>
-                  <span className="hidden md:inline">
-                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} Runs
-                  </span>
-                  <span className="font-bold underline text-[10px]">₹19 Pro</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPaywall(true)}
+                    className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} gap-1 font-normal`}
+                    title="Unlock 1 Month Unlimited for ₹29"
+                  >
+                    <span>⚡</span>
+                    <span className="hidden md:inline">
+                      {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} Runs
+                    </span>
+                    <span className="font-bold underline text-[10px]">₹29 Pro</span>
+                  </button>
               )}
               <div className="hidden sm:flex flex-col items-end text-right leading-tight">
                 <span className="text-xs font-medium truncate max-w-[130px]">
@@ -275,7 +275,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     className="btn btn-warning btn-sm w-full font-bold shadow-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    ⚡ Unlock Pro (₹19/mo)
+                    ⚡ Unlock Pro (₹29/mo)
                   </Link>
                 )}
                 <button

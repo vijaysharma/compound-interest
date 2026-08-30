@@ -72,7 +72,7 @@ const Admin = () => {
           setPayTitle(data.settings.title || '');
           setPayUpiId(data.settings.upi_id || '');
           setPayQrUrl(data.settings.upi_qr_code_url || '');
-          setPayAmount(data.settings.amount || 19);
+          setPayAmount(data.settings.amount || 29);
           setPayInstructions(data.settings.instructions || '');
         }
       } catch (err) {

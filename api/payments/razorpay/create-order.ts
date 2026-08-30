@@ -17,7 +17,7 @@ export default async function handler(request: Request): Promise<Response> {
       'rzp_test_TW0RQa1VIcpwaN';
     const keySecret = process.env.RAZORPAY_KEY_SECRET || 'UxZ0a8mnYGVRkkO6r52IAUcq';
     const body = (await request.json().catch(() => ({}))) as { amount?: number };
-    const amountInRupees = typeof body.amount === 'number' && body.amount > 0 ? body.amount : 19;
+    const amountInRupees = typeof body.amount === 'number' && body.amount > 0 ? body.amount : 29;
     const amountInPaise = Math.round(amountInRupees * 100);
     const authHeader = btoa(`${keyId}:${keySecret}`);
     const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;

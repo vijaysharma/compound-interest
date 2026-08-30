@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import { PaymentSettings } from '../types/auth';
@@ -47,6 +47,21 @@ const Upgrade = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+  const amount = settings?.amount ?? 29;
+  const isTrialActive =
+    user && !user.isBlocked && user.role !== 'admin' && user.subscription_status !== 'active';
+  const remainingCalculations = Math.max(0, (user?.freeLimit || 10) - (user?.api_usage_count || 0));
+  const [now] = useState(() => Date.now());
+  const getRemainingHours = () => {
+    if (!user?.trial_expires_at) return null;
+    const diff = new Date(user.trial_expires_at).getTime() - now;
+    if (diff <= 0) return 0;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+  };
+  const remainingTimeStr = getRemainingHours();
   const handleRazorpayPayment = async () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: { pathname: '/upgrade' } } });
@@ -62,7 +77,7 @@ const Upgrade = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${storedToken}`,
         },
-        body: JSON.stringify({ amount: 19 }),
+        body: JSON.stringify({ amount }),
       });
       const orderData = (await orderRes.json()) as {
         orderId?: string;
@@ -154,12 +169,31 @@ const Upgrade = () => {
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-          Keep Rupee Calculator Alive
+          Keep Rupee Calculator Ad-Free &amp; Alive
         </h1>
         <p className="mt-2 text-sm sm:text-base opacity-75 max-w-xl mx-auto">
-          Honest, transparent tools built with care for independent Indian investors and planners.
+          An honest, fast, private financial toolkit built for everyday investors in India.
         </p>
       </div>
+      {/* Active Trial Banner vs Expired Status */}
+      {isTrialActive && (
+        <div className="card bg-info/10 border border-info/30 p-4 mb-6 rounded-2xl shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div>
+              <div className="inline-flex items-center gap-1 text-xs font-bold text-info uppercase tracking-wider mb-1">
+                <span>⏱️</span> Your Free Trial is Active
+              </div>
+              <p className="text-xs sm:text-sm font-medium">
+                You have <span className="font-bold text-primary">{remainingCalculations} of {user?.freeLimit || 10}</span> calculations left
+                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}.
+              </p>
+            </div>
+            <Link to="/investment-details" className="btn btn-outline btn-info btn-xs shrink-0">
+              Continue to Calculators &rarr;
+            </Link>
+          </div>
+        </div>
+      )}
       {message && (
         <div
           className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} text-sm py-3 px-4 mb-6 rounded-xl shadow-sm`}
@@ -167,29 +201,29 @@ const Upgrade = () => {
           <span>{message.text}</span>
         </div>
       )}
-      {/* Narrative Story Card */}
+      {/* Human Developer Letter Card */}
       <div className="card bg-base-100 border border-base-300 p-6 sm:p-8 shadow-xl mb-8 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-warning/15 text-xl shrink-0">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-warning/15 text-2xl shrink-0">
             ☕
           </div>
           <div>
-            <h2 className="text-lg font-bold">Why we ask for just ₹19/month</h2>
-            <p className="text-xs opacity-60">A message from the developer</p>
+            <h2 className="text-lg font-bold">A quick note from the developer</h2>
+            <p className="text-xs opacity-60">Why ₹29/month makes a huge difference</p>
           </div>
         </div>
         <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
           <p>
-            Building <strong>Rupee Calculator</strong> wasn&apos;t just about throwing together simple compound interest math. We engineered an institutional-grade financial computation suite that synchronizes <strong>thousands of AMFI mutual fund historical NAVs</strong> daily, indexes <strong>decades of historical IMF inflation rates</strong>, and models real inflation-adjusted SWP, SIP, and Purchasing Power Parity (PPP) trajectories.
+            Hey there! I built <strong>Rupee Calculator</strong> because I was tired of bloated financial websites stuffed with credit card ads, loan banners, and spammy popups asking for phone numbers.
           </p>
           <p>
-            Unlike other financial platforms, we don&apos;t sell your private financial data to credit card brokers, and we don&apos;t clutter your screen with intrusive banner ads or loan spam.
+            I wanted a tool that was fast, honest, and mathematically accurate. I wrote every calculator from scratch—hooking up daily syncs for thousands of AMFI mutual fund NAVs, decades of IMF inflation data, and realistic inflation-adjusted SWP and SIP formulas so you can plan your retirement without guesswork.
           </p>
           <p>
-            However, maintaining high-speed edge compute servers, PostgreSQL connection poolers, and live AMFI API synchronization incurs real monthly infrastructure costs.
+            I don&apos;t run spammy ads, and I never sell your data to financial telemarketers. But running PostgreSQL databases, serverless edge compute, and daily mutual fund data feeds costs money every month.
           </p>
           <p className="font-semibold text-primary">
-            ₹19 is a meagre token amount—less than a single cup of tea ☕. Your support directly helps keep the servers running and motivates ongoing development of new calculators and features.
+            ₹29 a month is literally less than a cutting chai and samosa ☕. If this tool saved you time or gave you clarity on your financial goals, your support directly keeps this project alive, ad-free, and growing.
           </p>
         </div>
       </div>
@@ -198,10 +232,10 @@ const Upgrade = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="text-center sm:text-left">
             <span className="badge badge-primary font-bold text-xs uppercase px-3 py-1 mb-2">
-              Pro Subscription
+              Pro Access
             </span>
             <div className="flex items-baseline justify-center sm:justify-start gap-1">
-              <span className="text-4xl sm:text-5xl font-extrabold text-primary">₹19</span>
+              <span className="text-4xl sm:text-5xl font-extrabold text-primary">₹{amount}</span>
               <span className="text-sm opacity-70 font-medium">/ 30 Days</span>
             </div>
             <p className="mt-1.5 text-xs opacity-75">
@@ -222,7 +256,7 @@ const Upgrade = () => {
                 </>
               ) : (
                 <>
-                  <span>⚡ Pay ₹19 &amp; Unlock Instantly</span>
+                  <span>⚡ Pay ₹{amount} &amp; Unlock 30 Days</span>
                 </>
               )}
             </button>
@@ -238,7 +272,7 @@ const Upgrade = () => {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-success font-bold">✓</span>
-            <span>Real-time AMFI Data Sync</span>
+            <span>Daily AMFI Scheme Sync</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-success font-bold">✓</span>
@@ -259,7 +293,7 @@ const Upgrade = () => {
         {showQrFallback && (
           <div className="mt-4 pt-4 border-t border-base-300 flex flex-col items-center text-center space-y-3">
             <p className="text-xs opacity-75">
-              Scan with any UPI App and pay ₹19 to the UPI ID:
+              Scan with any UPI App and pay ₹{amount} to the UPI ID:
             </p>
             {settings?.upi_qr_code_url && (
               <img

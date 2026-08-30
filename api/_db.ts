@@ -160,8 +160,8 @@ export async function ensureTables(sql: Query) {
           title TEXT NOT NULL DEFAULT 'Rupee Calculator Pro Subscription',
           upi_id TEXT NOT NULL DEFAULT '',
           upi_qr_code_url TEXT NOT NULL DEFAULT '',
-          amount NUMERIC NOT NULL DEFAULT 19,
-          instructions TEXT NOT NULL DEFAULT 'Pay ₹19 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.',
+          amount NUMERIC NOT NULL DEFAULT 29,
+          instructions TEXT NOT NULL DEFAULT 'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.',
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `;
@@ -172,18 +172,19 @@ export async function ensureTables(sql: Query) {
           'Rupee Calculator Pro Subscription',
           '',
           '',
-          19,
-          'Pay ₹19 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
+          29,
+          'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
         )
         ON CONFLICT (id) DO NOTHING
       `;
+      await sql`UPDATE payment_settings SET amount = 29 WHERE id = 'default' AND amount = 19`;
       await sql`
         CREATE TABLE IF NOT EXISTS payment_submissions (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
           user_email TEXT NOT NULL,
           utr_ref TEXT NOT NULL,
-          amount NUMERIC NOT NULL DEFAULT 19,
+          amount NUMERIC NOT NULL DEFAULT 29,
           status TEXT NOT NULL DEFAULT 'pending',
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
