@@ -1,37 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 const themes = [
-  "fantasy",
-  "light",
-  "emerald",
-  "corporate",
-  "lofi",
-  "fantasy",
-  "wireframe",
-  "luxury",
-  "cmyk",
-  "lemonade",
-  "fantasy",
-  "night",
-  "winter",
-  "dim",
-  "nord",
-  "fantasy",
+  'fantasy',
+  'light',
+  'emerald',
+  'corporate',
+  'lofi',
+  'fantasy',
+  'wireframe',
+  'luxury',
+  'cmyk',
+  'lemonade',
+  'fantasy',
+  'night',
+  'winter',
+  'dim',
+  'nord',
+  'fantasy',
 ];
 const Logo = () => {
   const getRandomNumber = (min: number, max: number): number => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
-  const [theme, setTheme] = useState(localStorage.getItem("th") || "fantasy");
+  const [theme, setTheme] = useState(localStorage.getItem('th') || 'fantasy');
   useEffect(() => {
-    window.document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("th", theme);
+    window.document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('th', theme);
   }, [theme]);
   return (
     <div className="text-center ">
       <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"
-        width="60"
+        width="24"
         height="24"
         viewBox="0 0 139.000000 126.000000"
         preserveAspectRatio="xMidYMid meet"

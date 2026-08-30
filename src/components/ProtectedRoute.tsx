@@ -82,7 +82,8 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
             <span className="font-semibold">{user.email}</span>.
           </p>
           <p className="mb-6 text-xs opacity-60">
-            Support the creator for just ₹19 to unlock unlimited calculations, live AMFI data, and real-time models.
+            Support the creator for just ₹19 to unlock unlimited calculations, live AMFI data, and
+            real-time models.
           </p>
           <div className="space-y-2">
             <Link to="/upgrade" className="btn btn-primary w-full font-bold shadow-md">
