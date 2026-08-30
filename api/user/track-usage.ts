@@ -22,8 +22,8 @@ export default async function handler(request: Request): Promise<Response> {
       const isTimeExpired =
         user.trial_expires_at && new Date(user.trial_expires_at).getTime() < Date.now();
       const message = isTimeExpired
-        ? 'Your 24-hour free trial period has ended. Please unlock 30 days unlimited access for ₹29.'
-        : 'Free trial limit of 10 calculations reached. Please unlock 30 days unlimited access for ₹29.';
+        ? 'Your 24-hour free trial period for live Mutual Funds analytics has ended. Unlock 30 days unlimited Pro for ₹29.'
+        : 'Free trial limit of 10 live Mutual Fund calculation runs reached. Unlock 30 days unlimited Pro for ₹29.';
       return jsonResponse(
         {
           error: message,

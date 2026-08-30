@@ -39,10 +39,6 @@ const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('./pages/upgrade.tsx')).default }),
       },
       {
-        path: 'investment-details',
-        lazy: protectedRoute(() => import('./pages/investment_details.tsx')),
-      },
-      {
         path: 'admin',
         lazy: protectedRoute(() => import('./pages/admin.tsx'), true),
       },
@@ -72,7 +68,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'ppp-exchange-rate',
-            lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx'), false, true),
+            lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx')),
           },
         ],
       },

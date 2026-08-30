@@ -81,17 +81,18 @@ const ProtectedRoute = ({
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning text-2xl">
             ⚡
           </div>
-          <h2 className="mb-2 text-xl font-bold">Live Analytics Trial Expired</h2>
+          <h2 className="mb-2 text-xl font-bold">Mutual Funds Trial Expired</h2>
           <p className="mb-2 text-xs sm:text-sm opacity-75">
-            Your 24-hour / 10-calculation trial for live Mutual Funds &amp; PPP analytics has ended for{' '}
-            <span className="font-semibold">{user.email}</span>.
+            Your 24-hour / 10-calculation trial for live AMFI Mutual Funds search &amp; NAV history has ended
+            for <span className="font-semibold">{user.email}</span>.
           </p>
           <p className="mb-6 text-xs opacity-60">
-            Support the creator for just ₹29/mo to unlock unlimited live AMFI data &amp; PPP sync. Standard calculators in the suite remain completely free &amp; unlimited.
+            Support the creator for just ₹29/mo to unlock unlimited live AMFI Mutual Fund sync.
+            Standard calculators in the suite (FD, RD, SWP, EMI, Inflation, PPP) remain completely free &amp; unlimited.
           </p>
           <div className="space-y-2">
             <Link to="/upgrade" className="btn btn-primary w-full font-bold shadow-md">
-              ⚡ Upgrade for ₹29 / Month &rarr;
+              ⚡ Unlock Mutual Funds Pro for ₹29 / Month &rarr;
             </Link>
             <Link to="/investment-details" className="btn btn-ghost btn-xs w-full opacity-80">
               📊 Back to Calculators Suite

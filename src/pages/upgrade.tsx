@@ -167,18 +167,18 @@ const Upgrade = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <div>
               <div className="inline-flex items-center gap-1 text-xs font-bold text-info uppercase tracking-wider mb-1">
-                <span>⏱️</span> Live Analytics Trial Active
+                <span>⏱️</span> Mutual Funds Trial Active
               </div>
               <p className="text-xs sm:text-sm font-medium">
                 You have{' '}
                 <span className="font-bold text-primary">
                   {remainingCalculations} of {user?.freeLimit || 10}
                 </span>{' '}
-                Mutual Fund &amp; PPP calculation runs left
+                Mutual Fund search &amp; NAV history runs left
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}.
               </p>
               <p className="text-[11px] opacity-65 mt-0.5">
-                Standard calculators in the suite (FD, RD, SWP, SIP, EMI) remain completely free &amp; unlimited.
+                Standard calculators in the suite (FD, RD, SWP, SIP, EMI, Inflation, PPP) remain completely free &amp; unlimited.
               </p>
             </div>
             <Link to="/investment-details" className="btn btn-outline btn-info btn-xs shrink-0">
@@ -271,7 +271,7 @@ const Upgrade = () => {
         <div className="mt-6 pt-6 border-t border-base-300 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs opacity-80">
           <div className="flex items-center gap-2">
             <span className="text-success font-bold">✓</span>
-            <span>Unlimited MF &amp; PPP Calculations</span>
+            <span>Unlimited Mutual Fund Analytics</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-success font-bold">✓</span>

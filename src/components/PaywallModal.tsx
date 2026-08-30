@@ -169,15 +169,15 @@ const PaywallModal = () => {
         <div className="text-center mb-6">
           {isTrialActive ? (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-info/15 text-info font-bold text-xs uppercase tracking-wider mb-2">
-              <span>⏱️</span> Live Analytics Trial Active
+              <span>⏱️</span> Mutual Funds Trial Active
             </div>
           ) : (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning font-bold text-xs uppercase tracking-wider mb-2">
-              <span>⚡</span> Live Analytics Trial Expired
+              <span>⚡</span> Mutual Funds Trial Expired
             </div>
           )}
           <h2 id="paywall-title" className="text-2xl font-extrabold">
-            {isTrialActive ? 'Unlock Unlimited Live Analytics' : 'Unlock 30 Days Pro Access'}
+            {isTrialActive ? 'Unlock Unlimited Mutual Fund Analytics' : 'Unlock Mutual Funds Pro Access'}
           </h2>
           <p className="mt-2 text-xs sm:text-sm opacity-80 leading-relaxed">
             {isTrialActive ? (
@@ -186,13 +186,13 @@ const PaywallModal = () => {
                 <span className="font-bold text-primary">
                   {remainingCalculations} of {user?.freeLimit || 10}
                 </span>{' '}
-                live Mutual Fund &amp; PPP calculation runs remaining
-                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}. Standard calculators in the suite are always free. Support this independent project for just ₹{amount}/month for unlimited access.
+                live Mutual Fund search &amp; NAV history runs remaining
+                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}. All other tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) are 100% free &amp; unlimited. Unlock unlimited live AMFI sync for just ₹{amount}/month.
               </>
             ) : (
               <>
-                Your 24-hour / 10-calculation trial for live Mutual Funds &amp; PPP analytics has ended for{' '}
-                <span className="font-semibold">{user?.email}</span>. Support the independent development of the Calculators Suite for ₹{amount}/month to unlock unlimited live sync. Standard calculators remain completely free.
+                Your 24-hour / 10-run free trial for live AMFI Mutual Funds analytics has ended for{' '}
+                <span className="font-semibold">{user?.email}</span>. Support the Calculators Suite for just ₹{amount}/month to unlock unlimited live Mutual Fund sync. All other tools in the suite remain 100% free &amp; unlimited.
               </>
             )}
           </p>
@@ -261,7 +261,9 @@ const PaywallModal = () => {
             onClick={handleCloseOrLater}
             className="text-xs opacity-60 hover:opacity-100 underline"
           >
-            {isTrialActive ? 'Continue with Free Trial &rarr;' : 'Continue with Free Calculators Suite \u2192'}
+            {isTrialActive
+              ? 'Continue with Free Trial &rarr;'
+              : 'Continue with Free Calculators Suite \u2192'}
           </button>
         </div>
       </div>

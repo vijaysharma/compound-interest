@@ -77,11 +77,11 @@ const TopBar = ({ className }: { className?: string }) => {
                   type="button"
                   onClick={() => setShowPaywall(true)}
                   className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} gap-1 font-normal`}
-                  title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 10} MF & PPP live runs used. Standard calculators are always free.`}
+                  title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 10} Mutual Fund live calculations used in 24h trial. Standard calculators are always free.`}
                 >
                   <span>⚡</span>
                   <span className="hidden md:inline">
-                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} MF &amp; PPP
+                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} MF Runs
                   </span>
                   <span className="font-bold underline text-[10px]">₹29 Pro</span>
                 </button>
@@ -158,14 +158,6 @@ const TopBar = ({ className }: { className?: string }) => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Overview &amp; Features
-                </Link>
-                <Link
-                  to="/investment-details"
-                  className="px-3 py-2 rounded-lg bg-primary-content/15 font-bold hover:bg-primary-content/25 transition-colors flex items-center justify-between text-sm shadow-xs"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <span>📊 Calculators Suite</span>
-                  <span className="text-[10px] uppercase font-extrabold bg-primary-content/20 px-2 py-0.5 rounded">All-in-One</span>
                 </Link>
                 {isAdmin && (
                   <Link
@@ -282,7 +274,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     className="btn btn-warning btn-sm w-full font-bold shadow-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    ⚡ Unlock Live Analytics (₹29/mo)
+                    ⚡ Unlock Mutual Funds Pro (₹29/mo)
                   </Link>
                 )}
                 <button

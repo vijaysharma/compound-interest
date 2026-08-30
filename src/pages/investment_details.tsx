@@ -7,11 +7,8 @@ import InflationRates from './inflationRates';
 import PPPExchangeRate from './pppExchangeRate';
 import FixedRateSWP from './fixedRateSwp';
 import { useAuth } from '../context/useAuth';
-const isApiRestricted = (tabId: string, isDesktop: boolean) => {
-  if (isDesktop) {
-    return tabId === '3' || tabId === '4';
-  }
-  return tabId === '5' || tabId === '6';
+const isMutualFundTab = (tabId: string, isDesktop: boolean) => {
+  return isDesktop ? tabId === '4' : tabId === '6';
 };
 const InvestmentDetails = () => {
   const { trackUsage, isBlocked } = useAuth();
@@ -23,7 +20,7 @@ const InvestmentDetails = () => {
     if (isBlocked) return;
     if (prevIdRef.current !== activeId) {
       prevIdRef.current = activeId;
-      if (isApiRestricted(activeId, screenWidth >= 1024)) {
+      if (isMutualFundTab(activeId, screenWidth >= 1024)) {
         void trackUsage();
       }
     }

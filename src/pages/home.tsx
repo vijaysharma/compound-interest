@@ -52,7 +52,7 @@ const Home = () => {
                 to="/investment-details"
                 className="btn btn-primary btn-md sm:btn-lg shadow-lg hover:shadow-primary/30 transition-all font-semibold"
               >
-                Open Calculators Suite &rarr;
+                Open Calculators Suite (All-in-One) &rarr;
               </Link>
             ) : (
               <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -61,7 +61,7 @@ const Home = () => {
                   to="/investment-details"
                   className="btn btn-outline btn-md sm:btn-lg font-semibold"
                 >
-                  Explore Calculators Suite
+                  Explore Calculators Suite (All-in-One)
                 </Link>
               </div>
             )}
@@ -75,7 +75,7 @@ const Home = () => {
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 border-y border-base-300 py-6 text-center">
             <div>
               <div className="text-2xl font-black text-primary">8+</div>
-              <div className="text-xs opacity-70">Calculators Suite Tools</div>
+              <div className="text-xs opacity-70">Calculators in Suite</div>
             </div>
             <div>
               <div className="text-2xl font-black text-primary">0ms</div>
@@ -192,7 +192,7 @@ const Home = () => {
               </div>
               <div className="mt-6">
                 <Link to="/investment-details" className="btn btn-primary btn-sm w-full">
-                  Open Calculators Suite &rarr;
+                  Open Calculators Suite (All-in-One) &rarr;
                 </Link>
               </div>
             </div>
@@ -322,7 +322,7 @@ const Home = () => {
                 to="/investment-details"
                 className="btn btn-secondary btn-md sm:btn-lg font-semibold"
               >
-                Launch Calculators Suite &rarr;
+                Launch Calculators Suite (All-in-One) &rarr;
               </Link>
             ) : (
               <GoogleSignInButton text="signup_with" />
@@ -333,7 +333,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="border-t border-base-300 py-8 px-4 text-center text-xs opacity-60 space-y-2">
         <p>
-          &copy; {new Date().getFullYear()} Rupee Calculator. Built for financial intelligence and
+          &copy; {new Date().getFullYear()} Rupee Calculators Suite. Built for financial intelligence and
           precision.
         </p>
         <p>
