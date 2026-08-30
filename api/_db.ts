@@ -125,13 +125,11 @@ export async function ensureTables(sql: Query) {
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `;
-      await sql`
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS password_salt TEXT;
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS api_usage_count INT NOT NULL DEFAULT 0;
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'free_trial';
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
-      `;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_salt TEXT`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS api_usage_count INT NOT NULL DEFAULT 0`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'free_trial'`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ`;
       await sql`
         CREATE TABLE IF NOT EXISTS user_sessions (
           token TEXT PRIMARY KEY,

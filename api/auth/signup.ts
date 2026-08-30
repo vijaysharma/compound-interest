@@ -85,10 +85,7 @@ export default async function handler(request: Request): Promise<Response> {
       );
     }
     if (!password || password.length < 6) {
-      return jsonResponse(
-        { error: 'Password is required and must be at least 6 characters' },
-        400
-      );
+      return jsonResponse({ error: 'Password is required and must be at least 6 characters' }, 400);
     }
     if (!name) {
       name = email.split('@')[0];
