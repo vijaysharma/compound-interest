@@ -1,7 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import GoogleSignInButton from '../components/GoogleSignInButton';
 import Logo from '../components/Logo';
 const GoogleIcon = () => (
   <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
@@ -24,46 +23,78 @@ const GoogleIcon = () => (
   </svg>
 );
 const Login = () => {
-  const { isAuthenticated, loginWithGoogle, loading } = useAuth();
+  const { isAuthenticated, loginWithPassword, signupWithGooglePassword, loading } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  // Sign In form state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  // Sign Up form state
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupName, setSignupName] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/investment-details', { replace: true });
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/investment-details';
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
-  const handleAuthorize = async (e: FormEvent) => {
+  }, [isAuthenticated, navigate, location]);
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    const cleanEmail = email.trim();
+    const cleanEmail = loginEmail.trim();
     if (!cleanEmail || !cleanEmail.includes('@')) {
-      setError('Please enter a valid Google account email address.');
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!loginPassword) {
+      setError('Please enter your password.');
       return;
     }
     setIsSubmitting(true);
     setError(null);
     try {
-      await loginWithGoogle({
-        email: cleanEmail,
-        name: name.trim() || cleanEmail.split('@')[0],
-      });
+      await loginWithPassword({ email: cleanEmail, password: loginPassword });
       navigate('/investment-details', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authorization failed');
+      setError(err instanceof Error ? err.message : 'Sign in failed. Please check your credentials.');
     } finally {
       setIsSubmitting(false);
     }
   };
-  const isAdminCandidate =
-    email.trim().toLowerCase() ===
-    (import.meta.env.VITE_ALLOWED_EMAIL || '').trim().toLowerCase();
-  const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-  const hasValidClientId =
-    typeof rawClientId === 'string' &&
-    rawClientId.trim().length > 10 &&
-    rawClientId.includes('.apps.googleusercontent.com');
+  const handleSignup = async (e: FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = signupEmail.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Please enter a valid Google account email address.');
+      return;
+    }
+    if (signupPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (signupPassword !== signupConfirmPassword) {
+      setError('Passwords do not match. Please re-enter.');
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await signupWithGooglePassword({
+        email: cleanEmail,
+        password: signupPassword,
+        name: signupName.trim() || cleanEmail.split('@')[0],
+      });
+      navigate('/investment-details', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4 py-8">
       <div className="card bg-base-100 border border-base-300 w-full max-w-lg p-6 sm:p-10 shadow-2xl">
@@ -71,91 +102,211 @@ const Login = () => {
           <div className="mb-3">
             <Logo />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold">Sign in with Google</h1>
-          <p className="mt-2 text-sm opacity-70 max-w-sm">
-            Authorize your Google account to unlock institutional financial calculators and real-time AMFI data.
+          <h1 className="text-2xl sm:text-3xl font-extrabold">Rupee Calculator</h1>
+          <p className="mt-1.5 text-xs sm:text-sm opacity-70">
+            Institutional financial intelligence with real-time AMFI mutual fund analytics.
           </p>
+        </div>
+        {/* Tab Switcher */}
+        <div className="tabs tabs-boxed mb-6 p-1 bg-base-200 grid grid-cols-2">
+          <button
+            type="button"
+            className={`tab ${activeTab === 'signin' ? 'tab-active font-bold' : ''}`}
+            onClick={() => {
+              setActiveTab('signin');
+              setError(null);
+            }}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            className={`tab ${activeTab === 'signup' ? 'tab-active font-bold' : ''}`}
+            onClick={() => {
+              setActiveTab('signup');
+              setError(null);
+            }}
+          >
+            Sign Up with Google
+          </button>
         </div>
         {error && (
           <div className="alert alert-error text-xs py-2.5 px-4 mb-6 rounded-lg shadow-sm">
             <span>{error}</span>
           </div>
         )}
-        {hasValidClientId && (
-          <div className="mb-6 flex flex-col items-center">
-            <GoogleSignInButton
-              text="continue_with"
-              onSuccess={() => navigate('/investment-details', { replace: true })}
-              className="w-full"
-            />
-            <div className="divider my-4 text-xs opacity-50 uppercase">or authorize via account</div>
-          </div>
-        )}
-        <form onSubmit={handleAuthorize} className="space-y-4">
-          <div>
-            <label htmlFor="login-email" className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">
-              Google Account Email
-            </label>
-            <div className="relative">
+        {activeTab === 'signin' ? (
+          /* Sign In Form */
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label
+                htmlFor="signin-email"
+                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+              >
+                Email Address
+              </label>
               <input
-                id="login-email"
+                id="signin-email"
                 type="email"
                 required
                 autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. name@gmail.com or Google Workspace"
-                className="input input-bordered input-primary w-full text-sm pl-3 pr-8 focus:outline-none"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="you@gmail.com"
+                className="input input-bordered input-primary w-full text-sm focus:outline-none"
               />
-              {email.includes('@') && (
-                <span className="absolute right-3 top-3 text-success text-xs">✓</span>
-              )}
             </div>
-            {isAdminCandidate && (
-              <p className="mt-1.5 text-[11px] text-accent font-medium flex items-center gap-1">
-                ⚡ Administrator privileges detected for this email
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="login-name" className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">
-              Display Name <span className="opacity-50 lowercase font-normal">(optional)</span>
-            </label>
-            <input
-              id="login-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Alex Sharma"
-              className="input input-bordered w-full text-sm focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmitting || loading}
-            className="btn btn-primary w-full flex items-center justify-center gap-3 py-3 shadow-md hover:shadow-primary/30 transition-all font-semibold"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="loading loading-spinner loading-sm" />
-                <span>Authorizing Google Account...</span>
-              </>
-            ) : (
-              <>
-                <GoogleIcon />
-                <span>Authorize &amp; Sign In</span>
-              </>
-            )}
-          </button>
-        </form>
-        <div className="mt-6 rounded-lg bg-base-200/50 p-3.5 border border-base-300/60 text-xs opacity-75 space-y-1.5">
-          <div className="font-semibold text-primary flex items-center gap-1">
-            🔒 Direct &amp; Private Session
-          </div>
-          <p>
-            Your account is verified directly with the secure backend session store. No external tracking or data sharing.
-          </p>
-        </div>
+            <div>
+              <label
+                htmlFor="signin-password"
+                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+              >
+                Password
+              </label>
+              <input
+                id="signin-password"
+                type="password"
+                required
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••"
+                className="input input-bordered input-primary w-full text-sm focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting || loading}
+              className="btn btn-primary w-full shadow-md font-semibold mt-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="loading loading-spinner loading-sm" />
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <span>Sign In with Password &rarr;</span>
+              )}
+            </button>
+            <div className="pt-2 text-center text-xs opacity-75">
+              <span>New to Rupee Calculator? </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('signup');
+                  setError(null);
+                }}
+                className="text-primary font-bold hover:underline"
+              >
+                Sign Up with Google &rarr;
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Sign Up with Google Form */
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="rounded-lg bg-primary/10 p-3 text-xs text-primary font-medium flex items-center gap-2">
+              <GoogleIcon />
+              <span>Sign up with your Google account and create a secure login password.</span>
+            </div>
+            <div>
+              <label
+                htmlFor="signup-email"
+                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+              >
+                Google Account Email
+              </label>
+              <input
+                id="signup-email"
+                type="email"
+                required
+                autoFocus
+                value={signupEmail}
+                onChange={(e) => setSignupEmail(e.target.value)}
+                placeholder="e.g. name@gmail.com or Workspace"
+                className="input input-bordered input-primary w-full text-sm focus:outline-none"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="signup-name"
+                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+              >
+                Display Name <span className="opacity-50 lowercase font-normal">(optional)</span>
+              </label>
+              <input
+                id="signup-name"
+                type="text"
+                value={signupName}
+                onChange={(e) => setSignupName(e.target.value)}
+                placeholder="e.g. Alex Sharma"
+                className="input input-bordered w-full text-sm focus:outline-none"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="signup-password"
+                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+              >
+                Create Account Password
+              </label>
+              <input
+                id="signup-password"
+                type="password"
+                required
+                minLength={6}
+                value={signupPassword}
+                onChange={(e) => setSignupPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                className="input input-bordered input-primary w-full text-sm focus:outline-none"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="signup-confirm-password"
+                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+              >
+                Confirm Password
+              </label>
+              <input
+                id="signup-confirm-password"
+                type="password"
+                required
+                minLength={6}
+                value={signupConfirmPassword}
+                onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                placeholder="Re-enter password"
+                className="input input-bordered input-primary w-full text-sm focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting || loading}
+              className="btn btn-primary w-full shadow-md font-semibold mt-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="loading loading-spinner loading-sm" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <span>Register &amp; Unlock Free Access &rarr;</span>
+              )}
+            </button>
+            <div className="pt-2 text-center text-xs opacity-75">
+              <span>Already have an account? </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('signin');
+                  setError(null);
+                }}
+                className="text-primary font-bold hover:underline"
+              >
+                Sign In with Password &rarr;
+              </button>
+            </div>
+          </form>
+        )}
         <div className="mt-8 border-t border-base-200 pt-6 text-center text-xs opacity-60">
           <p>Institutional-grade financial precision. Fast, private, and free.</p>
         </div>

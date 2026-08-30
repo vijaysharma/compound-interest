@@ -13,6 +13,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   });
   const [loading, setLoading] = useState<boolean>(true);
+  const [showPaywall, setShowPaywall] = useState<boolean>(false);
+  const refreshUser = async () => {
+    const storedToken = token || localStorage.getItem('auth_token');
+    if (!storedToken) {
+      setUser(null);
+      return;
+    }
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${storedToken}` },
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { user: AuthUser };
+        setUser(data.user);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        if (data.user.isBlocked) {
+          setShowPaywall(true);
+        }
+      }
+    } catch (err) {
+      console.warn('Refresh user error:', err);
+    }
+  };
   useEffect(() => {
     let cancelled = false;
     const verifySession = async () => {
@@ -33,6 +56,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const data = (await res.json()) as { user: AuthUser };
           setUser(data.user);
           localStorage.setItem('auth_user', JSON.stringify(data.user));
+          if (data.user.isBlocked) {
+            setShowPaywall(true);
+          }
         } else {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('auth_user');
@@ -50,6 +76,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       cancelled = true;
     };
   }, [token]);
+  const signupWithGooglePassword = async (data: {
+    email: string;
+    password: string;
+    name?: string;
+    credential?: string;
+  }) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const resData = (await res.json()) as { token?: string; user?: AuthUser; error?: string };
+      if (!res.ok || !resData.token || !resData.user) {
+        throw new Error(resData.error ?? 'Registration failed');
+      }
+      localStorage.setItem('auth_token', resData.token);
+      localStorage.setItem('auth_user', JSON.stringify(resData.user));
+      setToken(resData.token);
+      setUser(resData.user);
+      if (resData.user.isBlocked) {
+        setShowPaywall(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  const loginWithPassword = async (data: { email: string; password: string }) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const resData = (await res.json()) as { token?: string; user?: AuthUser; error?: string };
+      if (!res.ok || !resData.token || !resData.user) {
+        throw new Error(resData.error ?? 'Sign in failed');
+      }
+      localStorage.setItem('auth_token', resData.token);
+      localStorage.setItem('auth_user', JSON.stringify(resData.user));
+      setToken(resData.token);
+      setUser(resData.user);
+      if (resData.user.isBlocked) {
+        setShowPaywall(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   const loginWithGoogle = async (
     authData: string | { credential?: string; email?: string; name?: string }
   ) => {
@@ -69,8 +146,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('auth_user', JSON.stringify(data.user));
       setToken(data.token);
       setUser(data.user);
+      if (data.user.isBlocked) {
+        setShowPaywall(true);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+  const trackUsage = async (): Promise<boolean> => {
+    const currentToken = token || localStorage.getItem('auth_token');
+    if (!currentToken) return false;
+    try {
+      const res = await fetch('/api/user/track-usage', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${currentToken}` },
+      });
+      const data = (await res.json()) as {
+        success?: boolean;
+        isBlocked?: boolean;
+        api_usage_count?: number;
+      };
+      if (user && typeof data.api_usage_count === 'number') {
+        const updated = {
+          ...user,
+          api_usage_count: data.api_usage_count,
+          isBlocked: Boolean(data.isBlocked),
+        };
+        setUser(updated);
+        localStorage.setItem('auth_user', JSON.stringify(updated));
+      }
+      if (data.isBlocked || res.status === 402) {
+        setShowPaywall(true);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Track usage error:', err);
+      return true;
     }
   };
   const logout = async () => {
@@ -89,19 +201,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('auth_user');
     setToken(null);
     setUser(null);
+    setShowPaywall(false);
   };
   const isAuthenticated = Boolean(user && token);
   const isAdmin = Boolean(user && user.role === 'admin');
+  const isBlocked = Boolean(user && user.isBlocked);
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
         loading,
+        signupWithGooglePassword,
+        loginWithPassword,
         loginWithGoogle,
         logout,
+        trackUsage,
+        refreshUser,
         isAuthenticated,
         isAdmin,
+        isBlocked,
+        showPaywall,
+        setShowPaywall,
       }}
     >
       {children}

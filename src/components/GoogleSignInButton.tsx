@@ -58,12 +58,14 @@ const GoogleSignInButton = ({
   onSuccess,
   className = '',
   text = 'continue_with',
-  modalTitle = 'Sign in with Google',
+  modalTitle = 'Sign Up with Google',
 }: GoogleSignInButtonProps) => {
-  const { loginWithGoogle, loading } = useAuth();
+  const { signupWithGooglePassword, loading } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSdkLoaded, setIsSdkLoaded] = useState(() => {
@@ -102,16 +104,20 @@ const GoogleSignInButton = ({
     try {
       window.google.accounts.id.initialize({
         client_id: rawClientId,
-        callback: async (response) => {
+        callback: (response) => {
           if (response.credential) {
             try {
-              setError(null);
-              await loginWithGoogle(response.credential);
-              setIsModalOpen(false);
-              if (onSuccess) onSuccess();
-            } catch (err) {
-              setError(err instanceof Error ? err.message : 'Google sign in failed');
+              const parts = response.credential.split('.');
+              if (parts.length === 3) {
+                const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+                const payload = JSON.parse(payloadJson) as { email?: string; name?: string };
+                if (payload.email) setEmail(payload.email);
+                if (payload.name) setName(payload.name);
+              }
+            } catch {
+              // fallback
             }
+            setIsModalOpen(true);
           }
         },
       });
@@ -128,7 +134,7 @@ const GoogleSignInButton = ({
     } catch (err) {
       console.warn('Google GSI button initialization notice:', err);
     }
-  }, [isSdkLoaded, hasValidClientId, rawClientId, loginWithGoogle, onSuccess, text]);
+  }, [isSdkLoaded, hasValidClientId, rawClientId, onSuccess, text]);
   const handleAuthorizeSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim();
@@ -136,17 +142,26 @@ const GoogleSignInButton = ({
       setError('Please enter a valid Google account email address.');
       return;
     }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please re-enter.');
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     try {
-      await loginWithGoogle({
+      await signupWithGooglePassword({
         email: cleanEmail,
+        password,
         name: name.trim() || cleanEmail.split('@')[0],
       });
       setIsModalOpen(false);
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authorization failed');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setIsSubmitting(false);
     }
@@ -169,7 +184,7 @@ const GoogleSignInButton = ({
           className="btn btn-outline border-base-300 hover:border-primary flex items-center justify-center gap-3 bg-base-100 px-5 py-2.5 font-medium shadow-sm transition-all text-sm rounded-lg hover:shadow-md cursor-pointer"
         >
           <GoogleIcon />
-          <span>Continue with Google</span>
+          <span>Sign up with Google</span>
         </button>
       )}
       {error && !isModalOpen && <p className="text-xs text-error text-center">{error}</p>}
@@ -198,7 +213,7 @@ const GoogleSignInButton = ({
                 <h3 id="auth-modal-title" className="text-lg font-bold">
                   {modalTitle}
                 </h3>
-                <p className="text-xs opacity-60">Authorize your Google profile to continue</p>
+                <p className="text-xs opacity-60">Create password to complete Google registration</p>
               </div>
             </div>
             {error && (
@@ -206,9 +221,9 @@ const GoogleSignInButton = ({
                 <span>{error}</span>
               </div>
             )}
-            <form onSubmit={handleAuthorizeSubmit} className="space-y-4">
+            <form onSubmit={handleAuthorizeSubmit} className="space-y-3">
               <div>
-                <label htmlFor="google-email" className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">
+                <label htmlFor="google-email" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
                   Google Account Email
                 </label>
                 <div className="relative">
@@ -233,7 +248,7 @@ const GoogleSignInButton = ({
                 )}
               </div>
               <div>
-                <label htmlFor="google-name" className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80">
+                <label htmlFor="google-name" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
                   Display Name <span className="opacity-50 lowercase font-normal">(optional)</span>
                 </label>
                 <input
@@ -245,19 +260,35 @@ const GoogleSignInButton = ({
                   className="input input-bordered w-full text-sm focus:outline-none"
                 />
               </div>
-              <div className="rounded-lg bg-base-200/60 p-3 text-xs opacity-75 border border-base-300/50 space-y-1">
-                <div className="flex items-center gap-1.5 font-semibold text-primary">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                  <span>Secure Local Authorization</span>
-                </div>
-                <p>Authenticates your session and issues a secure 30-day encrypted token.</p>
+              <div>
+                <label htmlFor="google-password" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+                  Create Password
+                </label>
+                <input
+                  id="google-password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimum 6 characters"
+                  className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="google-confirm-password" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+                  Confirm Password
+                </label>
+                <input
+                  id="google-confirm-password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter password"
+                  className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                />
               </div>
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
@@ -275,11 +306,11 @@ const GoogleSignInButton = ({
                   {isSubmitting ? (
                     <>
                       <span className="loading loading-spinner loading-xs" />
-                      <span>Authorizing...</span>
+                      <span>Creating Account...</span>
                     </>
                   ) : (
                     <>
-                      <span>Authorize &amp; Continue</span>
+                      <span>Register &amp; Continue</span>
                       <span>&rarr;</span>
                     </>
                   )}

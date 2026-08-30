@@ -17,12 +17,26 @@ const localApiPlugin = (): Plugin => ({
       }
       const path = request.url.split('?')[0];
       let modulePath: string | null = null;
-      if (path === '/api/auth/google') {
+      if (path === '/api/auth/signup') {
+        modulePath = '/api/auth/signup';
+      } else if (path === '/api/auth/login') {
+        modulePath = '/api/auth/login';
+      } else if (path === '/api/auth/google') {
         modulePath = '/api/auth/google';
       } else if (path === '/api/auth/me') {
         modulePath = '/api/auth/me';
       } else if (path === '/api/auth/logout') {
         modulePath = '/api/auth/logout';
+      } else if (path === '/api/user/track-usage') {
+        modulePath = '/api/user/track-usage';
+      } else if (path === '/api/payments/settings') {
+        modulePath = '/api/payments/settings';
+      } else if (path === '/api/payments/submit') {
+        modulePath = '/api/payments/submit';
+      } else if (path === '/api/admin/payments') {
+        modulePath = '/api/admin/payments';
+      } else if (path === '/api/admin/users') {
+        modulePath = '/api/admin/users';
       } else if (path === '/api/imf-inflation') {
         modulePath = '/api/imf-inflation';
       } else if (path === '/api/mutual-funds') {

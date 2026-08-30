@@ -25,7 +25,7 @@ const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout, setShowPaywall } = useAuth();
   const navTitle = getNavTitle(pathname);
   const handleLogout = async () => {
     await logout();
@@ -58,24 +58,41 @@ const TopBar = ({ className }: { className?: string }) => {
         <div className="flex items-center gap-2">
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
+              {isAdmin ? (
+                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold uppercase text-[10px]">
+                  Admin
+                </span>
+              ) : user.subscription_status === 'active' ? (
+                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold gap-1 text-[10px]">
+                  👑 Pro Active
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowPaywall(true)}
+                  className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} gap-1 font-normal`}
+                  title="Unlock 1 Month Unlimited for ₹19"
+                >
+                  <span>⚡</span>
+                  <span className="hidden md:inline">
+                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 15} Runs
+                  </span>
+                  <span className="font-bold underline text-[10px]">₹19 Pro</span>
+                </button>
+              )}
               <div className="hidden sm:flex flex-col items-end text-right leading-tight">
-                <span className="text-xs font-medium truncate max-w-[140px]">
+                <span className="text-xs font-medium truncate max-w-[130px]">
                   {user.name || user.email}
                 </span>
-                {isAdmin && (
-                  <span className="badge badge-accent badge-xs font-bold uppercase text-[9px] px-1 py-0 h-3.5">
-                    Admin
-                  </span>
-                )}
               </div>
               {user.picture ? (
                 <img
                   src={user.picture}
                   alt={user.name || user.email}
-                  className="h-8 w-8 rounded-full border border-primary-content/40 object-cover"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-primary-content/40 object-cover"
                 />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-content/20 text-xs font-bold uppercase text-primary-content">
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary-content/20 text-xs font-bold uppercase text-primary-content">
                   {(user.name || user.email).charAt(0)}
                 </div>
               )}

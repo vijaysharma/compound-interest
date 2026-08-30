@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import LoadingFallback from './components/LoadingFallback';
+import PaywallModal from './components/PaywallModal';
 import { AuthProvider } from './context/AuthContext';
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Outlet />
         </Suspense>
       </div>
+      <PaywallModal />
     </AuthProvider>
   );
 }
