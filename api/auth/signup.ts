@@ -9,105 +9,115 @@ import {
   jsonResponse,
 } from '../_db';
 export const config = { runtime: 'edge' };
+interface GoogleTokenInfo {
+  email?: string;
+  name?: string;
+  picture?: string;
+  sub?: string;
+  email_verified?: string | boolean;
+  error_description?: string;
+}
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
   try {
     const body = (await request.json()) as {
-      email?: string;
       password?: string;
-      name?: string;
-      picture?: string;
       credential?: string;
     };
-    let email = body.email ? body.email.toLowerCase().trim() : '';
-    let name = body.name ? body.name.trim() : '';
-    let picture = body.picture || '';
-    const password = body.password ? body.password.trim() : '';
-    let isGoogleVerified = false;
-    if (body.credential) {
-      try {
-        const tokenRes = await fetch(
-          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`
-        );
-        if (tokenRes.ok) {
-          const googleData = (await tokenRes.json()) as {
-            email?: string;
-            name?: string;
-            picture?: string;
-            email_verified?: string | boolean;
-          };
-          if (
-            googleData.email &&
-            (googleData.email_verified === 'true' || googleData.email_verified === true)
-          ) {
-            email = googleData.email.toLowerCase().trim();
-            name = googleData.name || name;
-            picture = googleData.picture || picture;
-            isGoogleVerified = true;
-          }
-        }
-      } catch (err) {
-        console.warn('Google tokeninfo verification network warning:', err);
-      }
-      if (!isGoogleVerified) {
-        try {
-          const parts = body.credential.split('.');
-          if (parts.length === 3) {
-            const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-            const payload = JSON.parse(payloadJson) as {
-              email?: string;
-              name?: string;
-              picture?: string;
-              email_verified?: boolean;
-            };
-            if (payload.email) {
-              email = payload.email.toLowerCase().trim();
-              name = payload.name || name;
-              picture = payload.picture || picture;
-              isGoogleVerified = true;
-            }
-          }
-        } catch {
-          // invalid jwt format fallback
-        }
-      }
-    }
-    if (!email || !email.includes('@')) {
-      return jsonResponse({ error: 'A valid email address is required' }, 400);
-    }
-    const isGmail = email.endsWith('@gmail.com') || email.endsWith('@googlemail.com');
-    if (!isGoogleVerified && !isGmail && !email.includes('@')) {
+    const credential = body.credential?.trim();
+    if (!credential) {
       return jsonResponse(
-        { error: 'Please sign up with a valid Google or Gmail account (@gmail.com)' },
+        {
+          error:
+            'Google authentication required. You must sign up with a verified Google or Gmail account.',
+        },
         400
       );
     }
+    const password = body.password ? body.password.trim() : '';
     if (!password || password.length < 6) {
-      return jsonResponse({ error: 'Password is required and must be at least 6 characters' }, 400);
+      return jsonResponse(
+        { error: 'Password is required and must be at least 6 characters' },
+        400
+      );
     }
-    if (!name) {
-      name = email.split('@')[0];
+    let verifiedEmail = '';
+    let verifiedName = '';
+    let verifiedPicture = '';
+    let providerId = '';
+    // Verify Google ID Token with Google OAuth tokeninfo endpoint
+    try {
+      const verifyRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+      );
+      if (verifyRes.ok) {
+        const info = (await verifyRes.json()) as GoogleTokenInfo;
+        if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
+          verifiedEmail = info.email.toLowerCase().trim();
+          verifiedName = info.name || '';
+          verifiedPicture = info.picture || '';
+          providerId = info.sub || '';
+        }
+      }
+    } catch (err) {
+      console.warn('Google tokeninfo fetch error:', err);
     }
-    if (!picture) {
-      picture = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name || email)}`;
+    // Parse verified JWT payload fallback if tokeninfo is unreachable
+    if (!verifiedEmail) {
+      try {
+        const parts = credential.split('.');
+        if (parts.length === 3) {
+          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+          const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
+          if (
+            payload.email &&
+            (payload.email_verified === 'true' ||
+              payload.email_verified === true ||
+              payload.email.endsWith('@gmail.com') ||
+              payload.email.endsWith('@googlemail.com'))
+          ) {
+            verifiedEmail = payload.email.toLowerCase().trim();
+            verifiedName = payload.name || '';
+            verifiedPicture = payload.picture || '';
+            providerId = payload.sub || '';
+          }
+        }
+      } catch {
+        // invalid jwt
+      }
+    }
+    if (!verifiedEmail) {
+      return jsonResponse(
+        {
+          error:
+            'Google authentication token could not be verified. Please sign up using a valid Google or Gmail account.',
+        },
+        400
+      );
+    }
+    if (!verifiedName) {
+      verifiedName = verifiedEmail.split('@')[0];
+    }
+    if (!verifiedPicture) {
+      verifiedPicture = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedName || verifiedEmail)}`;
     }
     const sql = getDb();
     await ensureTables(sql);
     const existingUsers = (await sql`
       SELECT id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, created_at, updated_at
       FROM users
-      WHERE email = ${email}
+      WHERE email = ${verifiedEmail}
     `) as DbUser[];
     const { hash, salt } = await hashPassword(password);
-    const isAdmin = isEmailAdmin(email);
+    const isAdmin = isEmailAdmin(verifiedEmail);
     let user: DbUser;
     if (existingUsers.length > 0) {
       const existing = existingUsers[0];
       if (existing.password_hash) {
         return jsonResponse(
-          { error: 'Account already exists for this email. Please sign in with your password.' },
+          { error: 'Account already exists for this Google email. Please sign in with your password.' },
           409
         );
       }
@@ -116,11 +126,12 @@ export default async function handler(request: Request): Promise<Response> {
         UPDATE users
         SET password_hash = ${hash},
             password_salt = ${salt},
-            name = COALESCE(${name || null}, name),
-            picture = COALESCE(${picture || null}, picture),
+            name = COALESCE(${verifiedName || null}, name),
+            picture = COALESCE(${verifiedPicture || null}, picture),
+            provider_id = COALESCE(${providerId || null}, provider_id),
             role = ${targetRole},
             updated_at = NOW()
-        WHERE email = ${email}
+        WHERE email = ${verifiedEmail}
         RETURNING id, email, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, created_at, updated_at
       `) as DbUser[];
       user = updated[0];
@@ -129,10 +140,10 @@ export default async function handler(request: Request): Promise<Response> {
       const role = isAdmin ? 'admin' : 'user';
       const created = (await sql`
         INSERT INTO users (
-          id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, subscription_status
+          id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, subscription_status
         )
         VALUES (
-          ${newId}, ${email}, ${hash}, ${salt}, ${name}, ${picture}, 'google', ${role}, 0, 'free_trial'
+          ${newId}, ${verifiedEmail}, ${hash}, ${salt}, ${verifiedName}, ${verifiedPicture}, 'google', ${providerId || null}, ${role}, 0, 'free_trial'
         )
         RETURNING id, email, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, created_at, updated_at
       `) as DbUser[];
