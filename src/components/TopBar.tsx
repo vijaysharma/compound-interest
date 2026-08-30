@@ -75,7 +75,7 @@ const TopBar = ({ className }: { className?: string }) => {
                 >
                   <span>⚡</span>
                   <span className="hidden md:inline">
-                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 15} Runs
+                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} Runs
                   </span>
                   <span className="font-bold underline text-[10px]">₹19 Pro</span>
                 </button>

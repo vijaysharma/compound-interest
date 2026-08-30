@@ -16,7 +16,7 @@ export default async function handler(request: Request): Promise<Response> {
   if (request.method === 'GET') {
     try {
       const users = (await sql`
-        SELECT id, email, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, created_at, updated_at
+        SELECT id, email, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
         FROM users
         ORDER BY created_at DESC
         LIMIT 200
@@ -30,7 +30,7 @@ export default async function handler(request: Request): Promise<Response> {
     try {
       const body = (await request.json()) as {
         user_id?: string;
-        action?: 'grant_access' | 'reset_usage' | 'set_role';
+        action?: 'grant_access' | 'reset_usage' | 'set_role' | 'reset_trial';
         role?: 'admin' | 'user';
       };
       const { user_id, action, role } = body;
@@ -49,14 +49,16 @@ export default async function handler(request: Request): Promise<Response> {
         `;
         return jsonResponse({ success: true, message: 'Granted 30-day Pro access to user' });
       }
-      if (action === 'reset_usage') {
+      if (action === 'reset_usage' || action === 'reset_trial') {
+        const trialExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         await sql`
           UPDATE users
           SET api_usage_count = 0,
+              trial_expires_at = ${trialExpiresAt},
               updated_at = NOW()
           WHERE id = ${user_id}
         `;
-        return jsonResponse({ success: true, message: 'Reset user usage count to 0' });
+        return jsonResponse({ success: true, message: 'Reset user usage count to 0 and refreshed 24h trial' });
       }
       if (action === 'set_role' && role) {
         await sql`

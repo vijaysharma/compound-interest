@@ -26,6 +26,7 @@ export default async function handler(request: Request): Promise<Response> {
         api_usage_count: user.api_usage_count ?? 0,
         subscription_status: user.subscription_status ?? 'free_trial',
         subscription_expires_at: user.subscription_expires_at,
+        trial_expires_at: user.trial_expires_at,
         isBlocked: blocked,
         freeLimit: FREE_USAGE_LIMIT,
       },

@@ -511,7 +511,7 @@ const Admin = () => {
                   <tr>
                     <th>Email</th>
                     <th>Role</th>
-                    <th>Usage (15 Limit)</th>
+                    <th>Usage (10 Limit)</th>
                     <th>Subscription</th>
                     <th>Expires At</th>
                     <th className="text-right">Manual Action</th>
@@ -519,7 +519,7 @@ const Admin = () => {
                 </thead>
                 <tbody>
                   {usersList.map((u) => {
-                    const isOverLimit = u.api_usage_count >= 15;
+                    const isOverLimit = u.api_usage_count >= 10;
                     return (
                       <tr key={u.id}>
                         <td className="font-semibold text-xs">{u.email}</td>
@@ -534,7 +534,7 @@ const Admin = () => {
                           <span
                             className={`font-mono text-xs font-bold ${isOverLimit && u.role !== 'admin' ? 'text-error' : 'text-primary'}`}
                           >
-                            {u.api_usage_count} / 15
+                            {u.api_usage_count} / 10
                           </span>
                         </td>
                         <td>

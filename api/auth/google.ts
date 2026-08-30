@@ -1,4 +1,12 @@
-import { DbUser, ensureTables, getDb, isEmailAdmin, jsonResponse } from '../_db';
+import {
+  DbUser,
+  ensureTables,
+  FREE_USAGE_LIMIT,
+  getDb,
+  isEmailAdmin,
+  isUserBlocked,
+  jsonResponse,
+} from '../_db';
 export const config = { runtime: 'edge' };
 interface GoogleTokenInfo {
   email?: string;
@@ -72,8 +80,9 @@ export default async function handler(request: Request): Promise<Response> {
     const sql = getDb();
     await ensureTables(sql);
     const isAdmin = isEmailAdmin(email);
+    const trialExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const existingUsers = (await sql`
-      SELECT id, email, name, picture, provider, provider_id, role, created_at, updated_at
+      SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
       FROM users
       WHERE email = ${email}
     `) as DbUser[];
@@ -87,18 +96,19 @@ export default async function handler(request: Request): Promise<Response> {
             picture = COALESCE(${picture || null}, picture),
             provider_id = COALESCE(${sub || null}, provider_id),
             role = ${targetRole},
+            trial_expires_at = COALESCE(trial_expires_at, ${trialExpiresAt}),
             updated_at = NOW()
         WHERE email = ${email}
-        RETURNING id, email, name, picture, provider, provider_id, role, created_at, updated_at
+        RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
       `) as DbUser[];
       user = updated[0];
     } else {
       const newId = crypto.randomUUID();
       const role = isAdmin ? 'admin' : 'user';
       const created = (await sql`
-        INSERT INTO users (id, email, name, picture, provider, provider_id, role)
-        VALUES (${newId}, ${email}, ${name || null}, ${picture || null}, 'google', ${sub || null}, ${role})
-        RETURNING id, email, name, picture, provider, provider_id, role, created_at, updated_at
+        INSERT INTO users (id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, trial_expires_at)
+        VALUES (${newId}, ${email}, ${name || null}, ${picture || null}, 'google', ${sub || null}, ${role}, 0, 'free_trial', ${trialExpiresAt})
+        RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
       `) as DbUser[];
       user = created[0];
     }
@@ -108,6 +118,7 @@ export default async function handler(request: Request): Promise<Response> {
       INSERT INTO user_sessions (token, user_id, expires_at)
       VALUES (${sessionToken}, ${user.id}, ${expiresAt})
     `;
+    const blocked = isUserBlocked(user);
     return jsonResponse({
       token: sessionToken,
       user: {
@@ -116,6 +127,12 @@ export default async function handler(request: Request): Promise<Response> {
         name: user.name,
         picture: user.picture,
         role: user.role,
+        api_usage_count: user.api_usage_count ?? 0,
+        subscription_status: user.subscription_status ?? 'free_trial',
+        subscription_expires_at: user.subscription_expires_at,
+        trial_expires_at: user.trial_expires_at,
+        isBlocked: blocked,
+        freeLimit: FREE_USAGE_LIMIT,
       },
     });
   } catch (error) {

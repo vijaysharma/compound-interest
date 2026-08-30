@@ -171,6 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         success?: boolean;
         isBlocked?: boolean;
         api_usage_count?: number;
+        trial_expires_at?: string | null;
       };
       if (typeof data.api_usage_count === 'number') {
         setUser((prev) => {
@@ -179,6 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ...prev,
             api_usage_count: data.api_usage_count!,
             isBlocked: Boolean(data.isBlocked),
+            trial_expires_at: data.trial_expires_at ?? prev.trial_expires_at,
           };
           localStorage.setItem('auth_user', JSON.stringify(updated));
           return updated;

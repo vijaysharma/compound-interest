@@ -7,6 +7,7 @@ export interface AuthUser {
   api_usage_count: number;
   subscription_status: 'free_trial' | 'active' | 'expired';
   subscription_expires_at: string | null;
+  trial_expires_at?: string | null;
   isBlocked: boolean;
   freeLimit: number;
 }

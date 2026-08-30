@@ -76,9 +76,9 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning text-2xl">
             ⚡
           </div>
-          <h2 className="mb-2 text-xl font-bold">Free Trial Quota Reached</h2>
+          <h2 className="mb-2 text-xl font-bold">Free Trial Expired</h2>
           <p className="mb-2 text-xs sm:text-sm opacity-75">
-            You have used all {user.freeLimit || 15} free calculation runs for{' '}
+            Your free trial (10 calculations / 24 hours) has ended for{' '}
             <span className="font-semibold">{user.email}</span>.
           </p>
           <p className="mb-6 text-xs opacity-60">

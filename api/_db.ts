@@ -2,7 +2,8 @@ import { neon } from '@neondatabase/serverless';
 declare const process: { env: Record<string, string | undefined> };
 export const MF_URL = 'https://api.mfapi.in/mf';
 export const IMF_URL = 'https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD';
-export const FREE_USAGE_LIMIT = 15;
+export const FREE_USAGE_LIMIT = 10;
+export const TRIAL_DURATION_HOURS = 24;
 export type Query = ReturnType<typeof neon>;
 export interface DbUser {
   id: string;
@@ -17,6 +18,7 @@ export interface DbUser {
   api_usage_count: number;
   subscription_status: 'free_trial' | 'active' | 'expired';
   subscription_expires_at: string | null;
+  trial_expires_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -60,8 +62,21 @@ export function isUserBlocked(user: DbUser): boolean {
     if (!user.subscription_expires_at) return false;
     const expiry = new Date(user.subscription_expires_at).getTime();
     if (expiry > Date.now()) return false;
+    return true;
   }
-  return (user.api_usage_count ?? 0) >= FREE_USAGE_LIMIT;
+  // Check free trial calculation quota (10 requests)
+  if ((user.api_usage_count ?? 0) >= FREE_USAGE_LIMIT) {
+    return true;
+  }
+  // Check free trial time window (24 hours from creation / trial start)
+  const trialExpiryTime = user.trial_expires_at
+    ? new Date(user.trial_expires_at).getTime()
+    : new Date(user.created_at || Date.now()).getTime() +
+      TRIAL_DURATION_HOURS * 60 * 60 * 1000;
+  if (Date.now() > trialExpiryTime) {
+    return true;
+  }
+  return false;
 }
 export async function hashPassword(
   password: string,
@@ -130,6 +145,7 @@ export async function ensureTables(sql: Query) {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS api_usage_count INT NOT NULL DEFAULT 0`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'free_trial'`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ`;
       await sql`
         CREATE TABLE IF NOT EXISTS user_sessions (
           token TEXT PRIMARY KEY,

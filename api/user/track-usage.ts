@@ -19,13 +19,18 @@ export default async function handler(request: Request): Promise<Response> {
       return jsonResponse({ error: 'Unauthenticated' }, 401);
     }
     if (isUserBlocked(user)) {
+      const isTimeExpired =
+        user.trial_expires_at && new Date(user.trial_expires_at).getTime() < Date.now();
+      const message = isTimeExpired
+        ? 'Your 24-hour free trial period has ended. Please unlock 30 days unlimited access for ₹19.'
+        : 'Free trial limit of 10 calculations reached. Please unlock 30 days unlimited access for ₹19.';
       return jsonResponse(
         {
-          error:
-            'Free trial limit reached. Please unlock unlimited access for ₹19/month using UPI.',
+          error: message,
           isBlocked: true,
           api_usage_count: user.api_usage_count ?? 0,
           freeLimit: FREE_USAGE_LIMIT,
+          trial_expires_at: user.trial_expires_at,
         },
         402
       );
@@ -36,15 +41,17 @@ export default async function handler(request: Request): Promise<Response> {
         SET api_usage_count = api_usage_count + 1,
             updated_at = NOW()
         WHERE id = ${user.id}
-        RETURNING api_usage_count, subscription_status, subscription_expires_at, role
+        RETURNING api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, role
       `) as {
         api_usage_count: number;
         subscription_status: 'free_trial' | 'active' | 'expired';
         subscription_expires_at: string | null;
+        trial_expires_at: string | null;
         role: 'admin' | 'user';
       }[];
       if (updated.length > 0) {
         user.api_usage_count = updated[0].api_usage_count;
+        user.trial_expires_at = updated[0].trial_expires_at;
       }
     }
     const blocked = isUserBlocked(user);
@@ -53,6 +60,7 @@ export default async function handler(request: Request): Promise<Response> {
       api_usage_count: user.api_usage_count ?? 0,
       isBlocked: blocked,
       freeLimit: FREE_USAGE_LIMIT,
+      trial_expires_at: user.trial_expires_at,
     });
   } catch (error) {
     return jsonResponse({ error: 'Failed to record usage', detail: String(error) }, 500);
