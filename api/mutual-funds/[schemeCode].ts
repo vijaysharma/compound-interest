@@ -1,4 +1,4 @@
-import { ensureTables, getDb, jsonResponse, MF_URL } from '../_db.ts';
+import { ensureTables, getDb, jsonResponse, MF_URL } from '../_db';
 export const config = { runtime: 'edge' };
 const navCache = new Map<string, { expiresAt: number; data: unknown }>();
 const NAV_CACHE_TTL_MS = 300_000;

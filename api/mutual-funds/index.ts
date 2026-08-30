@@ -1,4 +1,4 @@
-import { ensureTables, getDb, jsonResponse } from '../_db.ts';
+import { ensureTables, getDb, jsonResponse } from '../_db';
 export const config = { runtime: 'edge' };
 const searchCache = new Map<string, { expiresAt: number; data: unknown[] }>();
 const SEARCH_CACHE_TTL_MS = 60_000;

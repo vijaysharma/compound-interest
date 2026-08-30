@@ -2,11 +2,11 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import type { Plugin } from 'vite';
-import imfInflation from './api/imf-inflation.ts';
-import syncImf from './api/admin/sync-imf.ts';
-import syncMutualFunds from './api/admin/sync-mutual-funds.ts';
-import mutualFunds from './api/mutual-funds/index.ts';
-import mutualFundBySchemeCode from './api/mutual-funds/[schemeCode].ts';
+import imfInflation from './api/imf-inflation';
+import syncImf from './api/admin/sync-imf';
+import syncMutualFunds from './api/admin/sync-mutual-funds';
+import mutualFunds from './api/mutual-funds/index';
+import mutualFundBySchemeCode from './api/mutual-funds/[schemeCode]';
 const readRequestBody = async (request: import('node:http').IncomingMessage) => {
   const chunks: Buffer[] = [];
   for await (const chunk of request) chunks.push(Buffer.from(chunk));
