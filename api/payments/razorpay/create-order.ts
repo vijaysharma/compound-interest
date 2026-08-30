@@ -12,9 +12,7 @@ export default async function handler(request: Request): Promise<Response> {
       return jsonResponse({ error: 'Authentication required to initiate payment' }, 401);
     }
     const keyId =
-      process.env.RAZORPAY_KEY_ID ||
-      process.env.VITE_RAZORPAY_KEY_ID ||
-      'rzp_test_TW0RQa1VIcpwaN';
+      process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TW0RQa1VIcpwaN';
     const keySecret = process.env.RAZORPAY_KEY_SECRET || 'UxZ0a8mnYGVRkkO6r52IAUcq';
     const body = (await request.json().catch(() => ({}))) as { amount?: number };
     const amountInRupees = typeof body.amount === 'number' && body.amount > 0 ? body.amount : 29;

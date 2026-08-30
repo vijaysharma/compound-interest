@@ -3,14 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import { PaymentSettings } from '../types/auth';
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => {
-      open: () => void;
-      on: (event: string, handler: (response: unknown) => void) => void;
-    };
-  }
-}
+import { loadRazorpayScript } from '../utils/razorpay';
 const Upgrade = () => {
   const { user, isAuthenticated, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -20,14 +13,6 @@ const Upgrade = () => {
   const [settings, setSettings] = useState<PaymentSettings | null>(null);
   const [copied, setCopied] = useState(false);
   useEffect(() => {
-    // Load Razorpay Checkout script
-    if (!document.getElementById('razorpay-checkout-script')) {
-      const script = document.createElement('script');
-      script.id = 'razorpay-checkout-script';
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.body.appendChild(script);
-    }
     const fetchSettings = async () => {
       try {
         const res = await fetch('/api/payments/settings');
@@ -70,6 +55,10 @@ const Upgrade = () => {
     setIsProcessing(true);
     setMessage(null);
     try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded || !window.Razorpay) {
+        throw new Error('Could not load payment gateway. Please check your internet connection.');
+      }
       const storedToken = localStorage.getItem('auth_token');
       const orderRes = await fetch('/api/payments/razorpay/create-order', {
         method: 'POST',
@@ -89,9 +78,6 @@ const Upgrade = () => {
       };
       if (!orderRes.ok || !orderData.orderId || !orderData.keyId) {
         throw new Error(orderData.error || 'Failed to initialize payment gateway');
-      }
-      if (!window.Razorpay) {
-        throw new Error('Razorpay payment gateway script is still loading. Please try again.');
       }
       const options = {
         key: orderData.keyId,
@@ -184,8 +170,15 @@ const Upgrade = () => {
                 <span>⏱️</span> Your Free Trial is Active
               </div>
               <p className="text-xs sm:text-sm font-medium">
-                You have <span className="font-bold text-primary">{remainingCalculations} of {user?.freeLimit || 10}</span> calculations left
+                You have{' '}
+                <span className="font-bold text-primary">
+                  {remainingCalculations} of {user?.freeLimit || 10}
+                </span>{' '}
+                Mutual Fund &amp; PPP calculation runs left
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}.
+              </p>
+              <p className="text-[11px] opacity-65 mt-0.5">
+                Basic calculators (FD, RD, SWP, SIP, EMI) remain completely free &amp; unlimited.
               </p>
             </div>
             <Link to="/investment-details" className="btn btn-outline btn-info btn-xs shrink-0">
@@ -214,16 +207,25 @@ const Upgrade = () => {
         </div>
         <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
           <p>
-            Hey there! I built <strong>Rupee Calculator</strong> because I was tired of bloated financial websites stuffed with credit card ads, loan banners, and spammy popups asking for phone numbers.
+            Hey there! I built <strong>Rupee Calculator</strong> because I was tired of bloated
+            financial websites stuffed with credit card ads, loan banners, and spammy popups asking
+            for phone numbers.
           </p>
           <p>
-            I wanted a tool that was fast, honest, and mathematically accurate. I wrote every calculator from scratch—hooking up daily syncs for thousands of AMFI mutual fund NAVs, decades of IMF inflation data, and realistic inflation-adjusted SWP and SIP formulas so you can plan your retirement without guesswork.
+            I wanted a tool that was fast, honest, and mathematically accurate. I wrote every
+            calculator from scratch—hooking up daily syncs for thousands of AMFI mutual fund NAVs,
+            decades of IMF inflation data, and realistic inflation-adjusted SWP and SIP formulas so
+            you can plan your retirement without guesswork.
           </p>
           <p>
-            I don&apos;t run spammy ads, and I never sell your data to financial telemarketers. But running PostgreSQL databases, serverless edge compute, and daily mutual fund data feeds costs money every month.
+            I don&apos;t run spammy ads, and I never sell your data to financial telemarketers. But
+            running PostgreSQL databases, serverless edge compute, and daily mutual fund data feeds
+            costs money every month.
           </p>
           <p className="font-semibold text-primary">
-            ₹29 a month is literally less than a cutting chai and samosa ☕. If this tool saved you time or gave you clarity on your financial goals, your support directly keeps this project alive, ad-free, and growing.
+            ₹29 a month is literally less than a cutting chai and samosa ☕. If this tool saved you
+            time or gave you clarity on your financial goals, your support directly keeps this
+            project alive, ad-free, and growing.
           </p>
         </div>
       </div>
@@ -239,7 +241,8 @@ const Upgrade = () => {
               <span className="text-sm opacity-70 font-medium">/ 30 Days</span>
             </div>
             <p className="mt-1.5 text-xs opacity-75">
-              Instant activation for <span className="font-semibold">{user?.email || 'your account'}</span>
+              Instant activation for{' '}
+              <span className="font-semibold">{user?.email || 'your account'}</span>
             </p>
           </div>
           <div className="w-full sm:w-auto">
@@ -303,7 +306,9 @@ const Upgrade = () => {
               />
             )}
             <div className="flex items-center gap-2 bg-base-200 px-3 py-1.5 rounded-lg border border-base-300 text-xs">
-              <span className="font-mono font-bold text-primary">{settings?.upi_id || 'rupeecalculator@upi'}</span>
+              <span className="font-mono font-bold text-primary">
+                {settings?.upi_id || 'rupeecalculator@upi'}
+              </span>
               <button
                 type="button"
                 onClick={handleCopyUpi}

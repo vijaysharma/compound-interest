@@ -71,8 +71,7 @@ export function isUserBlocked(user: DbUser): boolean {
   // Check free trial time window (24 hours from creation / trial start)
   const trialExpiryTime = user.trial_expires_at
     ? new Date(user.trial_expires_at).getTime()
-    : new Date(user.created_at || Date.now()).getTime() +
-      TRIAL_DURATION_HOURS * 60 * 60 * 1000;
+    : new Date(user.created_at || Date.now()).getTime() + TRIAL_DURATION_HOURS * 60 * 60 * 1000;
   if (Date.now() > trialExpiryTime) {
     return true;
   }

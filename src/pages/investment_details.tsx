@@ -7,6 +7,12 @@ import InflationRates from './inflationRates';
 import PPPExchangeRate from './pppExchangeRate';
 import FixedRateSWP from './fixedRateSwp';
 import { useAuth } from '../context/useAuth';
+const isApiRestricted = (tabId: string, isDesktop: boolean) => {
+  if (isDesktop) {
+    return tabId === '3' || tabId === '4';
+  }
+  return tabId === '5' || tabId === '6';
+};
 const InvestmentDetails = () => {
   const { trackUsage, isBlocked } = useAuth();
   const getStoredId = (): string => window.localStorage.getItem('aid') || '1';
@@ -17,9 +23,11 @@ const InvestmentDetails = () => {
     if (isBlocked) return;
     if (prevIdRef.current !== activeId) {
       prevIdRef.current = activeId;
-      void trackUsage();
+      if (isApiRestricted(activeId, screenWidth >= 1024)) {
+        void trackUsage();
+      }
     }
-  }, [activeId, trackUsage, isBlocked]);
+  }, [activeId, trackUsage, isBlocked, screenWidth]);
   return (
     <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2">
       {screenWidth >= 1024 ? (

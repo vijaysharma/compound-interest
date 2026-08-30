@@ -7,12 +7,13 @@ import ProtectedRoute from './components/ProtectedRoute.tsx';
 import './index.css';
 const protectedRoute = (
   importer: () => Promise<{ default: ComponentType }>,
-  requireAdmin = false
+  requireAdmin = false,
+  requireApiQuota = false
 ) => {
   return async () => {
     const Component = (await importer()).default;
     const ProtectedComponent = () => (
-      <ProtectedRoute requireAdmin={requireAdmin}>
+      <ProtectedRoute requireAdmin={requireAdmin} requireApiQuota={requireApiQuota}>
         <Component />
       </ProtectedRoute>
     );
@@ -71,7 +72,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'ppp-exchange-rate',
-            lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx')),
+            lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx'), false, true),
           },
         ],
       },
@@ -93,15 +94,15 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'lumpsum',
-            lazy: protectedRoute(() => import('./pages/lumpsum.tsx')),
+            lazy: protectedRoute(() => import('./pages/lumpsum.tsx'), false, true),
           },
           {
             path: 'sip',
-            lazy: protectedRoute(() => import('./pages/sip.tsx')),
+            lazy: protectedRoute(() => import('./pages/sip.tsx'), false, true),
           },
           {
             path: 'swp',
-            lazy: protectedRoute(() => import('./pages/swp.tsx')),
+            lazy: protectedRoute(() => import('./pages/swp.tsx'), false, true),
           },
         ],
       },

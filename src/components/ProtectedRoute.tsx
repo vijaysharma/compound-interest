@@ -6,8 +6,13 @@ import GoogleSignInButton from './GoogleSignInButton';
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAdmin?: boolean;
+  requireApiQuota?: boolean;
 }
-const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
+const ProtectedRoute = ({
+  children,
+  requireAdmin = false,
+  requireApiQuota = false,
+}: ProtectedRouteProps) => {
   const { user, loading, isAuthenticated, isAdmin } = useAuth();
   if (loading) {
     return <LoadingFallback />;
@@ -69,7 +74,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
       </div>
     );
   }
-  if (user?.isBlocked && !isAdmin) {
+  if (requireApiQuota && user?.isBlocked && !isAdmin) {
     return (
       <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
         <div className="card bg-base-100 border border-warning/40 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">

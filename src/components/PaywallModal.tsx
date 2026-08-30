@@ -2,14 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { PaymentSettings } from '../types/auth';
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => {
-      open: () => void;
-      on: (event: string, handler: (response: unknown) => void) => void;
-    };
-  }
-}
+import { loadRazorpayScript } from '../utils/razorpay';
 const PaywallModal = () => {
   const { user, showPaywall, setShowPaywall, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -21,14 +14,6 @@ const PaywallModal = () => {
   const [now] = useState(() => Date.now());
   useEffect(() => {
     if (!showPaywall) return;
-    // Load Razorpay script if not already present
-    if (!document.getElementById('razorpay-checkout-script')) {
-      const script = document.createElement('script');
-      script.id = 'razorpay-checkout-script';
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.body.appendChild(script);
-    }
     const fetchSettings = async () => {
       try {
         const res = await fetch('/api/payments/settings');
@@ -74,6 +59,10 @@ const PaywallModal = () => {
     setIsProcessing(true);
     setMessage(null);
     try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded || !window.Razorpay) {
+        throw new Error('Could not load payment gateway. Please check your internet connection.');
+      }
       const storedToken = localStorage.getItem('auth_token');
       const orderRes = await fetch('/api/payments/razorpay/create-order', {
         method: 'POST',
@@ -93,9 +82,6 @@ const PaywallModal = () => {
       };
       if (!orderRes.ok || !orderData.orderId || !orderData.keyId) {
         throw new Error(orderData.error || 'Failed to initialize payment');
-      }
-      if (!window.Razorpay) {
-        throw new Error('Razorpay gateway is initializing. Please try again in a moment.');
       }
       const options = {
         key: orderData.keyId,
@@ -196,14 +182,19 @@ const PaywallModal = () => {
           <p className="mt-2 text-xs sm:text-sm opacity-80 leading-relaxed">
             {isTrialActive ? (
               <>
-                You have <span className="font-bold text-primary">{remainingCalculations} of {user?.freeLimit || 10}</span> free calculations remaining
-                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}.
-                Support this independent project for just ₹{amount}/month for unlimited access.
+                You have{' '}
+                <span className="font-bold text-primary">
+                  {remainingCalculations} of {user?.freeLimit || 10}
+                </span>{' '}
+                free calculations remaining
+                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}. Support
+                this independent project for just ₹{amount}/month for unlimited access.
               </>
             ) : (
               <>
                 Your free trial (10 calculations / 24 hours) has ended for{' '}
-                <span className="font-semibold">{user?.email}</span>. Support the independent development of Rupee Calculator for just ₹{amount}/month.
+                <span className="font-semibold">{user?.email}</span>. Support the independent
+                development of Rupee Calculator for just ₹{amount}/month.
               </>
             )}
           </p>
