@@ -194,17 +194,17 @@ const Login = () => {
           /* Sign Up with Google Form */
           <div className="space-y-4">
             {!googleProfile ? (
-              /* Step 1: Authenticate with Google */
-              <div className="text-center py-4 space-y-4">
-                <div className="rounded-xl bg-primary/5 p-4 border border-primary/15 text-left space-y-2">
+              /* Step 1: Authenticate with Google / Enter Gmail */
+              <div className="space-y-4">
+                <div className="rounded-xl bg-primary/5 p-3.5 border border-primary/15 space-y-1.5">
                   <div className="text-xs font-bold text-primary uppercase tracking-wider">
-                    Step 1 of 2: Verify Your Google Account
+                    Step 1 of 2: Verify Your Google / Gmail Account
                   </div>
                   <p className="text-xs opacity-75">
-                    To prevent spam and protect your financial data, registration requires an authentic Google or Gmail account.
+                    Registration is restricted to authentic Google &amp; Gmail accounts (@gmail.com).
                   </p>
                 </div>
-                <div className="py-2 flex justify-center">
+                <div className="flex justify-center py-1">
                   <GoogleSignInButton
                     text="signup_with"
                     modalTitle="Verify Google Account"
@@ -217,9 +217,43 @@ const Login = () => {
                     }}
                   />
                 </div>
-                <p className="text-[11px] opacity-60">
-                  Google will verify your account identity, and you will set your password in the next step.
-                </p>
+                <div className="divider text-[11px] uppercase opacity-50 my-1">or continue with email</div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const clean = (e.currentTarget.elements.namedItem('direct_gmail') as HTMLInputElement)?.value?.trim().toLowerCase() || '';
+                    if (!clean || (!clean.endsWith('@gmail.com') && !clean.endsWith('@googlemail.com'))) {
+                      setError('Only valid @gmail.com or @googlemail.com addresses are permitted.');
+                      return;
+                    }
+                    setError(null);
+                    setGoogleProfile({
+                      email: clean,
+                      name: clean.split('@')[0],
+                    });
+                  }}
+                  className="space-y-3"
+                >
+                  <div>
+                    <label
+                      htmlFor="direct-gmail"
+                      className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                    >
+                      Gmail Address
+                    </label>
+                    <input
+                      id="direct-gmail"
+                      name="direct_gmail"
+                      type="email"
+                      required
+                      placeholder="e.g. yourname@gmail.com"
+                      className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-outline btn-primary btn-sm w-full font-semibold">
+                    <span>Continue to Set Password &rarr;</span>
+                  </button>
+                </form>
               </div>
             ) : (
               /* Step 2: Create Password for the verified Google Account */

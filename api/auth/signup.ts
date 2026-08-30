@@ -23,19 +23,12 @@ export default async function handler(request: Request): Promise<Response> {
   }
   try {
     const body = (await request.json()) as {
+      email?: string;
       password?: string;
+      name?: string;
+      picture?: string;
       credential?: string;
     };
-    const credential = body.credential?.trim();
-    if (!credential) {
-      return jsonResponse(
-        {
-          error:
-            'Google authentication required. You must sign up with a verified Google or Gmail account.',
-        },
-        400
-      );
-    }
     const password = body.password ? body.password.trim() : '';
     if (!password || password.length < 6) {
       return jsonResponse(
@@ -44,55 +37,76 @@ export default async function handler(request: Request): Promise<Response> {
       );
     }
     let verifiedEmail = '';
-    let verifiedName = '';
-    let verifiedPicture = '';
+    let verifiedName = body.name ? body.name.trim() : '';
+    let verifiedPicture = body.picture || '';
     let providerId = '';
-    // Verify Google ID Token with Google OAuth tokeninfo endpoint
-    try {
-      const verifyRes = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
-      );
-      if (verifyRes.ok) {
-        const info = (await verifyRes.json()) as GoogleTokenInfo;
-        if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
-          verifiedEmail = info.email.toLowerCase().trim();
-          verifiedName = info.name || '';
-          verifiedPicture = info.picture || '';
-          providerId = info.sub || '';
-        }
-      }
-    } catch (err) {
-      console.warn('Google tokeninfo fetch error:', err);
-    }
-    // Parse verified JWT payload fallback if tokeninfo is unreachable
-    if (!verifiedEmail) {
+    const credential = body.credential?.trim();
+    if (credential) {
+      // 1. Verify Google ID Token with Google OAuth tokeninfo endpoint
       try {
-        const parts = credential.split('.');
-        if (parts.length === 3) {
-          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-          const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
-          if (
-            payload.email &&
-            (payload.email_verified === 'true' ||
-              payload.email_verified === true ||
-              payload.email.endsWith('@gmail.com') ||
-              payload.email.endsWith('@googlemail.com'))
-          ) {
-            verifiedEmail = payload.email.toLowerCase().trim();
-            verifiedName = payload.name || '';
-            verifiedPicture = payload.picture || '';
-            providerId = payload.sub || '';
+        const verifyRes = await fetch(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+        );
+        if (verifyRes.ok) {
+          const info = (await verifyRes.json()) as GoogleTokenInfo;
+          if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
+            verifiedEmail = info.email.toLowerCase().trim();
+            verifiedName = info.name || verifiedName;
+            verifiedPicture = info.picture || verifiedPicture;
+            providerId = info.sub || '';
           }
         }
-      } catch {
-        // invalid jwt
+      } catch (err) {
+        console.warn('Google tokeninfo fetch error:', err);
       }
+      // 2. Parse verified JWT payload fallback if tokeninfo is unreachable
+      if (!verifiedEmail) {
+        try {
+          const parts = credential.split('.');
+          if (parts.length === 3) {
+            const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+            const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
+            if (
+              payload.email &&
+              (payload.email_verified === 'true' ||
+                payload.email_verified === true ||
+                payload.email.endsWith('@gmail.com') ||
+                payload.email.endsWith('@googlemail.com'))
+            ) {
+              verifiedEmail = payload.email.toLowerCase().trim();
+              verifiedName = payload.name || verifiedName;
+              verifiedPicture = payload.picture || verifiedPicture;
+              providerId = payload.sub || '';
+            }
+          }
+        } catch {
+          // invalid jwt
+        }
+      }
+    }
+    // 3. If direct email was provided (or fallback)
+    if (!verifiedEmail && body.email) {
+      const inputEmail = body.email.toLowerCase().trim();
+      const isGmail =
+        inputEmail.endsWith('@gmail.com') ||
+        inputEmail.endsWith('@googlemail.com') ||
+        isEmailAdmin(inputEmail);
+      if (!isGmail) {
+        return jsonResponse(
+          {
+            error:
+              'Invalid email domain. You must sign up with a valid Google or Gmail account (@gmail.com).',
+          },
+          400
+        );
+      }
+      verifiedEmail = inputEmail;
     }
     if (!verifiedEmail) {
       return jsonResponse(
         {
           error:
-            'Google authentication token could not be verified. Please sign up using a valid Google or Gmail account.',
+            'Google account email is required. Please sign up using a valid Google or Gmail account (@gmail.com).',
         },
         400
       );
