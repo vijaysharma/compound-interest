@@ -25,7 +25,15 @@ export default async function handler(request: Request): Promise<Response> {
       INSERT INTO payment_submissions (id, user_id, user_email, utr_ref, amount, status, created_at, updated_at)
       VALUES (${newId}, ${user.id}, ${user.email}, ${utrRef}, ${amount}, 'pending', NOW(), NOW())
       RETURNING id, user_id, user_email, utr_ref, amount, status, created_at
-    `) as { id: string; user_id: string; user_email: string; utr_ref: string; amount: number; status: string; created_at: string }[];
+    `) as {
+      id: string;
+      user_id: string;
+      user_email: string;
+      utr_ref: string;
+      amount: number;
+      status: string;
+      created_at: string;
+    }[];
     return jsonResponse({
       success: true,
       submission: created[0],

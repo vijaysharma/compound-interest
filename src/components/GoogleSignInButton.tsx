@@ -30,6 +30,12 @@ declare global {
 }
 interface GoogleSignInButtonProps {
   onSuccess?: () => void;
+  onProfileSelect?: (profile: {
+    email: string;
+    name?: string;
+    picture?: string;
+    credential?: string;
+  }) => void;
   className?: string;
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
   modalTitle?: string;
@@ -56,6 +62,7 @@ const GoogleIcon = () => (
 );
 const GoogleSignInButton = ({
   onSuccess,
+  onProfileSelect,
   className = '',
   text = 'continue_with',
   modalTitle = 'Sign Up with Google',
@@ -106,17 +113,36 @@ const GoogleSignInButton = ({
         client_id: rawClientId,
         callback: (response) => {
           if (response.credential) {
+            let emailFound = '';
+            let nameFound = '';
+            let pictureFound = '';
             try {
               const parts = response.credential.split('.');
               if (parts.length === 3) {
                 const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-                const payload = JSON.parse(payloadJson) as { email?: string; name?: string };
-                if (payload.email) setEmail(payload.email);
-                if (payload.name) setName(payload.name);
+                const payload = JSON.parse(payloadJson) as {
+                  email?: string;
+                  name?: string;
+                  picture?: string;
+                };
+                if (payload.email) emailFound = payload.email;
+                if (payload.name) nameFound = payload.name;
+                if (payload.picture) pictureFound = payload.picture;
               }
             } catch {
               // fallback
             }
+            if (onProfileSelect && emailFound) {
+              onProfileSelect({
+                email: emailFound,
+                name: nameFound,
+                picture: pictureFound,
+                credential: response.credential,
+              });
+              return;
+            }
+            if (emailFound) setEmail(emailFound);
+            if (nameFound) setName(nameFound);
             setIsModalOpen(true);
           }
         },
@@ -134,7 +160,7 @@ const GoogleSignInButton = ({
     } catch (err) {
       console.warn('Google GSI button initialization notice:', err);
     }
-  }, [isSdkLoaded, hasValidClientId, rawClientId, onSuccess, text]);
+  }, [isSdkLoaded, hasValidClientId, rawClientId, onProfileSelect, onSuccess, text]);
   const handleAuthorizeSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim();
@@ -167,8 +193,7 @@ const GoogleSignInButton = ({
     }
   };
   const isAdminCandidate =
-    email.trim().toLowerCase() ===
-    (import.meta.env.VITE_ALLOWED_EMAIL || '').trim().toLowerCase();
+    email.trim().toLowerCase() === (import.meta.env.VITE_ALLOWED_EMAIL || '').trim().toLowerCase();
   return (
     <div className={`flex flex-col items-center gap-2 ${className}`}>
       {hasValidClientId ? (
@@ -213,7 +238,9 @@ const GoogleSignInButton = ({
                 <h3 id="auth-modal-title" className="text-lg font-bold">
                   {modalTitle}
                 </h3>
-                <p className="text-xs opacity-60">Create password to complete Google registration</p>
+                <p className="text-xs opacity-60">
+                  Create password to complete Google registration
+                </p>
               </div>
             </div>
             {error && (
@@ -223,7 +250,10 @@ const GoogleSignInButton = ({
             )}
             <form onSubmit={handleAuthorizeSubmit} className="space-y-3">
               <div>
-                <label htmlFor="google-email" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+                <label
+                  htmlFor="google-email"
+                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                >
                   Google Account Email
                 </label>
                 <div className="relative">
@@ -248,7 +278,10 @@ const GoogleSignInButton = ({
                 )}
               </div>
               <div>
-                <label htmlFor="google-name" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+                <label
+                  htmlFor="google-name"
+                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                >
                   Display Name <span className="opacity-50 lowercase font-normal">(optional)</span>
                 </label>
                 <input
@@ -261,7 +294,10 @@ const GoogleSignInButton = ({
                 />
               </div>
               <div>
-                <label htmlFor="google-password" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+                <label
+                  htmlFor="google-password"
+                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                >
                   Create Password
                 </label>
                 <input
@@ -276,7 +312,10 @@ const GoogleSignInButton = ({
                 />
               </div>
               <div>
-                <label htmlFor="google-confirm-password" className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80">
+                <label
+                  htmlFor="google-confirm-password"
+                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                >
                   Confirm Password
                 </label>
                 <input

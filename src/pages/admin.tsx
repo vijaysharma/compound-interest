@@ -14,7 +14,9 @@ interface AdminUser {
 const Admin = () => {
   const { token: authToken, user } = useAuth();
   const [token, setToken] = useState(() => authToken || '');
-  const [activeTab, setActiveTab] = useState<'payments' | 'submissions' | 'users' | 'sync'>('payments');
+  const [activeTab, setActiveTab] = useState<'payments' | 'submissions' | 'users' | 'sync'>(
+    'payments'
+  );
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   // Payment settings state
@@ -279,7 +281,8 @@ const Admin = () => {
         <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
           <h2 className="text-lg font-bold mb-1">UPI Payment &amp; QR Code Configuration</h2>
           <p className="text-xs opacity-70 mb-6">
-            Customize the ₹19 paywall payment details, UPI ID, QR code image, and instructions shown to users.
+            Customize the ₹19 paywall payment details, UPI ID, QR code image, and instructions shown
+            to users.
           </p>
           <form onSubmit={handleSavePaymentSettings} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -598,7 +601,9 @@ const Admin = () => {
           </label>
           <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
             <h2 className="mb-1 text-lg font-bold">Mutual Fund Schemes Sync</h2>
-            <p className="mb-4 text-xs opacity-70">Fetch and cache the latest scheme list from mfapi.in.</p>
+            <p className="mb-4 text-xs opacity-70">
+              Fetch and cache the latest scheme list from mfapi.in.
+            </p>
             <button
               className="btn btn-primary btn-sm"
               type="button"

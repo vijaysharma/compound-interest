@@ -37,7 +37,12 @@ export default async function handler(request: Request): Promise<Response> {
             updated_at = NOW()
         WHERE id = ${user.id}
         RETURNING api_usage_count, subscription_status, subscription_expires_at, role
-      `) as { api_usage_count: number; subscription_status: 'free_trial' | 'active' | 'expired'; subscription_expires_at: string | null; role: 'admin' | 'user' }[];
+      `) as {
+        api_usage_count: number;
+        subscription_status: 'free_trial' | 'active' | 'expired';
+        subscription_expires_at: string | null;
+        role: 'admin' | 'user';
+      }[];
       if (updated.length > 0) {
         user.api_usage_count = updated[0].api_usage_count;
       }

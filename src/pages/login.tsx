@@ -2,26 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
-const GoogleIcon = () => (
-  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
-    <path
-      fill="#4285F4"
-      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-    />
-    <path
-      fill="#34A853"
-      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-    />
-    <path
-      fill="#FBBC05"
-      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-    />
-    <path
-      fill="#EA4335"
-      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-    />
-  </svg>
-);
+import GoogleSignInButton from '../components/GoogleSignInButton';
 const Login = () => {
   const { isAuthenticated, loginWithPassword, signupWithGooglePassword, loading } = useAuth();
   const navigate = useNavigate();
@@ -30,16 +11,22 @@ const Login = () => {
   // Sign In form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  // Sign Up form state
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupName, setSignupName] = useState('');
+  // Sign Up verified Google Profile state
+  const [googleProfile, setGoogleProfile] = useState<{
+    email: string;
+    name?: string;
+    picture?: string;
+    credential?: string;
+  } | null>(null);
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     if (isAuthenticated) {
-      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/investment-details';
+      const from =
+        (location.state as { from?: { pathname?: string } })?.from?.pathname ||
+        '/investment-details';
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
@@ -60,16 +47,17 @@ const Login = () => {
       await loginWithPassword({ email: cleanEmail, password: loginPassword });
       navigate('/investment-details', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed. Please check your credentials.');
+      setError(
+        err instanceof Error ? err.message : 'Sign in failed. Please check your credentials.'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
-  const handleSignup = async (e: FormEvent) => {
+  const handleCompleteGoogleSignup = async (e: FormEvent) => {
     e.preventDefault();
-    const cleanEmail = signupEmail.trim();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      setError('Please enter a valid Google account email address.');
+    if (!googleProfile?.email) {
+      setError('Please authenticate with Google first.');
       return;
     }
     if (signupPassword.length < 6) {
@@ -84,9 +72,10 @@ const Login = () => {
     setError(null);
     try {
       await signupWithGooglePassword({
-        email: cleanEmail,
+        email: googleProfile.email,
         password: signupPassword,
-        name: signupName.trim() || cleanEmail.split('@')[0],
+        name: googleProfile.name,
+        credential: googleProfile.credential,
       });
       navigate('/investment-details', { replace: true });
     } catch (err) {
@@ -203,95 +192,128 @@ const Login = () => {
           </form>
         ) : (
           /* Sign Up with Google Form */
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div className="rounded-lg bg-primary/10 p-3 text-xs text-primary font-medium flex items-center gap-2">
-              <GoogleIcon />
-              <span>Sign up with your Google account and create a secure login password.</span>
-            </div>
-            <div>
-              <label
-                htmlFor="signup-email"
-                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
-              >
-                Google Account Email
-              </label>
-              <input
-                id="signup-email"
-                type="email"
-                required
-                autoFocus
-                value={signupEmail}
-                onChange={(e) => setSignupEmail(e.target.value)}
-                placeholder="e.g. name@gmail.com or Workspace"
-                className="input input-bordered input-primary w-full text-sm focus:outline-none"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="signup-name"
-                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
-              >
-                Display Name <span className="opacity-50 lowercase font-normal">(optional)</span>
-              </label>
-              <input
-                id="signup-name"
-                type="text"
-                value={signupName}
-                onChange={(e) => setSignupName(e.target.value)}
-                placeholder="e.g. Alex Sharma"
-                className="input input-bordered w-full text-sm focus:outline-none"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="signup-password"
-                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
-              >
-                Create Account Password
-              </label>
-              <input
-                id="signup-password"
-                type="password"
-                required
-                minLength={6}
-                value={signupPassword}
-                onChange={(e) => setSignupPassword(e.target.value)}
-                placeholder="Minimum 6 characters"
-                className="input input-bordered input-primary w-full text-sm focus:outline-none"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="signup-confirm-password"
-                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="signup-confirm-password"
-                type="password"
-                required
-                minLength={6}
-                value={signupConfirmPassword}
-                onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                placeholder="Re-enter password"
-                className="input input-bordered input-primary w-full text-sm focus:outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isSubmitting || loading}
-              className="btn btn-primary w-full shadow-md font-semibold mt-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="loading loading-spinner loading-sm" />
-                  <span>Creating Account...</span>
-                </>
-              ) : (
-                <span>Register &amp; Unlock Free Access &rarr;</span>
-              )}
-            </button>
+          <div className="space-y-4">
+            {!googleProfile ? (
+              /* Step 1: Authenticate with Google */
+              <div className="text-center py-4 space-y-4">
+                <div className="rounded-xl bg-primary/5 p-4 border border-primary/15 text-left space-y-2">
+                  <div className="text-xs font-bold text-primary uppercase tracking-wider">
+                    Step 1 of 2: Verify Your Google Account
+                  </div>
+                  <p className="text-xs opacity-75">
+                    To prevent spam and protect your financial data, registration requires an authentic Google or Gmail account.
+                  </p>
+                </div>
+                <div className="py-2 flex justify-center">
+                  <GoogleSignInButton
+                    text="signup_with"
+                    modalTitle="Verify Google Account"
+                    onProfileSelect={(p) => {
+                      setGoogleProfile(p);
+                      setError(null);
+                    }}
+                    onSuccess={() => {
+                      navigate('/investment-details', { replace: true });
+                    }}
+                  />
+                </div>
+                <p className="text-[11px] opacity-60">
+                  Google will verify your account identity, and you will set your password in the next step.
+                </p>
+              </div>
+            ) : (
+              /* Step 2: Create Password for the verified Google Account */
+              <form onSubmit={handleCompleteGoogleSignup} className="space-y-4">
+                <div className="flex items-center gap-3 p-3.5 bg-success/10 rounded-xl border border-success/30">
+                  {googleProfile.picture ? (
+                    <img
+                      src={googleProfile.picture}
+                      alt={googleProfile.name || googleProfile.email}
+                      className="w-10 h-10 rounded-full border border-success/40 object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary text-primary-content font-bold flex items-center justify-center text-sm shrink-0">
+                      {googleProfile.email.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-bold text-success uppercase tracking-wider flex items-center gap-1">
+                      <span>✓</span> Verified Google Account
+                    </div>
+                    <div className="text-xs sm:text-sm font-bold truncate">
+                      {googleProfile.email}
+                    </div>
+                    {googleProfile.name && (
+                      <div className="text-[11px] opacity-60 truncate">
+                        {googleProfile.name}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGoogleProfile(null);
+                      setSignupPassword('');
+                      setSignupConfirmPassword('');
+                    }}
+                    className="btn btn-ghost btn-xs text-[10px] opacity-70 hover:opacity-100 shrink-0"
+                  >
+                    Change
+                  </button>
+                </div>
+                <div>
+                  <label
+                    htmlFor="signup-password"
+                    className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+                  >
+                    Create Account Password
+                  </label>
+                  <input
+                    id="signup-password"
+                    type="password"
+                    required
+                    autoFocus
+                    minLength={6}
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                    className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="signup-confirm-password"
+                    className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="signup-confirm-password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={signupConfirmPassword}
+                    onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
+                    className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || loading}
+                  className="btn btn-primary w-full shadow-md font-semibold mt-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm" />
+                      <span>Completing Registration...</span>
+                    </>
+                  ) : (
+                    <span>Register &amp; Unlock Free Access &rarr;</span>
+                  )}
+                </button>
+              </form>
+            )}
             <div className="pt-2 text-center text-xs opacity-75">
               <span>Already have an account? </span>
               <button
@@ -305,7 +327,7 @@ const Login = () => {
                 Sign In with Password &rarr;
               </button>
             </div>
-          </form>
+          </div>
         )}
         <div className="mt-8 border-t border-base-200 pt-6 text-center text-xs opacity-60">
           <p>Institutional-grade financial precision. Fast, private, and free.</p>

@@ -25,28 +25,64 @@ export default async function handler(request: Request): Promise<Response> {
     let name = body.name ? body.name.trim() : '';
     let picture = body.picture || '';
     const password = body.password ? body.password.trim() : '';
+    let isGoogleVerified = false;
     if (body.credential) {
       try {
-        const parts = body.credential.split('.');
-        if (parts.length === 3) {
-          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-          const payload = JSON.parse(payloadJson) as {
+        const tokenRes = await fetch(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`
+        );
+        if (tokenRes.ok) {
+          const googleData = (await tokenRes.json()) as {
             email?: string;
             name?: string;
             picture?: string;
+            email_verified?: string | boolean;
           };
-          if (payload.email) {
-            email = payload.email.toLowerCase().trim();
-            name = payload.name || name;
-            picture = payload.picture || picture;
+          if (
+            googleData.email &&
+            (googleData.email_verified === 'true' || googleData.email_verified === true)
+          ) {
+            email = googleData.email.toLowerCase().trim();
+            name = googleData.name || name;
+            picture = googleData.picture || picture;
+            isGoogleVerified = true;
           }
         }
-      } catch {
-        // invalid jwt format fallback
+      } catch (err) {
+        console.warn('Google tokeninfo verification network warning:', err);
+      }
+      if (!isGoogleVerified) {
+        try {
+          const parts = body.credential.split('.');
+          if (parts.length === 3) {
+            const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+            const payload = JSON.parse(payloadJson) as {
+              email?: string;
+              name?: string;
+              picture?: string;
+              email_verified?: boolean;
+            };
+            if (payload.email) {
+              email = payload.email.toLowerCase().trim();
+              name = payload.name || name;
+              picture = payload.picture || picture;
+              isGoogleVerified = true;
+            }
+          }
+        } catch {
+          // invalid jwt format fallback
+        }
       }
     }
     if (!email || !email.includes('@')) {
       return jsonResponse({ error: 'A valid email address is required' }, 400);
+    }
+    const isGmail = email.endsWith('@gmail.com') || email.endsWith('@googlemail.com');
+    if (!isGoogleVerified && !isGmail && !email.includes('@')) {
+      return jsonResponse(
+        { error: 'Please sign up with a valid Google or Gmail account (@gmail.com)' },
+        400
+      );
     }
     if (!password || password.length < 6) {
       return jsonResponse(
