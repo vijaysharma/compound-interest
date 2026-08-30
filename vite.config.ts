@@ -2,11 +2,6 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import type { Plugin } from 'vite';
-import imfInflation from './api/imf-inflation';
-import syncImf from './api/admin/sync-imf';
-import syncMutualFunds from './api/admin/sync-mutual-funds';
-import mutualFunds from './api/mutual-funds/index';
-import mutualFundBySchemeCode from './api/mutual-funds/[schemeCode]';
 const readRequestBody = async (request: import('node:http').IncomingMessage) => {
   const chunks: Buffer[] = [];
   for await (const chunk of request) chunks.push(Buffer.from(chunk));
@@ -21,23 +16,29 @@ const localApiPlugin = (): Plugin => ({
         return;
       }
       const path = request.url.split('?')[0];
-      const handler =
-        path === '/api/imf-inflation'
-          ? imfInflation
-          : path === '/api/mutual-funds'
-            ? mutualFunds
-            : path === '/api/admin/sync-mutual-funds'
-              ? syncMutualFunds
-              : path === '/api/admin/sync-imf'
-                ? syncImf
-                : path.startsWith('/api/mutual-funds/')
-                  ? mutualFundBySchemeCode
-                  : null;
-      if (!handler) {
+      let modulePath: string | null = null;
+      if (path === '/api/imf-inflation') {
+        modulePath = '/api/imf-inflation';
+      } else if (path === '/api/mutual-funds') {
+        modulePath = '/api/mutual-funds/index';
+      } else if (path === '/api/admin/sync-mutual-funds') {
+        modulePath = '/api/admin/sync-mutual-funds';
+      } else if (path === '/api/admin/sync-imf') {
+        modulePath = '/api/admin/sync-imf';
+      } else if (path.startsWith('/api/mutual-funds/')) {
+        modulePath = '/api/mutual-funds/[schemeCode]';
+      }
+      if (!modulePath) {
         next();
         return;
       }
       try {
+        const mod = await server.ssrLoadModule(modulePath);
+        const handler = mod.default;
+        if (!handler) {
+          next();
+          return;
+        }
         const body =
           request.method === 'GET' || request.method === 'HEAD'
             ? undefined
@@ -53,7 +54,7 @@ const localApiPlugin = (): Plugin => ({
         });
         const handlerResponse = await handler(handlerRequest);
         response.statusCode = handlerResponse.status;
-        handlerResponse.headers.forEach((value, key) => response.setHeader(key, value));
+        handlerResponse.headers.forEach((value: string, key: string) => response.setHeader(key, value));
         response.end(Buffer.from(await handlerResponse.arrayBuffer()));
       } catch (error) {
         response.statusCode = 500;
