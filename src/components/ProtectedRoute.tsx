@@ -83,19 +83,19 @@ const ProtectedRoute = ({
           </div>
           <h2 className="mb-2 text-xl font-bold">Mutual Funds Trial Expired</h2>
           <p className="mb-2 text-xs sm:text-sm opacity-75">
-            Your 24-hour / 10-calculation trial for live AMFI Mutual Funds search &amp; NAV history has ended
-            for <span className="font-semibold">{user.email}</span>.
+            Your 48-hour / 10-calculation trial for live AMFI Mutual Funds search &amp; NAV history
+            has ended for <span className="font-semibold">{user.email}</span>.
           </p>
           <p className="mb-6 text-xs opacity-60">
             Support the creator for just ₹29/mo to unlock unlimited live AMFI Mutual Fund sync.
-            Standard calculators in the suite (FD, RD, SWP, EMI, Inflation, PPP) remain completely free &amp; unlimited.
+            All other tools (FD, RD, SWP, EMI, Inflation, PPP) are free for 48 hours.
           </p>
           <div className="space-y-2">
             <Link to="/upgrade" className="btn btn-primary w-full font-bold shadow-md">
               ⚡ Unlock Mutual Funds Pro for ₹29 / Month &rarr;
             </Link>
-            <Link to="/investment-details" className="btn btn-ghost btn-xs w-full opacity-80">
-              📊 Back to Calculators Suite
+            <Link to="/deposits/fd" className="btn btn-ghost btn-xs w-full opacity-80">
+              Back to Free Calculators &rarr;
             </Link>
           </div>
         </div>

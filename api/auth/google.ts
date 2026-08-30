@@ -80,7 +80,7 @@ export default async function handler(request: Request): Promise<Response> {
     const sql = getDb();
     await ensureTables(sql);
     const isAdmin = isEmailAdmin(email);
-    const trialExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const trialExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     const existingUsers = (await sql`
       SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
       FROM users

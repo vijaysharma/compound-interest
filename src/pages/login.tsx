@@ -202,7 +202,7 @@ const Login = () => {
                     Step 1 of 2: Verify Your Google / Gmail Account
                   </div>
                   <p className="text-xs opacity-75">
-                    Includes 24-hour / 10-calculation access to live Mutual Funds analytics. Standard calculators in the suite are always 100% free.
+                    Includes 48-hour trial with 10 live Mutual Fund calculation runs. All other tools are free for 48 hours.
                   </p>
                 </div>
                 <div className="flex justify-center py-1">

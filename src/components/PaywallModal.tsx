@@ -177,7 +177,9 @@ const PaywallModal = () => {
             </div>
           )}
           <h2 id="paywall-title" className="text-2xl font-extrabold">
-            {isTrialActive ? 'Unlock Unlimited Mutual Fund Analytics' : 'Unlock Mutual Funds Pro Access'}
+            {isTrialActive
+              ? 'Unlock Unlimited Mutual Fund Analytics'
+              : 'Unlock Mutual Funds Pro Access'}
           </h2>
           <p className="mt-2 text-xs sm:text-sm opacity-80 leading-relaxed">
             {isTrialActive ? (
@@ -187,12 +189,12 @@ const PaywallModal = () => {
                   {remainingCalculations} of {user?.freeLimit || 10}
                 </span>{' '}
                 live Mutual Fund search &amp; NAV history runs remaining
-                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}. All other tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) are 100% free &amp; unlimited. Unlock unlimited live AMFI sync for just ₹{amount}/month.
+                {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) are 100% free for 48 hours. Unlock unlimited live AMFI sync for just ₹{amount}/month.
               </>
             ) : (
               <>
-                Your 24-hour / 10-run free trial for live AMFI Mutual Funds analytics has ended for{' '}
-                <span className="font-semibold">{user?.email}</span>. Support the Calculators Suite for just ₹{amount}/month to unlock unlimited live Mutual Fund sync. All other tools in the suite remain 100% free &amp; unlimited.
+                Your 48-hour / 10-run free trial for live AMFI Mutual Funds analytics has ended for{' '}
+                <span className="font-semibold">{user?.email}</span>. Unlock unlimited live AMFI sync for just ₹{amount}/month. All other tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) were free for 48 hours.
               </>
             )}
           </p>

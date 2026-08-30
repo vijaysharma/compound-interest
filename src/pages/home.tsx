@@ -49,22 +49,28 @@ const Home = () => {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             {isAuthenticated ? (
               <Link
-                to="/investment-details"
+                to="/mutual-funds/lumpsum"
                 className="btn btn-primary btn-md sm:btn-lg shadow-lg hover:shadow-primary/30 transition-all font-semibold"
               >
-                Open Calculators Suite (All-in-One) &rarr;
+                Mutual Fund Calculator &rarr;
               </Link>
             ) : (
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <GoogleSignInButton text="continue_with" />
                 <Link
-                  to="/investment-details"
+                  to="/mutual-funds/lumpsum"
                   className="btn btn-outline btn-md sm:btn-lg font-semibold"
                 >
-                  Explore Calculators Suite (All-in-One)
+                  Try Mutual Fund Calculator
                 </Link>
               </div>
             )}
+            <Link
+              to="/deposits/fd"
+              className="btn btn-ghost btn-md sm:btn-lg font-semibold"
+            >
+              Deposit &amp; SIP Tools &rarr;
+            </Link>
           </div>
           {isAuthenticated && user && (
             <p className="mt-3 text-xs opacity-60">
@@ -75,7 +81,7 @@ const Home = () => {
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 border-y border-base-300 py-6 text-center">
             <div>
               <div className="text-2xl font-black text-primary">8+</div>
-              <div className="text-xs opacity-70">Calculators in Suite</div>
+              <div className="text-xs opacity-70">Financial Calculators</div>
             </div>
             <div>
               <div className="text-2xl font-black text-primary">0ms</div>
@@ -190,9 +196,12 @@ const Home = () => {
                   {quickCalc.wealthMultiple}x Capital
                 </span>
               </div>
-              <div className="mt-6">
-                <Link to="/investment-details" className="btn btn-primary btn-sm w-full">
-                  Open Calculators Suite (All-in-One) &rarr;
+              <div className="mt-6 flex flex-col sm:flex-row gap-2">
+                <Link to="/fixed-plans/fixed-rate-sip" className="btn btn-primary btn-sm flex-1">
+                  Open SIP Calculator &rarr;
+                </Link>
+                <Link to="/mutual-funds/sip" className="btn btn-outline btn-sm flex-1">
+                  Mutual Fund SIP &rarr;
                 </Link>
               </div>
             </div>
@@ -203,7 +212,7 @@ const Home = () => {
       <section className="py-16 px-4">
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold">All-in-One Calculators Suite</h2>
+            <h2 className="text-3xl font-extrabold">Explore Financial Calculators</h2>
             <p className="mt-2 text-base opacity-70">
               Engineered for precision, clarity, and comprehensive financial decision-making.
             </p>
@@ -319,22 +328,28 @@ const Home = () => {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             {isAuthenticated ? (
               <Link
-                to="/investment-details"
+                to="/mutual-funds/lumpsum"
                 className="btn btn-secondary btn-md sm:btn-lg font-semibold"
               >
-                Launch Calculators Suite (All-in-One) &rarr;
+                Start Calculating &rarr;
               </Link>
             ) : (
               <GoogleSignInButton text="signup_with" />
             )}
+            <Link
+              to="/deposits/fd"
+              className="btn btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary btn-md sm:btn-lg font-semibold"
+            >
+              Deposit &amp; EMI Calculators &rarr;
+            </Link>
           </div>
         </div>
       </section>
       {/* Footer */}
       <footer className="border-t border-base-300 py-8 px-4 text-center text-xs opacity-60 space-y-2">
         <p>
-          &copy; {new Date().getFullYear()} Rupee Calculators Suite. Built for financial intelligence and
-          precision.
+          &copy; {new Date().getFullYear()} Rupee Calculator. Built for financial
+          intelligence and precision.
         </p>
         <p>
           Data sourced from AMFI India, World Bank Open Data, and IMF DataMapper. For educational

@@ -54,12 +54,6 @@ const TopBar = ({ className }: { className?: string }) => {
           <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Logo /> <span className="truncate">{navTitle}</span>
           </Link>
-          <Link
-            to="/investment-details"
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-content/15 hover:bg-primary-content/25 text-xs font-semibold transition-colors"
-          >
-            <span>📊 Calculators Suite</span>
-          </Link>
         </div>
         <div className="flex items-center gap-2">
           {isAuthenticated && user ? (
@@ -77,7 +71,7 @@ const TopBar = ({ className }: { className?: string }) => {
                   type="button"
                   onClick={() => setShowPaywall(true)}
                   className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} gap-1 font-normal`}
-                  title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 10} Mutual Fund live calculations used in 24h trial. Standard calculators are always free.`}
+                  title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 10} Mutual Fund live calculations used in 48h trial. Other calculators are free for 48 hours.`}
                 >
                   <span>⚡</span>
                   <span className="hidden md:inline">

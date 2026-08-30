@@ -123,7 +123,7 @@ export default async function handler(request: Request): Promise<Response> {
     `) as DbUser[];
     const { hash, salt } = await hashPassword(password);
     const isAdmin = isEmailAdmin(verifiedEmail);
-    const trialExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const trialExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     let user: DbUser;
     if (existingUsers.length > 0) {
       const existing = existingUsers[0];

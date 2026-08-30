@@ -175,14 +175,14 @@ const Upgrade = () => {
                   {remainingCalculations} of {user?.freeLimit || 10}
                 </span>{' '}
                 Mutual Fund search &amp; NAV history runs left
-                {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}.
+                {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}.
               </p>
               <p className="text-[11px] opacity-65 mt-0.5">
-                Standard calculators in the suite (FD, RD, SWP, SIP, EMI, Inflation, PPP) remain completely free &amp; unlimited.
+                All other tools (FD, RD, SWP, SIP, EMI, Inflation, PPP) are 100% free for 48 hours.
               </p>
             </div>
-            <Link to="/investment-details" className="btn btn-outline btn-info btn-xs shrink-0">
-              Back to Calculators Suite &rarr;
+            <Link to="/mutual-funds/lumpsum" className="btn btn-outline btn-info btn-xs shrink-0">
+              Return to Calculators &rarr;
             </Link>
           </div>
         </div>

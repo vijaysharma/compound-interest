@@ -11,12 +11,28 @@ const mfSearchCache = new Map<string, MFJSONType[]>();
 const mfNavCache = new Map<string, unknown[]>();
 const mfNavRequests = new Map<string, Promise<unknown[]>>();
 const MAX_SEARCH_CACHE_ENTRIES = 50;
+const recordApiUsage = async () => {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (!token) return;
+    await fetch('/api/user/track-usage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (err) {
+    console.warn('Failed to record API usage:', err);
+  }
+};
 export const fetchAllMfs = async (search = '', signal?: AbortSignal): Promise<MFJSONType[]> => {
   const normalizedSearch = search.trim().toLowerCase();
   const cached = mfSearchCache.get(normalizedSearch);
   if (cached) return cached;
   const request = (async () => {
     try {
+      void recordApiUsage();
       const query = normalizedSearch ? `?q=${encodeURIComponent(normalizedSearch)}` : '';
       const response = await fetch(`${MF_URL}${query}`, { signal });
       const data = (await response.json()) as MFJSONType[];
@@ -53,6 +69,7 @@ export const fetchMFbySchemeCode = async (schemeCode: string, signal?: AbortSign
   const pending = mfNavRequests.get(schemeCode);
   if (pending) return pending;
   const request = (async () => {
+    void recordApiUsage();
     const response = await fetch(getMFSchemeCodeUrl(schemeCode), { signal });
     const data = await response.json();
     if (!response.ok) {
@@ -158,6 +175,7 @@ async function fetchWorldBankRecords(): Promise<WorldBankInflationRecord[]> {
   return records ?? [];
 }
 async function fetchIMFEstimates(): Promise<IMFDataMapperResponse> {
+  void recordApiUsage();
   const res = await fetch(IMF_INFLATION_URL);
   if (!res.ok) {
     throw new Error(`Stored IMF data request failed: ${res.status}`);
