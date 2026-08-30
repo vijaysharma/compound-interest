@@ -31,10 +31,7 @@ export default async function handler(request: Request): Promise<Response> {
     };
     const password = body.password ? body.password.trim() : '';
     if (!password || password.length < 6) {
-      return jsonResponse(
-        { error: 'Password is required and must be at least 6 characters' },
-        400
-      );
+      return jsonResponse({ error: 'Password is required and must be at least 6 characters' }, 400);
     }
     let verifiedEmail = '';
     let verifiedName = body.name ? body.name.trim() : '';
@@ -132,7 +129,10 @@ export default async function handler(request: Request): Promise<Response> {
       const existing = existingUsers[0];
       if (existing.password_hash) {
         return jsonResponse(
-          { error: 'Account already exists for this Google email. Please sign in with your password.' },
+          {
+            error:
+              'Account already exists for this Google email. Please sign in with your password.',
+          },
           409
         );
       }

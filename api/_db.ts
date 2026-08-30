@@ -254,6 +254,7 @@ export async function getUserFromRequest(request: Request, sql: Query): Promise<
       u.api_usage_count,
       u.subscription_status,
       u.subscription_expires_at,
+      u.trial_expires_at,
       u.created_at,
       u.updated_at
     FROM user_sessions s

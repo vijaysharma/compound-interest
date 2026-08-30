@@ -1,11 +1,4 @@
-import {
-  DbUser,
-  ensureTables,
-  getDb,
-  isAuthorized,
-  jsonResponse,
-  unauthorized,
-} from '../_db';
+import { DbUser, ensureTables, getDb, isAuthorized, jsonResponse, unauthorized } from '../_db';
 export const config = { runtime: 'edge' };
 export default async function handler(request: Request): Promise<Response> {
   const sql = getDb();
@@ -58,7 +51,10 @@ export default async function handler(request: Request): Promise<Response> {
               updated_at = NOW()
           WHERE id = ${user_id}
         `;
-        return jsonResponse({ success: true, message: 'Reset user usage count to 0 and refreshed 24h trial' });
+        return jsonResponse({
+          success: true,
+          message: 'Reset user usage count to 0 and refreshed 24h trial',
+        });
       }
       if (action === 'set_role' && role) {
         await sql`

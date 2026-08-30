@@ -174,7 +174,8 @@ const PaywallModal = () => {
           </h2>
           <p className="mt-1.5 text-xs sm:text-sm opacity-75">
             Your free trial (10 calculations / 24 hours) has ended for{' '}
-            <span className="font-semibold">{user?.email}</span>. Support the independent development of Rupee Calculator for just ₹{amount}/month.
+            <span className="font-semibold">{user?.email}</span>. Support the independent
+            development of Rupee Calculator for just ₹{amount}/month.
           </p>
         </div>
         {message && (
