@@ -17,7 +17,13 @@ const localApiPlugin = (): Plugin => ({
       }
       const path = request.url.split('?')[0];
       let modulePath: string | null = null;
-      if (path === '/api/imf-inflation') {
+      if (path === '/api/auth/google') {
+        modulePath = '/api/auth/google';
+      } else if (path === '/api/auth/me') {
+        modulePath = '/api/auth/me';
+      } else if (path === '/api/auth/logout') {
+        modulePath = '/api/auth/logout';
+      } else if (path === '/api/imf-inflation') {
         modulePath = '/api/imf-inflation';
       } else if (path === '/api/mutual-funds') {
         modulePath = '/api/mutual-funds/index';

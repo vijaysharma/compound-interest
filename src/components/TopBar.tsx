@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
+import { useAuth } from '../context/useAuth';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
-    '/': 'Investment Calculator',
+    '/': 'Rupee Calculator',
+    '/login': 'Sign In',
+    '/investment-details': 'Investment Suite',
     '/admin': 'Data administration',
     '/emi': 'EMI Calculator',
     '/deposits/fd': 'Fixed Deposits',
@@ -16,169 +19,236 @@ const getNavTitle = (pathname: string) => {
     '/mutual-funds/sip': 'SIP',
     '/mutual-funds/swp': 'SWP',
   };
-  return titles[pathname] ?? 'Investment Calculator';
+  return titles[pathname] ?? 'Rupee Calculator';
 };
 const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const navTitle = getNavTitle(pathname);
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
   return (
     <>
-      <div
-        className={`flex items-center gap-2 bg-primary text-primary-content font-semibold ${className}`}
+      <header
+        className={`flex items-center justify-between px-3 py-2 bg-primary text-primary-content font-semibold ${className}`}
       >
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square text-primary-content"
-          aria-label="Open navigation menu"
-          aria-expanded={isMenuOpen}
-          aria-controls="navigation-drawer"
-          onClick={() => setIsMenuOpen(true)}
-        >
-          <span className="flex flex-col gap-1" aria-hidden="true">
-            <span className="block h-0.5 w-5 bg-current" />
-            <span className="block h-0.5 w-5 bg-current" />
-            <span className="block h-0.5 w-5 bg-current" />
-          </span>
-        </button>
-        <Logo /> {navTitle}
-      </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-square text-primary-content"
+            aria-label="Open navigation menu"
+            aria-expanded={isMenuOpen}
+            aria-controls="navigation-drawer"
+            onClick={() => setIsMenuOpen(true)}
+          >
+            <span className="flex flex-col gap-1" aria-hidden="true">
+              <span className="block h-0.5 w-5 bg-current" />
+              <span className="block h-0.5 w-5 bg-current" />
+              <span className="block h-0.5 w-5 bg-current" />
+            </span>
+          </button>
+          <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <Logo /> <span className="truncate">{navTitle}</span>
+          </Link>
+        </div>
+        <div className="flex items-center gap-2">
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex flex-col items-end text-right leading-tight">
+                <span className="text-xs font-medium truncate max-w-[140px]">{user.name || user.email}</span>
+                {isAdmin && (
+                  <span className="badge badge-accent badge-xs font-bold uppercase text-[9px] px-1 py-0 h-3.5">
+                    Admin
+                  </span>
+                )}
+              </div>
+              {user.picture ? (
+                <img
+                  src={user.picture}
+                  alt={user.name || user.email}
+                  className="h-8 w-8 rounded-full border border-primary-content/40 object-cover"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-content/20 text-xs font-bold uppercase text-primary-content">
+                  {(user.name || user.email).charAt(0)}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="btn btn-ghost btn-xs text-primary-content hover:bg-primary-content/10"
+                title="Log out"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="btn btn-sm btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary"
+            >
+              Sign in
+            </Link>
+          )}
+        </div>
+      </header>
       {isMenuOpen && (
         <div className="fixed inset-0 z-50" role="presentation">
           <button
             type="button"
-            className="absolute inset-0 h-full w-full cursor-default"
+            className="absolute inset-0 h-full w-full cursor-default bg-black/40"
             aria-label="Close navigation menu"
             onClick={() => setIsMenuOpen(false)}
           />
           <aside
             id="navigation-drawer"
-            className="bg-primary relative h-full w-72 max-w-[85vw] p-4 text-primary-content shadow-xl"
+            className="bg-primary relative h-full w-72 max-w-[85vw] p-4 text-primary-content shadow-xl flex flex-col justify-between overflow-y-auto"
             aria-label="Navigation menu"
           >
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Financial Calculator</h2>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm btn-square text-primary-content"
-                aria-label="Close navigation menu"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="text-2xl leading-none" aria-hidden="true">
-                  &times;
-                </span>
-              </button>
+            <div>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Rupee Calculator</h2>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm btn-square text-primary-content"
+                  aria-label="Close navigation menu"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span className="text-2xl leading-none" aria-hidden="true">
+                    &times;
+                  </span>
+                </button>
+              </div>
+              <nav aria-label="Calculator pages" className="text-primary-content flex flex-col gap-1">
+                <Link
+                  to="/"
+                  className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Overview & Features
+                </Link>
+                <Link
+                  to="/investment-details"
+                  className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors font-semibold"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Calculators Suite
+                </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-accent font-semibold"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Data administration
+                  </Link>
+                )}
+                <div className="mt-3">
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Loans</h3>
+                  <Link
+                    to="/emi"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    EMI Calculator
+                  </Link>
+                </div>
+                <div className="mt-3">
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Deposits</h3>
+                  <Link
+                    to="/deposits/fd"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Fixed Deposits
+                  </Link>
+                  <Link
+                    to="/deposits/rd"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Recurring Deposits
+                  </Link>
+                </div>
+                <div className="mt-3">
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Economics</h3>
+                  <Link
+                    to="/economics/inflation-rates"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Inflation Rates
+                  </Link>
+                  <Link
+                    to="/economics/ppp-exchange-rate"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    PPP Exchange Rate
+                  </Link>
+                </div>
+                <div className="mt-3">
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Fixed Plans</h3>
+                  <Link
+                    to="/fixed-plans/fixed-rate-sip"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Fixed Rate SIP
+                  </Link>
+                  <Link
+                    to="/fixed-plans/fixed-rate-swp"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Fixed Rate SWP
+                  </Link>
+                </div>
+                <div className="mt-3">
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">Mutual Funds</h3>
+                  <Link
+                    to="/mutual-funds/lumpsum"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Lumpsum
+                  </Link>
+                  <Link
+                    to="/mutual-funds/sip"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    SIP
+                  </Link>
+                  <Link
+                    to="/mutual-funds/swp"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    SWP
+                  </Link>
+                </div>
+              </nav>
             </div>
-            <nav aria-label="Calculator pages" className="text-primary-content">
-              {/* <Link
-                to="/"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                }}
-              >
-                Investment Calculator
-              </Link> */}
-              <Link
-                to="/admin"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                }}
-              >
-                Data administration
-              </Link>
-              <Link
-                to="/emi"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                }}
-              >
-                EMI Calculator
-              </Link>
-              <div className="mt-4">
-                <h3 className="px-4 text-xs font-bold uppercase tracking-wide ">Deposits</h3>
-                <Link
-                  to="/deposits/fd"
+            {isAuthenticated && user && (
+              <div className="border-t border-primary-content/20 pt-4 mt-6">
+                <p className="text-xs truncate opacity-70 mb-2">{user.email}</p>
+                <button
+                  type="button"
                   onClick={() => {
                     setIsMenuOpen(false);
+                    void handleLogout();
                   }}
+                  className="btn btn-outline btn-sm w-full border-primary-content text-primary-content"
                 >
-                  Fixed Deposits
-                </Link>
-                <Link
-                  to="/deposits/rd"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Recurring Deposits
-                </Link>
+                  Sign Out
+                </button>
               </div>
-              <div className="mt-4">
-                <h3 className="px-4 text-xs font-bold uppercase tracking-wide">Economics</h3>
-                <Link
-                  to="/economics/inflation-rates"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Inflation Rates
-                </Link>
-                <Link
-                  to="/economics/ppp-exchange-rate"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  PPP Exchange Rate
-                </Link>
-              </div>
-              <div className="mt-4">
-                <h3 className="px-4 text-xs font-bold uppercase tracking-wide">Fixed Plans</h3>
-                <Link
-                  to="/fixed-plans/fixed-rate-sip"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Fixed Rate SIP
-                </Link>
-                <Link
-                  to="/fixed-plans/fixed-rate-swp"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Fixed Rate SWP
-                </Link>
-              </div>
-              <div className="mt-4">
-                <h3 className="px-4 text-xs font-bold uppercase tracking-wide">Mutual Funds</h3>
-                <Link
-                  to="/mutual-funds/lumpsum"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Lumpsum
-                </Link>
-                <Link
-                  to="/mutual-funds/sip"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  SIP
-                </Link>
-                <Link
-                  to="/mutual-funds/swp"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  SWP
-                </Link>
-              </div>
-            </nav>
+            )}
           </aside>
         </div>
       )}

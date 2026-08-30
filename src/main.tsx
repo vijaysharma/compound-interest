@@ -1,8 +1,21 @@
+import { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.tsx';
 import LoadingFallback from './components/LoadingFallback.tsx';
+import ProtectedRoute from './components/ProtectedRoute.tsx';
 import './index.css';
+const protectedRoute = (importer: () => Promise<{ default: ComponentType }>, requireAdmin = false) => {
+  return async () => {
+    const Component = (await importer()).default;
+    const ProtectedComponent = () => (
+      <ProtectedRoute requireAdmin={requireAdmin}>
+        <Component />
+      </ProtectedRoute>
+    );
+    return { Component: ProtectedComponent };
+  };
+};
 const router = createBrowserRouter([
   {
     path: '/',
@@ -14,23 +27,31 @@ const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('./pages/home.tsx')).default }),
       },
       {
+        path: 'login',
+        lazy: async () => ({ Component: (await import('./pages/login.tsx')).default }),
+      },
+      {
+        path: 'investment-details',
+        lazy: protectedRoute(() => import('./pages/investment_details.tsx')),
+      },
+      {
         path: 'admin',
-        lazy: async () => ({ Component: (await import('./pages/admin.tsx')).default }),
+        lazy: protectedRoute(() => import('./pages/admin.tsx'), true),
       },
       {
         path: 'emi',
-        lazy: async () => ({ Component: (await import('./pages/emiCalculator.tsx')).default }),
+        lazy: protectedRoute(() => import('./pages/emiCalculator.tsx')),
       },
       {
         path: 'deposits',
         children: [
           {
             path: 'fd',
-            lazy: async () => ({ Component: (await import('./pages/fd.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/fd.tsx')),
           },
           {
             path: 'rd',
-            lazy: async () => ({ Component: (await import('./pages/rd.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/rd.tsx')),
           },
         ],
       },
@@ -39,13 +60,11 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'inflation-rates',
-            lazy: async () => ({ Component: (await import('./pages/inflationRates.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/inflationRates.tsx')),
           },
           {
             path: 'ppp-exchange-rate',
-            lazy: async () => ({
-              Component: (await import('./pages/pppExchangeRate.tsx')).default,
-            }),
+            lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx')),
           },
         ],
       },
@@ -54,11 +73,11 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'fixed-rate-sip',
-            lazy: async () => ({ Component: (await import('./pages/fixedRateSip.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/fixedRateSip.tsx')),
           },
           {
             path: 'fixed-rate-swp',
-            lazy: async () => ({ Component: (await import('./pages/fixedRateSwp.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/fixedRateSwp.tsx')),
           },
         ],
       },
@@ -67,15 +86,15 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'lumpsum',
-            lazy: async () => ({ Component: (await import('./pages/lumpsum.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/lumpsum.tsx')),
           },
           {
             path: 'sip',
-            lazy: async () => ({ Component: (await import('./pages/sip.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/sip.tsx')),
           },
           {
             path: 'swp',
-            lazy: async () => ({ Component: (await import('./pages/swp.tsx')).default }),
+            lazy: protectedRoute(() => import('./pages/swp.tsx')),
           },
         ],
       },

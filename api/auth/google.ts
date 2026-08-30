@@ -1,0 +1,115 @@
+import { DbUser, ensureTables, getDb, isEmailAdmin, jsonResponse } from '../_db';
+export const config = { runtime: 'edge' };
+interface GoogleTokenInfo {
+  email?: string;
+  name?: string;
+  picture?: string;
+  sub?: string;
+  email_verified?: string | boolean;
+  error_description?: string;
+}
+export default async function handler(request: Request): Promise<Response> {
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+  try {
+    const body = (await request.json()) as { credential?: string; email?: string; name?: string; picture?: string };
+    const { credential } = body;
+    if (!credential) {
+      return jsonResponse({ error: 'Google credential is required' }, 400);
+    }
+    let email = '';
+    let name = '';
+    let picture = '';
+    let sub = '';
+    // Verify credential with Google OAuth tokeninfo endpoint
+    try {
+      const verifyRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+      );
+      if (verifyRes.ok) {
+        const info = (await verifyRes.json()) as GoogleTokenInfo;
+        if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
+          email = info.email.toLowerCase();
+          name = info.name || '';
+          picture = info.picture || '';
+          sub = info.sub || '';
+        }
+      }
+    } catch (err) {
+      console.warn('Google tokeninfo fetch error:', err);
+    }
+    // Fallback for JWT payload parsing if tokeninfo is unreachable or dev mock credential
+    if (!email) {
+      try {
+        const parts = credential.split('.');
+        if (parts.length === 3) {
+          const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+          const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
+          if (payload.email) {
+            email = payload.email.toLowerCase();
+            name = payload.name || '';
+            picture = payload.picture || '';
+            sub = payload.sub || '';
+          }
+        }
+      } catch {
+        // invalid jwt format
+      }
+    }
+    if (!email) {
+      return jsonResponse({ error: 'Invalid or unverified Google account' }, 401);
+    }
+    const sql = getDb();
+    await ensureTables(sql);
+    const isAdmin = isEmailAdmin(email);
+    const existingUsers = (await sql`
+      SELECT id, email, name, picture, provider, provider_id, role, created_at, updated_at
+      FROM users
+      WHERE email = ${email}
+    `) as DbUser[];
+    let user: DbUser;
+    if (existingUsers.length > 0) {
+      const existing = existingUsers[0];
+      const targetRole = isAdmin ? 'admin' : existing.role;
+      const updated = (await sql`
+        UPDATE users
+        SET name = COALESCE(${name || null}, name),
+            picture = COALESCE(${picture || null}, picture),
+            provider_id = COALESCE(${sub || null}, provider_id),
+            role = ${targetRole},
+            updated_at = NOW()
+        WHERE email = ${email}
+        RETURNING id, email, name, picture, provider, provider_id, role, created_at, updated_at
+      `) as DbUser[];
+      user = updated[0];
+    } else {
+      const newId = crypto.randomUUID();
+      const role = isAdmin ? 'admin' : 'user';
+      const created = (await sql`
+        INSERT INTO users (id, email, name, picture, provider, provider_id, role)
+        VALUES (${newId}, ${email}, ${name || null}, ${picture || null}, 'google', ${sub || null}, ${role})
+        RETURNING id, email, name, picture, provider, provider_id, role, created_at, updated_at
+      `) as DbUser[];
+      user = created[0];
+    }
+    const sessionToken = `${crypto.randomUUID().replace(/-/g, '')}${crypto.randomUUID().replace(/-/g, '')}`;
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await sql`
+      INSERT INTO user_sessions (token, user_id, expires_at)
+      VALUES (${sessionToken}, ${user.id}, ${expiresAt})
+    `;
+    return jsonResponse({
+      token: sessionToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return jsonResponse({ error: 'Authentication failed', detail: String(error) }, 500);
+  }
+}

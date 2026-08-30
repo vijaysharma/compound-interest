@@ -1,17 +1,20 @@
 import { useState } from 'react';
+import { useAuth } from '../context/useAuth';
 const Admin = () => {
-  const [token, setToken] = useState('');
+  const { token: authToken, user } = useAuth();
+  const [token, setToken] = useState(() => authToken || '');
   const [imfJson, setImfJson] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const sync = async (endpoint: string, body?: string) => {
     setBusy(endpoint);
     setMessage('');
+    const effectiveToken = token || authToken || '';
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${effectiveToken}`,
           ...(body ? { 'Content-Type': 'application/json' } : {}),
         },
         body,
@@ -42,8 +45,17 @@ const Admin = () => {
   };
   return (
     <main className="mx-auto max-w-3xl p-4">
-      <h1 className="mb-2 text-2xl font-semibold">Data administration</h1>
-      <p className="mb-6 text-sm opacity-70">Sync the datasets used by the calculators.</p>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Data administration</h1>
+          <p className="text-sm opacity-70">Sync the datasets used by the calculators.</p>
+        </div>
+        {user && (
+          <div className="badge badge-primary badge-outline text-xs">
+            Admin: {user.email}
+          </div>
+        )}
+      </div>
       <section className="mb-6 border border-error p-4">
         <h2 className="mb-2 text-lg font-medium">User data</h2>
         <p className="mb-4 text-sm opacity-70">

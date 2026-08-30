@@ -1,15 +1,15 @@
 import { ensureTables, getDb, isAuthorized, jsonResponse, MF_URL, unauthorized } from '../_db';
 export const config = { runtime: 'edge' };
 export default async function handler(request: Request): Promise<Response> {
-  if (!isAuthorized(request)) return unauthorized();
+  const sql = getDb();
+  await ensureTables(sql);
+  if (!(await isAuthorized(request, sql))) return unauthorized();
   try {
     const upstream = await fetch(MF_URL, { headers: { Accept: 'application/json' } });
     if (!upstream.ok) return jsonResponse({ error: `MF API returned ${upstream.status}` }, 502);
     const payload = await upstream.json();
     if (!Array.isArray(payload))
       return jsonResponse({ error: 'MF API returned an invalid list' }, 502);
-    const sql = getDb();
-    await ensureTables(sql);
     await sql`DELETE FROM mutual_fund_schemes`;
     await sql`
       INSERT INTO mutual_fund_schemes (scheme_code, scheme_name, payload)
