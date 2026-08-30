@@ -1,4 +1,4 @@
-import { ensureTables, getDb, jsonResponse } from './_db';
+import { ensureTables, getDb, jsonResponse } from './_db.ts';
 export const config = {
   runtime: 'edge',
 };

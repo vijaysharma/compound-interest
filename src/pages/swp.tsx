@@ -247,9 +247,10 @@ const SWP = ({
     if (!search) {
       return;
     }
+    const controller = new AbortController();
     let cancelled = false;
     const timeout = window.setTimeout(() => {
-      fetchAllMfs(search)
+      fetchAllMfs(search, controller.signal)
         .then((data) => {
           if (cancelled) return;
           setJsonAllData(data);
@@ -264,6 +265,7 @@ const SWP = ({
     }, 250);
     return () => {
       cancelled = true;
+      controller.abort();
       window.clearTimeout(timeout);
     };
   }, [deferredSearchKey]);
@@ -416,15 +418,12 @@ const SWP = ({
     if (pinnedFunds.length >= 8) {
       return;
     }
+    const color = CHART_COLORS[pinnedFunds.length];
+    const newPinnedFund: PinnedFund = { schemeCode, schemeName: mf.name, color };
+    setPinnedFunds((previous) => [...previous, newPinnedFund]);
+    setSelectedCode(schemeCode);
     try {
       const navData = await fetchMFbySchemeCode(schemeCode);
-      const color = CHART_COLORS[pinnedFunds.length];
-      const newPinnedFund: PinnedFund = {
-        schemeCode,
-        schemeName: mf.name,
-        color,
-      };
-      setPinnedFunds((previous) => [...previous, newPinnedFund]);
       setPinnedNavData((previous) => ({
         ...previous,
         [schemeCode]: navData,
@@ -432,6 +431,7 @@ const SWP = ({
       setSelectedCode(schemeCode);
       setJsonNavData(navData);
     } catch (err) {
+      setPinnedFunds((previous) => previous.filter((fund) => fund.schemeCode !== schemeCode));
       console.error('Failed to pin mutual fund:', err);
     }
   };
@@ -617,7 +617,7 @@ const SWP = ({
     color: string
   ) => {
     return (
-      <div className="flex flex-col items-center text-center w-full">
+      <div className="text-center w-full leading-none">
         <div className="stat-title text-xs font-semibold mb-1 max-w-full">
           <span
             className="inline-block w-2 h-2 rounded-full mr-1"
@@ -634,8 +634,8 @@ const SWP = ({
           <div className="text-xs opacity-60 py-3">Loading NAV data...</div>
         ) : (
           <>
-            <div className="flex gap-3">
-              <div className="text-secondary text-md">
+            <div className="flex w-full justify-around mb-1">
+              <div className="text-secondary text-md ">
                 <div className="stat-title font-semibold text-xs">{start.date}</div>
                 <span className="text-sm">₹</span>
                 {formatNav(start.nav)}
@@ -650,36 +650,34 @@ const SWP = ({
                 {formatNav(end.nav)}
               </div>
             </div>
-            <div className="stat-title text-xs">Initial Investment</div>
-            <span className="text-lg text-secondary font-semibold">
+            <div className="text-lg text-secondary font-semibold leading-none mb-1">
+              <div className="stat-title text-xs">Initial Investment</div>
               {Math.round(invested).toLocaleString('en-IN')}
-            </span>
-            <div className="stat-title text-xs">No. of Monthly Installments</div>
-            <span className="text-lg font-semibold text-primary">{installments}</span>
-            <div className="stat-title text-xs">Total Withdrawal Amount</div>
-            <span className="text-lg font-semibold text-primary">
+            </div>
+            <div className="text-lg font-semibold text-primary leading-none mb-1">
+              <div className="stat-title text-xs">No. of Monthly Installments</div>
+              {installments}
+            </div>
+            <div className="text-lg font-semibold text-primary leading-none mb-1">
+              <div className="stat-title text-xs">Total Withdrawal Amount</div>
               {Math.round(totalWithdrawn ?? 0).toLocaleString('en-IN')}
-            </span>
-            <div className="stat-title text-xs">Last Withdrawal {lastWithdrawalDate ?? 'N/A'}</div>
-            <span className="text-lg font-semibold text-primary">
+            </div>
+            <div className="text-lg font-semibold text-primary leading-none mb-1">
+              <div className="stat-title text-xs">
+                Last Withdrawal {lastWithdrawalDate ?? 'N/A'}
+              </div>
               {lastWithdrawalAmount === undefined
                 ? 'N/A'
                 : Math.round(lastWithdrawalAmount).toLocaleString('en-IN')}
-            </span>
-            <div className="stat-title text-xs">Value as on {end.date}</div>
-            <span className="text-lg font-semibold text-primary">
+            </div>
+            <div className="text-lg font-semibold text-primary leading-none mb-1">
+              <div className="stat-title text-xs">Value as on {end.date}</div>
               {Math.round(matureAmount).toLocaleString('en-IN')}
               <span className={`text-xs ${(xirr ?? 0) >= 0 ? 'text-success' : 'text-error'}`}>
                 &nbsp;({xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`})
               </span>
-            </span>
-            <div className="stat-title text-xs">Return (%) as on {end.date}</div>
-            <span
-              className={`text-lg font-semibold ${(xirr ?? 0) >= 0 ? 'text-success' : 'text-error'}`}
-            >
-              {xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`}
-            </span>
-            <div className="stat-title font-semibold">
+            </div>
+            <div className="stat-title font-semibold mb-1">
               <span className="text-xs">Units Left: </span>
               <span className="text-primary text-sm">{units.toFixed(2)}</span>
             </div>

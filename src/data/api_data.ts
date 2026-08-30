@@ -7,39 +7,69 @@ import {
   WORLD_BANK_PPP_URL,
 } from './API_LIST';
 import { MFJSONType } from '../types/types';
-export const fetchAllMfs = async (search = ''): Promise<MFJSONType[]> => {
-  try {
-    const query = search.trim() ? `?q=${encodeURIComponent(search.trim())}` : '';
-    const response = await fetch(`${MF_URL}${query}`);
-    const data = (await response.json()) as MFJSONType[];
-    const filteredData = Array.from(
-      new Map(data.map((fund: MFJSONType) => [fund.schemeCode, fund])).values()
-    );
-    //   Sort the data alphabetically by schemeName
-    const sortedData = filteredData.sort((a: { schemeName: string }, b: { schemeName: string }) => {
-      if (a.schemeName < b.schemeName) {
-        return -1;
+const mfSearchCache = new Map<string, MFJSONType[]>();
+const mfNavCache = new Map<string, unknown[]>();
+const mfNavRequests = new Map<string, Promise<unknown[]>>();
+const MAX_SEARCH_CACHE_ENTRIES = 50;
+export const fetchAllMfs = async (search = '', signal?: AbortSignal): Promise<MFJSONType[]> => {
+  const normalizedSearch = search.trim().toLowerCase();
+  const cached = mfSearchCache.get(normalizedSearch);
+  if (cached) return cached;
+  const request = (async () => {
+    try {
+      const query = normalizedSearch ? `?q=${encodeURIComponent(normalizedSearch)}` : '';
+      const response = await fetch(`${MF_URL}${query}`, { signal });
+      const data = (await response.json()) as MFJSONType[];
+      const filteredData = Array.from(
+        new Map(data.map((fund: MFJSONType) => [fund.schemeCode, fund])).values()
+      );
+      //   Sort the data alphabetically by schemeName
+      const sortedData = filteredData.sort(
+        (a: { schemeName: string }, b: { schemeName: string }) => {
+          if (a.schemeName < b.schemeName) {
+            return -1;
+          }
+          if (a.schemeName > b.schemeName) {
+            return 1;
+          }
+          return 0;
+        }
+      );
+      mfSearchCache.set(normalizedSearch, sortedData);
+      if (mfSearchCache.size > MAX_SEARCH_CACHE_ENTRIES) {
+        const oldestKey = mfSearchCache.keys().next().value;
+        if (oldestKey) mfSearchCache.delete(oldestKey);
       }
-      if (a.schemeName > b.schemeName) {
-        return 1;
-      }
-      return 0;
-    });
-    return sortedData;
-  } catch {
-    throw Error(`Failed to fetch mutual funds at this url ${MF_URL}`);
-  }
+      return sortedData;
+    } catch {
+      throw Error(`Failed to fetch mutual funds at this url ${MF_URL}`);
+    }
+  })();
+  return request;
 };
-export const fetchMFbySchemeCode = async (schemeCode: string) => {
-  const response = await fetch(getMFSchemeCodeUrl(schemeCode));
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error ?? `Mutual fund request failed: ${response.status}`);
+export const fetchMFbySchemeCode = async (schemeCode: string, signal?: AbortSignal) => {
+  const cached = mfNavCache.get(schemeCode);
+  if (cached) return cached;
+  const pending = mfNavRequests.get(schemeCode);
+  if (pending) return pending;
+  const request = (async () => {
+    const response = await fetch(getMFSchemeCodeUrl(schemeCode), { signal });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error ?? `Mutual fund request failed: ${response.status}`);
+    }
+    if (!Array.isArray(data.data)) {
+      throw new Error('Mutual fund response did not contain NAV data');
+    }
+    mfNavCache.set(schemeCode, data.data);
+    return data.data;
+  })();
+  mfNavRequests.set(schemeCode, request);
+  try {
+    return await request;
+  } finally {
+    mfNavRequests.delete(schemeCode);
   }
-  if (!Array.isArray(data.data)) {
-    throw new Error('Mutual fund response did not contain NAV data');
-  }
-  return data.data;
 };
 export const fetchExchangeRates = async () => {
   const response = await fetch(EXCHANGE_URL);

@@ -150,6 +150,13 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
       data: growthData,
     };
   });
+  const formatAxisCurrency = (value: number): string => {
+    const absoluteValue = Math.abs(value);
+    if (absoluteValue >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
+    if (absoluteValue >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+    if (absoluteValue >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
+    return `₹${Math.round(value)}`;
+  };
   /*
    * ==========================================================
    * COLLECT ALL DATES
@@ -203,8 +210,13 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
         const value = datum[`fund_${index}`];
         return {
           title: dataset.label,
-          content:
-            typeof value === 'number' && Number.isFinite(value) ? formatCurrency(value) : 'N/A',
+          data: [
+            {
+              label: 'Value',
+              value:
+                typeof value === 'number' && Number.isFinite(value) ? formatCurrency(value) : 'N/A',
+            },
+          ],
         };
       },
     },
@@ -220,12 +232,6 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
     },
     data: chartData,
     height: 240,
-    zoom: {
-      enableAxisDragging: false,
-      enablePanning: false,
-      enableScrolling: false,
-      enableSelecting: true,
-    },
     /*
      * We keep the AG Charts legend disabled because
      * you wanted a display-only legend.
@@ -262,7 +268,7 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
           avoidCollisions: true,
           fontSize: 9,
           fontWeight: 'bold',
-          formatter: ({ value }: { value: number }) => formatCurrency(value),
+          formatter: ({ value }: { value: number }) => formatAxisCurrency(value),
         },
       },
     },

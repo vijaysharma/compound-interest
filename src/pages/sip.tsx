@@ -225,9 +225,10 @@ const SIP = ({
     if (!search) {
       return;
     }
+    const controller = new AbortController();
     let cancelled = false;
     const timeout = window.setTimeout(() => {
-      fetchAllMfs(search)
+      fetchAllMfs(search, controller.signal)
         .then((data) => {
           if (cancelled) return;
           setJsonAllData(data);
@@ -242,6 +243,7 @@ const SIP = ({
     }, 250);
     return () => {
       cancelled = true;
+      controller.abort();
       window.clearTimeout(timeout);
     };
   }, [deferredSearchKey]);
@@ -427,15 +429,12 @@ const SIP = ({
     if (pinnedFunds.length >= 8) {
       return;
     }
+    const color = CHART_COLORS[pinnedFunds.length];
+    const newPinnedFund: PinnedFund = { schemeCode, schemeName: mf.name, color };
+    setPinnedFunds((previous) => [...previous, newPinnedFund]);
+    setSelectedCode(schemeCode);
     try {
       const navData = await fetchMFbySchemeCode(schemeCode);
-      const color = CHART_COLORS[pinnedFunds.length];
-      const newPinnedFund: PinnedFund = {
-        schemeCode,
-        schemeName: mf.name,
-        color,
-      };
-      setPinnedFunds((previous) => [...previous, newPinnedFund]);
       setPinnedNavData((previous) => ({
         ...previous,
         [schemeCode]: navData,
@@ -455,6 +454,7 @@ const SIP = ({
         }
       }
     } catch (err) {
+      setPinnedFunds((previous) => previous.filter((fund) => fund.schemeCode !== schemeCode));
       console.error('Failed to pin mutual fund:', err);
     }
   };

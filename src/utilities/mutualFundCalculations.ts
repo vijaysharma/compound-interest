@@ -59,6 +59,16 @@ const getEffectiveStartDate = (startDate: string, data: NavType[]): string => {
   }
   return earliestNav.date;
 };
+const getEffectiveSwpStartDate = (
+  investmentDate: string,
+  withdrawalStartDate: string,
+  data: NavType[]
+): string => {
+  const fundStartDate = getEffectiveStartDate(investmentDate, data);
+  return toDate(withdrawalStartDate).getTime() >= toDate(fundStartDate).getTime()
+    ? withdrawalStartDate
+    : fundStartDate;
+};
 const calculateXirr = (cashFlows: CashFlow[]): number | undefined => {
   if (cashFlows.length < 2) return undefined;
   const baseDate = toDate(cashFlows[0].date).getTime();
@@ -223,6 +233,11 @@ export const calculateSwp = (
     throw new Error('SWP start date cannot be before the investment date.');
   }
   const effectiveInvestmentDate = getEffectiveStartDate(investmentDate, navData);
+  const effectiveWithdrawalStartDate = getEffectiveSwpStartDate(
+    investmentDate,
+    withdrawalStartDate,
+    navData
+  );
   const startNav = getNav(effectiveInvestmentDate, navData);
   if (!startNav) throw new Error('No NAV data is available for the selected start date.');
   let units = initialInvestment / startNav.nav;
@@ -233,7 +248,7 @@ export const calculateSwp = (
   let lastWithdrawalDate: string | undefined;
   let lastNav = startNav.nav;
   const cashFlows: CashFlow[] = [{ date: startNav.date, amount: -initialInvestment }];
-  const dates = getMonthlyDates(withdrawalStartDate, endDate, installmentDay);
+  const dates = getMonthlyDates(effectiveWithdrawalStartDate, endDate, installmentDay);
   for (const [index, date] of dates.entries()) {
     const nav = getNav(date, navData);
     if (!nav) continue;
@@ -283,6 +298,11 @@ export const calculateSwpGrowth = (
     throw new Error('SWP start date cannot be before the investment date.');
   }
   const effectiveInvestmentDate = getEffectiveStartDate(investmentDate, navData);
+  const effectiveWithdrawalStartDate = getEffectiveSwpStartDate(
+    investmentDate,
+    withdrawalStartDate,
+    navData
+  );
   const startNav = getNav(effectiveInvestmentDate, navData);
   const endNav = getNav(endDate, navData);
   if (!startNav || !endNav) {
@@ -290,7 +310,7 @@ export const calculateSwpGrowth = (
   }
   let units = initialInvestment / startNav.nav;
   let withdrawalIndex = 0;
-  const withdrawals = getMonthlyDates(withdrawalStartDate, endDate, installmentDay)
+  const withdrawals = getMonthlyDates(effectiveWithdrawalStartDate, endDate, installmentDay)
     .map((date, index) => {
       const nav = getNav(date, navData);
       return nav
