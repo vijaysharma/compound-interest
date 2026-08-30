@@ -1,4 +1,14 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import {
+  FiCheck,
+  FiCreditCard,
+  FiPlus,
+  FiRefreshCw,
+  FiRotateCcw,
+  FiSmartphone,
+  FiUsers,
+  FiX,
+} from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import { PaymentSettings, PaymentSubmission } from '../types/auth';
 interface AdminUser {
@@ -23,9 +33,9 @@ const Admin = () => {
   const [payTitle, setPayTitle] = useState('Rupee Calculator Pro Subscription');
   const [payUpiId, setPayUpiId] = useState('');
   const [payQrUrl, setPayQrUrl] = useState('');
-  const [payAmount, setPayAmount] = useState(19);
+  const [payAmount, setPayAmount] = useState(29);
   const [payInstructions, setPayInstructions] = useState(
-    'Pay ₹19 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
+    'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
   );
   // Submissions state
   const [submissions, setSubmissions] = useState<PaymentSubmission[]>([]);
@@ -236,37 +246,41 @@ const Admin = () => {
       <div className="tabs tabs-boxed mb-6 p-1 bg-base-200 flex flex-wrap gap-1">
         <button
           type="button"
-          className={`tab ${activeTab === 'payments' ? 'tab-active font-bold' : ''}`}
+          className={`tab flex items-center gap-1.5 ${activeTab === 'payments' ? 'tab-active font-bold' : ''}`}
           onClick={() => setActiveTab('payments')}
         >
-          📱 UPI &amp; QR Settings
+          <FiSmartphone className="h-4 w-4" />
+          <span>UPI &amp; QR Settings</span>
         </button>
         <button
           type="button"
-          className={`tab ${activeTab === 'submissions' ? 'tab-active font-bold' : ''}`}
+          className={`tab flex items-center gap-1.5 ${activeTab === 'submissions' ? 'tab-active font-bold' : ''}`}
           onClick={() => {
             setActiveTab('submissions');
             void fetchSubmissions();
           }}
         >
-          💳 Payment Submissions ({submissions.filter((s) => s.status === 'pending').length})
+          <FiCreditCard className="h-4 w-4" />
+          <span>Payment Submissions ({submissions.filter((s) => s.status === 'pending').length})</span>
         </button>
         <button
           type="button"
-          className={`tab ${activeTab === 'users' ? 'tab-active font-bold' : ''}`}
+          className={`tab flex items-center gap-1.5 ${activeTab === 'users' ? 'tab-active font-bold' : ''}`}
           onClick={() => {
             setActiveTab('users');
             void fetchUsers();
           }}
         >
-          👥 Users &amp; Quotas ({usersList.length})
+          <FiUsers className="h-4 w-4" />
+          <span>Users &amp; Quotas ({usersList.length})</span>
         </button>
         <button
           type="button"
-          className={`tab ${activeTab === 'sync' ? 'tab-active font-bold' : ''}`}
+          className={`tab flex items-center gap-1.5 ${activeTab === 'sync' ? 'tab-active font-bold' : ''}`}
           onClick={() => setActiveTab('sync')}
         >
-          🔄 Dataset Sync
+          <FiRefreshCw className="h-4 w-4" />
+          <span>Dataset Sync</span>
         </button>
       </div>
       {message && (
@@ -281,7 +295,7 @@ const Admin = () => {
         <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
           <h2 className="text-lg font-bold mb-1">UPI Payment &amp; QR Code Configuration</h2>
           <p className="text-xs opacity-70 mb-6">
-            Customize the ₹19 paywall payment details, UPI ID, QR code image, and instructions shown
+            Customize the ₹29 paywall payment details, UPI ID, QR code image, and instructions shown
             to users.
           </p>
           <form onSubmit={handleSavePaymentSettings} className="space-y-4">
@@ -457,17 +471,19 @@ const Admin = () => {
                               type="button"
                               disabled={busy === `sub_${sub.id}`}
                               onClick={() => void handleProcessPayment(sub.id, 'approve')}
-                              className="btn btn-success btn-xs font-bold"
+                              className="btn btn-success btn-xs font-bold flex items-center gap-1"
                             >
-                              Approve (+30d)
+                              <FiCheck className="h-3 w-3" />
+                              <span>Approve (+30d)</span>
                             </button>
                             <button
                               type="button"
                               disabled={busy === `sub_${sub.id}`}
                               onClick={() => void handleProcessPayment(sub.id, 'reject')}
-                              className="btn btn-ghost btn-xs text-error"
+                              className="btn btn-ghost btn-xs text-error flex items-center gap-1"
                             >
-                              Reject
+                              <FiX className="h-3 w-3" />
+                              <span>Reject</span>
                             </button>
                           </div>
                         ) : (
@@ -561,19 +577,21 @@ const Admin = () => {
                               type="button"
                               disabled={busy === `user_${u.id}`}
                               onClick={() => void handleUserAction(u.id, 'grant_access')}
-                              className="btn btn-outline btn-xs"
+                              className="btn btn-outline btn-xs flex items-center gap-1"
                               title="Grant 30 Days Access"
                             >
-                              +30d Access
+                              <FiPlus className="h-3 w-3" />
+                              <span>+30d Access</span>
                             </button>
                             <button
                               type="button"
                               disabled={busy === `user_${u.id}`}
                               onClick={() => void handleUserAction(u.id, 'reset_usage')}
-                              className="btn btn-ghost btn-xs text-xs"
+                              className="btn btn-ghost btn-xs text-xs flex items-center gap-1"
                               title="Reset usage counter to 0"
                             >
-                              Reset
+                              <FiRotateCcw className="h-3 w-3" />
+                              <span>Reset</span>
                             </button>
                           </div>
                         </td>

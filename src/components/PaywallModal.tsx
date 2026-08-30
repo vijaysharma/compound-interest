@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiClock, FiLock, FiX, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import { PaymentSettings } from '../types/auth';
 import { loadRazorpayScript } from '../utils/razorpay';
@@ -9,8 +10,6 @@ const PaywallModal = () => {
   const [settings, setSettings] = useState<PaymentSettings | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [showQrFallback, setShowQrFallback] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [now] = useState(() => Date.now());
   useEffect(() => {
     if (!showPaywall) return;
@@ -28,12 +27,6 @@ const PaywallModal = () => {
     void fetchSettings();
   }, [showPaywall]);
   if (!showPaywall) return null;
-  const handleCopyUpi = () => {
-    if (!settings?.upi_id) return;
-    void navigator.clipboard.writeText(settings.upi_id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
   const handleCloseOrLater = () => {
     setShowPaywall(false);
     if (user?.isBlocked) {
@@ -41,8 +34,6 @@ const PaywallModal = () => {
     }
   };
   const amount = settings?.amount ?? 29;
-  const upiId = settings?.upi_id || 'rupeecalculator@upi';
-  const qrCodeUrl = settings?.upi_qr_code_url || '';
   const isTrialActive = user && !user.isBlocked && user.subscription_status !== 'active';
   const remainingCalculations = Math.max(0, (user?.freeLimit || 10) - (user?.api_usage_count || 0));
   const getRemainingHours = () => {
@@ -164,16 +155,18 @@ const PaywallModal = () => {
           onClick={handleCloseOrLater}
           aria-label="Close paywall"
         >
-          ✕
+          <FiX className="h-4 w-4" />
         </button>
         <div className="text-center mb-6">
           {isTrialActive ? (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-info/15 text-info font-bold text-xs uppercase tracking-wider mb-2">
-              <span>⏱️</span> Mutual Funds Trial Active
+              <FiClock className="h-3.5 w-3.5" />
+              <span>Mutual Funds Trial Active</span>
             </div>
           ) : (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning font-bold text-xs uppercase tracking-wider mb-2">
-              <span>⚡</span> Mutual Funds Trial Expired
+              <FiZap className="h-3.5 w-3.5" />
+              <span>Mutual Funds Trial Expired</span>
             </div>
           )}
           <h2 id="paywall-title" className="text-2xl font-extrabold">
@@ -189,12 +182,16 @@ const PaywallModal = () => {
                   {remainingCalculations} of {user?.freeLimit || 10}
                 </span>{' '}
                 live Mutual Fund search &amp; NAV history runs remaining
-                {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) are 100% free for 48 hours. Unlock unlimited live AMFI sync for just ₹{amount}/month.
+                {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other
+                tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) are 100% free
+                for 48 hours. Unlock unlimited live AMFI sync for just ₹{amount}/month.
               </>
             ) : (
               <>
                 Your 48-hour / 10-run free trial for live AMFI Mutual Funds analytics has ended for{' '}
-                <span className="font-semibold">{user?.email}</span>. Unlock unlimited live AMFI sync for just ₹{amount}/month. All other tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) were free for 48 hours.
+                <span className="font-semibold">{user?.email}</span>. Unlock unlimited live AMFI
+                sync for just ₹{amount}/month. All other tools in the Calculators Suite (FD, RD,
+                EMI, SIP, SWP, Inflation, PPP) were free for 48 hours.
               </>
             )}
           </p>
@@ -219,43 +216,15 @@ const PaywallModal = () => {
                 <span>Processing Payment...</span>
               </>
             ) : (
-              <span>⚡ Pay ₹{amount} &amp; Unlock Pro Access</span>
+              <>
+                <FiLock className="h-4 w-4" />
+                <span>Pay ₹{amount} &amp; Unlock Pro Access</span>
+              </>
             )}
           </button>
           <p className="text-center text-[11px] opacity-60">
             Secure checkout via Razorpay • UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking
           </p>
-        </div>
-        {/* Optional QR Code Fallback */}
-        <div className="mt-6 pt-4 border-t border-base-200 text-center">
-          <button
-            type="button"
-            onClick={() => setShowQrFallback(!showQrFallback)}
-            className="text-xs opacity-70 hover:opacity-100 underline mb-2"
-          >
-            {showQrFallback ? 'Hide manual UPI QR' : 'Need manual UPI QR fallback?'}
-          </button>
-          {showQrFallback && (
-            <div className="bg-base-200 p-3 rounded-lg border border-base-300 mt-2 space-y-2">
-              {qrCodeUrl && (
-                <img
-                  src={qrCodeUrl}
-                  alt="UPI QR"
-                  className="h-32 w-32 mx-auto object-contain bg-white p-1.5 rounded border border-base-300"
-                />
-              )}
-              <div className="flex items-center justify-between bg-base-100 p-2 rounded text-xs">
-                <span className="font-mono font-bold text-primary truncate">{upiId}</span>
-                <button
-                  type="button"
-                  onClick={handleCopyUpi}
-                  className="btn btn-outline btn-xs shrink-0"
-                >
-                  {copied ? '✓ Copied' : 'Copy'}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
         <div className="mt-4 text-center">
           <button
@@ -263,9 +232,7 @@ const PaywallModal = () => {
             onClick={handleCloseOrLater}
             className="text-xs opacity-60 hover:opacity-100 underline"
           >
-            {isTrialActive
-              ? 'Continue with Free Trial &rarr;'
-              : 'Continue with Free Calculators Suite \u2192'}
+            {isTrialActive ? 'Continue with Free Trial' : 'Continue with Free Calculators Suite'}
           </button>
         </div>
       </div>

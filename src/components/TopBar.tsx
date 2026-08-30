@@ -1,12 +1,25 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  FiAward,
+  FiClock,
+  FiGlobe,
+  FiHome,
+  FiLayers,
+  FiLogOut,
+  FiMenu,
+  FiPercent,
+  FiShield,
+  FiTrendingUp,
+  FiX,
+  FiZap,
+} from 'react-icons/fi';
 import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
     '/': 'Rupee Calculator',
     '/login': 'Sign In',
-    '/investment-details': 'Investment Suite',
     '/admin': 'Data administration',
     '/emi': 'EMI Calculator',
     '/deposits/fd': 'Fixed Deposits',
@@ -45,11 +58,7 @@ const TopBar = ({ className }: { className?: string }) => {
             aria-controls="navigation-drawer"
             onClick={() => setIsMenuOpen(true)}
           >
-            <span className="flex flex-col gap-1" aria-hidden="true">
-              <span className="block h-0.5 w-5 bg-current" />
-              <span className="block h-0.5 w-5 bg-current" />
-              <span className="block h-0.5 w-5 bg-current" />
-            </span>
+            <FiMenu className="h-5 w-5" aria-hidden="true" />
           </button>
           <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Logo /> <span className="truncate">{navTitle}</span>
@@ -59,21 +68,23 @@ const TopBar = ({ className }: { className?: string }) => {
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
               {isAdmin ? (
-                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold uppercase text-[10px]">
+                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold uppercase text-[10px] items-center gap-1">
+                  <FiShield className="h-3 w-3" />
                   Admin
                 </span>
               ) : user.subscription_status === 'active' ? (
-                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold gap-1 text-[10px]">
-                  👑 Pro Active
+                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold items-center gap-1 text-[10px]">
+                  <FiAward className="h-3 w-3" />
+                  Pro Active
                 </span>
               ) : (
                 <button
                   type="button"
                   onClick={() => setShowPaywall(true)}
-                  className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} gap-1 font-normal`}
+                  className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} items-center gap-1 font-normal`}
                   title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 10} Mutual Fund live calculations used in 48h trial. Other calculators are free for 48 hours.`}
                 >
-                  <span>⚡</span>
+                  <FiZap className="h-3 w-3" />
                   <span className="hidden md:inline">
                     {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} MF Runs
                   </span>
@@ -96,14 +107,6 @@ const TopBar = ({ className }: { className?: string }) => {
                   {(user.name || user.email).charAt(0)}
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => void handleLogout()}
-                className="btn btn-ghost btn-xs text-primary-content hover:bg-primary-content/10"
-                title="Log out"
-              >
-                Sign out
-              </button>
             </div>
           ) : (
             <Link
@@ -137,9 +140,7 @@ const TopBar = ({ className }: { className?: string }) => {
                   aria-label="Close navigation menu"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <span className="text-2xl leading-none" aria-hidden="true">
-                    &times;
-                  </span>
+                  <FiX className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
               <nav
@@ -148,23 +149,26 @@ const TopBar = ({ className }: { className?: string }) => {
               >
                 <Link
                   to="/"
-                  className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Overview &amp; Features
+                  <FiHome className="h-4 w-4 shrink-0" />
+                  <span>Overview &amp; Features</span>
                 </Link>
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-accent font-semibold"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-accent font-semibold"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Data administration
+                    <FiShield className="h-4 w-4 shrink-0" />
+                    <span>Data administration</span>
                   </Link>
                 )}
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
-                    Loans
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                    <FiPercent className="h-3.5 w-3.5" />
+                    <span>Loans</span>
                   </h3>
                   <Link
                     to="/emi"
@@ -175,8 +179,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
-                    Deposits
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                    <FiLayers className="h-3.5 w-3.5" />
+                    <span>Deposits</span>
                   </h3>
                   <Link
                     to="/deposits/fd"
@@ -194,8 +199,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
-                    Economics
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                    <FiGlobe className="h-3.5 w-3.5" />
+                    <span>Economics</span>
                   </h3>
                   <Link
                     to="/economics/inflation-rates"
@@ -213,8 +219,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
-                    Fixed Plans
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                    <FiClock className="h-3.5 w-3.5" />
+                    <span>Fixed Plans</span>
                   </h3>
                   <Link
                     to="/fixed-plans/fixed-rate-sip"
@@ -232,8 +239,9 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
                 <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60">
-                    Mutual Funds
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                    <FiTrendingUp className="h-3.5 w-3.5" />
+                    <span>Mutual Funds</span>
                   </h3>
                   <Link
                     to="/mutual-funds/lumpsum"
@@ -265,10 +273,11 @@ const TopBar = ({ className }: { className?: string }) => {
                 {user.subscription_status !== 'active' && user.role !== 'admin' && (
                   <Link
                     to="/upgrade"
-                    className="btn btn-warning btn-sm w-full font-bold shadow-sm"
+                    className="btn btn-warning btn-sm w-full font-bold shadow-sm flex items-center justify-center gap-1.5"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    ⚡ Unlock Mutual Funds Pro (₹29/mo)
+                    <FiZap className="h-4 w-4" />
+                    <span>Unlock Mutual Funds Pro (₹29/mo)</span>
                   </Link>
                 )}
                 <button
@@ -277,9 +286,10 @@ const TopBar = ({ className }: { className?: string }) => {
                     setIsMenuOpen(false);
                     void handleLogout();
                   }}
-                  className="btn btn-outline btn-sm w-full border-primary-content text-primary-content"
+                  className="btn btn-outline btn-sm w-full border-primary-content text-primary-content flex items-center justify-center gap-1.5"
                 >
-                  Sign Out
+                  <FiLogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
                 </button>
               </div>
             )}

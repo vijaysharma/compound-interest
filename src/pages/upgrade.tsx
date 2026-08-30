@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  FiCheck,
+  FiChevronDown,
+  FiChevronUp,
+  FiClock,
+  FiCoffee,
+  FiCopy,
+  FiLock,
+} from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import { PaymentSettings } from '../types/auth';
@@ -166,8 +175,9 @@ const Upgrade = () => {
         <div className="card bg-info/10 border border-info/30 p-4 mb-6 rounded-2xl shadow-sm">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <div>
-              <div className="inline-flex items-center gap-1 text-xs font-bold text-info uppercase tracking-wider mb-1">
-                <span>⏱️</span> Mutual Funds Trial Active
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-info uppercase tracking-wider mb-1">
+                <FiClock className="h-3.5 w-3.5" />
+                <span>Mutual Funds Trial Active</span>
               </div>
               <p className="text-xs sm:text-sm font-medium">
                 You have{' '}
@@ -197,8 +207,8 @@ const Upgrade = () => {
       {/* Human Developer Letter Card */}
       <div className="card bg-base-100 border border-base-300 p-6 sm:p-8 shadow-xl mb-8 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-warning/15 text-2xl shrink-0">
-            ☕
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-warning/15 shrink-0">
+            <FiCoffee className="h-5 w-5 text-warning" />
           </div>
           <div>
             <h2 className="text-lg font-bold">A quick note from the developer</h2>
@@ -207,7 +217,7 @@ const Upgrade = () => {
         </div>
         <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
           <p>
-            Hey there! I built the <strong>Calculators Suite</strong> because I was tired of bloated
+            Hey there! I built this platform because I was tired of bloated
             financial websites stuffed with credit card ads, loan banners, and spammy popups asking
             for phone numbers.
           </p>
@@ -223,7 +233,7 @@ const Upgrade = () => {
             costs money every month.
           </p>
           <p className="font-semibold text-primary">
-            ₹29 a month is literally less than a cutting chai and samosa ☕. If this suite saved you
+            ₹29 a month is literally less than a cutting chai and samosa. If this platform saved you
             time or gave you clarity on your financial goals, your support directly keeps this
             project alive, ad-free, and growing.
           </p>
@@ -250,7 +260,7 @@ const Upgrade = () => {
               type="button"
               disabled={isProcessing}
               onClick={() => void handleRazorpayPayment()}
-              className="btn btn-primary btn-lg w-full shadow-lg gap-2 text-sm sm:text-base font-bold"
+              className="btn btn-primary btn-lg w-full shadow-lg gap-2 text-sm sm:text-base font-bold flex items-center justify-center"
             >
               {isProcessing ? (
                 <>
@@ -259,7 +269,8 @@ const Upgrade = () => {
                 </>
               ) : (
                 <>
-                  <span>⚡ Pay ₹{amount} &amp; Unlock 30 Days Pro</span>
+                  <FiLock className="h-4 w-4" />
+                  <span>Pay ₹{amount} &amp; Unlock 30 Days Pro</span>
                 </>
               )}
             </button>
@@ -270,15 +281,15 @@ const Upgrade = () => {
         </div>
         <div className="mt-6 pt-6 border-t border-base-300 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs opacity-80">
           <div className="flex items-center gap-2">
-            <span className="text-success font-bold">✓</span>
+            <FiCheck className="text-success font-bold h-4 w-4 shrink-0" />
             <span>Unlimited Mutual Fund Analytics</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-success font-bold">✓</span>
+            <FiCheck className="text-success font-bold h-4 w-4 shrink-0" />
             <span>Daily AMFI Live NAV Sync</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-success font-bold">✓</span>
+            <FiCheck className="text-success font-bold h-4 w-4 shrink-0" />
             <span>Zero Ads &amp; Complete Privacy</span>
           </div>
         </div>
@@ -291,7 +302,7 @@ const Upgrade = () => {
           className="flex items-center justify-between w-full text-xs font-semibold opacity-75 hover:opacity-100"
         >
           <span>Having trouble with the payment gateway? Pay via manual UPI QR &rarr;</span>
-          <span>{showQrFallback ? '▲' : '▼'}</span>
+          {showQrFallback ? <FiChevronUp className="h-4 w-4" /> : <FiChevronDown className="h-4 w-4" />}
         </button>
         {showQrFallback && (
           <div className="mt-4 pt-4 border-t border-base-300 flex flex-col items-center text-center space-y-3">
@@ -312,9 +323,17 @@ const Upgrade = () => {
               <button
                 type="button"
                 onClick={handleCopyUpi}
-                className="btn btn-ghost btn-xs text-xs"
+                className="btn btn-ghost btn-xs text-xs flex items-center gap-1"
               >
-                {copied ? '✓ Copied' : 'Copy'}
+                {copied ? (
+                  <span className="inline-flex items-center gap-1 text-success">
+                    <FiCheck className="h-3.5 w-3.5" /> Copied
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    <FiCopy className="h-3.5 w-3.5" /> Copy
+                  </span>
+                )}
               </button>
             </div>
           </div>

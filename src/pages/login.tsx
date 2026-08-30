@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { FiCheckCircle } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import GoogleSignInButton from '../components/GoogleSignInButton';
@@ -202,7 +203,8 @@ const Login = () => {
                     Step 1 of 2: Verify Your Google / Gmail Account
                   </div>
                   <p className="text-xs opacity-75">
-                    Includes 48-hour trial with 10 live Mutual Fund calculation runs. All other tools are free for 48 hours.
+                    Includes 48-hour trial with 10 live Mutual Fund calculation runs. All other
+                    tools are free for 48 hours.
                   </p>
                 </div>
                 <div className="flex justify-center py-1">
@@ -286,7 +288,8 @@ const Login = () => {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="text-[10px] font-bold text-success uppercase tracking-wider flex items-center gap-1">
-                      <span>✓</span> Verified Google Account
+                      <FiCheckCircle className="h-3 w-3" />
+                      <span>Verified Google Account</span>
                     </div>
                     <div className="text-xs sm:text-sm font-bold truncate">
                       {googleProfile.email}

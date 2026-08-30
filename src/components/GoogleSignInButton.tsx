@@ -1,4 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 declare global {
   interface Window {
@@ -68,6 +70,7 @@ const GoogleSignInButton = ({
   modalTitle = 'Sign Up with Google',
 }: GoogleSignInButtonProps) => {
   const { signupWithGooglePassword, loading } = useAuth();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -185,7 +188,11 @@ const GoogleSignInButton = ({
         name: name.trim() || cleanEmail.split('@')[0],
       });
       setIsModalOpen(false);
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/investment-details', { replace: true });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -228,7 +235,7 @@ const GoogleSignInButton = ({
               onClick={() => setIsModalOpen(false)}
               aria-label="Close dialog"
             >
-              ✕
+              <FiX className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 border border-base-300">
@@ -268,12 +275,14 @@ const GoogleSignInButton = ({
                     className="input input-bordered input-primary w-full text-sm pl-3 pr-8 focus:outline-none"
                   />
                   {email.includes('@') && (
-                    <span className="absolute right-3 top-3 text-success text-xs">✓</span>
+                    <span className="absolute right-3 top-3 text-success">
+                      <FiCheck className="h-4 w-4" />
+                    </span>
                   )}
                 </div>
                 {isAdminCandidate && (
                   <p className="mt-1 text-[11px] text-accent font-medium flex items-center gap-1">
-                    ⚡ Administrator privileges detected for this email
+                    Administrator privileges detected for this email
                   </p>
                 )}
               </div>
