@@ -52,7 +52,7 @@ const Home = () => {
                 to="/investment-details"
                 className="btn btn-primary btn-md sm:btn-lg shadow-lg hover:shadow-primary/30 transition-all font-semibold"
               >
-                Go to Calculators Suite &rarr;
+                Open Calculators Suite &rarr;
               </Link>
             ) : (
               <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -61,7 +61,7 @@ const Home = () => {
                   to="/investment-details"
                   className="btn btn-outline btn-md sm:btn-lg font-semibold"
                 >
-                  Explore Live Demo
+                  Explore Calculators Suite
                 </Link>
               </div>
             )}
@@ -75,7 +75,7 @@ const Home = () => {
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 border-y border-base-300 py-6 text-center">
             <div>
               <div className="text-2xl font-black text-primary">8+</div>
-              <div className="text-xs opacity-70">Specialized Calculators</div>
+              <div className="text-xs opacity-70">Calculators Suite Tools</div>
             </div>
             <div>
               <div className="text-2xl font-black text-primary">0ms</div>
@@ -192,7 +192,7 @@ const Home = () => {
               </div>
               <div className="mt-6">
                 <Link to="/investment-details" className="btn btn-primary btn-sm w-full">
-                  Open Complete Calculator Suite &rarr;
+                  Open Calculators Suite &rarr;
                 </Link>
               </div>
             </div>
@@ -203,7 +203,7 @@ const Home = () => {
       <section className="py-16 px-4">
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold">Complete Financial Intelligence Suite</h2>
+            <h2 className="text-3xl font-extrabold">All-in-One Calculators Suite</h2>
             <p className="mt-2 text-base opacity-70">
               Engineered for precision, clarity, and comprehensive financial decision-making.
             </p>

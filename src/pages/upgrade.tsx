@@ -155,10 +155,10 @@ const Upgrade = () => {
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-          Keep Rupee Calculator Ad-Free &amp; Alive
+          Keep Calculators Suite Ad-Free &amp; Alive
         </h1>
         <p className="mt-2 text-sm sm:text-base opacity-75 max-w-xl mx-auto">
-          An honest, fast, private financial toolkit built for everyday investors in India.
+          An honest, fast, private financial suite built for everyday investors in India.
         </p>
       </div>
       {/* Active Trial Banner vs Expired Status */}
@@ -167,7 +167,7 @@ const Upgrade = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <div>
               <div className="inline-flex items-center gap-1 text-xs font-bold text-info uppercase tracking-wider mb-1">
-                <span>⏱️</span> Your Free Trial is Active
+                <span>⏱️</span> Live Analytics Trial Active
               </div>
               <p className="text-xs sm:text-sm font-medium">
                 You have{' '}
@@ -178,11 +178,11 @@ const Upgrade = () => {
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 24h trial)` : ''}.
               </p>
               <p className="text-[11px] opacity-65 mt-0.5">
-                Basic calculators (FD, RD, SWP, SIP, EMI) remain completely free &amp; unlimited.
+                Standard calculators in the suite (FD, RD, SWP, SIP, EMI) remain completely free &amp; unlimited.
               </p>
             </div>
             <Link to="/investment-details" className="btn btn-outline btn-info btn-xs shrink-0">
-              Continue to Calculators &rarr;
+              Back to Calculators Suite &rarr;
             </Link>
           </div>
         </div>
@@ -207,7 +207,7 @@ const Upgrade = () => {
         </div>
         <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
           <p>
-            Hey there! I built <strong>Rupee Calculator</strong> because I was tired of bloated
+            Hey there! I built the <strong>Calculators Suite</strong> because I was tired of bloated
             financial websites stuffed with credit card ads, loan banners, and spammy popups asking
             for phone numbers.
           </p>
@@ -223,7 +223,7 @@ const Upgrade = () => {
             costs money every month.
           </p>
           <p className="font-semibold text-primary">
-            ₹29 a month is literally less than a cutting chai and samosa ☕. If this tool saved you
+            ₹29 a month is literally less than a cutting chai and samosa ☕. If this suite saved you
             time or gave you clarity on your financial goals, your support directly keeps this
             project alive, ad-free, and growing.
           </p>
@@ -259,7 +259,7 @@ const Upgrade = () => {
                 </>
               ) : (
                 <>
-                  <span>⚡ Pay ₹{amount} &amp; Unlock 30 Days</span>
+                  <span>⚡ Pay ₹{amount} &amp; Unlock 30 Days Pro</span>
                 </>
               )}
             </button>
@@ -271,11 +271,11 @@ const Upgrade = () => {
         <div className="mt-6 pt-6 border-t border-base-300 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs opacity-80">
           <div className="flex items-center gap-2">
             <span className="text-success font-bold">✓</span>
-            <span>Unlimited Calculations</span>
+            <span>Unlimited MF &amp; PPP Calculations</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-success font-bold">✓</span>
-            <span>Daily AMFI Scheme Sync</span>
+            <span>Daily AMFI Live NAV Sync</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-success font-bold">✓</span>

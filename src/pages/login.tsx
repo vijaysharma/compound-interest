@@ -91,9 +91,9 @@ const Login = () => {
           <div className="mb-3">
             <Logo />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold">Rupee Calculator</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold">Rupee Calculators Suite</h1>
           <p className="mt-1.5 text-xs sm:text-sm opacity-70">
-            Institutional financial intelligence with real-time AMFI mutual fund analytics.
+            Institutional financial suite with live AMFI mutual fund sync &amp; multi-country models.
           </p>
         </div>
         {/* Tab Switcher */}
@@ -201,8 +201,7 @@ const Login = () => {
                     Step 1 of 2: Verify Your Google / Gmail Account
                   </div>
                   <p className="text-xs opacity-75">
-                    Registration is restricted to authentic Google &amp; Gmail accounts
-                    (@gmail.com).
+                    Includes 24-hour / 10-calculation access to live Mutual Funds &amp; PPP analytics. Standard calculators in the suite are always free.
                   </p>
                 </div>
                 <div className="flex justify-center py-1">

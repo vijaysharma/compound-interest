@@ -54,6 +54,12 @@ const TopBar = ({ className }: { className?: string }) => {
           <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Logo /> <span className="truncate">{navTitle}</span>
           </Link>
+          <Link
+            to="/investment-details"
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-content/15 hover:bg-primary-content/25 text-xs font-semibold transition-colors"
+          >
+            <span>📊 Calculators Suite</span>
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           {isAuthenticated && user ? (
@@ -71,11 +77,11 @@ const TopBar = ({ className }: { className?: string }) => {
                   type="button"
                   onClick={() => setShowPaywall(true)}
                   className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} gap-1 font-normal`}
-                  title="Unlock 1 Month Unlimited for ₹29"
+                  title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 10} MF & PPP live runs used. Standard calculators are always free.`}
                 >
                   <span>⚡</span>
                   <span className="hidden md:inline">
-                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} Runs
+                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} MF &amp; PPP
                   </span>
                   <span className="font-bold underline text-[10px]">₹29 Pro</span>
                 </button>
@@ -144,21 +150,22 @@ const TopBar = ({ className }: { className?: string }) => {
               </div>
               <nav
                 aria-label="Calculator pages"
-                className="text-primary-content flex flex-col gap-1"
+                className="text-primary-content flex flex-col gap-1.5"
               >
                 <Link
                   to="/"
-                  className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors"
+                  className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-sm"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Overview & Features
+                  Overview &amp; Features
                 </Link>
                 <Link
                   to="/investment-details"
-                  className="px-3 py-2 rounded hover:bg-primary-content/10 transition-colors font-semibold"
+                  className="px-3 py-2 rounded-lg bg-primary-content/15 font-bold hover:bg-primary-content/25 transition-colors flex items-center justify-between text-sm shadow-xs"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Calculators Suite
+                  <span>📊 Calculators Suite</span>
+                  <span className="text-[10px] uppercase font-extrabold bg-primary-content/20 px-2 py-0.5 rounded">All-in-One</span>
                 </Link>
                 {isAdmin && (
                   <Link
@@ -275,7 +282,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     className="btn btn-warning btn-sm w-full font-bold shadow-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    ⚡ Unlock Pro (₹29/mo)
+                    ⚡ Unlock Live Analytics (₹29/mo)
                   </Link>
                 )}
                 <button
