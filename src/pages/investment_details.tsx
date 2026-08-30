@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Tabs from '../components/Tabs';
 import MutualFund from './lumpsum';
 import RD from './rd';
@@ -8,13 +8,18 @@ import PPPExchangeRate from './pppExchangeRate';
 import FixedRateSWP from './fixedRateSwp';
 import { useAuth } from '../context/useAuth';
 const InvestmentDetails = () => {
-  const { trackUsage } = useAuth();
+  const { trackUsage, isBlocked } = useAuth();
   const getStoredId = (): string => window.localStorage.getItem('aid') || '1';
   const [activeId, setActiveId] = useState(() => getStoredId());
   const [screenWidth] = useState(() => window.innerWidth);
+  const prevIdRef = useRef<string | null>(null);
   useEffect(() => {
-    void trackUsage();
-  }, [activeId, trackUsage]);
+    if (isBlocked) return;
+    if (prevIdRef.current !== activeId) {
+      prevIdRef.current = activeId;
+      void trackUsage();
+    }
+  }, [activeId, trackUsage, isBlocked]);
   return (
     <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2">
       {screenWidth >= 1024 ? (

@@ -201,7 +201,8 @@ const Login = () => {
                     Step 1 of 2: Verify Your Google / Gmail Account
                   </div>
                   <p className="text-xs opacity-75">
-                    Registration is restricted to authentic Google &amp; Gmail accounts (@gmail.com).
+                    Registration is restricted to authentic Google &amp; Gmail accounts
+                    (@gmail.com).
                   </p>
                 </div>
                 <div className="flex justify-center py-1">
@@ -217,12 +218,22 @@ const Login = () => {
                     }}
                   />
                 </div>
-                <div className="divider text-[11px] uppercase opacity-50 my-1">or continue with email</div>
+                <div className="divider text-[11px] uppercase opacity-50 my-1">
+                  or continue with email
+                </div>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    const clean = (e.currentTarget.elements.namedItem('direct_gmail') as HTMLInputElement)?.value?.trim().toLowerCase() || '';
-                    if (!clean || (!clean.endsWith('@gmail.com') && !clean.endsWith('@googlemail.com'))) {
+                    const clean =
+                      (
+                        e.currentTarget.elements.namedItem('direct_gmail') as HTMLInputElement
+                      )?.value
+                        ?.trim()
+                        .toLowerCase() || '';
+                    if (
+                      !clean ||
+                      (!clean.endsWith('@gmail.com') && !clean.endsWith('@googlemail.com'))
+                    ) {
                       setError('Only valid @gmail.com or @googlemail.com addresses are permitted.');
                       return;
                     }
@@ -250,7 +261,10 @@ const Login = () => {
                       className="input input-bordered input-primary w-full text-sm focus:outline-none"
                     />
                   </div>
-                  <button type="submit" className="btn btn-outline btn-primary btn-sm w-full font-semibold">
+                  <button
+                    type="submit"
+                    className="btn btn-outline btn-primary btn-sm w-full font-semibold"
+                  >
                     <span>Continue to Set Password &rarr;</span>
                   </button>
                 </form>
@@ -278,9 +292,7 @@ const Login = () => {
                       {googleProfile.email}
                     </div>
                     {googleProfile.name && (
-                      <div className="text-[11px] opacity-60 truncate">
-                        {googleProfile.name}
-                      </div>
+                      <div className="text-[11px] opacity-60 truncate">{googleProfile.name}</div>
                     )}
                   </div>
                   <button

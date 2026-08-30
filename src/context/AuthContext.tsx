@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { AuthUser } from '../types/auth';
 import { AuthContext } from './authContextInstance';
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -14,7 +14,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [showPaywall, setShowPaywall] = useState<boolean>(false);
-  const refreshUser = async () => {
+  const isTrackingRef = useRef(false);
+  const refreshUser = useCallback(async () => {
     const storedToken = token || localStorage.getItem('auth_token');
     if (!storedToken) {
       setUser(null);
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.warn('Refresh user error:', err);
     }
-  };
+  }, [token]);
   useEffect(() => {
     let cancelled = false;
     const verifySession = async () => {
@@ -153,9 +154,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  const trackUsage = async (): Promise<boolean> => {
+  const trackUsage = useCallback(async (): Promise<boolean> => {
+    if (user?.isBlocked) {
+      setShowPaywall(true);
+      return false;
+    }
     const currentToken = token || localStorage.getItem('auth_token');
-    if (!currentToken) return false;
+    if (!currentToken || isTrackingRef.current) return true;
+    isTrackingRef.current = true;
     try {
       const res = await fetch('/api/user/track-usage', {
         method: 'POST',
@@ -166,14 +172,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isBlocked?: boolean;
         api_usage_count?: number;
       };
-      if (user && typeof data.api_usage_count === 'number') {
-        const updated = {
-          ...user,
-          api_usage_count: data.api_usage_count,
-          isBlocked: Boolean(data.isBlocked),
-        };
-        setUser(updated);
-        localStorage.setItem('auth_user', JSON.stringify(updated));
+      if (typeof data.api_usage_count === 'number') {
+        setUser((prev) => {
+          if (!prev) return null;
+          const updated = {
+            ...prev,
+            api_usage_count: data.api_usage_count!,
+            isBlocked: Boolean(data.isBlocked),
+          };
+          localStorage.setItem('auth_user', JSON.stringify(updated));
+          return updated;
+        });
       }
       if (data.isBlocked || res.status === 402) {
         setShowPaywall(true);
@@ -183,8 +192,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.warn('Track usage error:', err);
       return true;
+    } finally {
+      isTrackingRef.current = false;
     }
-  };
+  }, [token, user?.isBlocked]);
   const logout = async () => {
     const currentToken = token || localStorage.getItem('auth_token');
     if (currentToken) {
