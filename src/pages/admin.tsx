@@ -261,7 +261,9 @@ const Admin = () => {
           }}
         >
           <FiCreditCard className="h-4 w-4" />
-          <span>Payment Submissions ({submissions.filter((s) => s.status === 'pending').length})</span>
+          <span>
+            Payment Submissions ({submissions.filter((s) => s.status === 'pending').length})
+          </span>
         </button>
         <button
           type="button"

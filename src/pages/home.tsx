@@ -1,13 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  FiBarChart2,
-  FiClock,
-  FiGlobe,
-  FiLayers,
-  FiPercent,
-  FiTrendingUp,
-} from 'react-icons/fi';
+import { FiBarChart2, FiClock, FiGlobe, FiLayers, FiPercent, FiTrendingUp } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import convertToWords, { getCurrencySymbol } from '../utilities/currency';

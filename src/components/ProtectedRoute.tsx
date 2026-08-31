@@ -78,7 +78,10 @@ const ProtectedRoute = ({
             other tools (FD, RD, SWP, EMI, Inflation, PPP) are free for 48 hours.
           </p>
           <div className="space-y-2">
-            <Link to="/upgrade" className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5">
+            <Link
+              to="/upgrade"
+              className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
+            >
               <FiZap className="h-4 w-4" />
               <span>Unlock Mutual Funds Pro for ₹29 / Month &rarr;</span>
             </Link>

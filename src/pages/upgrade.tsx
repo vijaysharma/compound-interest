@@ -217,9 +217,8 @@ const Upgrade = () => {
         </div>
         <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
           <p>
-            Hey there! I built this platform because I was tired of bloated
-            financial websites stuffed with credit card ads, loan banners, and spammy popups asking
-            for phone numbers.
+            Hey there! I built this platform because I was tired of bloated financial websites
+            stuffed with credit card ads, loan banners, and spammy popups asking for phone numbers.
           </p>
           <p>
             I wanted a tool that was fast, honest, and mathematically accurate. I wrote every
@@ -302,7 +301,11 @@ const Upgrade = () => {
           className="flex items-center justify-between w-full text-xs font-semibold opacity-75 hover:opacity-100"
         >
           <span>Having trouble with the payment gateway? Pay via manual UPI QR &rarr;</span>
-          {showQrFallback ? <FiChevronUp className="h-4 w-4" /> : <FiChevronDown className="h-4 w-4" />}
+          {showQrFallback ? (
+            <FiChevronUp className="h-4 w-4" />
+          ) : (
+            <FiChevronDown className="h-4 w-4" />
+          )}
         </button>
         {showQrFallback && (
           <div className="mt-4 pt-4 border-t border-base-300 flex flex-col items-center text-center space-y-3">
