@@ -33,7 +33,7 @@
   line-height: 1;
 }
 #navigation-drawer nav h3 {
-  color: color-mix(in srgb, var(--color-primary) 40%, rgb(255, 255, 255));
+  color: color-mix(in srgb, var(--color-primary) 10%, rgb(255, 255, 255));
   font-size: 1rem;
 }
 #navigation-drawer nav a {

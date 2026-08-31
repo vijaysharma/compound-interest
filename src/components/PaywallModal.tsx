@@ -170,9 +170,7 @@ const PaywallModal = () => {
             </div>
           )}
           <h2 id="paywall-title" className="text-2xl font-extrabold">
-            {isTrialActive
-              ? 'Unlock Unlimited Mutual Fund Analytics'
-              : 'Unlock Mutual Funds Pro Access'}
+            {isTrialActive ? 'Unlock Unlimited Mutual Fund Analytics' : 'Unlock Pro Access'}
           </h2>
           <p className="mt-2 text-xs sm:text-sm opacity-80 leading-relaxed">
             {isTrialActive ? (

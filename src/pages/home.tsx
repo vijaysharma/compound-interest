@@ -220,10 +220,9 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-                <FiTrendingUp className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">Mutual Fund Engine</h3>
+              <h3 className="text-lg font-bold mb-2">
+                <FiTrendingUp className="h-5 w-5 inline" /> Mutual Fund Engine
+              </h3>
               <p className="text-sm opacity-70 mb-4">
                 Search thousands of AMFI mutual funds with live NAV history. Analyze CAGR, benchmark
                 growth, and visualize historical lumpsum and SIP performance.
@@ -236,10 +235,9 @@ const Home = () => {
               </Link>
             </div>
             <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-                <FiClock className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">SIP &amp; SWP Planning</h3>
+              <h3 className="text-lg font-bold mb-2">
+                <FiClock className="h-5 w-5 inline" /> SIP &amp; SWP Planning
+              </h3>
               <p className="text-sm opacity-70 mb-4">
                 Calculate forward systematic investments or retirement withdrawals. Model target
                 capital accumulation or monthly income sustainability.
@@ -252,10 +250,9 @@ const Home = () => {
               </Link>
             </div>
             <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-                <FiLayers className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">Fixed &amp; Recurring Deposits</h3>
+              <h3 className="text-lg font-bold mb-2">
+                <FiLayers className="h-5 w-5 inline" /> Fixed &amp; Recurring Deposits
+              </h3>
               <p className="text-sm opacity-70 mb-4">
                 High-precision compound interest calculator with support for monthly, quarterly,
                 semi-annual, and annual compounding frequencies.
@@ -268,10 +265,9 @@ const Home = () => {
               </Link>
             </div>
             <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-                <FiGlobe className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">Purchasing Power Parity (PPP)</h3>
+              <h3 className="text-lg font-bold mb-2">
+                <FiGlobe className="h-5 w-5 inline" /> Purchasing Power Parity (PPP)
+              </h3>
               <p className="text-sm opacity-70 mb-4">
                 Convert salary and living costs across 150+ countries using real World Bank PPP
                 conversion factors and currency mappings.
@@ -284,10 +280,9 @@ const Home = () => {
               </Link>
             </div>
             <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-                <FiBarChart2 className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">Inflation Modeling</h3>
+              <h3 className="text-lg font-bold mb-2">
+                <FiBarChart2 className="h-5 w-5 inline" /> Inflation Modeling
+              </h3>
               <p className="text-sm opacity-70 mb-4">
                 Understand the true purchasing power erosion over decades with IMF historical
                 inflation data and forward forecasts.
@@ -300,10 +295,9 @@ const Home = () => {
               </Link>
             </div>
             <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-                <FiPercent className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">EMI &amp; Loan Amortization</h3>
+              <h3 className="text-lg font-bold mb-2">
+                <FiPercent className="h-5 w-5 inline" /> EMI &amp; Loan Amortization
+              </h3>
               <p className="text-sm opacity-70 mb-4">
                 Calculate home, personal, or vehicle loan EMIs with full month-by-month principal vs
                 interest repayment breakdown schedules.

@@ -25,9 +25,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     if (isAuthenticated) {
-      const from =
-        (location.state as { from?: { pathname?: string } })?.from?.pathname ||
-        '/';
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);

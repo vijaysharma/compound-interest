@@ -4,7 +4,6 @@ import {
   FiAward,
   FiClock,
   FiGlobe,
-  FiHome,
   FiLayers,
   FiLogOut,
   FiMenu,
@@ -147,14 +146,6 @@ const TopBar = ({ className }: { className?: string }) => {
                 aria-label="Calculator pages"
                 className="text-primary-content flex flex-col gap-1.5"
               >
-                <Link
-                  to="/"
-                  className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-sm"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <FiHome className="h-4 w-4 shrink-0" />
-                  <span>Overview &amp; Features</span>
-                </Link>
                 {isAdmin && (
                   <Link
                     to="/admin"
@@ -277,7 +268,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <FiZap className="h-4 w-4" />
-                    <span>Unlock Mutual Funds Pro (₹29/mo)</span>
+                    <span>Unlock Pro (₹29/mo)</span>
                   </Link>
                 )}
                 <button

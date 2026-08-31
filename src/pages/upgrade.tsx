@@ -1,14 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  FiCheck,
-  FiChevronDown,
-  FiChevronUp,
-  FiClock,
-  FiCoffee,
-  FiCopy,
-  FiLock,
-} from 'react-icons/fi';
+import { FiCheck, FiClock, FiCoffee, FiLock } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import { PaymentSettings } from '../types/auth';
@@ -18,9 +10,7 @@ const Upgrade = () => {
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [showQrFallback, setShowQrFallback] = useState(false);
   const [settings, setSettings] = useState<PaymentSettings | null>(null);
-  const [copied, setCopied] = useState(false);
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -35,12 +25,6 @@ const Upgrade = () => {
     };
     void fetchSettings();
   }, []);
-  const handleCopyUpi = () => {
-    if (!settings?.upi_id) return;
-    void navigator.clipboard.writeText(settings.upi_id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
   const amount = settings?.amount ?? 29;
   const isTrialActive =
     user && !user.isBlocked && user.role !== 'admin' && user.subscription_status !== 'active';
@@ -292,55 +276,6 @@ const Upgrade = () => {
             <span>Zero Ads &amp; Complete Privacy</span>
           </div>
         </div>
-      </div>
-      {/* Optional Fallback Accordion */}
-      <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
-        <button
-          type="button"
-          onClick={() => setShowQrFallback(!showQrFallback)}
-          className="flex items-center justify-between w-full text-xs font-semibold opacity-75 hover:opacity-100"
-        >
-          <span>Having trouble with the payment gateway? Pay via manual UPI QR &rarr;</span>
-          {showQrFallback ? (
-            <FiChevronUp className="h-4 w-4" />
-          ) : (
-            <FiChevronDown className="h-4 w-4" />
-          )}
-        </button>
-        {showQrFallback && (
-          <div className="mt-4 pt-4 border-t border-base-300 flex flex-col items-center text-center space-y-3">
-            <p className="text-xs opacity-75">
-              Scan with any UPI App and pay ₹{amount} to the UPI ID:
-            </p>
-            {settings?.upi_qr_code_url && (
-              <img
-                src={settings.upi_qr_code_url}
-                alt="UPI QR"
-                className="h-40 w-40 object-contain bg-white p-2 rounded-lg border border-base-300"
-              />
-            )}
-            <div className="flex items-center gap-2 bg-base-200 px-3 py-1.5 rounded-lg border border-base-300 text-xs">
-              <span className="font-mono font-bold text-primary">
-                {settings?.upi_id || 'rupeecalculator@upi'}
-              </span>
-              <button
-                type="button"
-                onClick={handleCopyUpi}
-                className="btn btn-ghost btn-xs text-xs flex items-center gap-1"
-              >
-                {copied ? (
-                  <span className="inline-flex items-center gap-1 text-success">
-                    <FiCheck className="h-3.5 w-3.5" /> Copied
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1">
-                    <FiCopy className="h-3.5 w-3.5" /> Copy
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -83,7 +83,7 @@ const ProtectedRoute = ({
               className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
             >
               <FiZap className="h-4 w-4" />
-              <span>Unlock Mutual Funds Pro for ₹29 / Month &rarr;</span>
+              <span>Unlock Pro for ₹29 / Month &rarr;</span>
             </Link>
             <Link to="/deposits/fd" className="btn btn-ghost btn-xs w-full opacity-80">
               Back to Free Calculators &rarr;
