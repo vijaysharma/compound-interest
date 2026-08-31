@@ -13,6 +13,19 @@ const lumpsumSchema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'WebApplication',
+      name: 'Mutual Fund Lumpsum Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/mutual-funds/lumpsum',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR'
+      }
+    },
+    {
       '@type': 'FinancialProduct',
       name: 'Mutual Fund Lumpsum Return & Historical NAV Calculator',
       description:
@@ -783,9 +796,9 @@ const Lumpsum = ({
   return (
     <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
       <SEOHead
-        title="Mutual Fund Calculator | Lumpsum Return & Live NAV Backtest"
+        title="Mutual Fund Calculator — Lumpsum Return & CAGR Calculator India 2026"
         description="Analyze historical mutual fund lumpsum returns, CAGR growth, and rolling NAV trajectories with live AMFI data. Compare up to 8 funds simultaneously."
-        keywords="mutual fund return calculator, lumpsum mutual fund calculator, mutual fund CAGR calculator, AMFI NAV history, Indian mutual funds backtesting"
+        keywords="mutual fund return calculator, lumpsum mutual fund calculator, mutual fund CAGR calculator, AMFI NAV history, Indian mutual funds backtesting, ROI calculator, CAGR calculator, NAV calculator, investment calculator"
         canonicalPath="/mutual-funds/lumpsum"
         schema={lumpsumSchema}
       />

@@ -8,7 +8,7 @@
   <!-- ==================== HOMEPAGE ==================== -->
   <url>
     <loc>https://rupees.vercel.app/</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -21,7 +21,7 @@
   <!-- ==================== SIP CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/sip-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
     <image:image>
@@ -33,7 +33,7 @@
   <!-- ==================== SWP CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/swp-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
@@ -41,7 +41,7 @@
   <!-- ==================== FD CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/fd-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
@@ -49,38 +49,29 @@
   <!-- ==================== RD CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/rd-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
 
-  <!-- ==================== COMPOUND INTEREST CALCULATOR ==================== -->
-  <url>
-    <loc>https://rupees.vercel.app/compound-interest-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-  </url>
-
-  <!-- ==================== EMI CALCULATOR ==================== -->
-  <url>
-    <loc>https://rupees.vercel.app/emi-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
-
   <!-- ==================== MUTUAL FUND ENGINE ==================== -->
   <url>
+    <loc>https://rupees.vercel.app/mutual-funds/lumpsum</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
     <loc>https://rupees.vercel.app/mutual-funds/sip</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
   </url>
 
   <url>
     <loc>https://rupees.vercel.app/mutual-funds/swp</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
@@ -88,7 +79,7 @@
   <!-- ==================== INFLATION CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/inflation-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -96,7 +87,7 @@
   <!-- ==================== PPP CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/ppp-calculator</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -104,21 +95,21 @@
   <!-- ==================== TRUST & INFO PAGES ==================== -->
   <url>
     <loc>https://rupees.vercel.app/about</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
 
   <url>
     <loc>https://rupees.vercel.app/privacy</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.40</priority>
   </url>
 
   <url>
     <loc>https://rupees.vercel.app/disclaimer</loc>
-    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.40</priority>
   </url>

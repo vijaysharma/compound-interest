@@ -32,11 +32,6 @@
       "permanent": true
     },
     {
-      "source": "/mutual-funds/lumpsum",
-      "destination": "/mutual-funds",
-      "permanent": true
-    },
-    {
       "source": "/compound-interest-calculator",
       "destination": "/fd-calculator",
       "permanent": true
@@ -82,10 +77,24 @@
       ]
     },
     {
-      "source": "/(robots\\.txt|sitemap\\.xml|site\\.webmanifest)",
+      "source": "/(robots\\.txt)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/(sitemap\\.xml)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" },
         { "key": "Content-Type", "value": "application/xml; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/(site\\.webmanifest)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" }
       ]
     }
   ]

@@ -37,7 +37,6 @@
   font-size: 1rem;
 }
 #navigation-drawer nav a {
-  display: block;
   padding: 0.25rem 0 0.25rem 2rem;
   text-decoration: none;
   color: inherit;

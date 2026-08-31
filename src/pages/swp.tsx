@@ -13,6 +13,19 @@ const liveSwpSchema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'WebApplication',
+      name: 'Mutual Fund SWP Backtest — Rupee Calculator',
+      url: 'https://rupees.vercel.app/mutual-funds/swp',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR'
+      }
+    },
+    {
       '@type': 'FinancialProduct',
       name: 'Mutual Fund SWP Retirement Backtesting Engine India',
       description:
@@ -793,9 +806,9 @@ const SWP = ({
   return (
     <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
       <SEOHead
-        title="Mutual Fund SWP Calculator | Live AMFI NAV Retirement Backtest"
+        title="Mutual Fund SWP Backtest — Retirement Withdrawal Calculator India 2026"
         description="Backtest historical mutual fund SWP cashflows, capital longevity, monthly retirement pension drawdowns, and portfolio yields with verified AMFI daily NAVs."
-        keywords="mutual fund SWP calculator, SWP backtest calculator, retirement SWP planner, AMFI NAV history, systematic withdrawal plan India"
+        keywords="mutual fund SWP calculator, SWP backtest calculator, retirement SWP planner, AMFI NAV history, systematic withdrawal plan India, retirement pension calculator, mutual fund withdrawal planner"
         canonicalPath="/mutual-funds/swp"
         schema={liveSwpSchema}
       />

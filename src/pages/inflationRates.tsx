@@ -72,7 +72,28 @@ const inflationSchema = {
             text: 'Diversified Equity Mutual Funds (12-15% CAGR) and Gold (9-11% CAGR) have historically generated positive real (inflation-adjusted) returns over long horizons in India, whereas traditional savings accounts (3-4%) and post-tax fixed deposits (4.5-5.5%) often result in negative real returns.',
           },
         },
+        {
+          '@type': 'Question',
+          name: 'How does inflation affect savings and fixed deposits?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'If your savings account earns 3.5% and inflation is 6%, your real (inflation-adjusted) return is −2.5% per year. Over 10 years, ₹10 Lakh in a savings account grows nominally to ~₹14.1 Lakh, but its purchasing power drops to only ~₹7.9 Lakh in today\'s terms. Even FDs at 7% barely break even after 30% tax (effective 4.9%) against 6% inflation. Equity investments averaging 12–15% are the primary inflation-beating asset class for Indian investors.',
+          },
+        },
       ],
+    },
+    {
+      '@type': 'WebApplication',
+      name: 'Inflation Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/inflation-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
     },
   ],
 };
@@ -96,6 +117,11 @@ const inflationFaqs = [
     question: 'How should I account for inflation when planning retirement?',
     answer:
       'When calculating your target retirement corpus, always project your current annual living expenses to your retirement age using an expected inflation rate of 6-7%, and ensure your post-retirement withdrawal plan assumes continued annual cost escalation.',
+  },
+  {
+    question: 'How does inflation affect savings and fixed deposits?',
+    answer:
+      'If your savings account earns 3.5% and inflation is 6%, your real (inflation-adjusted) return is −2.5% per year. Over 10 years, ₹10 Lakh in a savings account grows nominally to ~₹14.1 Lakh, but its purchasing power drops to only ~₹7.9 Lakh in today\'s terms. Even FDs at 7% barely break even after 30% tax (effective 4.9%) against 6% inflation. Equity investments averaging 12–15% are the primary inflation-beating asset class for Indian investors.',
   },
 ];
 const InflationRates = ({ className, title }: { className?: string; title?: string }) => {
@@ -170,9 +196,9 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="Inflation Calculator India — Purchasing Power & CPI Data 2026"
-        description="Calculate India's inflation impact on savings. Use IMF historical CPI data to see how ₹1 Lakh today compares to its future purchasing power in 10–30 years."
-        keywords="inflation calculator India, future value of money calculator, historical inflation calculator India, IMF inflation forecast, purchasing power calculator India, CPI calculator"
+        title="Inflation Calculator India — Future Value of Money & Purchasing Power 2026"
+        description="Free inflation calculator with IMF historical CPI data. See how ₹1 Lakh today compares to future purchasing power. Plan retirement with real inflation projections."
+        keywords="inflation calculator India, future value of money calculator, historical inflation calculator India, IMF inflation forecast, purchasing power calculator India, CPI calculator, cost of living calculator, salary purchasing power, inflation rate calculator, historical inflation calculator"
         canonicalPath="/inflation-calculator"
         schema={inflationSchema}
       />

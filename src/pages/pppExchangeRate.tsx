@@ -12,6 +12,19 @@ const pppSchema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'WebApplication',
+      name: 'PPP Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/ppp-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR'
+      }
+    },
+    {
       '@type': 'FinancialProduct',
       name: 'Purchasing Power Parity (PPP) Salary & Cost of Living Calculator',
       description:
@@ -236,9 +249,9 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="PPP Calculator — Salary Comparison Across 150+ Countries"
+        title="PPP Calculator — Purchasing Power Parity & Salary Comparison India 2026"
         description="Compare salaries and living costs across 150+ countries using World Bank PPP data. Convert Indian Rupee salary to real USD/EUR purchasing power equivalent. 100% free."
-        keywords="purchasing power parity calculator, PPP calculator India to USA, salary comparison PPP, cost of living converter, World Bank PPP conversion, India US salary comparison"
+        keywords="purchasing power parity calculator, PPP calculator India to USA, salary comparison PPP, cost of living converter, World Bank PPP conversion, India US salary comparison, cost of living calculator, salary purchasing power, PPP conversion factor"
         canonicalPath="/ppp-calculator"
         schema={pppSchema}
       />

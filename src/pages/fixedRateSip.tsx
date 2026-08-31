@@ -99,7 +99,36 @@ const sipSchema = {
             text: 'For Equity Mutual Funds, Long-Term Capital Gains (LTCG) on units held for more than 12 months are tax-exempt up to ₹1.25 Lakh per financial year; gains exceeding ₹1.25 Lakh are taxed at 12.5% without indexation. Short-Term Capital Gains (STCG on units held under 12 months) are taxed at 20%.',
           },
         },
+        {
+          '@type': 'Question',
+          name: 'What is SIP and how does it work?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'A Systematic Investment Plan (SIP) is a method of investing a fixed amount regularly (monthly or weekly) in mutual funds. Each SIP installment buys units at the prevailing NAV, enabling rupee cost averaging — you automatically buy more units when markets are low and fewer when markets are high, reducing the average cost per unit over time.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'SIP vs Lump Sum: Which is better for mutual fund investment?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'SIP is better for salaried investors who want disciplined, regular investing with reduced market timing risk through rupee cost averaging. Lump sum is better when you have a large corpus available and markets are at reasonable valuations. Historical data shows that over 10+ year periods, lump sum investments slightly outperform SIP in rising markets, but SIP provides better risk-adjusted returns during volatile periods.',
+          },
+        },
       ],
+    },
+    {
+      '@type': 'WebApplication',
+      name: 'SIP Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/sip-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
     },
   ],
 };
@@ -123,6 +152,16 @@ const sipFaqs = [
     question: 'How does SIP compare against recurring deposits (RD) for 10+ year goals?',
     answer:
       'Recurring Deposits offer fixed pre-tax interest (~6.5%-7.5%) that is taxed at your income tax slab, resulting in post-tax returns that frequently lag inflation. Equity SIPs offer potential inflation-beating real returns (12-15% CAGR) with favorable capital gains tax treatment.',
+  },
+  {
+    question: 'What is SIP and how does it work?',
+    answer:
+      'A Systematic Investment Plan (SIP) is a method of investing a fixed amount regularly (monthly or weekly) in mutual funds. Each SIP installment buys units at the prevailing NAV, enabling rupee cost averaging — you automatically buy more units when markets are low and fewer when markets are high, reducing the average cost per unit over time.',
+  },
+  {
+    question: 'SIP vs Lump Sum: Which is better for mutual fund investment?',
+    answer:
+      'SIP is better for salaried investors who want disciplined, regular investing with reduced market timing risk through rupee cost averaging. Lump sum is better when you have a large corpus available and markets are at reasonable valuations. Historical data shows that over 10+ year periods, lump sum investments slightly outperform SIP in rising markets, but SIP provides better risk-adjusted returns during volatile periods.',
   },
 ];
 const FixedRateSIP = ({ className, title }: { className?: string; title?: string }) => {
@@ -168,9 +207,9 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="SIP Calculator India — Mutual Fund Wealth Planner 2026"
-        description="Free SIP calculator to project mutual fund returns with step-up SIP and target corpus planning. Simulate ₹500–₹1 Lakh monthly SIP over 1–35 years. 100% private."
-        keywords="SIP calculator, systematic investment plan calculator, mutual fund return calculator, step up SIP calculator, best SIP calculator India, SIP maturity calculator"
+        title="SIP Calculator — Free Mutual Fund SIP Return Calculator India 2026"
+        description="Calculate SIP returns with step-up SIP & target corpus planning. Estimate mutual fund growth for ₹500–₹1 Lakh monthly SIP over 1–35 years. 100% free & private."
+        keywords="SIP calculator, systematic investment plan calculator, mutual fund return calculator, step up SIP calculator, best SIP calculator India, SIP maturity calculator, mutual fund calculator, investment calculator, future value calculator, CAGR calculator, MF calculator, how to calculate SIP returns, SIP vs lump sum"
         canonicalPath="/sip-calculator"
         schema={sipSchema}
       />

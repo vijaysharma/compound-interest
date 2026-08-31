@@ -67,7 +67,36 @@ const swpSchema = {
             text: 'Due to higher historical CPI inflation in India (5-7%), a Safe Withdrawal Rate of 3.5% to 4.0% of your initial retirement corpus in Year 1 (subsequently adjusted annually for inflation) is recommended to ensure your corpus lasts 30+ years without exhaustion.',
           },
         },
+        {
+          '@type': 'Question',
+          name: 'What is SWP in mutual fund?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'A Systematic Withdrawal Plan (SWP) allows you to withdraw a fixed amount from your mutual fund investment at regular intervals (monthly, quarterly, or annually) while keeping the remaining corpus invested. Unlike FD interest payouts, SWP withdrawals are a mix of capital redemption and gains, making them more tax-efficient — only the capital gains portion is taxed, not the entire withdrawal amount.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How much corpus do I need for ₹50,000 monthly pension through SWP?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Using the 4% safe withdrawal rate (SWR) rule adapted for India, you need approximately ₹1.5 Crore corpus to sustain ₹50,000/month (₹6 Lakh/year) indefinitely. However, if your mutual fund earns 9–10% annual returns and inflation averages 6%, a corpus of ₹1 Crore can sustain ₹50,000/month for approximately 25–30 years with the residual balance still growing.',
+          },
+        },
       ],
+    },
+    {
+      '@type': 'WebApplication',
+      name: 'SWP Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/swp-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
     },
   ],
 };
@@ -91,6 +120,14 @@ const swpFaqs = [
     question: 'Can I change my SWP withdrawal amount or stop it at any time?',
     answer:
       'Yes. You can increase, decrease, or terminate your monthly SWP mandate at any time through your mutual fund portal or AMC without penalty.',
+  },
+  {
+    question: 'What is SWP in mutual fund?',
+    answer: 'A Systematic Withdrawal Plan (SWP) allows you to withdraw a fixed amount from your mutual fund investment at regular intervals (monthly, quarterly, or annually) while keeping the remaining corpus invested. Unlike FD interest payouts, SWP withdrawals are a mix of capital redemption and gains, making them more tax-efficient — only the capital gains portion is taxed, not the entire withdrawal amount.'
+  },
+  {
+    question: 'How much corpus do I need for ₹50,000 monthly pension through SWP?',
+    answer: 'Using the 4% safe withdrawal rate (SWR) rule adapted for India, you need approximately ₹1.5 Crore corpus to sustain ₹50,000/month (₹6 Lakh/year) indefinitely. However, if your mutual fund earns 9–10% annual returns and inflation averages 6%, a corpus of ₹1 Crore can sustain ₹50,000/month for approximately 25–30 years with the residual balance still growing.'
   },
 ];
 const FixedRateSWP = ({ className, title }: { className?: string; title?: string }) => {
@@ -155,9 +192,9 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="SWP Calculator India — Retirement Withdrawal Planner 2026"
-        description="Plan retirement with our SWP calculator. Model monthly pension withdrawals, inflation-adjusted income, corpus longevity, and tax-efficient cashflows from mutual funds."
-        keywords="SWP calculator, systematic withdrawal plan calculator, monthly pension calculator, retirement withdrawal calculator India, safe withdrawal rate India"
+        title="SWP Calculator — Systematic Withdrawal Plan Calculator India 2026"
+        description="Free SWP calculator to plan retirement income. Model monthly pension withdrawals, inflation-adjusted cashflows & corpus longevity from mutual funds. 100% private."
+        keywords="SWP calculator, systematic withdrawal plan calculator, monthly pension calculator, retirement withdrawal calculator India, safe withdrawal rate India, retirement calculator, annuity calculator, retirement planning, safe withdrawal rate"
         canonicalPath="/swp-calculator"
         schema={swpSchema}
       />

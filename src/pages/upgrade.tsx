@@ -145,6 +145,7 @@ const Upgrade = () => {
         title="Upgrade to Pro | Rupee Calculator"
         description="Unlock unlimited live AMFI mutual fund syncing, institutional-grade calculation limits, and World Bank PPP economic modeling for ₹29/month."
         canonicalPath="/upgrade"
+        noIndex={true}
       />
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 mb-3">

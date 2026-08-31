@@ -16,7 +16,6 @@ import {
 } from 'react-icons/fi';
 import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
-
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
     '/': 'Rupee Calculator',
@@ -46,19 +45,16 @@ const getNavTitle = (pathname: string) => {
   };
   return titles[pathname] ?? 'Rupee Calculator';
 };
-
 const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout, setShowPaywall } = useAuth();
   const navTitle = getNavTitle(pathname);
-
   const handleLogout = async () => {
     await logout();
     navigate('/', { replace: true });
   };
-
   return (
     <>
       <header
@@ -163,14 +159,19 @@ const TopBar = ({ className }: { className?: string }) => {
                 className="text-primary-content flex flex-col gap-1.5"
               >
                 {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-primary-content/10 transition-colors text-accent font-semibold"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <FiShield className="h-4 w-4 shrink-0" />
-                    <span>Data administration</span>
-                  </Link>
+                  <div className="mt-3">
+                    <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                      <FiShield className="h-3.5 w-3.5" />
+                      <span>Admin</span>
+                    </h3>
+                    <Link
+                      to="/admin"
+                      className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Datas administration
+                    </Link>
+                  </div>
                 )}
                 <div className="mt-3">
                   <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">

@@ -90,6 +90,7 @@ const Login = () => {
         title="Sign In | Rupee Calculator"
         description="Sign in to your Rupee Calculator account to manage your pro subscription, saved mutual fund portfolios, and economic models."
         canonicalPath="/login"
+        noIndex={true}
       />
       <div className="card bg-base-100 border border-base-300 w-full max-w-lg p-6 sm:p-10 shadow-2xl">
         <div className="mb-6 flex flex-col items-center text-center">

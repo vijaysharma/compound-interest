@@ -14,6 +14,19 @@ const liveSipSchema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'WebApplication',
+      name: 'Mutual Fund SIP Backtest — Rupee Calculator',
+      url: 'https://rupees.vercel.app/mutual-funds/sip',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR'
+      }
+    },
+    {
       '@type': 'FinancialProduct',
       name: 'Mutual Fund SIP Historical Backtest & XIRR Calculator',
       description:
@@ -811,9 +824,9 @@ const SIP = ({
   return (
     <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
       <SEOHead
-        title="Mutual Fund SIP Return Calculator | Live AMFI NAV & XIRR Backtest"
-        description="Backtest historical mutual fund SIP returns, units accumulation, XIRR CAGR, and step-up compounding with verified AMFI daily NAV histories."
-        keywords="mutual fund SIP calculator, mutual fund return calculator, SIP XIRR calculator, AMFI NAV history, step up SIP backtest"
+        title="Mutual Fund SIP Backtest — XIRR & Historical NAV Calculator India 2026"
+        description="Backtest historical mutual fund SIP performance, XIRR returns, units accumulation, and rupee cost averaging on live AMFI data."
+        keywords="mutual fund SIP calculator, mutual fund return calculator, SIP XIRR calculator, AMFI NAV history, step up SIP backtest, XIRR calculator, SIP backtest calculator"
         canonicalPath="/mutual-funds/sip"
         schema={liveSipSchema}
       />

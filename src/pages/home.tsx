@@ -123,9 +123,9 @@ const Home = () => {
   return (
     <div className="w-full text-base-content">
       <SEOHead
-        title="Rupee Calculator | Free Indian Financial Calculators & Wealth Simulator"
-        description="India's most precise free financial calculators. SIP returns, FD compound interest, home loan EMI, inflation impact & global PPP — 100% private, no login needed."
-        keywords="rupee calculator, compound interest calculator India, SIP calculator, SWP calculator, mutual fund return calculator, EMI calculator, inflation calculator India, PPP calculator, financial planning tools India"
+        title="Free Online Financial Calculators India — SIP, EMI, FD, SWP & More | Rupee Calculator"
+        description="Calculate SIP returns, compound interest, EMI amortization, SWP withdrawals, inflation impact & PPP with 100% free, private financial tools. Trusted by Indian investors."
+        keywords="rupee calculator, compound interest calculator India, SIP calculator, SWP calculator, mutual fund return calculator, EMI calculator, inflation calculator India, PPP calculator, financial planning tools India, financial calculator online, investment calculator, loan calculator, savings calculator, retirement calculator, mutual fund calculator, FD calculator, RD calculator"
         canonicalPath="/"
         schema={homeSchema}
       />
@@ -148,7 +148,7 @@ const Home = () => {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
-              to="/fixed-plans/fixed-rate-sip"
+              to="/sip-calculator"
               className="btn btn-primary btn-md sm:btn-lg shadow-lg hover:shadow-primary/30 transition-all font-semibold"
             >
               Open SIP Calculator &rarr;
@@ -159,7 +159,7 @@ const Home = () => {
             >
               Mutual Fund Engine
             </Link>
-            <Link to="/deposits/fd" className="btn btn-ghost btn-md sm:btn-lg font-semibold">
+            <Link to="/fd-calculator" className="btn btn-ghost btn-md sm:btn-lg font-semibold">
               Deposit &amp; EMI Tools &rarr;
             </Link>
           </div>
@@ -312,7 +312,7 @@ const Home = () => {
                 </span>
               </div>
               <div className="mt-6 flex flex-col sm:flex-row gap-2">
-                <Link to="/fixed-plans/fixed-rate-sip" className="btn btn-primary p-2 flex-1">
+                <Link to="/sip-calculator" className="btn btn-primary p-2 flex-1">
                   Open SIP Calculator &rarr;
                 </Link>
                 <Link to="/mutual-funds/sip" className="btn btn-outline text-sm p-2 flex-1">
@@ -361,7 +361,7 @@ const Home = () => {
                 </p>
               </div>
               <Link
-                to="/fixed-plans/fixed-rate-sip"
+                to="/sip-calculator"
                 className="text-xs text-primary font-semibold hover:underline"
               >
                 Explore Systematic Plans &rarr;
@@ -379,7 +379,7 @@ const Home = () => {
                 </p>
               </div>
               <Link
-                to="/deposits/fd"
+                to="/fd-calculator"
                 className="text-xs text-primary font-semibold hover:underline"
               >
                 Explore Deposit Plans &rarr;
@@ -397,7 +397,7 @@ const Home = () => {
                 </p>
               </div>
               <Link
-                to="/economics/ppp-exchange-rate"
+                to="/ppp-calculator"
                 className="text-xs text-primary font-semibold hover:underline"
               >
                 Calculate Global PPP &rarr;
@@ -414,7 +414,7 @@ const Home = () => {
                 </p>
               </div>
               <Link
-                to="/economics/inflation-rates"
+                to="/inflation-calculator"
                 className="text-xs text-primary font-semibold hover:underline"
               >
                 Explore Inflation Rates &rarr;
@@ -431,7 +431,7 @@ const Home = () => {
                   vs interest repayment breakdown schedules.
                 </p>
               </div>
-              <Link to="/emi" className="text-xs text-primary font-semibold hover:underline">
+              <Link to="/emi-calculator" className="text-xs text-primary font-semibold hover:underline">
                 Calculate Loan EMI &rarr;
               </Link>
             </div>
@@ -521,13 +521,13 @@ const Home = () => {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              to="/fixed-plans/fixed-rate-sip"
+              to="/sip-calculator"
               className="btn btn-secondary btn-md sm:btn-lg font-semibold"
             >
               Start Calculating Now &rarr;
             </Link>
             <Link
-              to="/deposits/fd"
+              to="/fd-calculator"
               className="btn btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary btn-md sm:btn-lg font-semibold"
             >
               Deposit &amp; EMI Tools &rarr;

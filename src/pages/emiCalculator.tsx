@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import DisplayCard from '../components/DisplayCard.tsx';
+import InputAmount from '../components/InputAmount.tsx';
+import RateOfInterest from '../components/RateOfInterest.tsx';
+import Tenure from '../components/Tenure.tsx';
+import { RT, StepAmountType } from '../types/types.ts';
+import { STEP_AMOUNT } from '../data/default_data.ts';
+import { sanctnum } from '../utilities/numSanitity.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
 interface ScheduleRow {
@@ -7,6 +14,8 @@ interface ScheduleRow {
   principal: string;
   interest: string;
   balance: string;
+  cumulativePrincipal: string;
+  cumulativeInterest: string;
   note?: string;
 }
 interface PartPayment {
@@ -80,7 +89,36 @@ const emiSchema = {
             text: 'Home loan borrowers in India can claim tax deductions up to ₹1.5 Lakh on principal repayment under Section 80C and up to ₹2.0 Lakh on interest paid for a self-occupied property under Section 24(b) of the Income Tax Act (Old Tax Regime).',
           },
         },
+        {
+          '@type': 'Question',
+          name: 'How to calculate EMI for a home loan?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Home loan EMI is calculated using the reducing balance formula: EMI = P × r × (1+r)^n / [(1+r)^n – 1], where P is loan principal, r is monthly interest rate (annual rate ÷ 12 ÷ 100), and n is total months. For a ₹50 Lakh loan at 8.5% for 20 years: EMI = ₹43,391/month.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the difference between flat rate and reducing balance EMI?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Flat rate EMI charges interest on the original loan amount throughout the tenure, resulting in a higher effective interest rate. Reducing balance EMI (used by all major Indian banks for home loans) charges interest only on the outstanding principal, which decreases with each payment. A flat rate of 8% is roughly equivalent to a reducing balance rate of 14-15%.',
+          },
+        },
       ],
+    },
+    {
+      '@type': 'WebApplication',
+      name: 'EMI Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/emi-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
     },
   ],
 };
@@ -105,9 +143,19 @@ const emiFaqs = [
     answer:
       'Under Reserve Bank of India (RBI) guidelines, commercial banks and Housing Finance Companies (HFCs) cannot levy any prepayment charges or foreclosure penalties on floating-rate individual home loans.',
   },
+  {
+    question: 'How to calculate EMI for a home loan?',
+    answer:
+      'Home loan EMI is calculated using the reducing balance formula: EMI = P × r × (1+r)^n / [(1+r)^n – 1], where P is loan principal, r is monthly interest rate (annual rate ÷ 12 ÷ 100), and n is total months. For a ₹50 Lakh loan at 8.5% for 20 years: EMI = ₹43,391/month.',
+  },
+  {
+    question: 'What is the difference between flat rate and reducing balance EMI?',
+    answer:
+      'Flat rate EMI charges interest on the original loan amount throughout the tenure, resulting in a higher effective interest rate. Reducing balance EMI (used by all major Indian banks for home loans) charges interest only on the outstanding principal, which decreases with each payment. A flat rate of 8% is roughly equivalent to a reducing balance rate of 14-15%.',
+  },
 ];
 const EmiCalculator: React.FC = () => {
-  // Load from localStorage or use defaults
+  // Helper for localStorage
   const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
     try {
       const item = window.localStorage.getItem(key);
@@ -117,13 +165,25 @@ const EmiCalculator: React.FC = () => {
       return defaultValue;
     }
   };
-  const [loanAmount, setLoanAmount] = useState<number>(() =>
-    loadFromLocalStorage('loanAmount', 3000000)
-  );
-  const [annualRate, setAnnualRate] = useState<number>(() => loadFromLocalStorage('annualRate', 9));
-  const [tenureMonths, setTenureMonths] = useState<number>(() =>
-    loadFromLocalStorage('tenureMonths', 120)
-  );
+  const [loanAmount, setLoanAmount] = useState<string>(() => {
+    const saved = loadFromLocalStorage<number | string>('loanAmount', '3000000');
+    return typeof saved === 'number' ? saved.toString() : saved || '3000000';
+  });
+  const [rt, setRt] = useState<RT>(() => {
+    const saved = loadFromLocalStorage<RT | null>('emiRateTenure', null);
+    if (saved && saved.tenure) return saved;
+    const oldRate = loadFromLocalStorage<number | null>('annualRate', null);
+    const oldTenure = loadFromLocalStorage<number | null>('tenureMonths', null);
+    return {
+      roi: oldRate ? oldRate.toString() : '8.5',
+      tenure: oldTenure
+        ? oldTenure >= 12 && oldTenure % 12 === 0
+          ? (oldTenure / 12).toString()
+          : oldTenure.toString()
+        : '20',
+      tenureFormat: oldTenure && oldTenure % 12 !== 0 ? 'm' : 'y',
+    };
+  });
   const [disbursementDate, setDisbursementDate] = useState<string>(() =>
     loadFromLocalStorage('disbursementDate', '2025-01-25')
   );
@@ -137,16 +197,14 @@ const EmiCalculator: React.FC = () => {
   const [includePrincipalInFirstEmi, setIncludePrincipalInFirstEmi] = useState<boolean>(() =>
     loadFromLocalStorage('includePrincipalInFirstEmi', false)
   );
-  // Save to localStorage whenever values change
+  const stepData: StepAmountType[] = STEP_AMOUNT;
+  // Save state to localStorage
   useEffect(() => {
     window.localStorage.setItem('loanAmount', JSON.stringify(loanAmount));
   }, [loanAmount]);
   useEffect(() => {
-    window.localStorage.setItem('annualRate', JSON.stringify(annualRate));
-  }, [annualRate]);
-  useEffect(() => {
-    window.localStorage.setItem('tenureMonths', JSON.stringify(tenureMonths));
-  }, [tenureMonths]);
+    window.localStorage.setItem('emiRateTenure', JSON.stringify(rt));
+  }, [rt]);
   useEffect(() => {
     window.localStorage.setItem('disbursementDate', JSON.stringify(disbursementDate));
   }, [disbursementDate]);
@@ -165,7 +223,14 @@ const EmiCalculator: React.FC = () => {
       JSON.stringify(includePrincipalInFirstEmi)
     );
   }, [includePrincipalInFirstEmi]);
-  // Helpers
+  // Calculation parameters
+  const principalAmount = useMemo(() => sanctnum(loanAmount), [loanAmount]);
+  const annualRate = useMemo(() => (rt.roi ? parseFloat(rt.roi) : 0), [rt.roi]);
+  const tenureMonths = useMemo(
+    () => (rt.tenureFormat === 'y' ? sanctnum(rt.tenure) * 12 : sanctnum(rt.tenure)),
+    [rt.tenure, rt.tenureFormat]
+  );
+  // Helper date functions
   const differenceInDays = (date1: Date, date2: Date): number => {
     const diffTime = date1.getTime() - date2.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -175,11 +240,23 @@ const EmiCalculator: React.FC = () => {
     d.setMonth(d.getMonth() + months);
     return d;
   };
+  // Base monthly EMI without prepayments
+  const baseMonthlyEmi = useMemo(() => {
+    const monthlyRate = annualRate / 12 / 100;
+    if (monthlyRate <= 0 || tenureMonths <= 0 || principalAmount <= 0) return 0;
+    return (
+      (principalAmount * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
+      (Math.pow(1 + monthlyRate, tenureMonths) - 1)
+    );
+  }, [principalAmount, annualRate, tenureMonths]);
+  // Full Amortization Schedule Calculation
   const calculateSchedule = useCallback((): ScheduleRow[] => {
-    if (!disbursementDate) return [];
-    let principal: number = loanAmount;
+    if (!disbursementDate || principalAmount <= 0 || tenureMonths <= 0) return [];
+    let principal: number = principalAmount;
     let currentAnnualRate: number = annualRate;
     let monthlyRate: number = currentAnnualRate / 12 / 100;
+    let cumulativePrincipal = 0;
+    let cumulativeInterest = 0;
     // Sort part payments and rate changes by date
     const sortedPartPayments = [...partPayments]
       .filter((p) => p.enabled && p.amount > 0 && p.date)
@@ -199,27 +276,36 @@ const EmiCalculator: React.FC = () => {
     const proratedInterest: number = (principal * annualRate * days) / (365 * 100);
     // Calculate initial EMI amount for the loan
     const initialEmiAmount: number =
-      (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
-      (Math.pow(1 + monthlyRate, tenureMonths) - 1);
+      monthlyRate > 0
+        ? (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
+          (Math.pow(1 + monthlyRate, tenureMonths) - 1)
+        : principal / tenureMonths;
     if (includePrincipalInFirstEmi) {
       const principalComponent = initialEmiAmount - principal * monthlyRate;
       const totalFirstEmi = proratedInterest + principalComponent;
       principal -= principalComponent;
+      cumulativePrincipal += principalComponent;
+      cumulativeInterest += proratedInterest;
       results.push({
         date: firstEmiDate.toDateString(),
         emi: totalFirstEmi.toFixed(2),
         principal: principalComponent.toFixed(2),
         interest: proratedInterest.toFixed(2),
         balance: principal.toFixed(2),
+        cumulativePrincipal: cumulativePrincipal.toFixed(2),
+        cumulativeInterest: cumulativeInterest.toFixed(2),
         note: 'Prorated Interest + Principal',
       });
     } else {
+      cumulativeInterest += proratedInterest;
       results.push({
         date: firstEmiDate.toDateString(),
         emi: proratedInterest.toFixed(2),
         principal: '0.00',
         interest: proratedInterest.toFixed(2),
         balance: principal.toFixed(2),
+        cumulativePrincipal: cumulativePrincipal.toFixed(2),
+        cumulativeInterest: cumulativeInterest.toFixed(2),
         note: 'Prorated Interest Only',
       });
     }
@@ -227,11 +313,14 @@ const EmiCalculator: React.FC = () => {
     let monthCounter = 1;
     let remainingTenureMonths = tenureMonths;
     let baseEmiAmount: number =
-      (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
-      (Math.pow(1 + monthlyRate, tenureMonths) - 1);
+      monthlyRate > 0
+        ? (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
+          (Math.pow(1 + monthlyRate, tenureMonths) - 1)
+        : principal / tenureMonths;
     let currentMode: 'tenure' | 'emi' = 'tenure';
     while (principal > 1 && monthCounter <= tenureMonths + 120) {
       const nextEmiDate = addMonths(currentDate, 1);
+      // Check for rate changes in this period
       const rateChangesInPeriod = sortedRateChanges.filter((r) => {
         const changeDate = new Date(r.date);
         return changeDate > currentDate && changeDate <= nextEmiDate;
@@ -248,10 +337,12 @@ const EmiCalculator: React.FC = () => {
           principal: '0.00',
           interest: '0.00',
           balance: principal.toFixed(2),
+          cumulativePrincipal: cumulativePrincipal.toFixed(2),
+          cumulativeInterest: cumulativeInterest.toFixed(2),
           note: `ROI Change: ${oldRate}% → ${currentAnnualRate}% (${rateChange.mode === 'emi' ? 'Adjust EMI' : 'Adjust Tenure'})`,
         });
         if (rateChange.mode === 'emi') {
-          if (remainingTenureMonths > 0) {
+          if (remainingTenureMonths > 0 && monthlyRate > 0) {
             baseEmiAmount =
               (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
               (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
@@ -265,7 +356,7 @@ const EmiCalculator: React.FC = () => {
       if (currentMode === 'tenure') {
         emiAmount = baseEmiAmount;
       } else {
-        if (remainingTenureMonths > 0) {
+        if (remainingTenureMonths > 0 && monthlyRate > 0) {
           emiAmount =
             (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
             (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
@@ -273,6 +364,7 @@ const EmiCalculator: React.FC = () => {
           emiAmount = principal;
         }
       }
+      // Check for part payments in this period
       const partPaymentsInPeriod = sortedPartPayments.filter((p) => {
         const paymentDate = new Date(p.date);
         return paymentDate > currentDate && paymentDate <= nextEmiDate;
@@ -282,17 +374,20 @@ const EmiCalculator: React.FC = () => {
         const paymentDate = new Date(payment.date);
         const actualPaymentAmount = Math.min(payment.amount, principal);
         principal -= actualPaymentAmount;
+        cumulativePrincipal += actualPaymentAmount;
         results.push({
           date: paymentDate.toDateString(),
           emi: actualPaymentAmount.toFixed(2),
           principal: actualPaymentAmount.toFixed(2),
           interest: '0.00',
           balance: principal.toFixed(2),
+          cumulativePrincipal: cumulativePrincipal.toFixed(2),
+          cumulativeInterest: cumulativeInterest.toFixed(2),
           note: `Part Payment (${payment.mode === 'emi' ? 'Reduce EMI' : 'Reduce Tenure'})`,
         });
         currentMode = payment.mode;
         if (currentMode === 'emi' && principal > 1) {
-          if (remainingTenureMonths > 0) {
+          if (remainingTenureMonths > 0 && monthlyRate > 0) {
             emiAmount =
               (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
               (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
@@ -308,6 +403,8 @@ const EmiCalculator: React.FC = () => {
         emiAmount = principalComponent + interest;
       }
       principal -= principalComponent;
+      cumulativePrincipal += principalComponent;
+      cumulativeInterest += interest;
       remainingTenureMonths--;
       results.push({
         date: nextEmiDate.toDateString(),
@@ -315,13 +412,15 @@ const EmiCalculator: React.FC = () => {
         principal: principalComponent.toFixed(2),
         interest: interest.toFixed(2),
         balance: Math.max(0, principal).toFixed(2),
+        cumulativePrincipal: cumulativePrincipal.toFixed(2),
+        cumulativeInterest: cumulativeInterest.toFixed(2),
       });
       currentDate = nextEmiDate;
       monthCounter++;
     }
     return results;
   }, [
-    loanAmount,
+    principalAmount,
     annualRate,
     tenureMonths,
     disbursementDate,
@@ -363,81 +462,63 @@ const EmiCalculator: React.FC = () => {
     updated[index] = { ...updated[index], [field]: value };
     setRateChanges(updated);
   };
-  const totalInterest = schedule.reduce((sum, row) => sum + parseFloat(row.interest), 0);
-  const totalPaid = schedule.reduce((sum, row) => sum + parseFloat(row.emi), 0);
+  const totalInterest = useMemo(
+    () => schedule.reduce((sum, row) => sum + parseFloat(row.interest), 0),
+    [schedule]
+  );
+  const totalPaid = useMemo(
+    () => schedule.reduce((sum, row) => sum + parseFloat(row.emi), 0),
+    [schedule]
+  );
   return (
-    <main className="mx-auto px-2 w-full max-w-6xl space-y-6 py-4">
+    <main className="w-full max-w-4xl mx-auto px-2 py-4 space-y-6">
       <SEOHead
-        title="EMI Calculator India — Home & Personal Loan Amortization 2026"
-        description="Calculate home loan, car loan & personal loan EMI with full monthly amortization schedule. Includes part-payment and floating interest rate change modeling. 100% free."
-        keywords="EMI calculator, home loan EMI calculator, loan amortization schedule India, prepayment EMI calculator, part payment home loan calculator, personal loan EMI"
+        title="EMI Calculator — Home Loan, Car & Personal Loan EMI Calculator India 2026"
+        description="Free online EMI calculator for home loan, car loan & personal loan. Full amortization schedule with part-payment modeling & floating rate simulation. 100% private."
+        keywords="EMI calculator, home loan EMI calculator, loan amortization schedule India, prepayment EMI calculator, part payment home loan calculator, personal loan EMI, car loan EMI calculator, education loan calculator, loan calculator, amortization calculator, EMI calculation formula, how to calculate EMI"
         canonicalPath="/emi-calculator"
         schema={emiSchema}
       />
-      <header className="text-center sm:text-left">
+      <header className="mb-6 text-center sm:text-left">
         <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
           Loan Intelligence &bull; Amortization Engine
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-          Advanced Loan EMI &amp; Part-Payment Amortization Calculator
+          Home &amp; Personal Loan EMI Calculator India
         </h1>
         <p className="mt-1 text-xs sm:text-sm opacity-70">
           Calculate equated monthly installments, model lump-sum prepayments, and simulate floating
-          interest rate changes.
+          interest rate changes with institutional precision.
         </p>
       </header>
-      <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-3">
-            <div>
-              <label className="label label-text font-semibold text-xs" htmlFor="loan-amount">
-                Loan Amount (₹)
-              </label>
-              <input
-                id="loan-amount"
-                className="input input-bordered w-full"
-                title="Loan Amount"
-                type="number"
-                value={loanAmount}
-                onChange={(e) => setLoanAmount(Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <label className="label label-text font-semibold text-xs" htmlFor="annual-rate">
-                Annual Interest Rate (%)
-              </label>
-              <input
-                id="annual-rate"
-                className="input input-bordered w-full"
-                title="Annual Interest Rate"
-                type="number"
-                step="0.1"
-                value={annualRate}
-                onChange={(e) => setAnnualRate(Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <label className="label label-text font-semibold text-xs" htmlFor="tenure-months">
-                Tenure (Months)
-              </label>
-              <input
-                id="tenure-months"
-                className="input input-bordered w-full"
-                title="Tenure in Months"
-                type="number"
-                value={tenureMonths}
-                onChange={(e) => setTenureMonths(Number(e.target.value))}
-              />
-            </div>
+      {/* Main Inputs & Display Card using unified app components */}
+      <div className="space-y-4">
+        <InputAmount
+          className="mb-1"
+          inputAmount={loanAmount}
+          setInputAmount={setLoanAmount}
+          title="Loan amount"
+          stepData={stepData}
+          stepSizePrefix="sm"
+        />
+        <RateOfInterest className="mb-1" rt={rt} setRt={setRt} />
+        <Tenure className="mb-1" rt={rt} setRt={setRt} />
+        {/* Loan-specific Settings */}
+        <div className="border border-base-300 rounded-xl p-3 bg-base-200/40 space-y-3">
+          <div className="text-xs font-bold uppercase tracking-wider opacity-70">
+            Disbursement &amp; Repayment Settings
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="label label-text font-semibold text-xs" htmlFor="disbursement-date">
+              <label
+                className="label label-text font-semibold text-xs py-1"
+                htmlFor="disbursement-date"
+              >
                 Disbursement Date
               </label>
               <input
                 id="disbursement-date"
-                className="input input-bordered w-full"
+                className="input input-bordered input-sm w-full"
                 title="Disbursement Date"
                 type="date"
                 value={disbursementDate}
@@ -445,12 +526,12 @@ const EmiCalculator: React.FC = () => {
               />
             </div>
             <div>
-              <label className="label label-text font-semibold text-xs" htmlFor="emi-date">
-                EMI Date (Day of Month)
+              <label className="label label-text font-semibold text-xs py-1" htmlFor="emi-date">
+                EMI Deduction Date (Day of Month)
               </label>
               <input
                 id="emi-date"
-                className="input input-bordered w-full"
+                className="input input-bordered input-sm w-full"
                 title="EMI Date (Day of Month)"
                 type="number"
                 min="1"
@@ -459,26 +540,29 @@ const EmiCalculator: React.FC = () => {
                 onChange={(e) => setEmiDate(Number(e.target.value))}
               />
             </div>
-            <div className="pt-2">
-              <label className="label cursor-pointer justify-start gap-3">
-                <input
-                  type="checkbox"
-                  title="Include Principal Payment in First EMI"
-                  className="checkbox checkbox-primary"
-                  checked={includePrincipalInFirstEmi}
-                  onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
-                />
-                <span className="label-text text-xs sm:text-sm font-medium">
-                  Include principal payment in first EMI
-                </span>
-              </label>
-              <p className="ml-7 text-[11px] opacity-60">
-                If checked, the first EMI includes both prorated interest and principal
-              </p>
-            </div>
           </div>
+          <label className="label cursor-pointer justify-start gap-2 py-0">
+            <input
+              type="checkbox"
+              title="Include Principal Payment in First EMI"
+              className="checkbox checkbox-primary checkbox-xs"
+              checked={includePrincipalInFirstEmi}
+              onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
+            />
+            <span className="label-text text-xs">
+              Include principal repayment in prorated first EMI
+            </span>
+          </label>
         </div>
-      </section>
+        <DisplayCard
+          primaryAmount={Math.round(baseMonthlyEmi)}
+          title="Monthly EMI Amount"
+          secondaryInfo={{
+            title: 'Total Interest Payable',
+            amount: Math.round(totalInterest),
+          }}
+        />
+      </div>
       {/* Part Payments Section */}
       <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-base-300 pb-3">
@@ -502,7 +586,9 @@ const EmiCalculator: React.FC = () => {
           {partPayments.map((p, idx) => (
             <div
               key={idx}
-              className={`grid gap-3 rounded-box border border-base-300 p-3 sm:grid-cols-2 lg:flex lg:items-center ${p.enabled ? 'bg-base-100' : 'bg-base-200 opacity-60'}`}
+              className={`grid gap-3 rounded-box border border-base-300 p-3 sm:grid-cols-2 lg:flex lg:items-center ${
+                p.enabled ? 'bg-base-100' : 'bg-base-200 opacity-60'
+              }`}
             >
               <input
                 type="checkbox"
@@ -590,7 +676,9 @@ const EmiCalculator: React.FC = () => {
           {rateChanges.map((r, idx) => (
             <div
               key={idx}
-              className={`grid gap-3 rounded-box border border-base-300 p-3 sm:grid-cols-2 lg:flex lg:items-center ${r.enabled ? 'bg-base-100' : 'bg-base-200 opacity-60'}`}
+              className={`grid gap-3 rounded-box border border-base-300 p-3 sm:grid-cols-2 lg:flex lg:items-center ${
+                r.enabled ? 'bg-base-100' : 'bg-base-200 opacity-60'
+              }`}
             >
               <input
                 type="checkbox"
@@ -677,11 +765,18 @@ const EmiCalculator: React.FC = () => {
               <div className="stat-title text-xs font-semibold">Total Installments</div>
             </div>
           </div>
-          <div className="md:hidden">
+          {/* Mobile Amortization Card View */}
+          <div className="md:hidden space-y-2">
             {schedule.map((row, idx) => (
               <article
                 key={idx}
-                className={`text-base-content/60 border-t border-base-300 p-2 ${row.note?.includes('Part Payment') ? 'border-warning bg-warning/10' : row.note?.includes('ROI Change') ? 'border-info bg-info/10' : 'bg-base-100'}`}
+                className={`text-base-content/70 border border-base-300 rounded-xl p-3 shadow-xs ${
+                  row.note?.includes('Part Payment')
+                    ? 'border-warning bg-warning/10'
+                    : row.note?.includes('ROI Change')
+                      ? 'border-info bg-info/10'
+                      : 'bg-base-100'
+                }`}
               >
                 <div className="mb-1 flex items-start justify-between gap-3">
                   <p className="font-semibold text-sm">
@@ -691,7 +786,7 @@ const EmiCalculator: React.FC = () => {
                     <span className="badge badge-warning badge text-xs">{row.note}</span>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-x-1 gap-y-1 text-sm">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs sm:text-sm">
                   <div>
                     EMI:{' '}
                     <span className="font-semibold text-secondary">
@@ -716,50 +811,81 @@ const EmiCalculator: React.FC = () => {
                       ₹{parseFloat(row.interest).toLocaleString('en-IN')}
                     </span>
                   </div>
+                  <div className="border-t border-base-300/50 pt-1">
+                    Cum. Principal:{' '}
+                    <span className="font-semibold text-success">
+                      ₹{parseFloat(row.cumulativePrincipal).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="border-t border-base-300/50 pt-1">
+                    Cum. Interest:{' '}
+                    <span className="font-semibold text-error">
+                      ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
+                    </span>
+                  </div>
                 </div>
               </article>
             ))}
           </div>
+          {/* Desktop Amortization Table View */}
           <div className="hidden overflow-x-auto rounded-box border border-base-300 md:block bg-base-100 shadow-xs max-h-[500px] overflow-y-auto">
             <table className="w-full text-sm" title="EMI Amortization Schedule">
-              <thead className="sticky top-0 bg-base-200 z-10">
+              <thead className="sticky top-0 bg-base-200 z-10 text-xs uppercase tracking-wider">
                 <tr>
-                  <th className="border-b border-base-300 px-4 py-3 text-left font-bold">Date</th>
-                  <th className="border-b border-base-300 px-4 py-3 text-right font-bold">EMI</th>
-                  <th className="border-b border-base-300 px-4 py-3 text-right font-bold">
+                  <th className="border-b border-base-300 px-3 py-3 text-left font-bold">Date</th>
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">EMI</th>
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">
                     Principal
                   </th>
-                  <th className="border-b border-base-300 px-4 py-3 text-right font-bold">
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">
                     Interest
                   </th>
-                  <th className="border-b border-base-300 px-4 py-3 text-right font-bold">
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">
                     Balance
                   </th>
-                  <th className="border-b border-base-300 px-4 py-3 text-left font-bold">Note</th>
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-success">
+                    Cum. Principal
+                  </th>
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-error">
+                    Cum. Interest
+                  </th>
+                  <th className="border-b border-base-300 px-3 py-3 text-left font-bold">Note</th>
                 </tr>
               </thead>
               <tbody>
                 {schedule.map((row, idx) => (
                   <tr
                     key={idx}
-                    className={`${row.note?.includes('Part Payment') ? 'bg-warning/10' : row.note?.includes('ROI Change') ? 'bg-info/10' : 'hover:bg-base-200/50'}`}
+                    className={`${
+                      row.note?.includes('Part Payment')
+                        ? 'bg-warning/10'
+                        : row.note?.includes('ROI Change')
+                          ? 'bg-info/10'
+                          : 'hover:bg-base-200/50'
+                    }`}
                   >
-                    <td className="border-b border-base-300 px-4 py-2.5 text-xs font-mono">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-xs font-mono">
                       {row.date}
                     </td>
-                    <td className="border-b border-base-300 px-4 py-2.5 text-right font-semibold">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-semibold">
                       ₹{parseFloat(row.emi).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-4 py-2.5 text-right text-success">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right text-success">
                       ₹{parseFloat(row.principal).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-4 py-2.5 text-right text-error">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right text-error">
                       ₹{parseFloat(row.interest).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-4 py-2.5 text-right font-mono">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono">
                       ₹{parseFloat(row.balance).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-4 py-2.5">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-success text-xs font-medium">
+                      ₹{parseFloat(row.cumulativePrincipal).toLocaleString('en-IN')}
+                    </td>
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-error text-xs font-medium">
+                      ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
+                    </td>
+                    <td className="border-b border-base-300 px-3 py-2.5">
                       {row.note && (
                         <span className="badge badge-outline badge-sm text-[10px] font-medium">
                           {row.note}

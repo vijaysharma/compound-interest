@@ -35,7 +35,7 @@ const rdSchema = {
           '@type': 'ListItem',
           position: 2,
           name: 'Recurring Deposit Calculator',
-          item: 'https://rupees.vercel.app/deposits/rd',
+          item: 'https://rupees.vercel.app/rd-calculator',
         },
       ],
     },
@@ -66,7 +66,36 @@ const rdSchema = {
             text: 'Yes, banks allow premature closure of RDs with a nominal penalty (usually 0.5% to 1.0% deduction from the applicable interest rate for the actual period held).',
           },
         },
+        {
+          '@type': 'Question',
+          name: 'How to calculate recurring deposit maturity amount?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank\'s quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'RD vs SIP: Which is better for monthly savings?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'For short-term goals (1–3 years), bank RDs offer guaranteed returns and capital protection. For long-term wealth creation (5+ years), mutual fund SIPs historically deliver significantly higher returns (12–15% CAGR vs. 6–7% RD rates) due to equity market compounding. RDs are ideal for risk-averse savers, while SIPs suit investors with higher risk tolerance and longer horizons.',
+          },
+        },
       ],
+    },
+    {
+      '@type': 'WebApplication',
+      name: 'RD Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/rd-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
     },
   ],
 };
@@ -90,6 +119,16 @@ const rdFaqs = [
     question: 'Should I choose an RD or a Mutual Fund SIP for a 3-year goal?',
     answer:
       'For short-term non-negotiable goals under 3 years (e.g., vacation, wedding down payment, emergency fund), an RD or Debt Fund provides zero market volatility. For goals 5+ years away, an Equity SIP offers higher inflation-beating potential.',
+  },
+  {
+    question: 'How to calculate recurring deposit maturity amount?',
+    answer:
+      'RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank\'s quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).',
+  },
+  {
+    question: 'RD vs SIP: Which is better for monthly savings?',
+    answer:
+      'For short-term goals (1–3 years), bank RDs offer guaranteed returns and capital protection. For long-term wealth creation (5+ years), mutual fund SIPs historically deliver significantly higher returns (12–15% CAGR vs. 6–7% RD rates) due to equity market compounding. RDs are ideal for risk-averse savers, while SIPs suit investors with higher risk tolerance and longer horizons.',
   },
 ];
 const RD = ({ className, title }: { className?: string; title?: string }) => {
@@ -137,10 +176,10 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="RD Calculator India | Recurring Deposit Interest & Maturity Planner"
-        description="Calculate Recurring Deposit (RD) maturity amount and interest yield for Indian banks and Post Office RD schemes with quarterly compounding."
-        keywords="RD calculator, recurring deposit calculator, post office RD calculator, bank RD interest rate, monthly deposit calculator India"
-        canonicalPath="/deposits/rd"
+        title="RD Calculator — Recurring Deposit Maturity & Interest Calculator India 2026"
+        description="Free recurring deposit calculator for Indian banks & Post Office RD. Calculate RD maturity amount with quarterly compounding. Compare RD vs FD vs SIP returns."
+        keywords="RD calculator, recurring deposit calculator, post office RD calculator, bank RD interest rate, monthly deposit calculator India, compound interest calculator RD, post office RD interest rate, RD vs FD, how to calculate RD maturity"
+        canonicalPath="/rd-calculator"
         schema={rdSchema}
       />
       <header className="mb-6 text-center sm:text-left">

@@ -106,7 +106,36 @@ const fdSchema = {
             text: 'In Cumulative FDs, interest is reinvested and paid along with the principal at maturity, maximizing compound interest. In Non-Cumulative FDs, interest is paid out periodically (monthly, quarterly, or annually) into your bank account as regular income.',
           },
         },
+        {
+          '@type': 'Question',
+          name: 'How to calculate compound interest on a fixed deposit?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Use the formula A = P(1 + r/n)^(nt), where P is the deposit amount, r is the annual interest rate (as a decimal), n is the compounding frequency per year (4 for quarterly, 12 for monthly), and t is the number of years. For example, ₹1,00,000 at 7.5% compounded quarterly for 5 years: A = 1,00,000 × (1 + 0.075/4)^(4×5) = ₹1,44,995.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'FD vs RD: Which gives higher returns?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'A Fixed Deposit (FD) generally yields slightly higher effective returns than a Recurring Deposit (RD) for the same interest rate and tenure. This is because the entire FD principal compounds from Day 1, while RD installments are staggered monthly — earlier installments compound longer but later ones compound less. For a 5-year tenure at 7%, an FD earns about 40% total interest vs. approximately 20% on an equivalent total RD investment.',
+          },
+        },
       ],
+    },
+    {
+      '@type': 'WebApplication',
+      name: 'Compound Interest & FD Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/fd-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+      },
     },
   ],
 };
@@ -131,6 +160,16 @@ const fdFaqs = [
     answer:
       'All deposits across commercial, small finance, and cooperative banks are insured up to ₹5,00,000 (including principal and interest) per depositor per bank by DICGC (Deposit Insurance and Credit Guarantee Corporation), a wholly-owned subsidiary of the Reserve Bank of India (RBI).',
   },
+  {
+    question: 'How to calculate compound interest on a fixed deposit?',
+    answer:
+      'Use the formula A = P(1 + r/n)^(nt), where P is the deposit amount, r is the annual interest rate (as a decimal), n is the compounding frequency per year (4 for quarterly, 12 for monthly), and t is the number of years. For example, ₹1,00,000 at 7.5% compounded quarterly for 5 years: A = 1,00,000 × (1 + 0.075/4)^(4×5) = ₹1,44,995.',
+  },
+  {
+    question: 'FD vs RD: Which gives higher returns?',
+    answer:
+      'A Fixed Deposit (FD) generally yields slightly higher effective returns than a Recurring Deposit (RD) for the same interest rate and tenure. This is because the entire FD principal compounds from Day 1, while RD installments are staggered monthly — earlier installments compound longer but later ones compound less. For a 5-year tenure at 7%, an FD earns about 40% total interest vs. approximately 20% on an equivalent total RD investment.',
+  },
 ];
 const FD: React.FC = () => {
   const [pa, setPa] = useState(PA);
@@ -153,9 +192,9 @@ const FD: React.FC = () => {
   return (
     <main className="w-full max-w-4xl mx-auto px-2 py-4">
       <SEOHead
-        title="FD Calculator India — Fixed Deposit Compound Interest 2026"
-        description="Calculate fixed deposit maturity value with quarterly, monthly, and annual compounding. Compare cumulative vs non-cumulative FD returns with tax insights. 100% free."
-        keywords="compound interest calculator India, FD calculator, fixed deposit calculator, quarterly compounding calculator, bank FD interest rate, FD maturity calculator"
+        title="Compound Interest Calculator & FD Calculator — Fixed Deposit India 2026"
+        description="Free compound interest calculator for Indian fixed deposits. Calculate FD maturity with daily, monthly & quarterly compounding. Compare cumulative vs non-cumulative FD returns."
+        keywords="compound interest calculator India, FD calculator, fixed deposit calculator, quarterly compounding calculator, bank FD interest rate, FD maturity calculator, daily compound interest calculator, monthly compound interest calculator, maturity calculator, interest rate calculator savings, compound interest formula, savings calculator"
         canonicalPath="/fd-calculator"
         schema={fdSchema}
       />
@@ -164,7 +203,7 @@ const FD: React.FC = () => {
           Fixed Income &bull; Guaranteed Returns
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-          Fixed Deposit (FD) &amp; Compound Interest Calculator India
+          Compound Interest Calculator &amp; Fixed Deposit (FD) Calculator India
         </h1>
         <p className="mt-1 text-xs sm:text-sm opacity-70">
           Simulate cumulative maturity amounts, periodic payout yields, and compound growth with
