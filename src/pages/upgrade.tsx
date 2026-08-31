@@ -28,7 +28,7 @@ const Upgrade = () => {
   const amount = settings?.amount ?? 29;
   const isTrialActive =
     user && !user.isBlocked && user.role !== 'admin' && user.subscription_status !== 'active';
-  const remainingCalculations = Math.max(0, (user?.freeLimit || 10) - (user?.api_usage_count || 0));
+  const remainingCalculations = Math.max(0, (user?.freeLimit || 15) - (user?.api_usage_count || 0));
   const [now] = useState(() => Date.now());
   const getRemainingHours = () => {
     if (!user?.trial_expires_at) return null;
@@ -116,7 +116,7 @@ const Upgrade = () => {
           } catch (err) {
             setMessage({
               type: 'error',
-              text: err instanceof Error ? err.message : 'Verification failed',
+              text: err instanceof Error ? err.message : 'Payment verification failed',
             });
           } finally {
             setIsProcessing(false);
@@ -161,18 +161,18 @@ const Upgrade = () => {
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-bold text-info uppercase tracking-wider mb-1">
                 <FiClock className="h-3.5 w-3.5" />
-                <span>Mutual Funds Trial Active</span>
+                <span>Mutual Funds &amp; PPP Trial Active</span>
               </div>
               <p className="text-xs sm:text-sm font-medium">
                 You have{' '}
                 <span className="font-bold text-primary">
-                  {remainingCalculations} of {user?.freeLimit || 10}
+                  {remainingCalculations} of {user?.freeLimit || 15}
                 </span>{' '}
-                Mutual Fund search &amp; NAV history runs left
+                Mutual Fund &amp; PPP calculation runs left
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}.
               </p>
               <p className="text-[11px] opacity-65 mt-0.5">
-                All other tools (FD, RD, SWP, SIP, EMI, Inflation, PPP) are 100% free for 48 hours.
+                All other tools (FD, RD, SWP, SIP, EMI, Inflation) are 100% free for 48 hours from first usage.
               </p>
             </div>
             <Link to="/mutual-funds/lumpsum" className="btn btn-outline btn-info btn-xs shrink-0">

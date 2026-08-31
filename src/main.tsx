@@ -68,7 +68,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'ppp-exchange-rate',
-            lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx')),
+            lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx'), false, true),
           },
         ],
       },

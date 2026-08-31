@@ -23,7 +23,7 @@ export default async function handler(request: Request): Promise<Response> {
     const sql = getDb();
     await ensureTables(sql);
     const rows = (await sql`
-      SELECT id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
+      SELECT id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
       FROM users
       WHERE email = ${email}
     `) as DbUser[];
@@ -67,11 +67,12 @@ export default async function handler(request: Request): Promise<Response> {
         picture: user.picture,
         role: user.role,
         api_usage_count: user.api_usage_count ?? 0,
+        freeLimit: user.free_limit ?? FREE_USAGE_LIMIT,
         subscription_status: user.subscription_status ?? 'free_trial',
         subscription_expires_at: user.subscription_expires_at,
+        first_used_at: user.first_used_at,
         trial_expires_at: user.trial_expires_at,
         isBlocked: blocked,
-        freeLimit: FREE_USAGE_LIMIT,
       },
     });
   } catch (error) {

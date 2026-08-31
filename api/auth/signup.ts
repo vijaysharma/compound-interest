@@ -123,7 +123,6 @@ export default async function handler(request: Request): Promise<Response> {
     `) as DbUser[];
     const { hash, salt } = await hashPassword(password);
     const isAdmin = isEmailAdmin(verifiedEmail);
-    const trialExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     let user: DbUser;
     if (existingUsers.length > 0) {
       const existing = existingUsers[0];
@@ -146,10 +145,10 @@ export default async function handler(request: Request): Promise<Response> {
             provider_id = COALESCE(${providerId || null}, provider_id),
             role = ${targetRole},
             api_usage_count = 0,
-            trial_expires_at = COALESCE(trial_expires_at, ${trialExpiresAt}),
+            free_limit = COALESCE(free_limit, 15),
             updated_at = NOW()
         WHERE email = ${verifiedEmail}
-        RETURNING id, email, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
+        RETURNING id, email, name, picture, provider, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
       `) as DbUser[];
       user = updated[0];
     } else {
@@ -157,12 +156,12 @@ export default async function handler(request: Request): Promise<Response> {
       const role = isAdmin ? 'admin' : 'user';
       const created = (await sql`
         INSERT INTO users (
-          id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, subscription_status, trial_expires_at
+          id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, first_used_at, trial_expires_at
         )
         VALUES (
-          ${newId}, ${verifiedEmail}, ${hash}, ${salt}, ${verifiedName}, ${verifiedPicture}, 'google', ${providerId || null}, ${role}, 0, 'free_trial', ${trialExpiresAt}
+          ${newId}, ${verifiedEmail}, ${hash}, ${salt}, ${verifiedName}, ${verifiedPicture}, 'google', ${providerId || null}, ${role}, 0, 15, 'free_trial', NULL, NULL
         )
-        RETURNING id, email, name, picture, provider, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
+        RETURNING id, email, name, picture, provider, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
       `) as DbUser[];
       user = created[0];
     }
@@ -182,11 +181,12 @@ export default async function handler(request: Request): Promise<Response> {
         picture: user.picture,
         role: user.role,
         api_usage_count: user.api_usage_count ?? 0,
+        freeLimit: user.free_limit ?? FREE_USAGE_LIMIT,
         subscription_status: user.subscription_status ?? 'free_trial',
         subscription_expires_at: user.subscription_expires_at,
+        first_used_at: user.first_used_at,
         trial_expires_at: user.trial_expires_at,
         isBlocked: blocked,
-        freeLimit: FREE_USAGE_LIMIT,
       },
     });
   } catch (error) {

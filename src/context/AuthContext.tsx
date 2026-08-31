@@ -154,50 +154,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  const trackUsage = useCallback(async (): Promise<boolean> => {
-    if (user?.isBlocked) {
-      setShowPaywall(true);
-      return false;
-    }
-    const currentToken = token || localStorage.getItem('auth_token');
-    if (!currentToken || isTrackingRef.current) return true;
-    isTrackingRef.current = true;
-    try {
-      const res = await fetch('/api/user/track-usage', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${currentToken}` },
-      });
-      const data = (await res.json()) as {
-        success?: boolean;
-        isBlocked?: boolean;
-        api_usage_count?: number;
-        trial_expires_at?: string | null;
-      };
-      if (typeof data.api_usage_count === 'number') {
-        setUser((prev) => {
-          if (!prev) return null;
-          const updated = {
-            ...prev,
-            api_usage_count: data.api_usage_count!,
-            isBlocked: Boolean(data.isBlocked),
-            trial_expires_at: data.trial_expires_at ?? prev.trial_expires_at,
-          };
-          localStorage.setItem('auth_user', JSON.stringify(updated));
-          return updated;
-        });
-      }
-      if (data.isBlocked || res.status === 402) {
+  const trackUsage = useCallback(
+    async (initOnly = false): Promise<boolean> => {
+      if (user?.isBlocked) {
         setShowPaywall(true);
         return false;
       }
-      return true;
-    } catch (err) {
-      console.warn('Track usage error:', err);
-      return true;
-    } finally {
-      isTrackingRef.current = false;
-    }
-  }, [token, user?.isBlocked]);
+      const currentToken = token || localStorage.getItem('auth_token');
+      if (!currentToken || isTrackingRef.current) return true;
+      isTrackingRef.current = true;
+      try {
+        const res = await fetch('/api/user/track-usage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentToken}`,
+          },
+          body: JSON.stringify({ type: initOnly ? 'init' : 'api' }),
+        });
+        const data = (await res.json()) as {
+          success?: boolean;
+          isBlocked?: boolean;
+          api_usage_count?: number;
+          freeLimit?: number;
+          first_used_at?: string | null;
+          trial_expires_at?: string | null;
+        };
+        if (typeof data.api_usage_count === 'number') {
+          setUser((prev) => {
+            if (!prev) return null;
+            const updated = {
+              ...prev,
+              api_usage_count: data.api_usage_count!,
+              freeLimit: data.freeLimit ?? prev.freeLimit,
+              isBlocked: Boolean(data.isBlocked),
+              first_used_at: data.first_used_at ?? prev.first_used_at,
+              trial_expires_at: data.trial_expires_at ?? prev.trial_expires_at,
+            };
+            localStorage.setItem('auth_user', JSON.stringify(updated));
+            return updated;
+          });
+        }
+        if (data.isBlocked || res.status === 402) {
+          setShowPaywall(true);
+          return false;
+        }
+        return true;
+      } catch (err) {
+        console.warn('Track usage error:', err);
+        return true;
+      } finally {
+        isTrackingRef.current = false;
+      }
+    },
+    [token, user?.isBlocked]
+  );
   const logout = async () => {
     const currentToken = token || localStorage.getItem('auth_token');
     if (currentToken) {

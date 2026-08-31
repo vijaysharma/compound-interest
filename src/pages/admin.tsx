@@ -1,10 +1,13 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import {
   FiCheck,
+  FiClock,
   FiCreditCard,
+  FiEdit2,
   FiPlus,
   FiRefreshCw,
   FiRotateCcw,
+  FiSliders,
   FiSmartphone,
   FiUsers,
   FiX,
@@ -17,8 +20,11 @@ interface AdminUser {
   name: string | null;
   role: 'admin' | 'user';
   api_usage_count: number;
+  free_limit: number;
   subscription_status: string;
   subscription_expires_at: string | null;
+  first_used_at: string | null;
+  trial_expires_at: string | null;
   created_at: string;
 }
 const Admin = () => {
@@ -41,6 +47,9 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState<PaymentSubmission[]>([]);
   // Users state
   const [usersList, setUsersList] = useState<AdminUser[]>([]);
+  const [limitModalUser, setLimitModalUser] = useState<AdminUser | null>(null);
+  const [customLimitInput, setCustomLimitInput] = useState<number>(15);
+  const [now] = useState(() => Date.now());
   // Sync state
   const [imfJson, setImfJson] = useState('');
   const effectiveToken = token || authToken || '';
@@ -181,7 +190,11 @@ const Admin = () => {
       setBusy(null);
     }
   };
-  const handleUserAction = async (userId: string, action: 'grant_access' | 'reset_usage') => {
+  const handleUserAction = async (
+    userId: string,
+    action: 'grant_access' | 'reset_usage' | 'reset_trial' | 'set_limit' | 'extend_trial_time',
+    extra?: { free_limit?: number; hours?: number }
+  ) => {
     setBusy(`user_${userId}`);
     setMessage(null);
     try {
@@ -191,12 +204,13 @@ const Admin = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${effectiveToken}`,
         },
-        body: JSON.stringify({ user_id: userId, action }),
+        body: JSON.stringify({ user_id: userId, action, ...extra }),
       });
       const data = (await res.json()) as { message?: string; error?: string };
       if (!res.ok) throw new Error(data.error || 'Action failed');
       setMessage({ type: 'success', text: data.message || 'User updated.' });
       void fetchUsers();
+      setLimitModalUser(null);
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Action failed' });
     } finally {
@@ -507,15 +521,16 @@ const Admin = () => {
             <div>
               <h2 className="text-lg font-bold">User Management &amp; Quotas</h2>
               <p className="text-xs opacity-70">
-                Track user calculation usage, subscription statuses, and grant access overrides.
+                Track user calculation usage, 48-hour first-usage trial windows, and grant access or quota overrides.
               </p>
             </div>
             <button
               type="button"
               onClick={() => void fetchUsers()}
-              className="btn btn-outline btn-xs"
+              className="btn btn-outline btn-xs flex items-center gap-1"
             >
-              Refresh
+              <FiRefreshCw className="h-3 w-3" />
+              <span>Refresh</span>
             </button>
           </div>
           {usersList.length === 0 ? (
@@ -529,15 +544,35 @@ const Admin = () => {
                   <tr>
                     <th>Email</th>
                     <th>Role</th>
-                    <th>Usage (10 Limit)</th>
+                    <th>Quota (MF &amp; PPP)</th>
+                    <th>48h Trial (From 1st Use)</th>
                     <th>Subscription</th>
                     <th>Expires At</th>
-                    <th className="text-right">Manual Action</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {usersList.map((u) => {
-                    const isOverLimit = u.api_usage_count >= 10;
+                    const limit = u.free_limit || 15;
+                    const isOverLimit = u.api_usage_count >= limit;
+                    let trialBadge = (
+                      <span className="badge badge-xs badge-ghost text-[10px]">Not Started</span>
+                    );
+                    if (u.trial_expires_at) {
+                      const diff = new Date(u.trial_expires_at).getTime() - now;
+                      if (diff <= 0) {
+                        trialBadge = (
+                          <span className="badge badge-xs badge-error text-[10px]">Expired</span>
+                        );
+                      } else {
+                        const hrs = Math.floor(diff / (1000 * 60 * 60));
+                        trialBadge = (
+                          <span className="badge badge-xs badge-info text-[10px]">
+                            Active ({hrs}h left)
+                          </span>
+                        );
+                      }
+                    }
                     return (
                       <tr key={u.id}>
                         <td className="font-semibold text-xs">{u.email}</td>
@@ -549,12 +584,26 @@ const Admin = () => {
                           </span>
                         </td>
                         <td>
-                          <span
-                            className={`font-mono text-xs font-bold ${isOverLimit && u.role !== 'admin' ? 'text-error' : 'text-primary'}`}
-                          >
-                            {u.api_usage_count} / 10
-                          </span>
+                          <div className="inline-flex items-center gap-1.5">
+                            <span
+                              className={`font-mono text-xs font-bold ${isOverLimit && u.role !== 'admin' ? 'text-error' : 'text-primary'}`}
+                            >
+                              {u.api_usage_count} / {limit}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLimitModalUser(u);
+                                setCustomLimitInput(limit);
+                              }}
+                              className="btn btn-ghost btn-xs p-1 h-auto text-primary hover:bg-primary/10"
+                              title="Edit calculation quota limit"
+                            >
+                              <FiEdit2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         </td>
+                        <td>{trialBadge}</td>
                         <td>
                           <span
                             className={`badge badge-xs font-bold text-[10px] uppercase ${
@@ -574,26 +623,38 @@ const Admin = () => {
                             : '—'}
                         </td>
                         <td className="text-right">
-                          <div className="inline-flex gap-1">
+                          <div className="inline-flex gap-1 flex-wrap justify-end">
+                            <button
+                              type="button"
+                              disabled={busy === `user_${u.id}`}
+                              onClick={() => void handleUserAction(u.id, 'reset_trial')}
+                              className="btn btn-ghost btn-xs text-xs flex items-center gap-1 text-warning hover:bg-warning/10"
+                              title="Reset trial to 0 runs and fresh 48h from next usage"
+                            >
+                              <FiRotateCcw className="h-3 w-3" />
+                              <span>Reset Trial</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy === `user_${u.id}`}
+                              onClick={() =>
+                                void handleUserAction(u.id, 'extend_trial_time', { hours: 48 })
+                              }
+                              className="btn btn-outline btn-xs flex items-center gap-1"
+                              title="Extend trial time by +48 hours"
+                            >
+                              <FiClock className="h-3 w-3" />
+                              <span>+48h</span>
+                            </button>
                             <button
                               type="button"
                               disabled={busy === `user_${u.id}`}
                               onClick={() => void handleUserAction(u.id, 'grant_access')}
                               className="btn btn-outline btn-xs flex items-center gap-1"
-                              title="Grant 30 Days Access"
+                              title="Grant 30 Days Pro Access"
                             >
                               <FiPlus className="h-3 w-3" />
-                              <span>+30d Access</span>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busy === `user_${u.id}`}
-                              onClick={() => void handleUserAction(u.id, 'reset_usage')}
-                              className="btn btn-ghost btn-xs text-xs flex items-center gap-1"
-                              title="Reset usage counter to 0"
-                            >
-                              <FiRotateCcw className="h-3 w-3" />
-                              <span>Reset</span>
+                              <span>+30d Pro</span>
                             </button>
                           </div>
                         </td>
@@ -660,6 +721,73 @@ const Admin = () => {
               {busy === '/api/admin/sync-imf' ? 'Syncing...' : 'Sync IMF JSON'}
             </button>
           </section>
+        </div>
+      )}
+      {/* Limit Modal */}
+      {limitModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
+          <div className="card bg-base-100 border border-base-300 w-full max-w-sm p-6 shadow-2xl relative">
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs btn-square absolute right-3 top-3 opacity-70 hover:opacity-100"
+              onClick={() => setLimitModalUser(null)}
+            >
+              <FiX className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-2 mb-3">
+              <FiSliders className="h-5 w-5 text-primary" />
+              <h3 className="font-bold text-base">Adjust Calculation Quota</h3>
+            </div>
+            <p className="text-xs opacity-75 mb-4">
+              Set the maximum allowed free live calculation runs for{' '}
+              <span className="font-semibold text-primary">{limitModalUser.email}</span> (currently{' '}
+              {limitModalUser.api_usage_count} used).
+            </p>
+            <div className="mb-4">
+              <label className="block text-xs font-semibold mb-1">Quota Limit (Runs)</label>
+              <input
+                type="number"
+                min="1"
+                max="99999"
+                value={customLimitInput}
+                onChange={(e) => setCustomLimitInput(Number(e.target.value))}
+                className="input input-bordered input-primary w-full text-sm font-mono"
+              />
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {[15, 25, 50, 100, 250, 1000].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setCustomLimitInput(preset)}
+                    className={`btn btn-xs ${customLimitInput === preset ? 'btn-primary' : 'btn-ghost border border-base-300'}`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setLimitModalUser(null)}
+                className="btn btn-ghost btn-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy === `user_${limitModalUser.id}`}
+                onClick={() =>
+                  void handleUserAction(limitModalUser.id, 'set_limit', {
+                    free_limit: customLimitInput,
+                  })
+                }
+                className="btn btn-primary btn-xs font-bold"
+              >
+                {busy === `user_${limitModalUser.id}` ? 'Saving...' : 'Save Quota'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>

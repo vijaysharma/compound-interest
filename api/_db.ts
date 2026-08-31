@@ -2,7 +2,7 @@ import { neon } from '@neondatabase/serverless';
 declare const process: { env: Record<string, string | undefined> };
 export const MF_URL = 'https://api.mfapi.in/mf';
 export const IMF_URL = 'https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD';
-export const FREE_USAGE_LIMIT = 10;
+export const FREE_USAGE_LIMIT = 15;
 export const TRIAL_DURATION_HOURS = 48;
 export type Query = ReturnType<typeof neon>;
 export interface DbUser {
@@ -16,8 +16,10 @@ export interface DbUser {
   provider_id: string | null;
   role: 'admin' | 'user';
   api_usage_count: number;
+  free_limit?: number;
   subscription_status: 'free_trial' | 'active' | 'expired';
   subscription_expires_at: string | null;
+  first_used_at?: string | null;
   trial_expires_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -56,7 +58,7 @@ export function isEmailAdmin(email: string): boolean {
     .filter(Boolean);
   return adminEmails.includes(email.toLowerCase());
 }
-export function isUserBlocked(user: DbUser): boolean {
+export function isUserBlocked(user: DbUser, checkApiQuota = false): boolean {
   if (user.role === 'admin') return false;
   if (user.subscription_status === 'active') {
     if (!user.subscription_expires_at) return false;
@@ -64,15 +66,20 @@ export function isUserBlocked(user: DbUser): boolean {
     if (expiry > Date.now()) return false;
     return true;
   }
-  // Check free trial calculation quota (10 requests)
-  if ((user.api_usage_count ?? 0) >= FREE_USAGE_LIMIT) {
+  // Check 48-hour free trial from first usage (if trial has started)
+  if (user.trial_expires_at) {
+    const trialExpiry = new Date(user.trial_expires_at).getTime();
+    if (Date.now() > trialExpiry) {
+      return true;
+    }
+  }
+  // Check free trial API calculation quota (default 15 requests, or custom free_limit)
+  const limit = user.free_limit ?? FREE_USAGE_LIMIT;
+  if (checkApiQuota && (user.api_usage_count ?? 0) >= limit) {
     return true;
   }
-  // Check free trial time window (24 hours from creation / trial start)
-  const trialExpiryTime = user.trial_expires_at
-    ? new Date(user.trial_expires_at).getTime()
-    : new Date(user.created_at || Date.now()).getTime() + TRIAL_DURATION_HOURS * 60 * 60 * 1000;
-  if (Date.now() > trialExpiryTime) {
+  // Overall blocked if calculation quota reached
+  if ((user.api_usage_count ?? 0) >= limit) {
     return true;
   }
   return false;
@@ -142,8 +149,10 @@ export async function ensureTables(sql: Query) {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_salt TEXT`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS api_usage_count INT NOT NULL DEFAULT 0`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS free_limit INT NOT NULL DEFAULT 15`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'free_trial'`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS first_used_at TIMESTAMPTZ`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ`;
       await sql`
         CREATE TABLE IF NOT EXISTS user_sessions (
@@ -252,8 +261,10 @@ export async function getUserFromRequest(request: Request, sql: Query): Promise<
       u.provider_id,
       u.role,
       u.api_usage_count,
+      COALESCE(u.free_limit, 15) AS free_limit,
       u.subscription_status,
       u.subscription_expires_at,
+      u.first_used_at,
       u.trial_expires_at,
       u.created_at,
       u.updated_at

@@ -35,7 +35,7 @@ const PaywallModal = () => {
   };
   const amount = settings?.amount ?? 29;
   const isTrialActive = user && !user.isBlocked && user.subscription_status !== 'active';
-  const remainingCalculations = Math.max(0, (user?.freeLimit || 10) - (user?.api_usage_count || 0));
+  const remainingCalculations = Math.max(0, (user?.freeLimit || 15) - (user?.api_usage_count || 0));
   const getRemainingHours = () => {
     if (!user?.trial_expires_at) return null;
     const diff = new Date(user.trial_expires_at).getTime() - now;
@@ -136,7 +136,7 @@ const PaywallModal = () => {
     } catch (err) {
       setMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Payment failed. Please try again.',
+        text: err instanceof Error ? err.message : 'Failed to process payment',
       });
       setIsProcessing(false);
     }
@@ -161,35 +161,35 @@ const PaywallModal = () => {
           {isTrialActive ? (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-info/15 text-info font-bold text-xs uppercase tracking-wider mb-2">
               <FiClock className="h-3.5 w-3.5" />
-              <span>Mutual Funds Trial Active</span>
+              <span>Trial Active</span>
             </div>
           ) : (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning font-bold text-xs uppercase tracking-wider mb-2">
               <FiZap className="h-3.5 w-3.5" />
-              <span>Mutual Funds Trial Expired</span>
+              <span>Trial Expired</span>
             </div>
           )}
           <h2 id="paywall-title" className="text-2xl font-extrabold">
-            {isTrialActive ? 'Unlock Unlimited Mutual Fund Analytics' : 'Unlock Pro Access'}
+            {isTrialActive ? 'Unlock Unlimited Financial Analytics' : 'Unlock Pro Access'}
           </h2>
           <p className="mt-2 text-xs sm:text-sm opacity-80 leading-relaxed">
             {isTrialActive ? (
               <>
                 You have{' '}
                 <span className="font-bold text-primary">
-                  {remainingCalculations} of {user?.freeLimit || 10}
+                  {remainingCalculations} of {user?.freeLimit || 15}
                 </span>{' '}
-                live Mutual Fund search &amp; NAV history runs remaining
+                live Mutual Fund &amp; PPP calculation runs remaining
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other
-                tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation, PPP) are 100% free
-                for 48 hours. Unlock unlimited live AMFI sync for just ₹{amount}/month.
+                tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation) are 100% free for
+                48 hours from first usage. Unlock unlimited access for just ₹{amount}/month.
               </>
             ) : (
               <>
-                Your 48-hour / 10-run free trial for live AMFI Mutual Funds analytics has ended for{' '}
-                <span className="font-semibold">{user?.email}</span>. Unlock unlimited live AMFI
-                sync for just ₹{amount}/month. All other tools in the Calculators Suite (FD, RD,
-                EMI, SIP, SWP, Inflation, PPP) were free for 48 hours.
+                Your 48-hour trial / {user?.freeLimit || 15}-run limit for live AMFI Mutual Funds
+                &amp; PPP analytics has ended for{' '}
+                <span className="font-semibold">{user?.email}</span>. Unlock unlimited access for
+                just ₹{amount}/month.
               </>
             )}
           </p>

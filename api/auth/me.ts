@@ -24,11 +24,12 @@ export default async function handler(request: Request): Promise<Response> {
         picture: user.picture,
         role: user.role,
         api_usage_count: user.api_usage_count ?? 0,
+        freeLimit: user.free_limit ?? FREE_USAGE_LIMIT,
         subscription_status: user.subscription_status ?? 'free_trial',
         subscription_expires_at: user.subscription_expires_at,
+        first_used_at: user.first_used_at,
         trial_expires_at: user.trial_expires_at,
         isBlocked: blocked,
-        freeLimit: FREE_USAGE_LIMIT,
       },
     });
   } catch (error) {

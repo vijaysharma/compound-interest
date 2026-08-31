@@ -89,6 +89,7 @@ export const fetchMFbySchemeCode = async (schemeCode: string, signal?: AbortSign
   }
 };
 export const fetchExchangeRates = async () => {
+  void recordApiUsage();
   const response = await fetch(EXCHANGE_URL);
   const data = await response.json();
   return data.rates;
@@ -110,6 +111,7 @@ export async function fetchPPPData(): Promise<WorldBankPPPRecord[]> {
   if (pppCache && Date.now() - pppCache.fetchedAt < PPP_CACHE_TTL_MS) {
     return pppCache.data;
   }
+  void recordApiUsage();
   const res = await fetch(WORLD_BANK_PPP_URL);
   if (!res.ok) {
     throw new Error(`World Bank PPP API request failed: ${res.status}`);
@@ -175,7 +177,6 @@ async function fetchWorldBankRecords(): Promise<WorldBankInflationRecord[]> {
   return records ?? [];
 }
 async function fetchIMFEstimates(): Promise<IMFDataMapperResponse> {
-  void recordApiUsage();
   const res = await fetch(IMF_INFLATION_URL);
   if (!res.ok) {
     throw new Error(`Stored IMF data request failed: ${res.status}`);

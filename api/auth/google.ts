@@ -80,9 +80,8 @@ export default async function handler(request: Request): Promise<Response> {
     const sql = getDb();
     await ensureTables(sql);
     const isAdmin = isEmailAdmin(email);
-    const trialExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     const existingUsers = (await sql`
-      SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
+      SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
       FROM users
       WHERE email = ${email}
     `) as DbUser[];
@@ -96,19 +95,19 @@ export default async function handler(request: Request): Promise<Response> {
             picture = COALESCE(${picture || null}, picture),
             provider_id = COALESCE(${sub || null}, provider_id),
             role = ${targetRole},
-            trial_expires_at = COALESCE(trial_expires_at, ${trialExpiresAt}),
+            free_limit = COALESCE(free_limit, 15),
             updated_at = NOW()
         WHERE email = ${email}
-        RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
+        RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
       `) as DbUser[];
       user = updated[0];
     } else {
       const newId = crypto.randomUUID();
       const role = isAdmin ? 'admin' : 'user';
       const created = (await sql`
-        INSERT INTO users (id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, trial_expires_at)
-        VALUES (${newId}, ${email}, ${name || null}, ${picture || null}, 'google', ${sub || null}, ${role}, 0, 'free_trial', ${trialExpiresAt})
-        RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, subscription_status, subscription_expires_at, trial_expires_at, created_at, updated_at
+        INSERT INTO users (id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, first_used_at, trial_expires_at)
+        VALUES (${newId}, ${email}, ${name || null}, ${picture || null}, 'google', ${sub || null}, ${role}, 0, 15, 'free_trial', NULL, NULL)
+        RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
       `) as DbUser[];
       user = created[0];
     }
@@ -128,11 +127,12 @@ export default async function handler(request: Request): Promise<Response> {
         picture: user.picture,
         role: user.role,
         api_usage_count: user.api_usage_count ?? 0,
+        freeLimit: user.free_limit ?? FREE_USAGE_LIMIT,
         subscription_status: user.subscription_status ?? 'free_trial',
         subscription_expires_at: user.subscription_expires_at,
+        first_used_at: user.first_used_at,
         trial_expires_at: user.trial_expires_at,
         isBlocked: blocked,
-        freeLimit: FREE_USAGE_LIMIT,
       },
     });
   } catch (error) {

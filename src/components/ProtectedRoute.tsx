@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiAlertTriangle, FiLock, FiZap } from 'react-icons/fi';
+import { FiAlertTriangle, FiClock, FiLock, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import LoadingFallback from './LoadingFallback';
 import GoogleSignInButton from './GoogleSignInButton';
@@ -14,7 +14,14 @@ const ProtectedRoute = ({
   requireAdmin = false,
   requireApiQuota = false,
 }: ProtectedRouteProps) => {
-  const { user, loading, isAuthenticated, isAdmin } = useAuth();
+  const { user, loading, isAuthenticated, isAdmin, trackUsage } = useAuth();
+  const [now] = useState(() => Date.now());
+  // Initialize first_used_at on the first visit to any protected tool
+  useEffect(() => {
+    if (isAuthenticated && !user?.first_used_at && !isAdmin) {
+      void trackUsage(true);
+    }
+  }, [isAuthenticated, user?.first_used_at, isAdmin, trackUsage]);
   if (loading) {
     return <LoadingFallback />;
   }
@@ -61,21 +68,27 @@ const ProtectedRoute = ({
       </div>
     );
   }
-  if (requireApiQuota && user?.isBlocked && !isAdmin) {
+  const isTimeExpired = Boolean(
+    user?.trial_expires_at &&
+      new Date(user.trial_expires_at).getTime() < now &&
+      !isAdmin &&
+      user?.subscription_status !== 'active'
+  );
+  // If 48-hour trial from first usage has expired, block all protected features
+  if (isTimeExpired) {
     return (
       <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
         <div className="card bg-base-100 border border-warning/40 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning">
-            <FiZap className="h-7 w-7" />
+            <FiClock className="h-7 w-7" />
           </div>
-          <h2 className="mb-2 text-xl font-bold">Mutual Funds Trial Expired</h2>
+          <h2 className="mb-2 text-xl font-bold">48-Hour Free Trial Expired</h2>
           <p className="mb-2 text-xs sm:text-sm opacity-75">
-            Your 48-hour / 10-calculation trial for live AMFI Mutual Funds search &amp; NAV history
-            has ended for <span className="font-semibold">{user.email}</span>.
+            Your 48-hour free trial period for the Calculators Suite has ended for{' '}
+            <span className="font-semibold">{user?.email}</span>.
           </p>
           <p className="mb-6 text-xs opacity-60">
-            Support the creator for just ₹29/mo to unlock unlimited live AMFI Mutual Fund sync. All
-            other tools (FD, RD, SWP, EMI, Inflation, PPP) are free for 48 hours.
+            Unlock 30 days of unlimited Pro access across all financial tools for just ₹29/month.
           </p>
           <div className="space-y-2">
             <Link
@@ -84,6 +97,45 @@ const ProtectedRoute = ({
             >
               <FiZap className="h-4 w-4" />
               <span>Unlock Pro for ₹29 / Month &rarr;</span>
+            </Link>
+            <Link to="/" className="btn btn-ghost btn-xs w-full opacity-80">
+              &larr; Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const limit = user?.freeLimit || 15;
+  const isQuotaExceeded = Boolean(
+    (user?.api_usage_count ?? 0) >= limit &&
+      !isAdmin &&
+      user?.subscription_status !== 'active'
+  );
+  // If API Quota reached (15 runs), block only the quota-restricted tools (MF and PPP)
+  if (requireApiQuota && isQuotaExceeded) {
+    return (
+      <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
+        <div className="card bg-base-100 border border-warning/40 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning">
+            <FiZap className="h-7 w-7" />
+          </div>
+          <h2 className="mb-2 text-xl font-bold">Calculation Limit Reached</h2>
+          <p className="mb-2 text-xs sm:text-sm opacity-75">
+            You have used all {limit} live Mutual Fund &amp; PPP calculation runs for{' '}
+            <span className="font-semibold">{user?.email}</span>.
+          </p>
+          <p className="mb-6 text-xs opacity-60">
+            Support the creator for just ₹29/mo to unlock unlimited live AMFI &amp; PPP sync. Other
+            tools (FD, RD, EMI, Inflation) remain free for 48 hours from your first usage.
+          </p>
+          <div className="space-y-2">
+            <Link
+              to="/upgrade"
+              className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
+            >
+              <FiZap className="h-4 w-4" />
+              <span>Unlock Unlimited Access for ₹29 / Month &rarr;</span>
             </Link>
             <Link to="/deposits/fd" className="btn btn-ghost btn-xs w-full opacity-80">
               Back to Free Calculators &rarr;

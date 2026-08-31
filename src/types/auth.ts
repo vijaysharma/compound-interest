@@ -7,6 +7,7 @@ export interface AuthUser {
   api_usage_count: number;
   subscription_status: 'free_trial' | 'active' | 'expired';
   subscription_expires_at: string | null;
+  first_used_at?: string | null;
   trial_expires_at?: string | null;
   isBlocked: boolean;
   freeLimit: number;
@@ -47,7 +48,7 @@ export interface AuthContextType {
     authData: string | { credential?: string; email?: string; name?: string }
   ) => Promise<void>;
   logout: () => Promise<void>;
-  trackUsage: () => Promise<boolean>;
+  trackUsage: (initOnly?: boolean) => Promise<boolean>;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
