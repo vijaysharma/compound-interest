@@ -1,134 +1,21 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
-import { FiClock, FiDelete, FiRotateCcw, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import {
+  FiClock,
+  FiDelete,
+  FiRotateCcw,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+} from 'react-icons/fi';
 import { TbMathFunction } from 'react-icons/tb';
-interface HistoryItem {
-  expression: string;
-  result: string;
-  timestamp: string;
-}
-// Factorial helper
-function factorial(n: number): number {
-  if (n < 0 || !Number.isInteger(n) || n > 170) return NaN;
-  if (n === 0 || n === 1) return 1;
-  let res = 1;
-  for (let i = 2; i <= n; i++) res *= i;
-  return res;
-}
-// Safe expression evaluator supporting implicit multiplication, percentages, and scientific functions
-export function evaluateExpression(
-  expr: string,
-  isDeg: boolean
-): { result: string | null; error: boolean } {
-  if (!expr || expr.trim() === '') return { result: null, error: false };
-  try {
-    let sanitized = expr
-      .replace(/×/g, '*')
-      .replace(/÷/g, '/')
-      .replace(/−/g, '-')
-      .replace(/\s+/g, '');
-    // Trim trailing operators for live preview
-    while (/[+\-*/^.(]$/.test(sanitized)) {
-      sanitized = sanitized.slice(0, -1);
-    }
-    if (!sanitized) return { result: null, error: false };
-    // Auto-close open parentheses for live preview
-    const openCount = (sanitized.match(/\(/g) || []).length;
-    const closeCount = (sanitized.match(/\)/g) || []).length;
-    if (openCount > closeCount) {
-      sanitized += ')'.repeat(openCount - closeCount);
-    }
-    // ─────────────────────────────────────────────────────────────────
-    // 1. Percentage logic (Android Calculator formula)
-    // ─────────────────────────────────────────────────────────────────
-    // A + B% => A + (A * (B / 100))
-    // A - B% => A - (A * (B / 100))
-    // A * B% => A * (B / 100)
-    // A / B% => A / (B / 100)
-    sanitized = sanitized.replace(
-      /((?:\d+(?:\.\d+)?|\([^()]+\)))\s*([+\-])\s*(\d+(?:\.\d+)?)%/g,
-      '($1 $2 ($1 * ($3 / 100)))'
-    );
-    sanitized = sanitized.replace(
-      /((?:\d+(?:\.\d+)?|\([^()]+\)))\s*([*/])\s*(\d+(?:\.\d+)?)%/g,
-      '($1 $2 ($3 / 100))'
-    );
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?)%/g, '($1 / 100)');
-    // ─────────────────────────────────────────────────────────────────
-    // 2. Implicit Operations (Multiplication & x√y)
-    // ─────────────────────────────────────────────────────────────────
-    // Number followed by parenthesis: 2(3+4) => 2*(3+4)
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?)\s*\(/g, '$1*(');
-    // Parenthesis followed by number: (3+4)2 => (3+4)*2
-    sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?)/g, ')*$1');
-    // Parenthesis followed by parenthesis: (2+3)(4+5) => (2+3)*(4+5)
-    sanitized = sanitized.replace(/\)\s*\(/g, ')*(');
-    // Number or ) followed by constant [πe]: 2π => 2*π, 3e => 3*e, (2+3)π => (2+3)*π
-    sanitized = sanitized.replace(/((?:\d+(?:\.\d+)?|\)))\s*([πe])/g, '$1*$2');
-    // Constant [πe] followed by Number or (: π(4) => π*4, π2 => π*2
-    sanitized = sanitized.replace(/([πe])\s*((?:\d+(?:\.\d+)?|\())/g, '$1*$2');
-    // Implicit operation: x times square root of y (e.g. 4√9, 2√(16), (2+3)√4)
-    // and Number/) /constant before scientific function (2sin(30), 4√9, 3ln(5))
-    sanitized = sanitized.replace(
-      /((?:\d+(?:\.\d+)?|\)|[πe]))\s*(√|sin|cos|tan|asin|acos|atan|ln|log|abs)/g,
-      '$1*$2'
-    );
-    // ─────────────────────────────────────────────────────────────────
-    // 3. Factorials & Constants
-    // ─────────────────────────────────────────────────────────────────
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
-    sanitized = sanitized
-      .replace(/π/g, '(Math.PI)')
-      .replace(/(?<![a-zA-Z])e(?![a-zA-Z])/g, '(Math.E)')
-      .replace(/\^/g, '**');
-    // ─────────────────────────────────────────────────────────────────
-    // 4. Square Roots & Scientific Functions (DEG/RAD)
-    // ─────────────────────────────────────────────────────────────────
-    const trigWrap = (fn: string, arg: string) => {
-      if (isDeg) {
-        return `Math.${fn}((${arg}) * Math.PI / 180)`;
-      }
-      return `Math.${fn}(${arg})`;
-    };
-    const invTrigWrap = (fn: string, arg: string) => {
-      if (isDeg) {
-        return `((Math.${fn}(${arg})) * 180 / Math.PI)`;
-      }
-      return `Math.${fn}(${arg})`;
-    };
-    // Replace functions iteratively to handle nesting
-    for (let iter = 0; iter < 4; iter++) {
-      sanitized = sanitized
-        .replace(/asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
-        .replace(/acos\(([^()]+)\)/g, (_, a) => invTrigWrap('acos', a))
-        .replace(/atan\(([^()]+)\)/g, (_, a) => invTrigWrap('atan', a))
-        .replace(/sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
-        .replace(/cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
-        .replace(/tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
-        .replace(/ln\(([^()]+)\)/g, 'Math.log($1)')
-        .replace(/log\(([^()]+)\)/g, 'Math.log10($1)')
-        .replace(/√\(([^()]+)\)/g, 'Math.sqrt($1)')
-        .replace(/√(\d+(?:\.\d+)?)/g, 'Math.sqrt($1)')
-        .replace(/abs\(([^()]+)\)/g, 'Math.abs($1)');
-    }
-    // Safe execution context
-    const evaluator = new Function(
-      'fact',
-      `try { 
-        const res = (${sanitized}); 
-        if (typeof res !== 'number' || isNaN(res) || !isFinite(res)) return null;
-        return res;
-      } catch(e) { return null; }`
-    );
-    const val = evaluator(factorial);
-    if (val === null) return { result: null, error: false };
-    // Format number cleanly
-    const formatted = parseFloat(Number(val).toPrecision(12)).toString();
-    return { result: formatted, error: false };
-  } catch {
-    return { result: null, error: true };
-  }
-}
+import {
+  evaluateExpression,
+  extractLastOperation,
+  type HistoryItem,
+  type LastOperation,
+} from '../utilities/calculatorHelper';
+
 const Calculator: React.FC = () => {
   const [expression, setExpression] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -136,6 +23,8 @@ const Calculator: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [isDeg, setIsDeg] = useState(true);
   const [isEvaluated, setIsEvaluated] = useState(false);
+  const [lastOp, setLastOp] = useState<LastOperation | null>(null);
+
   const [memory, setMemory] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('android_calc_memory');
@@ -144,6 +33,7 @@ const Calculator: React.FC = () => {
       return 0;
     }
   });
+
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('android_calc_history');
@@ -152,13 +42,16 @@ const Calculator: React.FC = () => {
       return [];
     }
   });
+
   const displayContainerRef = useRef<HTMLDivElement>(null);
+
   // Keep cursor position clamped within valid bounds
   useEffect(() => {
     if (cursorPosition > expression.length) {
       setCursorPosition(expression.length);
     }
   }, [expression, cursorPosition]);
+
   // Persist history & memory
   useEffect(() => {
     try {
@@ -167,6 +60,7 @@ const Calculator: React.FC = () => {
       console.error(e);
     }
   }, [history]);
+
   useEffect(() => {
     try {
       localStorage.setItem('android_calc_memory', String(memory));
@@ -174,14 +68,18 @@ const Calculator: React.FC = () => {
       console.error(e);
     }
   }, [memory]);
+
   // Live calculation preview
   const liveResult = useMemo(() => {
     if (!expression || isEvaluated) return null;
     const { result } = evaluateExpression(expression, isDeg);
     return result;
   }, [expression, isDeg, isEvaluated]);
+
   // Insert character or token at cursor position (Inline CRUD)
   const insertAtCursor = (char: string) => {
+    setLastOp(null); // Reset repeat operation on new input
+
     if (isEvaluated) {
       if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
         const next = expression + char;
@@ -194,51 +92,64 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
+
     // Prevent duplicate consecutive operators
     const isOperator = ['+', '−', '×', '÷'].includes(char);
     const lastIsOperator = ['+', '−', '×', '÷'].includes(before.slice(-1));
+
     let newBefore = before;
     if (isOperator && lastIsOperator) {
       newBefore = before.slice(0, -1);
     }
+
     const nextExpr = newBefore + char + after;
     setExpression(nextExpr);
     setCursorPosition(newBefore.length + char.length);
   };
+
   // Smart Parentheses at cursor position
   const handleSmartParentheses = () => {
+    setLastOp(null);
     if (isEvaluated) {
       setExpression('(');
       setCursorPosition(1);
       setIsEvaluated(false);
       return;
     }
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const openCount = (expression.match(/\(/g) || []).length;
     const closeCount = (expression.match(/\)/g) || []).length;
     const lastChar = before.slice(-1);
+
     if (/[\d%)]/.test(lastChar) && openCount > closeCount) {
       insertAtCursor(')');
     } else {
       insertAtCursor('(');
     }
   };
+
   // Backspace at cursor position
   const handleBackspace = () => {
+    setLastOp(null);
     if (isEvaluated) {
       setExpression('');
       setCursorPosition(0);
       setIsEvaluated(false);
       return;
     }
+
     if (cursorPosition === 0 || !expression) return;
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
+
     // Check if deleting a multi-char scientific function before cursor
     for (const fn of [
       'asin(',
@@ -251,6 +162,7 @@ const Calculator: React.FC = () => {
       'log(',
       'abs(',
       '1/(',
+      '√(',
     ]) {
       if (before.endsWith(fn)) {
         const newBefore = before.slice(0, -fn.length);
@@ -259,16 +171,20 @@ const Calculator: React.FC = () => {
         return;
       }
     }
+
     const newBefore = before.slice(0, -1);
     setExpression(newBefore + after);
     setCursorPosition(newBefore.length);
   };
+
   // Clear all
   const handleClear = () => {
     setExpression('');
     setCursorPosition(0);
     setIsEvaluated(false);
+    setLastOp(null);
   };
+
   // Move cursor left / right
   const moveCursor = (dir: 'left' | 'right') => {
     if (isEvaluated) {
@@ -280,8 +196,10 @@ const Calculator: React.FC = () => {
       setCursorPosition((prev) => Math.min(expression.length, prev + 1));
     }
   };
+
   // Toggle sign of active number at cursor
   const handleToggleSign = () => {
+    setLastOp(null);
     if (!expression) return;
     if (isEvaluated) {
       const val = parseFloat(expression);
@@ -292,13 +210,17 @@ const Calculator: React.FC = () => {
       }
       return;
     }
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
+
     const match = before.match(/([+\-×÷(]?)(-?\d+(?:\.\d+)?)$/);
     if (!match) return;
+
     const [full, op, num] = match;
     const prefix = before.slice(0, before.length - full.length);
+
     let replaced: string;
     if (num.startsWith('-')) {
       replaced = prefix + op + num.slice(1);
@@ -311,37 +233,68 @@ const Calculator: React.FC = () => {
         replaced = prefix + op + '(-' + num + ')';
       }
     }
+
     setExpression(replaced + after);
     setCursorPosition(replaced.length);
   };
+
   // Memory Operations
   const handleMemoryAdd = () => {
-    const activeVal = liveResult || expression;
+    const activeVal = liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
     const num = parseFloat(activeVal);
     if (!isNaN(num)) {
       setMemory((prev) => prev + num);
     }
   };
+
   const handleMemorySubtract = () => {
-    const activeVal = liveResult || expression;
+    const activeVal = liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
     const num = parseFloat(activeVal);
     if (!isNaN(num)) {
       setMemory((prev) => prev - num);
     }
   };
+
   const handleMemoryRecall = () => {
     if (memory !== 0) {
       insertAtCursor(String(memory));
     }
   };
+
   const handleMemoryClear = () => {
     setMemory(0);
   };
-  // Evaluate & Commit
+
+  // Evaluate & Commit (Supports repeating last operation if = is pressed repeatedly)
   const handleCalculate = () => {
     if (!expression) return;
+
+    // Repeating last operation (e.g. 5 + 3 = 8, press = again -> 8 + 3 = 11, press = -> 14)
+    if (isEvaluated && lastOp) {
+      const repeatExpr = `${expression}${lastOp.op}${lastOp.operand}`;
+      const { result, error } = evaluateExpression(repeatExpr, isDeg);
+      if (result !== null && !error) {
+        setHistory((prev) => [
+          {
+            expression: repeatExpr,
+            result,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+          ...prev.slice(0, 49),
+        ]);
+        setExpression(result);
+        setCursorPosition(result.length);
+        setIsEvaluated(true);
+      }
+      return;
+    }
+
+    // Normal calculation
+    const extracted = extractLastOperation(expression);
     const { result, error } = evaluateExpression(expression, isDeg);
+
     if (result !== null && !error) {
+      setLastOp(extracted);
       setHistory((prev) => [
         {
           expression,
@@ -355,17 +308,20 @@ const Calculator: React.FC = () => {
       setIsEvaluated(true);
     }
   };
+
   const textBeforeCursor = expression.slice(0, cursorPosition);
   const textAfterCursor = expression.slice(cursorPosition);
+
   return (
     <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none">
       <SEOHead
         title="Android-Style Calculator — Free Online Basic & Scientific Calculator"
-        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, memory operations (M+, M-, MC, MR), percentages (4-50%), x√y root operations, trigonometry, and history."
-        keywords="android calculator, inline cursor calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, x times root y, percentage calculator, scientific calculator"
+        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, memory operations (M+, M-, MC, MR), percentages (4-50%), x√y root operations, trigonometry, and repeat last operation on equals."
+        keywords="android calculator, inline cursor calculator, repeat last operation calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, x times root y, percentage calculator, scientific calculator"
         canonicalPath="/calculator"
         noIndex={false}
       />
+
       {/* Top Display Area with Moveable Cursor & Memory Indicator */}
       <div className="flex-1 flex flex-col justify-end pb-2 sm:pb-3">
         {/* History Modal / Drawer */}
@@ -416,6 +372,7 @@ const Calculator: React.FC = () => {
             )}
           </div>
         )}
+
         {/* Memory Indicator */}
         {memory !== 0 && (
           <div className="flex items-center justify-end px-2 mb-1 gap-1">
@@ -428,6 +385,7 @@ const Calculator: React.FC = () => {
             </span>
           </div>
         )}
+
         {/* Expression Display with Interactive Click-to-Position Cursor */}
         <div
           ref={displayContainerRef}
@@ -491,6 +449,7 @@ const Calculator: React.FC = () => {
             )}
           </div>
         </div>
+
         {/* Live Calculation Preview (Trailing Digits like Android) */}
         <div className="h-8 flex items-center justify-end px-2">
           {liveResult !== null && !isEvaluated ? (
@@ -501,6 +460,7 @@ const Calculator: React.FC = () => {
             <span className="text-sm opacity-0">0</span>
           )}
         </div>
+
         {/* Utility Icon Bar with Cursor Left/Right Navigation */}
         <div className="flex items-center justify-between border-b border-base-300/60 pt-2 pb-2 px-1 text-base-content/70">
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -522,6 +482,7 @@ const Calculator: React.FC = () => {
               <span className="text-[11px] font-semibold">√ π e</span>
             </button>
           </div>
+
           {/* Cursor Stepper & Backspace */}
           <div className="flex items-center gap-1">
             <button
@@ -553,6 +514,7 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       </div>
+
       {/* Scientific & Memory Tools Panel (Expandable) */}
       {showScientific && (
         <div className="mb-2 p-2 bg-base-200/50 rounded-2xl border border-base-300/80 space-y-1.5 animate-fadeIn">
@@ -574,6 +536,7 @@ const Calculator: React.FC = () => {
                 RAD
               </button>
             </div>
+
             {/* Memory Toolbar: MC, MR, M+, M- */}
             <div className="flex items-center gap-1">
               <button
@@ -612,6 +575,7 @@ const Calculator: React.FC = () => {
               </button>
             </div>
           </div>
+
           <div className="grid grid-cols-5 gap-1.5 text-xs font-semibold">
             {[
               { label: 'sin', fn: () => insertAtCursor('sin(') },
@@ -619,10 +583,13 @@ const Calculator: React.FC = () => {
               { label: 'tan', fn: () => insertAtCursor('tan(') },
               { label: 'ln', fn: () => insertAtCursor('ln(') },
               { label: 'log', fn: () => insertAtCursor('log(') },
+
               { label: 'sin⁻¹', fn: () => insertAtCursor('asin(') },
               { label: 'cos⁻¹', fn: () => insertAtCursor('acos(') },
               { label: 'tan⁻¹', fn: () => insertAtCursor('atan(') },
               { label: '√', fn: () => insertAtCursor('√(') },
+              { label: 'x√y', fn: () => insertAtCursor('√(') },
+
               { label: 'xʸ', fn: () => insertAtCursor('^') },
               { label: 'π', fn: () => insertAtCursor('π') },
               { label: 'e', fn: () => insertAtCursor('e') },
@@ -642,6 +609,7 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Main Keypad Grid (Android Calculator Circular/Pill Keypad) */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3 pb-2">
         {/* Row 1: C, ( ), %, ÷ */}
@@ -673,6 +641,7 @@ const Calculator: React.FC = () => {
         >
           ÷
         </button>
+
         {/* Row 2: 7, 8, 9, × */}
         {['7', '8', '9'].map((num) => (
           <button
@@ -691,6 +660,7 @@ const Calculator: React.FC = () => {
         >
           ×
         </button>
+
         {/* Row 3: 4, 5, 6, − */}
         {['4', '5', '6'].map((num) => (
           <button
@@ -709,6 +679,7 @@ const Calculator: React.FC = () => {
         >
           −
         </button>
+
         {/* Row 4: 1, 2, 3, + */}
         {['1', '2', '3'].map((num) => (
           <button
@@ -727,6 +698,7 @@ const Calculator: React.FC = () => {
         >
           +
         </button>
+
         {/* Row 5: +/-, 0, ., = */}
         <button
           type="button"
@@ -760,4 +732,5 @@ const Calculator: React.FC = () => {
     </main>
   );
 };
+
 export default Calculator;
