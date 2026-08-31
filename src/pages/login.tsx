@@ -27,7 +27,7 @@ const Login = () => {
     if (isAuthenticated) {
       const from =
         (location.state as { from?: { pathname?: string } })?.from?.pathname ||
-        '/investment-details';
+        '/';
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
@@ -46,7 +46,7 @@ const Login = () => {
     setError(null);
     try {
       await loginWithPassword({ email: cleanEmail, password: loginPassword });
-      navigate('/investment-details', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Sign in failed. Please check your credentials.'
@@ -78,7 +78,7 @@ const Login = () => {
         name: googleProfile.name,
         credential: googleProfile.credential,
       });
-      navigate('/investment-details', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
@@ -216,7 +216,7 @@ const Login = () => {
                       setError(null);
                     }}
                     onSuccess={() => {
-                      navigate('/investment-details', { replace: true });
+                      navigate('/', { replace: true });
                     }}
                   />
                 </div>

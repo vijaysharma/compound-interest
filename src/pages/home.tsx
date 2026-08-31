@@ -59,7 +59,7 @@ const Home = () => {
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <GoogleSignInButton
                   text="continue_with"
-                  onSuccess={() => navigate('/investment-details')}
+                  onSuccess={() => navigate('/', { replace: true })}
                 />
                 <Link
                   to="/mutual-funds/lumpsum"
@@ -337,7 +337,7 @@ const Home = () => {
             ) : (
               <GoogleSignInButton
                 text="signup_with"
-                onSuccess={() => navigate('/investment-details')}
+                onSuccess={() => navigate('/', { replace: true })}
               />
             )}
             <Link

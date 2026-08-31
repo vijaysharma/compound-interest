@@ -127,7 +127,7 @@ const Upgrade = () => {
             });
             await refreshUser();
             setTimeout(() => {
-              navigate('/investment-details', { replace: true });
+              navigate('/', { replace: true });
             }, 1500);
           } catch (err) {
             setMessage({

@@ -114,7 +114,7 @@ const PaywallModal = () => {
             await refreshUser();
             setTimeout(() => {
               setShowPaywall(false);
-              navigate('/investment-details', { replace: true });
+              navigate('/', { replace: true });
             }, 1200);
           } catch (err) {
             setMessage({

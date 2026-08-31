@@ -191,7 +191,7 @@ const GoogleSignInButton = ({
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate('/investment-details', { replace: true });
+        navigate('/', { replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
