@@ -9,7 +9,7 @@ function App() {
   return (
     <AuthProvider>
       <TopBar className="sticky top-0 z-50" />
-      <div className="container">
+      <div className="container mx-auto">
         <Suspense fallback={<LoadingFallback />}>
           <Outlet />
         </Suspense>

@@ -9,54 +9,137 @@
     <title>Rupee Calculator | Free Indian Financial Calculators &amp; Wealth Simulator</title>
     <meta
       name="description"
-      content="100% free, institutional-grade Indian financial calculators. Simulate SIP, SWP, Mutual Funds CAGR, Fixed Deposits, Loan EMI Amortization, Inflation, and Global PPP."
+      content="India's most precise free financial calculators. Calculate SIP returns, FD compound interest, home loan EMI, and inflation impact. 100% private, no login needed."
     />
     <meta
       name="keywords"
-      content="rupee calculator, compound interest calculator India, SIP calculator, SWP calculator, mutual fund return calculator, EMI calculator, inflation calculator India, PPP calculator, financial planning tools India"
+      content="rupee calculator, compound interest calculator India, SIP calculator, SWP calculator, mutual fund return calculator, EMI calculator, inflation calculator India, PPP calculator, financial planning tools India, FD calculator, RD calculator"
     />
     <meta name="author" content="Rupee Calculator" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="theme-color" content="#2563eb" />
+
+    <!-- Canonical & hreflang -->
     <link rel="canonical" href="https://rupees.vercel.app/" />
+    <link rel="alternate" hreflang="en-IN" href="https://rupees.vercel.app/" />
+    <link rel="alternate" hreflang="en" href="https://rupees.vercel.app/" />
+    <link rel="alternate" hreflang="x-default" href="https://rupees.vercel.app/" />
 
     <!-- Open Graph / Facebook / LinkedIn -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://rupees.vercel.app/" />
     <meta property="og:site_name" content="Rupee Calculator" />
-    <meta property="og:title" content="Rupee Calculator | Free Indian Financial Planning &amp; Compounding Tools" />
+    <meta property="og:title" content="Rupee Calculator | Free Indian Financial Calculators &amp; Wealth Simulator" />
     <meta
       property="og:description"
-      content="Simulate SIPs, Mutual Fund NAVs, EMI Amortization, and Purchasing Power Parity with live AMFI and World Bank verified data. 100% private, client-side execution."
+      content="India's most precise free financial calculators. SIP, SWP, FD, EMI, Mutual Fund CAGR, Inflation &amp; PPP — powered by live AMFI, World Bank &amp; IMF data. 100% private."
     />
-    <meta property="og:image" content="https://rupees.vercel.app/images/logo.svg" />
+    <meta property="og:image" content="https://rupees.vercel.app/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Rupee Calculator — Free SIP, FD, EMI and Mutual Fund financial calculators for India" />
     <meta property="og:locale" content="en_IN" />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@RupeeCalc" />
     <meta name="twitter:url" content="https://rupees.vercel.app/" />
-    <meta name="twitter:title" content="Rupee Calculator | High-Precision Financial Suite" />
+    <meta name="twitter:title" content="Rupee Calculator | Free Indian Financial Calculators" />
     <meta
       name="twitter:description"
-      content="Free institutional-grade calculators for Indian investors. SIP, SWP, FD, RD, EMI, Inflation &amp; PPP."
+      content="Free institutional-grade calculators for Indian investors. SIP, SWP, FD, RD, EMI, Inflation &amp; PPP — 100% private, no data tracking."
     />
-    <meta name="twitter:image" content="https://rupees.vercel.app/images/logo.svg" />
+    <meta name="twitter:image" content="https://rupees.vercel.app/images/og-image.png" />
+    <meta name="twitter:image:alt" content="Rupee Calculator — Free financial tools for India" />
 
-    <!-- Favicon & PWA Icons -->
+    <!-- Favicon &amp; PWA Icons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#2563eb" />
 
-    <!-- Preconnect & DNS-Prefetch for External CDNs / APIs -->
+    <!-- Resource Hints for Critical External APIs -->
     <link rel="preconnect" href="https://api.mfapi.in" crossorigin />
     <link rel="dns-prefetch" href="https://api.mfapi.in" />
     <link rel="preconnect" href="https://api.worldbank.org" crossorigin />
     <link rel="dns-prefetch" href="https://api.worldbank.org" />
+
+    <!-- Base Organization Schema (static, crawler-visible — not JS-injected) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://rupees.vercel.app/#organization",
+          "name": "Rupee Calculator",
+          "url": "https://rupees.vercel.app/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://rupees.vercel.app/images/logo.svg",
+            "width": 200,
+            "height": 60
+          },
+          "description": "Free institutional-grade financial calculators for Indian investors, NRIs, and financial planners.",
+          "areaServed": {
+            "@type": "Country",
+            "name": "India"
+          },
+          "knowsAbout": ["Mutual Funds", "SIP", "Fixed Deposits", "EMI", "Inflation", "Purchasing Power Parity"],
+          "sameAs": []
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://rupees.vercel.app/#website",
+          "url": "https://rupees.vercel.app/",
+          "name": "Rupee Calculator",
+          "description": "Free, institutional-grade Indian financial calculators for SIP, SWP, FD, EMI, Inflation and PPP.",
+          "inLanguage": "en-IN",
+          "publisher": { "@id": "https://rupees.vercel.app/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://rupees.vercel.app/mutual-funds/sip?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body class="bg-base-100 text-base-content antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Noscript fallback — ensures meaningful content for no-JS crawlers & users -->
+    <noscript>
+      <style>
+        .noscript-container { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        .noscript-container h1 { font-size: 2rem; font-weight: 800; color: #1d4ed8; }
+        .noscript-container p { color: #374151; line-height: 1.6; }
+        .noscript-container ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; padding: 0; list-style: none; }
+        .noscript-container li a { display: block; padding: 12px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1d4ed8; text-decoration: none; font-weight: 600; }
+        .noscript-container li a:hover { background: #dbeafe; }
+      </style>
+      <div class="noscript-container">
+        <h1>Rupee Calculator — Free Indian Financial Calculators</h1>
+        <p>India's most precise, 100% free financial calculator suite. This application requires JavaScript to run the interactive calculators. Please enable JavaScript in your browser to access:</p>
+        <ul>
+          <li><a href="/sip-calculator">SIP Calculator — Systematic Investment Plan Returns</a></li>
+          <li><a href="/swp-calculator">SWP Calculator — Systematic Withdrawal Plan</a></li>
+          <li><a href="/fd-calculator">FD Calculator — Fixed Deposit Compound Interest</a></li>
+          <li><a href="/rd-calculator">RD Calculator — Recurring Deposit Returns</a></li>
+          <li><a href="/emi-calculator">EMI Calculator — Home &amp; Personal Loan Amortization</a></li>
+          <li><a href="/inflation-calculator">Inflation Calculator — Purchasing Power Analysis</a></li>
+          <li><a href="/ppp-calculator">PPP Calculator — Global Salary Comparison</a></li>
+          <li><a href="/mutual-funds/lumpsum">Mutual Fund Calculator — Live AMFI NAV &amp; CAGR</a></li>
+        </ul>
+        <p>All calculations are 100% client-side — your financial data never leaves your browser. Powered by live AMFI, World Bank, and IMF data.</p>
+      </div>
+    </noscript>
   </body>
 </html>

@@ -24,11 +24,15 @@ const homeSchema = {
       url: 'https://rupees.vercel.app/',
       name: 'Rupee Calculator',
       description:
-        'High-precision financial calculators for Indian retail investors, NRIs, and financial planners.',
+        'Free institutional-grade financial calculators for Indian investors — SIP, SWP, FD, EMI, Inflation & PPP. 100% private, client-side execution.',
       inLanguage: 'en-IN',
+      publisher: { '@id': 'https://rupees.vercel.app/#organization' },
       potentialAction: {
         '@type': 'SearchAction',
-        target: 'https://rupees.vercel.app/mutual-funds/sip?q={search_term_string}',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://rupees.vercel.app/mutual-funds/sip?q={search_term_string}',
+        },
         'query-input': 'required name=search_term_string',
       },
     },
@@ -120,7 +124,7 @@ const Home = () => {
     <div className="w-full text-base-content">
       <SEOHead
         title="Rupee Calculator | Free Indian Financial Calculators & Wealth Simulator"
-        description="Institutional-grade Indian financial calculator suite. Simulate SIP, SWP, Compound Interest, Loan EMI schedules, and live AMFI Mutual Funds in real-time."
+        description="India's most precise free financial calculators. SIP returns, FD compound interest, home loan EMI, inflation impact & global PPP — 100% private, no login needed."
         keywords="rupee calculator, compound interest calculator India, SIP calculator, SWP calculator, mutual fund return calculator, EMI calculator, inflation calculator India, PPP calculator, financial planning tools India"
         canonicalPath="/"
         schema={homeSchema}
@@ -132,9 +136,9 @@ const Home = () => {
             Institutional Precision &bull; 100% Free &amp; Private &bull; Real-Time Data
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-balance">
-            Master Your Wealth With <br className="hidden sm:inline" />
+            Rupee Calculator —{' '}
             <span className="text-primary bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Intelligent Financial Tools
+              Free SIP, FD, EMI &amp; Mutual Fund Tools for India
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg opacity-80 leading-relaxed">
@@ -532,14 +536,22 @@ const Home = () => {
         </div>
       </section>
       {/* Footer */}
-      <footer className="border-t border-base-300 py-8 px-4 text-center text-xs opacity-60 space-y-2">
-        <p>
-          &copy; {new Date().getFullYear()} Rupee Calculator. Built for financial intelligence and
-          precision.
-        </p>
-        <p>
-          Data sourced from AMFI India, World Bank Open Data, and IMF DataMapper. For educational
-          and analytical purposes.
+      <footer className="border-t border-base-300 py-6 px-4 text-center text-xs opacity-75 space-y-2">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 font-medium">
+          <Link to="/about" className="hover:text-primary transition-colors">
+            About
+          </Link>
+          <span className="opacity-40">&bull;</span>
+          <Link to="/privacy" className="hover:text-primary transition-colors">
+            Privacy Policy
+          </Link>
+          <span className="opacity-40">&bull;</span>
+          <Link to="/disclaimer" className="hover:text-primary transition-colors">
+            Disclaimer
+          </Link>
+        </div>
+        <p className="opacity-60 text-[11px]">
+          &copy; {new Date().getFullYear()} Rupee Calculator &bull; Educational and analytical purposes only.
         </p>
       </footer>
     </div>

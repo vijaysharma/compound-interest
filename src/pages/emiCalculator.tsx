@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
-
 interface ScheduleRow {
   date: string;
   emi: string;
@@ -10,21 +9,18 @@ interface ScheduleRow {
   balance: string;
   note?: string;
 }
-
 interface PartPayment {
   amount: number;
   date: string; // ISO string
   mode: 'tenure' | 'emi'; // Individual mode for each part payment
   enabled: boolean; // Toggle to include/exclude from calculation
 }
-
 interface RateChange {
   rate: number;
   date: string; // ISO string
   mode: 'tenure' | 'emi'; // Keep EMI same (increase tenure) or Keep tenure same (increase EMI)
   enabled: boolean; // Toggle to include/exclude from calculation
 }
-
 const emiSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -53,7 +49,7 @@ const emiSchema = {
           '@type': 'ListItem',
           position: 2,
           name: 'EMI Calculator',
-          item: 'https://rupees.vercel.app/emi',
+          item: 'https://rupees.vercel.app/emi-calculator',
         },
       ],
     },
@@ -88,7 +84,6 @@ const emiSchema = {
     },
   ],
 };
-
 const emiFaqs = [
   {
     question: 'How do interest rate hikes by RBI impact my floating rate home loan?',
@@ -111,7 +106,6 @@ const emiFaqs = [
       'Under Reserve Bank of India (RBI) guidelines, commercial banks and Housing Finance Companies (HFCs) cannot levy any prepayment charges or foreclosure penalties on floating-rate individual home loans.',
   },
 ];
-
 const EmiCalculator: React.FC = () => {
   // Load from localStorage or use defaults
   const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
@@ -123,7 +117,6 @@ const EmiCalculator: React.FC = () => {
       return defaultValue;
     }
   };
-
   const [loanAmount, setLoanAmount] = useState<number>(() =>
     loadFromLocalStorage('loanAmount', 3000000)
   );
@@ -144,89 +137,70 @@ const EmiCalculator: React.FC = () => {
   const [includePrincipalInFirstEmi, setIncludePrincipalInFirstEmi] = useState<boolean>(() =>
     loadFromLocalStorage('includePrincipalInFirstEmi', false)
   );
-
   // Save to localStorage whenever values change
   useEffect(() => {
     window.localStorage.setItem('loanAmount', JSON.stringify(loanAmount));
   }, [loanAmount]);
-
   useEffect(() => {
     window.localStorage.setItem('annualRate', JSON.stringify(annualRate));
   }, [annualRate]);
-
   useEffect(() => {
     window.localStorage.setItem('tenureMonths', JSON.stringify(tenureMonths));
   }, [tenureMonths]);
-
   useEffect(() => {
     window.localStorage.setItem('disbursementDate', JSON.stringify(disbursementDate));
   }, [disbursementDate]);
-
   useEffect(() => {
     window.localStorage.setItem('emiDate', JSON.stringify(emiDate));
   }, [emiDate]);
-
   useEffect(() => {
     window.localStorage.setItem('partPayments', JSON.stringify(partPayments));
   }, [partPayments]);
-
   useEffect(() => {
     window.localStorage.setItem('rateChanges', JSON.stringify(rateChanges));
   }, [rateChanges]);
-
   useEffect(() => {
     window.localStorage.setItem(
       'includePrincipalInFirstEmi',
       JSON.stringify(includePrincipalInFirstEmi)
     );
   }, [includePrincipalInFirstEmi]);
-
   // Helpers
   const differenceInDays = (date1: Date, date2: Date): number => {
     const diffTime = date1.getTime() - date2.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
-
   const addMonths = (date: Date, months: number): Date => {
     const d = new Date(date);
     d.setMonth(d.getMonth() + months);
     return d;
   };
-
   const calculateSchedule = useCallback((): ScheduleRow[] => {
     if (!disbursementDate) return [];
-
     let principal: number = loanAmount;
     let currentAnnualRate: number = annualRate;
     let monthlyRate: number = currentAnnualRate / 12 / 100;
-
     // Sort part payments and rate changes by date
     const sortedPartPayments = [...partPayments]
       .filter((p) => p.enabled && p.amount > 0 && p.date)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
     const sortedRateChanges = [...rateChanges]
       .filter((r) => r.enabled && r.rate > 0 && r.date)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
     let currentDate: Date = new Date(disbursementDate);
     const results: ScheduleRow[] = [];
-
     // Handle prorated first EMI
     let firstEmiDate: Date = new Date(currentDate);
     firstEmiDate.setDate(emiDate);
     if (firstEmiDate <= currentDate) {
       firstEmiDate = addMonths(firstEmiDate, 1);
     }
-
     const days: number = differenceInDays(firstEmiDate, currentDate);
     const proratedInterest: number = (principal * annualRate * days) / (365 * 100);
-
     // Calculate initial EMI amount for the loan
     const initialEmiAmount: number =
       (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
       (Math.pow(1 + monthlyRate, tenureMonths) - 1);
-
     if (includePrincipalInFirstEmi) {
       const principalComponent = initialEmiAmount - principal * monthlyRate;
       const totalFirstEmi = proratedInterest + principalComponent;
@@ -249,25 +223,19 @@ const EmiCalculator: React.FC = () => {
         note: 'Prorated Interest Only',
       });
     }
-
     currentDate = firstEmiDate;
     let monthCounter = 1;
     let remainingTenureMonths = tenureMonths;
-
     let baseEmiAmount: number =
       (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
       (Math.pow(1 + monthlyRate, tenureMonths) - 1);
-
     let currentMode: 'tenure' | 'emi' = 'tenure';
-
     while (principal > 1 && monthCounter <= tenureMonths + 120) {
       const nextEmiDate = addMonths(currentDate, 1);
-
       const rateChangesInPeriod = sortedRateChanges.filter((r) => {
         const changeDate = new Date(r.date);
         return changeDate > currentDate && changeDate <= nextEmiDate;
       });
-
       for (const rateChange of rateChangesInPeriod) {
         if (principal <= 1) break;
         const changeDate = new Date(rateChange.date);
@@ -282,7 +250,6 @@ const EmiCalculator: React.FC = () => {
           balance: principal.toFixed(2),
           note: `ROI Change: ${oldRate}% → ${currentAnnualRate}% (${rateChange.mode === 'emi' ? 'Adjust EMI' : 'Adjust Tenure'})`,
         });
-
         if (rateChange.mode === 'emi') {
           if (remainingTenureMonths > 0) {
             baseEmiAmount =
@@ -294,7 +261,6 @@ const EmiCalculator: React.FC = () => {
           currentMode = 'tenure';
         }
       }
-
       let emiAmount: number;
       if (currentMode === 'tenure') {
         emiAmount = baseEmiAmount;
@@ -307,12 +273,10 @@ const EmiCalculator: React.FC = () => {
           emiAmount = principal;
         }
       }
-
       const partPaymentsInPeriod = sortedPartPayments.filter((p) => {
         const paymentDate = new Date(p.date);
         return paymentDate > currentDate && paymentDate <= nextEmiDate;
       });
-
       for (const payment of partPaymentsInPeriod) {
         if (principal <= 1) break;
         const paymentDate = new Date(payment.date);
@@ -326,9 +290,7 @@ const EmiCalculator: React.FC = () => {
           balance: principal.toFixed(2),
           note: `Part Payment (${payment.mode === 'emi' ? 'Reduce EMI' : 'Reduce Tenure'})`,
         });
-
         currentMode = payment.mode;
-
         if (currentMode === 'emi' && principal > 1) {
           if (remainingTenureMonths > 0) {
             emiAmount =
@@ -338,20 +300,15 @@ const EmiCalculator: React.FC = () => {
           }
         }
       }
-
       if (principal <= 1) break;
-
       const interest = principal * monthlyRate;
       let principalComponent = emiAmount - interest;
-
       if (principalComponent > principal) {
         principalComponent = principal;
         emiAmount = principalComponent + interest;
       }
-
       principal -= principalComponent;
       remainingTenureMonths--;
-
       results.push({
         date: nextEmiDate.toDateString(),
         emi: emiAmount.toFixed(2),
@@ -359,11 +316,9 @@ const EmiCalculator: React.FC = () => {
         interest: interest.toFixed(2),
         balance: Math.max(0, principal).toFixed(2),
       });
-
       currentDate = nextEmiDate;
       monthCounter++;
     }
-
     return results;
   }, [
     loanAmount,
@@ -375,18 +330,14 @@ const EmiCalculator: React.FC = () => {
     rateChanges,
     includePrincipalInFirstEmi,
   ]);
-
   const schedule = useMemo(() => calculateSchedule(), [calculateSchedule]);
-
   const addPartPayment = () => {
     setPartPayments([...partPayments, { amount: 0, date: '', mode: 'emi', enabled: true }]);
   };
-
   const removePartPayment = (index: number) => {
     const updated = partPayments.filter((_, i) => i !== index);
     setPartPayments(updated);
   };
-
   const updatePartPayment = <K extends keyof PartPayment>(
     index: number,
     field: K,
@@ -396,16 +347,13 @@ const EmiCalculator: React.FC = () => {
     updated[index] = { ...updated[index], [field]: value };
     setPartPayments(updated);
   };
-
   const addRateChange = () => {
     setRateChanges([...rateChanges, { rate: annualRate, date: '', mode: 'tenure', enabled: true }]);
   };
-
   const removeRateChange = (index: number) => {
     const updated = rateChanges.filter((_, i) => i !== index);
     setRateChanges(updated);
   };
-
   const updateRateChange = <K extends keyof RateChange>(
     index: number,
     field: K,
@@ -415,20 +363,17 @@ const EmiCalculator: React.FC = () => {
     updated[index] = { ...updated[index], [field]: value };
     setRateChanges(updated);
   };
-
   const totalInterest = schedule.reduce((sum, row) => sum + parseFloat(row.interest), 0);
   const totalPaid = schedule.reduce((sum, row) => sum + parseFloat(row.emi), 0);
-
   return (
     <main className="mx-auto px-2 w-full max-w-6xl space-y-6 py-4">
       <SEOHead
-        title="EMI Calculator India | Home & Personal Loan Amortization"
-        description="Calculate exact Home Loan and Personal Loan EMIs. Model part-prepayments, interest rate fluctuations, and view complete month-by-month amortization schedules."
-        keywords="EMI calculator, home loan EMI calculator, loan amortization schedule India, prepayment EMI calculator, part payment home loan calculator"
-        canonicalPath="/emi"
+        title="EMI Calculator India — Home & Personal Loan Amortization 2026"
+        description="Calculate home loan, car loan & personal loan EMI with full monthly amortization schedule. Includes part-payment and floating interest rate change modeling. 100% free."
+        keywords="EMI calculator, home loan EMI calculator, loan amortization schedule India, prepayment EMI calculator, part payment home loan calculator, personal loan EMI"
+        canonicalPath="/emi-calculator"
         schema={emiSchema}
       />
-
       <header className="text-center sm:text-left">
         <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
           Loan Intelligence &bull; Amortization Engine
@@ -437,10 +382,10 @@ const EmiCalculator: React.FC = () => {
           Advanced Loan EMI &amp; Part-Payment Amortization Calculator
         </h1>
         <p className="mt-1 text-xs sm:text-sm opacity-70">
-          Calculate equated monthly installments, model lump-sum prepayments, and simulate floating interest rate changes.
+          Calculate equated monthly installments, model lump-sum prepayments, and simulate floating
+          interest rate changes.
         </p>
       </header>
-
       <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-3">
@@ -534,12 +479,13 @@ const EmiCalculator: React.FC = () => {
           </div>
         </div>
       </section>
-
       {/* Part Payments Section */}
       <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-base-300 pb-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">Prepayment Optimizer</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">
+              Prepayment Optimizer
+            </p>
             <h2 className="text-lg font-bold">Lump-Sum Part Payments</h2>
           </div>
           <button type="button" onClick={addPartPayment} className="btn btn-primary btn-sm">
@@ -548,7 +494,10 @@ const EmiCalculator: React.FC = () => {
         </div>
         <div className="space-y-3">
           {partPayments.length === 0 && (
-            <p className="text-xs opacity-60 italic">No part payments added yet. Click &quot;Add Part Payment&quot; above to simulate prepayments.</p>
+            <p className="text-xs opacity-60 italic">
+              No part payments added yet. Click &quot;Add Part Payment&quot; above to simulate
+              prepayments.
+            </p>
           )}
           {partPayments.map((p, idx) => (
             <div
@@ -618,12 +567,13 @@ const EmiCalculator: React.FC = () => {
           ))}
         </div>
       </section>
-
       {/* Interest Rate Changes Section */}
       <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-base-300 pb-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">Repo Rate Shifts</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">
+              Repo Rate Shifts
+            </p>
             <h2 className="text-lg font-bold">Floating Interest Rate Changes</h2>
           </div>
           <button type="button" onClick={addRateChange} className="btn btn-primary btn-sm">
@@ -632,7 +582,10 @@ const EmiCalculator: React.FC = () => {
         </div>
         <div className="space-y-3">
           {rateChanges.length === 0 && (
-            <p className="text-xs opacity-60 italic">No rate changes added yet. Model RBI rate increases or decreases during the loan tenure.</p>
+            <p className="text-xs opacity-60 italic">
+              No rate changes added yet. Model RBI rate increases or decreases during the loan
+              tenure.
+            </p>
           )}
           {rateChanges.map((r, idx) => (
             <div
@@ -703,7 +656,6 @@ const EmiCalculator: React.FC = () => {
           ))}
         </div>
       </section>
-
       {/* Schedule Summary & Table */}
       {schedule.length > 0 && (
         <>
@@ -725,7 +677,6 @@ const EmiCalculator: React.FC = () => {
               <div className="stat-title text-xs font-semibold">Total Installments</div>
             </div>
           </div>
-
           <div className="md:hidden">
             {schedule.map((row, idx) => (
               <article
@@ -769,17 +720,12 @@ const EmiCalculator: React.FC = () => {
               </article>
             ))}
           </div>
-
           <div className="hidden overflow-x-auto rounded-box border border-base-300 md:block bg-base-100 shadow-xs max-h-[500px] overflow-y-auto">
             <table className="w-full text-sm" title="EMI Amortization Schedule">
               <thead className="sticky top-0 bg-base-200 z-10">
                 <tr>
-                  <th className="border-b border-base-300 px-4 py-3 text-left font-bold">
-                    Date
-                  </th>
-                  <th className="border-b border-base-300 px-4 py-3 text-right font-bold">
-                    EMI
-                  </th>
+                  <th className="border-b border-base-300 px-4 py-3 text-left font-bold">Date</th>
+                  <th className="border-b border-base-300 px-4 py-3 text-right font-bold">EMI</th>
                   <th className="border-b border-base-300 px-4 py-3 text-right font-bold">
                     Principal
                   </th>
@@ -789,9 +735,7 @@ const EmiCalculator: React.FC = () => {
                   <th className="border-b border-base-300 px-4 py-3 text-right font-bold">
                     Balance
                   </th>
-                  <th className="border-b border-base-300 px-4 py-3 text-left font-bold">
-                    Note
-                  </th>
+                  <th className="border-b border-base-300 px-4 py-3 text-left font-bold">Note</th>
                 </tr>
               </thead>
               <tbody>
@@ -800,7 +744,9 @@ const EmiCalculator: React.FC = () => {
                     key={idx}
                     className={`${row.note?.includes('Part Payment') ? 'bg-warning/10' : row.note?.includes('ROI Change') ? 'bg-info/10' : 'hover:bg-base-200/50'}`}
                   >
-                    <td className="border-b border-base-300 px-4 py-2.5 text-xs font-mono">{row.date}</td>
+                    <td className="border-b border-base-300 px-4 py-2.5 text-xs font-mono">
+                      {row.date}
+                    </td>
                     <td className="border-b border-base-300 px-4 py-2.5 text-right font-semibold">
                       ₹{parseFloat(row.emi).toLocaleString('en-IN')}
                     </td>
@@ -814,7 +760,11 @@ const EmiCalculator: React.FC = () => {
                       ₹{parseFloat(row.balance).toLocaleString('en-IN')}
                     </td>
                     <td className="border-b border-base-300 px-4 py-2.5">
-                      {row.note && <span className="badge badge-outline badge-sm text-[10px] font-medium">{row.note}</span>}
+                      {row.note && (
+                        <span className="badge badge-outline badge-sm text-[10px] font-medium">
+                          {row.note}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -823,7 +773,6 @@ const EmiCalculator: React.FC = () => {
           </div>
         </>
       )}
-
       <CalculatorContentSection
         title="Understanding Loan Amortization & Smart Prepayment Strategies"
         subtitle="An Equated Monthly Installment (EMI) consists of two components: the interest on the outstanding loan balance and the principal repayment. In the initial years of a loan, up to 75% of your EMI goes toward interest rather than principal reduction."
@@ -837,30 +786,56 @@ const EmiCalculator: React.FC = () => {
         ]}
         workedExample={{
           title: 'Worked Example: ₹30 Lakh Home Loan for 20 Years at 8.75%',
-          description: 'Borrowing ₹30,00,000 at 8.75% annual interest over 240 months (r = 0.0072916):',
-          calculation: 'E = 30,00,000 × 0.0072916 × (1.0072916)^240 / [(1.0072916)^240 - 1] = ₹26,511 / month',
-          result: 'Total Amount Payable: ₹63,62,708 | Total Interest Paid: ₹33,62,708 (Exceeds Principal Loan Amount!)',
+          description:
+            'Borrowing ₹30,00,000 at 8.75% annual interest over 240 months (r = 0.0072916):',
+          calculation:
+            'E = 30,00,000 × 0.0072916 × (1.0072916)^240 / [(1.0072916)^240 - 1] = ₹26,511 / month',
+          result:
+            'Total Amount Payable: ₹63,62,708 | Total Interest Paid: ₹33,62,708 (Exceeds Principal Loan Amount!)',
         }}
         comparisonTable={{
-          headers: ['Prepayment Option', 'Tenure Impact', 'Monthly EMI Impact', 'Total Interest Saved'],
+          headers: [
+            'Prepayment Option',
+            'Tenure Impact',
+            'Monthly EMI Impact',
+            'Total Interest Saved',
+          ],
           rows: [
-            ['Reduce Loan Tenure', 'Reduces by 3-6 years', 'Stays the same', 'Maximum Interest Saved (Up to 40%)'],
-            ['Reduce Monthly EMI', 'Stays at original years', 'Decreases monthly burden', 'Moderate Interest Saved (~15-20%)'],
-            ['Annual 1 Extra EMI', 'Reduces 20-yr loan to ~16 yrs', 'Stays the same', 'Saves ₹7-10 Lakhs on ₹30L loan'],
+            [
+              'Reduce Loan Tenure',
+              'Reduces by 3-6 years',
+              'Stays the same',
+              'Maximum Interest Saved (Up to 40%)',
+            ],
+            [
+              'Reduce Monthly EMI',
+              'Stays at original years',
+              'Decreases monthly burden',
+              'Moderate Interest Saved (~15-20%)',
+            ],
+            [
+              'Annual 1 Extra EMI',
+              'Reduces 20-yr loan to ~16 yrs',
+              'Stays the same',
+              'Saves ₹7-10 Lakhs on ₹30L loan',
+            ],
           ],
         }}
         keyBenefits={[
           {
             title: 'Dynamic Part-Payment Modeling',
-            description: 'Simulate the exact compounding impact of ad-hoc or scheduled prepayments on your debt schedule.',
+            description:
+              'Simulate the exact compounding impact of ad-hoc or scheduled prepayments on your debt schedule.',
           },
           {
             title: 'Floating Rate Adjustment',
-            description: 'Model future RBI repo rate hikes or cuts to prepare your household cashflow in advance.',
+            description:
+              'Model future RBI repo rate hikes or cuts to prepare your household cashflow in advance.',
           },
           {
             title: 'Month-by-Month Transparency',
-            description: 'Track exact principal vs. interest breakdown for accurate Income Tax deduction claims under Section 80C & 24(b).',
+            description:
+              'Track exact principal vs. interest breakdown for accurate Income Tax deduction claims under Section 80C & 24(b).',
           },
         ]}
         faqs={emiFaqs}
@@ -868,5 +843,4 @@ const EmiCalculator: React.FC = () => {
     </main>
   );
 };
-
 export default EmiCalculator;

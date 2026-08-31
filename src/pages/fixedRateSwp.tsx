@@ -8,7 +8,6 @@ import { RT } from '../types/types.ts';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
-
 const swpSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -37,7 +36,7 @@ const swpSchema = {
           '@type': 'ListItem',
           position: 2,
           name: 'SWP Calculator',
-          item: 'https://rupees.vercel.app/fixed-plans/fixed-rate-swp',
+          item: 'https://rupees.vercel.app/swp-calculator',
         },
       ],
     },
@@ -72,7 +71,6 @@ const swpSchema = {
     },
   ],
 };
-
 const swpFaqs = [
   {
     question: 'How does an inflation-indexed SWP protect retirement purchasing power?',
@@ -95,7 +93,6 @@ const swpFaqs = [
       'Yes. You can increase, decrease, or terminate your monthly SWP mandate at any time through your mutual fund portal or AMC without penalty.',
   },
 ];
-
 const FixedRateSWP = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState('35000000');
   const [rt, setRt] = useState('10');
@@ -124,7 +121,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
     { id: 'wp6', value: '100', title: '100' },
     { id: 'wp7', value: '10', title: '10' },
   ];
-
   const calculateRemainingAmount = (
     p: string,
     r: string,
@@ -152,22 +148,19 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
     }
     return [`${wa}`, `${fa}`];
   };
-
   const [lwa, remainingAmount] = useMemo(
     () => calculateRemainingAmount(pa, rt, irt, inflationFreq, t.tenure, t.tenureFormat, wa),
     [pa, rt, irt, inflationFreq, t.tenure, t.tenureFormat, wa]
   );
-
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="SWP Calculator India | Retirement Monthly Cashflow Planner"
-        description="Plan retirement withdrawals with our SWP calculator. Simulate monthly payouts, residual portfolio balance, capital longevity, and tax-efficient cashflows."
+        title="SWP Calculator India — Retirement Withdrawal Planner 2026"
+        description="Plan retirement with our SWP calculator. Model monthly pension withdrawals, inflation-adjusted income, corpus longevity, and tax-efficient cashflows from mutual funds."
         keywords="SWP calculator, systematic withdrawal plan calculator, monthly pension calculator, retirement withdrawal calculator India, safe withdrawal rate India"
-        canonicalPath="/fixed-plans/fixed-rate-swp"
+        canonicalPath="/swp-calculator"
         schema={swpSchema}
       />
-
       <header className="mb-6 text-center sm:text-left">
         <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
           Retirement Income &bull; Capital Longevity
@@ -176,10 +169,10 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           Systematic Withdrawal Plan (SWP) Calculator for Retirement
         </h1>
         <p className="mt-1 text-xs sm:text-sm opacity-70">
-          Simulate monthly retirement payouts, inflation adjustments, and residual portfolio longevity.
+          Simulate monthly retirement payouts, inflation adjustments, and residual portfolio
+          longevity.
         </p>
       </header>
-
       <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
@@ -227,7 +220,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           }}
         />
       </div>
-
       <CalculatorContentSection
         title="Mastering Sustainable Retirement Cashflows with SWP"
         subtitle="A Systematic Withdrawal Plan (SWP) is a modern financial strategy that allows retirees and wealth planners to generate regular monthly income from an accumulated mutual fund corpus while keeping remaining capital invested in compounding assets."
@@ -235,38 +227,80 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
         formula="Balance_m = Balance_(m-1) × (1 + r)^(1/12) - W_m"
         formulaExplanation={[
           { symbol: 'Balance_m', label: 'Remaining invested capital at the end of month m' },
-          { symbol: 'Balance_(m-1)', label: 'Invested capital balance at the beginning of the month' },
+          {
+            symbol: 'Balance_(m-1)',
+            label: 'Invested capital balance at the beginning of the month',
+          },
           { symbol: 'r', label: 'Annual expected portfolio return rate in decimal form' },
-          { symbol: 'W_m', label: 'Monthly withdrawal payout (adjusted periodically for inflation)' },
+          {
+            symbol: 'W_m',
+            label: 'Monthly withdrawal payout (adjusted periodically for inflation)',
+          },
         ]}
         workedExample={{
           title: 'Worked Example: ₹1 Crore Corpus with ₹50,000/Month Withdrawal at 9% ROI',
-          description: 'With a starting corpus of ₹1,00,00,000, withdrawing ₹50,000 per month (₹6,00,000/year, a 6.0% withdrawal rate) from a fund generating 9% annual returns:',
-          calculation: 'Annual Growth (+₹9.0 Lakhs) > Annual Withdrawals (-₹6.0 Lakhs) -> Net Corpus Grows to ₹1.48 Crores in 20 Years',
-          result: 'Total Withdrawn Over 20 Years: ₹1.20 Crores | Final Residual Portfolio: ~₹1.48 Crores',
+          description:
+            'With a starting corpus of ₹1,00,00,000, withdrawing ₹50,000 per month (₹6,00,000/year, a 6.0% withdrawal rate) from a fund generating 9% annual returns:',
+          calculation:
+            'Annual Growth (+₹9.0 Lakhs) > Annual Withdrawals (-₹6.0 Lakhs) -> Net Corpus Grows to ₹1.48 Crores in 20 Years',
+          result:
+            'Total Withdrawn Over 20 Years: ₹1.20 Crores | Final Residual Portfolio: ~₹1.48 Crores',
         }}
         comparisonTable={{
-          headers: ['Parameter', 'Mutual Fund SWP', 'Bank FD Monthly Interest', 'Annuity Insurance Policy'],
+          headers: [
+            'Parameter',
+            'Mutual Fund SWP',
+            'Bank FD Monthly Interest',
+            'Annuity Insurance Policy',
+          ],
           rows: [
-            ['Monthly Cashflow Structure', 'Flexible (Can be modified or stopped)', 'Fixed interest on principal', 'Fixed life annuity payment'],
-            ['Tax Efficiency', 'High (Only capital gains portion taxed)', 'Poor (Entire interest taxed at slab)', 'Poor (Annuity income fully taxable)'],
-            ['Corpus Growth Potential', 'High (Remaining balance compounds)', 'Zero (Principal stays static)', 'Zero (Principal forfeited to insurer)'],
-            ['Inflation Protection', 'Yes (Can step up withdrawals)', 'No (Fixed payout loses real value)', 'No (Fixed payout)'],
-            ['Inheritance to Nominee', 'Full residual market value', 'Full original principal amount', 'Depends on annuity variant'],
+            [
+              'Monthly Cashflow Structure',
+              'Flexible (Can be modified or stopped)',
+              'Fixed interest on principal',
+              'Fixed life annuity payment',
+            ],
+            [
+              'Tax Efficiency',
+              'High (Only capital gains portion taxed)',
+              'Poor (Entire interest taxed at slab)',
+              'Poor (Annuity income fully taxable)',
+            ],
+            [
+              'Corpus Growth Potential',
+              'High (Remaining balance compounds)',
+              'Zero (Principal stays static)',
+              'Zero (Principal forfeited to insurer)',
+            ],
+            [
+              'Inflation Protection',
+              'Yes (Can step up withdrawals)',
+              'No (Fixed payout loses real value)',
+              'No (Fixed payout)',
+            ],
+            [
+              'Inheritance to Nominee',
+              'Full residual market value',
+              'Full original principal amount',
+              'Depends on annuity variant',
+            ],
           ],
         }}
         keyBenefits={[
           {
             title: 'Superior Tax Arbitrage',
-            description: 'Redemptions under SWP combine capital return and long-term gains, resulting in a much lower effective tax rate than FD interest.',
+            description:
+              'Redemptions under SWP combine capital return and long-term gains, resulting in a much lower effective tax rate than FD interest.',
           },
           {
             title: 'Complete Liquidity Control',
-            description: 'Unlike pension annuities that permanently lock your capital, SWP allows emergency lumpsum withdrawals whenever required.',
+            description:
+              'Unlike pension annuities that permanently lock your capital, SWP allows emergency lumpsum withdrawals whenever required.',
           },
           {
             title: 'Longevity Protection',
-            description: 'When withdrawal rate is calibrated below portfolio CAGR, your capital can outlive you and pass to heirs.',
+            description:
+              'When withdrawal rate is calibrated below portfolio CAGR, your capital can outlive you and pass to heirs.',
           },
         ]}
         faqs={swpFaqs}

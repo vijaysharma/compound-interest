@@ -7,7 +7,6 @@ import { sanctnum } from '../utilities/numSanitity.ts';
 import { RT } from '../types/types.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
-
 const sipSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -36,7 +35,40 @@ const sipSchema = {
           '@type': 'ListItem',
           position: 2,
           name: 'SIP Calculator',
-          item: 'https://rupees.vercel.app/fixed-plans/fixed-rate-sip',
+          item: 'https://rupees.vercel.app/sip-calculator',
+        },
+      ],
+    },
+    {
+      '@type': 'HowTo',
+      name: 'How to Use the SIP Calculator',
+      description:
+        'Calculate your Systematic Investment Plan returns and projected wealth in 4 simple steps.',
+      totalTime: 'PT1M',
+      step: [
+        {
+          '@type': 'HowToStep',
+          position: 1,
+          name: 'Enter Monthly Investment Amount',
+          text: 'Enter the amount you plan to invest every month via SIP (e.g., ₹10,000). You can also switch to "Target Amount" mode to calculate the required monthly SIP.',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 2,
+          name: 'Set Expected Annual Return (CAGR)',
+          text: 'Enter the expected annualized return rate. Use 12% for diversified equity mutual funds based on historical Indian market performance.',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 3,
+          name: 'Choose Investment Duration',
+          text: 'Select how many years or months you plan to continue your SIP (1–35 years).',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 4,
+          name: 'View Instant Results',
+          text: 'Your projected maturity value, total amount invested, estimated capital gains, and wealth multiplier are calculated and displayed instantly.',
         },
       ],
     },
@@ -71,7 +103,6 @@ const sipSchema = {
     },
   ],
 };
-
 const sipFaqs = [
   {
     question: 'Why is Rupee Cost Averaging the biggest advantage of a SIP?',
@@ -94,7 +125,6 @@ const sipFaqs = [
       'Recurring Deposits offer fixed pre-tax interest (~6.5%-7.5%) that is taxed at your income tax slab, resulting in post-tax returns that frequently lag inflation. Equity SIPs offer potential inflation-beating real returns (12-15% CAGR) with favorable capital gains tax treatment.',
   },
 ];
-
 const FixedRateSIP = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState('10000');
   const [rt, setRt] = useState<RT>({
@@ -112,7 +142,6 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
     { id: 'p6', value: '500', title: '500' },
     { id: 'p7', value: '50', title: '50' },
   ];
-
   const calculate = (p: string, t: string, tf: string, invType: string, r?: string) => {
     const tenure = tf === 'y' ? sanctnum(t) : sanctnum(t) / 12;
     const principal = sanctnum(p);
@@ -132,22 +161,19 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
     }
     return sanctnum(fa);
   };
-
   const payoutAmount = useMemo(
     () => Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi)),
     [pa, rt.tenure, rt.tenureFormat, invType, rt.roi]
   );
-
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="SIP Calculator India | Mutual Fund Return & Wealth Planner"
-        description="Free SIP calculator to project mutual fund wealth accumulation, maturity value, and absolute vs. annualized returns with step-up and historical NAV backtesting."
-        keywords="SIP calculator, systematic investment plan calculator, mutual fund return calculator, step up SIP calculator, best SIP calculator India"
-        canonicalPath="/fixed-plans/fixed-rate-sip"
+        title="SIP Calculator India — Mutual Fund Wealth Planner 2026"
+        description="Free SIP calculator to project mutual fund returns with step-up SIP and target corpus planning. Simulate ₹500–₹1 Lakh monthly SIP over 1–35 years. 100% private."
+        keywords="SIP calculator, systematic investment plan calculator, mutual fund return calculator, step up SIP calculator, best SIP calculator India, SIP maturity calculator"
+        canonicalPath="/sip-calculator"
         schema={sipSchema}
       />
-
       <header className="mb-6 text-center sm:text-left">
         <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
           Compounding Engine &bull; Wealth Accumulation
@@ -159,7 +185,6 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
           Simulate compound growth, total maturity corpus, and required monthly investment targets.
         </p>
       </header>
-
       <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
@@ -183,7 +208,6 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
           title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}
         />
       </div>
-
       <CalculatorContentSection
         title="The Compounding Science of Systematic Investment Plans (SIP)"
         subtitle="A Systematic Investment Plan (SIP) enables disciplined retail investors to invest fixed sums regularly into equity and hybrid mutual funds. By combining compounding returns with rupee cost averaging, SIPs are India's premier vehicle for long-term wealth creation."
@@ -197,32 +221,52 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
         ]}
         workedExample={{
           title: 'Worked Example: ₹10,000 Monthly SIP for 15 Years at 12% CAGR',
-          description: 'If you invest ₹10,000 every month into an equity mutual fund delivering an average of 12% annualized returns (i = 0.01/month, n = 180 months):',
+          description:
+            'If you invest ₹10,000 every month into an equity mutual fund delivering an average of 12% annualized returns (i = 0.01/month, n = 180 months):',
           calculation: 'M = 10,000 × [((1 + 0.01)^180 - 1) / 0.01] × (1 + 0.01) = ₹50,45,760',
-          result: 'Total Invested: ₹18,00,000 | Estimated Capital Gains: ₹32,45,760 | Wealth Multiplier: 2.8x',
+          result:
+            'Total Invested: ₹18,00,000 | Estimated Capital Gains: ₹32,45,760 | Wealth Multiplier: 2.8x',
         }}
         comparisonTable={{
-          headers: ['Metric', 'Flat Monthly SIP', '10% Annual Step-Up SIP', 'Bank Recurring Deposit (RD)'],
+          headers: [
+            'Metric',
+            'Flat Monthly SIP',
+            '10% Annual Step-Up SIP',
+            'Bank Recurring Deposit (RD)',
+          ],
           rows: [
-            ['Monthly Start Amount', '₹10,000 / month', '₹10,000 / month (+10% yearly)', '₹10,000 / month'],
+            [
+              'Monthly Start Amount',
+              '₹10,000 / month',
+              '₹10,000 / month (+10% yearly)',
+              '₹10,000 / month',
+            ],
             ['Total Invested (15 Yrs)', '₹18,00,000', '₹38,12,700', '₹18,00,000'],
             ['Expected Returns (CAGR)', '12% p.a.', '12% p.a.', '7.0% p.a.'],
             ['Final Maturity Value', '₹50,45,760', '₹89,28,400', '₹31,88,000'],
-            ['Tax Efficiency', '12.5% LTCG (above ₹1.25L/yr)', '12.5% LTCG (above ₹1.25L/yr)', 'Taxed at standard slab rate'],
+            [
+              'Tax Efficiency',
+              '12.5% LTCG (above ₹1.25L/yr)',
+              '12.5% LTCG (above ₹1.25L/yr)',
+              'Taxed at standard slab rate',
+            ],
           ],
         }}
         keyBenefits={[
           {
             title: 'Rupee Cost Averaging',
-            description: 'Eliminate emotional market timing by purchasing more fund units during market corrections.',
+            description:
+              'Eliminate emotional market timing by purchasing more fund units during market corrections.',
           },
           {
             title: 'Exponential Compounding',
-            description: 'In the later years of a 15-20 year SIP, annual gains often surpass your entire accumulated principal investment.',
+            description:
+              'In the later years of a 15-20 year SIP, annual gains often surpass your entire accumulated principal investment.',
           },
           {
             title: 'Inflation-Beating Growth',
-            description: 'Equity mutual funds historically generate 5-8% alpha over India CPI inflation.',
+            description:
+              'Equity mutual funds historically generate 5-8% alpha over India CPI inflation.',
           },
         ]}
         faqs={sipFaqs}

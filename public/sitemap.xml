@@ -1,98 +1,126 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-  
-  <!-- Homepage -->
+
+  <!-- ==================== HOMEPAGE ==================== -->
   <url>
     <loc>https://rupees.vercel.app/</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://rupees.vercel.app/images/og-image.png</image:loc>
+      <image:title>Rupee Calculator — Free Indian Financial Calculators</image:title>
+      <image:caption>Free SIP, FD, EMI, Inflation and PPP calculators for Indian investors</image:caption>
+    </image:image>
   </url>
 
-  <!-- Core Deposit & Compounding Calculators -->
+  <!-- ==================== SIP CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/deposits/fd</loc>
+    <loc>https://rupees.vercel.app/sip-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://rupees.vercel.app/images/logo.svg</image:loc>
+      <image:title>SIP Calculator India — Systematic Investment Plan Returns</image:title>
+    </image:image>
   </url>
 
+  <!-- ==================== SWP CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/deposits/rd</loc>
+    <loc>https://rupees.vercel.app/swp-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.90</priority>
   </url>
 
-  <!-- Systematic Investment & Withdrawal Calculators -->
+  <!-- ==================== FD CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/fixed-plans/fixed-rate-sip</loc>
+    <loc>https://rupees.vercel.app/fd-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.95</priority>
   </url>
 
+  <!-- ==================== RD CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/fixed-plans/fixed-rate-swp</loc>
+    <loc>https://rupees.vercel.app/rd-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.80</priority>
   </url>
 
-  <!-- Loan & Debt Amortization -->
+  <!-- ==================== COMPOUND INTEREST CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/emi</loc>
+    <loc>https://rupees.vercel.app/compound-interest-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.90</priority>
   </url>
 
-  <!-- Mutual Fund Engines (Live AMFI Data) -->
+  <!-- ==================== EMI CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/mutual-funds/lumpsum</loc>
+    <loc>https://rupees.vercel.app/emi-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
   </url>
 
+  <!-- ==================== MUTUAL FUND ENGINE ==================== -->
   <url>
     <loc>https://rupees.vercel.app/mutual-funds/sip</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.9</priority>
+    <priority>0.90</priority>
   </url>
 
   <url>
     <loc>https://rupees.vercel.app/mutual-funds/swp</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
 
-  <!-- Macroeconomic Intelligence Calculators -->
+  <!-- ==================== INFLATION CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/economics/inflation-rates</loc>
+    <loc>https://rupees.vercel.app/inflation-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
 
+  <!-- ==================== PPP CALCULATOR ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/economics/ppp-exchange-rate</loc>
+    <loc>https://rupees.vercel.app/ppp-calculator</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
 
-  <!-- Utility & Upgrade Pages -->
+  <!-- ==================== TRUST & INFO PAGES ==================== -->
   <url>
-    <loc>https://rupees.vercel.app/upgrade</loc>
+    <loc>https://rupees.vercel.app/about</loc>
     <lastmod>2026-08-31T00:00:00+05:30</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.60</priority>
   </url>
-</urlset>
 
+  <url>
+    <loc>https://rupees.vercel.app/privacy</loc>
+    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.40</priority>
+  </url>
+
+  <url>
+    <loc>https://rupees.vercel.app/disclaimer</loc>
+    <lastmod>2026-08-31T00:00:00+05:30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.40</priority>
+  </url>
+
+</urlset>

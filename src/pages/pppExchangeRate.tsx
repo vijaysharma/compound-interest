@@ -8,7 +8,6 @@ import { fetchExchangeRates, fetchPPPData } from '../data/api_data';
 import CountrySelect from '../components/CountrySelect';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
-
 const pppSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -37,7 +36,7 @@ const pppSchema = {
           '@type': 'ListItem',
           position: 2,
           name: 'PPP Calculator',
-          item: 'https://rupees.vercel.app/economics/ppp-exchange-rate',
+          item: 'https://rupees.vercel.app/ppp-calculator',
         },
       ],
     },
@@ -72,7 +71,6 @@ const pppSchema = {
     },
   ],
 };
-
 const pppFaqs = [
   {
     question: 'How do multinational companies use PPP for remote employee compensation?',
@@ -95,7 +93,6 @@ const pppFaqs = [
       'The Market Exchange Rate reflects international trade demand, currency trading, and interest rate differentials. The PPP Rate reflects the true domestic purchasing power of ordinary consumers buying non-tradable goods like rent, meals, transport, and utilities.',
   },
 ];
-
 const PPPExchangeRate = ({ className, title }: { className?: string; title?: string }) => {
   const [data, setData] = useState<{ [key: string]: CountryPPPType }>({});
   const [pppLoading, setPppLoading] = useState(true);
@@ -105,7 +102,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
   const [srcAmt, setSrcAmt] = useState('10000');
   const [tgtExAmt, setTgtExAmt] = useState(0);
   const [fetchedExData, setFetchExData] = useState<ExchangeRateType>();
-
   const calculatePPP = (
     srcCountry: string,
     tgtCountry: string,
@@ -131,23 +127,19 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       ];
     return [SourcePPP, TargetPPP];
   };
-
   const calculateTargetAmount = (srcAmt: string, srcPPP: number, tgtPPP: number) => {
     srcAmt = srcAmt || '0';
     const targetAmount = (parseFloat(srcAmt) / srcPPP) * tgtPPP;
     return `${targetAmount}`;
   };
-
   const handleSwapCountries = () => {
     setSrcCountry(tgtCountry);
     setTgtCountry(srcCountry);
   };
-
   const currencyLookup = useMemo(
     () => new Map(CURRENCY_CODES.map((cc) => [cc.name.toLowerCase(), cc])),
     []
   );
-
   useEffect(() => {
     let cancelled = false;
     const loadPPPData = async () => {
@@ -186,7 +178,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       cancelled = true;
     };
   }, [currencyLookup]);
-
   const derivedValues = useMemo(() => {
     if (pppLoading || pppError || !data[srcCountry] || !data[tgtCountry]) return null;
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);
@@ -202,7 +193,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       sourceLocale: source.currencyCode,
     };
   }, [data, pppError, pppLoading, srcAmt, srcCountry, tgtCountry]);
-
   useEffect(() => {
     if (!derivedValues) return;
     const { sourceCurrencyName, targetCurrencyName } = derivedValues;
@@ -227,7 +217,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
     };
     getExchangeRates();
   }, [derivedValues, fetchedExData, srcAmt]);
-
   if (pppLoading) {
     return (
       <div className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
@@ -236,7 +225,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       </div>
     );
   }
-
   if (pppError) {
     return (
       <div className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
@@ -245,17 +233,15 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       </div>
     );
   }
-
   return (
     <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
       <SEOHead
-        title="PPP Calculator | Global Salary & Purchasing Power Parity"
-        description="Compare salaries and living standards across 150+ countries using official World Bank Purchasing Power Parity (PPP) conversion metrics and live exchange rates."
-        keywords="purchasing power parity calculator, PPP calculator India to USA, salary comparison PPP, cost of living converter, World Bank PPP conversion"
-        canonicalPath="/economics/ppp-exchange-rate"
+        title="PPP Calculator — Salary Comparison Across 150+ Countries"
+        description="Compare salaries and living costs across 150+ countries using World Bank PPP data. Convert Indian Rupee salary to real USD/EUR purchasing power equivalent. 100% free."
+        keywords="purchasing power parity calculator, PPP calculator India to USA, salary comparison PPP, cost of living converter, World Bank PPP conversion, India US salary comparison"
+        canonicalPath="/ppp-calculator"
         schema={pppSchema}
       />
-
       <header className="mb-6 text-center sm:text-left">
         <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
           Global Economics &bull; World Bank Verified Data
@@ -267,7 +253,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           Compare real standard of living and salary equivalents across 150+ countries.
         </p>
       </header>
-
       <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <div className="join mb-1 w-full">
@@ -290,7 +275,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
             Target
           </div>
         </div>
-
         {/* Swap link */}
         <div className="text-center">
           <button
@@ -300,7 +284,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
             &harr; Swap source &amp; target countries
           </button>
         </div>
-
         <InputAmount
           inputAmount={srcAmt}
           setInputAmount={setSrcAmt}
@@ -332,14 +315,12 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           typeSizePrefix="base"
           stepSizePrefix="sm"
         />
-
         <DisplayCard
           primaryAmount={parseFloat(parseFloat(derivedValues?.tgtAmt || '0').toFixed(2))}
           currencySymbol={derivedValues?.targetCurrencySymbol || 'XYZ'}
           locale={derivedValues?.targetLocale || 'en-US'}
           title={`Equivalent Purchasing Power in ${tgtCountry}`}
         />
-
         <DisplayCard
           primaryAmount={parseFloat(tgtExAmt.toFixed(2))}
           currencySymbol={derivedValues?.targetCurrencySymbol || 'XYZ'}
@@ -351,26 +332,41 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           }`}
         />
       </div>
-
       <CalculatorContentSection
         title="Why Purchasing Power Parity (PPP) Matters for Global Salaries"
         subtitle="Market exchange rates fluctuate based on capital flows and central bank policies, failing to capture true local living costs. Purchasing Power Parity (PPP) calculates the real cost of rent, healthcare, food, and daily essentials across nations."
         formulaTitle="World Bank Purchasing Power Parity Conversion Formula"
         formula="Target Equivalent = (Source Amount / Source PPP Factor) × Target PPP Factor"
         formulaExplanation={[
-          { symbol: 'Target Equivalent', label: 'Local currency needed in target country to match source lifestyle' },
+          {
+            symbol: 'Target Equivalent',
+            label: 'Local currency needed in target country to match source lifestyle',
+          },
           { symbol: 'Source Amount', label: 'Income or expense in origin country local currency' },
-          { symbol: 'Source PPP Factor', label: 'World Bank PPP conversion factor for source economy' },
-          { symbol: 'Target PPP Factor', label: 'World Bank PPP conversion factor for destination economy' },
+          {
+            symbol: 'Source PPP Factor',
+            label: 'World Bank PPP conversion factor for source economy',
+          },
+          {
+            symbol: 'Target PPP Factor',
+            label: 'World Bank PPP conversion factor for destination economy',
+          },
         ]}
         workedExample={{
           title: 'Worked Example: ₹25 Lakhs India Salary vs. USA Equivalent',
-          description: 'With India PPP factor of ~24.5 and USA factor of 1.0, converting a ₹25,00,000 Indian annual income to US Dollar lifestyle equivalence:',
+          description:
+            'With India PPP factor of ~24.5 and USA factor of 1.0, converting a ₹25,00,000 Indian annual income to US Dollar lifestyle equivalence:',
           calculation: 'Equivalent USD = ₹25,00,000 / 24.5 = $102,040 in the United States',
-          result: 'Real Purchasing Equivalent: ~$102,000 in USA (Compared to just $29,000 at nominal Forex rates)',
+          result:
+            'Real Purchasing Equivalent: ~$102,000 in USA (Compared to just $29,000 at nominal Forex rates)',
         }}
         comparisonTable={{
-          headers: ['Country', 'Nominal FX (1 USD)', 'PPP Factor (1 USD)', '₹25L Equivalent Salary'],
+          headers: [
+            'Country',
+            'Nominal FX (1 USD)',
+            'PPP Factor (1 USD)',
+            '₹25L Equivalent Salary',
+          ],
           rows: [
             ['India (INR)', '₹86.50', '₹24.50', '₹25,00,000 (Base)'],
             ['United States (USD)', '$1.00', '$1.00', '$102,000'],
@@ -383,15 +379,18 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
         keyBenefits={[
           {
             title: 'Accurate Global Job Offer Analysis',
-            description: 'Evaluate whether an overseas job offer in the US, Europe, or Gulf actually improves your disposable income.',
+            description:
+              'Evaluate whether an overseas job offer in the US, Europe, or Gulf actually improves your disposable income.',
           },
           {
             title: 'Expat & NRI Repatriation Planning',
-            description: 'Determine the exact domestic rupee compensation required when moving back to India.',
+            description:
+              'Determine the exact domestic rupee compensation required when moving back to India.',
           },
           {
             title: 'Remote Freelance Rate Card',
-            description: 'Set fair, competitive pricing for international clients based on real economic value.',
+            description:
+              'Set fair, competitive pricing for international clients based on real economic value.',
           },
         ]}
         faqs={pppFaqs}
@@ -399,5 +398,4 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
     </main>
   );
 };
-
 export default PPPExchangeRate;

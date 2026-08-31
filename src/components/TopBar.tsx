@@ -4,6 +4,7 @@ import {
   FiAward,
   FiClock,
   FiGlobe,
+  FiInfo,
   FiLayers,
   FiLogOut,
   FiMenu,
@@ -15,34 +16,49 @@ import {
 } from 'react-icons/fi';
 import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
+
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
     '/': 'Rupee Calculator',
     '/login': 'Sign In',
     '/admin': 'Data administration',
+    '/about': 'About',
+    '/privacy': 'Privacy Policy',
+    '/disclaimer': 'Disclaimer',
     '/emi': 'EMI Calculator',
+    '/emi-calculator': 'EMI Calculator',
     '/deposits/fd': 'Fixed Deposits',
+    '/fd-calculator': 'Fixed Deposits',
     '/deposits/rd': 'Recurring Deposits',
+    '/rd-calculator': 'Recurring Deposits',
+    '/compound-interest-calculator': 'Compound Interest',
     '/economics/inflation-rates': 'Inflation Rates',
+    '/inflation-calculator': 'Inflation Rates',
     '/economics/ppp-exchange-rate': 'PPP Exchange Rate',
+    '/ppp-calculator': 'PPP Exchange Rate',
     '/fixed-plans/fixed-rate-sip': 'Fixed Rate SIP',
+    '/sip-calculator': 'SIP Calculator',
     '/fixed-plans/fixed-rate-swp': 'Fixed Rate SWP',
+    '/swp-calculator': 'SWP Calculator',
     '/mutual-funds/lumpsum': 'Lumpsum',
     '/mutual-funds/sip': 'SIP',
     '/mutual-funds/swp': 'SWP',
   };
   return titles[pathname] ?? 'Rupee Calculator';
 };
+
 const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout, setShowPaywall } = useAuth();
   const navTitle = getNavTitle(pathname);
+
   const handleLogout = async () => {
     await logout();
     navigate('/', { replace: true });
   };
+
   return (
     <>
       <header
@@ -162,7 +178,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     <span>Loans</span>
                   </h3>
                   <Link
-                    to="/emi"
+                    to="/emi-calculator"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -175,14 +191,14 @@ const TopBar = ({ className }: { className?: string }) => {
                     <span>Deposits</span>
                   </h3>
                   <Link
-                    to="/deposits/fd"
+                    to="/fd-calculator"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Fixed Deposits
                   </Link>
                   <Link
-                    to="/deposits/rd"
+                    to="/rd-calculator"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -195,14 +211,14 @@ const TopBar = ({ className }: { className?: string }) => {
                     <span>Economics</span>
                   </h3>
                   <Link
-                    to="/economics/inflation-rates"
+                    to="/inflation-calculator"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Inflation Rates
                   </Link>
                   <Link
-                    to="/economics/ppp-exchange-rate"
+                    to="/ppp-calculator"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -215,18 +231,18 @@ const TopBar = ({ className }: { className?: string }) => {
                     <span>Fixed Plans</span>
                   </h3>
                   <Link
-                    to="/fixed-plans/fixed-rate-sip"
+                    to="/sip-calculator"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Fixed Rate SIP
+                    SIP Calculator
                   </Link>
                   <Link
-                    to="/fixed-plans/fixed-rate-swp"
+                    to="/swp-calculator"
                     className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Fixed Rate SWP
+                    SWP Calculator
                   </Link>
                 </div>
                 <div className="mt-3">
@@ -254,6 +270,33 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SWP
+                  </Link>
+                </div>
+                <div className="mt-3 border-t border-primary-content/20 pt-3">
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                    <FiInfo className="h-3.5 w-3.5" />
+                    <span>Info &amp; Legal</span>
+                  </h3>
+                  <Link
+                    to="/about"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    About Us
+                  </Link>
+                  <Link
+                    to="/privacy"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Privacy Policy
+                  </Link>
+                  <Link
+                    to="/disclaimer"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Disclaimer
                   </Link>
                 </div>
               </nav>

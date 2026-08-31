@@ -6,10 +6,10 @@ export interface FAQItem {
 export interface ContentSectionProps {
   title: string;
   subtitle: string;
-  formulaTitle: string;
-  formula: string;
-  formulaExplanation: { symbol: string; label: string }[];
-  workedExample: {
+  formulaTitle?: string;
+  formula?: string;
+  formulaExplanation?: { symbol: string; label: string }[];
+  workedExample?: {
     title: string;
     description: string;
     calculation: string;
@@ -60,32 +60,36 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
           </div>
         )}
         {/* Formula Box (Featured Snippet Optimized) */}
-        <div className="card bg-base-200/60 border border-base-300 p-6 rounded-xl space-y-4">
-          <h3 className="text-lg font-bold">{formulaTitle}</h3>
-          <div className="bg-base-100 p-4 rounded-lg font-mono text-center text-primary text-base sm:text-lg font-bold border border-primary/20 shadow-inner overflow-x-auto">
-            {formula}
+        {formula && formulaTitle && formulaExplanation && (
+          <div className="card bg-base-200/60 border border-base-300 p-6 rounded-xl space-y-4">
+            <h3 className="text-lg font-bold">{formulaTitle}</h3>
+            <div className="bg-base-100 p-4 rounded-lg font-mono text-center text-primary text-base sm:text-lg font-bold border border-primary/20 shadow-inner overflow-x-auto">
+              {formula}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm opacity-85">
+              {formulaExplanation.map((item, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <span className="font-bold text-primary font-mono shrink-0">{item.symbol}:</span>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm opacity-85">
-            {formulaExplanation.map((item, idx) => (
-              <div key={idx} className="flex items-start gap-2">
-                <span className="font-bold text-primary font-mono shrink-0">{item.symbol}:</span>
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
         {/* Worked Example */}
-        <div className="card bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm space-y-3">
-          <h3 className="text-lg font-bold text-primary">{workedExample.title}</h3>
-          <p className="text-sm opacity-80 leading-relaxed">{workedExample.description}</p>
-          <div className="bg-base-200 p-3 rounded-lg text-xs sm:text-sm font-mono text-base-content/90 overflow-x-auto">
-            {workedExample.calculation}
+        {workedExample && (
+          <div className="card bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm space-y-3">
+            <h3 className="text-lg font-bold text-primary">{workedExample.title}</h3>
+            <p className="text-sm opacity-80 leading-relaxed">{workedExample.description}</p>
+            <div className="bg-base-200 p-3 rounded-lg text-xs sm:text-sm font-mono text-base-content/90 overflow-x-auto">
+              {workedExample.calculation}
+            </div>
+            <p className="text-sm font-bold text-success flex items-center gap-1.5">
+              <span>Result:</span>
+              <span>{workedExample.result}</span>
+            </p>
           </div>
-          <p className="text-sm font-bold text-success flex items-center gap-1.5">
-            <span>Result:</span>
-            <span>{workedExample.result}</span>
-          </p>
-        </div>
+        )}
         {/* Comparison Table */}
         {comparisonTable && (
           <div className="space-y-3">

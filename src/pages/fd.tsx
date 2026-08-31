@@ -15,7 +15,6 @@ import {
 } from '../data/default_data.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
-
 const fdSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -44,7 +43,39 @@ const fdSchema = {
           '@type': 'ListItem',
           position: 2,
           name: 'Fixed Deposit Calculator',
-          item: 'https://rupees.vercel.app/deposits/fd',
+          item: 'https://rupees.vercel.app/fd-calculator',
+        },
+      ],
+    },
+    {
+      '@type': 'HowTo',
+      name: 'How to Use the FD Compound Interest Calculator',
+      description: 'Calculate Fixed Deposit maturity amount and compound interest in 4 steps.',
+      totalTime: 'PT1M',
+      step: [
+        {
+          '@type': 'HowToStep',
+          position: 1,
+          name: 'Enter Principal Amount',
+          text: 'Enter the amount you wish to deposit as a Fixed Deposit (e.g., ₹1,00,000).',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 2,
+          name: 'Set Annual Interest Rate',
+          text: 'Enter the interest rate offered by your bank (e.g., 7.5% per annum).',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 3,
+          name: 'Choose Tenure and Compounding Frequency',
+          text: 'Select the FD duration and how often interest is compounded (monthly, quarterly, half-yearly, or annually).',
+        },
+        {
+          '@type': 'HowToStep',
+          position: 4,
+          name: 'View Maturity Amount',
+          text: 'Instantly see your total maturity value, interest earned, and effective annual yield.',
         },
       ],
     },
@@ -79,7 +110,6 @@ const fdSchema = {
     },
   ],
 };
-
 const fdFaqs = [
   {
     question: 'How does quarterly compounding increase FD returns compared to simple interest?',
@@ -102,7 +132,6 @@ const fdFaqs = [
       'All deposits across commercial, small finance, and cooperative banks are insured up to ₹5,00,000 (including principal and interest) per depositor per bank by DICGC (Deposit Insurance and Credit Guarantee Corporation), a wholly-owned subsidiary of the Reserve Bank of India (RBI).',
   },
 ];
-
 const FD: React.FC = () => {
   const [pa, setPa] = useState(PA);
   const [rt, setRt] = useState<RT>(RATE_TENURE);
@@ -110,7 +139,6 @@ const FD: React.FC = () => {
   const [frequency, setFrequency] = useState('4');
   const [invType, setInvType] = useState('inv');
   const stepData: StepAmountType[] = STEP_AMOUNT;
-
   const payoutAmount = useMemo(() => {
     const rtRoi = rt.roi ? rt.roi : '0';
     const finalAmount =
@@ -122,17 +150,15 @@ const FD: React.FC = () => {
     }
     return Math.round(finalAmount);
   }, [pa, rt, mode, invType, frequency]);
-
   return (
     <main className="w-full max-w-4xl mx-auto px-2 py-4">
       <SEOHead
-        title="FD Calculator India | Compound Interest & Maturity Simulator"
-        description="Calculate Fixed Deposit maturity amount and compound interest across monthly, quarterly, half-yearly, and annual compounding frequencies with live tax insights."
-        keywords="compound interest calculator India, FD calculator, fixed deposit calculator, quarterly compounding calculator, bank FD interest rate"
-        canonicalPath="/deposits/fd"
+        title="FD Calculator India — Fixed Deposit Compound Interest 2026"
+        description="Calculate fixed deposit maturity value with quarterly, monthly, and annual compounding. Compare cumulative vs non-cumulative FD returns with tax insights. 100% free."
+        keywords="compound interest calculator India, FD calculator, fixed deposit calculator, quarterly compounding calculator, bank FD interest rate, FD maturity calculator"
+        canonicalPath="/fd-calculator"
         schema={fdSchema}
       />
-
       <header className="mb-6 text-center sm:text-left">
         <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
           Fixed Income &bull; Guaranteed Returns
@@ -141,11 +167,11 @@ const FD: React.FC = () => {
           Fixed Deposit (FD) &amp; Compound Interest Calculator India
         </h1>
         <p className="mt-1 text-xs sm:text-sm opacity-70">
-          Simulate cumulative maturity amounts, periodic payout yields, and compound growth with institutional precision.
+          Simulate cumulative maturity amounts, periodic payout yields, and compound growth with
+          institutional precision.
         </p>
       </header>
-
-      <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
+      <div>
         <InputAmount
           className="mb-1"
           inputAmount={pa}
@@ -185,47 +211,64 @@ const FD: React.FC = () => {
           title={invType === 'tgt' ? 'Lumpsum amount required' : ''}
         />
       </div>
-
       <CalculatorContentSection
         title="Understanding Fixed Deposit Compounding & Maturity Mathematics"
         subtitle="A Fixed Deposit (FD) is one of India's most trusted fixed-income investment instruments, offering assured capital protection and predictable returns. Understanding how compounding intervals impact your final wealth is key to maximizing interest income."
-        formulaTitle="Fixed Deposit Compound Interest Formula"
-        formula="A = P × (1 + r / n)^(n × t)"
-        formulaExplanation={[
-          { symbol: 'A', label: 'Total maturity amount receivable at the end of the tenure' },
-          { symbol: 'P', label: 'Initial principal deposit amount (₹)' },
-          { symbol: 'r', label: 'Annual nominal interest rate in decimal form (e.g., 7.5% = 0.075)' },
-          { symbol: 'n', label: 'Compounding frequency per year (Quarterly = 4, Monthly = 12, Annually = 1)' },
-          { symbol: 't', label: 'Total duration/tenure of the deposit in years' },
-        ]}
-        workedExample={{
-          title: 'Worked Example: 5-Year Bank FD with Quarterly Compounding',
-          description: 'Suppose you invest ₹1,00,000 in a 5-year fixed deposit at an annual interest rate of 7.5% compounded quarterly (n = 4).',
-          calculation: 'A = 1,00,000 × (1 + 0.075 / 4)^(4 × 5) = 1,00,000 × (1.01875)^20 = ₹1,44,995',
-          result: 'Total Maturity Value: ₹1,44,995 | Total Interest Earned: ₹44,995 (Effective Yield: 8.99% p.a.)',
-        }}
         comparisonTable={{
-          headers: ['Feature / Parameter', 'Bank Fixed Deposit (FD)', 'Debt Mutual Funds', 'Public Provident Fund (PPF)'],
+          headers: [
+            'Feature / Parameter',
+            'Bank Fixed Deposit (FD)',
+            'Debt Mutual Funds',
+            'Public Provident Fund (PPF)',
+          ],
           rows: [
-            ['Capital Safety', 'Very High (DICGC Insured up to ₹5L)', 'Moderate (Market-linked NAV)', 'Sovereign Guarantee (Govt of India)'],
-            ['Returns Predictability', 'Guaranteed & Fixed at deposit date', 'Variable (Depends on interest cycle)', 'Govt reset quarterly (currently ~7.1%)'],
-            ['Compounding Frequency', 'Quarterly (typically)', 'Daily NAV compounding', 'Annual Compounding (March 31st)'],
-            ['Tax Treatment', 'Taxed at slab rate (TDS applicable)', 'Taxed at slab rate post April 2023', 'Exempt-Exempt-Exempt (EEE) - 100% Tax Free'],
-            ['Liquidity / Premature Exit', 'Allowed with 0.5% - 1% penalty', 'High (Redeem in 1-2 business days)', '15-Year Lock-in (Partial exit after 7 yrs)'],
+            [
+              'Capital Safety',
+              'Very High (DICGC Insured up to ₹5L)',
+              'Moderate (Market-linked NAV)',
+              'Sovereign Guarantee (Govt of India)',
+            ],
+            [
+              'Returns Predictability',
+              'Guaranteed & Fixed at deposit date',
+              'Variable (Depends on interest cycle)',
+              'Govt reset quarterly (currently ~7.1%)',
+            ],
+            [
+              'Compounding Frequency',
+              'Quarterly (typically)',
+              'Daily NAV compounding',
+              'Annual Compounding (March 31st)',
+            ],
+            [
+              'Tax Treatment',
+              'Taxed at slab rate (TDS applicable)',
+              'Taxed at slab rate post April 2023',
+              'Exempt-Exempt-Exempt (EEE) - 100% Tax Free',
+            ],
+            [
+              'Liquidity / Premature Exit',
+              'Allowed with 0.5% - 1% penalty',
+              'High (Redeem in 1-2 business days)',
+              '15-Year Lock-in (Partial exit after 7 yrs)',
+            ],
           ],
         }}
         keyBenefits={[
           {
             title: 'Guaranteed Capital Preservation',
-            description: 'Unlike equities, your principal and committed interest rate are unaffected by stock market swings.',
+            description:
+              'Unlike equities, your principal and committed interest rate are unaffected by stock market swings.',
           },
           {
             title: 'Flexible Interest Payouts',
-            description: 'Choose Cumulative reinvestment to maximize compound growth or periodic monthly/quarterly payouts for living expenses.',
+            description:
+              'Choose Cumulative reinvestment to maximize compound growth or periodic monthly/quarterly payouts for living expenses.',
           },
           {
             title: 'Senior Citizen Bonus',
-            description: 'Most Indian banks offer an additional 0.50% to 0.75% higher interest rate to citizens aged 60 and above.',
+            description:
+              'Most Indian banks offer an additional 0.50% to 0.75% higher interest rate to citizens aged 60 and above.',
           },
         ]}
         faqs={fdFaqs}
