@@ -1,0 +1,12 @@
+# Robots.txt for https://rupees.vercel.app/
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/admin/
+Disallow: /api/auth/
+Disallow: /api/payments/
+
+# Host & Sitemaps
+Host: https://rupees.vercel.app
+Sitemap: https://rupees.vercel.app/sitemap.xml
+

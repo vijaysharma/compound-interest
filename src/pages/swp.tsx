@@ -7,6 +7,80 @@ import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
+import SEOHead from '../components/SEOHead';
+import CalculatorContentSection from '../components/CalculatorContentSection';
+const liveSwpSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FinancialProduct',
+      name: 'Mutual Fund SWP Retirement Backtesting Engine India',
+      description:
+        'Backtests historical mutual fund Systematic Withdrawal Plans (SWP), inflation-adjusted monthly pension drawdowns, and portfolio longevity with live AMFI data.',
+      category: 'InvestmentAccount',
+      provider: {
+        '@type': 'Organization',
+        name: 'Rupee Calculator',
+        url: 'https://rupees.vercel.app/',
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://rupees.vercel.app/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Mutual Fund SWP Backtest',
+          item: 'https://rupees.vercel.app/mutual-funds/swp',
+        },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'How does historical SWP backtesting account for mutual fund market crashes?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Historical SWP backtesting uses exact daily AMFI NAV prices to simulate redemptions during market crashes (such as 2008 and 2020), revealing true sequence-of-returns risk and testing whether your portfolio could survive severe bear markets.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How does step-up SWP combat retirement inflation?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Step-up SWP increases your monthly payout by a set percentage each year (e.g., 6%), matching living cost inflation while testing if your underlying mutual fund growth sustains the higher withdrawal demands.',
+          },
+        },
+      ],
+    },
+  ],
+};
+const liveSwpFaqs = [
+  {
+    question: 'What is Sequence of Returns Risk in retirement SWP planning?',
+    answer:
+      'Sequence of Returns Risk is the risk of experiencing poor market returns in the first few years of retirement. When market NAVs crash early, more units must be liquidated to meet fixed monthly cashflows, causing permanent capital impairment unless buffered by hybrid or debt funds.',
+  },
+  {
+    question: 'How do Hybrid / Balanced Advantage Funds help in SWP backtests?',
+    answer:
+      'Balanced Advantage Funds dynamically shift between equity and debt based on market valuations, limiting downside drawdowns and preventing excessive unit redemptions during market corrections.',
+  },
+  {
+    question: 'How are capital gains taxed when redeeming units under an SWP mandate?',
+    answer:
+      'Each monthly SWP installment redeems a fraction of mutual fund units. Only the capital appreciation portion of the redeemed units is taxed (First-In, First-Out basis), making SWP vastly more tax-efficient than interest-bearing deposits.',
+  },
+];
 const Chart = lazy(() => import('../components/Chart'));
 const STORAGE_KEY = 'mutual_fund_swp_state';
 interface PinnedFund {
@@ -717,7 +791,26 @@ const SWP = ({
     return <h3 className="text-error">{error.message}</h3>;
   }
   return (
-    <>
+    <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
+      <SEOHead
+        title="Mutual Fund SWP Calculator | Live AMFI NAV Retirement Backtest"
+        description="Backtest historical mutual fund SWP cashflows, capital longevity, monthly retirement pension drawdowns, and portfolio yields with verified AMFI daily NAVs."
+        keywords="mutual fund SWP calculator, SWP backtest calculator, retirement SWP planner, AMFI NAV history, systematic withdrawal plan India"
+        canonicalPath="/mutual-funds/swp"
+        schema={liveSwpSchema}
+      />
+      <header className="mb-4 text-center sm:text-left">
+        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+          Retirement Engine &bull; AMFI Historical Backtest
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Mutual Fund SWP Retirement Backtesting Engine
+        </h1>
+        <p className="mt-1 text-xs sm:text-sm opacity-70">
+          Backtest systematic monthly withdrawals, step-up pension payouts, and residual portfolio
+          longevity using live AMFI NAV histories.
+        </p>
+      </header>
       <div className="flex gap-2">
         <button
           type="button"
@@ -929,7 +1022,76 @@ const SWP = ({
           ))}
         </div>
       )}
-    </>
+      <CalculatorContentSection
+        title="Testing Real-World Retirement Resilience with SWP Backtests"
+        subtitle="Simulating Systematic Withdrawal Plans against real historical mutual fund data exposes your retirement portfolio to actual historical market drawdowns, inflation cycles, and recovery periods."
+        formulaTitle="Historical NAV Unit Redemption Model"
+        formula="Units_redeemed = Monthly_Payout / NAV_date  |  Residual_Units = Units_prev - Units_redeemed"
+        formulaExplanation={[
+          {
+            symbol: 'Units_redeemed',
+            label: 'Exact number of mutual fund units liquidated on scheduled withdrawal date',
+          },
+          { symbol: 'Monthly_Payout', label: 'Desired monthly cashflow amount in Indian Rupees' },
+          { symbol: 'NAV_date', label: 'Official AMFI Net Asset Value on the withdrawal date' },
+          {
+            symbol: 'Residual_Units',
+            label: 'Remaining invested units compounding in the mutual fund scheme',
+          },
+        ]}
+        workedExample={{
+          title:
+            'Worked Example: ₹50 Lakhs Invested in Balanced Advantage Fund with ₹35,000/Mo SWP',
+          description:
+            'Backtesting a real hybrid mutual fund through 10 years including major market shocks:',
+          calculation:
+            'Total Principal Invested: ₹50,00,000 | Total Payout Received (120 Months): ₹42,00,000 | Residual Portfolio Valuation: ~₹71,50,000',
+          result:
+            'Corpus Never Depleted | Total Wealth Generated (Withdrawn + Current Value): ₹1.13 Crores (2.26x)',
+        }}
+        comparisonTable={{
+          headers: ['Feature', 'Historical SWP Backtest', 'Static Calculator', 'Insurance Annuity'],
+          rows: [
+            [
+              'Market Volatility Impact',
+              'True daily NAV swings captured',
+              'Assumes smooth constant CAGR',
+              'Zero market link (Fixed rate)',
+            ],
+            [
+              'Sequence of Returns Risk',
+              'Fully backtested through crises',
+              'Ignored / Overlooked',
+              'Not applicable',
+            ],
+            [
+              'Real Inflation Test',
+              'Tests Step-Up vs. Real NAVs',
+              'Rough mathematical guess',
+              'Loses value to inflation',
+            ],
+          ],
+        }}
+        keyBenefits={[
+          {
+            title: 'Exact AMFI Historical Pricing',
+            description:
+              'Simulate the exact day-by-day unit redemption dynamics during real Indian market bull and bear cycles.',
+          },
+          {
+            title: 'Capital Longevity Stress Testing',
+            description:
+              'Determine whether a 4%, 5%, or 6% initial withdrawal rate survives major market corrections.',
+          },
+          {
+            title: 'Tax-Efficient Drawdown Insights',
+            description:
+              'Evaluate remaining capital gains vs. principal return under Indian LTCG rules.',
+          },
+        ]}
+        faqs={liveSwpFaqs}
+      />
+    </main>
   );
 };
 export default SWP;

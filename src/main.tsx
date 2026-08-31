@@ -5,6 +5,7 @@ import App from './App.tsx';
 import LoadingFallback from './components/LoadingFallback.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import './index.css';
+
 const protectedRoute = (
   importer: () => Promise<{ default: ComponentType }>,
   requireAdmin = false,
@@ -20,6 +21,7 @@ const protectedRoute = (
     return { Component: ProtectedComponent };
   };
 };
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -47,6 +49,10 @@ const router = createBrowserRouter([
         lazy: protectedRoute(() => import('./pages/emiCalculator.tsx')),
       },
       {
+        path: 'emi-calculator',
+        lazy: protectedRoute(() => import('./pages/emiCalculator.tsx')),
+      },
+      {
         path: 'deposits',
         children: [
           {
@@ -58,6 +64,18 @@ const router = createBrowserRouter([
             lazy: protectedRoute(() => import('./pages/rd.tsx')),
           },
         ],
+      },
+      {
+        path: 'fd-calculator',
+        lazy: protectedRoute(() => import('./pages/fd.tsx')),
+      },
+      {
+        path: 'rd-calculator',
+        lazy: protectedRoute(() => import('./pages/rd.tsx')),
+      },
+      {
+        path: 'compound-interest-calculator',
+        lazy: protectedRoute(() => import('./pages/fd.tsx')),
       },
       {
         path: 'economics',
@@ -73,6 +91,14 @@ const router = createBrowserRouter([
         ],
       },
       {
+        path: 'inflation-calculator',
+        lazy: protectedRoute(() => import('./pages/inflationRates.tsx')),
+      },
+      {
+        path: 'ppp-calculator',
+        lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx'), false, true),
+      },
+      {
         path: 'fixed-plans',
         children: [
           {
@@ -84,6 +110,14 @@ const router = createBrowserRouter([
             lazy: protectedRoute(() => import('./pages/fixedRateSwp.tsx')),
           },
         ],
+      },
+      {
+        path: 'sip-calculator',
+        lazy: protectedRoute(() => import('./pages/fixedRateSip.tsx')),
+      },
+      {
+        path: 'swp-calculator',
+        lazy: protectedRoute(() => import('./pages/fixedRateSwp.tsx')),
       },
       {
         path: 'mutual-funds',
@@ -105,4 +139,5 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
 createRoot(document.getElementById('root')!).render(<RouterProvider router={router} />);

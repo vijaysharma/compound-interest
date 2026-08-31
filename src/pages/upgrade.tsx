@@ -5,6 +5,7 @@ import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import { PaymentSettings } from '../types/auth';
 import { loadRazorpayScript } from '../utils/razorpay';
+import SEOHead from '../components/SEOHead';
 const Upgrade = () => {
   const { user, isAuthenticated, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -139,7 +140,12 @@ const Upgrade = () => {
     }
   };
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+      <SEOHead
+        title="Upgrade to Pro | Rupee Calculator"
+        description="Unlock unlimited live AMFI mutual fund syncing, institutional-grade calculation limits, and World Bank PPP economic modeling for ₹29/month."
+        canonicalPath="/upgrade"
+      />
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 mb-3">
           <Logo />
@@ -278,7 +284,7 @@ const Upgrade = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 export default Upgrade;

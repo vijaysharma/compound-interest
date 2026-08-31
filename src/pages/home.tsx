@@ -1,12 +1,100 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiBarChart2, FiClock, FiGlobe, FiLayers, FiPercent, FiTrendingUp } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import {
+  FiBarChart2,
+  FiCheckCircle,
+  FiClock,
+  FiGlobe,
+  FiLayers,
+  FiPercent,
+  FiShield,
+  FiTrendingUp,
+  FiZap,
+} from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
-import GoogleSignInButton from '../components/GoogleSignInButton';
 import convertToWords, { getCurrencySymbol } from '../utilities/currency';
+import SEOHead from '../components/SEOHead';
+import { trackCalculatorEvent } from '../utilities/analytics';
+const homeSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://rupees.vercel.app/#website',
+      url: 'https://rupees.vercel.app/',
+      name: 'Rupee Calculator',
+      description:
+        'High-precision financial calculators for Indian retail investors, NRIs, and financial planners.',
+      inLanguage: 'en-IN',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://rupees.vercel.app/mutual-funds/sip?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'Organization',
+      '@id': 'https://rupees.vercel.app/#organization',
+      name: 'Rupee Calculator',
+      url: 'https://rupees.vercel.app/',
+      logo: 'https://rupees.vercel.app/images/logo.svg',
+      sameAs: [],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Are the financial calculations on Rupee Calculator 100% free and private?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. All mathematical models, compounding algorithms, and EMI amortization schedules run 100% client-side in your browser. No financial numbers or personal inputs are transmitted to external servers.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How does Rupee Calculator source its mutual fund and macroeconomic data?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Mutual fund NAV histories are retrieved directly from AMFI (Association of Mutual Funds in India), while purchasing power parity and inflation datasets are verified via the World Bank and International Monetary Fund (IMF).',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What calculators are available on Rupee Calculator?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Rupee Calculator provides 8+ institutional-grade tools including SIP Calculator, SWP Calculator, Fixed Deposit (FD) Compounding Calculator, Recurring Deposit (RD) Calculator, Loan EMI & Amortization Calculator, Inflation Calculator, Purchasing Power Parity (PPP) Converter, and Mutual Fund CAGR Analytics Engine.',
+          },
+        },
+      ],
+    },
+  ],
+};
+const homeFaqs = [
+  {
+    question: 'Are calculations on Rupee Calculator 100% free and private?',
+    answer:
+      'Yes. All mathematical algorithms, compounding models, and EMI schedules execute locally in your web browser. No confidential financial figures or calculation inputs are stored or transmitted to external servers.',
+  },
+  {
+    question: 'How accurate is the Mutual Fund and Macroeconomic data?',
+    answer:
+      'Mutual fund historical NAVs are retrieved directly via official AMFI feeds. Global Purchasing Power Parity (PPP) and inflation statistics are sourced from the World Bank Open Data catalog and the International Monetary Fund (IMF) DataMapper.',
+  },
+  {
+    question: 'How is this different from Groww or ET Money calculators?',
+    answer:
+      'Unlike commercial portals that push advertisements, lead-generation forms, or simplistic calculators, Rupee Calculator offers institutional-grade precision, zero ads, dynamic loan prepayments (part payments), interest rate shift models, and multi-fund backtesting with up to 8 simultaneous mutual funds.',
+  },
+  {
+    question: 'Can I use Rupee Calculator for tax and retirement planning in India?',
+    answer:
+      'Yes. Our SIP, SWP, and FD tools include practical notes on Section 80C, 80TTB senior citizen exemptions, post-Budget LTCG/STCG tax brackets, and sustainable safe withdrawal rates (SWR) for FIRE (Financial Independence, Retire Early) planning.',
+  },
+];
 const Home = () => {
   const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
   const [monthlySip, setMonthlySip] = useState(15000);
   const [expectedRoi, setExpectedRoi] = useState(12);
   const [tenureYears, setTenureYears] = useState(10);
@@ -30,6 +118,13 @@ const Home = () => {
   const currencySymbol = getCurrencySymbol('en-IN', 'INR');
   return (
     <div className="w-full text-base-content">
+      <SEOHead
+        title="Rupee Calculator | Free Indian Financial Calculators & Wealth Simulator"
+        description="Institutional-grade Indian financial calculator suite. Simulate SIP, SWP, Compound Interest, Loan EMI schedules, and live AMFI Mutual Funds in real-time."
+        keywords="rupee calculator, compound interest calculator India, SIP calculator, SWP calculator, mutual fund return calculator, EMI calculator, inflation calculator India, PPP calculator, financial planning tools India"
+        canonicalPath="/"
+        schema={homeSchema}
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden py-12 lg:py-20">
         <div className="mx-auto max-w-5xl px-4 text-center">
@@ -48,29 +143,20 @@ const Home = () => {
             Power Parity in real time.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            {isAuthenticated ? (
-              <Link
-                to="/mutual-funds/lumpsum"
-                className="btn btn-primary btn-md sm:btn-lg shadow-lg hover:shadow-primary/30 transition-all font-semibold"
-              >
-                Mutual Fund Calculator &rarr;
-              </Link>
-            ) : (
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <GoogleSignInButton
-                  text="continue_with"
-                  onSuccess={() => navigate('/', { replace: true })}
-                />
-                <Link
-                  to="/mutual-funds/lumpsum"
-                  className="btn btn-outline btn-md sm:btn-lg font-semibold"
-                >
-                  Try Mutual Fund Calculator
-                </Link>
-              </div>
-            )}
+            <Link
+              to="/fixed-plans/fixed-rate-sip"
+              className="btn btn-primary btn-md sm:btn-lg shadow-lg hover:shadow-primary/30 transition-all font-semibold"
+            >
+              Open SIP Calculator &rarr;
+            </Link>
+            <Link
+              to="/mutual-funds/lumpsum"
+              className="btn btn-outline btn-md sm:btn-lg font-semibold"
+            >
+              Mutual Fund Engine
+            </Link>
             <Link to="/deposits/fd" className="btn btn-ghost btn-md sm:btn-lg font-semibold">
-              Deposit &amp; SIP Tools &rarr;
+              Deposit &amp; EMI Tools &rarr;
             </Link>
           </div>
           {isAuthenticated && user && (
@@ -125,7 +211,15 @@ const Home = () => {
                   max="100000"
                   step="1000"
                   value={monthlySip}
-                  onChange={(e) => setMonthlySip(Number(e.target.value))}
+                  onChange={(e) => {
+                    setMonthlySip(Number(e.target.value));
+                    trackCalculatorEvent(
+                      'home_quick_sip',
+                      'slider_changed',
+                      'monthly_sip',
+                      Number(e.target.value)
+                    );
+                  }}
                   className="range range-primary range-sm w-full"
                 />
                 <span className="text-[11px] opacity-60 capitalize">
@@ -143,7 +237,15 @@ const Home = () => {
                   max="25"
                   step="0.5"
                   value={expectedRoi}
-                  onChange={(e) => setExpectedRoi(Number(e.target.value))}
+                  onChange={(e) => {
+                    setExpectedRoi(Number(e.target.value));
+                    trackCalculatorEvent(
+                      'home_quick_sip',
+                      'slider_changed',
+                      'roi',
+                      Number(e.target.value)
+                    );
+                  }}
                   className="range range-primary range-sm w-full"
                 />
               </div>
@@ -158,7 +260,15 @@ const Home = () => {
                   max="35"
                   step="1"
                   value={tenureYears}
-                  onChange={(e) => setTenureYears(Number(e.target.value))}
+                  onChange={(e) => {
+                    setTenureYears(Number(e.target.value));
+                    trackCalculatorEvent(
+                      'home_quick_sip',
+                      'slider_changed',
+                      'tenure_years',
+                      Number(e.target.value)
+                    );
+                  }}
                   className="range range-primary range-sm w-full"
                 />
               </div>
@@ -219,96 +329,182 @@ const Home = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold mb-2">
-                <FiTrendingUp className="h-5 w-5 inline" /> Mutual Fund Engine
-              </h3>
-              <p className="text-sm opacity-70 mb-4">
-                Search thousands of AMFI mutual funds with live NAV history. Analyze CAGR, benchmark
-                growth, and visualize historical lumpsum and SIP performance.
-              </p>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiTrendingUp className="h-5 w-5 inline text-primary mr-1" /> Mutual Fund Engine
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Search thousands of AMFI mutual funds with live NAV history. Analyze CAGR,
+                  benchmark growth, and visualize historical lumpsum and SIP performance.
+                </p>
+              </div>
               <Link
                 to="/mutual-funds/lumpsum"
-                className="text-xs text-primary font-semibold hover:underline mt-auto"
+                className="text-xs text-primary font-semibold hover:underline"
               >
                 Explore Mutual Funds &rarr;
               </Link>
             </div>
-            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold mb-2">
-                <FiClock className="h-5 w-5 inline" /> SIP &amp; SWP Planning
-              </h3>
-              <p className="text-sm opacity-70 mb-4">
-                Calculate forward systematic investments or retirement withdrawals. Model target
-                capital accumulation or monthly income sustainability.
-              </p>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiClock className="h-5 w-5 inline text-primary mr-1" /> SIP &amp; SWP Planning
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Calculate forward systematic investments or retirement withdrawals. Model target
+                  capital accumulation or monthly income sustainability.
+                </p>
+              </div>
               <Link
                 to="/fixed-plans/fixed-rate-sip"
-                className="text-xs text-primary font-semibold hover:underline mt-auto"
+                className="text-xs text-primary font-semibold hover:underline"
               >
                 Explore Systematic Plans &rarr;
               </Link>
             </div>
-            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold mb-2">
-                <FiLayers className="h-5 w-5 inline" /> Fixed &amp; Recurring Deposits
-              </h3>
-              <p className="text-sm opacity-70 mb-4">
-                High-precision compound interest calculator with support for monthly, quarterly,
-                semi-annual, and annual compounding frequencies.
-              </p>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiLayers className="h-5 w-5 inline text-primary mr-1" /> Fixed &amp; Recurring
+                  Deposits
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  High-precision compound interest calculator with support for monthly, quarterly,
+                  semi-annual, and annual compounding frequencies.
+                </p>
+              </div>
               <Link
                 to="/deposits/fd"
-                className="text-xs text-primary font-semibold hover:underline mt-auto"
+                className="text-xs text-primary font-semibold hover:underline"
               >
                 Explore Deposit Plans &rarr;
               </Link>
             </div>
-            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold mb-2">
-                <FiGlobe className="h-5 w-5 inline" /> Purchasing Power Parity (PPP)
-              </h3>
-              <p className="text-sm opacity-70 mb-4">
-                Convert salary and living costs across 150+ countries using real World Bank PPP
-                conversion factors and currency mappings.
-              </p>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiGlobe className="h-5 w-5 inline text-primary mr-1" /> Purchasing Power Parity
+                  (PPP)
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Convert salary and living costs across 150+ countries using real World Bank PPP
+                  conversion factors and currency mappings.
+                </p>
+              </div>
               <Link
                 to="/economics/ppp-exchange-rate"
-                className="text-xs text-primary font-semibold hover:underline mt-auto"
+                className="text-xs text-primary font-semibold hover:underline"
               >
                 Calculate Global PPP &rarr;
               </Link>
             </div>
-            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold mb-2">
-                <FiBarChart2 className="h-5 w-5 inline" /> Inflation Modeling
-              </h3>
-              <p className="text-sm opacity-70 mb-4">
-                Understand the true purchasing power erosion over decades with IMF historical
-                inflation data and forward forecasts.
-              </p>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiBarChart2 className="h-5 w-5 inline text-primary mr-1" /> Inflation Modeling
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Understand the true purchasing power erosion over decades with IMF historical
+                  inflation data and forward forecasts.
+                </p>
+              </div>
               <Link
                 to="/economics/inflation-rates"
-                className="text-xs text-primary font-semibold hover:underline mt-auto"
+                className="text-xs text-primary font-semibold hover:underline"
               >
                 Explore Inflation Rates &rarr;
               </Link>
             </div>
-            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold mb-2">
-                <FiPercent className="h-5 w-5 inline" /> EMI &amp; Loan Amortization
-              </h3>
-              <p className="text-sm opacity-70 mb-4">
-                Calculate home, personal, or vehicle loan EMIs with full month-by-month principal vs
-                interest repayment breakdown schedules.
-              </p>
-              <Link
-                to="/emi"
-                className="text-xs text-primary font-semibold hover:underline mt-auto"
-              >
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiPercent className="h-5 w-5 inline text-primary mr-1" /> EMI &amp; Loan
+                  Amortization
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Calculate home, personal, or vehicle loan EMIs with full month-by-month principal
+                  vs interest repayment breakdown schedules.
+                </p>
+              </div>
+              <Link to="/emi" className="text-xs text-primary font-semibold hover:underline">
                 Calculate Loan EMI &rarr;
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+      {/* Why Choose Rupee Calculator */}
+      <section className="py-12 px-4 bg-base-200/40 border-y border-base-300">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold">
+              Why Indian Investors Choose Rupee Calculator
+            </h2>
+            <p className="mt-2 text-sm opacity-70">
+              The premier privacy-first financial simulation suite in India.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="card bg-base-100 border border-base-300 p-5 rounded-xl space-y-2">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <FiShield className="h-5 w-5" />
+                <span>100% Client-Side Privacy</span>
+              </div>
+              <p className="text-xs sm:text-sm opacity-75 leading-relaxed">
+                Zero data tracking. Your salary, loan balances, and investment amounts never leave
+                your browser.
+              </p>
+            </div>
+            <div className="card bg-base-100 border border-base-300 p-5 rounded-xl space-y-2">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <FiZap className="h-5 w-5" />
+                <span>Zero Calculation Lag (0ms)</span>
+              </div>
+              <p className="text-xs sm:text-sm opacity-75 leading-relaxed">
+                Instant interactive feedback with responsive sliders and real-time amortization
+                generation.
+              </p>
+            </div>
+            <div className="card bg-base-100 border border-base-300 p-5 rounded-xl space-y-2">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <FiCheckCircle className="h-5 w-5" />
+                <span>Official Institutional Data</span>
+              </div>
+              <p className="text-xs sm:text-sm opacity-75 leading-relaxed">
+                Live mutual fund NAV feeds from AMFI, global PPP metrics from World Bank, and CPI
+                inflation from IMF.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Homepage FAQ Section */}
+      <section className="py-16 px-4">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-bold">Frequently Asked Questions</h2>
+            <p className="mt-2 text-sm opacity-70">
+              Everything you need to know about Rupee Calculator and financial modeling.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {homeFaqs.map((faq, idx) => (
+              <details
+                key={idx}
+                className="group border border-base-300 rounded-xl bg-base-100 p-4 open:bg-base-200/40 transition-colors shadow-xs"
+              >
+                <summary className="font-semibold cursor-pointer list-none flex justify-between items-center text-sm sm:text-base select-none">
+                  <span>{faq.question}</span>
+                  <span className="text-primary group-open:rotate-180 transition-transform font-bold text-lg">
+                    &darr;
+                  </span>
+                </summary>
+                <p className="mt-3 text-xs sm:text-sm opacity-80 leading-relaxed border-t border-base-300/50 pt-3">
+                  {faq.answer}
+                </p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
@@ -317,28 +513,20 @@ const Home = () => {
         <div className="mx-auto max-w-2xl">
           <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to Optimize Your Finances?</h2>
           <p className="mt-3 text-base sm:text-lg opacity-90">
-            Sign in with Google to start modeling your financial independence, investments, and
-            compounding returns.
+            Model your wealth compounding, loan repayments, and investment strategies with zero lag.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            {isAuthenticated ? (
-              <Link
-                to="/mutual-funds/lumpsum"
-                className="btn btn-secondary btn-md sm:btn-lg font-semibold"
-              >
-                Start Calculating &rarr;
-              </Link>
-            ) : (
-              <GoogleSignInButton
-                text="signup_with"
-                onSuccess={() => navigate('/', { replace: true })}
-              />
-            )}
+            <Link
+              to="/fixed-plans/fixed-rate-sip"
+              className="btn btn-secondary btn-md sm:btn-lg font-semibold"
+            >
+              Start Calculating Now &rarr;
+            </Link>
             <Link
               to="/deposits/fd"
               className="btn btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary btn-md sm:btn-lg font-semibold"
             >
-              Deposit &amp; EMI Calculators &rarr;
+              Deposit &amp; EMI Tools &rarr;
             </Link>
           </div>
         </div>

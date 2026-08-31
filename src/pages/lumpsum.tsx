@@ -7,6 +7,93 @@ import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { CHART_COLORS } from '../data/chartColors';
+import SEOHead from '../components/SEOHead';
+import CalculatorContentSection from '../components/CalculatorContentSection';
+const lumpsumSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FinancialProduct',
+      name: 'Mutual Fund Lumpsum Return & Historical NAV Calculator',
+      description:
+        'Analyzes historical mutual fund lumpsum investments, CAGR performance, absolute returns, and rolling NAV trajectories with live AMFI data.',
+      category: 'InvestmentAccount',
+      provider: {
+        '@type': 'Organization',
+        name: 'Rupee Calculator',
+        url: 'https://rupees.vercel.app/',
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://rupees.vercel.app/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Mutual Fund Lumpsum Calculator',
+          item: 'https://rupees.vercel.app/mutual-funds/lumpsum',
+        },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'How is Compound Annual Growth Rate (CAGR) calculated for Mutual Funds?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'CAGR measures the annual compounded rate of return of an investment over a specific time horizon using the formula: CAGR = [(Ending NAV / Beginning NAV)^(1 / Years) - 1] × 100.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the taxation on Lumpsum Equity Mutual Fund investments in India?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Long-Term Capital Gains (LTCG) on equity mutual fund units held for over 12 months are tax-exempt up to ₹1.25 Lakh per financial year, with gains exceeding ₹1.25 Lakh taxed at 12.5%. Short-Term Capital Gains (STCG on units held under 12 months) are taxed at 20%.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Is Lumpsum investment better than SIP?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Lumpsum investing generally delivers higher long-term returns during bull or upward trending markets because 100% of your capital compounds from Day 1. However, SIPs offer superior risk protection during volatile or declining markets through Rupee Cost Averaging.',
+          },
+        },
+      ],
+    },
+  ],
+};
+const lumpsumFaqs = [
+  {
+    question: 'How does historical NAV backtesting work on Rupee Calculator?',
+    answer:
+      'We fetch verified daily Net Asset Value (NAV) price histories directly from the Association of Mutual Funds in India (AMFI). When you choose a date range, our engine calculates the exact historical unit allotment, absolute profit, and annualized CAGR across thousands of direct and regular mutual fund schemes.',
+  },
+  {
+    question: 'What is the difference between Direct Plan and Regular Plan mutual funds?',
+    answer:
+      'Direct plans have lower annual expense ratios (TER) because no distributor commissions are paid. Over 10-20 years, direct plans frequently deliver 1.0% to 1.5% higher annual CAGR, compounding into lakhs of rupees in extra wealth.',
+  },
+  {
+    question: 'Can I compare multiple mutual funds simultaneously?',
+    answer:
+      'Yes. Rupee Calculator allows you to pin and backtest up to 8 mutual funds side-by-side on interactive multi-line growth charts with synchronized date ranges.',
+  },
+  {
+    question: 'What is the difference between Absolute Return and CAGR?',
+    answer:
+      'Absolute Return measures the raw percentage gain from start to finish without accounting for time. CAGR normalizes this growth over multiple years to show the smooth annual compounding pace, making it the industry standard for multi-year comparisons.',
+  },
+];
 const Chart = lazy(() => import('../components/Chart'));
 const STORAGE_KEY = 'mutual_fund_lumpsum_state';
 interface PinnedFund {
@@ -693,13 +780,27 @@ const Lumpsum = ({
   if (error.status === 'error' && deferredSearchKey.trim()) {
     return <h3 className="text-error">{error.message}</h3>;
   }
-  /*
-   * ==========================================================
-   * RENDER
-   * ==========================================================
-   */
   return (
-    <div>
+    <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
+      <SEOHead
+        title="Mutual Fund Calculator | Lumpsum Return & Live NAV Backtest"
+        description="Analyze historical mutual fund lumpsum returns, CAGR growth, and rolling NAV trajectories with live AMFI data. Compare up to 8 funds simultaneously."
+        keywords="mutual fund return calculator, lumpsum mutual fund calculator, mutual fund CAGR calculator, AMFI NAV history, Indian mutual funds backtesting"
+        canonicalPath="/mutual-funds/lumpsum"
+        schema={lumpsumSchema}
+      />
+      <header className="mb-4 text-center sm:text-left">
+        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+          AMFI Live Sync &bull; Multi-Fund Backtesting
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Mutual Fund Lumpsum Return &amp; Historical NAV Engine
+        </h1>
+        <p className="mt-1 text-xs sm:text-sm opacity-70">
+          Backtest historical mutual fund CAGR, absolute capital gains, and comparative NAV
+          performance across 8 schemes.
+        </p>
+      </header>
       <div className="flex gap-2">
         <button
           type="button"
@@ -1007,7 +1108,79 @@ const Lumpsum = ({
           ))}
         </div>
       )}
-    </div>
+      <CalculatorContentSection
+        title="Mastering Mutual Fund Compounding & Historical NAV Analysis"
+        subtitle="Lumpsum mutual fund investing deploys capital into equity, hybrid, or debt portfolios from Day 1, allowing 100% of your investment to compound over the full duration. Analyzing historical rolling returns and CAGR helps set realistic wealth expectations."
+        formulaTitle="Compound Annual Growth Rate (CAGR) & Lumpsum Formula"
+        formula="CAGR = [(Ending NAV / Beginning NAV)^(1 / Years) - 1] × 100  |  Maturity = Principal × (1 + CAGR)^Years"
+        formulaExplanation={[
+          { symbol: 'CAGR', label: 'Compound Annual Growth Rate normalized per year (%)' },
+          { symbol: 'Ending NAV', label: 'Mutual fund Net Asset Value on exit / maturity date' },
+          {
+            symbol: 'Beginning NAV',
+            label: 'Mutual fund Net Asset Value on purchase / allotment date',
+          },
+          {
+            symbol: 'Years',
+            label: 'Exact elapsed duration between purchase date and evaluation date',
+          },
+        ]}
+        workedExample={{
+          title: 'Worked Example: ₹5,00,000 Lumpsum Invested for 7 Years at 14% CAGR',
+          description:
+            'A one-time investment of ₹5,00,000 in a diversified equity mutual fund delivering 14.0% annualized CAGR over 7 years:',
+          calculation: 'Maturity Value = 5,00,000 × (1 + 0.14)^7 = 5,00,000 × 2.502 = ₹12,51,146',
+          result:
+            'Total Invested: ₹5,00,000 | Estimated Capital Gain: ₹7,51,146 | Total Wealth Multiplier: 2.5x',
+        }}
+        comparisonTable={{
+          headers: [
+            'Strategy',
+            'Best Market Condition',
+            'Risk Exposure',
+            'Behavioral Discipline Needed',
+          ],
+          rows: [
+            [
+              'Lumpsum Investment',
+              'Bull Market / Undervalued Dips',
+              'High short-term volatility',
+              'High (Must endure initial drawdowns)',
+            ],
+            [
+              'Systematic Investment (SIP)',
+              'Volatile Sideways / Bear Markets',
+              'Averaged volatility (Rupee Cost Averaging)',
+              'Low (Automated monthly habit)',
+            ],
+            [
+              'Fixed Deposit (FD)',
+              'High interest rate peaks / Capital Safety',
+              'Zero equity risk (Inflation drag)',
+              'Low (Fixed guaranteed yield)',
+            ],
+          ],
+        }}
+        keyBenefits={[
+          {
+            title: 'Live AMFI Verified Data',
+            description:
+              'Backtest real historical NAV data for thousands of active and direct mutual fund schemes.',
+          },
+          {
+            title: 'Simultaneous Multi-Fund Compare',
+            description:
+              'Pin up to 8 mutual funds to visually compare CAGR performance and rolling returns.',
+          },
+          {
+            title: 'Exact Days Precision',
+            description:
+              'Calculate real-world annualized returns for exact start and end calendar dates.',
+          },
+        ]}
+        faqs={lumpsumFaqs}
+      />
+    </main>
   );
 };
 export default Lumpsum;

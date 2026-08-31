@@ -8,6 +8,80 @@ import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSip, calculateSipGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
+import SEOHead from '../components/SEOHead';
+import CalculatorContentSection from '../components/CalculatorContentSection';
+const liveSipSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FinancialProduct',
+      name: 'Mutual Fund SIP Historical Backtest & XIRR Calculator',
+      description:
+        'Backtests historical SIP performance, XIRR returns, units accumulation, and rupee cost averaging on live AMFI mutual fund NAV histories.',
+      category: 'InvestmentAccount',
+      provider: {
+        '@type': 'Organization',
+        name: 'Rupee Calculator',
+        url: 'https://rupees.vercel.app/',
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://rupees.vercel.app/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Mutual Fund SIP Backtest',
+          item: 'https://rupees.vercel.app/mutual-funds/sip',
+        },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'What is XIRR in Mutual Fund SIP performance?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Extended Internal Rate of Return (XIRR) is the true annual rate of return for multiple cashflows occurring at different dates. Since a SIP involves multiple monthly installment cash inflows, XIRR accurately measures the compounded return of your overall portfolio.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How does step-up SIP backtesting work?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Step-up SIP backtesting simulates annual percentage increases (e.g. 5%, 10%, 15%) in your monthly installment, reflecting real-world salary growth and showing the substantial compounding impact on unit accumulation.',
+          },
+        },
+      ],
+    },
+  ],
+};
+const liveSipFaqs = [
+  {
+    question: 'Why is XIRR superior to CAGR for evaluating SIP investments?',
+    answer:
+      'CAGR assumes a single point-to-point lump-sum investment. In a SIP, each monthly installment has a different holding period. XIRR calculates the exact internal rate of return across all multiple periodic cash inflows.',
+  },
+  {
+    question: 'How are NAV dates matched during market holidays or weekends?',
+    answer:
+      'If your scheduled SIP date falls on a stock market holiday or weekend, our engine automatically allocates units using the immediately preceding active NAV transaction date, matching AMFI regulations.',
+  },
+  {
+    question: 'Can I backtest SIPs across different mutual fund categories?',
+    answer:
+      'Yes. You can search and compare index funds, large cap, flexi cap, mid cap, small cap, arbitrage, and hybrid funds across direct and regular growth options.',
+  },
+];
 const Chart = lazy(() => import('../components/Chart'));
 const STORAGE_KEY = 'mutual_fund_sip_state';
 interface PinnedFund {
@@ -735,7 +809,26 @@ const SIP = ({
     return <h3 className="text-error">{error.message}</h3>;
   }
   return (
-    <div>
+    <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
+      <SEOHead
+        title="Mutual Fund SIP Return Calculator | Live AMFI NAV & XIRR Backtest"
+        description="Backtest historical mutual fund SIP returns, units accumulation, XIRR CAGR, and step-up compounding with verified AMFI daily NAV histories."
+        keywords="mutual fund SIP calculator, mutual fund return calculator, SIP XIRR calculator, AMFI NAV history, step up SIP backtest"
+        canonicalPath="/mutual-funds/sip"
+        schema={liveSipSchema}
+      />
+      <header className="mb-4 text-center sm:text-left">
+        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+          AMFI Live Feed &bull; True XIRR Backtesting
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Mutual Fund SIP Historical Backtest &amp; XIRR Calculator
+        </h1>
+        <p className="mt-1 text-xs sm:text-sm opacity-70">
+          Simulate actual historical SIP returns, average purchase price, unit accumulation, and
+          internal rate of return (XIRR).
+        </p>
+      </header>
       <div className="flex gap-2">
         <button
           type="button"
@@ -1051,7 +1144,80 @@ const SIP = ({
           ))}
         </div>
       )}
-    </div>
+      <CalculatorContentSection
+        title="Understanding Historical SIP Backtesting & XIRR Yields"
+        subtitle="Evaluating mutual funds based solely on past 1-year or 3-year trailing returns often produces inaccurate expectations. Historical SIP backtesting simulates real-world monthly investments through bull and bear market cycles."
+        formulaTitle="XIRR Multi-Cashflow Compounding Formula"
+        formula="0 = ∑ [ C_i / (1 + XIRR)^((d_i - d_0) / 365) ] + Value_end / (1 + XIRR)^((d_end - d_0) / 365)"
+        formulaExplanation={[
+          {
+            symbol: 'XIRR',
+            label: 'Extended Internal Rate of Return (Annualized true compounding rate)',
+          },
+          { symbol: 'C_i', label: 'Cashflow amount for installment i (Negative for investments)' },
+          { symbol: 'd_i', label: 'Exact calendar date on which installment i was debited' },
+          {
+            symbol: 'Value_end',
+            label: 'Market valuation of accumulated units on valuation date d_end',
+          },
+        ]}
+        workedExample={{
+          title: 'Worked Example: ₹15,000 Monthly SIP with 10% Annual Step-Up Over 10 Years',
+          description:
+            'Backtesting a real equity index fund delivering ~13.5% XIRR with a 10% annual step-up from Year 1 (₹15,000/mo) to Year 10 (₹35,369/mo):',
+          calculation: 'Total Invested: ₹28,68,736 -> Final Accumulated Corpus: ₹58,41,200',
+          result:
+            'Total Invested: ₹28.68 Lakhs | Wealth Created: +₹29.72 Lakhs | Portfolio Multiplier: 2.03x',
+        }}
+        comparisonTable={{
+          headers: ['Parameter', 'Fixed Amount SIP', 'Step-Up / Top-Up SIP', 'Lumpsum Investment'],
+          rows: [
+            [
+              'Monthly Cash Commitment',
+              'Constant monthly debit',
+              'Increases 5-15% annually',
+              'Single initial outflow',
+            ],
+            [
+              'Market Timing Dependency',
+              'Zero (Rupee cost averaged)',
+              'Zero (Rupee cost averaged)',
+              'High (Depends on entry NAV)',
+            ],
+            [
+              'Suitability for Salaried',
+              'High (Matches monthly income)',
+              'Very High (Matches salary hikes)',
+              'Moderate (Requires lump sum)',
+            ],
+            [
+              '15-Year Wealth Output',
+              'Baseline Corpus (1.0x)',
+              'Accelerated Corpus (~1.8x to 2.2x)',
+              'Market dependent',
+            ],
+          ],
+        }}
+        keyBenefits={[
+          {
+            title: 'Exact AMFI Historical Allotment',
+            description:
+              'Computes fractional unit allotment based on official daily NAV figures without rough estimations.',
+          },
+          {
+            title: 'Average Buy Price Tracker',
+            description:
+              'View your exact dollar-cost / rupee-cost averaged purchase price compared to the latest market NAV.',
+          },
+          {
+            title: 'Interactive Multi-Fund Charting',
+            description:
+              'Graph up to 8 mutual funds side-by-side to compare rolling volatility and momentum.',
+          },
+        ]}
+        faqs={liveSipFaqs}
+      />
+    </main>
   );
 };
 export default SIP;

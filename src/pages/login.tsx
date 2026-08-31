@@ -4,6 +4,7 @@ import { FiCheckCircle } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import SEOHead from '../components/SEOHead';
 const Login = () => {
   const { isAuthenticated, loginWithPassword, signupWithGooglePassword, loading } = useAuth();
   const navigate = useNavigate();
@@ -85,6 +86,11 @@ const Login = () => {
   };
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4 py-8">
+      <SEOHead
+        title="Sign In | Rupee Calculator"
+        description="Sign in to your Rupee Calculator account to manage your pro subscription, saved mutual fund portfolios, and economic models."
+        canonicalPath="/login"
+      />
       <div className="card bg-base-100 border border-base-300 w-full max-w-lg p-6 sm:p-10 shadow-2xl">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-3">

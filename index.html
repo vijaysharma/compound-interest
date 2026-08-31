@@ -1,28 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
-    <link rel="icon" type="image/x-icon" href="./src/assets/favicon.ico" />
-    <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="48x48"
-      href="./src/assets/favicon-48x48.png"
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Primary Meta Tags -->
+    <title>Rupee Calculator | Free Indian Financial Calculators &amp; Wealth Simulator</title>
+    <meta
+      name="description"
+      content="100% free, institutional-grade Indian financial calculators. Simulate SIP, SWP, Mutual Funds CAGR, Fixed Deposits, Loan EMI Amortization, Inflation, and Global PPP."
     />
     <meta
-      name="viewport"
-      content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      name="keywords"
+      content="rupee calculator, compound interest calculator India, SIP calculator, SWP calculator, mutual fund return calculator, EMI calculator, inflation calculator India, PPP calculator, financial planning tools India"
     />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="./src/assets/apple-touch-icon.png"
+    <meta name="author" content="Rupee Calculator" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <link rel="canonical" href="https://rupees.vercel.app/" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rupees.vercel.app/" />
+    <meta property="og:site_name" content="Rupee Calculator" />
+    <meta property="og:title" content="Rupee Calculator | Free Indian Financial Planning &amp; Compounding Tools" />
+    <meta
+      property="og:description"
+      content="Simulate SIPs, Mutual Fund NAVs, EMI Amortization, and Purchasing Power Parity with live AMFI and World Bank verified data. 100% private, client-side execution."
     />
-    <link rel="manifest" href="./src/assets/site.webmanifest" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>Compound Interest Calculator</title>
+    <meta property="og:image" content="https://rupees.vercel.app/images/logo.svg" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="https://rupees.vercel.app/" />
+    <meta name="twitter:title" content="Rupee Calculator | High-Precision Financial Suite" />
+    <meta
+      name="twitter:description"
+      content="Free institutional-grade calculators for Indian investors. SIP, SWP, FD, RD, EMI, Inflation &amp; PPP."
+    />
+    <meta name="twitter:image" content="https://rupees.vercel.app/images/logo.svg" />
+
+    <!-- Favicon & PWA Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#2563eb" />
+
+    <!-- Preconnect & DNS-Prefetch for External CDNs / APIs -->
+    <link rel="preconnect" href="https://api.mfapi.in" crossorigin />
+    <link rel="dns-prefetch" href="https://api.mfapi.in" />
+    <link rel="preconnect" href="https://api.worldbank.org" crossorigin />
+    <link rel="dns-prefetch" href="https://api.worldbank.org" />
   </head>
-  <body>
+  <body class="bg-base-100 text-base-content antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
