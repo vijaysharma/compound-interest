@@ -8,6 +8,7 @@ import { STEP_AMOUNT } from '../data/default_data.ts';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
+import { TbTrash } from 'react-icons/tb';
 interface ScheduleRow {
   date: string;
   emi: string;
@@ -16,6 +17,7 @@ interface ScheduleRow {
   balance: string;
   cumulativePrincipal: string;
   cumulativeInterest: string;
+  remainingInterest: string;
   note?: string;
 }
 interface PartPayment {
@@ -154,6 +156,7 @@ const emiFaqs = [
       'Flat rate EMI charges interest on the original loan amount throughout the tenure, resulting in a higher effective interest rate. Reducing balance EMI (used by all major Indian banks for home loans) charges interest only on the outstanding principal, which decreases with each payment. A flat rate of 8% is roughly equivalent to a reducing balance rate of 14-15%.',
   },
 ];
+const getTodayDateString = () => new Date().toISOString().split('T')[0];
 const EmiCalculator: React.FC = () => {
   // Helper for localStorage
   const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
@@ -185,7 +188,7 @@ const EmiCalculator: React.FC = () => {
     };
   });
   const [disbursementDate, setDisbursementDate] = useState<string>(() =>
-    loadFromLocalStorage('disbursementDate', '2025-01-25')
+    loadFromLocalStorage('disbursementDate', getTodayDateString())
   );
   const [emiDate, setEmiDate] = useState<number>(() => loadFromLocalStorage('emiDate', 10));
   const [partPayments, setPartPayments] = useState<PartPayment[]>(() =>
@@ -265,7 +268,8 @@ const EmiCalculator: React.FC = () => {
       .filter((r) => r.enabled && r.rate > 0 && r.date)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     let currentDate: Date = new Date(disbursementDate);
-    const results: ScheduleRow[] = [];
+    type RawRow = Omit<ScheduleRow, 'remainingInterest'>;
+    const rawRows: RawRow[] = [];
     // Handle prorated first EMI
     let firstEmiDate: Date = new Date(currentDate);
     firstEmiDate.setDate(emiDate);
@@ -286,7 +290,7 @@ const EmiCalculator: React.FC = () => {
       principal -= principalComponent;
       cumulativePrincipal += principalComponent;
       cumulativeInterest += proratedInterest;
-      results.push({
+      rawRows.push({
         date: firstEmiDate.toDateString(),
         emi: totalFirstEmi.toFixed(2),
         principal: principalComponent.toFixed(2),
@@ -298,7 +302,7 @@ const EmiCalculator: React.FC = () => {
       });
     } else {
       cumulativeInterest += proratedInterest;
-      results.push({
+      rawRows.push({
         date: firstEmiDate.toDateString(),
         emi: proratedInterest.toFixed(2),
         principal: '0.00',
@@ -331,7 +335,7 @@ const EmiCalculator: React.FC = () => {
         const oldRate = currentAnnualRate;
         currentAnnualRate = rateChange.rate;
         monthlyRate = currentAnnualRate / 12 / 100;
-        results.push({
+        rawRows.push({
           date: changeDate.toDateString(),
           emi: '0.00',
           principal: '0.00',
@@ -375,7 +379,7 @@ const EmiCalculator: React.FC = () => {
         const actualPaymentAmount = Math.min(payment.amount, principal);
         principal -= actualPaymentAmount;
         cumulativePrincipal += actualPaymentAmount;
-        results.push({
+        rawRows.push({
           date: paymentDate.toDateString(),
           emi: actualPaymentAmount.toFixed(2),
           principal: actualPaymentAmount.toFixed(2),
@@ -406,7 +410,7 @@ const EmiCalculator: React.FC = () => {
       cumulativePrincipal += principalComponent;
       cumulativeInterest += interest;
       remainingTenureMonths--;
-      results.push({
+      rawRows.push({
         date: nextEmiDate.toDateString(),
         emi: emiAmount.toFixed(2),
         principal: principalComponent.toFixed(2),
@@ -418,7 +422,14 @@ const EmiCalculator: React.FC = () => {
       currentDate = nextEmiDate;
       monthCounter++;
     }
-    return results;
+    const totalScheduleInterest = cumulativeInterest;
+    return rawRows.map((row) => ({
+      ...row,
+      remainingInterest: Math.max(
+        0,
+        totalScheduleInterest - parseFloat(row.cumulativeInterest)
+      ).toFixed(2),
+    }));
   }, [
     principalAmount,
     annualRate,
@@ -430,8 +441,17 @@ const EmiCalculator: React.FC = () => {
     includePrincipalInFirstEmi,
   ]);
   const schedule = useMemo(() => calculateSchedule(), [calculateSchedule]);
+  const isAddPartPaymentDisabled = useMemo(() => {
+    if (partPayments.length === 0) return false;
+    const lastPayment = partPayments[partPayments.length - 1];
+    return !lastPayment.amount || lastPayment.amount <= 0 || !lastPayment.date;
+  }, [partPayments]);
   const addPartPayment = () => {
-    setPartPayments([...partPayments, { amount: 0, date: '', mode: 'emi', enabled: true }]);
+    if (isAddPartPaymentDisabled) return;
+    setPartPayments([
+      ...partPayments,
+      { amount: 0, date: getTodayDateString(), mode: 'emi', enabled: true },
+    ]);
   };
   const removePartPayment = (index: number) => {
     const updated = partPayments.filter((_, i) => i !== index);
@@ -446,8 +466,17 @@ const EmiCalculator: React.FC = () => {
     updated[index] = { ...updated[index], [field]: value };
     setPartPayments(updated);
   };
+  const isAddRateChangeDisabled = useMemo(() => {
+    if (rateChanges.length === 0) return false;
+    const lastChange = rateChanges[rateChanges.length - 1];
+    return !lastChange.rate || lastChange.rate <= 0 || !lastChange.date;
+  }, [rateChanges]);
   const addRateChange = () => {
-    setRateChanges([...rateChanges, { rate: annualRate, date: '', mode: 'tenure', enabled: true }]);
+    if (isAddRateChangeDisabled) return;
+    setRateChanges([
+      ...rateChanges,
+      { rate: annualRate, date: getTodayDateString(), mode: 'tenure', enabled: true },
+    ]);
   };
   const removeRateChange = (index: number) => {
     const updated = rateChanges.filter((_, i) => i !== index);
@@ -464,10 +493,6 @@ const EmiCalculator: React.FC = () => {
   };
   const totalInterest = useMemo(
     () => schedule.reduce((sum, row) => sum + parseFloat(row.interest), 0),
-    [schedule]
-  );
-  const totalPaid = useMemo(
-    () => schedule.reduce((sum, row) => sum + parseFloat(row.emi), 0),
     [schedule]
   );
   return (
@@ -503,45 +528,36 @@ const EmiCalculator: React.FC = () => {
         />
         <RateOfInterest className="mb-1" rt={rt} setRt={setRt} />
         <Tenure className="mb-1" rt={rt} setRt={setRt} />
-        {/* Loan-specific Settings */}
-        <div className="border border-base-300 rounded-xl p-3 bg-base-200/40 space-y-3">
-          <div className="text-xs font-bold uppercase tracking-wider opacity-70">
-            Disbursement &amp; Repayment Settings
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label
-                className="label label-text font-semibold text-xs py-1"
-                htmlFor="disbursement-date"
-              >
-                Disbursement Date
-              </label>
-              <input
-                id="disbursement-date"
-                className="input input-bordered input-sm w-full"
-                title="Disbursement Date"
-                type="date"
-                value={disbursementDate}
-                onChange={(e) => setDisbursementDate(e.target.value)}
-              />
+        {/* Joined Disbursement Date & EMI Deduction Date */}
+        <div className="w-full text-center">
+          <h5>Disbursement &amp; Repayment</h5>
+          <div className="join w-full date-picker focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
+            <div className="label join-item px-2.5 bg-primary text-primary-content border-primary text-center text-xs font-semibold whitespace-nowrap">
+              Disbursed
             </div>
-            <div>
-              <label className="label label-text font-semibold text-xs py-1" htmlFor="emi-date">
-                EMI Deduction Date (Day of Month)
-              </label>
-              <input
-                id="emi-date"
-                className="input input-bordered input-sm w-full"
-                title="EMI Date (Day of Month)"
-                type="number"
-                min="1"
-                max="31"
-                value={emiDate}
-                onChange={(e) => setEmiDate(Number(e.target.value))}
-              />
+            <input
+              id="disbursement-date"
+              className="join-item input input-sm input-primary grow focus:outline-none text-xs sm:text-sm"
+              title="Disbursement Date"
+              type="date"
+              value={disbursementDate}
+              onChange={(e) => setDisbursementDate(e.target.value)}
+            />
+            <div className="label join-item px-2.5 bg-primary text-primary-content border-primary text-center text-xs font-semibold whitespace-nowrap">
+              EMI Day
             </div>
+            <input
+              id="emi-date"
+              className="join-item input input-sm input-primary w-16 text-center focus:outline-none text-xs sm:text-sm font-semibold"
+              title="EMI Deduction Date (Day of Month)"
+              type="number"
+              min="1"
+              max="31"
+              value={emiDate}
+              onChange={(e) => setEmiDate(Number(e.target.value))}
+            />
           </div>
-          <label className="label cursor-pointer justify-start gap-2 py-0">
+          <label className="label cursor-pointer justify-center gap-2 pt-1 pb-0">
             <input
               type="checkbox"
               title="Include Principal Payment in First EMI"
@@ -549,7 +565,7 @@ const EmiCalculator: React.FC = () => {
               checked={includePrincipalInFirstEmi}
               onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
             />
-            <span className="label-text text-xs">
+            <span className="label-text text-xs opacity-80">
               Include principal repayment in prorated first EMI
             </span>
           </label>
@@ -565,56 +581,61 @@ const EmiCalculator: React.FC = () => {
       </div>
       {/* Part Payments Section */}
       <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-base-300 pb-3">
+        <div className="flex flex-wrap items-end justify-between gap-3 pb-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-primary">
               Prepayment Optimizer
             </p>
             <h2 className="text-lg font-bold">Lump-Sum Part Payments</h2>
           </div>
-          <button type="button" onClick={addPartPayment} className="btn btn-primary btn-sm">
-            + Add Part Payment
-          </button>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {partPayments.length === 0 && (
             <p className="text-xs opacity-60 italic">
-              No part payments added yet. Click &quot;Add Part Payment&quot; above to simulate
+              No part payments added yet. Click &quot;Add Part Payment&quot; below to simulate
               prepayments.
             </p>
           )}
           {partPayments.map((p, idx) => (
             <div
               key={idx}
-              className={`grid gap-3 rounded-box border border-base-300 p-3 sm:grid-cols-2 lg:flex lg:items-center ${
+              className={`grid gap-2 sm:grid-cols-2 lg:flex lg:items-center ${
                 p.enabled ? 'bg-base-100' : 'bg-base-200 opacity-60'
               }`}
             >
-              <input
-                type="checkbox"
-                title={`Enable/Disable Part Payment #${idx + 1}`}
-                checked={p.enabled}
-                onChange={(e) => updatePartPayment(idx, 'enabled', e.target.checked)}
-                className="checkbox checkbox-primary self-center"
-              />
-              <input
-                className="input input-bordered w-full lg:flex-1"
-                title={`Part Payment Amount #${idx + 1}`}
-                type="number"
-                placeholder="Payment Amount (₹)"
-                value={p.amount}
-                onChange={(e) => updatePartPayment(idx, 'amount', Number(e.target.value))}
-                disabled={!p.enabled}
-              />
-              <input
-                className="input input-bordered w-full lg:flex-1"
-                title={`Part Payment Date #${idx + 1}`}
-                type="date"
-                value={p.date}
-                onChange={(e) => updatePartPayment(idx, 'date', e.target.value)}
-                disabled={!p.enabled}
-              />
-              <div className="flex flex-wrap items-center gap-3 text-sm lg:flex-nowrap">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-lg font-semibold">#{idx + 1}</span>
+                <input
+                  type="checkbox"
+                  title={`Enable/Disable Part Payment #${idx + 1}`}
+                  checked={p.enabled}
+                  onChange={(e) => updatePartPayment(idx, 'enabled', e.target.checked)}
+                  className="checkbox checkbox-primary self-center"
+                />
+                <input
+                  className="input input-bordered w-full lg:flex-1"
+                  title={`Part Payment Amount #${idx + 1}`}
+                  type="number"
+                  placeholder="Payment Amount (₹)"
+                  value={p.amount || ''}
+                  onChange={(e) => updatePartPayment(idx, 'amount', Number(e.target.value))}
+                  disabled={!p.enabled}
+                />
+                <input
+                  className="input input-bordered w-full lg:flex-1"
+                  title={`Part Payment Date #${idx + 1}`}
+                  type="date"
+                  value={p.date}
+                  onChange={(e) => updatePartPayment(idx, 'date', e.target.value)}
+                  disabled={!p.enabled}
+                />
+                <TbTrash
+                  onClick={() => removePartPayment(idx)}
+                  size={24}
+                  className="text-error flex-shrink-0 cursor-pointer"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pl-16 text-sm lg:flex-nowrap">
                 <label className="flex items-center gap-2 text-sm whitespace-nowrap cursor-pointer">
                   <input
                     type="radio"
@@ -642,16 +663,17 @@ const EmiCalculator: React.FC = () => {
                   <span>Reduce Tenure</span>
                 </label>
               </div>
-              <button
-                onClick={() => removePartPayment(idx)}
-                type="button"
-                className="btn btn-error btn-sm"
-              >
-                Remove
-              </button>
             </div>
           ))}
         </div>
+        <button
+          type="button"
+          onClick={addPartPayment}
+          disabled={isAddPartPaymentDisabled}
+          className="btn btn-primary btn-sm"
+        >
+          + Add Part Payment
+        </button>
       </section>
       {/* Interest Rate Changes Section */}
       <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
@@ -662,7 +684,12 @@ const EmiCalculator: React.FC = () => {
             </p>
             <h2 className="text-lg font-bold">Floating Interest Rate Changes</h2>
           </div>
-          <button type="button" onClick={addRateChange} className="btn btn-primary btn-sm">
+          <button
+            type="button"
+            onClick={addRateChange}
+            disabled={isAddRateChangeDisabled}
+            className="btn btn-primary btn-sm"
+          >
             + Add Rate Change
           </button>
         </div>
@@ -693,7 +720,7 @@ const EmiCalculator: React.FC = () => {
                 type="number"
                 step="0.1"
                 placeholder="New Interest Rate (%)"
-                value={r.rate}
+                value={r.rate || ''}
                 onChange={(e) => updateRateChange(idx, 'rate', Number(e.target.value))}
                 disabled={!r.enabled}
               />
@@ -744,27 +771,9 @@ const EmiCalculator: React.FC = () => {
           ))}
         </div>
       </section>
-      {/* Schedule Summary & Table */}
+      {/* Schedule Table */}
       {schedule.length > 0 && (
         <>
-          <div className="stats stats-vertical w-full border border-primary sm:stats-horizontal shadow-md bg-base-100">
-            <div className="stat place-items-center text-center">
-              <div className="stat-value text-2xl text-primary">
-                ₹{totalPaid.toLocaleString('en-IN')}
-              </div>
-              <div className="stat-title text-xs font-semibold">Total Amount Paid</div>
-            </div>
-            <div className="stat place-items-center text-center">
-              <div className="stat-value text-2xl text-error">
-                ₹{totalInterest.toLocaleString('en-IN')}
-              </div>
-              <div className="stat-title text-xs font-semibold">Total Interest Paid</div>
-            </div>
-            <div className="stat place-items-center text-center">
-              <div className="stat-value text-2xl text-success">{schedule.length}</div>
-              <div className="stat-title text-xs font-semibold">Total Installments</div>
-            </div>
-          </div>
           {/* Mobile Amortization Card View */}
           <div className="md:hidden space-y-2">
             {schedule.map((row, idx) => (
@@ -823,6 +832,12 @@ const EmiCalculator: React.FC = () => {
                       ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
                     </span>
                   </div>
+                  <div className="col-span-2 border-t border-base-300/50 pt-1 text-xs">
+                    Remaining Interest:{' '}
+                    <span className="font-semibold text-warning">
+                      ₹{parseFloat(row.remainingInterest).toLocaleString('en-IN')}
+                    </span>
+                  </div>
                 </div>
               </article>
             ))}
@@ -848,6 +863,9 @@ const EmiCalculator: React.FC = () => {
                   </th>
                   <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-error">
                     Cum. Interest
+                  </th>
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-warning">
+                    Remaining Interest
                   </th>
                   <th className="border-b border-base-300 px-3 py-3 text-left font-bold">Note</th>
                 </tr>
@@ -884,6 +902,9 @@ const EmiCalculator: React.FC = () => {
                     </td>
                     <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-error text-xs font-medium">
                       ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
+                    </td>
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-warning text-xs font-medium">
+                      ₹{parseFloat(row.remainingInterest).toLocaleString('en-IN')}
                     </td>
                     <td className="border-b border-base-300 px-3 py-2.5">
                       {row.note && (
