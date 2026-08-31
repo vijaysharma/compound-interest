@@ -93,6 +93,28 @@ const router = createBrowserRouter([
         path: 'swp-calculator',
         lazy: protectedRoute(() => import('./pages/fixedRateSwp.tsx')),
       },
+      {
+        path: 'calculator',
+        lazy: protectedRoute(() => import('./pages/calculator.tsx')),
+      },
+      {
+        path: 'date-calculator',
+        lazy: protectedRoute(() => import('./pages/dateCalculator.tsx')),
+      },
+      // ── Utilities (Nested routes for convenience) ─────────────────
+      {
+        path: 'utilities',
+        children: [
+          {
+            path: 'calculator',
+            lazy: protectedRoute(() => import('./pages/calculator.tsx')),
+          },
+          {
+            path: 'date-calculator',
+            lazy: protectedRoute(() => import('./pages/dateCalculator.tsx')),
+          },
+        ],
+      },
       // ── Mutual Fund Engine (keeps nested structure for sub-tools) ──
       {
         path: 'mutual-funds',

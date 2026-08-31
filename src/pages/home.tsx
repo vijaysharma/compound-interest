@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiBarChart2,
+  FiCalendar,
   FiCheckCircle,
   FiClock,
   FiGlobe,
   FiLayers,
   FiPercent,
   FiShield,
+  FiTool,
   FiTrendingUp,
   FiZap,
 } from 'react-icons/fi';
@@ -171,8 +173,8 @@ const Home = () => {
           {/* Trust Metrics */}
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 border-y border-base-300 py-6 text-center">
             <div>
-              <div className="text-2xl font-black text-primary">8+</div>
-              <div className="text-xs opacity-70">Financial Calculators</div>
+              <div className="text-2xl font-black text-primary">10+</div>
+              <div className="text-xs opacity-70">Financial &amp; Utility Tools</div>
             </div>
             <div>
               <div className="text-2xl font-black text-primary">0ms</div>
@@ -431,8 +433,42 @@ const Home = () => {
                   vs interest repayment breakdown schedules.
                 </p>
               </div>
-              <Link to="/emi-calculator" className="text-xs text-primary font-semibold hover:underline">
+              <Link
+                to="/emi-calculator"
+                className="text-xs text-primary font-semibold hover:underline"
+              >
                 Calculate Loan EMI &rarr;
+              </Link>
+            </div>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiTool className="h-5 w-5 inline text-primary mr-1" /> Mathematical Calculator
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Full-featured basic and scientific calculator with trigonometry, logarithms,
+                  powers, factorials, and degree/radian support.
+                </p>
+              </div>
+              <Link to="/calculator" className="text-xs text-primary font-semibold hover:underline">
+                Open Calculator &rarr;
+              </Link>
+            </div>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiCalendar className="h-5 w-5 inline text-primary mr-1" /> Date Calculator
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Calculate exact days, weeks, months, and years between dates or add and subtract
+                  time intervals from any date.
+                </p>
+              </div>
+              <Link
+                to="/date-calculator"
+                className="text-xs text-primary font-semibold hover:underline"
+              >
+                Open Date Calculator &rarr;
               </Link>
             </div>
           </div>
@@ -520,10 +556,7 @@ const Home = () => {
             Model your wealth compounding, loan repayments, and investment strategies with zero lag.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/sip-calculator"
-              className="btn btn-secondary btn-md sm:btn-lg font-semibold"
-            >
+            <Link to="/sip-calculator" className="btn btn-secondary btn-md sm:btn-lg font-semibold">
               Start Calculating Now &rarr;
             </Link>
             <Link
@@ -551,7 +584,8 @@ const Home = () => {
           </Link>
         </div>
         <p className="opacity-60 text-[11px]">
-          &copy; {new Date().getFullYear()} Rupee Calculator &bull; Educational and analytical purposes only.
+          &copy; {new Date().getFullYear()} Rupee Calculator &bull; Educational and analytical
+          purposes only.
         </p>
       </footer>
     </div>

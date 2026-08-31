@@ -10,6 +10,7 @@ import {
   FiMenu,
   FiPercent,
   FiShield,
+  FiTool,
   FiTrendingUp,
   FiX,
   FiZap,
@@ -42,6 +43,10 @@ const getNavTitle = (pathname: string) => {
     '/mutual-funds/lumpsum': 'Lumpsum',
     '/mutual-funds/sip': 'SIP',
     '/mutual-funds/swp': 'SWP',
+    '/calculator': 'Calculator',
+    '/utilities/calculator': 'Calculator',
+    '/date-calculator': 'Date Calculator',
+    '/utilities/date-calculator': 'Date Calculator',
   };
   return titles[pathname] ?? 'Rupee Calculator';
 };
@@ -271,6 +276,26 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SWP
+                  </Link>
+                </div>
+                <div className="mt-3">
+                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
+                    <FiTool className="h-3.5 w-3.5" />
+                    <span>Utilities</span>
+                  </h3>
+                  <Link
+                    to="/calculator"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Calculator (Basic &amp; Scientific)
+                  </Link>
+                  <Link
+                    to="/date-calculator"
+                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Date Calculator
                   </Link>
                 </div>
                 <div className="mt-3 border-t border-primary-content/20 pt-3">
