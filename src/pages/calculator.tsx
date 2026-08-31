@@ -1,12 +1,21 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
-import { FiClock, FiDelete, FiRotateCcw, FiX } from 'react-icons/fi';
+import {
+  FiClock,
+  FiDelete,
+  FiRotateCcw,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+} from 'react-icons/fi';
 import { TbMathFunction } from 'react-icons/tb';
+
 interface HistoryItem {
   expression: string;
   result: string;
   timestamp: string;
 }
+
 // Factorial helper
 function factorial(n: number): number {
   if (n < 0 || !Number.isInteger(n) || n > 170) return NaN;
@@ -15,79 +24,119 @@ function factorial(n: number): number {
   for (let i = 2; i <= n; i++) res *= i;
   return res;
 }
-// Safe expression evaluator mimicking Android Calculator
-function evaluateExpression(
+
+// Safe expression evaluator supporting implicit multiplication, percentages, and scientific functions
+export function evaluateExpression(
   expr: string,
   isDeg: boolean
 ): { result: string | null; error: boolean } {
   if (!expr || expr.trim() === '') return { result: null, error: false };
+
   try {
     let sanitized = expr
       .replace(/×/g, '*')
       .replace(/÷/g, '/')
       .replace(/−/g, '-')
       .replace(/\s+/g, '');
+
     // Trim trailing operators for live preview
     while (/[+\-*/^.(]$/.test(sanitized)) {
       sanitized = sanitized.slice(0, -1);
     }
+
     if (!sanitized) return { result: null, error: false };
+
     // Auto-close open parentheses for live preview
     const openCount = (sanitized.match(/\(/g) || []).length;
     const closeCount = (sanitized.match(/\)/g) || []).length;
     if (openCount > closeCount) {
       sanitized += ')'.repeat(openCount - closeCount);
     }
-    // Handle percentage logic like Android Calculator:
-    // 1) A + B% => A + (A * (B / 100))
-    // 2) A - B% => A - (A * (B / 100))
-    // 3) A * B% => A * (B / 100)
-    // 4) A / B% => A / (B / 100)
-    // 5) Standalone B% => (B / 100)
-    // Replace addition/subtraction with percent: e.g. 4 - 50%
+
+    // ─────────────────────────────────────────────────────────────────
+    // 1. Percentage logic (Android Calculator formula)
+    // ─────────────────────────────────────────────────────────────────
+    // A + B% => A + (A * (B / 100))
+    // A - B% => A - (A * (B / 100))
+    // A * B% => A * (B / 100)
+    // A / B% => A / (B / 100)
     sanitized = sanitized.replace(
-      /((?:\d+(?:\.\d+)?|\([^()]+\)))\s*([+-])\s*(\d+(?:\.\d+)?)%/g,
+      /((?:\d+(?:\.\d+)?|\([^()]+\)))\s*([+\-])\s*(\d+(?:\.\d+)?)%/g,
       '($1 $2 ($1 * ($3 / 100)))'
     );
-    // Replace multiplication/division with percent: e.g. 50 * 10%
     sanitized = sanitized.replace(
       /((?:\d+(?:\.\d+)?|\([^()]+\)))\s*([*/])\s*(\d+(?:\.\d+)?)%/g,
       '($1 $2 ($3 / 100))'
     );
-    // Remaining standalone percentages
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)%/g, '($1 / 100)');
-    // Handle factorials e.g. 5!
+
+    // ─────────────────────────────────────────────────────────────────
+    // 2. Implicit Operations (Multiplication & x√y)
+    // ─────────────────────────────────────────────────────────────────
+    // Number followed by parenthesis: 2(3+4) => 2*(3+4)
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?)\s*\(/g, '$1*(');
+
+    // Parenthesis followed by number: (3+4)2 => (3+4)*2
+    sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?)/g, ')*$1');
+
+    // Parenthesis followed by parenthesis: (2+3)(4+5) => (2+3)*(4+5)
+    sanitized = sanitized.replace(/\)\s*\(/g, ')*(');
+
+    // Number or ) followed by constant [πe]: 2π => 2*π, 3e => 3*e, (2+3)π => (2+3)*π
+    sanitized = sanitized.replace(/((?:\d+(?:\.\d+)?|\)))\s*([πe])/g, '$1*$2');
+
+    // Constant [πe] followed by Number or (: π(4) => π*4, π2 => π*2
+    sanitized = sanitized.replace(/([πe])\s*((?:\d+(?:\.\d+)?|\())/g, '$1*$2');
+
+    // Implicit operation: x times square root of y (e.g. 4√9, 2√(16), (2+3)√4)
+    // and Number/) /constant before scientific function (2sin(30), 4√9, 3ln(5))
+    sanitized = sanitized.replace(
+      /((?:\d+(?:\.\d+)?|\)|[πe]))\s*(√|sin|cos|tan|asin|acos|atan|ln|log|abs)/g,
+      '$1*$2'
+    );
+
+    // ─────────────────────────────────────────────────────────────────
+    // 3. Factorials & Constants
+    // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
-    // Handle constants
     sanitized = sanitized
       .replace(/π/g, '(Math.PI)')
       .replace(/(?<![a-zA-Z])e(?![a-zA-Z])/g, '(Math.E)')
       .replace(/\^/g, '**');
-    // Handle scientific functions with DEG/RAD support
+
+    // ─────────────────────────────────────────────────────────────────
+    // 4. Square Roots & Scientific Functions (DEG/RAD)
+    // ─────────────────────────────────────────────────────────────────
     const trigWrap = (fn: string, arg: string) => {
       if (isDeg) {
         return `Math.${fn}((${arg}) * Math.PI / 180)`;
       }
       return `Math.${fn}(${arg})`;
     };
+
     const invTrigWrap = (fn: string, arg: string) => {
       if (isDeg) {
         return `((Math.${fn}(${arg})) * 180 / Math.PI)`;
       }
       return `Math.${fn}(${arg})`;
     };
-    sanitized = sanitized
-      .replace(/asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
-      .replace(/acos\(([^()]+)\)/g, (_, a) => invTrigWrap('acos', a))
-      .replace(/atan\(([^()]+)\)/g, (_, a) => invTrigWrap('atan', a))
-      .replace(/sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
-      .replace(/cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
-      .replace(/tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
-      .replace(/ln\(([^()]+)\)/g, 'Math.log($1)')
-      .replace(/log\(([^()]+)\)/g, 'Math.log10($1)')
-      .replace(/√\(([^()]+)\)/g, 'Math.sqrt($1)')
-      .replace(/√(\d+(?:\.\d+)?)/g, 'Math.sqrt($1)')
-      .replace(/abs\(([^()]+)\)/g, 'Math.abs($1)');
+
+    // Replace functions iteratively to handle nesting
+    for (let iter = 0; iter < 4; iter++) {
+      sanitized = sanitized
+        .replace(/asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
+        .replace(/acos\(([^()]+)\)/g, (_, a) => invTrigWrap('acos', a))
+        .replace(/atan\(([^()]+)\)/g, (_, a) => invTrigWrap('atan', a))
+        .replace(/sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
+        .replace(/cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
+        .replace(/tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
+        .replace(/ln\(([^()]+)\)/g, 'Math.log($1)')
+        .replace(/log\(([^()]+)\)/g, 'Math.log10($1)')
+        .replace(/√\(([^()]+)\)/g, 'Math.sqrt($1)')
+        .replace(/√(\d+(?:\.\d+)?)/g, 'Math.sqrt($1)')
+        .replace(/abs\(([^()]+)\)/g, 'Math.abs($1)');
+    }
+
     // Safe execution context
     const evaluator = new Function(
       'fact',
@@ -97,21 +146,34 @@ function evaluateExpression(
         return res;
       } catch(e) { return null; }`
     );
+
     const val = evaluator(factorial);
     if (val === null) return { result: null, error: false };
-    // Format number nicely
+
+    // Format number cleanly
     const formatted = parseFloat(Number(val).toPrecision(12)).toString();
     return { result: formatted, error: false };
   } catch {
     return { result: null, error: true };
   }
 }
+
 const Calculator: React.FC = () => {
   const [expression, setExpression] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
   const [showScientific, setShowScientific] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isDeg, setIsDeg] = useState(true);
   const [isEvaluated, setIsEvaluated] = useState(false);
+  const [memory, setMemory] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('android_calc_memory');
+      return saved ? parseFloat(saved) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('android_calc_history');
@@ -120,13 +182,17 @@ const Calculator: React.FC = () => {
       return [];
     }
   });
-  const displayRef = useRef<HTMLDivElement>(null);
-  // Auto-scroll expression display to the right as characters are entered
+
+  const displayContainerRef = useRef<HTMLDivElement>(null);
+
+  // Keep cursor position clamped within valid bounds
   useEffect(() => {
-    if (displayRef.current) {
-      displayRef.current.scrollLeft = displayRef.current.scrollWidth;
+    if (cursorPosition > expression.length) {
+      setCursorPosition(expression.length);
     }
-  }, [expression]);
+  }, [expression, cursorPosition]);
+
+  // Persist history & memory
   useEffect(() => {
     try {
       localStorage.setItem('android_calc_history', JSON.stringify(history));
@@ -134,107 +200,198 @@ const Calculator: React.FC = () => {
       console.error(e);
     }
   }, [history]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('android_calc_memory', String(memory));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [memory]);
+
   // Live calculation preview
   const liveResult = useMemo(() => {
     if (!expression || isEvaluated) return null;
     const { result } = evaluateExpression(expression, isDeg);
     return result;
   }, [expression, isDeg, isEvaluated]);
-  const appendChar = (char: string) => {
+
+  // Insert character or token at cursor position (Inline CRUD)
+  const insertAtCursor = (char: string) => {
     if (isEvaluated) {
-      // If user types operator right after evaluation, continue with result
       if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
-        setExpression((prev) => prev + char);
+        const next = expression + char;
+        setExpression(next);
+        setCursorPosition(next.length);
       } else {
         setExpression(char);
+        setCursorPosition(char.length);
       }
       setIsEvaluated(false);
       return;
     }
-    setExpression((prev) => {
-      // Avoid duplicate consecutive operators
-      const lastChar = prev.slice(-1);
-      const isOperator = ['+', '−', '×', '÷'].includes(char);
-      const lastIsOperator = ['+', '−', '×', '÷'].includes(lastChar);
-      if (isOperator && lastIsOperator) {
-        return prev.slice(0, -1) + char;
-      }
-      return prev + char;
-    });
+
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+
+    // Prevent duplicate consecutive operators
+    const isOperator = ['+', '−', '×', '÷'].includes(char);
+    const lastIsOperator = ['+', '−', '×', '÷'].includes(before.slice(-1));
+
+    let newBefore = before;
+    if (isOperator && lastIsOperator) {
+      newBefore = before.slice(0, -1);
+    }
+
+    const nextExpr = newBefore + char + after;
+    setExpression(nextExpr);
+    setCursorPosition(newBefore.length + char.length);
   };
+
+  // Smart Parentheses at cursor position
   const handleSmartParentheses = () => {
     if (isEvaluated) {
       setExpression('(');
+      setCursorPosition(1);
       setIsEvaluated(false);
       return;
     }
-    setExpression((prev) => {
-      const openCount = (prev.match(/\(/g) || []).length;
-      const closeCount = (prev.match(/\)/g) || []).length;
-      const lastChar = prev.slice(-1);
-      // If last char is a digit, % or ), and we have unclosed parens, close it
-      if (/[\d%)]/.test(lastChar) && openCount > closeCount) {
-        return prev + ')';
-      }
-      // If last char is digit or ), and multiplying with new paren
-      if (/[\d)]/.test(lastChar)) {
-        return prev + '×(';
-      }
-      return prev + '(';
-    });
+
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const openCount = (expression.match(/\(/g) || []).length;
+    const closeCount = (expression.match(/\)/g) || []).length;
+    const lastChar = before.slice(-1);
+
+    if (/[\d%)]/.test(lastChar) && openCount > closeCount) {
+      insertAtCursor(')');
+    } else {
+      insertAtCursor('(');
+    }
   };
+
+  // Backspace at cursor position
   const handleBackspace = () => {
     if (isEvaluated) {
       setExpression('');
+      setCursorPosition(0);
       setIsEvaluated(false);
       return;
     }
-    setExpression((prev) => {
-      // If deleting a scientific function e.g. "sin("
-      for (const fn of ['asin(', 'acos(', 'atan(', 'sin(', 'cos(', 'tan(', 'ln(', 'log(', 'abs(']) {
-        if (prev.endsWith(fn)) {
-          return prev.slice(0, -fn.length);
-        }
+
+    if (cursorPosition === 0 || !expression) return;
+
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+
+    // Check if deleting a multi-char scientific function before cursor
+    for (const fn of ['asin(', 'acos(', 'atan(', 'sin(', 'cos(', 'tan(', 'ln(', 'log(', 'abs(', '1/(']) {
+      if (before.endsWith(fn)) {
+        const newBefore = before.slice(0, -fn.length);
+        setExpression(newBefore + after);
+        setCursorPosition(newBefore.length);
+        return;
       }
-      return prev.slice(0, -1);
-    });
+    }
+
+    const newBefore = before.slice(0, -1);
+    setExpression(newBefore + after);
+    setCursorPosition(newBefore.length);
   };
+
+  // Clear all
   const handleClear = () => {
     setExpression('');
+    setCursorPosition(0);
     setIsEvaluated(false);
   };
+
+  // Move cursor left / right
+  const moveCursor = (dir: 'left' | 'right') => {
+    if (isEvaluated) {
+      setIsEvaluated(false);
+    }
+    if (dir === 'left') {
+      setCursorPosition((prev) => Math.max(0, prev - 1));
+    } else {
+      setCursorPosition((prev) => Math.min(expression.length, prev + 1));
+    }
+  };
+
+  // Toggle sign of active number at cursor
   const handleToggleSign = () => {
     if (!expression) return;
     if (isEvaluated) {
       const val = parseFloat(expression);
       if (!isNaN(val)) {
-        setExpression(String(-val));
+        const toggled = String(-val);
+        setExpression(toggled);
+        setCursorPosition(toggled.length);
       }
       return;
     }
-    // Toggle sign of last number in expression
-    setExpression((prev) => {
-      const match = prev.match(/([+\-×÷(]?)(-?\d+(?:\.\d+)?)$/);
-      if (!match) return prev;
-      const [full, op, num] = match;
-      const prefix = prev.slice(0, prev.length - full.length);
-      if (num.startsWith('-')) {
-        return prefix + op + num.slice(1);
+
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+
+    const match = before.match(/([+\-×÷(]?)(-?\d+(?:\.\d+)?)$/);
+    if (!match) return;
+
+    const [full, op, num] = match;
+    const prefix = before.slice(0, before.length - full.length);
+
+    let replaced: string;
+    if (num.startsWith('-')) {
+      replaced = prefix + op + num.slice(1);
+    } else {
+      if (op === '−' || op === '-') {
+        replaced = prefix + '+' + num;
+      } else if (op === '+') {
+        replaced = prefix + '−' + num;
       } else {
-        if (op === '−' || op === '-') {
-          return prefix + '+' + num;
-        } else if (op === '+') {
-          return prefix + '−' + num;
-        }
-        return prefix + op + '(-' + num + ')';
+        replaced = prefix + op + '(-' + num + ')';
       }
-    });
+    }
+
+    setExpression(replaced + after);
+    setCursorPosition(replaced.length);
   };
+
+  // Memory Operations
+  const handleMemoryAdd = () => {
+    const activeVal = liveResult || expression;
+    const num = parseFloat(activeVal);
+    if (!isNaN(num)) {
+      setMemory((prev) => prev + num);
+    }
+  };
+
+  const handleMemorySubtract = () => {
+    const activeVal = liveResult || expression;
+    const num = parseFloat(activeVal);
+    if (!isNaN(num)) {
+      setMemory((prev) => prev - num);
+    }
+  };
+
+  const handleMemoryRecall = () => {
+    if (memory !== 0) {
+      insertAtCursor(String(memory));
+    }
+  };
+
+  const handleMemoryClear = () => {
+    setMemory(0);
+  };
+
+  // Evaluate & Commit
   const handleCalculate = () => {
     if (!expression) return;
     const { result, error } = evaluateExpression(expression, isDeg);
     if (result !== null && !error) {
-      // Add to history
       setHistory((prev) => [
         {
           expression,
@@ -244,31 +401,29 @@ const Calculator: React.FC = () => {
         ...prev.slice(0, 49),
       ]);
       setExpression(result);
+      setCursorPosition(result.length);
       setIsEvaluated(true);
     }
   };
-  const formatWithCommas = (str: string) => {
-    // Format numeric substrings nicely
-    return str.replace(/\b\d+(\.\d+)?\b/g, (num) => {
-      const parts = num.split('.');
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      return parts.join('.');
-    });
-  };
+
+  const textBeforeCursor = expression.slice(0, cursorPosition);
+  const textAfterCursor = expression.slice(cursorPosition);
+
   return (
     <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none">
       <SEOHead
         title="Android-Style Calculator — Free Online Basic & Scientific Calculator"
-        description="Fast, institutional-grade Android-style calculator with live calculation preview, percentages (4-50%), trigonometry, logarithms, and calculation history."
-        keywords="android calculator, online calculator, scientific calculator, live preview calculator, percentage calculator, math calculator"
+        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, memory operations (M+, M-, MC, MR), percentages (4-50%), x√y root operations, trigonometry, and history."
+        keywords="android calculator, inline cursor calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, x times root y, percentage calculator, scientific calculator"
         canonicalPath="/calculator"
         noIndex={false}
       />
-      {/* Top Display Area */}
-      <div className="flex-1 flex flex-col justify-end pb-3 sm:pb-4">
+
+      {/* Top Display Area with Moveable Cursor & Memory Indicator */}
+      <div className="flex-1 flex flex-col justify-end pb-2 sm:pb-3">
         {/* History Modal / Drawer */}
         {showHistory && (
-          <div className="relative mb-3 bg-base-200/90 border border-base-300 rounded-2xl p-3 shadow-lg max-h-56 overflow-y-auto backdrop-blur-md">
+          <div className="relative mb-3 bg-base-200/95 border border-base-300 rounded-2xl p-3 shadow-xl max-h-56 overflow-y-auto backdrop-blur-md animate-fadeIn">
             <div className="flex items-center justify-between pb-2 border-b border-base-300/60 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider opacity-70 flex items-center gap-1">
                 <FiClock className="h-3.5 w-3.5" /> History
@@ -300,6 +455,7 @@ const Calculator: React.FC = () => {
                     key={idx}
                     onClick={() => {
                       setExpression(item.result);
+                      setCursorPosition(item.result.length);
                       setIsEvaluated(true);
                       setShowHistory(false);
                     }}
@@ -313,28 +469,90 @@ const Calculator: React.FC = () => {
             )}
           </div>
         )}
-        {/* Expression Display */}
+
+        {/* Memory Indicator */}
+        {memory !== 0 && (
+          <div className="flex items-center justify-end px-2 mb-1 gap-1">
+            <span
+              onClick={handleMemoryRecall}
+              className="badge badge-primary badge-sm font-mono font-bold cursor-pointer hover:opacity-80 transition-opacity"
+              title="Click to recall memory (MR)"
+            >
+              M = {memory}
+            </span>
+          </div>
+        )}
+
+        {/* Expression Display with Interactive Click-to-Position Cursor */}
         <div
-          ref={displayRef}
-          className="w-full overflow-x-auto whitespace-nowrap text-right py-1 px-1 scrollbar-none transition-all"
+          ref={displayContainerRef}
+          className="w-full overflow-x-auto whitespace-nowrap text-right py-2 px-2 scrollbar-none rounded-xl cursor-text transition-all bg-base-200/30 hover:bg-base-200/50"
+          onClick={(e) => {
+            // Clicking outside characters moves cursor to end or start
+            if (e.target === e.currentTarget) {
+              setCursorPosition(expression.length);
+            }
+          }}
         >
-          <span className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-base-content font-sans">
-            {expression ? formatWithCommas(expression) : '0'}
-          </span>
+          <div className="inline-flex items-center justify-end text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-base-content font-sans min-h-[3rem]">
+            {expression.length === 0 ? (
+              <>
+                <span className="w-[3px] h-[1.1em] bg-primary animate-pulse inline-block align-middle rounded-full mr-0.5" />
+                <span className="opacity-30">0</span>
+              </>
+            ) : (
+              <>
+                {/* Clickable characters before cursor */}
+                {textBeforeCursor.split('').map((ch, idx) => (
+                  <span
+                    key={`before-${idx}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCursorPosition(idx);
+                      setIsEvaluated(false);
+                    }}
+                    className="hover:bg-primary/20 rounded cursor-pointer transition-colors"
+                  >
+                    {ch}
+                  </span>
+                ))}
+
+                {/* Visible Blinking Cursor */}
+                <span className="w-[3px] h-[1.1em] bg-primary animate-pulse inline-block align-middle rounded-full mx-[1px]" />
+
+                {/* Clickable characters after cursor */}
+                {textAfterCursor.split('').map((ch, idx) => (
+                  <span
+                    key={`after-${idx}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCursorPosition(textBeforeCursor.length + idx + 1);
+                      setIsEvaluated(false);
+                    }}
+                    className="hover:bg-primary/20 rounded cursor-pointer transition-colors"
+                  >
+                    {ch}
+                  </span>
+                ))}
+              </>
+            )}
+          </div>
         </div>
+
         {/* Live Calculation Preview (Trailing Digits like Android) */}
-        <div className="h-8 flex items-center justify-end px-1">
+        <div className="h-8 flex items-center justify-end px-2">
           {liveResult !== null && !isEvaluated ? (
             <span className="text-xl sm:text-2xl font-light text-base-content/50 font-sans tracking-tight">
-              {formatWithCommas(liveResult)}
+              {liveResult}
             </span>
           ) : (
             <span className="text-sm opacity-0">0</span>
           )}
         </div>
-        {/* Utility Icon Bar (Android Calculator Style) */}
-        <div className="flex items-center justify-between border-b border-base-300/60 pt-2 pb-2 px-2 text-base-content/70">
-          <div className="flex items-center gap-3">
+
+        {/* Utility Icon Bar with Cursor Left/Right Navigation */}
+        <div className="flex items-center justify-between border-b border-base-300/60 pt-2 pb-2 px-1 text-base-content/70">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setShowHistory(!showHistory)}
@@ -353,20 +571,44 @@ const Calculator: React.FC = () => {
               <span className="text-[11px] font-semibold">√ π e</span>
             </button>
           </div>
-          <button
-            type="button"
-            onClick={handleBackspace}
-            className="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10"
-            title="Backspace"
-          >
-            <FiDelete className="h-5 w-5" />
-          </button>
+
+          {/* Cursor Stepper & Backspace */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => moveCursor('left')}
+              className="btn btn-ghost btn-xs btn-circle text-base-content/70 hover:text-primary hover:bg-base-200"
+              title="Move cursor left"
+              disabled={cursorPosition === 0}
+            >
+              <FiChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => moveCursor('right')}
+              className="btn btn-ghost btn-xs btn-circle text-base-content/70 hover:text-primary hover:bg-base-200"
+              title="Move cursor right"
+              disabled={cursorPosition >= expression.length}
+            >
+              <FiChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleBackspace}
+              className="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10 ml-1"
+              title="Backspace"
+            >
+              <FiDelete className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
-      {/* Scientific Functions Grid (Expandable) */}
+
+      {/* Scientific & Memory Tools Panel (Expandable) */}
       {showScientific && (
         <div className="mb-2 p-2 bg-base-200/50 rounded-2xl border border-base-300/80 space-y-1.5 animate-fadeIn">
-          <div className="flex items-center justify-between px-1">
+          {/* Top Row: DEG/RAD toggle + Memory Row (MC, MR, M+, M-) */}
+          <div className="flex items-center justify-between px-1 gap-1">
             <div className="join join-horizontal">
               <button
                 type="button"
@@ -383,27 +625,65 @@ const Calculator: React.FC = () => {
                 RAD
               </button>
             </div>
-            <span className="text-[10px] uppercase font-bold opacity-50 tracking-wider">
-              Scientific Functions
-            </span>
+
+            {/* Memory Toolbar: MC, MR, M+, M- */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleMemoryClear}
+                disabled={memory === 0}
+                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-error disabled:opacity-40"
+                title="Memory Clear (MC)"
+              >
+                MC
+              </button>
+              <button
+                type="button"
+                onClick={handleMemoryRecall}
+                disabled={memory === 0}
+                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-primary disabled:opacity-40"
+                title="Memory Recall (MR)"
+              >
+                MR
+              </button>
+              <button
+                type="button"
+                onClick={handleMemoryAdd}
+                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-primary hover:bg-primary/10"
+                title="Memory Add (M+)"
+              >
+                M+
+              </button>
+              <button
+                type="button"
+                onClick={handleMemorySubtract}
+                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-primary hover:bg-primary/10"
+                title="Memory Subtract (M-)"
+              >
+                M-
+              </button>
+            </div>
           </div>
+
           <div className="grid grid-cols-5 gap-1.5 text-xs font-semibold">
             {[
-              { label: 'sin', fn: () => appendChar('sin(') },
-              { label: 'cos', fn: () => appendChar('cos(') },
-              { label: 'tan', fn: () => appendChar('tan(') },
-              { label: 'ln', fn: () => appendChar('ln(') },
-              { label: 'log', fn: () => appendChar('log(') },
-              { label: 'sin⁻¹', fn: () => appendChar('asin(') },
-              { label: 'cos⁻¹', fn: () => appendChar('acos(') },
-              { label: 'tan⁻¹', fn: () => appendChar('atan(') },
-              { label: '√', fn: () => appendChar('√(') },
-              { label: 'xʸ', fn: () => appendChar('^') },
-              { label: 'π', fn: () => appendChar('π') },
-              { label: 'e', fn: () => appendChar('e') },
-              { label: 'x!', fn: () => appendChar('!') },
-              { label: '|x|', fn: () => appendChar('abs(') },
-              { label: '1/x', fn: () => appendChar('1/(') },
+              { label: 'sin', fn: () => insertAtCursor('sin(') },
+              { label: 'cos', fn: () => insertAtCursor('cos(') },
+              { label: 'tan', fn: () => insertAtCursor('tan(') },
+              { label: 'ln', fn: () => insertAtCursor('ln(') },
+              { label: 'log', fn: () => insertAtCursor('log(') },
+
+              { label: 'sin⁻¹', fn: () => insertAtCursor('asin(') },
+              { label: 'cos⁻¹', fn: () => insertAtCursor('acos(') },
+              { label: 'tan⁻¹', fn: () => insertAtCursor('atan(') },
+              { label: '√', fn: () => insertAtCursor('√(') },
+              { label: 'xʸ', fn: () => insertAtCursor('^') },
+
+              { label: 'π', fn: () => insertAtCursor('π') },
+              { label: 'e', fn: () => insertAtCursor('e') },
+              { label: 'x!', fn: () => insertAtCursor('!') },
+              { label: '|x|', fn: () => insertAtCursor('abs(') },
+              { label: '1/x', fn: () => insertAtCursor('1/(') },
             ].map((btn, idx) => (
               <button
                 key={idx}
@@ -417,6 +697,7 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Main Keypad Grid (Android Calculator Circular/Pill Keypad) */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3 pb-2">
         {/* Row 1: C, ( ), %, ÷ */}
@@ -436,24 +717,25 @@ const Calculator: React.FC = () => {
         </button>
         <button
           type="button"
-          onClick={() => appendChar('%')}
+          onClick={() => insertAtCursor('%')}
           className="btn h-14 sm:h-16 rounded-full text-lg sm:text-xl font-bold bg-base-200 text-primary hover:bg-primary/15 border-0 shadow-none"
         >
           %
         </button>
         <button
           type="button"
-          onClick={() => appendChar('÷')}
+          onClick={() => insertAtCursor('÷')}
           className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
         >
           ÷
         </button>
+
         {/* Row 2: 7, 8, 9, × */}
         {['7', '8', '9'].map((num) => (
           <button
             key={num}
             type="button"
-            onClick={() => appendChar(num)}
+            onClick={() => insertAtCursor(num)}
             className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
           >
             {num}
@@ -461,17 +743,18 @@ const Calculator: React.FC = () => {
         ))}
         <button
           type="button"
-          onClick={() => appendChar('×')}
+          onClick={() => insertAtCursor('×')}
           className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
         >
           ×
         </button>
+
         {/* Row 3: 4, 5, 6, − */}
         {['4', '5', '6'].map((num) => (
           <button
             key={num}
             type="button"
-            onClick={() => appendChar(num)}
+            onClick={() => insertAtCursor(num)}
             className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
           >
             {num}
@@ -479,17 +762,18 @@ const Calculator: React.FC = () => {
         ))}
         <button
           type="button"
-          onClick={() => appendChar('−')}
+          onClick={() => insertAtCursor('−')}
           className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
         >
           −
         </button>
+
         {/* Row 4: 1, 2, 3, + */}
         {['1', '2', '3'].map((num) => (
           <button
             key={num}
             type="button"
-            onClick={() => appendChar(num)}
+            onClick={() => insertAtCursor(num)}
             className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
           >
             {num}
@@ -497,11 +781,12 @@ const Calculator: React.FC = () => {
         ))}
         <button
           type="button"
-          onClick={() => appendChar('+')}
+          onClick={() => insertAtCursor('+')}
           className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
         >
           +
         </button>
+
         {/* Row 5: +/-, 0, ., = */}
         <button
           type="button"
@@ -512,14 +797,14 @@ const Calculator: React.FC = () => {
         </button>
         <button
           type="button"
-          onClick={() => appendChar('0')}
+          onClick={() => insertAtCursor('0')}
           className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
         >
           0
         </button>
         <button
           type="button"
-          onClick={() => appendChar('.')}
+          onClick={() => insertAtCursor('.')}
           className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
         >
           .
@@ -535,4 +820,5 @@ const Calculator: React.FC = () => {
     </main>
   );
 };
+
 export default Calculator;
