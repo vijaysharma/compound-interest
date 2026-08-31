@@ -172,7 +172,8 @@ const Upgrade = () => {
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}.
               </p>
               <p className="text-[11px] opacity-65 mt-0.5">
-                All other tools (FD, RD, SWP, SIP, EMI, Inflation) are 100% free for 48 hours from first usage.
+                All other tools (FD, RD, SWP, SIP, EMI, Inflation) are 100% free for 48 hours from
+                first usage.
               </p>
             </div>
             <Link to="/mutual-funds/lumpsum" className="btn btn-outline btn-info btn-xs shrink-0">

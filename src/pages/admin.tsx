@@ -521,7 +521,8 @@ const Admin = () => {
             <div>
               <h2 className="text-lg font-bold">User Management &amp; Quotas</h2>
               <p className="text-xs opacity-70">
-                Track user calculation usage, 48-hour first-usage trial windows, and grant access or quota overrides.
+                Track user calculation usage, 48-hour first-usage trial windows, and grant access or
+                quota overrides.
               </p>
             </div>
             <button

@@ -70,9 +70,9 @@ const ProtectedRoute = ({
   }
   const isTimeExpired = Boolean(
     user?.trial_expires_at &&
-      new Date(user.trial_expires_at).getTime() < now &&
-      !isAdmin &&
-      user?.subscription_status !== 'active'
+    new Date(user.trial_expires_at).getTime() < now &&
+    !isAdmin &&
+    user?.subscription_status !== 'active'
   );
   // If 48-hour trial from first usage has expired, block all protected features
   if (isTimeExpired) {
@@ -108,9 +108,7 @@ const ProtectedRoute = ({
   }
   const limit = user?.freeLimit || 15;
   const isQuotaExceeded = Boolean(
-    (user?.api_usage_count ?? 0) >= limit &&
-      !isAdmin &&
-      user?.subscription_status !== 'active'
+    (user?.api_usage_count ?? 0) >= limit && !isAdmin && user?.subscription_status !== 'active'
   );
   // If API Quota reached (15 runs), block only the quota-restricted tools (MF and PPP)
   if (requireApiQuota && isQuotaExceeded) {

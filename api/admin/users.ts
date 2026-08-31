@@ -23,7 +23,13 @@ export default async function handler(request: Request): Promise<Response> {
     try {
       const body = (await request.json()) as {
         user_id?: string;
-        action?: 'grant_access' | 'reset_usage' | 'set_role' | 'reset_trial' | 'set_limit' | 'extend_trial_time';
+        action?:
+          | 'grant_access'
+          | 'reset_usage'
+          | 'set_role'
+          | 'reset_trial'
+          | 'set_limit'
+          | 'extend_trial_time';
         role?: 'admin' | 'user';
         free_limit?: number;
         hours?: number;
