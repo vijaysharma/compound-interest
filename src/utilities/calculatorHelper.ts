@@ -1,4 +1,4 @@
-// Comprehensive, high-precision expression evaluator for Android-style Calculator
+// Comprehensive, arbitrary-precision expression evaluator for Android-style Calculator
 
 export interface HistoryItem {
   expression: string;
@@ -40,15 +40,59 @@ export function normalizeSuperscripts(s: string): string {
   return s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹ʸˣ]/g, (m) => supMap[m] || m);
 }
 
-// Arbitrary-precision Decimal arithmetic using BigInt (60 decimal places of precision)
-const SCALE = 60;
-const BASE = 10n ** BigInt(SCALE);
-
+// Arbitrary-precision Decimal arithmetic (supports arbitrary exponents up to any magnitude)
 export class Decimal {
-  val: bigint; // scaled by 10^SCALE
+  m: bigint; // unscaled integer mantissa
+  e: number; // base-10 exponent: value = m * 10^e
 
-  constructor(val: bigint) {
-    this.val = val;
+  constructor(m: bigint | number | string, e: number) {
+    this.m = BigInt(m);
+    this.e = e;
+    this.normalize();
+  }
+
+  normalize() {
+    if (this.m === 0n) {
+      this.e = 0;
+      return;
+    }
+    while (this.m % 10n === 0n) {
+      this.m /= 10n;
+      this.e += 1;
+    }
+  }
+
+  static fromString(str: string): Decimal {
+    str = str.trim();
+    const isNeg = str.startsWith('-');
+    const clean = str.replace(/^[+-]/, '');
+
+    // Handle scientific notation e.g. 8.06581751709e+67 or 1.5e-5
+    const sciMatch = clean.match(/^(\d+)(?:\.(\d+))?[eE]([+-]?\d+)$/);
+    if (sciMatch) {
+      const intPart = sciMatch[1] || '0';
+      const fracPart = sciMatch[2] || '';
+      const exp = parseInt(sciMatch[3], 10);
+      const digits = intPart + fracPart;
+      const decPlaces = fracPart.length;
+      let m = BigInt(digits);
+      if (isNeg) m = -m;
+      return new Decimal(m, exp - decPlaces);
+    }
+
+    // Handle standard decimal numbers
+    const decMatch = clean.match(/^(\d+)(?:\.(\d+))?$/);
+    if (decMatch) {
+      const intPart = decMatch[1] || '0';
+      const fracPart = decMatch[2] || '';
+      const digits = intPart + fracPart;
+      const decPlaces = fracPart.length;
+      let m = BigInt(digits);
+      if (isNeg) m = -m;
+      return new Decimal(m, -decPlaces);
+    }
+
+    return new Decimal(0n, 0);
   }
 
   static fromNumber(n: number): Decimal {
@@ -56,120 +100,78 @@ export class Decimal {
     return Decimal.fromString(n.toString());
   }
 
-  static fromString(str: string): Decimal {
-    str = str.trim();
-    if (!str) return new Decimal(0n);
-
-    // Handle scientific exponential notation e.g. 1.18059162073e+21, 5e-3, 3.2E4
-    const sciMatch = str.match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))[eE]([+-]?\d+)$/);
-    if (sciMatch) {
-      const baseStr = sciMatch[1];
-      const exp = parseInt(sciMatch[2], 10);
-      const isNeg = baseStr.startsWith('-');
-      const cleanBase = baseStr.replace(/^[+-]/, '');
-      const parts = cleanBase.split('.');
-      const intPart = parts[0] || '0';
-      const fracPart = parts[1] || '';
-
-      const totalDigits = intPart + fracPart;
-      const decPlaces = fracPart.length;
-      const effectiveExp = exp - decPlaces;
-
-      let big = BigInt(totalDigits);
-      if (isNeg) big = -big;
-
-      const shift = BigInt(effectiveExp) + BigInt(SCALE);
-      if (shift >= 0n) {
-        return new Decimal(big * (10n ** shift));
-      } else {
-        return new Decimal(big / (10n ** (-shift)));
-      }
-    }
-
-    const isNeg = str.startsWith('-');
-    const clean = str.replace(/^[+-]/, '');
-    const parts = clean.split('.');
-    const intPart = parts[0] || '0';
-    const fracPart = parts[1] || '';
-
-    const digits = intPart + fracPart;
-    const decPlaces = fracPart.length;
-    let big = BigInt(digits);
-    if (isNeg) big = -big;
-
-    const shift = BigInt(SCALE - decPlaces);
-    if (shift >= 0n) {
-      return new Decimal(big * (10n ** shift));
-    } else {
-      return new Decimal(big / (10n ** (-shift)));
-    }
-  }
-
   add(other: Decimal): Decimal {
-    return new Decimal(this.val + other.val);
+    const diff = this.e - other.e;
+    if (diff >= 0) {
+      const m1 = this.m * (10n ** BigInt(diff));
+      return new Decimal(m1 + other.m, other.e);
+    } else {
+      const m2 = other.m * (10n ** BigInt(-diff));
+      return new Decimal(this.m + m2, this.e);
+    }
   }
 
   sub(other: Decimal): Decimal {
-    return new Decimal(this.val - other.val);
+    return this.add(new Decimal(-other.m, other.e));
   }
 
   mul(other: Decimal): Decimal {
-    return new Decimal((this.val * other.val) / BASE);
+    return new Decimal(this.m * other.m, this.e + other.e);
   }
 
-  div(other: Decimal): Decimal {
-    if (other.val === 0n) throw new Error('Undefined');
-    return new Decimal((this.val * BASE) / other.val);
-  }
-
-  pow(exp: number): Decimal {
-    if (Number.isInteger(exp) && Math.abs(exp) <= 1000) {
-      if (exp === 0) return new Decimal(BASE);
-      let p = Math.abs(exp);
-      let base: Decimal = this;
-      let result = new Decimal(BASE);
-      while (p > 0) {
-        if (p % 2 === 1) result = result.mul(base);
-        base = base.mul(base);
-        p = Math.floor(p / 2);
-      }
-      return exp < 0 ? new Decimal(BASE).div(result) : result;
-    }
-    const floatRes = Math.pow(this.toNumber(), exp);
-    if (isNaN(floatRes)) throw new Error('Undefined');
-    if (!isFinite(floatRes)) throw new Error('Overflow');
-    return Decimal.fromNumber(floatRes);
+  div(other: Decimal, precision = 40): Decimal {
+    if (other.m === 0n) throw new Error('Undefined');
+    const m = (this.m * (10n ** BigInt(precision))) / other.m;
+    return new Decimal(m, this.e - other.e - precision);
   }
 
   toNumber(): number {
-    const isNeg = this.val < 0n;
-    const absVal = isNeg ? -this.val : this.val;
-    const intPart = absVal / BASE;
-    const fracPart = absVal % BASE;
-    const fracStr = fracPart.toString().padStart(SCALE, '0');
-    const floatStr = (isNeg ? '-' : '') + intPart.toString() + '.' + fracStr;
-    return parseFloat(floatStr);
+    const isNeg = this.m < 0n;
+    const absM = isNeg ? -this.m : this.m;
+    const s = absM.toString();
+    const e = this.e;
+    if (e >= 0) {
+      return (isNeg ? -1 : 1) * Number(s + '0'.repeat(e));
+    }
+    const decPos = s.length + e;
+    if (decPos > 0) {
+      const str = s.slice(0, decPos) + '.' + s.slice(decPos);
+      return (isNeg ? -1 : 1) * parseFloat(str);
+    } else {
+      const str = '0.' + '0'.repeat(-decPos) + s;
+      return (isNeg ? -1 : 1) * parseFloat(str);
+    }
   }
 
   toString(): string {
-    const isNeg = this.val < 0n;
-    const absVal = isNeg ? -this.val : this.val;
-    const intPart = absVal / BASE;
-    const fracPart = absVal % BASE;
-
-    if (fracPart === 0n) {
-      return (isNeg ? '-' : '') + intPart.toString();
+    if (this.m === 0n) return '0';
+    const isNeg = this.m < 0n;
+    const absM = isNeg ? -this.m : this.m;
+    const s = absM.toString();
+    const e = this.e;
+    if (e >= 0) {
+      if (e + s.length > 15) {
+        const exp = s.length - 1 + e;
+        let mant = s[0] + (s.length > 1 ? '.' + s.slice(1) : '');
+        if (mant.length > 14) mant = mant.slice(0, 14);
+        mant = mant.replace(/0+$/, '').replace(/\.$/, '');
+        return (isNeg ? '-' : '') + mant + 'e+' + exp;
+      }
+      return (isNeg ? '-' : '') + s + '0'.repeat(e);
     }
-
-    let fracStr = fracPart.toString().padStart(SCALE, '0').replace(/0+$/, '');
-    if (intPart === 0n && fracStr.length > 12) {
-      const num = this.toNumber();
-      return parseFloat(num.toPrecision(12)).toString();
+    const decPos = s.length + e;
+    if (decPos > 0) {
+      let frac = s.slice(decPos);
+      if (frac.length > 12) frac = frac.slice(0, 12).replace(/0+$/, '');
+      return (isNeg ? '-' : '') + s.slice(0, decPos) + (frac ? '.' + frac : '');
+    } else {
+      let frac = '0'.repeat(-decPos) + s;
+      if (frac.length > 12) {
+        const num = this.toNumber();
+        return parseFloat(num.toPrecision(12)).toString();
+      }
+      return (isNeg ? '-' : '') + '0.' + frac;
     }
-    if (fracStr.length > 12) {
-      fracStr = fracStr.slice(0, 12).replace(/0+$/, '');
-    }
-    return (isNeg ? '-' : '') + intPart.toString() + (fracStr ? '.' + fracStr : '');
   }
 }
 
@@ -200,7 +202,7 @@ export function extractLastOperation(expr: string): LastOperation | null {
   return null;
 }
 
-// Tokenize and evaluate expression supporting BigInt decimals, trig singularities, factorials, and y√(x)
+// Tokenize and evaluate expression supporting arbitrary-precision Decimals, trig singularities, factorials, and y√(x)
 export function evaluateExpression(
   expr: string,
   isDeg: boolean
@@ -244,50 +246,39 @@ export function evaluateExpression(
     // ─────────────────────────────────────────────────────────────────
     // 2. y-th root of x: y√(x) => nthRoot(x, y) e.g. 3√(27) => 3
     // ─────────────────────────────────────────────────────────────────
-    // Handle y√(x) with parentheses: 3√(27) => nthRoot(27, 3)
     sanitized = sanitized.replace(
       /(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*√\s*\(([^()]+)\)/g,
       'nthRoot(($2), $1)'
     );
-    // Handle y√x without parentheses: 3√27 => nthRoot(27, 3)
     sanitized = sanitized.replace(
       /(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
       'nthRoot($2, $1)'
     );
-    // Handle standard √(x) when no leading index y: √(25) => nthRoot(25, 2)
     sanitized = sanitized.replace(/√\s*\(([^()]+)\)/g, 'nthRoot(($1), 2)');
     sanitized = sanitized.replace(/√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, 'nthRoot($1, 2)');
 
     // ─────────────────────────────────────────────────────────────────
     // 3. Implicit Multiplication (Parentheses, Constants & Functions)
     // ─────────────────────────────────────────────────────────────────
-    // Number followed by parenthesis: 2(3+4) => 2*(3+4)
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\(/g, '$1*(');
-    // Parenthesis followed by number: (3+4)2 => (3+4)*2
     sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, ')*$1');
-    // Parenthesis followed by parenthesis: (2+3)(4+5) => (2+3)*(4+5)
     sanitized = sanitized.replace(/\)\s*\(/g, ')*(');
 
-    // Standalone constants [πe] (DO NOT touch exponent 'e' in scientific numbers!)
     sanitized = sanitized.replace(/π/g, '(Math.PI)');
-    // Only replace standalone 'e' (Euler's number) not followed/preceded by a digit
     sanitized = sanitized.replace(/(?<![0-9a-zA-Z.])e(?![0-9a-zA-Z+])/g, '(Math.E)');
 
-    // Constant followed by Number or (: π(4) => π*4
     sanitized = sanitized.replace(/((?:\(Math\.PI\)|\(Math\.E\)))\s*(\d+|\()/g, '$1*$2');
     sanitized = sanitized.replace(/(\d+|\))\s*((?:\(Math\.PI\)|\(Math\.E\)))/g, '$1*$2');
 
-    // Number or ) before scientific functions
     sanitized = sanitized.replace(
       /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\)))\s*(sin|cos|tan|asin|acos|atan|ln|log|abs|nthRoot)/g,
       '$1*$2'
     );
 
     // ─────────────────────────────────────────────────────────────────
-    // 4. Factorials (e.g. 5! or 5000!)
+    // 4. Factorials (e.g. 5! or 52! or 5000!)
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
-    sanitized = sanitized.replace(/\^/g, '**');
 
     // ─────────────────────────────────────────────────────────────────
     // 5. Trigonometric Functions with Exact Undefined checks (tan(90))
@@ -315,49 +306,35 @@ export function evaluateExpression(
       return `Math.${fn}(${arg})`;
     };
 
-    // Replace functions iteratively
     for (let iter = 0; iter < 4; iter++) {
       sanitized = sanitized
-        .replace(/asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
-        .replace(/acos\(([^()]+)\)/g, (_, a) => invTrigWrap('acos', a))
-        .replace(/atan\(([^()]+)\)/g, (_, a) => invTrigWrap('atan', a))
-        .replace(/sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
-        .replace(/cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
-        .replace(/tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
-        .replace(/ln\(([^()]+)\)/g, '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log(v); })())')
-        .replace(/log\(([^()]+)\)/g, '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log10(v); })())')
-        .replace(/abs\(([^()]+)\)/g, 'Math.abs($1)');
+        .replace(/(?<![a-zA-Z.])asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
+        .replace(/(?<![a-zA-Z.])acos\(([^()]+)\)/g, (_, a) => invTrigWrap('acos', a))
+        .replace(/(?<![a-zA-Z.])atan\(([^()]+)\)/g, (_, a) => invTrigWrap('atan', a))
+        .replace(/(?<![a-zA-Z.])sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
+        .replace(/(?<![a-zA-Z.])cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
+        .replace(/(?<![a-zA-Z.])tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
+        .replace(/(?<![a-zA-Z.])ln\(([^()]+)\)/g, '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log(v); })())')
+        .replace(/(?<![a-zA-Z.])log\(([^()]+)\)/g, '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log10(v); })())')
+        .replace(/(?<![a-zA-Z.])abs\(([^()]+)\)/g, 'Math.abs($1)');
     }
 
-    // Check division by zero: replace / 0 with check
-    sanitized = sanitized.replace(
-      /\/([0-9.]+(?:[eE][+-]?\d+)?|\([^()]+\))/g,
-      `((d) => { if (d === 0) throw new Error("Undefined"); return 1 / d; })(($1))`
-    );
-    // Replace trailing * 1/d with division
-    sanitized = sanitized.replace(/\* \(\(d\) =>/g, '* ((d) =>');
-
     // ─────────────────────────────────────────────────────────────────
-    // 6. High-Precision Evaluation / Decimal Solver
+    // 6. High-Precision Decimal Evaluation for arithmetic & scientific notation
     // ─────────────────────────────────────────────────────────────────
-    // First, try Decimal evaluation if expression is linear additive / scientific arithmetic
-    // e.g. 1.18059162073e+21+2-1.18059162073e+21
-    const isLinearDecimal = /^[+-]?(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[+\-*\/() ])+$/.test(sanitized) &&
-      !/(?:fact|Math|nthRoot)/.test(sanitized);
-
-    if (isLinearDecimal) {
+    const isDecimalEligible = /^(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[+\-*\/() ])+$/.test(sanitized);
+    if (isDecimalEligible) {
       try {
-        const tokens = sanitized.match(/([+-]?(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|[+\-*\/()])/g);
-        if (tokens && tokens.length > 0) {
-          // Infix to RPN Shunting-Yard for Decimal
+        const rawTokens = sanitized.match(/(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[+\-*\/()])/g);
+        if (rawTokens && rawTokens.length > 0) {
           const output: (Decimal | string)[] = [];
           const ops: string[] = [];
           const precedence: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
 
           let prevToken: string | null = null;
-          for (let i = 0; i < tokens.length; i++) {
-            const token = tokens[i];
-            if (/^[+-]?(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)$/.test(token)) {
+          for (let i = 0; i < rawTokens.length; i++) {
+            const token = rawTokens[i];
+            if (/^\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(token)) {
               output.push(Decimal.fromString(token));
             } else if (token === '(') {
               ops.push(token);
@@ -367,9 +344,8 @@ export function evaluateExpression(
               }
               ops.pop();
             } else if (['+', '-', '*', '/'].includes(token)) {
-              // Unary minus handling
               if ((token === '-' || token === '+') && (prevToken === null || ['+', '-', '*', '/', '('].includes(prevToken))) {
-                output.push(Decimal.fromString('0'));
+                output.push(new Decimal(0n, 0));
               }
               while (ops.length && ops[ops.length - 1] !== '(' && precedence[ops[ops.length - 1]] >= precedence[token]) {
                 output.push(ops.pop()!);
@@ -380,7 +356,6 @@ export function evaluateExpression(
           }
           while (ops.length) output.push(ops.pop()!);
 
-          // Evaluate RPN with Decimal
           const stack: Decimal[] = [];
           for (const tok of output) {
             if (tok instanceof Decimal) {
@@ -401,9 +376,10 @@ export function evaluateExpression(
         }
       } catch (e: any) {
         if (e.message === 'Undefined') return { result: 'Undefined', error: false };
-        // Fallback to standard evaluator below
       }
     }
+
+    sanitized = sanitized.replace(/\^/g, '**');
 
     // Standard high-level execution context with math helpers
     const evaluator = new Function(
@@ -415,8 +391,7 @@ export function evaluateExpression(
         if (typeof res !== 'number' || isNaN(res)) throw new Error('Undefined');
         return res;
       } catch(e) {
-        if (e.message === 'Overflow') throw e;
-        if (e.message === 'Undefined') throw e;
+        if (e.message === 'Overflow' || e.message === 'Undefined') throw e;
         return null;
       }`
     );
