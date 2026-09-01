@@ -1121,28 +1121,6 @@ const Lumpsum = ({
       <CalculatorContentSection
         title="Mastering Mutual Fund Compounding & Historical NAV Analysis"
         subtitle="Lumpsum mutual fund investing deploys capital into equity, hybrid, or debt portfolios from Day 1, allowing 100% of your investment to compound over the full duration. Analyzing historical rolling returns and CAGR helps set realistic wealth expectations."
-        formulaTitle="Compound Annual Growth Rate (CAGR) & Lumpsum Formula"
-        formula="CAGR = [(Ending NAV / Beginning NAV)^(1 / Years) - 1] × 100  |  Maturity = Principal × (1 + CAGR)^Years"
-        formulaExplanation={[
-          { symbol: 'CAGR', label: 'Compound Annual Growth Rate normalized per year (%)' },
-          { symbol: 'Ending NAV', label: 'Mutual fund Net Asset Value on exit / maturity date' },
-          {
-            symbol: 'Beginning NAV',
-            label: 'Mutual fund Net Asset Value on purchase / allotment date',
-          },
-          {
-            symbol: 'Years',
-            label: 'Exact elapsed duration between purchase date and evaluation date',
-          },
-        ]}
-        workedExample={{
-          title: 'Worked Example: ₹5,00,000 Lumpsum Invested for 7 Years at 14% CAGR',
-          description:
-            'A one-time investment of ₹5,00,000 in a diversified equity mutual fund delivering 14.0% annualized CAGR over 7 years:',
-          calculation: 'Maturity Value = 5,00,000 × (1 + 0.14)^7 = 5,00,000 × 2.502 = ₹12,51,146',
-          result:
-            'Total Invested: ₹5,00,000 | Estimated Capital Gain: ₹7,51,146 | Total Wealth Multiplier: 2.5x',
-        }}
         comparisonTable={{
           headers: [
             'Strategy',

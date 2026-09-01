@@ -123,11 +123,13 @@ const swpFaqs = [
   },
   {
     question: 'What is SWP in mutual fund?',
-    answer: 'A Systematic Withdrawal Plan (SWP) allows you to withdraw a fixed amount from your mutual fund investment at regular intervals (monthly, quarterly, or annually) while keeping the remaining corpus invested. Unlike FD interest payouts, SWP withdrawals are a mix of capital redemption and gains, making them more tax-efficient — only the capital gains portion is taxed, not the entire withdrawal amount.'
+    answer:
+      'A Systematic Withdrawal Plan (SWP) allows you to withdraw a fixed amount from your mutual fund investment at regular intervals (monthly, quarterly, or annually) while keeping the remaining corpus invested. Unlike FD interest payouts, SWP withdrawals are a mix of capital redemption and gains, making them more tax-efficient — only the capital gains portion is taxed, not the entire withdrawal amount.',
   },
   {
     question: 'How much corpus do I need for ₹50,000 monthly pension through SWP?',
-    answer: 'Using the 4% safe withdrawal rate (SWR) rule adapted for India, you need approximately ₹1.5 Crore corpus to sustain ₹50,000/month (₹6 Lakh/year) indefinitely. However, if your mutual fund earns 9–10% annual returns and inflation averages 6%, a corpus of ₹1 Crore can sustain ₹50,000/month for approximately 25–30 years with the residual balance still growing.'
+    answer:
+      'Using the 4% safe withdrawal rate (SWR) rule adapted for India, you need approximately ₹1.5 Crore corpus to sustain ₹50,000/month (₹6 Lakh/year) indefinitely. However, if your mutual fund earns 9–10% annual returns and inflation averages 6%, a corpus of ₹1 Crore can sustain ₹50,000/month for approximately 25–30 years with the residual balance still growing.',
   },
 ];
 const FixedRateSWP = ({ className, title }: { className?: string; title?: string }) => {
@@ -210,7 +212,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           longevity.
         </p>
       </header>
-      <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
+      <div className="space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
           className="mb-1"
@@ -260,29 +262,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
       <CalculatorContentSection
         title="Mastering Sustainable Retirement Cashflows with SWP"
         subtitle="A Systematic Withdrawal Plan (SWP) is a modern financial strategy that allows retirees and wealth planners to generate regular monthly income from an accumulated mutual fund corpus while keeping remaining capital invested in compounding assets."
-        formulaTitle="Monthly Portfolio Depletion & Growth Model"
-        formula="Balance_m = Balance_(m-1) × (1 + r)^(1/12) - W_m"
-        formulaExplanation={[
-          { symbol: 'Balance_m', label: 'Remaining invested capital at the end of month m' },
-          {
-            symbol: 'Balance_(m-1)',
-            label: 'Invested capital balance at the beginning of the month',
-          },
-          { symbol: 'r', label: 'Annual expected portfolio return rate in decimal form' },
-          {
-            symbol: 'W_m',
-            label: 'Monthly withdrawal payout (adjusted periodically for inflation)',
-          },
-        ]}
-        workedExample={{
-          title: 'Worked Example: ₹1 Crore Corpus with ₹50,000/Month Withdrawal at 9% ROI',
-          description:
-            'With a starting corpus of ₹1,00,00,000, withdrawing ₹50,000 per month (₹6,00,000/year, a 6.0% withdrawal rate) from a fund generating 9% annual returns:',
-          calculation:
-            'Annual Growth (+₹9.0 Lakhs) > Annual Withdrawals (-₹6.0 Lakhs) -> Net Corpus Grows to ₹1.48 Crores in 20 Years',
-          result:
-            'Total Withdrawn Over 20 Years: ₹1.20 Crores | Final Residual Portfolio: ~₹1.48 Crores',
-        }}
         comparisonTable={{
           headers: [
             'Parameter',

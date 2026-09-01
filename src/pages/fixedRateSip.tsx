@@ -224,7 +224,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
           Simulate compound growth, total maturity corpus, and required monthly investment targets.
         </p>
       </header>
-      <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
+      <div className="space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
           className="mb-1"
@@ -250,22 +250,6 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
       <CalculatorContentSection
         title="The Compounding Science of Systematic Investment Plans (SIP)"
         subtitle="A Systematic Investment Plan (SIP) enables disciplined retail investors to invest fixed sums regularly into equity and hybrid mutual funds. By combining compounding returns with rupee cost averaging, SIPs are India's premier vehicle for long-term wealth creation."
-        formulaTitle="Systematic Investment Plan (SIP) Compound Formula"
-        formula="M = P × [((1 + i)^n - 1) / i] × (1 + i)"
-        formulaExplanation={[
-          { symbol: 'M', label: 'Expected final maturity amount (Corpus)' },
-          { symbol: 'P', label: 'Monthly SIP installment amount (₹)' },
-          { symbol: 'i', label: 'Periodic monthly interest rate: Annual CAGR (%) / 12 / 100' },
-          { symbol: 'n', label: 'Total number of monthly contributions (Years × 12)' },
-        ]}
-        workedExample={{
-          title: 'Worked Example: ₹10,000 Monthly SIP for 15 Years at 12% CAGR',
-          description:
-            'If you invest ₹10,000 every month into an equity mutual fund delivering an average of 12% annualized returns (i = 0.01/month, n = 180 months):',
-          calculation: 'M = 10,000 × [((1 + 0.01)^180 - 1) / 0.01] × (1 + 0.01) = ₹50,45,760',
-          result:
-            'Total Invested: ₹18,00,000 | Estimated Capital Gains: ₹32,45,760 | Wealth Multiplier: 2.8x',
-        }}
         comparisonTable={{
           headers: [
             'Metric',

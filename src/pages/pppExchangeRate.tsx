@@ -266,7 +266,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           Compare real standard of living and salary equivalents across 150+ countries.
         </p>
       </header>
-      <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
+      <div className="space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <div className="join mb-1 w-full">
           <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-xs font-semibold">
@@ -301,7 +301,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           inputAmount={srcAmt}
           setInputAmount={setSrcAmt}
           className="mb-1"
-          title="Source Amount"
+          title="Amount"
           stepData={[
             {
               id: 'ip1',
@@ -348,31 +348,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       <CalculatorContentSection
         title="Why Purchasing Power Parity (PPP) Matters for Global Salaries"
         subtitle="Market exchange rates fluctuate based on capital flows and central bank policies, failing to capture true local living costs. Purchasing Power Parity (PPP) calculates the real cost of rent, healthcare, food, and daily essentials across nations."
-        formulaTitle="World Bank Purchasing Power Parity Conversion Formula"
-        formula="Target Equivalent = (Source Amount / Source PPP Factor) × Target PPP Factor"
-        formulaExplanation={[
-          {
-            symbol: 'Target Equivalent',
-            label: 'Local currency needed in target country to match source lifestyle',
-          },
-          { symbol: 'Source Amount', label: 'Income or expense in origin country local currency' },
-          {
-            symbol: 'Source PPP Factor',
-            label: 'World Bank PPP conversion factor for source economy',
-          },
-          {
-            symbol: 'Target PPP Factor',
-            label: 'World Bank PPP conversion factor for destination economy',
-          },
-        ]}
-        workedExample={{
-          title: 'Worked Example: ₹25 Lakhs India Salary vs. USA Equivalent',
-          description:
-            'With India PPP factor of ~24.5 and USA factor of 1.0, converting a ₹25,00,000 Indian annual income to US Dollar lifestyle equivalence:',
-          calculation: 'Equivalent USD = ₹25,00,000 / 24.5 = $102,040 in the United States',
-          result:
-            'Real Purchasing Equivalent: ~$102,000 in USA (Compared to just $29,000 at nominal Forex rates)',
-        }}
         comparisonTable={{
           headers: [
             'Country',

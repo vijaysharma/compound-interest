@@ -1035,30 +1035,6 @@ const SWP = ({
       <CalculatorContentSection
         title="Testing Real-World Retirement Resilience with SWP Backtests"
         subtitle="Simulating Systematic Withdrawal Plans against real historical mutual fund data exposes your retirement portfolio to actual historical market drawdowns, inflation cycles, and recovery periods."
-        formulaTitle="Historical NAV Unit Redemption Model"
-        formula="Units_redeemed = Monthly_Payout / NAV_date  |  Residual_Units = Units_prev - Units_redeemed"
-        formulaExplanation={[
-          {
-            symbol: 'Units_redeemed',
-            label: 'Exact number of mutual fund units liquidated on scheduled withdrawal date',
-          },
-          { symbol: 'Monthly_Payout', label: 'Desired monthly cashflow amount in Indian Rupees' },
-          { symbol: 'NAV_date', label: 'Official AMFI Net Asset Value on the withdrawal date' },
-          {
-            symbol: 'Residual_Units',
-            label: 'Remaining invested units compounding in the mutual fund scheme',
-          },
-        ]}
-        workedExample={{
-          title:
-            'Worked Example: ₹50 Lakhs Invested in Balanced Advantage Fund with ₹35,000/Mo SWP',
-          description:
-            'Backtesting a real hybrid mutual fund through 10 years including major market shocks:',
-          calculation:
-            'Total Principal Invested: ₹50,00,000 | Total Payout Received (120 Months): ₹42,00,000 | Residual Portfolio Valuation: ~₹71,50,000',
-          result:
-            'Corpus Never Depleted | Total Wealth Generated (Withdrawn + Current Value): ₹1.13 Crores (2.26x)',
-        }}
         comparisonTable={{
           headers: ['Feature', 'Historical SWP Backtest', 'Static Calculator', 'Insurance Annuity'],
           rows: [

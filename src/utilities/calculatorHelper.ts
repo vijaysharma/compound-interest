@@ -277,9 +277,9 @@ export function evaluateExpression(
       .replace(/÷/g, '/')
       .replace(/−/g, '-')
       .replace(/\s+/g, '');
-    // Trim trailing operators for live preview
-    while (/[+\-*/^.(]$/.test(sanitized)) {
-      sanitized = sanitized.slice(0, -1);
+    // Trim trailing operators and incomplete capital E exponents for live preview
+    while (/[+\-*/^.(]$/.test(sanitized) || /E[+-]?$/.test(sanitized)) {
+      sanitized = sanitized.replace(/E[+-]?$/, '').replace(/[+\-*/^.(]$/, '');
     }
     if (!sanitized) return { result: null, error: false };
     // Auto-close open parentheses for live preview
@@ -334,15 +334,21 @@ export function evaluateExpression(
     sanitized = sanitized.replace(/√\s*\(([^()]+)\)/g, 'nthRoot(($1), 2)');
     sanitized = sanitized.replace(/√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, 'nthRoot($1, 2)');
     // ─────────────────────────────────────────────────────────────────
-    // 4. Protect Scientific Notation numbers (e.g. 1.2e+5, 2e-3)
+    // 4. Protect Scientific Notation numbers with capital E (e.g. 2E3, 1.5E-4, 5E+2)
     // ─────────────────────────────────────────────────────────────────
     const sciMap: string[] = [];
-    sanitized = sanitized.replace(/\b\d+(?:\.\d+)?e[+-]?\d+\b/gi, (m) => {
-      sciMap.push(m);
+    sanitized = sanitized.replace(/\b\d+(?:\.\d+)?E[+-]?\d+\b/g, (m) => {
+      sciMap.push(m.toLowerCase());
+      return `__SCI_${sciMap.length - 1}__`;
+    });
+    sanitized = sanitized.replace(/(?<![a-zA-Z0-9_])E([+-]?\d+)\b/g, (_, p1) => {
+      sciMap.push(`1e${p1}`);
       return `__SCI_${sciMap.length - 1}__`;
     });
     // Euler number e after digits: 2e => 2*Math.E
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)\s*e/g, '$1*Math.E');
+    // Euler number e before digits: e2 => Math.E*2
+    sanitized = sanitized.replace(/e\s*(\d+(?:\.\d+)?)/g, 'Math.E*$1');
     // Standalone Euler number e
     sanitized = sanitized.replace(/(?<![a-zA-Z0-9_])e(?![a-zA-Z0-9_])/g, 'Math.E');
     // Pi

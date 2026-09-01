@@ -222,6 +222,7 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           setInputAmount={setPrincipal}
           type={place}
           setType={setPlace}
+          title="Amount"
           typeData={[
             { id: 'ty1', value: 'India', title: 'India' },
             { id: 'ty2', value: 'World', title: 'World' },
@@ -283,28 +284,6 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
       <CalculatorContentSection
         title="The Hidden Wealth Destroyer: Compounding Inflation Explained"
         subtitle="Inflation represents the steady increase in the general price level of goods and services over time. Left unaddressed in fixed-cash accounts, inflation quietly erodes real wealth and retirement readiness."
-        formulaTitle="Future Price & Purchasing Power Formulas"
-        formula="Future Price = Present Cost × ∏ (1 + r_t)  |  Purchasing Power = Present Value / ∏ (1 + r_t)"
-        formulaExplanation={[
-          {
-            symbol: 'Future Price',
-            label: 'Equivalent rupee cost required in future year to purchase the same goods',
-          },
-          {
-            symbol: 'Purchasing Power',
-            label: 'Real purchasing value remaining of a fixed rupee sum',
-          },
-          { symbol: 'r_t', label: 'Annual CPI inflation rate observed in year t' },
-        ]}
-        workedExample={{
-          title: 'Worked Example: Impact of 20 Years of India Inflation on ₹1,00,000',
-          description:
-            'A monthly household basket costing ₹1,00,000 in 2004 compounded across 20 years of real historical Indian inflation (averaging ~6.1% p.a.):',
-          calculation:
-            '₹1,00,000 (2004) -> Needs ₹3,28,000 in 2024 to purchase the exact same basket of items',
-          result:
-            'Total Price Increase: +228% | Purchasing Power of Uninvested Cash Halved Every 11.8 Years',
-        }}
         comparisonTable={{
           headers: [
             'Asset Class',

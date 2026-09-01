@@ -19,6 +19,8 @@ import {
   type HistoryItem,
   type LastOperation,
 } from '../utilities/calculatorHelper';
+const isErrorState = (expr: string) =>
+  expr === 'Error' || expr === 'Undefined' || expr === 'Overflow';
 const Calculator: React.FC = () => {
   const [expression, setExpression] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -78,8 +80,9 @@ const Calculator: React.FC = () => {
   }, [memory]);
   // Live calculation preview
   const liveResult = useMemo(() => {
-    if (!expression || isEvaluated) return null;
-    const { result } = evaluateExpression(expression, isDeg);
+    if (!expression || isEvaluated || isErrorState(expression)) return null;
+    const { result, error } = evaluateExpression(expression, isDeg);
+    if (error || !result || isErrorState(result)) return null;
     return result;
   }, [expression, isDeg, isEvaluated]);
   // Copy to clipboard
@@ -109,7 +112,7 @@ const Calculator: React.FC = () => {
         .replace(/[^0-9+\-−×÷%^().eEπ√!sincostanloglnabs⁰¹²³⁴⁵⁶⁷⁸⁹]/gi, '');
       if (!sanitized) return;
       setLastOp(null);
-      if (isEvaluated) {
+      if (isEvaluated || isErrorState(expression)) {
         setExpression(sanitized);
         setCursorPosition(sanitized.length);
         setIsEvaluated(false);
@@ -131,6 +134,18 @@ const Calculator: React.FC = () => {
   // Insert character or token at cursor position (Inline CRUD)
   const insertAtCursor = (char: string) => {
     setLastOp(null); // Reset repeat operation on new input
+    if (isErrorState(expression)) {
+      if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
+        setExpression('');
+        setCursorPosition(0);
+      } else {
+        const initial = char === '.' ? '0.' : char;
+        setExpression(initial);
+        setCursorPosition(initial.length);
+      }
+      setIsEvaluated(false);
+      return;
+    }
     if (isEvaluated) {
       if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
         const next = expression + char;
@@ -175,7 +190,7 @@ const Calculator: React.FC = () => {
   // Insert y-th root of x (ʸ√x): converts trailing digits to superscript or inserts ³√(
   const insertYRoot = () => {
     setLastOp(null);
-    if (isEvaluated) {
+    if (isEvaluated || isErrorState(expression)) {
       setExpression('³√(');
       setCursorPosition(3);
       setIsEvaluated(false);
@@ -201,7 +216,7 @@ const Calculator: React.FC = () => {
   // Smart Parentheses at cursor position
   const handleSmartParentheses = () => {
     setLastOp(null);
-    if (isEvaluated) {
+    if (isEvaluated || isErrorState(expression)) {
       setExpression('(');
       setCursorPosition(1);
       setIsEvaluated(false);
@@ -221,7 +236,7 @@ const Calculator: React.FC = () => {
   // Backspace at cursor position
   const handleBackspace = () => {
     setLastOp(null);
-    if (isEvaluated) {
+    if (isEvaluated || isErrorState(expression)) {
       setExpression('');
       setCursorPosition(0);
       setIsEvaluated(false);
@@ -266,11 +281,11 @@ const Calculator: React.FC = () => {
     setExpression(newBefore + after);
     setCursorPosition(newBefore.length);
   };
-  // Insert scientific exponent (EE)
+  // Insert scientific exponent (EE displayed as capital 'E')
   const insertEE = () => {
     setLastOp(null);
-    if (isEvaluated) {
-      setExpression('1e');
+    if (isEvaluated || isErrorState(expression)) {
+      setExpression('1E');
       setCursorPosition(2);
       setIsEvaluated(false);
       return;
@@ -279,12 +294,12 @@ const Calculator: React.FC = () => {
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
     const lastChar = before.slice(-1);
-    if (/\d|\./.test(lastChar)) {
-      const nextExpr = before + 'e' + after;
+    if (/\d|\./.test(lastChar) || lastChar === 'e' || lastChar === 'π' || lastChar === ')') {
+      const nextExpr = before + 'E' + after;
       setExpression(nextExpr);
       setCursorPosition(before.length + 1);
     } else {
-      const nextExpr = before + '1e' + after;
+      const nextExpr = before + '1E' + after;
       setExpression(nextExpr);
       setCursorPosition(before.length + 2);
     }
@@ -310,7 +325,12 @@ const Calculator: React.FC = () => {
   // Toggle sign of active number at cursor
   const handleToggleSign = () => {
     setLastOp(null);
-    if (!expression) return;
+    if (!expression || isErrorState(expression)) {
+      setExpression('');
+      setCursorPosition(0);
+      setIsEvaluated(false);
+      return;
+    }
     if (isEvaluated) {
       const val = parseFloat(expression);
       if (!isNaN(val)) {
@@ -344,6 +364,7 @@ const Calculator: React.FC = () => {
   };
   // Memory Operations
   const handleMemoryAdd = () => {
+    if (isErrorState(expression)) return;
     const activeVal =
       liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
     const num = parseFloat(activeVal);
@@ -352,6 +373,7 @@ const Calculator: React.FC = () => {
     }
   };
   const handleMemorySubtract = () => {
+    if (isErrorState(expression)) return;
     const activeVal =
       liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
     const num = parseFloat(activeVal);
@@ -370,11 +392,17 @@ const Calculator: React.FC = () => {
   // Evaluate & Commit (Supports repeating last operation if = is pressed repeatedly)
   const handleCalculate = () => {
     if (!expression) return;
+    if (isErrorState(expression)) {
+      setExpression('');
+      setCursorPosition(0);
+      setIsEvaluated(false);
+      return;
+    }
     // Repeating last operation (e.g. 5 + 3 = 8, press = again -> 8 + 3 = 11, press = -> 14)
     if (isEvaluated && lastOp) {
       const repeatExpr = `${expression}${lastOp.op}${lastOp.operand}`;
       const { result, error } = evaluateExpression(repeatExpr, isDeg);
-      if (result !== null && !error) {
+      if (result !== null && !error && !isErrorState(result)) {
         setHistory((prev) => [
           {
             expression: repeatExpr,
@@ -386,13 +414,18 @@ const Calculator: React.FC = () => {
         setExpression(result);
         setCursorPosition(result.length);
         setIsEvaluated(true);
+      } else {
+        const errResult = result && isErrorState(result) ? result : 'Error';
+        setExpression(errResult);
+        setCursorPosition(errResult.length);
+        setIsEvaluated(true);
       }
       return;
     }
     // Normal calculation
     const extracted = extractLastOperation(expression);
     const { result, error } = evaluateExpression(expression, isDeg);
-    if (result !== null && !error) {
+    if (result !== null && !error && !isErrorState(result)) {
       setLastOp(extracted);
       setHistory((prev) => [
         {
@@ -405,12 +438,18 @@ const Calculator: React.FC = () => {
       setExpression(result);
       setCursorPosition(result.length);
       setIsEvaluated(true);
+    } else {
+      const errResult = result && isErrorState(result) ? result : 'Error';
+      setExpression(errResult);
+      setCursorPosition(errResult.length);
+      setIsEvaluated(true);
     }
   };
   const handlersRef = useRef({
     handleCopy,
     handlePaste,
     insertAtCursor,
+    insertEE,
     handleCalculate,
     handleBackspace,
     handleClear,
@@ -424,6 +463,7 @@ const Calculator: React.FC = () => {
       handleCopy,
       handlePaste,
       insertAtCursor,
+      insertEE,
       handleCalculate,
       handleBackspace,
       handleClear,
@@ -484,6 +524,18 @@ const Calculator: React.FC = () => {
       } else if (e.key === 'Escape' || e.key === 'Delete') {
         e.preventDefault();
         handlersRef.current.handleClear();
+      } else if (e.key === 'e') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('e');
+      } else if (e.key === 'E') {
+        e.preventDefault();
+        handlersRef.current.insertEE();
+      } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('π');
+      } else if (e.key === '!') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('!');
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handlersRef.current.moveCursor('left');

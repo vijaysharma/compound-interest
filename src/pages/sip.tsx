@@ -863,7 +863,7 @@ const SIP = ({
         </button>
       </div>
       {!showDate && (
-        <>
+        <div>
           <JoinedButtonGroup
             data={[
               {
@@ -1009,7 +1009,7 @@ const SIP = ({
             className="mb-2"
             btnClass="rounded-tl-none rounded-tr-none"
           />
-        </>
+        </div>
       )}
       {showDate && jsonNavData.length > 0 && (
         <StartEndDate
@@ -1157,28 +1157,6 @@ const SIP = ({
       <CalculatorContentSection
         title="Understanding Historical SIP Backtesting & XIRR Yields"
         subtitle="Evaluating mutual funds based solely on past 1-year or 3-year trailing returns often produces inaccurate expectations. Historical SIP backtesting simulates real-world monthly investments through bull and bear market cycles."
-        formulaTitle="XIRR Multi-Cashflow Compounding Formula"
-        formula="0 = ∑ [ C_i / (1 + XIRR)^((d_i - d_0) / 365) ] + Value_end / (1 + XIRR)^((d_end - d_0) / 365)"
-        formulaExplanation={[
-          {
-            symbol: 'XIRR',
-            label: 'Extended Internal Rate of Return (Annualized true compounding rate)',
-          },
-          { symbol: 'C_i', label: 'Cashflow amount for installment i (Negative for investments)' },
-          { symbol: 'd_i', label: 'Exact calendar date on which installment i was debited' },
-          {
-            symbol: 'Value_end',
-            label: 'Market valuation of accumulated units on valuation date d_end',
-          },
-        ]}
-        workedExample={{
-          title: 'Worked Example: ₹15,000 Monthly SIP with 10% Annual Step-Up Over 10 Years',
-          description:
-            'Backtesting a real equity index fund delivering ~13.5% XIRR with a 10% annual step-up from Year 1 (₹15,000/mo) to Year 10 (₹35,369/mo):',
-          calculation: 'Total Invested: ₹28,68,736 -> Final Accumulated Corpus: ₹58,41,200',
-          result:
-            'Total Invested: ₹28.68 Lakhs | Wealth Created: +₹29.72 Lakhs | Portfolio Multiplier: 2.03x',
-        }}
         comparisonTable={{
           headers: ['Parameter', 'Fixed Amount SIP', 'Step-Up / Top-Up SIP', 'Lumpsum Investment'],
           rows: [
