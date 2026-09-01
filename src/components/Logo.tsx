@@ -1,31 +1,4 @@
-import { useEffect, useState } from 'react';
-const themes = [
-  'fantasy',
-  'light',
-  'emerald',
-  'corporate',
-  'lofi',
-  'fantasy',
-  'wireframe',
-  'luxury',
-  'cmyk',
-  'lemonade',
-  'fantasy',
-  'night',
-  'winter',
-  'dim',
-  'nord',
-  'fantasy',
-];
 const Logo = () => {
-  const getRandomNumber = (min: number, max: number): number => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
-  const [theme, setTheme] = useState(localStorage.getItem('th') || 'fantasy');
-  useEffect(() => {
-    window.document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('th', theme);
-  }, [theme]);
   return (
     <div className="text-center ">
       <svg
@@ -37,9 +10,6 @@ const Logo = () => {
         preserveAspectRatio="xMidYMid meet"
         className="inline-block animate-jiggle hover:animate-wiggle"
         fill="var(--color-primary-content)"
-        onClick={() => {
-          setTheme(themes[getRandomNumber(0, themes.length)]);
-        }}
       >
         <g transform="translate(0.000000,126.000000) scale(0.100000,-0.100000)" stroke="none">
           <path

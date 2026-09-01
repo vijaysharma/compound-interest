@@ -4,9 +4,7 @@
 @config "../tailwind.config.js";
 
 @plugin "daisyui" {
-  themes:
-    light --default, emerald, corporate, lofi, fantasy, wireframe, luxury, cmyk,
-    lemonade, night, winter, dim, nord;
+  themes: fantasy;
 }
 
 /*

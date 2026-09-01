@@ -21,8 +21,8 @@ const pppSchema = {
       offers: {
         '@type': 'Offer',
         price: '0',
-        priceCurrency: 'INR'
-      }
+        priceCurrency: 'INR',
+      },
     },
     {
       '@type': 'FinancialProduct',

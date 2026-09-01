@@ -52,6 +52,7 @@ const Admin = () => {
   const [now] = useState(() => Date.now());
   // Sync state
   const [imfJson, setImfJson] = useState('');
+  const [pppJson, setPppJson] = useState('');
   const effectiveToken = token || authToken || '';
   const fetchSubmissions = async () => {
     if (!effectiveToken) return;
@@ -231,9 +232,20 @@ const Admin = () => {
       });
       const result = (await response.json()) as { error?: string; synced?: number | boolean };
       if (!response.ok) throw new Error(result.error ?? 'Sync failed');
+      let successText = 'Dataset synced successfully.';
+      if (endpoint.includes('sync-mutual-funds')) {
+        successText = `Mutual funds synced: ${result.synced}.`;
+      } else if (endpoint.includes('sync-imf')) {
+        successText = 'IMF inflation data synced successfully.';
+      } else if (endpoint.includes('sync-ppp')) {
+        successText =
+          typeof result.synced === 'number'
+            ? `World Bank PPP synced: ${result.synced} records.`
+            : 'World Bank PPP data synced successfully.';
+      }
       setMessage({
         type: 'success',
-        text: body ? 'IMF data synced successfully.' : `Mutual funds synced: ${result.synced}.`,
+        text: successText,
       });
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Sync failed' });
@@ -721,6 +733,62 @@ const Admin = () => {
             >
               {busy === '/api/admin/sync-imf' ? 'Syncing...' : 'Sync IMF JSON'}
             </button>
+          </section>
+          <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
+            <h2 className="mb-1 text-lg font-bold">
+              World Bank PPP (Purchasing Power Parity) Sync
+            </h2>
+            <p className="mb-4 text-xs opacity-70">
+              Fetch and store global Purchasing Power Parity (PA.NUS.PPP) conversion factor datasets
+              from the World Bank API directly into our database.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <button
+                className="btn btn-primary btn-sm"
+                type="button"
+                disabled={busy !== null}
+                onClick={() => void sync('/api/admin/sync-ppp')}
+              >
+                {busy === '/api/admin/sync-ppp'
+                  ? 'Fetching & Syncing from World Bank...'
+                  : 'Sync from World Bank API'}
+              </button>
+            </div>
+            <details className="collapse collapse-arrow bg-base-200 text-xs rounded-box border border-base-300">
+              <summary className="collapse-title font-semibold py-2">
+                Or Paste World Bank PPP JSON Manually
+              </summary>
+              <div className="collapse-content space-y-2 pt-2">
+                <p className="opacity-70 text-xs">
+                  Paste the JSON response array from
+                  api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP.
+                </p>
+                <textarea
+                  className="textarea textarea-bordered h-36 w-full font-mono text-xs"
+                  value={pppJson}
+                  onChange={(event) => setPppJson(event.target.value)}
+                  placeholder='[{"page":1,...},[{"indicator":{...},"country":{...},"date":"2024","value":23.85},...]]'
+                />
+                <button
+                  className="btn btn-secondary btn-sm"
+                  type="button"
+                  disabled={!pppJson.trim() || busy !== null}
+                  onClick={() => {
+                    try {
+                      const parsed = JSON.parse(pppJson);
+                      void sync('/api/admin/sync-ppp', JSON.stringify(parsed));
+                    } catch {
+                      setMessage({
+                        type: 'error',
+                        text: 'Paste valid JSON before syncing PPP data.',
+                      });
+                    }
+                  }}
+                >
+                  {busy === '/api/admin/sync-ppp' ? 'Syncing...' : 'Sync Pasted PPP JSON'}
+                </button>
+              </div>
+            </details>
           </section>
         </div>
       )}

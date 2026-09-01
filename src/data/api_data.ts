@@ -7,6 +7,7 @@ import {
   WORLD_BANK_PPP_URL,
 } from './API_LIST';
 import { MFJSONType } from '../types/types';
+import { DEFAULT_PPP_RECORDS } from './default_ppp_data';
 const mfSearchCache = new Map<string, MFJSONType[]>();
 const mfNavCache = new Map<string, unknown[]>();
 const mfNavRequests = new Map<string, Promise<unknown[]>>();
@@ -112,15 +113,36 @@ export async function fetchPPPData(): Promise<WorldBankPPPRecord[]> {
     return pppCache.data;
   }
   void recordApiUsage();
-  const res = await fetch(WORLD_BANK_PPP_URL);
-  if (!res.ok) {
-    throw new Error(`World Bank PPP API request failed: ${res.status}`);
+  try {
+    const res = await fetch(WORLD_BANK_PPP_URL);
+    if (!res.ok) {
+      // If DB has not been synced yet by admin, fallback to bundled data
+      pppCache = { data: DEFAULT_PPP_RECORDS, fetchedAt: Date.now() };
+      return DEFAULT_PPP_RECORDS;
+    }
+    const json = await res.json();
+    let records: WorldBankPPPRecord[] = [];
+    if (Array.isArray(json)) {
+      if (Array.isArray(json[1])) {
+        records = json[1] as WorldBankPPPRecord[];
+      } else {
+        records = json as WorldBankPPPRecord[];
+      }
+    } else if (
+      json &&
+      typeof json === 'object' &&
+      Array.isArray((json as { records?: unknown }).records)
+    ) {
+      records = (json as { records: WorldBankPPPRecord[] }).records;
+    }
+    const data = records.length > 0 ? records : DEFAULT_PPP_RECORDS;
+    pppCache = { data, fetchedAt: Date.now() };
+    return data;
+  } catch (err) {
+    console.warn('Using fallback PPP data:', err);
+    pppCache = { data: DEFAULT_PPP_RECORDS, fetchedAt: Date.now() };
+    return DEFAULT_PPP_RECORDS;
   }
-  // The API's JSON response is a 2-element array: [metadata, records[]]
-  const [, records] = (await res.json()) as [unknown, WorldBankPPPRecord[] | null];
-  const data = records ?? [];
-  pppCache = { data, fetchedAt: Date.now() };
-  return data;
 }
 // ------------------
 export interface WorldBankInflationRecord {

@@ -77,7 +77,7 @@ const inflationSchema = {
           name: 'How does inflation affect savings and fixed deposits?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'If your savings account earns 3.5% and inflation is 6%, your real (inflation-adjusted) return is −2.5% per year. Over 10 years, ₹10 Lakh in a savings account grows nominally to ~₹14.1 Lakh, but its purchasing power drops to only ~₹7.9 Lakh in today\'s terms. Even FDs at 7% barely break even after 30% tax (effective 4.9%) against 6% inflation. Equity investments averaging 12–15% are the primary inflation-beating asset class for Indian investors.',
+            text: "If your savings account earns 3.5% and inflation is 6%, your real (inflation-adjusted) return is −2.5% per year. Over 10 years, ₹10 Lakh in a savings account grows nominally to ~₹14.1 Lakh, but its purchasing power drops to only ~₹7.9 Lakh in today's terms. Even FDs at 7% barely break even after 30% tax (effective 4.9%) against 6% inflation. Equity investments averaging 12–15% are the primary inflation-beating asset class for Indian investors.",
           },
         },
       ],
@@ -121,7 +121,7 @@ const inflationFaqs = [
   {
     question: 'How does inflation affect savings and fixed deposits?',
     answer:
-      'If your savings account earns 3.5% and inflation is 6%, your real (inflation-adjusted) return is −2.5% per year. Over 10 years, ₹10 Lakh in a savings account grows nominally to ~₹14.1 Lakh, but its purchasing power drops to only ~₹7.9 Lakh in today\'s terms. Even FDs at 7% barely break even after 30% tax (effective 4.9%) against 6% inflation. Equity investments averaging 12–15% are the primary inflation-beating asset class for Indian investors.',
+      "If your savings account earns 3.5% and inflation is 6%, your real (inflation-adjusted) return is −2.5% per year. Over 10 years, ₹10 Lakh in a savings account grows nominally to ~₹14.1 Lakh, but its purchasing power drops to only ~₹7.9 Lakh in today's terms. Even FDs at 7% barely break even after 30% tax (effective 4.9%) against 6% inflation. Equity investments averaging 12–15% are the primary inflation-beating asset class for Indian investors.",
   },
 ];
 const InflationRates = ({ className, title }: { className?: string; title?: string }) => {
@@ -214,7 +214,7 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           benchmarks since 1990.
         </p>
       </header>
-      <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
+      <div>
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
           className="mb-1"
