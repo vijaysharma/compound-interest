@@ -46,6 +46,9 @@ export default async function handler(request: Request): Promise<Response> {
     }
     return jsonResponse({ synced: count || true });
   } catch (error) {
-    return jsonResponse({ error: 'Failed to sync World Bank PPP data', detail: String(error) }, 500);
+    return jsonResponse(
+      { error: 'Failed to sync World Bank PPP data', detail: String(error) },
+      500
+    );
   }
 }

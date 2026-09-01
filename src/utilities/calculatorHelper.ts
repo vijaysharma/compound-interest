@@ -200,6 +200,71 @@ export function extractLastOperation(expr: string): LastOperation | null {
   }
   return null;
 }
+// // Math helper functions for safe mathematical evaluation
+const log10 = (v: number) => {
+  if (v <= 0 || isNaN(v)) throw new Error('Undefined');
+  return Math.log10(v);
+};
+const ln = (v: number) => {
+  if (v <= 0 || isNaN(v)) throw new Error('Undefined');
+  return Math.log(v);
+};
+const sinFn = (v: number, isDeg: boolean) => {
+  if (isNaN(v)) throw new Error('Undefined');
+  if (isDeg) {
+    const mod = ((v % 360) + 360) % 360;
+    if (mod === 0 || mod === 180 || mod === 360) return 0;
+    if (mod === 90) return 1;
+    if (mod === 270) return -1;
+    return Math.sin((v * Math.PI) / 180);
+  }
+  return Math.sin(v);
+};
+const cosFn = (v: number, isDeg: boolean) => {
+  if (isNaN(v)) throw new Error('Undefined');
+  if (isDeg) {
+    const mod = ((v % 360) + 360) % 360;
+    if (mod === 90 || mod === 270) return 0;
+    if (mod === 0 || mod === 360) return 1;
+    if (mod === 180) return -1;
+    return Math.cos((v * Math.PI) / 180);
+  }
+  return Math.cos(v);
+};
+const tanFn = (v: number, isDeg: boolean) => {
+  if (isNaN(v)) throw new Error('Undefined');
+  if (isDeg) {
+    const mod = ((v % 180) + 180) % 180;
+    if (Math.abs(mod - 90) < 1e-9) throw new Error('Undefined');
+    if (mod === 0) return 0;
+    return Math.tan((v * Math.PI) / 180);
+  }
+  if (Math.abs(Math.cos(v)) < 1e-15) throw new Error('Undefined');
+  return Math.tan(v);
+};
+const asinFn = (v: number, isDeg: boolean) => {
+  if (Math.abs(v) > 1 || isNaN(v)) throw new Error('Undefined');
+  const r = Math.asin(v);
+  return isDeg ? (r * 180) / Math.PI : r;
+};
+const acosFn = (v: number, isDeg: boolean) => {
+  if (Math.abs(v) > 1 || isNaN(v)) throw new Error('Undefined');
+  const r = Math.acos(v);
+  return isDeg ? (r * 180) / Math.PI : r;
+};
+const atanFn = (v: number, isDeg: boolean) => {
+  if (isNaN(v)) throw new Error('Undefined');
+  const r = Math.atan(v);
+  return isDeg ? (r * 180) / Math.PI : r;
+};
+const acoshFn = (v: number) => {
+  if (v < 1 || isNaN(v)) throw new Error('Undefined');
+  return Math.acosh(v);
+};
+const atanhFn = (v: number) => {
+  if (Math.abs(v) >= 1 || isNaN(v)) throw new Error('Undefined');
+  return Math.atanh(v);
+};
 // Tokenize and evaluate expression supporting arbitrary-precision Decimals, trig singularities, factorials, and y√(x)
 export function evaluateExpression(
   expr: string,
@@ -224,7 +289,7 @@ export function evaluateExpression(
       sanitized += ')'.repeat(openCount - closeCount);
     }
     // ─────────────────────────────────────────────────────────────────
-    // 1. Percentage logic (Android Calculator formula)
+    // 1. Percentage logic
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(
       /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\)))\s*([+-])\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g,
@@ -234,7 +299,7 @@ export function evaluateExpression(
       /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\)))\s*([*/])\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g,
       '($1 $2 ($3 / 100))'
     );
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g, '($1 / 100)');
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\))%/g, '($1 / 100)');
     // ─────────────────────────────────────────────────────────────────
     // 2. Superscript y-th root of x: ³√(27) => nthRoot(27, 3)
     // ─────────────────────────────────────────────────────────────────
@@ -269,73 +334,64 @@ export function evaluateExpression(
     sanitized = sanitized.replace(/√\s*\(([^()]+)\)/g, 'nthRoot(($1), 2)');
     sanitized = sanitized.replace(/√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, 'nthRoot($1, 2)');
     // ─────────────────────────────────────────────────────────────────
-    // 4. Implicit Multiplication (Parentheses, Constants & Functions, including normal digit before √)
-    // E.g. 4√9 => 4*nthRoot(9, 2) = 12, 3√(27) => 3*nthRoot(27, 2)
+    // 4. Protect Scientific Notation numbers (e.g. 1.2e+5, 2e-3)
     // ─────────────────────────────────────────────────────────────────
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\(/g, '$1*(');
-    sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, ')*$1');
-    sanitized = sanitized.replace(/\)\s*\(/g, ')*(');
-    sanitized = sanitized.replace(/π/g, '(Math.PI)');
-    sanitized = sanitized.replace(/(?<![0-9a-zA-Z.])e(?![0-9a-zA-Z+])/g, '(Math.E)');
-    sanitized = sanitized.replace(/((?:\(Math\.PI\)|\(Math\.E\)))\s*(\d+|\()/g, '$1*$2');
-    sanitized = sanitized.replace(/(\d+|\))\s*((?:\(Math\.PI\)|\(Math\.E\)))/g, '$1*$2');
-    // Number or ) before scientific functions or nthRoot
-    sanitized = sanitized.replace(
-      /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\)))\s*(sin|cos|tan|asin|acos|atan|ln|log|abs|nthRoot)/g,
-      '$1*$2'
-    );
+    const sciMap: string[] = [];
+    sanitized = sanitized.replace(/\b\d+(?:\.\d+)?e[+-]?\d+\b/gi, (m) => {
+      sciMap.push(m);
+      return `__SCI_${sciMap.length - 1}__`;
+    });
+    // Euler number e after digits: 2e => 2*Math.E
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?)\s*e/g, '$1*Math.E');
+    // Standalone Euler number e
+    sanitized = sanitized.replace(/(?<![a-zA-Z0-9_])e(?![a-zA-Z0-9_])/g, 'Math.E');
+    // Pi
+    sanitized = sanitized.replace(/π/g, 'Math.PI');
+    // Restore Scientific Notation numbers
+    sanitized = sanitized.replace(/__SCI_(\d+)__/g, (_, idx) => sciMap[Number(idx)]);
     // ─────────────────────────────────────────────────────────────────
     // 5. Factorials (e.g. 5! or 52! or 5000!)
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
     // ─────────────────────────────────────────────────────────────────
-    // 6. Trigonometric Functions with Exact Degree and Singularity Checks
+    // 6. Implicit Multiplication (Parentheses, Constants & Functions)
     // ─────────────────────────────────────────────────────────────────
-    const trigWrap = (fn: string, arg: string) => {
-      if (isDeg) {
-        if (fn === 'sin') {
-          return `((() => { const a = (${arg}); const mod = ((a % 360) + 360) % 360; if (mod === 0 || mod === 180 || mod === 360) return 0; if (mod === 90) return 1; if (mod === 270) return -1; return Math.sin(a * Math.PI / 180); })())`;
-        }
-        if (fn === 'cos') {
-          return `((() => { const a = (${arg}); const mod = ((a % 360) + 360) % 360; if (mod === 90 || mod === 270) return 0; if (mod === 0 || mod === 360) return 1; if (mod === 180) return -1; return Math.cos(a * Math.PI / 180); })())`;
-        }
-        if (fn === 'tan') {
-          return `((() => { const a = (${arg}); const mod = ((a % 180) + 180) % 180; if (Math.abs(mod - 90) < 1e-9) throw new Error('Undefined'); if (mod === 0) return 0; return Math.tan(a * Math.PI / 180); })())`;
-        }
-      } else {
-        if (fn === 'tan') {
-          return `((() => { const a = (${arg}); if (Math.abs(Math.cos(a)) < 1e-15) throw new Error('Undefined'); return Math.tan(a); })())`;
-        }
-        if (fn === 'sin') return `Math.sin(${arg})`;
-        if (fn === 'cos') return `Math.cos(${arg})`;
-      }
-      return `Math.${fn}(${arg})`;
-    };
-    const invTrigWrap = (fn: string, arg: string) => {
-      return `((() => { const a = (${arg}); if (Math.abs(a) > 1) throw new Error('Undefined'); const r = Math.${fn}(a); return ${isDeg ? '(r * 180 / Math.PI)' : 'r'}; })())`;
-    };
-    for (let iter = 0; iter < 4; iter++) {
-      sanitized = sanitized
-        .replace(/(?<![a-zA-Z.])asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
-        .replace(/(?<![a-zA-Z.])acos\(([^()]+)\)/g, (_, a) => invTrigWrap('acos', a))
-        .replace(/(?<![a-zA-Z.])atan\(([^()]+)\)/g, (_, a) =>
-          isDeg ? `(Math.atan(${a}) * 180 / Math.PI)` : `Math.atan(${a})`
-        )
-        .replace(/(?<![a-zA-Z.])sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
-        .replace(/(?<![a-zA-Z.])cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
-        .replace(/(?<![a-zA-Z.])tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
-        .replace(
-          /(?<![a-zA-Z.])ln\(([^()]+)\)/g,
-          '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log(v); })())'
-        )
-        .replace(
-          /(?<![a-zA-Z.])log\(([^()]+)\)/g,
-          '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log10(v); })())'
-        )
-        .replace(/(?<![a-zA-Z.])abs\(([^()]+)\)/g, 'Math.abs($1)');
-    }
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\(/g, '$1*(');
+    sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, ')*$1');
+    sanitized = sanitized.replace(/\)\s*\(/g, ')*(');
+    sanitized = sanitized.replace(/((?:Math\.PI|Math\.E))\s*(\d+|\()/g, '$1*$2');
+    sanitized = sanitized.replace(/(\d+|\))\s*((?:Math\.PI|Math\.E))/g, '$1*$2');
+    sanitized = sanitized.replace(/((?:Math\.PI|Math\.E))\s*((?:Math\.PI|Math\.E))/g, '$1*$2');
+    const funcList =
+      'sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|ln|log|abs|nthRoot';
+    sanitized = sanitized.replace(
+      new RegExp(
+        '((?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|\\)|Math\\.PI|Math\\.E))\\s*(' + funcList + ')',
+        'g'
+      ),
+      '$1*$2'
+    );
+    sanitized = sanitized.replace(new RegExp('\\)\\s*(' + funcList + ')', 'g'), ')*$1');
     // ─────────────────────────────────────────────────────────────────
-    // 7. High-Precision Decimal Evaluation for arithmetic & scientific notation
+    // 7. Replace function calls with mathematical evaluation functions
+    // ─────────────────────────────────────────────────────────────────
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])log\(/g, 'log10(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])sin\(/g, 'sinFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])cos\(/g, 'cosFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])tan\(/g, 'tanFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])asin\(/g, 'asinFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])acos\(/g, 'acosFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])atan\(/g, 'atanFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])sinh\(/g, 'Math.sinh(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])cosh\(/g, 'Math.cosh(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])tanh\(/g, 'Math.tanh(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])asinh\(/g, 'Math.asinh(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])acosh\(/g, 'acoshFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])atanh\(/g, 'atanhFn(');
+    sanitized = sanitized.replace(/(?<![a-zA-Z.])abs\(/g, 'Math.abs(');
+    sanitized = sanitized.replace(/\^/g, '**');
+    // ─────────────────────────────────────────────────────────────────
+    // 8. High-Precision Decimal Evaluation for pure basic arithmetic
     // ─────────────────────────────────────────────────────────────────
     const isDecimalEligible = new RegExp(
       '^(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/() ])+$'
@@ -403,11 +459,20 @@ export function evaluateExpression(
           return { result: 'Undefined', error: false };
       }
     }
-    sanitized = sanitized.replace(/\^/g, '**');
     // Standard high-level execution context with math helpers
     const evaluator = new Function(
-      'fact',
+      'log10',
+      'ln',
+      'sinFn',
+      'cosFn',
+      'tanFn',
+      'asinFn',
+      'acosFn',
+      'atanFn',
+      'acoshFn',
+      'atanhFn',
       'nthRoot',
+      'fact',
       `try {
         const res = (${sanitized});
         if (res === Infinity || res === -Infinity) throw new Error('Undefined');
@@ -418,7 +483,20 @@ export function evaluateExpression(
         return null;
       }`
     );
-    const val = evaluator(factorial, nthRoot);
+    const val = evaluator(
+      log10,
+      ln,
+      (v: number) => sinFn(v, isDeg),
+      (v: number) => cosFn(v, isDeg),
+      (v: number) => tanFn(v, isDeg),
+      (v: number) => asinFn(v, isDeg),
+      (v: number) => acosFn(v, isDeg),
+      (v: number) => atanFn(v, isDeg),
+      acoshFn,
+      atanhFn,
+      nthRoot,
+      factorial
+    );
     if (val === null) return { result: null, error: false };
     // Format number nicely
     const formatted = parseFloat(Number(val).toPrecision(12)).toString();

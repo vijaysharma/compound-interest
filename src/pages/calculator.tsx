@@ -30,7 +30,8 @@ const Calculator: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [memory, setMemory] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('calc_memory') || localStorage.getItem('android_calc_memory');
+      const saved =
+        localStorage.getItem('calc_memory') || localStorage.getItem('android_calc_memory');
       return saved ? parseFloat(saved) : 0;
     } catch {
       return 0;
@@ -38,7 +39,8 @@ const Calculator: React.FC = () => {
   });
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
-      const saved = localStorage.getItem('calc_history') || localStorage.getItem('android_calc_history');
+      const saved =
+        localStorage.getItem('calc_history') || localStorage.getItem('android_calc_history');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];

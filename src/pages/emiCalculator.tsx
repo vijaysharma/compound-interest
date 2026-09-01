@@ -661,7 +661,9 @@ const EmiCalculator: React.FC = () => {
                     ₹{Math.round(totalPayable).toLocaleString('en-IN')}
                   </span>
                   <span className="text-[10px] opacity-60 mt-0.5">
-                    {schedule[schedule.length - 1]?.date ? `Payoff: ${schedule[schedule.length - 1].date}` : ''}
+                    {schedule[schedule.length - 1]?.date
+                      ? `Payoff: ${schedule[schedule.length - 1].date}`
+                      : ''}
                   </span>
                 </div>
               </div>
@@ -674,7 +676,9 @@ const EmiCalculator: React.FC = () => {
                   <div className="w-3.5 h-3.5 rounded-full bg-primary flex-shrink-0" />
                   <div>
                     <span className="text-xs font-bold block">Principal Loan Amount</span>
-                    <span className="text-[11px] opacity-70 block">{principalPercent.toFixed(1)}% of total</span>
+                    <span className="text-[11px] opacity-70 block">
+                      {principalPercent.toFixed(1)}% of total
+                    </span>
                   </div>
                 </div>
                 <span className="text-sm sm:text-base font-bold text-primary">
@@ -687,7 +691,9 @@ const EmiCalculator: React.FC = () => {
                   <div className="w-3.5 h-3.5 rounded-full bg-error flex-shrink-0" />
                   <div>
                     <span className="text-xs font-bold block">Total Interest Payable</span>
-                    <span className="text-[11px] opacity-70 block">{interestPercent.toFixed(1)}% of total</span>
+                    <span className="text-[11px] opacity-70 block">
+                      {interestPercent.toFixed(1)}% of total
+                    </span>
                   </div>
                 </div>
                 <span className="text-sm sm:text-base font-bold text-error">
@@ -696,7 +702,9 @@ const EmiCalculator: React.FC = () => {
               </div>
               {/* Total Payable Pill */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-base-200/70 border border-base-300">
-                <span className="text-xs font-bold text-base-content/80">Total Loan Cost (P + I)</span>
+                <span className="text-xs font-bold text-base-content/80">
+                  Total Loan Cost (P + I)
+                </span>
                 <span className="text-sm sm:text-base font-extrabold text-base-content">
                   ₹{Math.round(totalPayable).toLocaleString('en-IN')}
                 </span>

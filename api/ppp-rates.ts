@@ -10,7 +10,10 @@ export default async function handler(): Promise<Response> {
       SELECT payload FROM inflation_sources WHERE source = 'world-bank-ppp'
     `) as Array<{ payload: unknown }>;
     if (rows.length === 0) {
-      return jsonResponse({ error: 'World Bank PPP data has not been synced by an administrator' }, 404);
+      return jsonResponse(
+        { error: 'World Bank PPP data has not been synced by an administrator' },
+        404
+      );
     }
     return jsonResponse(rows[0].payload);
   } catch (err) {

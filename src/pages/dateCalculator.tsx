@@ -175,7 +175,10 @@ const DateCalculator: React.FC = () => {
           {/* Results */}
           {diff && (
             <div className="space-y-3">
-              <DisplayCard primaryAmount={diff.totalDays} title={isInclusive ? 'Total Days (Inclusive)' : 'Total Days'} />
+              <DisplayCard
+                primaryAmount={diff.totalDays}
+                title={isInclusive ? 'Total Days (Inclusive)' : 'Total Days'}
+              />
               <div className="card bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
