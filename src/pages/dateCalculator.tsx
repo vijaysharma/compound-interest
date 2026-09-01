@@ -24,6 +24,7 @@ const DateCalculator: React.FC = () => {
   const [months, setMonths] = useState(0);
   const [days, setDays] = useState(0);
   const [addOrSub, setAddOrSub] = useState<'add' | 'subtract'>('add');
+  const [isAddSubInclusive, setIsAddSubInclusive] = useState(false);
   // Difference calculation
   const diff = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -70,12 +71,24 @@ const DateCalculator: React.FC = () => {
   const resultDate = useMemo(() => {
     if (!baseDate) return null;
     const d = new Date(baseDate);
-    const sign = addOrSub === 'add' ? 1 : -1;
-    d.setFullYear(d.getFullYear() + sign * years);
-    d.setMonth(d.getMonth() + sign * months);
-    d.setDate(d.getDate() + sign * days);
+    const hasDuration = years > 0 || months > 0 || days > 0;
+    if (addOrSub === 'add') {
+      d.setFullYear(d.getFullYear() + years);
+      d.setMonth(d.getMonth() + months);
+      d.setDate(d.getDate() + days);
+      if (isAddSubInclusive && hasDuration) {
+        d.setDate(d.getDate() - 1);
+      }
+    } else {
+      d.setFullYear(d.getFullYear() - years);
+      d.setMonth(d.getMonth() - months);
+      d.setDate(d.getDate() - days);
+      if (isAddSubInclusive && hasDuration) {
+        d.setDate(d.getDate() + 1);
+      }
+    }
     return d;
-  }, [baseDate, years, months, days, addOrSub]);
+  }, [baseDate, years, months, days, addOrSub, isAddSubInclusive]);
   const formatDate = (d: Date) =>
     d.toLocaleDateString('en-IN', {
       weekday: 'long',
@@ -145,10 +158,10 @@ const DateCalculator: React.FC = () => {
             <label className="flex items-center justify-between bg-base-200/60 border border-base-300 rounded-xl px-3.5 py-2 cursor-pointer hover:bg-base-200 transition-colors">
               <div>
                 <span className="text-xs font-semibold block text-base-content">
-                  Include end date (add 1 day)
+                  Include both start and end dates (+1 day)
                 </span>
                 <span className="text-[11px] opacity-60 block">
-                  Counts both start and end day as full calendar days
+                  Counts both start and end days as full calendar days
                 </span>
               </div>
               <input
@@ -162,7 +175,7 @@ const DateCalculator: React.FC = () => {
           {/* Results */}
           {diff && (
             <div className="space-y-3">
-              <DisplayCard primaryAmount={diff.totalDays} title="Total Days" />
+              <DisplayCard primaryAmount={diff.totalDays} title={isInclusive ? 'Total Days (Inclusive)' : 'Total Days'} />
               <div className="card bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
@@ -257,11 +270,28 @@ const DateCalculator: React.FC = () => {
               />
             </div>
           </div>
+          {/* Inclusive Date Option Toggle for Add/Subtract */}
+          <label className="flex items-center justify-between bg-base-200/60 border border-base-300 rounded-xl px-3.5 py-2 cursor-pointer hover:bg-base-200 transition-colors">
+            <div>
+              <span className="text-xs font-semibold block text-base-content">
+                Include start and end days (inclusive count)
+              </span>
+              <span className="text-[11px] opacity-60 block">
+                Counts starting date as Day 1 of the period
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={isAddSubInclusive}
+              onChange={(e) => setIsAddSubInclusive(e.target.checked)}
+              className="toggle toggle-primary toggle-sm"
+            />
+          </label>
           {/* Result */}
           {resultDate && (
             <div className="card bg-primary/5 border border-primary/20 rounded-xl p-4 text-center space-y-1">
               <p className="text-xs uppercase tracking-wider opacity-60 font-semibold">
-                Resulting Date
+                Resulting Date {isAddSubInclusive ? '(Inclusive)' : ''}
               </p>
               <p className="text-xl sm:text-2xl font-bold text-primary">{formatDate(resultDate)}</p>
               <p className="text-xs opacity-60">
@@ -279,6 +309,7 @@ const DateCalculator: React.FC = () => {
                   month: 'short',
                   year: 'numeric',
                 })}
+                {isAddSubInclusive ? ' (counting starting date as Day 1)' : ''}
               </p>
             </div>
           )}
