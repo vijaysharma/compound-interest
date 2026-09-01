@@ -1,13 +1,22 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
-import { FiClock, FiDelete, FiRotateCcw, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import {
+  FiClock,
+  FiDelete,
+  FiRotateCcw,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+} from 'react-icons/fi';
 import { TbMathFunction } from 'react-icons/tb';
 import {
   evaluateExpression,
   extractLastOperation,
+  toSuperscript,
   type HistoryItem,
   type LastOperation,
 } from '../utilities/calculatorHelper';
+
 const Calculator: React.FC = () => {
   const [expression, setExpression] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -16,6 +25,7 @@ const Calculator: React.FC = () => {
   const [isDeg, setIsDeg] = useState(true);
   const [isEvaluated, setIsEvaluated] = useState(false);
   const [lastOp, setLastOp] = useState<LastOperation | null>(null);
+
   const [memory, setMemory] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('android_calc_memory');
@@ -24,6 +34,7 @@ const Calculator: React.FC = () => {
       return 0;
     }
   });
+
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('android_calc_history');
@@ -32,13 +43,16 @@ const Calculator: React.FC = () => {
       return [];
     }
   });
+
   const displayContainerRef = useRef<HTMLDivElement>(null);
+
   // Keep cursor position clamped within valid bounds
   useEffect(() => {
     if (cursorPosition > expression.length) {
       setCursorPosition(expression.length);
     }
   }, [expression, cursorPosition]);
+
   // Persist history & memory
   useEffect(() => {
     try {
@@ -47,6 +61,7 @@ const Calculator: React.FC = () => {
       console.error(e);
     }
   }, [history]);
+
   useEffect(() => {
     try {
       localStorage.setItem('android_calc_memory', String(memory));
@@ -54,15 +69,18 @@ const Calculator: React.FC = () => {
       console.error(e);
     }
   }, [memory]);
+
   // Live calculation preview
   const liveResult = useMemo(() => {
     if (!expression || isEvaluated) return null;
     const { result } = evaluateExpression(expression, isDeg);
     return result;
   }, [expression, isDeg, isEvaluated]);
+
   // Insert character or token at cursor position (Inline CRUD)
   const insertAtCursor = (char: string) => {
     setLastOp(null); // Reset repeat operation on new input
+
     if (isEvaluated) {
       if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
         const next = expression + char;
@@ -75,20 +93,54 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
+
     // Prevent duplicate consecutive operators
     const isOperator = ['+', '−', '×', '÷'].includes(char);
     const lastIsOperator = ['+', '−', '×', '÷'].includes(before.slice(-1));
+
     let newBefore = before;
     if (isOperator && lastIsOperator) {
       newBefore = before.slice(0, -1);
     }
+
     const nextExpr = newBefore + char + after;
     setExpression(nextExpr);
     setCursorPosition(newBefore.length + char.length);
   };
+
+  // Insert y-th root of x (ʸ√x): converts trailing digits to superscript or inserts ³√(
+  const insertYRoot = () => {
+    setLastOp(null);
+    if (isEvaluated) {
+      setExpression('³√(');
+      setCursorPosition(3);
+      setIsEvaluated(false);
+      return;
+    }
+
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+
+    const match = before.match(/(\d+)$/);
+    if (match) {
+      const num = match[1];
+      const prefix = before.slice(0, before.length - num.length);
+      const sup = toSuperscript(num);
+      const nextExpr = prefix + sup + '√(' + after;
+      setExpression(nextExpr);
+      setCursorPosition(prefix.length + sup.length + 2);
+    } else {
+      const nextExpr = before + '³√(' + after;
+      setExpression(nextExpr);
+      setCursorPosition(before.length + 3);
+    }
+  };
+
   // Smart Parentheses at cursor position
   const handleSmartParentheses = () => {
     setLastOp(null);
@@ -98,17 +150,20 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const openCount = (expression.match(/\(/g) || []).length;
     const closeCount = (expression.match(/\)/g) || []).length;
     const lastChar = before.slice(-1);
+
     if (/[\d%)]/.test(lastChar) && openCount > closeCount) {
       insertAtCursor(')');
     } else {
       insertAtCursor('(');
     }
   };
+
   // Backspace at cursor position
   const handleBackspace = () => {
     setLastOp(null);
@@ -118,10 +173,13 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
+
     if (cursorPosition === 0 || !expression) return;
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
+
     // Check if deleting a multi-char scientific function before cursor
     for (const fn of [
       'asin(',
@@ -134,6 +192,10 @@ const Calculator: React.FC = () => {
       'log(',
       'abs(',
       '1/(',
+      '³√(',
+      '²√(',
+      '⁴√(',
+      '⁵√(',
       '√(',
     ]) {
       if (before.endsWith(fn)) {
@@ -143,10 +205,12 @@ const Calculator: React.FC = () => {
         return;
       }
     }
+
     const newBefore = before.slice(0, -1);
     setExpression(newBefore + after);
     setCursorPosition(newBefore.length);
   };
+
   // Clear all
   const handleClear = () => {
     setExpression('');
@@ -154,6 +218,7 @@ const Calculator: React.FC = () => {
     setIsEvaluated(false);
     setLastOp(null);
   };
+
   // Move cursor left / right
   const moveCursor = (dir: 'left' | 'right') => {
     if (isEvaluated) {
@@ -165,6 +230,7 @@ const Calculator: React.FC = () => {
       setCursorPosition((prev) => Math.min(expression.length, prev + 1));
     }
   };
+
   // Toggle sign of active number at cursor
   const handleToggleSign = () => {
     setLastOp(null);
@@ -178,13 +244,17 @@ const Calculator: React.FC = () => {
       }
       return;
     }
+
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
+
     const match = before.match(/([+\-×÷(]?)(-?\d+(?:\.\d+)?)$/);
     if (!match) return;
+
     const [full, op, num] = match;
     const prefix = before.slice(0, before.length - full.length);
+
     let replaced: string;
     if (num.startsWith('-')) {
       replaced = prefix + op + num.slice(1);
@@ -197,9 +267,11 @@ const Calculator: React.FC = () => {
         replaced = prefix + op + '(-' + num + ')';
       }
     }
+
     setExpression(replaced + after);
     setCursorPosition(replaced.length);
   };
+
   // Memory Operations
   const handleMemoryAdd = () => {
     const activeVal =
@@ -209,6 +281,7 @@ const Calculator: React.FC = () => {
       setMemory((prev) => prev + num);
     }
   };
+
   const handleMemorySubtract = () => {
     const activeVal =
       liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
@@ -217,17 +290,21 @@ const Calculator: React.FC = () => {
       setMemory((prev) => prev - num);
     }
   };
+
   const handleMemoryRecall = () => {
     if (memory !== 0) {
       insertAtCursor(String(memory));
     }
   };
+
   const handleMemoryClear = () => {
     setMemory(0);
   };
+
   // Evaluate & Commit (Supports repeating last operation if = is pressed repeatedly)
   const handleCalculate = () => {
     if (!expression) return;
+
     // Repeating last operation (e.g. 5 + 3 = 8, press = again -> 8 + 3 = 11, press = -> 14)
     if (isEvaluated && lastOp) {
       const repeatExpr = `${expression}${lastOp.op}${lastOp.operand}`;
@@ -247,9 +324,11 @@ const Calculator: React.FC = () => {
       }
       return;
     }
+
     // Normal calculation
     const extracted = extractLastOperation(expression);
     const { result, error } = evaluateExpression(expression, isDeg);
+
     if (result !== null && !error) {
       setLastOp(extracted);
       setHistory((prev) => [
@@ -265,17 +344,36 @@ const Calculator: React.FC = () => {
       setIsEvaluated(true);
     }
   };
+
   const textBeforeCursor = expression.slice(0, cursorPosition);
   const textAfterCursor = expression.slice(cursorPosition);
+
+  // Render individual characters with elevated superscript styling for root indices
+  const renderChar = (ch: string, key: string, onClick: (e: React.MouseEvent) => void) => {
+    const isSup = /[⁰¹²³⁴⁵⁶⁷⁸⁹ʸˣ]/.test(ch);
+    return (
+      <span
+        key={key}
+        onClick={onClick}
+        className={`hover:bg-primary/20 rounded cursor-pointer transition-colors inline-block ${
+          isSup ? 'text-[0.62em] -translate-y-[0.45em] font-medium leading-none' : ''
+        }`}
+      >
+        {ch}
+      </span>
+    );
+  };
+
   return (
     <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none">
       <SEOHead
         title="Android-Style Calculator — Free Online Basic & Scientific Calculator"
-        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, memory operations (M+, M-, MC, MR), percentages (4-50%), x√y root operations, trigonometry, and repeat last operation on equals."
-        keywords="android calculator, inline cursor calculator, repeat last operation calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, x times root y, percentage calculator, scientific calculator"
+        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, memory operations (M+, M-, MC, MR), percentages (4-50%), y-th root of x (³√(27)), trigonometry, and repeat last operation on equals."
+        keywords="android calculator, inline cursor calculator, cube root calculator, y-th root calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, percentage calculator, scientific calculator"
         canonicalPath="/calculator"
         noIndex={false}
       />
+
       {/* Top Display Area with Moveable Cursor & Memory Indicator */}
       <div className="flex-1 flex flex-col justify-end pb-2 sm:pb-3">
         {/* History Modal / Drawer */}
@@ -326,6 +424,7 @@ const Calculator: React.FC = () => {
             )}
           </div>
         )}
+
         {/* Memory Indicator */}
         {memory !== 0 && (
           <div className="flex items-center justify-end px-2 mb-1 gap-1">
@@ -338,6 +437,7 @@ const Calculator: React.FC = () => {
             </span>
           </div>
         )}
+
         {/* Expression Display with Interactive Click-to-Position Cursor */}
         <div
           ref={displayContainerRef}
@@ -361,19 +461,14 @@ const Calculator: React.FC = () => {
             ) : (
               <>
                 {/* Clickable characters before cursor */}
-                {textBeforeCursor.split('').map((ch, idx) => (
-                  <span
-                    key={`before-${idx}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCursorPosition(idx);
-                      setIsEvaluated(false);
-                    }}
-                    className="hover:bg-primary/20 rounded cursor-pointer transition-colors"
-                  >
-                    {ch}
-                  </span>
-                ))}
+                {textBeforeCursor.split('').map((ch, idx) =>
+                  renderChar(ch, `before-${idx}`, (e) => {
+                    e.stopPropagation();
+                    setCursorPosition(idx);
+                    setIsEvaluated(false);
+                  })
+                )}
+
                 {/* Visible Blinking Cursor (only when content exists) */}
                 <span
                   className="w-[2.5px] sm:w-[3px] h-[1.1em] bg-primary inline-block align-middle rounded-full mx-[1px]"
@@ -381,24 +476,20 @@ const Calculator: React.FC = () => {
                     animation: 'calcCaretBlink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                   }}
                 />
+
                 {/* Clickable characters after cursor */}
-                {textAfterCursor.split('').map((ch, idx) => (
-                  <span
-                    key={`after-${idx}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCursorPosition(textBeforeCursor.length + idx + 1);
-                      setIsEvaluated(false);
-                    }}
-                    className="hover:bg-primary/20 rounded cursor-pointer transition-colors"
-                  >
-                    {ch}
-                  </span>
-                ))}
+                {textAfterCursor.split('').map((ch, idx) =>
+                  renderChar(ch, `after-${idx}`, (e) => {
+                    e.stopPropagation();
+                    setCursorPosition(textBeforeCursor.length + idx + 1);
+                    setIsEvaluated(false);
+                  })
+                )}
               </>
             )}
           </div>
         </div>
+
         {/* Live Calculation Preview (Trailing Digits like Android) */}
         <div className="h-8 flex items-center justify-end px-2">
           {liveResult !== null && !isEvaluated ? (
@@ -409,6 +500,7 @@ const Calculator: React.FC = () => {
             <span className="text-sm opacity-0">0</span>
           )}
         </div>
+
         {/* Utility Icon Bar with Cursor Left/Right Navigation */}
         <div className="flex items-center justify-between border-b border-base-300/60 pt-2 pb-2 px-1 text-base-content/70">
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -430,6 +522,7 @@ const Calculator: React.FC = () => {
               <span className="text-[11px] font-semibold">√ π e</span>
             </button>
           </div>
+
           {/* Cursor Stepper & Backspace */}
           <div className="flex items-center gap-1">
             <button
@@ -461,6 +554,7 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       </div>
+
       {/* Scientific & Memory Tools Panel (Expandable) */}
       {showScientific && (
         <div className="mb-2 p-2 bg-base-200/50 rounded-2xl border border-base-300/80 space-y-1.5 animate-fadeIn">
@@ -482,6 +576,7 @@ const Calculator: React.FC = () => {
                 RAD
               </button>
             </div>
+
             {/* Memory Toolbar: MC, MR, M+, M- */}
             <div className="flex items-center gap-1">
               <button
@@ -520,6 +615,7 @@ const Calculator: React.FC = () => {
               </button>
             </div>
           </div>
+
           <div className="grid grid-cols-5 gap-1.5 text-xs font-semibold">
             {[
               { label: 'sin', fn: () => insertAtCursor('sin(') },
@@ -527,11 +623,13 @@ const Calculator: React.FC = () => {
               { label: 'tan', fn: () => insertAtCursor('tan(') },
               { label: 'ln', fn: () => insertAtCursor('ln(') },
               { label: 'log', fn: () => insertAtCursor('log(') },
+
               { label: 'sin⁻¹', fn: () => insertAtCursor('asin(') },
               { label: 'cos⁻¹', fn: () => insertAtCursor('acos(') },
               { label: 'tan⁻¹', fn: () => insertAtCursor('atan(') },
               { label: '√', fn: () => insertAtCursor('√(') },
-              { label: 'ʸ√x', fn: () => insertAtCursor('√(') },
+              { label: 'ʸ√x', fn: insertYRoot },
+
               { label: 'xʸ', fn: () => insertAtCursor('^') },
               { label: '1/x', fn: () => insertAtCursor('1/(') },
               { label: 'π', fn: () => insertAtCursor('π') },
@@ -550,6 +648,7 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Main Keypad Grid (Android Calculator Circular/Pill Keypad) */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3 pb-2">
         {/* Row 1: C, ( ), %, ÷ */}
@@ -581,6 +680,7 @@ const Calculator: React.FC = () => {
         >
           ÷
         </button>
+
         {/* Row 2: 7, 8, 9, × */}
         {['7', '8', '9'].map((num) => (
           <button
@@ -599,6 +699,7 @@ const Calculator: React.FC = () => {
         >
           ×
         </button>
+
         {/* Row 3: 4, 5, 6, − */}
         {['4', '5', '6'].map((num) => (
           <button
@@ -617,6 +718,7 @@ const Calculator: React.FC = () => {
         >
           −
         </button>
+
         {/* Row 4: 1, 2, 3, + */}
         {['1', '2', '3'].map((num) => (
           <button
@@ -635,6 +737,7 @@ const Calculator: React.FC = () => {
         >
           +
         </button>
+
         {/* Row 5: +/-, 0, ., = */}
         <button
           type="button"
@@ -668,4 +771,5 @@ const Calculator: React.FC = () => {
     </main>
   );
 };
+
 export default Calculator;

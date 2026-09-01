@@ -11,6 +11,23 @@ export interface LastOperation {
   operand: string;
 }
 
+// Convert numbers to superscript characters
+export const toSuperscript = (str: string): string => {
+  const map: Record<string, string> = {
+    '0': '⁰',
+    '1': '¹',
+    '2': '²',
+    '3': '³',
+    '4': '⁴',
+    '5': '⁵',
+    '6': '⁶',
+    '7': '⁷',
+    '8': '⁸',
+    '9': '⁹',
+  };
+  return str.split('').map((c) => map[c] || c).join('');
+};
+
 // Factorial helper with Overflow detection
 export function factorial(n: number): number {
   if (n < 0 || !Number.isInteger(n)) throw new Error('Undefined');
@@ -21,7 +38,7 @@ export function factorial(n: number): number {
   return res;
 }
 
-// Convert superscript numbers to regular digits for uniform parsing
+// Convert superscript numbers to regular digits
 export function normalizeSuperscripts(s: string): string {
   const supMap: Record<string, string> = {
     '⁰': '0',
@@ -210,7 +227,7 @@ export function evaluateExpression(
   if (!expr || expr.trim() === '') return { result: null, error: false };
 
   try {
-    let sanitized = normalizeSuperscripts(expr)
+    let sanitized = expr
       .replace(/×/g, '*')
       .replace(/÷/g, '/')
       .replace(/−/g, '-')
@@ -244,21 +261,44 @@ export function evaluateExpression(
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g, '($1 / 100)');
 
     // ─────────────────────────────────────────────────────────────────
-    // 2. y-th root of x: y√(x) => nthRoot(x, y) e.g. 3√(27) => 3
+    // 2. Superscript y-th root of x: ³√(27) => nthRoot(27, 3)
     // ─────────────────────────────────────────────────────────────────
+    const supMap: Record<string, string> = {
+      '⁰': '0',
+      '¹': '1',
+      '²': '2',
+      '³': '3',
+      '⁴': '4',
+      '⁵': '5',
+      '⁶': '6',
+      '⁷': '7',
+      '⁸': '8',
+      '⁹': '9',
+    };
+    const supToNum = (s: string) =>
+      s
+        .split('')
+        .map((c) => supMap[c] || c)
+        .join('');
+
     sanitized = sanitized.replace(
-      /(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*√\s*\(([^()]+)\)/g,
-      'nthRoot(($2), $1)'
+      /([⁰¹²³⁴⁵⁶⁷⁸⁹]+)\s*√\s*\(([^()]+)\)/g,
+      (_, sup, inner) => `nthRoot((${inner}), ${supToNum(sup)})`
     );
     sanitized = sanitized.replace(
-      /(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
-      'nthRoot($2, $1)'
+      /([⁰¹²³⁴⁵⁶⁷⁸⁹]+)\s*√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
+      (_, sup, num) => `nthRoot(${num}, ${supToNum(sup)})`
     );
+
+    // ─────────────────────────────────────────────────────────────────
+    // 3. Regular square root without superscript index: √(25) => nthRoot(25, 2)
+    // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/√\s*\(([^()]+)\)/g, 'nthRoot(($1), 2)');
     sanitized = sanitized.replace(/√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, 'nthRoot($1, 2)');
 
     // ─────────────────────────────────────────────────────────────────
-    // 3. Implicit Multiplication (Parentheses, Constants & Functions)
+    // 4. Implicit Multiplication (Parentheses, Constants & Functions, including normal digit before √)
+    // E.g. 4√9 => 4*nthRoot(9, 2) = 12, 3√(27) => 3*nthRoot(27, 2)
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\(/g, '$1*(');
     sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, ')*$1');
@@ -270,18 +310,19 @@ export function evaluateExpression(
     sanitized = sanitized.replace(/((?:\(Math\.PI\)|\(Math\.E\)))\s*(\d+|\()/g, '$1*$2');
     sanitized = sanitized.replace(/(\d+|\))\s*((?:\(Math\.PI\)|\(Math\.E\)))/g, '$1*$2');
 
+    // Number or ) before scientific functions or nthRoot
     sanitized = sanitized.replace(
       /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\)))\s*(sin|cos|tan|asin|acos|atan|ln|log|abs|nthRoot)/g,
       '$1*$2'
     );
 
     // ─────────────────────────────────────────────────────────────────
-    // 4. Factorials (e.g. 5! or 52! or 5000!)
+    // 5. Factorials (e.g. 5! or 52! or 5000!)
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
 
     // ─────────────────────────────────────────────────────────────────
-    // 5. Trigonometric Functions with Exact Undefined checks (tan(90))
+    // 6. Trigonometric Functions with Exact Undefined checks (tan(90))
     // ─────────────────────────────────────────────────────────────────
     const trigWrap = (fn: string, arg: string) => {
       if (fn === 'tan') {
@@ -320,7 +361,7 @@ export function evaluateExpression(
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // 6. High-Precision Decimal Evaluation for arithmetic & scientific notation
+    // 7. High-Precision Decimal Evaluation for arithmetic & scientific notation
     // ─────────────────────────────────────────────────────────────────
     const isDecimalEligible = /^(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[+\-*\/() ])+$/.test(sanitized);
     if (isDecimalEligible) {
