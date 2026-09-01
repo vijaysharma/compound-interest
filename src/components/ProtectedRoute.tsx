@@ -14,7 +14,6 @@ const ProtectedRoute = ({
   children,
   requireAdmin = false,
   requireApiQuota = false,
-  requireAuth = false,
 }: ProtectedRouteProps) => {
   const { user, loading, isAuthenticated, isAdmin, trackUsage } = useAuth();
   const [now] = useState(() => Date.now());
