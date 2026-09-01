@@ -4,14 +4,12 @@ import { FiAlertTriangle, FiClock, FiLock, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import LoadingFallback from './LoadingFallback';
 import GoogleSignInButton from './GoogleSignInButton';
-
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAdmin?: boolean;
   requireApiQuota?: boolean;
   requireAuth?: boolean;
 }
-
 const ProtectedRoute = ({
   children,
   requireAdmin = false,
@@ -20,18 +18,15 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, loading, isAuthenticated, isAdmin, trackUsage } = useAuth();
   const [now] = useState(() => Date.now());
-
   // Initialize first_used_at on the first visit to any protected tool for authenticated users
   useEffect(() => {
     if (isAuthenticated && !user?.first_used_at && !isAdmin) {
       void trackUsage(true);
     }
   }, [isAuthenticated, user?.first_used_at, isAdmin, trackUsage]);
-
   if (loading) {
     return <LoadingFallback />;
   }
-
   // 1. Admin-only Route Check
   if (requireAdmin) {
     if (!isAuthenticated) {
@@ -55,7 +50,6 @@ const ProtectedRoute = ({
         </div>
       );
     }
-
     if (!isAdmin) {
       return (
         <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
@@ -79,7 +73,6 @@ const ProtectedRoute = ({
       );
     }
   }
-
   // 2. Strict Auth Check (if explicitly requested)
   if (requireAuth && !isAuthenticated) {
     return (
@@ -102,7 +95,6 @@ const ProtectedRoute = ({
       </div>
     );
   }
-
   // 3. For Authenticated Users: Check Trial Expiration
   const isTimeExpired = Boolean(
     isAuthenticated &&
@@ -111,7 +103,6 @@ const ProtectedRoute = ({
       !isAdmin &&
       user?.subscription_status !== 'active'
   );
-
   if (isTimeExpired) {
     return (
       <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
@@ -143,7 +134,6 @@ const ProtectedRoute = ({
       </div>
     );
   }
-
   // 4. For Authenticated Users: Check Quota
   const limit = user?.freeLimit || 15;
   const isQuotaExceeded = Boolean(
@@ -152,7 +142,6 @@ const ProtectedRoute = ({
       !isAdmin &&
       user?.subscription_status !== 'active'
   );
-
   if (requireApiQuota && isQuotaExceeded) {
     return (
       <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
@@ -185,8 +174,6 @@ const ProtectedRoute = ({
       </div>
     );
   }
-
   return <>{children}</>;
 };
-
 export default ProtectedRoute;

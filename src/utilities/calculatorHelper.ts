@@ -333,10 +333,10 @@ export function evaluateExpression(
     // ─────────────────────────────────────────────────────────────────
     // 7. High-Precision Decimal Evaluation for arithmetic & scientific notation
     // ─────────────────────────────────────────────────────────────────
-    const isDecimalEligible = /^(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[+\-*\/() ])+$/.test(sanitized);
+    const isDecimalEligible = new RegExp('^(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/() ])+$').test(sanitized);
     if (isDecimalEligible) {
       try {
-        const rawTokens = sanitized.match(/(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[+\-*\/()])/g);
+        const rawTokens = sanitized.match(new RegExp('(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/()])', 'g'));
         if (rawTokens && rawTokens.length > 0) {
           const output: (Decimal | string)[] = [];
           const ops: string[] = [];
@@ -390,8 +390,9 @@ export function evaluateExpression(
             return { result: stack[0].toString(), error: false };
           }
         }
-      } catch (e: any) {
-        if (e.message === 'Undefined') return { result: 'Undefined', error: false };
+      } catch (e) {
+        if (e instanceof Error && e.message === 'Undefined')
+          return { result: 'Undefined', error: false };
       }
     }
     sanitized = sanitized.replace(/\^/g, '**');
@@ -414,12 +415,14 @@ export function evaluateExpression(
     // Format number nicely
     const formatted = parseFloat(Number(val).toPrecision(12)).toString();
     return { result: formatted, error: false };
-  } catch (err: any) {
-    if (err.message === 'Undefined') {
-      return { result: 'Undefined', error: false };
-    }
-    if (err.message === 'Overflow') {
-      return { result: 'Overflow', error: false };
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === 'Undefined') {
+        return { result: 'Undefined', error: false };
+      }
+      if (err.message === 'Overflow') {
+        return { result: 'Overflow', error: false };
+      }
     }
     return { result: null, error: true };
   }

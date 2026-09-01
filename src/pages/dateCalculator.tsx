@@ -2,35 +2,27 @@ import React, { useState, useMemo } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import DisplayCard from '../components/DisplayCard.tsx';
-
 type DateMode = 'difference' | 'add-subtract';
-
 const MODE_DATA = [
   { id: 'diff', value: 'difference', title: 'Date Difference' },
   { id: 'add-sub', value: 'add-subtract', title: 'Add / Subtract' },
 ];
-
 const ADD_SUB_DATA = [
   { id: 'add', value: 'add', title: 'Add' },
   { id: 'subtract', value: 'subtract', title: 'Subtract' },
 ];
-
 const getTodayISO = () => new Date().toISOString().split('T')[0];
-
 const DateCalculator: React.FC = () => {
   const [mode, setMode] = useState<DateMode>('difference');
-
   // Difference mode state
   const [startDate, setStartDate] = useState(getTodayISO());
   const [endDate, setEndDate] = useState(getTodayISO());
-
   // Add/Subtract mode state
   const [baseDate, setBaseDate] = useState(getTodayISO());
   const [years, setYears] = useState(0);
   const [months, setMonths] = useState(0);
   const [days, setDays] = useState(0);
   const [addOrSub, setAddOrSub] = useState<'add' | 'subtract'>('add');
-
   // Difference calculation
   const diff = useMemo(() => {
     if (!startDate || !endDate) return null;
@@ -40,15 +32,12 @@ const DateCalculator: React.FC = () => {
     const totalDays = Math.round(totalMs / (1000 * 60 * 60 * 24));
     const totalWeeks = Math.floor(totalDays / 7);
     const remainingDaysAfterWeeks = totalDays % 7;
-
     // Calculate year/month/day breakdown
     const earlier = s <= e ? new Date(s) : new Date(e);
     const later = s <= e ? new Date(e) : new Date(s);
-
     let diffYears = later.getFullYear() - earlier.getFullYear();
     let diffMonths = later.getMonth() - earlier.getMonth();
     let diffDays = later.getDate() - earlier.getDate();
-
     if (diffDays < 0) {
       diffMonths--;
       // Get last day of the previous month of the later date
@@ -59,7 +48,6 @@ const DateCalculator: React.FC = () => {
       diffYears--;
       diffMonths += 12;
     }
-
     return {
       totalDays,
       totalWeeks,
@@ -70,7 +58,6 @@ const DateCalculator: React.FC = () => {
       isPast: e < s,
     };
   }, [startDate, endDate]);
-
   // Add/Subtract calculation
   const resultDate = useMemo(() => {
     if (!baseDate) return null;
@@ -81,7 +68,6 @@ const DateCalculator: React.FC = () => {
     d.setDate(d.getDate() + sign * days);
     return d;
   }, [baseDate, years, months, days, addOrSub]);
-
   const formatDate = (d: Date) =>
     d.toLocaleDateString('en-IN', {
       weekday: 'long',
@@ -89,15 +75,12 @@ const DateCalculator: React.FC = () => {
       month: 'long',
       day: 'numeric',
     });
-
   const dayOfWeek = (dateStr: string) => {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'long' });
   };
-
   const numberInputBase =
     'input input-bordered input-sm text-center w-full font-semibold';
-
   return (
     <main className="w-full max-w-lg mx-auto px-2 py-4 space-y-4">
       <SEOHead
@@ -107,21 +90,18 @@ const DateCalculator: React.FC = () => {
         canonicalPath="/date-calculator"
         noIndex={false}
       />
-
       <header className="text-center">
         <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Date Calculator</h1>
         <p className="text-xs opacity-70 mt-1">
           Find the duration between dates or add/subtract time from a date.
         </p>
       </header>
-
       <JoinedButtonGroup
         data={MODE_DATA}
         selectedValue={mode}
         updateSelectedValue={(v: string) => setMode(v as DateMode)}
         sizePrefix="sm"
       />
-
       {mode === 'difference' ? (
         <div className="space-y-4">
           {/* Date Inputs */}
@@ -149,19 +129,16 @@ const DateCalculator: React.FC = () => {
                 />
               </div>
             </div>
-
             {startDate && (
               <p className="text-xs text-center opacity-60">
                 {dayOfWeek(startDate)} → {dayOfWeek(endDate)}
               </p>
             )}
           </div>
-
           {/* Results */}
           {diff && (
             <div className="space-y-3">
               <DisplayCard primaryAmount={diff.totalDays} title="Total Days" />
-
               <div className="card bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
@@ -177,9 +154,7 @@ const DateCalculator: React.FC = () => {
                     <p className="text-xs opacity-70">Days</p>
                   </div>
                 </div>
-
                 <div className="divider my-0 text-xs opacity-50">or equivalently</div>
-
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="bg-base-200/60 rounded-lg px-3 py-2 text-center">
                     <span className="font-bold text-lg">{diff.totalWeeks}</span>
@@ -219,14 +194,12 @@ const DateCalculator: React.FC = () => {
               />
             </div>
           </div>
-
           <JoinedButtonGroup
             data={ADD_SUB_DATA}
             selectedValue={addOrSub}
             updateSelectedValue={(v: string) => setAddOrSub(v as 'add' | 'subtract')}
             sizePrefix="sm"
           />
-
           {/* Duration Inputs */}
           <div className="grid grid-cols-3 gap-2">
             <div className="text-center">
@@ -263,7 +236,6 @@ const DateCalculator: React.FC = () => {
               />
             </div>
           </div>
-
           {/* Result */}
           {resultDate && (
             <div className="card bg-primary/5 border border-primary/20 rounded-xl p-4 text-center space-y-1">
@@ -296,5 +268,4 @@ const DateCalculator: React.FC = () => {
     </main>
   );
 };
-
 export default DateCalculator;

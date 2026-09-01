@@ -19,7 +19,6 @@ import {
   type HistoryItem,
   type LastOperation,
 } from '../utilities/calculatorHelper';
-
 const Calculator: React.FC = () => {
   const [expression, setExpression] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -29,7 +28,6 @@ const Calculator: React.FC = () => {
   const [isEvaluated, setIsEvaluated] = useState(false);
   const [lastOp, setLastOp] = useState<LastOperation | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const [memory, setMemory] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('android_calc_memory');
@@ -38,7 +36,6 @@ const Calculator: React.FC = () => {
       return 0;
     }
   });
-
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('android_calc_history');
@@ -47,16 +44,7 @@ const Calculator: React.FC = () => {
       return [];
     }
   });
-
   const displayContainerRef = useRef<HTMLDivElement>(null);
-
-  // Keep cursor position clamped within valid bounds
-  useEffect(() => {
-    if (cursorPosition > expression.length) {
-      setCursorPosition(expression.length);
-    }
-  }, [expression, cursorPosition]);
-
   // Persist history & memory
   useEffect(() => {
     try {
@@ -65,7 +53,6 @@ const Calculator: React.FC = () => {
       console.error(e);
     }
   }, [history]);
-
   useEffect(() => {
     try {
       localStorage.setItem('android_calc_memory', String(memory));
@@ -73,17 +60,15 @@ const Calculator: React.FC = () => {
       console.error(e);
     }
   }, [memory]);
-
   // Live calculation preview
   const liveResult = useMemo(() => {
     if (!expression || isEvaluated) return null;
     const { result } = evaluateExpression(expression, isDeg);
     return result;
   }, [expression, isDeg, isEvaluated]);
-
   // Copy to clipboard
   const handleCopy = async () => {
-    const textToCopy = isEvaluated ? expression : (liveResult || expression);
+    const textToCopy = isEvaluated ? expression : liveResult || expression;
     if (!textToCopy) return;
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -94,13 +79,11 @@ const Calculator: React.FC = () => {
       setTimeout(() => setToastMessage(null), 2000);
     }
   };
-
   // Paste from clipboard or string
   const handlePaste = async (pastedText?: string) => {
     try {
       const text = pastedText !== undefined ? pastedText : await navigator.clipboard.readText();
       if (!text) return;
-
       // Clean & sanitize pasted math expression
       const sanitized = text
         .trim()
@@ -108,9 +91,7 @@ const Calculator: React.FC = () => {
         .replace(/\//g, '÷')
         .replace(/-/g, '−')
         .replace(/[^0-9+\-−×÷%^().eEπ√!sincostanloglnabs⁰¹²³⁴⁵⁶⁷⁸⁹]/gi, '');
-
       if (!sanitized) return;
-
       setLastOp(null);
       if (isEvaluated) {
         setExpression(sanitized);
@@ -124,7 +105,6 @@ const Calculator: React.FC = () => {
         setExpression(nextExpr);
         setCursorPosition(before.length + sanitized.length);
       }
-
       setToastMessage('Pasted from clipboard');
       setTimeout(() => setToastMessage(null), 2000);
     } catch {
@@ -132,11 +112,9 @@ const Calculator: React.FC = () => {
       setTimeout(() => setToastMessage(null), 2000);
     }
   };
-
   // Insert character or token at cursor position (Inline CRUD)
   const insertAtCursor = (char: string) => {
     setLastOp(null); // Reset repeat operation on new input
-
     if (isEvaluated) {
       if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
         const next = expression + char;
@@ -149,25 +127,20 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
-
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
-
     // Prevent duplicate consecutive operators
     const isOperator = ['+', '−', '×', '÷'].includes(char);
     const lastIsOperator = ['+', '−', '×', '÷'].includes(before.slice(-1));
-
     let newBefore = before;
     if (isOperator && lastIsOperator) {
       newBefore = before.slice(0, -1);
     }
-
     const nextExpr = newBefore + char + after;
     setExpression(nextExpr);
     setCursorPosition(newBefore.length + char.length);
   };
-
   // Insert y-th root of x (ʸ√x): converts trailing digits to superscript or inserts ³√(
   const insertYRoot = () => {
     setLastOp(null);
@@ -177,11 +150,9 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
-
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
-
     const match = before.match(/(\d+)$/);
     if (match) {
       const num = match[1];
@@ -196,7 +167,6 @@ const Calculator: React.FC = () => {
       setCursorPosition(before.length + 3);
     }
   };
-
   // Smart Parentheses at cursor position
   const handleSmartParentheses = () => {
     setLastOp(null);
@@ -206,20 +176,17 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
-
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const openCount = (expression.match(/\(/g) || []).length;
     const closeCount = (expression.match(/\)/g) || []).length;
     const lastChar = before.slice(-1);
-
     if (/[\d%)]/.test(lastChar) && openCount > closeCount) {
       insertAtCursor(')');
     } else {
       insertAtCursor('(');
     }
   };
-
   // Backspace at cursor position
   const handleBackspace = () => {
     setLastOp(null);
@@ -229,13 +196,10 @@ const Calculator: React.FC = () => {
       setIsEvaluated(false);
       return;
     }
-
     if (cursorPosition === 0 || !expression) return;
-
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
-
     // Check if deleting a multi-char scientific function before cursor
     for (const fn of [
       'asin(',
@@ -261,12 +225,10 @@ const Calculator: React.FC = () => {
         return;
       }
     }
-
     const newBefore = before.slice(0, -1);
     setExpression(newBefore + after);
     setCursorPosition(newBefore.length);
   };
-
   // Clear all
   const handleClear = () => {
     setExpression('');
@@ -274,7 +236,6 @@ const Calculator: React.FC = () => {
     setIsEvaluated(false);
     setLastOp(null);
   };
-
   // Move cursor left / right
   const moveCursor = (dir: 'left' | 'right') => {
     if (isEvaluated) {
@@ -286,7 +247,6 @@ const Calculator: React.FC = () => {
       setCursorPosition((prev) => Math.min(expression.length, prev + 1));
     }
   };
-
   // Toggle sign of active number at cursor
   const handleToggleSign = () => {
     setLastOp(null);
@@ -300,17 +260,13 @@ const Calculator: React.FC = () => {
       }
       return;
     }
-
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
-
     const match = before.match(/([+\-×÷(]?)(-?\d+(?:\.\d+)?)$/);
     if (!match) return;
-
     const [full, op, num] = match;
     const prefix = before.slice(0, before.length - full.length);
-
     let replaced: string;
     if (num.startsWith('-')) {
       replaced = prefix + op + num.slice(1);
@@ -323,11 +279,9 @@ const Calculator: React.FC = () => {
         replaced = prefix + op + '(-' + num + ')';
       }
     }
-
     setExpression(replaced + after);
     setCursorPosition(replaced.length);
   };
-
   // Memory Operations
   const handleMemoryAdd = () => {
     const activeVal =
@@ -337,7 +291,6 @@ const Calculator: React.FC = () => {
       setMemory((prev) => prev + num);
     }
   };
-
   const handleMemorySubtract = () => {
     const activeVal =
       liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
@@ -346,21 +299,17 @@ const Calculator: React.FC = () => {
       setMemory((prev) => prev - num);
     }
   };
-
   const handleMemoryRecall = () => {
     if (memory !== 0) {
       insertAtCursor(String(memory));
     }
   };
-
   const handleMemoryClear = () => {
     setMemory(0);
   };
-
   // Evaluate & Commit (Supports repeating last operation if = is pressed repeatedly)
   const handleCalculate = () => {
     if (!expression) return;
-
     // Repeating last operation (e.g. 5 + 3 = 8, press = again -> 8 + 3 = 11, press = -> 14)
     if (isEvaluated && lastOp) {
       const repeatExpr = `${expression}${lastOp.op}${lastOp.operand}`;
@@ -380,11 +329,9 @@ const Calculator: React.FC = () => {
       }
       return;
     }
-
     // Normal calculation
     const extracted = extractLastOperation(expression);
     const { result, error } = evaluateExpression(expression, isDeg);
-
     if (result !== null && !error) {
       setLastOp(extracted);
       setHistory((prev) => [
@@ -400,70 +347,91 @@ const Calculator: React.FC = () => {
       setIsEvaluated(true);
     }
   };
-
+  const handlersRef = useRef({
+    handleCopy,
+    handlePaste,
+    insertAtCursor,
+    handleCalculate,
+    handleBackspace,
+    handleClear,
+    moveCursor,
+    isEvaluated,
+    expression,
+    liveResult,
+  });
+  useEffect(() => {
+    handlersRef.current = {
+      handleCopy,
+      handlePaste,
+      insertAtCursor,
+      handleCalculate,
+      handleBackspace,
+      handleClear,
+      moveCursor,
+      isEvaluated,
+      expression,
+      liveResult,
+    };
+  });
   // Keyboard Event Listeners for Typing, Copy & Paste
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
-
       // Copy: Cmd+C / Ctrl+C
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
-        handleCopy();
+        handlersRef.current.handleCopy();
         return;
       }
-
       // Paste: Cmd+V / Ctrl+V handled by paste listener
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'v') {
         return;
       }
-
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
-        insertAtCursor(e.key);
+        handlersRef.current.insertAtCursor(e.key);
       } else if (e.key === '.') {
         e.preventDefault();
-        insertAtCursor('.');
+        handlersRef.current.insertAtCursor('.');
       } else if (e.key === '+') {
         e.preventDefault();
-        insertAtCursor('+');
+        handlersRef.current.insertAtCursor('+');
       } else if (e.key === '-') {
         e.preventDefault();
-        insertAtCursor('−');
+        handlersRef.current.insertAtCursor('−');
       } else if (e.key === '*' || e.key === 'x' || e.key === 'X') {
         e.preventDefault();
-        insertAtCursor('×');
+        handlersRef.current.insertAtCursor('×');
       } else if (e.key === '/') {
         e.preventDefault();
-        insertAtCursor('÷');
+        handlersRef.current.insertAtCursor('÷');
       } else if (e.key === '%') {
         e.preventDefault();
-        insertAtCursor('%');
+        handlersRef.current.insertAtCursor('%');
       } else if (e.key === '(' || e.key === ')') {
         e.preventDefault();
-        insertAtCursor(e.key);
+        handlersRef.current.insertAtCursor(e.key);
       } else if (e.key === '^') {
         e.preventDefault();
-        insertAtCursor('^');
+        handlersRef.current.insertAtCursor('^');
       } else if (e.key === 'Enter' || e.key === '=') {
         e.preventDefault();
-        handleCalculate();
+        handlersRef.current.handleCalculate();
       } else if (e.key === 'Backspace') {
         e.preventDefault();
-        handleBackspace();
+        handlersRef.current.handleBackspace();
       } else if (e.key === 'Escape' || e.key === 'Delete') {
         e.preventDefault();
-        handleClear();
+        handlersRef.current.handleClear();
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        moveCursor('left');
+        handlersRef.current.moveCursor('left');
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        moveCursor('right');
+        handlersRef.current.moveCursor('right');
       }
     };
-
     const handleWindowPaste = (e: ClipboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         return;
@@ -471,16 +439,16 @@ const Calculator: React.FC = () => {
       e.preventDefault();
       const pastedData = e.clipboardData?.getData('text');
       if (pastedData) {
-        handlePaste(pastedData);
+        handlersRef.current.handlePaste(pastedData);
       }
     };
-
     const handleWindowCopy = (e: ClipboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
       if (!window.getSelection()?.toString()) {
-        const textToCopy = isEvaluated ? expression : (liveResult || expression);
+        const { isEvaluated: evaluated, expression: expr, liveResult: live } = handlersRef.current;
+        const textToCopy = evaluated ? expr : live || expr;
         if (textToCopy) {
           e.preventDefault();
           e.clipboardData?.setData('text/plain', textToCopy);
@@ -489,21 +457,18 @@ const Calculator: React.FC = () => {
         }
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('paste', handleWindowPaste);
     window.addEventListener('copy', handleWindowCopy);
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('paste', handleWindowPaste);
       window.removeEventListener('copy', handleWindowCopy);
     };
-  }, [expression, cursorPosition, isEvaluated, liveResult, lastOp, isDeg]);
-
-  const textBeforeCursor = expression.slice(0, cursorPosition);
-  const textAfterCursor = expression.slice(cursorPosition);
-
+  }, []);
+  const safeCursor = Math.min(Math.max(0, cursorPosition), expression.length);
+  const textBeforeCursor = expression.slice(0, safeCursor);
+  const textAfterCursor = expression.slice(safeCursor);
   // Render individual characters with elevated superscript styling for root indices
   const renderChar = (ch: string, key: string, onClick: (e: React.MouseEvent) => void) => {
     const isSup = /[⁰¹²³⁴⁵⁶⁷⁸⁹ʸˣ]/.test(ch);
@@ -519,7 +484,6 @@ const Calculator: React.FC = () => {
       </span>
     );
   };
-
   return (
     <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative">
       <SEOHead
@@ -529,7 +493,6 @@ const Calculator: React.FC = () => {
         canonicalPath="/calculator"
         noIndex={false}
       />
-
       {/* Floating Toast Notification for Copy/Paste */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 animate-bounce">
@@ -538,7 +501,6 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       )}
-
       {/* Top Display Area with Moveable Cursor & Memory Indicator */}
       <div className="flex-1 flex flex-col justify-end pb-2 sm:pb-3">
         {/* History Modal / Drawer */}
@@ -589,7 +551,6 @@ const Calculator: React.FC = () => {
             )}
           </div>
         )}
-
         {/* Memory Indicator */}
         {memory !== 0 && (
           <div className="flex items-center justify-end px-2 mb-1 gap-1">
@@ -602,7 +563,6 @@ const Calculator: React.FC = () => {
             </span>
           </div>
         )}
-
         {/* Expression Display with Interactive Click-to-Position Cursor */}
         <div
           ref={displayContainerRef}
@@ -632,7 +592,6 @@ const Calculator: React.FC = () => {
                     setIsEvaluated(false);
                   })
                 )}
-
                 {/* Visible Blinking Cursor (only when content exists) */}
                 <span
                   className="w-[2.5px] sm:w-[3px] h-[1.1em] bg-primary inline-block align-middle rounded-full mx-[1px]"
@@ -640,7 +599,6 @@ const Calculator: React.FC = () => {
                     animation: 'calcCaretBlink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                   }}
                 />
-
                 {/* Clickable characters after cursor */}
                 {textAfterCursor.split('').map((ch, idx) =>
                   renderChar(ch, `after-${idx}`, (e) => {
@@ -653,7 +611,6 @@ const Calculator: React.FC = () => {
             )}
           </div>
         </div>
-
         {/* Live Calculation Preview (Trailing Digits like Android) */}
         <div
           onClick={handleCopy}
@@ -668,7 +625,6 @@ const Calculator: React.FC = () => {
             <span className="text-sm opacity-0">0</span>
           )}
         </div>
-
         {/* Utility Icon Bar: History, Scientific, Copy, Paste, Cursor Chevrons & Backspace */}
         <div className="flex items-center justify-between border-b border-base-300/60 pt-2 pb-2 px-1 text-base-content/70">
           <div className="flex items-center gap-1 sm:gap-1.5">
@@ -707,7 +663,6 @@ const Calculator: React.FC = () => {
               <FiClipboard className="h-4 w-4" />
             </button>
           </div>
-
           {/* Cursor Stepper & Backspace */}
           <div className="flex items-center gap-1">
             <button
@@ -739,7 +694,6 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       </div>
-
       {/* Scientific & Memory Tools Panel (Expandable) */}
       {showScientific && (
         <div className="mb-2 p-2 bg-base-200/50 rounded-2xl border border-base-300/80 space-y-1.5 animate-fadeIn">
@@ -761,7 +715,6 @@ const Calculator: React.FC = () => {
                 RAD
               </button>
             </div>
-
             {/* Memory Toolbar: MC, MR, M+, M- */}
             <div className="flex items-center gap-1">
               <button
@@ -800,7 +753,6 @@ const Calculator: React.FC = () => {
               </button>
             </div>
           </div>
-
           <div className="grid grid-cols-5 gap-1.5 text-xs font-semibold">
             {[
               { label: 'sin', fn: () => insertAtCursor('sin(') },
@@ -808,13 +760,11 @@ const Calculator: React.FC = () => {
               { label: 'tan', fn: () => insertAtCursor('tan(') },
               { label: 'ln', fn: () => insertAtCursor('ln(') },
               { label: 'log', fn: () => insertAtCursor('log(') },
-
               { label: 'sin⁻¹', fn: () => insertAtCursor('asin(') },
               { label: 'cos⁻¹', fn: () => insertAtCursor('acos(') },
               { label: 'tan⁻¹', fn: () => insertAtCursor('atan(') },
               { label: '√', fn: () => insertAtCursor('√(') },
               { label: 'ʸ√x', fn: insertYRoot },
-
               { label: 'xʸ', fn: () => insertAtCursor('^') },
               { label: '1/x', fn: () => insertAtCursor('1/(') },
               { label: 'π', fn: () => insertAtCursor('π') },
@@ -833,7 +783,6 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       )}
-
       {/* Main Keypad Grid (Android Calculator Circular/Pill Keypad) */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3 pb-2">
         {/* Row 1: C, ( ), %, ÷ */}
@@ -865,7 +814,6 @@ const Calculator: React.FC = () => {
         >
           ÷
         </button>
-
         {/* Row 2: 7, 8, 9, × */}
         {['7', '8', '9'].map((num) => (
           <button
@@ -884,7 +832,6 @@ const Calculator: React.FC = () => {
         >
           ×
         </button>
-
         {/* Row 3: 4, 5, 6, − */}
         {['4', '5', '6'].map((num) => (
           <button
@@ -903,7 +850,6 @@ const Calculator: React.FC = () => {
         >
           −
         </button>
-
         {/* Row 4: 1, 2, 3, + */}
         {['1', '2', '3'].map((num) => (
           <button
@@ -922,7 +868,6 @@ const Calculator: React.FC = () => {
         >
           +
         </button>
-
         {/* Row 5: +/-, 0, ., = */}
         <button
           type="button"
@@ -956,5 +901,4 @@ const Calculator: React.FC = () => {
     </main>
   );
 };
-
 export default Calculator;
