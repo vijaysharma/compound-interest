@@ -73,8 +73,8 @@ const ProtectedRoute = ({
       );
     }
   }
-  // 2. Strict Auth Check (if explicitly requested)
-  if (requireAuth && !isAuthenticated) {
+  // 2. Authentication Check: Require login for all protected tools
+  if (!isAuthenticated) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
         <div className="card bg-base-100 border border-base-300 w-full max-w-md p-6 text-center shadow-lg">
@@ -83,7 +83,7 @@ const ProtectedRoute = ({
           </div>
           <h2 className="mb-2 text-xl font-bold">Authentication Required</h2>
           <p className="mb-6 text-sm opacity-70">
-            Please sign in with your Google account to access this feature.
+            Please sign in with your Google account to access all features.
           </p>
           <GoogleSignInButton className="w-full" />
           <div className="mt-6 border-t border-base-200 pt-4">
@@ -98,10 +98,10 @@ const ProtectedRoute = ({
   // 3. For Authenticated Users: Check Trial Expiration
   const isTimeExpired = Boolean(
     isAuthenticated &&
-      user?.trial_expires_at &&
-      new Date(user.trial_expires_at).getTime() < now &&
-      !isAdmin &&
-      user?.subscription_status !== 'active'
+    user?.trial_expires_at &&
+    new Date(user.trial_expires_at).getTime() < now &&
+    !isAdmin &&
+    user?.subscription_status !== 'active'
   );
   if (isTimeExpired) {
     return (
@@ -138,9 +138,9 @@ const ProtectedRoute = ({
   const limit = user?.freeLimit || 15;
   const isQuotaExceeded = Boolean(
     isAuthenticated &&
-      (user?.api_usage_count ?? 0) >= limit &&
-      !isAdmin &&
-      user?.subscription_status !== 'active'
+    (user?.api_usage_count ?? 0) >= limit &&
+    !isAdmin &&
+    user?.subscription_status !== 'active'
   );
   if (requireApiQuota && isQuotaExceeded) {
     return (

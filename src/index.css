@@ -4,7 +4,7 @@
 @config "../tailwind.config.js";
 
 @plugin "daisyui" {
-  themes: fantasy;
+  themes: fantasy --default;
 }
 
 /*
