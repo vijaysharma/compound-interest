@@ -7,6 +7,9 @@ import {
   FiX,
   FiChevronLeft,
   FiChevronRight,
+  FiCopy,
+  FiClipboard,
+  FiCheck,
 } from 'react-icons/fi';
 import { TbMathFunction } from 'react-icons/tb';
 import {
@@ -25,6 +28,7 @@ const Calculator: React.FC = () => {
   const [isDeg, setIsDeg] = useState(true);
   const [isEvaluated, setIsEvaluated] = useState(false);
   const [lastOp, setLastOp] = useState<LastOperation | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [memory, setMemory] = useState<number>(() => {
     try {
@@ -76,6 +80,58 @@ const Calculator: React.FC = () => {
     const { result } = evaluateExpression(expression, isDeg);
     return result;
   }, [expression, isDeg, isEvaluated]);
+
+  // Copy to clipboard
+  const handleCopy = async () => {
+    const textToCopy = isEvaluated ? expression : (liveResult || expression);
+    if (!textToCopy) return;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setToastMessage('Copied to clipboard');
+      setTimeout(() => setToastMessage(null), 2000);
+    } catch {
+      setToastMessage('Failed to copy');
+      setTimeout(() => setToastMessage(null), 2000);
+    }
+  };
+
+  // Paste from clipboard or string
+  const handlePaste = async (pastedText?: string) => {
+    try {
+      const text = pastedText !== undefined ? pastedText : await navigator.clipboard.readText();
+      if (!text) return;
+
+      // Clean & sanitize pasted math expression
+      const sanitized = text
+        .trim()
+        .replace(/\*/g, '×')
+        .replace(/\//g, '÷')
+        .replace(/-/g, '−')
+        .replace(/[^0-9+\-−×÷%^().eEπ√!sincostanloglnabs⁰¹²³⁴⁵⁶⁷⁸⁹]/gi, '');
+
+      if (!sanitized) return;
+
+      setLastOp(null);
+      if (isEvaluated) {
+        setExpression(sanitized);
+        setCursorPosition(sanitized.length);
+        setIsEvaluated(false);
+      } else {
+        const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+        const before = expression.slice(0, pos);
+        const after = expression.slice(pos);
+        const nextExpr = before + sanitized + after;
+        setExpression(nextExpr);
+        setCursorPosition(before.length + sanitized.length);
+      }
+
+      setToastMessage('Pasted from clipboard');
+      setTimeout(() => setToastMessage(null), 2000);
+    } catch {
+      setToastMessage('Unable to access clipboard');
+      setTimeout(() => setToastMessage(null), 2000);
+    }
+  };
 
   // Insert character or token at cursor position (Inline CRUD)
   const insertAtCursor = (char: string) => {
@@ -345,6 +401,106 @@ const Calculator: React.FC = () => {
     }
   };
 
+  // Keyboard Event Listeners for Typing, Copy & Paste
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+
+      // Copy: Cmd+C / Ctrl+C
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
+        handleCopy();
+        return;
+      }
+
+      // Paste: Cmd+V / Ctrl+V handled by paste listener
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'v') {
+        return;
+      }
+
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        insertAtCursor(e.key);
+      } else if (e.key === '.') {
+        e.preventDefault();
+        insertAtCursor('.');
+      } else if (e.key === '+') {
+        e.preventDefault();
+        insertAtCursor('+');
+      } else if (e.key === '-') {
+        e.preventDefault();
+        insertAtCursor('−');
+      } else if (e.key === '*' || e.key === 'x' || e.key === 'X') {
+        e.preventDefault();
+        insertAtCursor('×');
+      } else if (e.key === '/') {
+        e.preventDefault();
+        insertAtCursor('÷');
+      } else if (e.key === '%') {
+        e.preventDefault();
+        insertAtCursor('%');
+      } else if (e.key === '(' || e.key === ')') {
+        e.preventDefault();
+        insertAtCursor(e.key);
+      } else if (e.key === '^') {
+        e.preventDefault();
+        insertAtCursor('^');
+      } else if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        handleCalculate();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleBackspace();
+      } else if (e.key === 'Escape' || e.key === 'Delete') {
+        e.preventDefault();
+        handleClear();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        moveCursor('left');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        moveCursor('right');
+      }
+    };
+
+    const handleWindowPaste = (e: ClipboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      e.preventDefault();
+      const pastedData = e.clipboardData?.getData('text');
+      if (pastedData) {
+        handlePaste(pastedData);
+      }
+    };
+
+    const handleWindowCopy = (e: ClipboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      if (!window.getSelection()?.toString()) {
+        const textToCopy = isEvaluated ? expression : (liveResult || expression);
+        if (textToCopy) {
+          e.preventDefault();
+          e.clipboardData?.setData('text/plain', textToCopy);
+          setToastMessage('Copied');
+          setTimeout(() => setToastMessage(null), 2000);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('paste', handleWindowPaste);
+    window.addEventListener('copy', handleWindowCopy);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('paste', handleWindowPaste);
+      window.removeEventListener('copy', handleWindowCopy);
+    };
+  }, [expression, cursorPosition, isEvaluated, liveResult, lastOp, isDeg]);
+
   const textBeforeCursor = expression.slice(0, cursorPosition);
   const textAfterCursor = expression.slice(cursorPosition);
 
@@ -365,14 +521,23 @@ const Calculator: React.FC = () => {
   };
 
   return (
-    <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none">
+    <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative">
       <SEOHead
         title="Android-Style Calculator — Free Online Basic & Scientific Calculator"
-        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, memory operations (M+, M-, MC, MR), percentages (4-50%), y-th root of x (³√(27)), trigonometry, and repeat last operation on equals."
-        keywords="android calculator, inline cursor calculator, cube root calculator, y-th root calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, percentage calculator, scientific calculator"
+        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, copy/paste support, memory operations (M+, M-, MC, MR), percentages (4-50%), y-th root of x (³√(27)), trigonometry, and repeat last operation on equals."
+        keywords="android calculator, inline cursor calculator, copy paste calculator, cube root calculator, y-th root calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, percentage calculator, scientific calculator"
         canonicalPath="/calculator"
         noIndex={false}
       />
+
+      {/* Floating Toast Notification for Copy/Paste */}
+      {toastMessage && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+          <div className="badge badge-neutral shadow-xl px-3 py-2 text-xs font-semibold gap-1.5 border border-base-300/50 backdrop-blur-md">
+            <FiCheck className="h-3.5 w-3.5 text-success" /> {toastMessage}
+          </div>
+        </div>
+      )}
 
       {/* Top Display Area with Moveable Cursor & Memory Indicator */}
       <div className="flex-1 flex flex-col justify-end pb-2 sm:pb-3">
@@ -441,9 +606,8 @@ const Calculator: React.FC = () => {
         {/* Expression Display with Interactive Click-to-Position Cursor */}
         <div
           ref={displayContainerRef}
-          className="w-full overflow-x-auto whitespace-nowrap text-right py-2 px-2 scrollbar-none rounded-xl cursor-text transition-all bg-base-200/30 hover:bg-base-200/50"
+          className="w-full overflow-x-auto whitespace-nowrap text-right py-2 px-2 scrollbar-none rounded-xl cursor-text transition-all bg-base-200/30 hover:bg-base-200/50 select-text"
           onClick={(e) => {
-            // Clicking outside characters moves cursor to end or start
             if (e.target === e.currentTarget && expression.length > 0) {
               setCursorPosition(expression.length);
             }
@@ -491,7 +655,11 @@ const Calculator: React.FC = () => {
         </div>
 
         {/* Live Calculation Preview (Trailing Digits like Android) */}
-        <div className="h-8 flex items-center justify-end px-2">
+        <div
+          onClick={handleCopy}
+          className="h-8 flex items-center justify-end px-2 cursor-pointer hover:opacity-80 transition-opacity"
+          title="Click to copy result"
+        >
           {liveResult !== null && !isEvaluated ? (
             <span className="text-xl sm:text-2xl font-light text-base-content/50 font-sans tracking-tight">
               {liveResult}
@@ -501,9 +669,9 @@ const Calculator: React.FC = () => {
           )}
         </div>
 
-        {/* Utility Icon Bar with Cursor Left/Right Navigation */}
+        {/* Utility Icon Bar: History, Scientific, Copy, Paste, Cursor Chevrons & Backspace */}
         <div className="flex items-center justify-between border-b border-base-300/60 pt-2 pb-2 px-1 text-base-content/70">
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             <button
               type="button"
               onClick={() => setShowHistory(!showHistory)}
@@ -520,6 +688,23 @@ const Calculator: React.FC = () => {
             >
               <TbMathFunction className="h-4 w-4 text-primary" />
               <span className="text-[11px] font-semibold">√ π e</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={!expression && !liveResult}
+              className="btn btn-ghost btn-sm btn-circle text-base-content/70 hover:text-primary disabled:opacity-30"
+              title="Copy expression or result (Ctrl+C / ⌘C)"
+            >
+              <FiCopy className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePaste()}
+              className="btn btn-ghost btn-sm btn-circle text-base-content/70 hover:text-primary"
+              title="Paste expression (Ctrl+V / ⌘V)"
+            >
+              <FiClipboard className="h-4 w-4" />
             </button>
           </div>
 

@@ -1,16 +1,13 @@
 // Comprehensive, arbitrary-precision expression evaluator for Android-style Calculator
-
 export interface HistoryItem {
   expression: string;
   result: string;
   timestamp: string;
 }
-
 export interface LastOperation {
   op: string;
   operand: string;
 }
-
 // Convert numbers to superscript characters
 export const toSuperscript = (str: string): string => {
   const map: Record<string, string> = {
@@ -25,9 +22,11 @@ export const toSuperscript = (str: string): string => {
     '8': '⁸',
     '9': '⁹',
   };
-  return str.split('').map((c) => map[c] || c).join('');
+  return str
+    .split('')
+    .map((c) => map[c] || c)
+    .join('');
 };
-
 // Factorial helper with Overflow detection
 export function factorial(n: number): number {
   if (n < 0 || !Number.isInteger(n)) throw new Error('Undefined');
@@ -37,7 +36,6 @@ export function factorial(n: number): number {
   for (let i = 2; i <= n; i++) res *= i;
   return res;
 }
-
 // Convert superscript numbers to regular digits
 export function normalizeSuperscripts(s: string): string {
   const supMap: Record<string, string> = {
@@ -51,23 +49,20 @@ export function normalizeSuperscripts(s: string): string {
     '⁷': '7',
     '⁸': '8',
     '⁹': '9',
-    'ʸ': 'y',
-    'ˣ': 'x',
+    ʸ: 'y',
+    ˣ: 'x',
   };
   return s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹ʸˣ]/g, (m) => supMap[m] || m);
 }
-
 // Arbitrary-precision Decimal arithmetic (supports arbitrary exponents up to any magnitude)
 export class Decimal {
   m: bigint; // unscaled integer mantissa
   e: number; // base-10 exponent: value = m * 10^e
-
   constructor(m: bigint | number | string, e: number) {
     this.m = BigInt(m);
     this.e = e;
     this.normalize();
   }
-
   normalize() {
     if (this.m === 0n) {
       this.e = 0;
@@ -78,12 +73,10 @@ export class Decimal {
       this.e += 1;
     }
   }
-
   static fromString(str: string): Decimal {
     str = str.trim();
     const isNeg = str.startsWith('-');
     const clean = str.replace(/^[+-]/, '');
-
     // Handle scientific notation e.g. 8.06581751709e+67 or 1.5e-5
     const sciMatch = clean.match(/^(\d+)(?:\.(\d+))?[eE]([+-]?\d+)$/);
     if (sciMatch) {
@@ -96,7 +89,6 @@ export class Decimal {
       if (isNeg) m = -m;
       return new Decimal(m, exp - decPlaces);
     }
-
     // Handle standard decimal numbers
     const decMatch = clean.match(/^(\d+)(?:\.(\d+))?$/);
     if (decMatch) {
@@ -108,40 +100,33 @@ export class Decimal {
       if (isNeg) m = -m;
       return new Decimal(m, -decPlaces);
     }
-
     return new Decimal(0n, 0);
   }
-
   static fromNumber(n: number): Decimal {
     if (isNaN(n) || !isFinite(n)) throw new Error('Undefined');
     return Decimal.fromString(n.toString());
   }
-
   add(other: Decimal): Decimal {
     const diff = this.e - other.e;
     if (diff >= 0) {
-      const m1 = this.m * (10n ** BigInt(diff));
+      const m1 = this.m * 10n ** BigInt(diff);
       return new Decimal(m1 + other.m, other.e);
     } else {
-      const m2 = other.m * (10n ** BigInt(-diff));
+      const m2 = other.m * 10n ** BigInt(-diff);
       return new Decimal(this.m + m2, this.e);
     }
   }
-
   sub(other: Decimal): Decimal {
     return this.add(new Decimal(-other.m, other.e));
   }
-
   mul(other: Decimal): Decimal {
     return new Decimal(this.m * other.m, this.e + other.e);
   }
-
   div(other: Decimal, precision = 40): Decimal {
     if (other.m === 0n) throw new Error('Undefined');
-    const m = (this.m * (10n ** BigInt(precision))) / other.m;
+    const m = (this.m * 10n ** BigInt(precision)) / other.m;
     return new Decimal(m, this.e - other.e - precision);
   }
-
   toNumber(): number {
     const isNeg = this.m < 0n;
     const absM = isNeg ? -this.m : this.m;
@@ -159,7 +144,6 @@ export class Decimal {
       return (isNeg ? -1 : 1) * parseFloat(str);
     }
   }
-
   toString(): string {
     if (this.m === 0n) return '0';
     const isNeg = this.m < 0n;
@@ -182,7 +166,7 @@ export class Decimal {
       if (frac.length > 12) frac = frac.slice(0, 12).replace(/0+$/, '');
       return (isNeg ? '-' : '') + s.slice(0, decPos) + (frac ? '.' + frac : '');
     } else {
-      let frac = '0'.repeat(-decPos) + s;
+      const frac = '0'.repeat(-decPos) + s;
       if (frac.length > 12) {
         const num = this.toNumber();
         return parseFloat(num.toPrecision(12)).toString();
@@ -191,7 +175,6 @@ export class Decimal {
     }
   }
 }
-
 // High-precision nth-root helper: y√(x) = x^(1/y)
 export function nthRoot(x: number, y: number): number {
   if (y === 0) throw new Error('Undefined');
@@ -204,7 +187,6 @@ export function nthRoot(x: number, y: number): number {
   }
   return Math.pow(x, 1 / y);
 }
-
 // Extract last binary operation from expression for repeat on "="
 export function extractLastOperation(expr: string): LastOperation | null {
   if (!expr) return null;
@@ -218,35 +200,29 @@ export function extractLastOperation(expr: string): LastOperation | null {
   }
   return null;
 }
-
 // Tokenize and evaluate expression supporting arbitrary-precision Decimals, trig singularities, factorials, and y√(x)
 export function evaluateExpression(
   expr: string,
   isDeg: boolean
 ): { result: string | null; error: boolean } {
   if (!expr || expr.trim() === '') return { result: null, error: false };
-
   try {
     let sanitized = expr
       .replace(/×/g, '*')
       .replace(/÷/g, '/')
       .replace(/−/g, '-')
       .replace(/\s+/g, '');
-
     // Trim trailing operators for live preview
     while (/[+\-*/^.(]$/.test(sanitized)) {
       sanitized = sanitized.slice(0, -1);
     }
-
     if (!sanitized) return { result: null, error: false };
-
     // Auto-close open parentheses for live preview
     const openCount = (sanitized.match(/\(/g) || []).length;
     const closeCount = (sanitized.match(/\)/g) || []).length;
     if (openCount > closeCount) {
       sanitized += ')'.repeat(openCount - closeCount);
     }
-
     // ─────────────────────────────────────────────────────────────────
     // 1. Percentage logic (Android Calculator formula)
     // ─────────────────────────────────────────────────────────────────
@@ -259,7 +235,6 @@ export function evaluateExpression(
       '($1 $2 ($3 / 100))'
     );
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g, '($1 / 100)');
-
     // ─────────────────────────────────────────────────────────────────
     // 2. Superscript y-th root of x: ³√(27) => nthRoot(27, 3)
     // ─────────────────────────────────────────────────────────────────
@@ -280,7 +255,6 @@ export function evaluateExpression(
         .split('')
         .map((c) => supMap[c] || c)
         .join('');
-
     sanitized = sanitized.replace(
       /([⁰¹²³⁴⁵⁶⁷⁸⁹]+)\s*√\s*\(([^()]+)\)/g,
       (_, sup, inner) => `nthRoot((${inner}), ${supToNum(sup)})`
@@ -289,13 +263,11 @@ export function evaluateExpression(
       /([⁰¹²³⁴⁵⁶⁷⁸⁹]+)\s*√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
       (_, sup, num) => `nthRoot(${num}, ${supToNum(sup)})`
     );
-
     // ─────────────────────────────────────────────────────────────────
     // 3. Regular square root without superscript index: √(25) => nthRoot(25, 2)
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/√\s*\(([^()]+)\)/g, 'nthRoot(($1), 2)');
     sanitized = sanitized.replace(/√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, 'nthRoot($1, 2)');
-
     // ─────────────────────────────────────────────────────────────────
     // 4. Implicit Multiplication (Parentheses, Constants & Functions, including normal digit before √)
     // E.g. 4√9 => 4*nthRoot(9, 2) = 12, 3√(27) => 3*nthRoot(27, 2)
@@ -303,24 +275,19 @@ export function evaluateExpression(
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\(/g, '$1*(');
     sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, ')*$1');
     sanitized = sanitized.replace(/\)\s*\(/g, ')*(');
-
     sanitized = sanitized.replace(/π/g, '(Math.PI)');
     sanitized = sanitized.replace(/(?<![0-9a-zA-Z.])e(?![0-9a-zA-Z+])/g, '(Math.E)');
-
     sanitized = sanitized.replace(/((?:\(Math\.PI\)|\(Math\.E\)))\s*(\d+|\()/g, '$1*$2');
     sanitized = sanitized.replace(/(\d+|\))\s*((?:\(Math\.PI\)|\(Math\.E\)))/g, '$1*$2');
-
     // Number or ) before scientific functions or nthRoot
     sanitized = sanitized.replace(
       /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\)))\s*(sin|cos|tan|asin|acos|atan|ln|log|abs|nthRoot)/g,
       '$1*$2'
     );
-
     // ─────────────────────────────────────────────────────────────────
     // 5. Factorials (e.g. 5! or 52! or 5000!)
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
-
     // ─────────────────────────────────────────────────────────────────
     // 6. Trigonometric Functions with Exact Undefined checks (tan(90))
     // ─────────────────────────────────────────────────────────────────
@@ -339,14 +306,12 @@ export function evaluateExpression(
       }
       return `Math.${fn}(${arg})`;
     };
-
     const invTrigWrap = (fn: string, arg: string) => {
       if (isDeg) {
         return `((Math.${fn}(${arg})) * 180 / Math.PI)`;
       }
       return `Math.${fn}(${arg})`;
     };
-
     for (let iter = 0; iter < 4; iter++) {
       sanitized = sanitized
         .replace(/(?<![a-zA-Z.])asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
@@ -355,11 +320,16 @@ export function evaluateExpression(
         .replace(/(?<![a-zA-Z.])sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
         .replace(/(?<![a-zA-Z.])cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
         .replace(/(?<![a-zA-Z.])tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
-        .replace(/(?<![a-zA-Z.])ln\(([^()]+)\)/g, '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log(v); })())')
-        .replace(/(?<![a-zA-Z.])log\(([^()]+)\)/g, '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log10(v); })())')
+        .replace(
+          /(?<![a-zA-Z.])ln\(([^()]+)\)/g,
+          '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log(v); })())'
+        )
+        .replace(
+          /(?<![a-zA-Z.])log\(([^()]+)\)/g,
+          '((() => { const v = (${1}); if (v <= 0) throw new Error("Undefined"); return Math.log10(v); })())'
+        )
         .replace(/(?<![a-zA-Z.])abs\(([^()]+)\)/g, 'Math.abs($1)');
     }
-
     // ─────────────────────────────────────────────────────────────────
     // 7. High-Precision Decimal Evaluation for arithmetic & scientific notation
     // ─────────────────────────────────────────────────────────────────
@@ -371,7 +341,6 @@ export function evaluateExpression(
           const output: (Decimal | string)[] = [];
           const ops: string[] = [];
           const precedence: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
-
           let prevToken: string | null = null;
           for (let i = 0; i < rawTokens.length; i++) {
             const token = rawTokens[i];
@@ -385,10 +354,17 @@ export function evaluateExpression(
               }
               ops.pop();
             } else if (['+', '-', '*', '/'].includes(token)) {
-              if ((token === '-' || token === '+') && (prevToken === null || ['+', '-', '*', '/', '('].includes(prevToken))) {
+              if (
+                (token === '-' || token === '+') &&
+                (prevToken === null || ['+', '-', '*', '/', '('].includes(prevToken))
+              ) {
                 output.push(new Decimal(0n, 0));
               }
-              while (ops.length && ops[ops.length - 1] !== '(' && precedence[ops[ops.length - 1]] >= precedence[token]) {
+              while (
+                ops.length &&
+                ops[ops.length - 1] !== '(' &&
+                precedence[ops[ops.length - 1]] >= precedence[token]
+              ) {
                 output.push(ops.pop()!);
               }
               ops.push(token);
@@ -396,7 +372,6 @@ export function evaluateExpression(
             prevToken = token;
           }
           while (ops.length) output.push(ops.pop()!);
-
           const stack: Decimal[] = [];
           for (const tok of output) {
             if (tok instanceof Decimal) {
@@ -419,9 +394,7 @@ export function evaluateExpression(
         if (e.message === 'Undefined') return { result: 'Undefined', error: false };
       }
     }
-
     sanitized = sanitized.replace(/\^/g, '**');
-
     // Standard high-level execution context with math helpers
     const evaluator = new Function(
       'fact',
@@ -436,10 +409,8 @@ export function evaluateExpression(
         return null;
       }`
     );
-
     const val = evaluator(factorial, nthRoot);
     if (val === null) return { result: null, error: false };
-
     // Format number nicely
     const formatted = parseFloat(Number(val).toPrecision(12)).toString();
     return { result: formatted, error: false };
