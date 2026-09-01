@@ -144,182 +144,182 @@ const TopBar = ({ className }: { className?: string }) => {
           />
           <aside
             id="navigation-drawer"
-            className="bg-primary relative h-full w-72 max-w-[85vw] p-4 text-primary-content shadow-xl flex flex-col justify-between overflow-y-auto"
+            className="bg-primary relative h-full w-64 max-w-[80vw] p-3 text-primary-content shadow-xl flex flex-col justify-between overflow-y-auto"
             aria-label="Navigation menu"
           >
             <div>
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Rupee Calculator</h2>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold">Rupee Calculator</h2>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm btn-square text-primary-content"
+                  className="btn btn-ghost btn-xs btn-square text-primary-content"
                   aria-label="Close navigation menu"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <FiX className="h-5 w-5" aria-hidden="true" />
+                  <FiX className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               <nav
                 aria-label="Calculator pages"
-                className="text-primary-content flex flex-col gap-1.5"
+                className="text-primary-content flex flex-col gap-0.5"
               >
                 {isAdmin && (
-                  <div className="mt-3">
-                    <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                      <FiShield className="h-3.5 w-3.5" />
+                  <div className="mt-1.5">
+                    <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                      <FiShield className="h-3 w-3" />
                       <span>Admin</span>
                     </h3>
                     <Link
                       to="/admin"
-                      className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Datas administration
+                      Data administration
                     </Link>
                   </div>
                 )}
-                <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                    <FiPercent className="h-3.5 w-3.5" />
+                <div className="mt-1.5">
+                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                    <FiPercent className="h-3 w-3" />
                     <span>Loans</span>
                   </h3>
                   <Link
                     to="/emi-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     EMI Calculator
                   </Link>
                 </div>
-                <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                    <FiLayers className="h-3.5 w-3.5" />
+                <div className="mt-1.5">
+                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                    <FiLayers className="h-3 w-3" />
                     <span>Deposits</span>
                   </h3>
                   <Link
                     to="/fd-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Fixed Deposits
                   </Link>
                   <Link
                     to="/rd-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Recurring Deposits
                   </Link>
                 </div>
-                <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                    <FiGlobe className="h-3.5 w-3.5" />
+                <div className="mt-1.5">
+                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                    <FiGlobe className="h-3 w-3" />
                     <span>Economics</span>
                   </h3>
                   <Link
                     to="/inflation-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Inflation Rates
                   </Link>
                   <Link
                     to="/ppp-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     PPP Exchange Rate
                   </Link>
                 </div>
-                <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                    <FiClock className="h-3.5 w-3.5" />
+                <div className="mt-1.5">
+                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                    <FiClock className="h-3 w-3" />
                     <span>Fixed Plans</span>
                   </h3>
                   <Link
                     to="/sip-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SIP Calculator
                   </Link>
                   <Link
                     to="/swp-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SWP Calculator
                   </Link>
                 </div>
-                <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                    <FiTrendingUp className="h-3.5 w-3.5" />
+                <div className="mt-1.5">
+                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                    <FiTrendingUp className="h-3 w-3" />
                     <span>Mutual Funds</span>
                   </h3>
                   <Link
                     to="/mutual-funds/lumpsum"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Lumpsum
                   </Link>
                   <Link
                     to="/mutual-funds/sip"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SIP
                   </Link>
                   <Link
                     to="/mutual-funds/swp"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SWP
                   </Link>
                 </div>
-                <div className="mt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                    <FiTool className="h-3.5 w-3.5" />
+                <div className="mt-1.5">
+                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                    <FiTool className="h-3 w-3" />
                     <span>Utilities</span>
                   </h3>
                   <Link
                     to="/calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Calculator (Basic &amp; Scientific)
                   </Link>
                   <Link
                     to="/date-calculator"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Date Calculator
                   </Link>
                 </div>
-                <div className="mt-3 border-t border-primary-content/20 pt-3">
-                  <h3 className="px-3 text-xs font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-1">
-                    <FiInfo className="h-3.5 w-3.5" />
+                <div className="mt-2 border-t border-primary-content/20 pt-2">
+                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
+                    <FiInfo className="h-3 w-3" />
                     <span>Info &amp; Legal</span>
                   </h3>
                   <Link
                     to="/about"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     About Us
                   </Link>
                   <Link
                     to="/privacy"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Privacy Policy
                   </Link>
                   <Link
                     to="/disclaimer"
-                    className="block px-3 py-1.5 rounded hover:bg-primary-content/10 transition-colors text-sm"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Disclaimer
@@ -328,15 +328,15 @@ const TopBar = ({ className }: { className?: string }) => {
               </nav>
             </div>
             {isAuthenticated && user && (
-              <div className="border-t border-primary-content/20 pt-4 mt-6 space-y-2">
-                <p className="text-xs truncate opacity-70 mb-1">{user.email}</p>
+              <div className="border-t border-primary-content/20 pt-2 mt-3 space-y-1.5">
+                <p className="text-xs truncate opacity-70 mb-0.5">{user.email}</p>
                 {user.subscription_status !== 'active' && user.role !== 'admin' && (
                   <Link
                     to="/upgrade"
-                    className="btn btn-warning btn-sm w-full font-bold shadow-sm flex items-center justify-center gap-1.5"
+                    className="btn btn-warning btn-xs w-full font-bold shadow-sm flex items-center justify-center gap-1"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <FiZap className="h-4 w-4" />
+                    <FiZap className="h-3.5 w-3.5" />
                     <span>Unlock Pro (₹29/mo)</span>
                   </Link>
                 )}
@@ -346,9 +346,9 @@ const TopBar = ({ className }: { className?: string }) => {
                     setIsMenuOpen(false);
                     void handleLogout();
                   }}
-                  className="btn btn-outline btn-sm w-full border-primary-content text-primary-content flex items-center justify-center gap-1.5"
+                  className="btn btn-outline btn-xs w-full border-primary-content text-primary-content flex items-center justify-center gap-1"
                 >
-                  <FiLogOut className="h-4 w-4" />
+                  <FiLogOut className="h-3.5 w-3.5" />
                   <span>Sign Out</span>
                 </button>
               </div>

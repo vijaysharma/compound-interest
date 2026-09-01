@@ -30,7 +30,7 @@ const Calculator: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [memory, setMemory] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('android_calc_memory');
+      const saved = localStorage.getItem('calc_memory') || localStorage.getItem('android_calc_memory');
       return saved ? parseFloat(saved) : 0;
     } catch {
       return 0;
@@ -38,7 +38,7 @@ const Calculator: React.FC = () => {
   });
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
-      const saved = localStorage.getItem('android_calc_history');
+      const saved = localStorage.getItem('calc_history') || localStorage.getItem('android_calc_history');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -48,14 +48,14 @@ const Calculator: React.FC = () => {
   // Persist history & memory
   useEffect(() => {
     try {
-      localStorage.setItem('android_calc_history', JSON.stringify(history));
+      localStorage.setItem('calc_history', JSON.stringify(history));
     } catch (e) {
       console.error(e);
     }
   }, [history]);
   useEffect(() => {
     try {
-      localStorage.setItem('android_calc_memory', String(memory));
+      localStorage.setItem('calc_memory', String(memory));
     } catch (e) {
       console.error(e);
     }
@@ -121,8 +121,9 @@ const Calculator: React.FC = () => {
         setExpression(next);
         setCursorPosition(next.length);
       } else {
-        setExpression(char);
-        setCursorPosition(char.length);
+        const initial = char === '.' ? '0.' : char;
+        setExpression(initial);
+        setCursorPosition(initial.length);
       }
       setIsEvaluated(false);
       return;
@@ -130,12 +131,26 @@ const Calculator: React.FC = () => {
     const pos = Math.min(Math.max(0, cursorPosition), expression.length);
     const before = expression.slice(0, pos);
     const after = expression.slice(pos);
+    // Prevent duplicate consecutive decimals within the same number token
+    if (char === '.') {
+      const match = before.match(/(\d*(?:\.\d*)?)$/);
+      if (match && match[1].includes('.')) {
+        return; // Already has a decimal dot
+      }
+      if (!match || match[1] === '') {
+        char = '0.';
+      }
+    }
     // Prevent duplicate consecutive operators
-    const isOperator = ['+', '−', '×', '÷'].includes(char);
-    const lastIsOperator = ['+', '−', '×', '÷'].includes(before.slice(-1));
+    const isOperator = ['+', '−', '×', '÷', '^'].includes(char);
+    const lastIsOperator = ['+', '−', '×', '÷', '^'].includes(before.slice(-1));
     let newBefore = before;
     if (isOperator && lastIsOperator) {
-      newBefore = before.slice(0, -1);
+      if (char === '−' && ['×', '÷', '^'].includes(before.slice(-1))) {
+        // Keep negative minus after multiply/divide/power
+      } else {
+        newBefore = before.slice(0, -1);
+      }
     }
     const nextExpr = newBefore + char + after;
     setExpression(nextExpr);
@@ -487,9 +502,9 @@ const Calculator: React.FC = () => {
   return (
     <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative">
       <SEOHead
-        title="Android-Style Calculator — Free Online Basic & Scientific Calculator"
-        description="Fast, institutional-grade Android-style calculator with editable cursor display, implicit multiplication, copy/paste support, memory operations (M+, M-, MC, MR), percentages (4-50%), y-th root of x (³√(27)), trigonometry, and repeat last operation on equals."
-        keywords="android calculator, inline cursor calculator, copy paste calculator, cube root calculator, y-th root calculator, memory calculator M+ M- MC MR, implicit multiplication calculator, percentage calculator, scientific calculator"
+        title="Online Calculator — Free Scientific & Basic Calculator India 2026"
+        description="Fast, institutional-grade online calculator with editable cursor display, implicit multiplication, copy/paste support, memory operations (M+, M-, MC, MR), percentages, y-th root of x (³√(27)), and trigonometry."
+        keywords="online calculator, scientific calculator, basic calculator, percentage calculator, cube root calculator, math calculator, memory operations calculator, fast calculator"
         canonicalPath="/calculator"
         noIndex={false}
       />
@@ -611,7 +626,7 @@ const Calculator: React.FC = () => {
             )}
           </div>
         </div>
-        {/* Live Calculation Preview (Trailing Digits like Android) */}
+        {/* Live Calculation Preview */}
         <div
           onClick={handleCopy}
           className="h-8 flex items-center justify-end px-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -783,7 +798,7 @@ const Calculator: React.FC = () => {
           </div>
         </div>
       )}
-      {/* Main Keypad Grid (Android Calculator Circular/Pill Keypad) */}
+      {/* Main Keypad Grid (Circular/Pill Keypad) */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3 pb-2">
         {/* Row 1: C, ( ), %, ÷ */}
         <button

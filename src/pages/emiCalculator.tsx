@@ -495,6 +495,18 @@ const EmiCalculator: React.FC = () => {
     () => schedule.reduce((sum, row) => sum + parseFloat(row.interest), 0),
     [schedule]
   );
+  const totalPayable = useMemo(
+    () => principalAmount + totalInterest,
+    [principalAmount, totalInterest]
+  );
+  const principalPercent = useMemo(
+    () => (totalPayable > 0 ? (principalAmount / totalPayable) * 100 : 0),
+    [principalAmount, totalPayable]
+  );
+  const interestPercent = useMemo(
+    () => (totalPayable > 0 ? (totalInterest / totalPayable) * 100 : 0),
+    [totalInterest, totalPayable]
+  );
   return (
     <main className="w-full max-w-4xl mx-auto px-2 py-4 space-y-6">
       <SEOHead
@@ -513,10 +525,10 @@ const EmiCalculator: React.FC = () => {
         </h1>
         <p className="mt-1 text-xs sm:text-sm opacity-70">
           Calculate equated monthly installments, model lump-sum prepayments, and simulate floating
-          interest rate changes with institutional precision.
+          rate adjustments.
         </p>
       </header>
-      {/* Main Inputs & Display Card using unified app components */}
+      {/* Input Section */}
       <div className="space-y-4">
         <InputAmount
           className="mb-1"
@@ -579,6 +591,120 @@ const EmiCalculator: React.FC = () => {
           }}
         />
       </div>
+      {/* Loan Statistics & Pie/Donut Chart Section */}
+      {principalAmount > 0 && (
+        <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-base-200 pb-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                Breakdown &amp; Analytics
+              </p>
+              <h2 className="text-lg font-bold">Loan Statistics &amp; Payment Proportion</h2>
+            </div>
+            {schedule.length > 0 && (
+              <span className="badge badge-primary badge-outline text-xs font-semibold">
+                {schedule.length} Total Payments
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            {/* Donut Chart Visual */}
+            <div className="flex flex-col items-center justify-center p-2">
+              <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+                <svg
+                  viewBox="0 0 200 200"
+                  className="w-full h-full -rotate-90 transform"
+                  aria-label="Loan Principal vs Interest Pie Chart"
+                >
+                  {/* Background Circle */}
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="70"
+                    className="stroke-base-200"
+                    strokeWidth="28"
+                    fill="transparent"
+                  />
+                  {/* Principal Segment */}
+                  {totalPayable > 0 && (
+                    <circle
+                      cx="100"
+                      cy="100"
+                      r="70"
+                      className="stroke-primary transition-all duration-700 ease-out"
+                      strokeWidth="28"
+                      fill="transparent"
+                      strokeDasharray={`${(principalPercent / 100) * 439.82} 439.82`}
+                      strokeDashoffset="0"
+                    />
+                  )}
+                  {/* Interest Segment */}
+                  {totalPayable > 0 && (
+                    <circle
+                      cx="100"
+                      cy="100"
+                      r="70"
+                      className="stroke-error transition-all duration-700 ease-out"
+                      strokeWidth="28"
+                      fill="transparent"
+                      strokeDasharray={`${(interestPercent / 100) * 439.82} 439.82`}
+                      strokeDashoffset={`-${(principalPercent / 100) * 439.82}`}
+                    />
+                  )}
+                </svg>
+                {/* Center Readout */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                  <span className="text-[11px] uppercase tracking-wider font-semibold opacity-60">
+                    Total Payable
+                  </span>
+                  <span className="text-base sm:text-lg font-extrabold text-base-content">
+                    ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+                  </span>
+                  <span className="text-[10px] opacity-60 mt-0.5">
+                    {schedule[schedule.length - 1]?.date ? `Payoff: ${schedule[schedule.length - 1].date}` : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {/* Legend & Key Metrics */}
+            <div className="space-y-3 flex flex-col justify-center">
+              {/* Principal Pill */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-3.5 h-3.5 rounded-full bg-primary flex-shrink-0" />
+                  <div>
+                    <span className="text-xs font-bold block">Principal Loan Amount</span>
+                    <span className="text-[11px] opacity-70 block">{principalPercent.toFixed(1)}% of total</span>
+                  </div>
+                </div>
+                <span className="text-sm sm:text-base font-bold text-primary">
+                  ₹{Math.round(principalAmount).toLocaleString('en-IN')}
+                </span>
+              </div>
+              {/* Interest Pill */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-error/10 border border-error/20">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-3.5 h-3.5 rounded-full bg-error flex-shrink-0" />
+                  <div>
+                    <span className="text-xs font-bold block">Total Interest Payable</span>
+                    <span className="text-[11px] opacity-70 block">{interestPercent.toFixed(1)}% of total</span>
+                  </div>
+                </div>
+                <span className="text-sm sm:text-base font-bold text-error">
+                  ₹{Math.round(totalInterest).toLocaleString('en-IN')}
+                </span>
+              </div>
+              {/* Total Payable Pill */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-base-200/70 border border-base-300">
+                <span className="text-xs font-bold text-base-content/80">Total Loan Cost (P + I)</span>
+                <span className="text-sm sm:text-base font-extrabold text-base-content">
+                  ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
       {/* Part Payments Section */}
       <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3 pb-3">

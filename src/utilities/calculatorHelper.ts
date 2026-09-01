@@ -1,4 +1,4 @@
-// Comprehensive, arbitrary-precision expression evaluator for Android-style Calculator
+// Comprehensive, arbitrary-precision expression evaluator for Online Calculator
 export interface HistoryItem {
   expression: string;
   result: string;
@@ -289,34 +289,38 @@ export function evaluateExpression(
     // ─────────────────────────────────────────────────────────────────
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
     // ─────────────────────────────────────────────────────────────────
-    // 6. Trigonometric Functions with Exact Undefined checks (tan(90))
+    // 6. Trigonometric Functions with Exact Degree and Singularity Checks
     // ─────────────────────────────────────────────────────────────────
     const trigWrap = (fn: string, arg: string) => {
-      if (fn === 'tan') {
-        if (isDeg) {
-          return `((() => { const a = (${arg}); if (Math.abs(((a % 180) + 180) % 180 - 90) < 1e-9) throw new Error('Undefined'); return Math.tan(a * Math.PI / 180); })())`;
+      if (isDeg) {
+        if (fn === 'sin') {
+          return `((() => { const a = (${arg}); const mod = ((a % 360) + 360) % 360; if (mod === 0 || mod === 180 || mod === 360) return 0; if (mod === 90) return 1; if (mod === 270) return -1; return Math.sin(a * Math.PI / 180); })())`;
         }
-        return `((() => { const a = (${arg}); if (Math.abs(Math.cos(a)) < 1e-15) throw new Error('Undefined'); return Math.tan(a); })())`;
-      }
-      if (fn === 'sin') {
-        return isDeg ? `Math.sin((${arg}) * Math.PI / 180)` : `Math.sin(${arg})`;
-      }
-      if (fn === 'cos') {
-        return isDeg ? `Math.cos((${arg}) * Math.PI / 180)` : `Math.cos(${arg})`;
+        if (fn === 'cos') {
+          return `((() => { const a = (${arg}); const mod = ((a % 360) + 360) % 360; if (mod === 90 || mod === 270) return 0; if (mod === 0 || mod === 360) return 1; if (mod === 180) return -1; return Math.cos(a * Math.PI / 180); })())`;
+        }
+        if (fn === 'tan') {
+          return `((() => { const a = (${arg}); const mod = ((a % 180) + 180) % 180; if (Math.abs(mod - 90) < 1e-9) throw new Error('Undefined'); if (mod === 0) return 0; return Math.tan(a * Math.PI / 180); })())`;
+        }
+      } else {
+        if (fn === 'tan') {
+          return `((() => { const a = (${arg}); if (Math.abs(Math.cos(a)) < 1e-15) throw new Error('Undefined'); return Math.tan(a); })())`;
+        }
+        if (fn === 'sin') return `Math.sin(${arg})`;
+        if (fn === 'cos') return `Math.cos(${arg})`;
       }
       return `Math.${fn}(${arg})`;
     };
     const invTrigWrap = (fn: string, arg: string) => {
-      if (isDeg) {
-        return `((Math.${fn}(${arg})) * 180 / Math.PI)`;
-      }
-      return `Math.${fn}(${arg})`;
+      return `((() => { const a = (${arg}); if (Math.abs(a) > 1) throw new Error('Undefined'); const r = Math.${fn}(a); return ${isDeg ? '(r * 180 / Math.PI)' : 'r'}; })())`;
     };
     for (let iter = 0; iter < 4; iter++) {
       sanitized = sanitized
         .replace(/(?<![a-zA-Z.])asin\(([^()]+)\)/g, (_, a) => invTrigWrap('asin', a))
         .replace(/(?<![a-zA-Z.])acos\(([^()]+)\)/g, (_, a) => invTrigWrap('acos', a))
-        .replace(/(?<![a-zA-Z.])atan\(([^()]+)\)/g, (_, a) => invTrigWrap('atan', a))
+        .replace(/(?<![a-zA-Z.])atan\(([^()]+)\)/g, (_, a) =>
+          isDeg ? `(Math.atan(${a}) * 180 / Math.PI)` : `Math.atan(${a})`
+        )
         .replace(/(?<![a-zA-Z.])sin\(([^()]+)\)/g, (_, a) => trigWrap('sin', a))
         .replace(/(?<![a-zA-Z.])cos\(([^()]+)\)/g, (_, a) => trigWrap('cos', a))
         .replace(/(?<![a-zA-Z.])tan\(([^()]+)\)/g, (_, a) => trigWrap('tan', a))
@@ -333,10 +337,14 @@ export function evaluateExpression(
     // ─────────────────────────────────────────────────────────────────
     // 7. High-Precision Decimal Evaluation for arithmetic & scientific notation
     // ─────────────────────────────────────────────────────────────────
-    const isDecimalEligible = new RegExp('^(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/() ])+$').test(sanitized);
+    const isDecimalEligible = new RegExp(
+      '^(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/() ])+$'
+    ).test(sanitized);
     if (isDecimalEligible) {
       try {
-        const rawTokens = sanitized.match(new RegExp('(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/()])', 'g'));
+        const rawTokens = sanitized.match(
+          new RegExp('(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/()])', 'g')
+        );
         if (rawTokens && rawTokens.length > 0) {
           const output: (Decimal | string)[] = [];
           const ops: string[] = [];

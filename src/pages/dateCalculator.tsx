@@ -17,6 +17,7 @@ const DateCalculator: React.FC = () => {
   // Difference mode state
   const [startDate, setStartDate] = useState(getTodayISO());
   const [endDate, setEndDate] = useState(getTodayISO());
+  const [isInclusive, setIsInclusive] = useState(false);
   // Add/Subtract mode state
   const [baseDate, setBaseDate] = useState(getTodayISO());
   const [years, setYears] = useState(0);
@@ -29,12 +30,18 @@ const DateCalculator: React.FC = () => {
     const s = new Date(startDate);
     const e = new Date(endDate);
     const totalMs = Math.abs(e.getTime() - s.getTime());
-    const totalDays = Math.round(totalMs / (1000 * 60 * 60 * 24));
+    let totalDays = Math.round(totalMs / (1000 * 60 * 60 * 24));
+    if (isInclusive) {
+      totalDays += 1;
+    }
     const totalWeeks = Math.floor(totalDays / 7);
     const remainingDaysAfterWeeks = totalDays % 7;
     // Calculate year/month/day breakdown
     const earlier = s <= e ? new Date(s) : new Date(e);
     const later = s <= e ? new Date(e) : new Date(s);
+    if (isInclusive) {
+      later.setDate(later.getDate() + 1);
+    }
     let diffYears = later.getFullYear() - earlier.getFullYear();
     let diffMonths = later.getMonth() - earlier.getMonth();
     let diffDays = later.getDate() - earlier.getDate();
@@ -56,8 +63,9 @@ const DateCalculator: React.FC = () => {
       months: diffMonths,
       days: diffDays,
       isPast: e < s,
+      isInclusive,
     };
-  }, [startDate, endDate]);
+  }, [startDate, endDate, isInclusive]);
   // Add/Subtract calculation
   const resultDate = useMemo(() => {
     if (!baseDate) return null;
@@ -79,14 +87,13 @@ const DateCalculator: React.FC = () => {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'long' });
   };
-  const numberInputBase =
-    'input input-bordered input-sm text-center w-full font-semibold';
+  const numberInputBase = 'input input-bordered input-sm text-center w-full font-semibold';
   return (
     <main className="w-full max-w-lg mx-auto px-2 py-4 space-y-4">
       <SEOHead
         title="Date Calculator — Days Between Dates & Add/Subtract Days"
-        description="Free date calculator to find the number of days, weeks, months, and years between two dates, or add/subtract days, months, and years from a date."
-        keywords="date calculator, days between dates, date difference calculator, add days to date, subtract days from date, date duration calculator, how many days between"
+        description="Free date calculator to find the number of days, weeks, months, and years between two dates with inclusive date options, or add/subtract days, months, and years."
+        keywords="date calculator, days between dates, inclusive date calculator, date difference calculator, add days to date, subtract days from date, date duration calculator"
         canonicalPath="/date-calculator"
         noIndex={false}
       />
@@ -134,6 +141,23 @@ const DateCalculator: React.FC = () => {
                 {dayOfWeek(startDate)} → {dayOfWeek(endDate)}
               </p>
             )}
+            {/* Inclusive Date Option Toggle */}
+            <label className="flex items-center justify-between bg-base-200/60 border border-base-300 rounded-xl px-3.5 py-2 cursor-pointer hover:bg-base-200 transition-colors">
+              <div>
+                <span className="text-xs font-semibold block text-base-content">
+                  Include end date (add 1 day)
+                </span>
+                <span className="text-[11px] opacity-60 block">
+                  Counts both start and end day as full calendar days
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={isInclusive}
+                onChange={(e) => setIsInclusive(e.target.checked)}
+                className="toggle toggle-primary toggle-sm"
+              />
+            </label>
           </div>
           {/* Results */}
           {diff && (
@@ -160,10 +184,7 @@ const DateCalculator: React.FC = () => {
                     <span className="font-bold text-lg">{diff.totalWeeks}</span>
                     <span className="text-xs opacity-70 ml-1">weeks</span>
                     {diff.remainingDaysAfterWeeks > 0 && (
-                      <span className="text-xs opacity-70">
-                        {' '}
-                        + {diff.remainingDaysAfterWeeks}d
-                      </span>
+                      <span className="text-xs opacity-70"> + {diff.remainingDaysAfterWeeks}d</span>
                     )}
                   </div>
                   <div className="bg-base-200/60 rounded-lg px-3 py-2 text-center">
@@ -242,9 +263,7 @@ const DateCalculator: React.FC = () => {
               <p className="text-xs uppercase tracking-wider opacity-60 font-semibold">
                 Resulting Date
               </p>
-              <p className="text-xl sm:text-2xl font-bold text-primary">
-                {formatDate(resultDate)}
-              </p>
+              <p className="text-xl sm:text-2xl font-bold text-primary">{formatDate(resultDate)}</p>
               <p className="text-xs opacity-60">
                 {addOrSub === 'add' ? 'Added' : 'Subtracted'}{' '}
                 {[
