@@ -9,9 +9,10 @@ import {
 import { MFJSONType } from '../types/types';
 import { DEFAULT_PPP_RECORDS } from './default_ppp_data';
 const mfSearchCache = new Map<string, MFJSONType[]>();
-const mfNavCache = new Map<string, unknown[]>();
+const mfNavCache = new Map<string, { expiresAt: number; data: unknown[] }>();
 const mfNavRequests = new Map<string, Promise<unknown[]>>();
 const MAX_SEARCH_CACHE_ENTRIES = 50;
+const CLIENT_NAV_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes client cache
 const recordApiUsage = async () => {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -66,7 +67,7 @@ export const fetchAllMfs = async (search = '', signal?: AbortSignal): Promise<MF
 };
 export const fetchMFbySchemeCode = async (schemeCode: string, signal?: AbortSignal) => {
   const cached = mfNavCache.get(schemeCode);
-  if (cached) return cached;
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
   const pending = mfNavRequests.get(schemeCode);
   if (pending) return pending;
   const request = (async () => {
@@ -79,7 +80,10 @@ export const fetchMFbySchemeCode = async (schemeCode: string, signal?: AbortSign
     if (!Array.isArray(data.data)) {
       throw new Error('Mutual fund response did not contain NAV data');
     }
-    mfNavCache.set(schemeCode, data.data);
+    mfNavCache.set(schemeCode, {
+      expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
+      data: data.data,
+    });
     return data.data;
   })();
   mfNavRequests.set(schemeCode, request);

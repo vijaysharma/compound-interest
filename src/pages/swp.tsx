@@ -22,8 +22,8 @@ const liveSwpSchema = {
       offers: {
         '@type': 'Offer',
         price: '0',
-        priceCurrency: 'INR'
-      }
+        priceCurrency: 'INR',
+      },
     },
     {
       '@type': 'FinancialProduct',
@@ -447,9 +447,6 @@ const SWP = ({
     const cached = pinnedNavDataRef.current[selectedCode];
     if (cached) {
       setJsonNavData(cached);
-      return () => {
-        cancelled = true;
-      };
     }
     fetchMFbySchemeCode(selectedCode)
       .then((data) => {

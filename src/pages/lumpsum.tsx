@@ -22,8 +22,8 @@ const lumpsumSchema = {
       offers: {
         '@type': 'Offer',
         price: '0',
-        priceCurrency: 'INR'
-      }
+        priceCurrency: 'INR',
+      },
     },
     {
       '@type': 'FinancialProduct',
@@ -397,12 +397,9 @@ const Lumpsum = ({
     const cached = pinnedNavDataRef.current[selectedCode];
     if (cached) {
       setJsonNavData(cached);
-      return () => {
-        cancelled = true;
-      };
     }
     /*
-     * Fetch latest data.
+     * Fetch latest data from API (respecting server TTL).
      */
     fetchMFbySchemeCode(selectedCode)
       .then((data) => {
