@@ -22,7 +22,14 @@ import {
 const Calculator: React.FC = () => {
   const [expression, setExpression] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
-  const [showScientific, setShowScientific] = useState(false);
+  const [showScientific, setShowScientific] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('calc_show_scientific');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
   const [showHistory, setShowHistory] = useState(false);
   const [isDeg, setIsDeg] = useState(true);
   const [isEvaluated, setIsEvaluated] = useState(false);
@@ -47,7 +54,14 @@ const Calculator: React.FC = () => {
     }
   });
   const displayContainerRef = useRef<HTMLDivElement>(null);
-  // Persist history & memory
+  // Persist history, memory & scientific view state
+  useEffect(() => {
+    try {
+      localStorage.setItem('calc_show_scientific', String(showScientific));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [showScientific]);
   useEffect(() => {
     try {
       localStorage.setItem('calc_history', JSON.stringify(history));
@@ -219,6 +233,12 @@ const Calculator: React.FC = () => {
     const after = expression.slice(pos);
     // Check if deleting a multi-char scientific function before cursor
     for (const fn of [
+      'asinh(',
+      'acosh(',
+      'atanh(',
+      'sinh(',
+      'cosh(',
+      'tanh(',
       'asin(',
       'acos(',
       'atan(',
@@ -245,6 +265,29 @@ const Calculator: React.FC = () => {
     const newBefore = before.slice(0, -1);
     setExpression(newBefore + after);
     setCursorPosition(newBefore.length);
+  };
+  // Insert scientific exponent (EE)
+  const insertEE = () => {
+    setLastOp(null);
+    if (isEvaluated) {
+      setExpression('1e');
+      setCursorPosition(2);
+      setIsEvaluated(false);
+      return;
+    }
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+    const lastChar = before.slice(-1);
+    if (/\d|\./.test(lastChar)) {
+      const nextExpr = before + 'e' + after;
+      setExpression(nextExpr);
+      setCursorPosition(before.length + 1);
+    } else {
+      const nextExpr = before + '1e' + after;
+      setExpression(nextExpr);
+      setCursorPosition(before.length + 2);
+    }
   };
   // Clear all
   const handleClear = () => {
@@ -656,11 +699,11 @@ const Calculator: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowScientific(!showScientific)}
-              className={`btn btn-ghost btn-sm px-2 gap-1 font-mono text-xs ${showScientific ? 'btn-active text-primary' : ''}`}
-              title="Scientific Mode Toggle"
+              className={`btn btn-sm px-2.5 gap-1.5 text-xs font-semibold ${showScientific ? 'btn-primary shadow-xs' : 'btn-ghost text-base-content/70'}`}
+              title="Toggle Scientific Keypad (Trig, Hyperbolic, Roots, Exponents)"
             >
-              <TbMathFunction className="h-4 w-4 text-primary" />
-              <span className="text-[11px] font-semibold">√ π e</span>
+              <TbMathFunction className="h-4 w-4" />
+              <span>Scientific</span>
             </button>
             <button
               type="button"
@@ -777,6 +820,11 @@ const Calculator: React.FC = () => {
               { label: 'tan', fn: () => insertAtCursor('tan(') },
               { label: 'ln', fn: () => insertAtCursor('ln(') },
               { label: 'log', fn: () => insertAtCursor('log(') },
+              { label: 'sinh', fn: () => insertAtCursor('sinh(') },
+              { label: 'cosh', fn: () => insertAtCursor('cosh(') },
+              { label: 'tanh', fn: () => insertAtCursor('tanh(') },
+              { label: 'e', fn: () => insertAtCursor('e') },
+              { label: 'EE', fn: insertEE },
               { label: 'sin⁻¹', fn: () => insertAtCursor('asin(') },
               { label: 'cos⁻¹', fn: () => insertAtCursor('acos(') },
               { label: 'tan⁻¹', fn: () => insertAtCursor('atan(') },
@@ -785,7 +833,7 @@ const Calculator: React.FC = () => {
               { label: 'xʸ', fn: () => insertAtCursor('^') },
               { label: '1/x', fn: () => insertAtCursor('1/(') },
               { label: 'π', fn: () => insertAtCursor('π') },
-              { label: 'e', fn: () => insertAtCursor('e') },
+              { label: '|x|', fn: () => insertAtCursor('abs(') },
               { label: 'x!', fn: () => insertAtCursor('!') },
             ].map((btn, idx) => (
               <button
