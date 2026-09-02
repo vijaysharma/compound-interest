@@ -33,6 +33,14 @@ export default async function handler(request: Request): Promise<Response> {
       return jsonResponse({ error: 'Authentication required to verify payment' }, 401);
     }
     const rawKeySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!rawKeySecret) {
+      return jsonResponse(
+        { error: 'Razorpay secret key is not configured in Vercel environment variables.' },
+        500
+      );
+    }
+    const keySecret = rawKeySecret.trim();
+    const body = (await request.json().catch(() => ({}))) as {
       razorpay_order_id?: string;
       razorpay_payment_id?: string;
       razorpay_signature?: string;
