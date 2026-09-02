@@ -1,5 +1,5 @@
 import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../../_db';
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs', maxDuration: 10 };
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
@@ -16,19 +16,17 @@ export default async function handler(request: Request): Promise<Response> {
     if (!rawKeyId || !rawKeySecret) {
       console.error('Razorpay keys missing from environment');
       return jsonResponse(
-        {
-          error:
-            'Razorpay API keys (RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET) are missing in Vercel environment variables.',
-        },
+        { error: 'Payment gateway is not configured. Please contact support.' },
         500
       );
     }
     const keyId = rawKeyId.trim().replace(/^["']|["']$/g, '');
     const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
-    const body = (await request.json().catch(() => ({}))) as { amount?: number };
-    const amountInRupees = typeof body.amount === 'number' && body.amount > 0 ? body.amount : 29;
+    const body = (await request.json().catch(() => ({}))) as { amount?: number | string };
+    const parsed = Number(body.amount);
+    const amountInRupees = !isNaN(parsed) && parsed > 0 ? parsed : 29;
     const amountInPaise = Math.round(amountInRupees * 100);
-    const authHeader = btoa(`${keyId}:${keySecret}`);
+    const authHeader = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
     const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;
     const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
@@ -36,6 +34,7 @@ export default async function handler(request: Request): Promise<Response> {
         Authorization: `Basic ${authHeader}`,
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'User-Agent': 'RupeeCalculator/1.0',
       },
       body: JSON.stringify({
         amount: amountInPaise,
@@ -68,7 +67,12 @@ export default async function handler(request: Request): Promise<Response> {
         orderData.message ||
         resText ||
         `Razorpay error (HTTP ${rzpRes.status})`;
-      console.error('Razorpay order creation error:', { status: rzpRes.status, error: errorMsg });
+      console.error('Razorpay order creation failed:', {
+        status: rzpRes.status,
+        statusText: rzpRes.statusText,
+        error: errorMsg,
+        keyIdPrefix: keyId.slice(0, 12) + '...',
+      });
       return jsonResponse(
         {
           error: `Razorpay Order Error: ${errorMsg}`,
@@ -88,6 +92,7 @@ export default async function handler(request: Request): Promise<Response> {
       },
     });
   } catch (error) {
+    console.error('Create order exception:', error);
     return jsonResponse({ error: 'Failed to create payment order', detail: String(error) }, 500);
   }
 }
