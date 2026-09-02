@@ -1,5 +1,5 @@
 import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../../_db';
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs', maxDuration: 10 };
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
@@ -25,22 +25,8 @@ export default async function handler(request: Request): Promise<Response> {
     const parsed = Number(body.amount);
     const amountInRupees = !isNaN(parsed) && parsed > 0 ? parsed : 29;
     const amountInPaise = Math.round(amountInRupees * 100);
-    // Build base64 auth using TextEncoder (Edge-compatible, no btoa charset issues)
-    const encoder = new TextEncoder();
-    const credentials = encoder.encode(`${keyId}:${keySecret}`);
-    const binString = Array.from(credentials, (byte) => String.fromCodePoint(byte)).join('');
-    const authHeader = btoa(binString);
+    const authHeader = btoa(`${keyId}:${keySecret}`);
     const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;
-    const orderPayload = JSON.stringify({
-      amount: amountInPaise,
-      currency: 'INR',
-      receipt,
-      notes: {
-        user_id: user.id,
-        user_email: user.email,
-        plan: '30_days_pro',
-      },
-    });
     const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
@@ -48,9 +34,17 @@ export default async function handler(request: Request): Promise<Response> {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'User-Agent': 'RupeeCalculator/1.0',
-        'X-Razorpay-Account': keyId,
       },
-      body: orderPayload,
+      body: JSON.stringify({
+        amount: amountInPaise,
+        currency: 'INR',
+        receipt,
+        notes: {
+          user_id: user.id,
+          user_email: user.email,
+          plan: '30_days_pro',
+        },
+      }),
     });
     const resText = await rzpRes.text();
     let orderData: {
