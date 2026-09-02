@@ -1,16 +1,25 @@
-import { createHmac, randomUUID } from 'node:crypto';
 import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../../_db';
-export const config = { runtime: 'nodejs', maxDuration: 10 };
-function verifyRazorpaySignature(
+export const config = { runtime: 'edge' };
+async function verifyRazorpaySignature(
   orderId: string,
   paymentId: string,
   signature: string,
   secret: string
-): boolean {
-  const generated = createHmac('sha256', secret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex');
-  return generated.toLowerCase() === signature.toLowerCase().trim();
+): Promise<boolean> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const data = enc.encode(`${orderId}|${paymentId}`);
+  const signatureBytes = await crypto.subtle.sign('HMAC', key, data);
+  const generatedSignature = Array.from(new Uint8Array(signatureBytes))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return generatedSignature.toLowerCase() === signature.toLowerCase().trim();
 }
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
@@ -43,7 +52,7 @@ export default async function handler(request: Request): Promise<Response> {
         400
       );
     }
-    const isValid = verifyRazorpaySignature(
+    const isValid = await verifyRazorpaySignature(
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
@@ -64,7 +73,7 @@ export default async function handler(request: Request): Promise<Response> {
           updated_at = NOW()
       WHERE id = ${user.id}
     `;
-    const newSubId = randomUUID();
+    const newSubId = crypto.randomUUID();
     await sql`
       INSERT INTO payment_submissions (id, user_id, user_email, utr_ref, amount, status, created_at, updated_at)
       VALUES (${newSubId}, ${user.id}, ${user.email}, ${razorpay_payment_id}, 29, 'approved', NOW(), NOW())
@@ -75,7 +84,6 @@ export default async function handler(request: Request): Promise<Response> {
       subscription_expires_at: expiresAt,
     });
   } catch (error) {
-    console.error('Payment verification error:', error);
     return jsonResponse({ error: 'Payment verification error', detail: String(error) }, 500);
   }
 }

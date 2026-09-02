@@ -1,5 +1,5 @@
 import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../../_db';
-export const config = { runtime: 'nodejs', maxDuration: 10 };
+export const config = { runtime: 'edge' };
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
@@ -14,7 +14,6 @@ export default async function handler(request: Request): Promise<Response> {
     const rawKeyId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID;
     const rawKeySecret = process.env.RAZORPAY_KEY_SECRET;
     if (!rawKeyId || !rawKeySecret) {
-      console.error('Razorpay keys missing from environment');
       return jsonResponse(
         { error: 'Payment gateway is not configured. Please contact support.' },
         500
@@ -26,26 +25,32 @@ export default async function handler(request: Request): Promise<Response> {
     const parsed = Number(body.amount);
     const amountInRupees = !isNaN(parsed) && parsed > 0 ? parsed : 29;
     const amountInPaise = Math.round(amountInRupees * 100);
-    const authHeader = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+    // Build base64 auth using TextEncoder (Edge-compatible, no btoa charset issues)
+    const encoder = new TextEncoder();
+    const credentials = encoder.encode(`${keyId}:${keySecret}`);
+    const binString = Array.from(credentials, (byte) => String.fromCodePoint(byte)).join('');
+    const authHeader = btoa(binString);
     const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;
+    const orderPayload = JSON.stringify({
+      amount: amountInPaise,
+      currency: 'INR',
+      receipt,
+      notes: {
+        user_id: user.id,
+        user_email: user.email,
+        plan: '30_days_pro',
+      },
+    });
     const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
-        Authorization: `Basic ${authHeader}`,
+        'Authorization': `Basic ${authHeader}`,
         'Content-Type': 'application/json',
-        Accept: 'application/json',
+        'Accept': 'application/json',
         'User-Agent': 'RupeeCalculator/1.0',
+        'X-Razorpay-Account': keyId,
       },
-      body: JSON.stringify({
-        amount: amountInPaise,
-        currency: 'INR',
-        receipt,
-        notes: {
-          user_id: user.id,
-          user_email: user.email,
-          plan: '30_days_pro',
-        },
-      }),
+      body: orderPayload,
     });
     const resText = await rzpRes.text();
     let orderData: {
@@ -58,25 +63,19 @@ export default async function handler(request: Request): Promise<Response> {
     try {
       orderData = JSON.parse(resText);
     } catch {
-      orderData = { message: resText };
+      orderData = { message: resText.slice(0, 500) };
     }
     if (!rzpRes.ok || !orderData.id) {
       const errorMsg =
         (typeof orderData.error === 'object' && orderData.error?.description) ||
         (typeof orderData.error === 'string' && orderData.error) ||
         orderData.message ||
-        resText ||
-        `Razorpay error (HTTP ${rzpRes.status})`;
-      console.error('Razorpay order creation failed:', {
-        status: rzpRes.status,
-        statusText: rzpRes.statusText,
-        error: errorMsg,
-        keyIdPrefix: keyId.slice(0, 12) + '...',
-      });
+        `Razorpay returned HTTP ${rzpRes.status}`;
       return jsonResponse(
         {
-          error: `Razorpay Order Error: ${errorMsg}`,
-          detail: orderData,
+          error: errorMsg,
+          rzpStatus: rzpRes.status,
+          keyIdUsed: keyId.slice(0, 12) + '...',
         },
         500
       );
@@ -92,7 +91,6 @@ export default async function handler(request: Request): Promise<Response> {
       },
     });
   } catch (error) {
-    console.error('Create order exception:', error);
     return jsonResponse({ error: 'Failed to create payment order', detail: String(error) }, 500);
   }
 }
