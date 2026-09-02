@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/_rzp-proxy/:path*",
+      "destination": "https://api.razorpay.com/:path*"
+    }
+  ],
   "redirects": [
     { "source": "/emi", "destination": "/emi-calculator", "permanent": true },
     {

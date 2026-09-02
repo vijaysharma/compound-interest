@@ -1,5 +1,5 @@
 import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../../_db';
-export const config = { runtime: 'nodejs', maxDuration: 10 };
+export const config = { runtime: 'edge' };
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
@@ -27,24 +27,28 @@ export default async function handler(request: Request): Promise<Response> {
     const amountInPaise = Math.round(amountInRupees * 100);
     const authHeader = btoa(`${keyId}:${keySecret}`);
     const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;
-    const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
+    const orderPayload = JSON.stringify({
+      amount: amountInPaise,
+      currency: 'INR',
+      receipt,
+      notes: {
+        user_id: user.id,
+        user_email: user.email,
+        plan: '30_days_pro',
+      },
+    });
+    // Use Vercel rewrite proxy to bypass Cloudflare-to-Cloudflare blocking.
+    // The rewrite in vercel.json maps /api/_rzp-proxy/:path* → https://api.razorpay.com/:path*
+    const proxyUrl = new URL(request.url);
+    proxyUrl.pathname = '/api/_rzp-proxy/v1/orders';
+    const rzpRes = await fetch(proxyUrl.toString(), {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${authHeader}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'RupeeCalculator/1.0',
       },
-      body: JSON.stringify({
-        amount: amountInPaise,
-        currency: 'INR',
-        receipt,
-        notes: {
-          user_id: user.id,
-          user_email: user.email,
-          plan: '30_days_pro',
-        },
-      }),
+      body: orderPayload,
     });
     const resText = await rzpRes.text();
     let orderData: {

@@ -1,5 +1,5 @@
 import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../../_db';
-export const config = { runtime: 'nodejs', maxDuration: 10 };
+export const config = { runtime: 'edge' };
 async function verifyRazorpaySignature(
   orderId: string,
   paymentId: string,
