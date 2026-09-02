@@ -11,9 +11,20 @@ export default async function handler(request: Request): Promise<Response> {
     if (!user) {
       return jsonResponse({ error: 'Authentication required to initiate payment' }, 401);
     }
-    const keyId =
-      process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TW0RQa1VIcpwaN';
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'UxZ0a8mnYGVRkkO6r52IAUcq';
+    const rawKeyId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID;
+    const rawKeySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!rawKeyId || !rawKeySecret) {
+      console.error('Razorpay keys missing from environment');
+      return jsonResponse(
+        {
+          error:
+            'Razorpay API keys (RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET) are missing in Vercel environment variables.',
+        },
+        500
+      );
+    }
+    const keyId = rawKeyId.trim();
+    const keySecret = rawKeySecret.trim();
     const body = (await request.json().catch(() => ({}))) as { amount?: number };
     const amountInRupees = typeof body.amount === 'number' && body.amount > 0 ? body.amount : 29;
     const amountInPaise = Math.round(amountInRupees * 100);
@@ -36,18 +47,24 @@ export default async function handler(request: Request): Promise<Response> {
         },
       }),
     });
-    const orderData = (await rzpRes.json()) as {
+    const orderData = (await rzpRes.json().catch(() => ({}))) as {
       id?: string;
       amount?: number;
       currency?: string;
-      error?: { description?: string };
+      error?: { description?: string; code?: string; field?: string; reason?: string } | string;
+      message?: string;
     };
     if (!rzpRes.ok || !orderData.id) {
+      const errorMsg =
+        (typeof orderData.error === 'object' && orderData.error?.description) ||
+        (typeof orderData.error === 'string' && orderData.error) ||
+        orderData.message ||
+        `Razorpay error (HTTP ${rzpRes.status})`;
+      console.error('Razorpay order creation error:', { status: rzpRes.status, error: errorMsg });
       return jsonResponse(
         {
-          error:
-            orderData.error?.description ||
-            'Failed to create payment order with Razorpay. Please try again.',
+          error: `Razorpay Order Error: ${errorMsg}`,
+          detail: orderData,
         },
         500
       );

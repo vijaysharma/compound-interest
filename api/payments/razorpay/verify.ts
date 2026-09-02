@@ -32,8 +32,7 @@ export default async function handler(request: Request): Promise<Response> {
     if (!user) {
       return jsonResponse({ error: 'Authentication required to verify payment' }, 401);
     }
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'UxZ0a8mnYGVRkkO6r52IAUcq';
-    const body = (await request.json()) as {
+    const rawKeySecret = process.env.RAZORPAY_KEY_SECRET;
       razorpay_order_id?: string;
       razorpay_payment_id?: string;
       razorpay_signature?: string;
