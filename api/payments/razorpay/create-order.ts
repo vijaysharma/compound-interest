@@ -23,8 +23,8 @@ export default async function handler(request: Request): Promise<Response> {
         500
       );
     }
-    const keyId = rawKeyId.trim();
-    const keySecret = rawKeySecret.trim();
+    const keyId = rawKeyId.trim().replace(/^["']|["']$/g, '');
+    const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
     const body = (await request.json().catch(() => ({}))) as { amount?: number };
     const amountInRupees = typeof body.amount === 'number' && body.amount > 0 ? body.amount : 29;
     const amountInPaise = Math.round(amountInRupees * 100);
@@ -35,6 +35,7 @@ export default async function handler(request: Request): Promise<Response> {
       headers: {
         Authorization: `Basic ${authHeader}`,
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         amount: amountInPaise,
@@ -47,18 +48,25 @@ export default async function handler(request: Request): Promise<Response> {
         },
       }),
     });
-    const orderData = (await rzpRes.json().catch(() => ({}))) as {
+    const resText = await rzpRes.text();
+    let orderData: {
       id?: string;
       amount?: number;
       currency?: string;
       error?: { description?: string; code?: string; field?: string; reason?: string } | string;
       message?: string;
-    };
+    } = {};
+    try {
+      orderData = JSON.parse(resText);
+    } catch {
+      orderData = { message: resText };
+    }
     if (!rzpRes.ok || !orderData.id) {
       const errorMsg =
         (typeof orderData.error === 'object' && orderData.error?.description) ||
         (typeof orderData.error === 'string' && orderData.error) ||
         orderData.message ||
+        resText ||
         `Razorpay error (HTTP ${rzpRes.status})`;
       console.error('Razorpay order creation error:', { status: rzpRes.status, error: errorMsg });
       return jsonResponse(

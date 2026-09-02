@@ -39,7 +39,7 @@ export default async function handler(request: Request): Promise<Response> {
         500
       );
     }
-    const keySecret = rawKeySecret.trim();
+    const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
     const body = (await request.json().catch(() => ({}))) as {
       razorpay_order_id?: string;
       razorpay_payment_id?: string;
