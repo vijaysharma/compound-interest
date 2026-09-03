@@ -12,13 +12,15 @@ export default async function handler(request: Request): Promise<Response> {
     return jsonResponse({ error: 'Unauthorized: Admin access required' }, 401);
   }
   const email = process.env.SHIPROCKET_EMAIL;
-  const password = process.env.SHIPROCKET_PASSWORD;
+  // User might have stored the API User password in SHIPROCKET_API_TOKEN as per their env file
+  const password = process.env.SHIPROCKET_PASSWORD || process.env.SHIPROCKET_API_TOKEN;
   const tokenEnv = process.env.SHIPROCKET_TOKEN;
-  if ((!email || !password) && !tokenEnv) {
+
+  if (!email || !password) {
     return jsonResponse(
       {
         error:
-          'Shiprocket API credentials not configured in environment (SHIPROCKET_EMAIL, SHIPROCKET_PASSWORD).',
+          'Shiprocket API credentials not configured in environment (SHIPROCKET_EMAIL, SHIPROCKET_API_TOKEN).',
       },
       500
     );
@@ -30,8 +32,14 @@ export default async function handler(request: Request): Promise<Response> {
       return jsonResponse({ error: 'Missing required fields: pickup, delivery, weight.' }, 400);
     }
     let token = tokenEnv;
+
+    if (!token && password && password.startsWith('eyJ')) {
+      // User might have placed the actual JWT token in SHIPROCKET_API_TOKEN
+      token = password;
+    }
+
     if (!token) {
-      // Authenticate to Shiprocket to get token
+      // Authenticate to Shiprocket to get token using email and password
       const authRes = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

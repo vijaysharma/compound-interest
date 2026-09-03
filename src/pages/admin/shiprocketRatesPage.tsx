@@ -2,16 +2,18 @@ import React from 'react';
 import ShiprocketRates from '../../components/admin/ShiprocketRates';
 import { useAuth } from '../../context/useAuth';
 import SEOHead from '../../components/SEOHead';
-
 const ShiprocketRatesPage: React.FC = () => {
   const { token } = useAuth();
   return (
     <main className="w-full max-w-4xl mx-auto px-4 py-8">
-      <SEOHead title="Shiprocket Rates | Admin" description="Shiprocket Rates for Admin" noIndex={true} />
+      <SEOHead
+        title="Shiprocket Rates | Admin"
+        description="Shiprocket Rates for Admin"
+        noIndex={true}
+      />
       <h1 className="text-3xl font-bold mb-6 text-base-content text-center">Shiprocket Rates</h1>
       <ShiprocketRates token={token || ''} />
     </main>
   );
 };
-
 export default ShiprocketRatesPage;

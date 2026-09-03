@@ -2,7 +2,6 @@ import React from 'react';
 import QuickNotes from '../../components/admin/QuickNotes';
 import { useAuth } from '../../context/useAuth';
 import SEOHead from '../../components/SEOHead';
-
 const QuickNotesPage: React.FC = () => {
   const { token } = useAuth();
   return (
@@ -13,5 +12,4 @@ const QuickNotesPage: React.FC = () => {
     </main>
   );
 };
-
 export default QuickNotesPage;
