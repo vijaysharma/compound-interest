@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import { FiTruck } from 'react-icons/fi';
+interface CourierCompany {
+  courier_company_id: number;
+  courier_name: string;
+  rate: number;
+  etd: string;
+  rating: number | string;
+}
 const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
   const [pickup, setPickup] = useState('');
   const [delivery, setDelivery] = useState('');
@@ -9,7 +16,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
   const [height, setHeight] = useState('');
   const [cod, setCod] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CourierCompany[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fetchRates = async () => {
     if (!pickup || !delivery || !weight) {
@@ -41,8 +48,12 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
         throw new Error(data.error || 'Failed to fetch rates');
       }
       setResult(data.data?.data?.available_courier_companies || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +64,6 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
         <h2 className="card-title text-lg flex items-center gap-2">
           <FiTruck className="text-primary" /> Shiprocket Rate Calculator
         </h2>
-
         {error && <div className="alert alert-error text-sm my-2 py-2">{error}</div>}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
           <div className="form-control">
@@ -158,7 +168,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {result.map((c: any) => (
+                  {result.map((c) => (
                     <tr key={c.courier_company_id}>
                       <td className="font-semibold">{c.courier_name}</td>
                       <td>{c.etd}</td>

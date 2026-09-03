@@ -15,7 +15,6 @@ export default async function handler(request: Request): Promise<Response> {
   // User might have stored the API User password in SHIPROCKET_API_TOKEN as per their env file
   const password = process.env.SHIPROCKET_PASSWORD || process.env.SHIPROCKET_API_TOKEN;
   const tokenEnv = process.env.SHIPROCKET_TOKEN;
-
   if (!email || !password) {
     return jsonResponse(
       {
@@ -26,18 +25,24 @@ export default async function handler(request: Request): Promise<Response> {
     );
   }
   try {
-    const body = (await request.json()) as any;
+    const body = (await request.json()) as {
+      pickup_postcode?: string;
+      delivery_postcode?: string;
+      weight?: number | string;
+      length?: number | string;
+      breadth?: number | string;
+      height?: number | string;
+      cod?: boolean | number;
+    };
     const { pickup_postcode, delivery_postcode, weight, length, breadth, height, cod } = body;
     if (!pickup_postcode || !delivery_postcode || !weight) {
       return jsonResponse({ error: 'Missing required fields: pickup, delivery, weight.' }, 400);
     }
     let token = tokenEnv;
-
     if (!token && password && password.startsWith('eyJ')) {
       // User might have placed the actual JWT token in SHIPROCKET_API_TOKEN
       token = password;
     }
-
     if (!token) {
       // Authenticate to Shiprocket to get token using email and password
       const authRes = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
@@ -45,7 +50,7 @@ export default async function handler(request: Request): Promise<Response> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const authData = (await authRes.json()) as any;
+      const authData = (await authRes.json()) as { token?: string };
       if (!authRes.ok || !authData.token) {
         return jsonResponse({ error: 'Shiprocket authentication failed', detail: authData }, 500);
       }
