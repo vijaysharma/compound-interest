@@ -94,109 +94,113 @@ const WoodCalculator: React.FC = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto w-full mb-4 border border-base-200 rounded-lg">
-        <table className="table table-xs w-full">
-          <thead className="bg-base-200">
-            <tr>
-              <th>L ({unit === 'feet' ? 'ft' : 'in'})</th>
-              <th>B ({unit === 'feet' ? 'ft' : 'in'})</th>
-              <th>T (in)</th>
-              <th>Qty</th>
-              <th>₹/CFT</th>
-              <th>CFT</th>
-              <th>Total</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {piecesWithCalcs.map((p) => (
-              <tr key={p.id}>
-                <td className="p-1">
-                  <input
-                    type="number"
-                    className="input input-xs input-bordered w-full max-w-[4rem]"
-                    value={p.length}
-                    onChange={(e) => updatePiece(p.id, 'length', e.target.value)}
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    type="number"
-                    className="input input-xs input-bordered w-full max-w-[4rem]"
-                    value={p.breadth}
-                    onChange={(e) => updatePiece(p.id, 'breadth', e.target.value)}
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    type="number"
-                    className="input input-xs input-bordered w-full max-w-[4rem]"
-                    value={p.thickness}
-                    onChange={(e) => updatePiece(p.id, 'thickness', e.target.value)}
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    type="number"
-                    className="input input-xs input-bordered w-full max-w-[3rem]"
-                    value={p.qty}
-                    onChange={(e) => updatePiece(p.id, 'qty', e.target.value)}
-                  />
-                </td>
-                <td className="p-1">
-                  <input
-                    type="number"
-                    className="input input-xs input-bordered w-full max-w-[5rem]"
-                    value={p.pricePerCft}
-                    onChange={(e) => updatePiece(p.id, 'pricePerCft', e.target.value)}
-                  />
-                </td>
-                <td className="p-1 text-xs">{p.cft.toFixed(2)}</td>
-                <td className="p-1 text-xs font-semibold">₹{p.price.toFixed(0)}</td>
-                <td className="p-1">
-                  <button
-                    className="btn btn-xs btn-ghost text-error"
-                    onClick={() => removePiece(p.id)}
-                    disabled={pieces.length === 1}
-                  >
-                    <FiTrash2 />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="bg-base-100 p-2 border-t border-base-200">
-          <button className="btn btn-xs btn-outline btn-primary w-full" onClick={addPiece}>
-            <FiPlus /> Add Piece
-          </button>
-        </div>
+      <div className="space-y-3 mb-6">
+        {piecesWithCalcs.map((p, index) => (
+          <div key={p.id} className="bg-base-100 border border-base-300 rounded-xl p-4 relative shadow-sm">
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+              <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">Piece {index + 1}</span>
+              <button
+                className="btn btn-xs btn-circle btn-ghost text-error"
+                onClick={() => removePiece(p.id)}
+                disabled={pieces.length === 1}
+              >
+                <FiTrash2 />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div>
+                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                  Length ({unit === 'feet' ? 'ft' : 'in'})
+                </label>
+                <input
+                  type="number"
+                  className="input input-sm input-bordered w-full"
+                  value={p.length}
+                  onChange={(e) => updatePiece(p.id, 'length', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                  Breadth ({unit === 'feet' ? 'ft' : 'in'})
+                </label>
+                <input
+                  type="number"
+                  className="input input-sm input-bordered w-full"
+                  value={p.breadth}
+                  onChange={(e) => updatePiece(p.id, 'breadth', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                  Thickness (in)
+                </label>
+                <input
+                  type="number"
+                  className="input input-sm input-bordered w-full"
+                  value={p.thickness}
+                  onChange={(e) => updatePiece(p.id, 'thickness', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  className="input input-sm input-bordered w-full"
+                  value={p.qty}
+                  onChange={(e) => updatePiece(p.id, 'qty', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                  Price / CFT (₹)
+                </label>
+                <input
+                  type="number"
+                  className="input input-sm input-bordered w-full text-success font-semibold"
+                  value={p.pricePerCft}
+                  onChange={(e) => updatePiece(p.id, 'pricePerCft', e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col justify-end items-end pb-1 bg-base-200 rounded px-2">
+                <span className="text-[11px] opacity-70 font-semibold">{p.cft.toFixed(2)} CFT</span>
+                <span className="font-bold text-sm text-primary">₹{p.price.toFixed(0)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+        <button className="btn btn-sm btn-outline btn-primary w-full border-dashed" onClick={addPiece}>
+          <FiPlus /> Add Another Piece
+        </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-4 bg-base-200 p-3 rounded-lg">
+      <h3 className="font-bold text-sm opacity-70 uppercase tracking-wider mb-2">Extra Charges</h3>
+      <div className="grid grid-cols-3 gap-3 mb-6 bg-base-200 p-4 rounded-xl">
         <div>
-          <label className="label py-1"><span className="label-text text-xs font-semibold">Cuts Extra (₹)</span></label>
+          <label className="block text-[11px] font-bold opacity-70 mb-1">Cuts (₹)</label>
           <input
             type="number"
-            className="input input-xs input-bordered w-full"
+            className="input input-sm input-bordered w-full"
             value={cutsCharge}
             onChange={(e) => setCutsCharge(e.target.value)}
           />
         </div>
         <div>
-          <label className="label py-1"><span className="label-text text-xs font-semibold">Labour (₹)</span></label>
+          <label className="block text-[11px] font-bold opacity-70 mb-1">Labour (₹)</label>
           <input
             type="number"
-            className="input input-xs input-bordered w-full"
+            className="input input-sm input-bordered w-full"
             value={labourCharge}
             onChange={(e) => setLabourCharge(e.target.value)}
           />
         </div>
         <div>
-          <label className="label py-1"><span className="label-text text-xs font-semibold">Shipping (₹)</span></label>
+          <label className="block text-[11px] font-bold opacity-70 mb-1">Shipping (₹)</label>
           <input
             type="number"
-            className="input input-xs input-bordered w-full"
+            className="input input-sm input-bordered w-full"
             value={shippingCharge}
             onChange={(e) => setShippingCharge(e.target.value)}
           />
@@ -204,13 +208,13 @@ const WoodCalculator: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-3 bg-base-200 rounded-xl flex justify-between items-center">
+        <div className="p-4 bg-base-200 rounded-xl flex justify-between items-center">
           <span className="text-xs font-bold opacity-70 uppercase">Total Volume</span>
           <span className="text-xl font-bold">{totalCft.toFixed(3)} CFT</span>
         </div>
-        <div className="p-3 bg-success/10 text-success rounded-xl flex justify-between items-center">
+        <div className="p-4 bg-success/10 text-success rounded-xl flex justify-between items-center shadow-inner">
           <span className="text-xs font-bold uppercase">Final Cost</span>
-          <span className="text-xl font-bold">₹{totalCost.toFixed(0)}</span>
+          <span className="text-2xl font-bold">₹{totalCost.toFixed(0)}</span>
         </div>
       </div>
     </>
