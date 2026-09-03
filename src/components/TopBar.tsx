@@ -22,6 +22,10 @@ const getNavTitle = (pathname: string) => {
     '/': 'Rupee Calculator',
     '/login': 'Sign In',
     '/admin': 'Data administration',
+    '/admin/shiprocket-rates': 'Shiprocket Rates',
+    '/admin/volumetric-weight': 'Volumetric Weight',
+    '/admin/wood-calculator': 'Wood Calculator',
+    '/admin/quick-notes': 'Quick Notes',
     '/about': 'About',
     '/privacy': 'Privacy Policy',
     '/disclaimer': 'Disclaimer',
@@ -176,6 +180,34 @@ const TopBar = ({ className }: { className?: string }) => {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Data administration
+                    </Link>
+                    <Link
+                      to="/admin/shiprocket-rates"
+                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Shiprocket Rates
+                    </Link>
+                    <Link
+                      to="/admin/volumetric-weight"
+                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Volumetric Weight
+                    </Link>
+                    <Link
+                      to="/admin/wood-calculator"
+                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Wood Calculator
+                    </Link>
+                    <Link
+                      to="/admin/quick-notes"
+                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Quick Notes
                     </Link>
                   </div>
                 )}

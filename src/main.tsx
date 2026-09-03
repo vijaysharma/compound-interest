@@ -44,6 +44,22 @@ const router = createBrowserRouter([
         path: 'admin',
         lazy: protectedRoute(() => import('./pages/admin.tsx'), true),
       },
+      {
+        path: 'admin/shiprocket-rates',
+        lazy: protectedRoute(() => import('./pages/admin/shiprocketRatesPage.tsx'), true),
+      },
+      {
+        path: 'admin/volumetric-weight',
+        lazy: protectedRoute(() => import('./pages/admin/volumetricWeightPage.tsx'), true),
+      },
+      {
+        path: 'admin/wood-calculator',
+        lazy: protectedRoute(() => import('./pages/admin/woodCalculatorPage.tsx'), true),
+      },
+      {
+        path: 'admin/quick-notes',
+        lazy: protectedRoute(() => import('./pages/admin/quickNotesPage.tsx'), true),
+      },
       // ── Trust & Info Pages (E-E-A-T) ──────────────────────────────
       {
         path: 'about',
