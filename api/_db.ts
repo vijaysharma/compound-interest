@@ -233,8 +233,16 @@ export async function ensureTables(sql: Query) {
         ON payment_submissions (user_id)
       `;
       await sql`
-        CREATE INDEX IF NOT EXISTS mutual_fund_schemes_name_idx
-        ON mutual_fund_schemes (scheme_name)
+        CREATE TABLE IF NOT EXISTS admin_notes (
+          id TEXT PRIMARY KEY,
+          content TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        CREATE INDEX IF NOT EXISTS admin_notes_created_at_idx
+        ON admin_notes (created_at DESC)
       `;
     })();
   }

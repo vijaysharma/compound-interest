@@ -597,7 +597,7 @@ const Calculator: React.FC = () => {
     );
   };
   return (
-    <main className="w-full max-w-sm sm:max-w-md mx-auto px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative">
+    <main className="w-full max-w-sm sm:max-w-md mx-auto px-1 sm:px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative overflow-x-hidden">
       <SEOHead
         title="Online Calculator — Free Scientific & Basic Calculator India 2026"
         description="Fast, institutional-grade online calculator with editable cursor display, implicit multiplication, copy/paste support, memory operations (M+, M-, MC, MR), percentages, y-th root of x (³√(27)), and trigonometry."
@@ -901,7 +901,7 @@ const Calculator: React.FC = () => {
         </div>
       )}
       {/* Main Keypad Grid (Circular/Pill Keypad) */}
-      <div className="grid grid-cols-4 gap-2 sm:gap-3 pb-2">
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-3 pb-2 w-full max-w-full">
         {/* Row 1: C, ( ), %, ÷ */}
         <button
           type="button"

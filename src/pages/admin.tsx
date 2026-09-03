@@ -14,6 +14,10 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import { PaymentSettings, PaymentSubmission } from '../types/auth';
+import ShiprocketRates from '../components/admin/ShiprocketRates';
+import VolumetricWeight from '../components/admin/VolumetricWeight';
+import WoodCalculator from '../components/admin/WoodCalculator';
+import QuickNotes from '../components/admin/QuickNotes';
 interface AdminUser {
   id: string;
   email: string;
@@ -30,9 +34,9 @@ interface AdminUser {
 const Admin = () => {
   const { token: authToken, user } = useAuth();
   const [token, setToken] = useState(() => authToken || '');
-  const [activeTab, setActiveTab] = useState<'payments' | 'submissions' | 'users' | 'sync'>(
-    'payments'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'payments' | 'submissions' | 'users' | 'sync' | 'business_tools'
+  >('payments');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   // Payment settings state
@@ -309,6 +313,14 @@ const Admin = () => {
         >
           <FiRefreshCw className="h-4 w-4" />
           <span>Dataset Sync</span>
+        </button>
+        <button
+          type="button"
+          className={`tab flex items-center gap-1.5 ${activeTab === 'business_tools' ? 'tab-active font-bold' : ''}`}
+          onClick={() => setActiveTab('business_tools')}
+        >
+          <FiSliders className="h-4 w-4" />
+          <span>Business Tools</span>
         </button>
       </div>
       {message && (
@@ -790,6 +802,17 @@ const Admin = () => {
               </div>
             </details>
           </section>
+        </div>
+      )}
+      {/* Tab 5: Business Tools */}
+      {activeTab === 'business_tools' && (
+        <div className="space-y-6">
+          <ShiprocketRates token={effectiveToken} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <WoodCalculator />
+            <VolumetricWeight />
+          </div>
+          <QuickNotes token={effectiveToken} />
         </div>
       )}
       {/* Limit Modal */}

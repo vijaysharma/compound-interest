@@ -113,6 +113,10 @@ const router = createBrowserRouter([
             path: 'date-calculator',
             lazy: protectedRoute(() => import('./pages/dateCalculator.tsx')),
           },
+          {
+            path: 'unit-converter',
+            lazy: protectedRoute(() => import('./pages/unitConverter.tsx')),
+          },
         ],
       },
       // ── Mutual Fund Engine (keeps nested structure for sub-tools) ──

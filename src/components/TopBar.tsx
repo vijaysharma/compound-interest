@@ -47,6 +47,7 @@ const getNavTitle = (pathname: string) => {
     '/utilities/calculator': 'Calculator',
     '/date-calculator': 'Date Calculator',
     '/utilities/date-calculator': 'Date Calculator',
+    '/utilities/unit-converter': 'Unit Converter',
   };
   return titles[pathname] ?? 'Rupee Calculator';
 };
@@ -296,6 +297,13 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Date Calculator
+                  </Link>
+                  <Link
+                    to="/utilities/unit-converter"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Unit Converter
                   </Link>
                 </div>
                 <div className="mt-2 border-t border-primary-content/20 pt-2">
