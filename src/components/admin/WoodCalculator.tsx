@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
-
 interface WoodPiece {
   id: string;
   length: string;
@@ -9,7 +8,6 @@ interface WoodPiece {
   qty: string;
   pricePerCft: string;
 }
-
 const WoodCalculator: React.FC = () => {
   const [unit, setUnit] = useState<'inches' | 'feet'>('feet');
   const [pieces, setPieces] = useState<WoodPiece[]>([
@@ -18,7 +16,6 @@ const WoodCalculator: React.FC = () => {
   const [cutsCharge, setCutsCharge] = useState('');
   const [labourCharge, setLabourCharge] = useState('');
   const [shippingCharge, setShippingCharge] = useState('');
-
   const addPiece = () => {
     setPieces([
       ...pieces,
@@ -32,20 +29,14 @@ const WoodCalculator: React.FC = () => {
       },
     ]);
   };
-
   const removePiece = (id: string) => {
     if (pieces.length > 1) {
       setPieces(pieces.filter((p) => p.id !== id));
     }
   };
-
   const updatePiece = (id: string, field: keyof WoodPiece, value: string) => {
     setPieces(pieces.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
   };
-
-  let totalCft = 0;
-  let totalBasePrice = 0;
-
   const piecesWithCalcs = pieces.map((p) => {
     const l = parseFloat(p.length) || 0;
     const b = parseFloat(p.breadth) || 0;
@@ -58,47 +49,49 @@ const WoodCalculator: React.FC = () => {
       cft = ((l * b * t) / 1728) * q;
     }
     const price = cft * (parseFloat(p.pricePerCft) || 0);
-    totalCft += cft;
-    totalBasePrice += price;
     return { ...p, cft, price };
   });
-
+  const totalCft = piecesWithCalcs.reduce((sum, p) => sum + p.cft, 0);
+  const totalBasePrice = piecesWithCalcs.reduce((sum, p) => sum + p.price, 0);
   const totalExtra =
     (parseFloat(cutsCharge) || 0) +
     (parseFloat(labourCharge) || 0) +
     (parseFloat(shippingCharge) || 0);
   const totalCost = totalBasePrice + totalExtra;
-
   return (
     <>
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         <div>
           <h2 className="card-title text-lg">Wood Cubic Calculator</h2>
           <p className="text-sm opacity-70">
             Calculate volume (CFT) and pricing for multiple pieces.
           </p>
         </div>
-        <div className="flex gap-2 bg-base-200 p-1 rounded-lg">
+        <div className="flex gap-1 bg-base-200 p-1 rounded-lg w-full sm:w-auto shrink-0">
           <button
-            className={`btn btn-xs ${unit === 'feet' ? 'btn-primary' : 'btn-ghost'}`}
+            className={`btn btn-sm flex-1 sm:flex-none ${unit === 'feet' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => setUnit('feet')}
           >
             L/B in ft
           </button>
           <button
-            className={`btn btn-xs ${unit === 'inches' ? 'btn-primary' : 'btn-ghost'}`}
+            className={`btn btn-sm flex-1 sm:flex-none ${unit === 'inches' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => setUnit('inches')}
           >
             All inches
           </button>
         </div>
       </div>
-
       <div className="space-y-3 mb-6">
         {piecesWithCalcs.map((p, index) => (
-          <div key={p.id} className="bg-base-100 border border-base-300 rounded-xl p-4 relative shadow-sm">
+          <div
+            key={p.id}
+            className="bg-base-100 border border-base-300 rounded-xl p-4 relative shadow-sm"
+          >
             <div className="absolute top-2 right-2 flex items-center gap-2">
-              <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">Piece {index + 1}</span>
+              <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">
+                Piece {index + 1}
+              </span>
               <button
                 className="btn btn-xs btn-circle btn-ghost text-error"
                 onClick={() => removePiece(p.id)}
@@ -107,7 +100,6 @@ const WoodCalculator: React.FC = () => {
                 <FiTrash2 />
               </button>
             </div>
-            
             <div className="grid grid-cols-3 gap-3 mt-4">
               <div>
                 <label className="block text-[11px] font-bold opacity-70 mb-1">
@@ -143,9 +135,7 @@ const WoodCalculator: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold opacity-70 mb-1">
-                  Quantity
-                </label>
+                <label className="block text-[11px] font-bold opacity-70 mb-1">Quantity</label>
                 <input
                   type="number"
                   className="input input-sm input-bordered w-full"
@@ -171,11 +161,13 @@ const WoodCalculator: React.FC = () => {
             </div>
           </div>
         ))}
-        <button className="btn btn-sm btn-outline btn-primary w-full border-dashed" onClick={addPiece}>
+        <button
+          className="btn btn-sm btn-outline btn-primary w-full border-dashed"
+          onClick={addPiece}
+        >
           <FiPlus /> Add Another Piece
         </button>
       </div>
-
       <h3 className="font-bold text-sm opacity-70 uppercase tracking-wider mb-2">Extra Charges</h3>
       <div className="grid grid-cols-3 gap-3 mb-6 bg-base-200 p-4 rounded-xl">
         <div>
@@ -206,7 +198,6 @@ const WoodCalculator: React.FC = () => {
           />
         </div>
       </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-4 bg-base-200 rounded-xl flex justify-between items-center">
           <span className="text-xs font-bold opacity-70 uppercase">Total Volume</span>
