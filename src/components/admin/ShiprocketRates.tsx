@@ -19,8 +19,8 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
   const [result, setResult] = useState<CourierCompany[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fetchRates = async () => {
-    if (!pickup || !delivery || !weight) {
-      setError('Pickup, Delivery, and Weight are required.');
+    if (!pickup || !delivery || !weight || !length || !breadth || !height) {
+      setError('Pickup, Delivery, Weight, and all dimensions (L x B x H) are required.');
       return;
     }
     setLoading(true);
@@ -58,138 +58,148 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       setLoading(false);
     }
   };
+
+  const volumetricWeight =
+    length && breadth && height
+      ? ((Number(length) * Number(breadth) * Number(height)) / 5000).toFixed(2)
+      : '0.00';
+
   return (
-    <div className="card bg-base-100 shadow-md border border-base-300">
-      <div className="card-body">
-        <h2 className="card-title text-lg flex items-center gap-2">
-          <FiTruck className="text-primary" /> Shiprocket Rate Calculator
-        </h2>
-        {error && <div className="alert alert-error text-sm my-2 py-2">{error}</div>}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-bold">Pickup Pincode*</span>
-            </label>
-            <input
-              type="text"
-              className="input input-bordered input-sm"
-              value={pickup}
-              onChange={(e) => setPickup(e.target.value)}
-            />
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-bold">Delivery Pincode*</span>
-            </label>
-            <input
-              type="text"
-              className="input input-bordered input-sm"
-              value={delivery}
-              onChange={(e) => setDelivery(e.target.value)}
-            />
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-bold">Weight (kg)*</span>
-            </label>
-            <input
-              type="number"
-              className="input input-bordered input-sm"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-            />
-          </div>
-          <div className="form-control">
-            <label className="label cursor-pointer flex flex-col items-start gap-1">
-              <span className="label-text font-bold">COD Required?</span>
-              <input
-                type="checkbox"
-                className="toggle toggle-primary toggle-sm mt-1"
-                checked={cod}
-                onChange={(e) => setCod(e.target.checked)}
-              />
-            </label>
-          </div>
+    <>
+      <h2 className="card-title text-lg flex items-center gap-2">
+        <FiTruck className="text-primary" /> Shiprocket Rate Calculator
+      </h2>
+      {error && <div className="alert alert-error text-sm my-2 py-2">{error}</div>}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold">Pickup Pincode*</span>
+          </label>
+          <input
+            type="text"
+            className="input input-bordered input-sm"
+            value={pickup}
+            onChange={(e) => setPickup(e.target.value)}
+          />
         </div>
-        <div className="grid grid-cols-3 gap-4 mt-2">
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text text-xs">Length (cm)</span>
-            </label>
-            <input
-              type="number"
-              className="input input-bordered input-sm"
-              value={length}
-              onChange={(e) => setLength(e.target.value)}
-              placeholder="Optional"
-            />
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text text-xs">Breadth (cm)</span>
-            </label>
-            <input
-              type="number"
-              className="input input-bordered input-sm"
-              value={breadth}
-              onChange={(e) => setBreadth(e.target.value)}
-              placeholder="Optional"
-            />
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text text-xs">Height (cm)</span>
-            </label>
-            <input
-              type="number"
-              className="input input-bordered input-sm"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              placeholder="Optional"
-            />
-          </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold">Delivery Pincode*</span>
+          </label>
+          <input
+            type="text"
+            className="input input-bordered input-sm"
+            value={delivery}
+            onChange={(e) => setDelivery(e.target.value)}
+          />
         </div>
-        <div className="mt-4 flex justify-end">
-          <button className="btn btn-primary" onClick={fetchRates} disabled={loading}>
-            {loading ? <span className="loading loading-spinner"></span> : 'Get Rates'}
-          </button>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text font-bold">Dead Weight (kg)*</span>
+          </label>
+          <input
+            type="number"
+            className="input input-bordered input-sm"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+          />
         </div>
-        {result && (
-          <div className="mt-6">
-            <h3 className="font-bold mb-3 border-b pb-2">Available Couriers ({result.length})</h3>
-            <div className="overflow-x-auto">
-              <table className="table table-sm table-zebra">
-                <thead>
-                  <tr>
-                    <th>Courier</th>
-                    <th>Est. Time</th>
-                    <th>Rate</th>
-                    <th>Rating</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.map((c) => (
-                    <tr key={c.courier_company_id}>
-                      <td className="font-semibold">{c.courier_name}</td>
-                      <td>{c.etd}</td>
-                      <td className="font-bold text-success">₹{c.rate}</td>
-                      <td>{c.rating} ⭐</td>
-                    </tr>
-                  ))}
-                  {result.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center">
-                        No couriers available for this route.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        <div className="form-control">
+          <label className="label cursor-pointer flex flex-col items-start gap-1">
+            <span className="label-text font-bold">COD Required?</span>
+            <input
+              type="checkbox"
+              className="toggle toggle-primary toggle-sm mt-1"
+              checked={cod}
+              onChange={(e) => setCod(e.target.checked)}
+            />
+          </label>
+        </div>
       </div>
-    </div>
+      <div className="grid grid-cols-3 gap-4 mt-2">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text text-xs">Length (cm)*</span>
+          </label>
+          <input
+            type="number"
+            className="input input-bordered input-sm"
+            value={length}
+            onChange={(e) => setLength(e.target.value)}
+            placeholder="Required"
+          />
+        </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text text-xs">Breadth (cm)*</span>
+          </label>
+          <input
+            type="number"
+            className="input input-bordered input-sm"
+            value={breadth}
+            onChange={(e) => setBreadth(e.target.value)}
+            placeholder="Required"
+          />
+        </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text text-xs">Height (cm)*</span>
+          </label>
+          <input
+            type="number"
+            className="input input-bordered input-sm"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+            placeholder="Required"
+          />
+        </div>
+      </div>
+      
+      <div className="mt-3 bg-base-200 p-2 px-3 rounded text-sm flex justify-between items-center">
+        <span>Volumetric Weight: <strong>{volumetricWeight} kg</strong></span>
+        <span className="text-xs opacity-60">Applied Weight: <strong>{Math.max(Number(weight || 0), Number(volumetricWeight))} kg</strong></span>
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <button className="btn btn-primary" onClick={fetchRates} disabled={loading}>
+          {loading ? <span className="loading loading-spinner"></span> : 'Get Rates'}
+        </button>
+      </div>
+      {result && (
+        <div className="mt-6">
+          <h3 className="font-bold mb-3 border-b pb-2">Available Couriers ({result.length})</h3>
+          <div className="overflow-x-auto">
+            <table className="table table-sm table-zebra">
+              <thead>
+                <tr>
+                  <th>Courier</th>
+                  <th>Est. Time</th>
+                  <th>Rate</th>
+                  <th>Rating</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.map((c) => (
+                  <tr key={c.courier_company_id}>
+                    <td className="font-semibold">{c.courier_name}</td>
+                    <td>{c.etd}</td>
+                    <td className="font-bold text-success">₹{c.rate}</td>
+                    <td>{c.rating} ⭐</td>
+                  </tr>
+                ))}
+                {result.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center">
+                      No couriers available for this route.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 export default ShiprocketRates;

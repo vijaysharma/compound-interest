@@ -10,7 +10,6 @@ const QuickNotes: React.FC<{ token: string }> = ({ token }) => {
   const [newNote, setNewNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
-
   const fetchNotes = useCallback(async () => {
     if (!token) return;
     try {
@@ -25,7 +24,6 @@ const QuickNotes: React.FC<{ token: string }> = ({ token }) => {
       console.error(err);
     }
   }, [token]);
-
   useEffect(() => {
     let active = true;
     const initialLoad = async () => {
