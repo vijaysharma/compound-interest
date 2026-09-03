@@ -49,6 +49,10 @@ const localApiPlugin = (): Plugin => ({
         modulePath = '/api/admin/sync-mutual-funds';
       } else if (path === '/api/admin/sync-imf') {
         modulePath = '/api/admin/sync-imf';
+      } else if (path === '/api/admin/notes') {
+        modulePath = '/api/admin/notes';
+      } else if (path === '/api/admin/shiprocket-rates') {
+        modulePath = '/api/admin/shiprocket-rates';
       } else if (path.startsWith('/api/mutual-funds/')) {
         modulePath = '/api/mutual-funds/[schemeCode]';
       }
