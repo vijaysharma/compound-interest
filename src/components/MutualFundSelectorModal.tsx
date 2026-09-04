@@ -18,6 +18,7 @@ interface MutualFundSelectorModalProps {
   funds: MFType[];
   pinnedFunds: PinnedFund[];
   togglePinFund: (fund: MFType) => void;
+  loadingSchemeCodes?: Set<string>;
 }
 const MutualFundSelectorModal = ({
   open,
@@ -31,6 +32,7 @@ const MutualFundSelectorModal = ({
   funds,
   pinnedFunds,
   togglePinFund,
+  loadingSchemeCodes,
 }: MutualFundSelectorModalProps) => {
   const pinnedFundMap = useMemo(
     () => new Map(pinnedFunds.map((f) => [f.schemeCode, f])),
@@ -97,56 +99,72 @@ const MutualFundSelectorModal = ({
         />
         {pinnedFunds.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1" aria-label="Selected mutual funds">
-            {pinnedFunds.map((fund, index) => (
-              <div
-                key={fund.schemeCode}
-                className="badge badge-primary badge-outline max-w-full gap-1 py-2 text-left"
-                title={`Remove ${fund.schemeName}`}
-                onClick={() =>
-                  togglePinFund({
-                    value: Number(fund.schemeCode),
-                    name: fund.schemeName,
-                    id: fund.schemeCode,
-                  })
-                }
-              >
-                <span className="truncate">
-                  {index + 1}. {fund.schemeName}
-                </span>
-                <span aria-hidden="true">&times;</span>
-              </div>
-            ))}
+            {pinnedFunds.map((fund, index) => {
+              const isLoading = loadingSchemeCodes?.has(fund.schemeCode);
+              return (
+                <div
+                  key={fund.schemeCode}
+                  className="badge badge-primary badge-outline max-w-full gap-1 py-2 text-left cursor-pointer hover:bg-primary hover:text-primary-content transition-colors"
+                  title={`Remove ${fund.schemeName}`}
+                  onClick={() =>
+                    togglePinFund({
+                      value: Number(fund.schemeCode),
+                      name: fund.schemeName,
+                      id: fund.schemeCode,
+                    })
+                  }
+                >
+                  {isLoading && (
+                    <span className="loading loading-spinner loading-xs mr-1 shrink-0" />
+                  )}
+                  <span className="truncate">
+                    {index + 1}. {fund.schemeName}
+                  </span>
+                  <span aria-hidden="true">&times;</span>
+                </div>
+              );
+            })}
           </div>
         )}
         <div className="mf-container min-h-0 flex-1 overflow-y-auto">
           {funds.length > 0 ? (
-            funds.map((fund) => {
-              const schemeCode = String(fund.value);
-              const pinnedFund = pinnedFundMap.get(schemeCode);
-              const isPinned = Boolean(pinnedFund);
-              return (
-                <label
-                  key={fund.id}
-                  className={`label cursor-pointer justify-start gap-2 px-0 py-1 ${isPinned ? 'font-semibold' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    className="checkbox checkbox-primary checkbox-sm"
-                    checked={isPinned}
-                    disabled={!isPinned && pinnedFunds.length >= 8}
-                    onChange={() => void togglePinFund(fund)}
-                  />
-                  {pinnedFund && (
-                    <span
-                      className="inline-block h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: pinnedFund.color }}
-                      aria-hidden="true"
+            <>
+              {funds.slice(0, 100).map((fund) => {
+                const schemeCode = String(fund.value);
+                const pinnedFund = pinnedFundMap.get(schemeCode);
+                const isPinned = Boolean(pinnedFund);
+                const isLoading = Boolean(loadingSchemeCodes?.has(schemeCode));
+                return (
+                  <label
+                    key={fund.id}
+                    className={`label cursor-pointer justify-start gap-2 px-1 py-1.5 hover:bg-base-200/60 rounded transition-colors ${isPinned ? 'font-semibold text-primary' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-primary checkbox-sm"
+                      checked={isPinned}
+                      disabled={!isPinned && pinnedFunds.length >= 8}
+                      onChange={() => void togglePinFund(fund)}
                     />
-                  )}
-                  <span className="flex-1 text-sm">{fund.name}</span>
-                </label>
-              );
-            })
+                    {isLoading ? (
+                      <span className="loading loading-spinner loading-xs text-primary shrink-0" />
+                    ) : pinnedFund ? (
+                      <span
+                        className="inline-block h-2 w-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: pinnedFund.color }}
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                    <span className="flex-1 text-sm">{fund.name}</span>
+                  </label>
+                );
+              })}
+              {funds.length > 100 && (
+                <div className="py-2 text-center text-xs opacity-60 italic">
+                  Showing top 100 results. Please refine your search.
+                </div>
+              )}
+            </>
           ) : (
             <p className="py-4 text-center text-sm opacity-60">
               Enter a search term to find mutual funds.

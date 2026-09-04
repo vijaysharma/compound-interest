@@ -597,7 +597,7 @@ const Calculator: React.FC = () => {
     );
   };
   return (
-    <main className="w-full max-w-sm sm:max-w-md mx-auto px-1 sm:px-3 py-2 sm:py-4 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative overflow-x-hidden">
+    <main className="w-full mx-auto px-1 py-2 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative overflow-x-hidden">
       <SEOHead
         title="Online Calculator — Free Scientific & Basic Calculator India 2026"
         description="Fast, institutional-grade online calculator with editable cursor display, implicit multiplication, copy/paste support, memory operations (M+, M-, MC, MR), percentages, y-th root of x (³√(27)), and trigonometry."

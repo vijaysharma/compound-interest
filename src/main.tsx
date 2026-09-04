@@ -2,6 +2,7 @@ import { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.tsx';
+import Home from './pages/home.tsx';
 import LoadingFallback from './components/LoadingFallback.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import './index.css';
@@ -29,7 +30,7 @@ const router = createBrowserRouter([
       // ── Homepage ──────────────────────────────────────────────────
       {
         index: true,
-        lazy: async () => ({ Component: (await import('./pages/home.tsx')).default }),
+        element: <Home />,
       },
       // ── Auth & Admin ──────────────────────────────────────────────
       {

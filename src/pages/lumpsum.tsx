@@ -227,6 +227,7 @@ const Lumpsum = ({
   const [invAmt, setInvAmt] = useState<string>(savedState.invAmt);
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
+  const [loadingSchemeCodes, setLoadingSchemeCodes] = useState<Set<string>>(new Set());
   const [error, setError] = useState<{
     status: string;
     message: string;
@@ -313,15 +314,17 @@ const Lumpsum = ({
     }
     return funds.filter((mf) => RegExp(expression, 'i').test(mf.name));
   };
-  const mfs = useMemo<MFType[]>(() => {
-    if (!deferredSearchKey.trim()) {
-      return [];
-    }
-    const allFunds: MFType[] = jsonAllData.map((fund: MFJSONType, index: number) => ({
+  const allFunds = useMemo<MFType[]>(() => {
+    return jsonAllData.map((fund: MFJSONType, index: number) => ({
       id: `${index}`,
       value: fund.schemeCode,
       name: fund.schemeName,
     }));
+  }, [jsonAllData]);
+  const mfs = useMemo<MFType[]>(() => {
+    if (!deferredSearchKey.trim()) {
+      return [];
+    }
     let filtered = filterMfs(allFunds, selectedType);
     filtered = filterMfs(filtered, selectedGrowth);
     const search = deferredSearchKey.trim();
@@ -340,14 +343,8 @@ const Lumpsum = ({
         searched = filtered.filter((fund) => expression.test(fund.name));
       }
     }
-    const pinned = pinnedFunds
-      .map((pinnedFund) => filtered.find((fund) => String(fund.value) === pinnedFund.schemeCode))
-      .filter((fund): fund is MFType => Boolean(fund));
-    const unpinned = searched.filter(
-      (fund) => !pinnedFunds.some((pinnedFund) => pinnedFund.schemeCode === String(fund.value))
-    );
-    return [...pinned, ...unpinned];
-  }, [jsonAllData, deferredSearchKey, selectedType, selectedGrowth, pinnedFunds]);
+    return searched;
+  }, [allFunds, deferredSearchKey, selectedType, selectedGrowth]);
   useEffect(() => {
     if (pinnedFunds.length === 0) {
       return;
@@ -513,20 +510,22 @@ const Lumpsum = ({
     if (pinnedFunds.length >= 8) {
       return;
     }
+    const color = CHART_COLORS[pinnedFunds.length % CHART_COLORS.length];
+    const newPinnedFund: PinnedFund = {
+      schemeCode,
+      schemeName: mf.name,
+      color,
+    };
+    // Instantly pin the fund for 0ms feedback
+    setPinnedFunds((previous) => [...previous, newPinnedFund]);
+    setSelectedCode(schemeCode);
+    setLoadingSchemeCodes((previous) => new Set([...previous, schemeCode]));
     try {
       const navData = await fetchMFbySchemeCode(schemeCode);
-      const color = CHART_COLORS[pinnedFunds.length];
-      const newPinnedFund: PinnedFund = {
-        schemeCode,
-        schemeName: mf.name,
-        color,
-      };
-      setPinnedFunds((previous) => [...previous, newPinnedFund]);
       setPinnedNavData((previous) => ({
         ...previous,
         [schemeCode]: navData,
       }));
-      setSelectedCode(schemeCode);
       setJsonNavData(navData);
       if (!startDate || !endDate) {
         const durationIndex = Math.max(parseInt(duration, 10) || 1, 0);
@@ -541,7 +540,14 @@ const Lumpsum = ({
         }
       }
     } catch (err) {
+      setPinnedFunds((previous) => previous.filter((fund) => fund.schemeCode !== schemeCode));
       console.error('Failed to pin mutual fund:', err);
+    } finally {
+      setLoadingSchemeCodes((previous) => {
+        const next = new Set(previous);
+        next.delete(schemeCode);
+        return next;
+      });
     }
   };
   const fundAnalyses = useMemo<FundAnalysis[]>(() => {
@@ -1039,6 +1045,7 @@ const Lumpsum = ({
         funds={mfs}
         pinnedFunds={pinnedFunds}
         togglePinFund={togglePinFund}
+        loadingSchemeCodes={loadingSchemeCodes}
       />
       {/*
        * ======================================================

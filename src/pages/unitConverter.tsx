@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
-import { FiArrowRight, FiArrowDown } from 'react-icons/fi';
+import { HiArrowsRightLeft } from 'react-icons/hi2';
 const unitTypes = {
   Length: {
     mm: 0.001,
@@ -12,6 +12,22 @@ const unitTypes = {
     yd: 0.9144,
     mi: 1609.344,
   },
+  Area: {
+    'sq m': 1,
+    'sq km': 1000000,
+    'sq ft': 0.09290304,
+    'sq yd': 0.83612736,
+    acre: 4046.8564224,
+    hectare: 10000,
+    cent: 40.468564224, // 1/100 acre = 435.6 sq ft
+    'kottah (WB)': 66.8901888, // 720 sq ft
+    'katha (Bihar)': 126.4642632, // 1,361.25 sq ft
+    'katha (Assam)': 267.5607552, // 2,880 sq ft
+    'katha (UP)': 126.3481344, // 1,360 sq ft
+    guntha: 101.17141056, // 1,089 sq ft
+    'ground (TN)': 222.967296, // 2,400 sq ft
+    'bigha (WB)': 1337.803776, // 14,400 sq ft
+  },
   Weight: {
     mg: 0.000001,
     g: 0.001,
@@ -19,14 +35,6 @@ const unitTypes = {
     ton: 1000,
     oz: 0.0283495,
     lb: 0.453592,
-  },
-  Area: {
-    'sq m': 1,
-    'sq km': 1000000,
-    'sq ft': 0.092903,
-    'sq yd': 0.836127,
-    acre: 4046.86,
-    hectare: 10000,
   },
   Volume: {
     ml: 0.001,
@@ -53,62 +61,148 @@ const unitTypes = {
   },
 };
 type UnitCategory = keyof typeof unitTypes | 'Temperature';
+interface UnitInputRowProps {
+  label: string;
+  value: string;
+  onChange?: (val: string) => void;
+  unit: string;
+  onUnitChange: (unit: string) => void;
+  availableUnits: string[];
+  readOnly?: boolean;
+  isResult?: boolean;
+}
+const UnitInputRow: React.FC<UnitInputRowProps> = ({
+  label,
+  value,
+  onChange,
+  unit,
+  onUnitChange,
+  availableUnits,
+  readOnly = false,
+  isResult = false,
+}) => (
+  <div className="flex-1 w-full min-w-0">
+    <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+      {label}
+    </label>
+    <div className="flex gap-2">
+      <input
+        type={readOnly ? 'text' : 'number'}
+        className={`input input-sm input-primary input-bordered w-full ${
+          isResult ? 'bg-success/10 text-success font-bold' : ''
+        }`}
+        value={value}
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+        placeholder={readOnly ? '0' : 'Enter value'}
+        readOnly={readOnly}
+      />
+      <select
+        className="select select-sm select-bordered select-primary max-w-[150px] font-medium"
+        value={unit}
+        onChange={(e) => onUnitChange(e.target.value)}
+      >
+        {availableUnits.map((u) => (
+          <option key={u} value={u}>
+            {u}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+);
+const STORAGE_KEY = 'unit_converter_state';
+interface SavedState {
+  category: UnitCategory;
+  fromUnit: string;
+  toUnit: string;
+  inputValue: string;
+}
+const getSavedState = (): SavedState => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          category: parsed.category || 'Length',
+          fromUnit: parsed.fromUnit || 'm',
+          toUnit: parsed.toUnit || 'ft',
+          inputValue: parsed.inputValue || '1',
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load unit converter state:', err);
+  }
+  return {
+    category: 'Length',
+    fromUnit: 'm',
+    toUnit: 'ft',
+    inputValue: '1',
+  };
+};
 const UnitConverter: React.FC = () => {
   const categories: UnitCategory[] = [
     'Length',
-    'Weight',
     'Area',
+    'Weight',
     'Volume',
     'Temperature',
     'Speed',
     'Data',
   ];
-  const [category, setCategory] = useState<UnitCategory>('Length');
-  const [fromUnit, setFromUnit] = useState('m');
-  const [toUnit, setToUnit] = useState('ft');
-  const [inputValue, setInputValue] = useState('1');
-  const [outputValue, setOutputValue] = useState('');
-  // Handle category change
+  const [saved] = useState<SavedState>(getSavedState);
+  const [category, setCategory] = useState<UnitCategory>(saved.category);
+  const [fromUnit, setFromUnit] = useState<string>(saved.fromUnit);
+  const [toUnit, setToUnit] = useState<string>(saved.toUnit);
+  const [inputValue, setInputValue] = useState<string>(saved.inputValue);
+  // Persist state to localStorage on changes
   useEffect(() => {
-    if (category === 'Temperature') {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ category, fromUnit, toUnit, inputValue })
+      );
+    } catch (err) {
+      console.warn('Failed to persist unit converter state:', err);
+    }
+  }, [category, fromUnit, toUnit, inputValue]);
+  // Handle category change
+  const handleCategoryChange = (c: UnitCategory) => {
+    setCategory(c);
+    if (c === 'Temperature') {
       setFromUnit('C');
       setToUnit('F');
     } else {
-      const units = Object.keys(unitTypes[category]);
-      setFromUnit(units[2] || units[0]); // default e.g., m
-      setToUnit(units[5] || units[1]);   // default e.g., ft
+      const units = Object.keys(unitTypes[c]);
+      setFromUnit(units[2] || units[0]);
+      setToUnit(units[5] || units[1]);
     }
-  }, [category]);
-  // Handle calculation
-  useEffect(() => {
-    const val = parseFloat(inputValue);
-    if (isNaN(val)) {
-      setOutputValue('');
-      return;
-    }
+  };
+  // Calculate output on the fly during render
+  let outputValue = '';
+  const val = parseFloat(inputValue);
+  if (!isNaN(val)) {
     if (category === 'Temperature') {
       let c = 0;
-      // Convert to Celsius first
       if (fromUnit === 'C') c = val;
-      else if (fromUnit === 'F') c = (val - 32) * 5 / 9;
+      else if (fromUnit === 'F') c = ((val - 32) * 5) / 9;
       else if (fromUnit === 'K') c = val - 273.15;
-      // Convert Celsius to target
       let result = 0;
       if (toUnit === 'C') result = c;
-      else if (toUnit === 'F') result = (c * 9 / 5) + 32;
+      else if (toUnit === 'F') result = (c * 9) / 5 + 32;
       else if (toUnit === 'K') result = c + 273.15;
-      setOutputValue(result.toLocaleString(undefined, { maximumFractionDigits: 6 }));
+      outputValue = result.toLocaleString(undefined, { maximumFractionDigits: 6 });
     } else {
-      // Base conversion (everything to base unit, then to target)
       const catData = unitTypes[category];
-      const fromFactor = catData[fromUnit as keyof typeof catData];
-      const toFactor = catData[toUnit as keyof typeof catData];
+      const fromFactor = catData?.[fromUnit as keyof typeof catData];
+      const toFactor = catData?.[toUnit as keyof typeof catData];
       if (fromFactor && toFactor) {
         const result = (val * fromFactor) / toFactor;
-        setOutputValue(result.toLocaleString(undefined, { maximumFractionDigits: 6 }));
+        outputValue = result.toLocaleString(undefined, { maximumFractionDigits: 6 });
       }
     }
-  }, [inputValue, fromUnit, toUnit, category]);
+  }
   const handleSwap = () => {
     setFromUnit(toUnit);
     setToUnit(fromUnit);
@@ -121,85 +215,55 @@ const UnitConverter: React.FC = () => {
   return (
     <main className="w-full max-w-3xl mx-auto px-4 py-8">
       <SEOHead
-        title="Unit Converter — Length, Weight, Area, Temp | Rupee Calculator"
-        description="Free online unit converter tool. Easily convert length, weight, area, volume, temperature, speed, and data sizes instantly."
+        title="Unit Converter — Length, Area, Weight, Temp | Rupee Calculator"
+        description="Free online unit converter tool. Convert land area (Cent, Kottah, Katha, Acre, Guntha), length, weight, volume, temperature, and speed instantly."
         canonicalPath="/utilities/unit-converter"
       />
-      <h1 className="text-3xl font-bold mb-6 text-base-content text-center">Unit Converter</h1>
-      <div className="card bg-base-100 shadow-xl border border-base-300">
-        <div className="card-body">
-          {/* Category Selector */}
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
-            {categories.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCategory(c)}
-                className={`btn btn-sm ${category === c ? 'btn-primary' : 'btn-outline'}`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          {/* Converter Logic */}
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-            {/* From */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">From</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  className="input input-bordered w-full"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Enter value"
-                />
-                <select
-                  className="select select-bordered"
-                  value={fromUnit}
-                  onChange={(e) => setFromUnit(e.target.value)}
-                >
-                  {getAvailableUnits().map((u) => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+      <div>
+        {/* Category Selector */}
+        <div className="flex flex-wrap gap-2 justify-center mb-6">
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => handleCategoryChange(c)}
+              className={`btn btn-sm ${category === c ? 'btn-primary' : 'btn-outline'}`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        {/* Converter Logic: Single row input container */}
+        <div className="bg-base-100 border border-base-300 rounded-xl p-6 shadow-sm max-w-3xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center gap-3">
+            <UnitInputRow
+              label="From"
+              value={inputValue}
+              onChange={setInputValue}
+              unit={fromUnit}
+              onUnitChange={setFromUnit}
+              availableUnits={getAvailableUnits()}
+            />
             {/* Swap Button */}
-            <div className="flex justify-center mt-6 md:mt-8">
+            <div className="flex justify-center pt-2 md:pt-5 shrink-0">
               <button
+                type="button"
                 onClick={handleSwap}
-                className="btn btn-circle btn-ghost"
+                className="btn btn-circle btn-sm btn-ghost bg-base-200 hover:bg-base-300 hover:text-primary transition-all shadow-sm"
                 title="Swap units"
+                aria-label="Swap units"
               >
-                <FiArrowRight className="hidden md:block w-6 h-6" />
-                <FiArrowDown className="block md:hidden w-6 h-6" />
+                <HiArrowsRightLeft className="w-4 h-4" />
               </button>
             </div>
-            {/* To */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">To</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  className="input input-bordered w-full bg-base-200"
-                  value={outputValue}
-                  readOnly
-                />
-                <select
-                  className="select select-bordered"
-                  value={toUnit}
-                  onChange={(e) => setToUnit(e.target.value)}
-                >
-                  {getAvailableUnits().map((u) => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <UnitInputRow
+              label="To"
+              value={outputValue}
+              unit={toUnit}
+              onUnitChange={setToUnit}
+              availableUnits={getAvailableUnits()}
+              readOnly
+              isResult
+            />
           </div>
         </div>
       </div>

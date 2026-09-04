@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 interface WoodPiece {
   id: string;
@@ -8,14 +8,60 @@ interface WoodPiece {
   qty: string;
   pricePerCft: string;
 }
+const STORAGE_KEY = 'wood_calculator_state';
+interface SavedState {
+  unit: 'inches' | 'feet';
+  pieces: WoodPiece[];
+  cutsCharge: string;
+  labourCharge: string;
+  shippingCharge: string;
+}
+const getSavedState = (): SavedState => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          unit: parsed.unit === 'inches' ? 'inches' : 'feet',
+          pieces:
+            Array.isArray(parsed.pieces) && parsed.pieces.length > 0
+              ? parsed.pieces
+              : [{ id: '1', length: '', breadth: '', thickness: '', qty: '1', pricePerCft: '' }],
+          cutsCharge: parsed.cutsCharge ?? '',
+          labourCharge: parsed.labourCharge ?? '',
+          shippingCharge: parsed.shippingCharge ?? '',
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load wood calculator state:', err);
+  }
+  return {
+    unit: 'feet',
+    pieces: [{ id: '1', length: '', breadth: '', thickness: '', qty: '1', pricePerCft: '' }],
+    cutsCharge: '',
+    labourCharge: '',
+    shippingCharge: '',
+  };
+};
 const WoodCalculator: React.FC = () => {
-  const [unit, setUnit] = useState<'inches' | 'feet'>('feet');
-  const [pieces, setPieces] = useState<WoodPiece[]>([
-    { id: '1', length: '', breadth: '', thickness: '', qty: '1', pricePerCft: '' },
-  ]);
-  const [cutsCharge, setCutsCharge] = useState('');
-  const [labourCharge, setLabourCharge] = useState('');
-  const [shippingCharge, setShippingCharge] = useState('');
+  const [saved] = useState<SavedState>(getSavedState);
+  const [unit, setUnit] = useState<'inches' | 'feet'>(saved.unit);
+  const [pieces, setPieces] = useState<WoodPiece[]>(saved.pieces);
+  const [cutsCharge, setCutsCharge] = useState(saved.cutsCharge);
+  const [labourCharge, setLabourCharge] = useState(saved.labourCharge);
+  const [shippingCharge, setShippingCharge] = useState(saved.shippingCharge);
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ unit, pieces, cutsCharge, labourCharge, shippingCharge })
+      );
+    } catch (err) {
+      console.warn('Failed to persist wood calculator state:', err);
+    }
+  }, [unit, pieces, cutsCharge, labourCharge, shippingCharge]);
   const addPiece = () => {
     setPieces([
       ...pieces,
@@ -61,12 +107,6 @@ const WoodCalculator: React.FC = () => {
   return (
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <div>
-          <h2 className="card-title text-lg">Wood Cubic Calculator</h2>
-          <p className="text-sm opacity-70">
-            Calculate volume (CFT) and pricing for multiple pieces.
-          </p>
-        </div>
         <div className="flex gap-1 bg-base-200 p-1 rounded-lg w-full sm:w-auto shrink-0">
           <button
             className={`btn btn-sm flex-1 sm:flex-none ${unit === 'feet' ? 'btn-primary' : 'btn-ghost'}`}
@@ -107,7 +147,7 @@ const WoodCalculator: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-bordered w-full"
+                  className="input input-sm input-primary input-bordered w-full"
                   value={p.length}
                   onChange={(e) => updatePiece(p.id, 'length', e.target.value)}
                 />
@@ -118,7 +158,7 @@ const WoodCalculator: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-bordered w-full"
+                  className="input input-sm input-primary input-bordered w-full"
                   value={p.breadth}
                   onChange={(e) => updatePiece(p.id, 'breadth', e.target.value)}
                 />
@@ -129,7 +169,7 @@ const WoodCalculator: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-bordered w-full"
+                  className="input input-sm input-primary input-bordered w-full"
                   value={p.thickness}
                   onChange={(e) => updatePiece(p.id, 'thickness', e.target.value)}
                 />
@@ -138,7 +178,7 @@ const WoodCalculator: React.FC = () => {
                 <label className="block text-[11px] font-bold opacity-70 mb-1">Quantity</label>
                 <input
                   type="number"
-                  className="input input-sm input-bordered w-full"
+                  className="input input-sm input-primary input-bordered w-full"
                   value={p.qty}
                   onChange={(e) => updatePiece(p.id, 'qty', e.target.value)}
                 />
@@ -149,7 +189,7 @@ const WoodCalculator: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-bordered w-full text-success font-semibold"
+                  className="input input-sm input-primary input-bordered w-full text-success font-semibold"
                   value={p.pricePerCft}
                   onChange={(e) => updatePiece(p.id, 'pricePerCft', e.target.value)}
                 />
@@ -174,7 +214,7 @@ const WoodCalculator: React.FC = () => {
           <label className="block text-[11px] font-bold opacity-70 mb-1">Cuts (₹)</label>
           <input
             type="number"
-            className="input input-sm input-bordered w-full"
+            className="input input-sm input-primary input-bordered w-full"
             value={cutsCharge}
             onChange={(e) => setCutsCharge(e.target.value)}
           />
@@ -183,7 +223,7 @@ const WoodCalculator: React.FC = () => {
           <label className="block text-[11px] font-bold opacity-70 mb-1">Labour (₹)</label>
           <input
             type="number"
-            className="input input-sm input-bordered w-full"
+            className="input input-sm input-primary input-bordered w-full"
             value={labourCharge}
             onChange={(e) => setLabourCharge(e.target.value)}
           />
@@ -192,7 +232,7 @@ const WoodCalculator: React.FC = () => {
           <label className="block text-[11px] font-bold opacity-70 mb-1">Shipping (₹)</label>
           <input
             type="number"
-            className="input input-sm input-bordered w-full"
+            className="input input-sm input-primary input-bordered w-full"
             value={shippingCharge}
             onChange={(e) => setShippingCharge(e.target.value)}
           />

@@ -369,7 +369,7 @@ const TopBar = ({ className }: { className?: string }) => {
             </div>
             {isAuthenticated && user && (
               <div className="border-t border-primary-content/20 pt-2 mt-3 space-y-1.5">
-                <p className="text-xs truncate opacity-70 mb-0.5">{user.email}</p>
+                <p className="text-xs text-center truncate opacity-70 mb-1  ">{user.email}</p>
                 {user.subscription_status !== 'active' && user.role !== 'admin' && (
                   <Link
                     to="/upgrade"
@@ -386,7 +386,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     setIsMenuOpen(false);
                     void handleLogout();
                   }}
-                  className="btn btn-outline btn-xs w-full border-primary-content text-primary-content flex items-center justify-center gap-1"
+                  className="btn btn-outline btn-sm w-full border-primary-content text-primary-content flex items-center justify-center gap-1"
                 >
                   <FiLogOut className="h-3.5 w-3.5" />
                   <span>Sign Out</span>
