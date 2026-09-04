@@ -5,7 +5,7 @@ import SEOHead from '../../components/SEOHead';
 const QuickNotesPage: React.FC = () => {
   const { token } = useAuth();
   return (
-    <main className="w-full max-w-4xl mx-auto px-4 py-4">
+    <main className="w-full max-w-4xl mx-auto px-2 py-2">
       <SEOHead title="Quick Notes | Admin" description="Quick Notes for Admin" noIndex={true} />
       <QuickNotes token={token || ''} />
     </main>

@@ -3,7 +3,7 @@ import VolumetricWeight from '../../components/admin/VolumetricWeight';
 import SEOHead from '../../components/SEOHead';
 const VolumetricWeightPage: React.FC = () => {
   return (
-    <main className="w-full max-w-4xl mx-auto px-4 py-4">
+    <main className="w-full max-w-4xl mx-auto px-2 py-2">
       <SEOHead
         title="Volumetric Weight | Admin"
         description="Volumetric Weight for Admin"

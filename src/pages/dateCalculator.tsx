@@ -268,15 +268,15 @@ const DateCalculator: React.FC = () => {
                 <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
                   From Date &amp; Time
                 </label>
-                <div className="flex gap-2">
+                <div className="w-full join join-horizonal">
                   <input
-                    className="input input-sm input-primary input-bordered grow min-w-0 font-medium"
+                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                   />
                   <input
-                    className="input input-sm input-primary input-bordered w-24 shrink-0 font-medium text-center"
+                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
@@ -293,15 +293,15 @@ const DateCalculator: React.FC = () => {
                 <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
                   To Date &amp; Time
                 </label>
-                <div className="flex gap-2">
+                <div className="w-full join join-horizonal">
                   <input
-                    className="input input-sm input-primary input-bordered grow min-w-0 font-medium"
+                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                   />
                   <input
-                    className="input input-sm input-primary input-bordered w-24 shrink-0 font-medium text-center"
+                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
@@ -387,15 +387,15 @@ const DateCalculator: React.FC = () => {
             <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
               Starting Date &amp; Time
             </label>
-            <div className="flex gap-2">
+            <div className="w-full join join-horizonal">
               <input
-                className="input input-sm input-primary input-bordered grow min-w-0 font-medium"
+                className="w-1/2 input input-sm input-primary input-bordered font-medium"
                 type="date"
                 value={baseDate}
                 onChange={(e) => setBaseDate(e.target.value)}
               />
               <input
-                className="input input-sm input-primary input-bordered w-24 shrink-0 font-medium text-center"
+                className="w-1/2 input input-sm input-primary input-bordered font-medium"
                 type="time"
                 value={baseTime}
                 onChange={(e) => setBaseTime(e.target.value)}

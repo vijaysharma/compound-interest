@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
 import { HiArrowsRightLeft } from 'react-icons/hi2';
+import { FiNavigation } from 'react-icons/fi';
 const unitTypes = {
   Length: {
     mm: 0.001,
@@ -81,33 +82,31 @@ const UnitInputRow: React.FC<UnitInputRowProps> = ({
   readOnly = false,
   isResult = false,
 }) => (
-  <div className="flex-1 w-full min-w-0">
-    <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+  <div className="join w-full min-w-0">
+    <span className="inline-block join-item border border-primary text-[11px]/[30px] w-32 text-center align-middle bg-primary text-primary-content font-bold uppercase tracking-wider">
       {label}
-    </label>
-    <div className="flex gap-2">
-      <input
-        type={readOnly ? 'text' : 'number'}
-        className={`input input-sm input-primary input-bordered w-full ${
-          isResult ? 'bg-success/10 text-success font-bold' : ''
-        }`}
-        value={value}
-        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-        placeholder={readOnly ? '0' : 'Enter value'}
-        readOnly={readOnly}
-      />
-      <select
-        className="select select-sm select-bordered select-primary max-w-[150px] font-medium"
-        value={unit}
-        onChange={(e) => onUnitChange(e.target.value)}
-      >
-        {availableUnits.map((u) => (
-          <option key={u} value={u}>
-            {u}
-          </option>
-        ))}
-      </select>
-    </div>
+    </span>
+    <input
+      type={readOnly ? 'text' : 'number'}
+      className={`join-item input input-sm input-primary input-bordered ${
+        isResult ? 'bg-success/10 text-success font-bold' : ''
+      }`}
+      value={value}
+      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+      placeholder={readOnly ? '0' : 'Enter value'}
+      readOnly={readOnly}
+    />
+    <select
+      className="join-item w-48 select select-sm select-bordered select-primary  font-medium"
+      value={unit}
+      onChange={(e) => onUnitChange(e.target.value)}
+    >
+      {availableUnits.map((u) => (
+        <option key={u} value={u}>
+          {u}
+        </option>
+      ))}
+    </select>
   </div>
 );
 const STORAGE_KEY = 'unit_converter_state';
@@ -159,10 +158,7 @@ const UnitConverter: React.FC = () => {
   // Persist state to localStorage on changes
   useEffect(() => {
     try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ category, fromUnit, toUnit, inputValue })
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ category, fromUnit, toUnit, inputValue }));
     } catch (err) {
       console.warn('Failed to persist unit converter state:', err);
     }
@@ -213,27 +209,34 @@ const UnitConverter: React.FC = () => {
     return Object.keys(unitTypes[category]);
   };
   return (
-    <main className="w-full max-w-3xl mx-auto px-4 py-8">
+    <main className="w-full max-w-3xl mx-auto px-2 py-2">
       <SEOHead
         title="Unit Converter — Length, Area, Weight, Temp | Rupee Calculator"
         description="Free online unit converter tool. Convert land area (Cent, Kottah, Katha, Acre, Guntha), length, weight, volume, temperature, and speed instantly."
         canonicalPath="/utilities/unit-converter"
       />
-      <div>
+      <>
+        <h2 className="card-title text-lg flex items-center gap-2">
+          <FiNavigation className="text-primary" /> Unit Converter
+        </h2>
+        <p className="text-sm opacity-70 mb-4">
+          Convert between different units of measurement for length, area, weight, volume,
+          temperature, and speed.
+        </p>
         {/* Category Selector */}
-        <div className="flex flex-wrap gap-2 justify-center mb-6">
+        <div className="join w-full justify-center mb-4">
           {categories.map((c) => (
-            <button
+            <span
               key={c}
               onClick={() => handleCategoryChange(c)}
-              className={`btn btn-sm ${category === c ? 'btn-primary' : 'btn-outline'}`}
+              className={`btn btn-primary py-4 btn-xs ${category === c ? 'btn-primary' : 'btn-outline'}`}
             >
               {c}
-            </button>
+            </span>
           ))}
         </div>
         {/* Converter Logic: Single row input container */}
-        <div className="bg-base-100 border border-base-300 rounded-xl p-6 shadow-sm max-w-3xl mx-auto">
+        <div>
           <div className="flex flex-col md:flex-row items-center gap-3">
             <UnitInputRow
               label="From"
@@ -244,7 +247,7 @@ const UnitConverter: React.FC = () => {
               availableUnits={getAvailableUnits()}
             />
             {/* Swap Button */}
-            <div className="flex justify-center pt-2 md:pt-5 shrink-0">
+            <div className="flex justify-center md:pt-5 shrink-0">
               <button
                 type="button"
                 onClick={handleSwap}
@@ -266,7 +269,7 @@ const UnitConverter: React.FC = () => {
             />
           </div>
         </div>
-      </div>
+      </>
     </main>
   );
 };

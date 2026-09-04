@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiTruck } from 'react-icons/fi';
+import { FiTruck, FiMapPin } from 'react-icons/fi';
 interface CourierCompany {
   courier_company_id: number;
   courier_name: string;
@@ -47,6 +47,88 @@ const getSavedState = (): SavedState => {
     cod: false,
   };
 };
+interface PincodeInfo {
+  display: string;
+  tooltip?: string;
+}
+const pincodeCache = new Map<string, PincodeInfo>();
+function formatLocation(localities: string[], city?: string, state?: string): PincodeInfo {
+  const cleanLocs = Array.from(
+    new Set(localities.map((l) => l?.trim()).filter((l): l is string => Boolean(l && l.length > 0)))
+  );
+  const cleanCity = city?.trim() || '';
+  const cleanState = state?.trim() || '';
+  const locSummary =
+    cleanLocs.length > 2
+      ? `${cleanLocs.slice(0, 2).join(', ')} (+${cleanLocs.length - 2} more)`
+      : cleanLocs.join(', ');
+  const parts = [locSummary, cleanCity, cleanState].filter(
+    (val, idx, arr) => Boolean(val) && arr.indexOf(val) === idx
+  );
+  const fullParts = [cleanLocs.join(', '), cleanCity, cleanState].filter(
+    (val, idx, arr) => Boolean(val) && arr.indexOf(val) === idx
+  );
+  return {
+    display: parts.join(', '),
+    tooltip: cleanLocs.length > 2 ? fullParts.join(', ') : undefined,
+  };
+}
+async function lookupPincode(code: string, signal?: AbortSignal): Promise<PincodeInfo | null> {
+  const trimmed = code.trim();
+  if (!/^\d{6}$/.test(trimmed)) return null;
+  if (pincodeCache.has(trimmed)) return pincodeCache.get(trimmed)!;
+  try {
+    const res = await fetch(
+      `https://apiv2.shiprocket.in/v1/external/open/postcode/details?postcode=${encodeURIComponent(trimmed)}`,
+      { signal }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.postcode_details) {
+        const { city, state, locality } = data.postcode_details;
+        const locList: string[] = Array.isArray(locality)
+          ? locality
+          : locality
+            ? [String(locality)]
+            : [];
+        const result = formatLocation(locList, city, state);
+        if (result.display) {
+          pincodeCache.set(trimmed, result);
+          return result;
+        }
+      }
+    }
+  } catch (err) {
+    if ((err as Error)?.name === 'AbortError') return null;
+  }
+  try {
+    const res = await fetch(`https://api.postalpincode.in/pincode/${encodeURIComponent(trimmed)}`, {
+      signal,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data[0]?.Status === 'Success' && data[0]?.PostOffice?.[0]) {
+        const poList = data[0].PostOffice as Array<{
+          Name?: string;
+          District?: string;
+          Block?: string;
+          State?: string;
+        }>;
+        const po = poList[0];
+        const locList = poList.map((p) => p.Name).filter((n): n is string => Boolean(n));
+        const district = po.District || po.Block;
+        const result = formatLocation(locList, district, po.State);
+        if (result.display) {
+          pincodeCache.set(trimmed, result);
+          return result;
+        }
+      }
+    }
+  } catch (err) {
+    if ((err as Error)?.name === 'AbortError') return null;
+  }
+  return null;
+}
 const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
   const [saved] = useState<SavedState>(getSavedState);
   const [pickup, setPickup] = useState(saved.pickup);
@@ -56,6 +138,10 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
   const [breadth, setBreadth] = useState(saved.breadth);
   const [height, setHeight] = useState(saved.height);
   const [cod, setCod] = useState(saved.cod);
+  const [pickupLocation, setPickupLocation] = useState<PincodeInfo | null>(null);
+  const [pickupLoading, setPickupLoading] = useState(saved.pickup.length === 6);
+  const [deliveryLocation, setDeliveryLocation] = useState<PincodeInfo | null>(null);
+  const [deliveryLoading, setDeliveryLoading] = useState(saved.delivery.length === 6);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CourierCompany[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +163,52 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       console.warn('Failed to persist shiprocket rates state:', err);
     }
   }, [pickup, delivery, weight, length, breadth, height, cod]);
+  useEffect(() => {
+    const trimmed = pickup.trim();
+    if (!/^\d{6}$/.test(trimmed)) {
+      return;
+    }
+    let ignore = false;
+    const controller = new AbortController();
+    lookupPincode(trimmed, controller.signal)
+      .then((loc) => {
+        if (!ignore) {
+          setPickupLocation(loc);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setPickupLoading(false);
+        }
+      });
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
+  }, [pickup]);
+  useEffect(() => {
+    const trimmed = delivery.trim();
+    if (!/^\d{6}$/.test(trimmed)) {
+      return;
+    }
+    let ignore = false;
+    const controller = new AbortController();
+    lookupPincode(trimmed, controller.signal)
+      .then((loc) => {
+        if (!ignore) {
+          setDeliveryLocation(loc);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setDeliveryLoading(false);
+        }
+      });
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
+  }, [delivery]);
   const fetchRates = async () => {
     if (!pickup || !delivery || !weight || !length || !breadth || !height) {
       setError('Pickup, Delivery, Weight, and all dimensions (L x B x H) are required.');
@@ -127,104 +259,166 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
         <FiTruck className="text-primary" /> Shiprocket Rate Calculator
       </h2>
       {error && <div className="alert alert-error text-sm my-2 py-2">{error}</div>}
-      <div className="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm mb-6 mt-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-              Pickup Pincode*
-            </label>
-            <input
-              type="text"
-              className="input input-sm input-primary input-bordered w-full"
-              value={pickup}
-              onChange={(e) => setPickup(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-              Delivery Pincode*
-            </label>
-            <input
-              type="text"
-              className="input input-sm input-primary input-bordered w-full"
-              value={delivery}
-              onChange={(e) => setDelivery(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-              Dead Weight (kg)*
-            </label>
-            <input
-              type="number"
-              className="input input-sm input-primary input-bordered w-full"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-              COD Required?
-            </label>
-            <div className="mt-1">
-              <input
-                type="checkbox"
-                className="toggle toggle-primary toggle-sm"
-                checked={cod}
-                onChange={(e) => setCod(e.target.checked)}
-              />
-            </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div className="min-h-[120px]">
+          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            Pickup Pincode*
+          </label>
+          <input
+            type="text"
+            className="input input-sm input-primary input-bordered w-full"
+            value={pickup}
+            maxLength={6}
+            placeholder="e.g. 700157"
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+              setPickup(val);
+              if (val.length !== 6) {
+                setPickupLocation(null);
+                setPickupLoading(false);
+              } else {
+                setPickupLoading(true);
+              }
+            }}
+          />
+          <div className="min-h-[16px] mt-1 text-[11px]">
+            {pickupLoading && (
+              <span className="opacity-60 flex items-center gap-1">
+                <span className="loading loading-spinner loading-xs text-primary" />
+                Looking up location...
+              </span>
+            )}
+            {!pickupLoading && pickupLocation && (
+              <span
+                className="font-semibold text-primary flex items-center gap-1 truncate"
+                title={pickupLocation.tooltip || pickupLocation.display}
+              >
+                <FiMapPin className="shrink-0 w-3 h-3 text-primary" />
+                <span className="text-wrap">{pickupLocation.display}</span>
+              </span>
+            )}
+            {!pickupLoading && !pickupLocation && pickup.length === 6 && (
+              <span className="text-error opacity-75">Location not found</span>
+            )}
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-              Length (cm)*
-            </label>
-            <input
-              type="number"
-              className="input input-sm input-primary input-bordered w-full"
-              value={length}
-              onChange={(e) => setLength(e.target.value)}
-              placeholder="Required"
-            />
+        <div>
+          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            Delivery Pincode*
+          </label>
+          <input
+            type="text"
+            className="input input-sm input-primary input-bordered w-full"
+            value={delivery}
+            maxLength={6}
+            placeholder="e.g. 700120"
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+              setDelivery(val);
+              if (val.length !== 6) {
+                setDeliveryLocation(null);
+                setDeliveryLoading(false);
+              } else {
+                setDeliveryLoading(true);
+              }
+            }}
+          />
+          <div className="min-h-[16px] mt-1 text-[11px]">
+            {deliveryLoading && (
+              <span className="opacity-60 flex items-center gap-1">
+                <span className="loading loading-spinner loading-xs text-primary" />
+                Looking up location...
+              </span>
+            )}
+            {!deliveryLoading && deliveryLocation && (
+              <span
+                className="font-semibold text-primary flex items-center gap-1 truncate"
+                title={deliveryLocation.tooltip || deliveryLocation.display}
+              >
+                <FiMapPin className="shrink-0 w-3 h-3 text-primary" />
+                <span className="text-wrap">{deliveryLocation.display}</span>
+              </span>
+            )}
+            {!deliveryLoading && !deliveryLocation && delivery.length === 6 && (
+              <span className="text-error opacity-75">Location not found</span>
+            )}
           </div>
-          <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-              Breadth (cm)*
-            </label>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            Dead Weight (kg)*
+          </label>
+          <input
+            type="number"
+            className="input input-sm input-primary input-bordered w-full"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            COD Required?
+          </label>
+          <div className="mt-1">
             <input
-              type="number"
-              className="input input-sm input-primary input-bordered w-full"
-              value={breadth}
-              onChange={(e) => setBreadth(e.target.value)}
-              placeholder="Required"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-              Height (cm)*
-            </label>
-            <input
-              type="number"
-              className="input input-sm input-primary input-bordered w-full"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              placeholder="Required"
+              type="checkbox"
+              className="toggle toggle-primary toggle-sm"
+              checked={cod}
+              onChange={(e) => setCod(e.target.checked)}
             />
           </div>
         </div>
-        <div className="mt-2 bg-success/10 text-success p-3 rounded-lg flex justify-between items-center text-sm shadow-inner">
-          <span>
-            Volumetric Weight: <strong className="text-lg">{volumetricWeight} kg</strong>
-          </span>
-          <span className="opacity-80 font-medium">
-            Applied Weight:{' '}
-            <strong className="text-lg">
-              {Math.max(Number(weight || 0), Number(volumetricWeight))} kg
-            </strong>
-          </span>
+      </div>
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div>
+          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            Length (cm)*
+          </label>
+          <input
+            type="number"
+            className="input input-sm input-primary input-bordered w-full"
+            value={length}
+            onChange={(e) => setLength(e.target.value)}
+            placeholder="Required"
+          />
         </div>
+        <div>
+          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            Breadth (cm)*
+          </label>
+          <input
+            type="number"
+            className="input input-sm input-primary input-bordered w-full"
+            value={breadth}
+            onChange={(e) => setBreadth(e.target.value)}
+            placeholder="Required"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            Height (cm)*
+          </label>
+          <input
+            type="number"
+            className="input input-sm input-primary input-bordered w-full"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+            placeholder="Required"
+          />
+        </div>
+      </div>
+      <div className="mb-4 bg-primary/5 text-primary p-3 rounded-lg flex justify-between items-center text-sm">
+        <span>
+          Volumetric Weight
+          <br /> <span className="text-md">{volumetricWeight} kg</span>
+        </span>
+        <span className="opacity-80 font-medium">
+          Applied Weight
+          <br />
+          <strong className="text-lg">
+            {Math.max(Number(weight || 0), Number(volumetricWeight))} kg
+          </strong>
+        </span>
       </div>
       <div className="flex justify-end">
         <button className="btn btn-primary" onClick={fetchRates} disabled={loading}>
