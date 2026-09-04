@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiTruck, FiMapPin } from 'react-icons/fi';
+import { FiTruck, FiMapPin, FiStar } from 'react-icons/fi';
 interface CourierCompany {
   courier_company_id: number;
   courier_name: string;
@@ -429,7 +429,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
         <div className="mt-6">
           <h3 className="font-bold mb-3 border-b pb-2">Available Couriers ({result.length})</h3>
           <div className="overflow-x-auto">
-            <table className="table table-sm table-zebra">
+            <table className="table table-primary table-sm table-zebra">
               <thead>
                 <tr>
                   <th>Courier</th>
@@ -443,8 +443,10 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                   <tr key={c.courier_company_id}>
                     <td className="font-semibold">{c.courier_name}</td>
                     <td>{c.etd}</td>
-                    <td className="font-bold text-success">₹{c.rate}</td>
-                    <td>{c.rating} ⭐</td>
+                    <td className="font-semibold text-primary text-[15px]">₹{c.rate}</td>
+                    <td>
+                      {c.rating} <FiStar className="inline text-primary" />
+                    </td>
                   </tr>
                 ))}
                 {result.length === 0 && (
