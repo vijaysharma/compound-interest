@@ -42,29 +42,76 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   });
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(() => {
     try {
+      const savedNoteId = localStorage.getItem(user?.id ? `quick_notes_${user.id}_last_note_id` : 'quick_notes_last_note_id');
       const userCached = user?.id ? localStorage.getItem(`quick_notes_cache_${user.id}_v2`) : null;
       const legacyCached = localStorage.getItem('quick_notes_cache_v2');
       const cached = userCached || legacyCached;
       const list = cached ? JSON.parse(cached) : [];
+      if (savedNoteId && list.some((n: Note) => n.id === savedNoteId && !n.is_trashed)) {
+        return savedNoteId;
+      }
+      if (savedNoteId) return savedNoteId;
       const firstActive = list.find((n: Note) => !n.is_trashed);
       return firstActive ? firstActive.id : null;
     } catch {
       return null;
     }
   });
-  const [activeFolder, setActiveFolder] = useState<string>(SYSTEM_FOLDERS.ALL);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeFolder, setActiveFolder] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(user?.id ? `quick_notes_${user.id}_last_folder` : 'quick_notes_last_folder');
+      return saved || SYSTEM_FOLDERS.ALL;
+    } catch {
+      return SYSTEM_FOLDERS.ALL;
+    }
+  });
+  const [activeTag, setActiveTag] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(user?.id ? `quick_notes_${user.id}_last_tag` : 'quick_notes_last_tag');
+    } catch {
+      return null;
+    }
+  });
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [sortOption, setSortOption] = useState<SortOption>('updated_desc');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(user?.id ? `quick_notes_${user.id}_view_mode` : 'quick_notes_view_mode') as ViewMode;
+      return saved === 'gallery' || saved === 'list' ? saved : 'list';
+    } catch {
+      return 'list';
+    }
+  });
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    try {
+      const saved = localStorage.getItem(user?.id ? `quick_notes_${user.id}_sort_option` : 'quick_notes_sort_option') as SortOption;
+      return saved || 'updated_desc';
+    } catch {
+      return 'updated_desc';
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(user?.id ? `quick_notes_${user.id}_sidebar_open` : 'quick_notes_sidebar_open');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
   const [isLockModalOpen, setIsLockModalOpen] = useState(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [storageProvider, setStorageProvider] = useState<'vercel_blob' | 'database_fallback' | null>(null);
-  const [mobileScreen, setMobileScreen] = useState<'folders' | 'list' | 'editor'>('list');
+  const [mobileScreen, setMobileScreen] = useState<'folders' | 'list' | 'editor'>(() => {
+    try {
+      const saved = localStorage.getItem(user?.id ? `quick_notes_${user.id}_last_mobile_screen` : 'quick_notes_last_mobile_screen') as 'folders' | 'list' | 'editor' | null;
+      if (saved === 'editor' || saved === 'folders' || saved === 'list') return saved;
+      return 'list';
+    } catch {
+      return 'list';
+    }
+  });
   const [unlockedNotes, setUnlockedNotes] = useState<Set<string>>(new Set());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingUpdatesRef = useRef<{ id: string; updates: Partial<Note> } | null>(null);
@@ -113,7 +160,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
               return combined;
             });
             setSelectedNoteId((curr) => {
-              if (curr && decryptedNotes.some((n) => n.id === curr)) return curr;
+              const savedNoteId = localStorage.getItem(userId !== 'default' ? `quick_notes_${userId}_last_note_id` : 'quick_notes_last_note_id');
+              const target = curr || savedNoteId;
+              if (target && decryptedNotes.some((n) => n.id === target && !n.is_trashed)) {
+                return target;
+              }
               const firstActive = decryptedNotes.find((n) => !n.is_trashed);
               return firstActive ? firstActive.id : null;
             });
@@ -158,8 +209,49 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       isMounted = false;
     };
   }, [token, userId, userEmail]);
+  // Persist revisit states
+  useEffect(() => {
+    const key = user?.id ? `quick_notes_${user.id}_last_note_id` : 'quick_notes_last_note_id';
+    if (selectedNoteId) {
+      localStorage.setItem(key, selectedNoteId);
+    } else {
+      localStorage.removeItem(key);
+    }
+  }, [selectedNoteId, user?.id]);
+  useEffect(() => {
+    const key = user?.id ? `quick_notes_${user.id}_last_folder` : 'quick_notes_last_folder';
+    if (activeFolder) {
+      localStorage.setItem(key, activeFolder);
+    }
+  }, [activeFolder, user?.id]);
+  useEffect(() => {
+    const key = user?.id ? `quick_notes_${user.id}_last_mobile_screen` : 'quick_notes_last_mobile_screen';
+    localStorage.setItem(key, mobileScreen);
+  }, [mobileScreen, user?.id]);
+  useEffect(() => {
+    const key = user?.id ? `quick_notes_${user.id}_last_tag` : 'quick_notes_last_tag';
+    if (activeTag) {
+      localStorage.setItem(key, activeTag);
+    } else {
+      localStorage.removeItem(key);
+    }
+  }, [activeTag, user?.id]);
+  useEffect(() => {
+    const key = user?.id ? `quick_notes_${user.id}_view_mode` : 'quick_notes_view_mode';
+    localStorage.setItem(key, viewMode);
+  }, [viewMode, user?.id]);
+  useEffect(() => {
+    const key = user?.id ? `quick_notes_${user.id}_sort_option` : 'quick_notes_sort_option';
+    localStorage.setItem(key, sortOption);
+  }, [sortOption, user?.id]);
+  useEffect(() => {
+    const key = user?.id ? `quick_notes_${user.id}_sidebar_open` : 'quick_notes_sidebar_open';
+    localStorage.setItem(key, String(isSidebarOpen));
+  }, [isSidebarOpen, user?.id]);
   const effectiveNoteId = selectedNoteId || notes.find((n) => !n.is_trashed)?.id || null;
   const selectedNote = notes.find((n) => n.id === effectiveNoteId) || null;
+  const effectiveMobileScreen: 'folders' | 'list' | 'editor' =
+    mobileScreen === 'editor' && !selectedNote ? 'list' : mobileScreen;
   const persistNoteToServer = useCallback(
     async (noteId: string, updates: Partial<Note>) => {
       if (!token) return;
@@ -581,7 +673,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       )}
       <div
         className={`h-full ${
-          mobileScreen === 'folders'
+          effectiveMobileScreen === 'folders'
             ? 'flex flex-1 w-full md:flex-none'
             : isSidebarOpen
               ? 'hidden md:flex'
@@ -606,17 +698,17 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onRenameFolder={handleRenameFolder}
           onDeleteFolder={handleDeleteFolder}
           onMoveNoteToFolder={handleMoveNoteToFolder}
-          isOpen={isSidebarOpen || mobileScreen === 'folders'}
+          isOpen={isSidebarOpen || effectiveMobileScreen === 'folders'}
           onCloseMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
           onNewNote={handleNewNote}
-          isMobileScreen={mobileScreen === 'folders'}
+          isMobileScreen={effectiveMobileScreen === 'folders'}
         />
       </div>
       <div
         className={`h-full ${
-          mobileScreen === 'list'
+          effectiveMobileScreen === 'list'
             ? 'flex flex-1 w-full md:w-80 lg:w-88 md:flex-initial'
             : 'hidden md:flex'
         }`}
@@ -649,11 +741,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onBackToFolders={() => setMobileScreen('folders')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
-          isMobileScreen={mobileScreen === 'list'}
+          isMobileScreen={effectiveMobileScreen === 'list'}
         />
       </div>
       <div
-        className={`h-full flex-1 min-h-0 ${mobileScreen === 'editor' ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'}`}
+        className={`h-full flex-1 min-h-0 ${effectiveMobileScreen === 'editor' ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'}`}
       >
         <NotesEditor
           note={selectedNote}
@@ -676,7 +768,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
           onCreateFolder={handleCreateFolder}
           folderTitle={activeFolder === SYSTEM_FOLDERS.ALL ? 'All Notes' : activeFolder}
-          isMobileScreen={mobileScreen === 'editor'}
+          isMobileScreen={effectiveMobileScreen === 'editor'}
         />
       </div>
       {selectedNote && (

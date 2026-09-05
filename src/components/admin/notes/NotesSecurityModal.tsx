@@ -25,18 +25,20 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
         >
           <FiX className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success/15 text-success">
+        <div className="flex items-start gap-3 mb-4 pr-10">
+          <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-success/15 text-success flex-shrink-0 mt-0.5">
             <FiShield className="h-6 w-6" />
           </div>
-          <div>
-            <h3 id="security-modal-title" className="text-lg font-bold flex items-center gap-2">
-              End-to-End Encrypted
-              <span className="badge badge-success badge-sm font-semibold text-[10px] uppercase tracking-wider">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 id="security-modal-title" className="text-base sm:text-lg font-bold text-base-content leading-snug">
+                End-to-End Encrypted
+              </h3>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-success text-success-content shadow-xs whitespace-nowrap flex-shrink-0">
                 AES-256-GCM
               </span>
-            </h3>
-            <p className="text-xs text-base-content/60">Zero-Knowledge Client-Side Protection</p>
+            </div>
+            <p className="text-xs text-base-content/60 mt-0.5">Zero-Knowledge Client-Side Protection</p>
           </div>
         </div>
         <div className="bg-success/10 border border-success/20 rounded-xl p-3 mb-3 text-xs text-success-content/90 flex items-start gap-2.5">
