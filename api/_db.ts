@@ -234,14 +234,33 @@ export async function ensureTables(sql: Query) {
       await sql`
         CREATE TABLE IF NOT EXISTS admin_notes (
           id TEXT PRIMARY KEY,
+          title TEXT,
           content TEXT NOT NULL,
+          folder TEXT NOT NULL DEFAULT 'Notes',
+          is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+          is_locked BOOLEAN NOT NULL DEFAULT FALSE,
+          lock_password_hash TEXT,
+          is_trashed BOOLEAN NOT NULL DEFAULT FALSE,
+          tags TEXT NOT NULL DEFAULT '[]',
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS title TEXT`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS folder TEXT NOT NULL DEFAULT 'Notes'`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN NOT NULL DEFAULT FALSE`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS is_locked BOOLEAN NOT NULL DEFAULT FALSE`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS lock_password_hash TEXT`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS is_trashed BOOLEAN NOT NULL DEFAULT FALSE`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS tags TEXT NOT NULL DEFAULT '[]'`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
       await sql`
         CREATE INDEX IF NOT EXISTS admin_notes_created_at_idx
         ON admin_notes (created_at DESC)
+      `;
+      await sql`
+        CREATE INDEX IF NOT EXISTS admin_notes_updated_at_idx
+        ON admin_notes (updated_at DESC)
       `;
     })();
   }

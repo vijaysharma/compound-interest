@@ -1,0 +1,204 @@
+/* Quick Notes Visual Stylesheet */
+
+.quick-notes-theme {
+  font-family: system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Paper canvas background that seamlessly adapts to DaisyUI base colors */
+.qn-paper {
+  background-color: var(--color-base-100, #ffffff);
+}
+
+/* Custom sleek scrollbar */
+.qn-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.qn-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.qn-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 9999px;
+}
+
+.qn-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.5);
+}
+
+/* Interactive Circular Checklist Item */
+.qn-checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.35rem 0;
+  position: relative;
+  line-height: 1.5;
+}
+
+.qn-checkbox-circle {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-primary, #6e0b75);
+  background-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.qn-checkbox-circle:hover {
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 15%, transparent);
+  transform: scale(1.08);
+}
+
+.qn-checklist-item[data-checked="true"] .qn-checkbox-circle {
+  background-color: var(--color-primary, #6e0b75);
+  border-color: var(--color-primary, #6e0b75);
+  color: var(--color-primary-content, #ffffff);
+}
+
+.qn-checklist-item[data-checked="true"] .qn-checklist-content {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.qn-checklist-content {
+  flex: 1;
+  min-width: 0;
+  outline: none;
+}
+
+/* Quick Notes Table */
+.qn-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.85rem 0;
+  border: 1px solid rgba(160, 160, 160, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.qn-table th,
+.qn-table td {
+  border: 1px solid rgba(160, 160, 160, 0.25);
+  padding: 0.5rem 0.75rem;
+  min-width: 90px;
+  outline: none;
+}
+
+.qn-table th {
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 10%, transparent);
+  font-weight: 600;
+}
+
+/* Highlighter with theme adaptation */
+.qn-highlight {
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 20%, transparent) !important;
+  color: inherit !important;
+  padding: 0.1rem 0.25rem;
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Blockquote */
+.qn-quote {
+  border-left: 3.5px solid var(--color-primary, #6e0b75);
+  padding-left: 0.85rem;
+  margin: 0.65rem 0;
+  font-style: italic;
+  opacity: 0.88;
+}
+
+/* Code Block */
+.qn-code {
+  background-color: rgba(120, 120, 120, 0.12);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  margin: 0.65rem 0;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  border: 1px solid rgba(150, 150, 150, 0.18);
+}
+
+/* Clean formatting in editor content */
+.qn-note-canvas {
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.qn-note-canvas h1 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.25;
+}
+
+.qn-note-canvas h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-top: 0.85rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.qn-note-canvas h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  margin-bottom: 0.3rem;
+}
+
+.qn-note-canvas ul:not(.checklist) {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.qn-note-canvas ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.qn-note-canvas hr {
+  margin: 1.25rem 0;
+  border: 0;
+  border-top: 1px solid rgba(150, 150, 150, 0.25);
+}
+
+.qn-note-canvas a {
+  color: var(--color-primary, #6e0b75);
+  text-decoration: underline;
+}
+
+/* Print Styling */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .qn-note-canvas,
+  .qn-note-canvas * {
+    visibility: visible;
+  }
+  .qn-note-canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: white !important;
+    color: black !important;
+  }
+}
