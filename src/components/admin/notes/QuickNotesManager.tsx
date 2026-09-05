@@ -113,6 +113,12 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     }
   });
   const [unlockedNotes, setUnlockedNotes] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingUpdatesRef = useRef<{ id: string; updates: Partial<Note> } | null>(null);
   const cacheKeyRef = useRef(cacheKey);
@@ -277,6 +283,47 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     },
     [token, userId, userEmail]
   );
+  const flushPendingUpdates = useCallback(async () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    const pending = pendingUpdatesRef.current;
+    if (!pending) return;
+    pendingUpdatesRef.current = null;
+    await persistNoteToServer(pending.id, pending.updates);
+  }, [persistNoteToServer]);
+  const handleSelectNote = useCallback(
+    (note: Note) => {
+      if (pendingUpdatesRef.current && pendingUpdatesRef.current.id !== note.id) {
+        void flushPendingUpdates();
+      }
+      setSelectedNoteId(note.id);
+      setMobileScreen('editor');
+    },
+    [flushPendingUpdates]
+  );
+  useEffect(() => {
+    const handleVisibilityOrUnload = () => {
+      if (pendingUpdatesRef.current) {
+        void flushPendingUpdates();
+      }
+    };
+    window.addEventListener('beforeunload', handleVisibilityOrUnload);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden' && pendingUpdatesRef.current) {
+        void flushPendingUpdates();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('beforeunload', handleVisibilityOrUnload);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (pendingUpdatesRef.current) {
+        void flushPendingUpdates();
+      }
+    };
+  }, [flushPendingUpdates]);
   const handleUpdateNote = useCallback(
     (updatedFields: Partial<Note>) => {
       if (!selectedNoteId) return;
@@ -299,14 +346,19 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       }
       saveTimeoutRef.current = setTimeout(() => {
         if (pendingUpdatesRef.current) {
-          persistNoteToServer(pendingUpdatesRef.current.id, pendingUpdatesRef.current.updates);
+          const target = pendingUpdatesRef.current;
           pendingUpdatesRef.current = null;
+          saveTimeoutRef.current = null;
+          persistNoteToServer(target.id, target.updates);
         }
       }, 500);
     },
     [selectedNoteId, persistNoteToServer]
   );
   const handleNewNote = useCallback(async () => {
+    if (pendingUpdatesRef.current) {
+      await flushPendingUpdates();
+    }
     let targetFolder = 'Quick Notes';
     if (
       activeFolder !== SYSTEM_FOLDERS.ALL &&
@@ -372,7 +424,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     } catch (err) {
       console.error('Failed to create note on server:', err);
     }
-  }, [activeFolder, activeTag, token, userId, userEmail]);
+  }, [activeFolder, activeTag, token, userId, userEmail, flushPendingUpdates]);
   const handleTogglePin = useCallback(
     (id?: string, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
@@ -397,6 +449,17 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     async (id?: string) => {
       const targetId = id || selectedNoteId;
       if (!targetId) return;
+      if (pendingUpdatesRef.current) {
+        if (pendingUpdatesRef.current.id === targetId) {
+          if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+          }
+          pendingUpdatesRef.current = null;
+        } else {
+          await flushPendingUpdates();
+        }
+      }
       setNotes((prev) => {
         const next = prev.filter((n) => n.id !== targetId);
         localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
@@ -417,7 +480,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         console.error('Failed to permanently delete note:', err);
       }
     },
-    [notes, selectedNoteId, token]
+    [notes, selectedNoteId, token, flushPendingUpdates]
   );
   const handleDeleteNote = useCallback(
     (id?: string, e?: React.MouseEvent) => {
@@ -429,6 +492,17 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       if (target.is_trashed) {
         handlePermanentDelete(targetId);
         return;
+      }
+      if (pendingUpdatesRef.current) {
+        if (pendingUpdatesRef.current.id === targetId) {
+          if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+          }
+          pendingUpdatesRef.current = null;
+        } else {
+          void flushPendingUpdates();
+        }
       }
       const updatedTime = new Date().toISOString();
       setNotes((prev) => {
@@ -445,13 +519,16 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       }
       persistNoteToServer(targetId, { is_trashed: true, updated_at: updatedTime });
     },
-    [notes, selectedNoteId, persistNoteToServer, handlePermanentDelete]
+    [notes, selectedNoteId, persistNoteToServer, handlePermanentDelete, flushPendingUpdates]
   );
   const handleRestoreNote = useCallback(
     (id?: string, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
       const targetId = id || selectedNoteId;
       if (!targetId) return;
+      if (pendingUpdatesRef.current) {
+        void flushPendingUpdates();
+      }
       const updatedTime = new Date().toISOString();
       setNotes((prev) => {
         const next = prev.map((n) =>
@@ -462,11 +539,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       });
       persistNoteToServer(targetId, { is_trashed: false, updated_at: updatedTime });
     },
-    [selectedNoteId, persistNoteToServer]
+    [selectedNoteId, persistNoteToServer, flushPendingUpdates]
   );
   const handleDuplicateNote = useCallback(
     async (noteToDupe?: Note, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
+      if (pendingUpdatesRef.current) {
+        await flushPendingUpdates();
+      }
       const baseNote = noteToDupe || selectedNote;
       if (!baseNote) return;
       const tempId = `note_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -524,7 +604,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         console.error('Failed to duplicate note:', err);
       }
     },
-    [selectedNote, token, userId, userEmail]
+    [selectedNote, token, userId, userEmail, flushPendingUpdates]
   );
   const handleEmptyTrash = useCallback(async () => {
     if (
@@ -714,7 +794,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onOpenSecurityModal={handleOpenSecurityModal}
           onNewNote={handleNewNote}
-          isMobileScreen={effectiveMobileScreen === 'folders'}
+          isMobileScreen={isMobile && effectiveMobileScreen === 'folders'}
         />
       </div>
       <div
@@ -733,10 +813,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           viewMode={viewMode}
           sortOption={sortOption}
           folders={folders}
-          onSelectNote={(note) => {
-            setSelectedNoteId(note.id);
-            setMobileScreen('editor');
-          }}
+          onSelectNote={handleSelectNote}
           onNewNote={handleNewNote}
           onSearchChange={setSearchQuery}
           onViewModeChange={setViewMode}
@@ -752,7 +829,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onBackToFolders={() => setMobileScreen('folders')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onOpenSecurityModal={handleOpenSecurityModal}
-          isMobileScreen={effectiveMobileScreen === 'list'}
+          isMobileScreen={isMobile && effectiveMobileScreen === 'list'}
         />
       </div>
       <div
@@ -779,7 +856,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onOpenSecurityModal={handleOpenSecurityModal}
           onCreateFolder={handleCreateFolder}
           folderTitle={activeFolder === SYSTEM_FOLDERS.ALL ? 'All Notes' : activeFolder}
-          isMobileScreen={effectiveMobileScreen === 'editor'}
+          isMobileScreen={isMobile && effectiveMobileScreen === 'editor'}
         />
       </div>
       {selectedNote && (

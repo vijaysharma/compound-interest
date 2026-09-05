@@ -113,13 +113,15 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     setWordCount(words);
     setCharCount(chars);
   }, []);
+  const lastLoadedNoteIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!note || !editorRef.current) return;
-    if (editorRef.current.innerHTML !== (note.content || '')) {
+    if (lastLoadedNoteIdRef.current !== note.id) {
       editorRef.current.innerHTML = note.content || '';
+      lastLoadedNoteIdRef.current = note.id;
     }
     calculateStats((note.title || '') + ' ' + (note.content || ''));
-  }, [note?.id, calculateStats, note?.content, note?.title, note]);
+  }, [note?.id, calculateStats, note?.title, note]);
   const handleContentChange = () => {
     if (!editorRef.current || !note) return;
     const html = editorRef.current.innerHTML;
@@ -136,10 +138,30 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
     onUpdateNote({ title: newTitle, tags: combinedTags });
   };
+  const savedRangeRef = useRef<Range | null>(null);
+  const saveSelection = useCallback(() => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+    }
+  }, []);
+  const restoreSelection = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      if (savedRangeRef.current) {
+        const sel = window.getSelection();
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(savedRangeRef.current);
+        }
+      }
+    }
+  }, []);
   const execCmd = (cmd: string, value: string | undefined = undefined) => {
     if (!editorRef.current) return;
-    editorRef.current.focus();
+    restoreSelection();
     document.execCommand(cmd, false, value);
+    saveSelection();
     handleContentChange();
   };
   const insertChecklistItem = () => {
@@ -547,7 +569,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       className="flex-1 flex flex-col h-full bg-base-100/90 overflow-hidden relative qn-paper min-h-0"
       style={{ height: '100%' }}
     >
-      <div className="border-b border-base-300/70 flex items-center justify-between gap-1 z-10 select-none min-h-[48px] px-2 sm:px-3 flex-shrink-0">
+      <div className="relative border-b border-base-300/70 flex items-center justify-between gap-1 z-40 select-none min-h-[48px] px-2 sm:px-3 flex-shrink-0 overflow-visible">
         <div className="flex items-center gap-1 min-w-0 flex-1">
           {onBackMobile && (
             <button
@@ -568,7 +590,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
           )}
           {!isTrash && (
-            <div className="dropdown dropdown-bottom min-w-0">
+            <div className="dropdown dropdown-bottom min-w-0 relative">
               <div
                 tabIndex={0}
                 role="button"
@@ -580,13 +602,16 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-30 menu p-1.5 shadow-xl bg-base-100 rounded-box w-48 text-xs border border-base-200"
+                className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-48 text-xs border border-base-200 mt-1"
               >
                 <li className="menu-title text-[10px] text-base-content/50">Move to Folder</li>
                 {allFolderOptions.map((f) => (
                   <li key={f}>
                     <button
-                      onClick={() => onUpdateNote({ folder: f })}
+                      onClick={() => {
+                        onUpdateNote({ folder: f });
+                        (document.activeElement as HTMLElement)?.blur();
+                      }}
                       className={currentFolder === f ? 'active font-bold' : ''}
                     >
                       {f}
@@ -595,7 +620,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 ))}
                 <li className="border-t border-base-200 mt-1 pt-1">
                   <button
-                    onClick={() => setShowMoveModal(true)}
+                    onClick={() => {
+                      setShowMoveModal(true);
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
                     className="text-primary font-semibold flex items-center gap-1"
                   >
                     <FiFolderPlus className="w-3.5 h-3.5" />
@@ -608,7 +636,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         </div>
         {!isTrash && (
           <div className="hidden md:flex items-center gap-0.5 flex-wrap">
-            <div className="dropdown dropdown-bottom">
+            <div className="dropdown dropdown-bottom relative">
               <div
                 tabIndex={0}
                 role="button"
@@ -619,28 +647,64 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-30 menu p-1 shadow-xl bg-base-100 rounded-box w-36 text-xs border border-base-200"
+                className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
               >
                 <li>
-                  <button onClick={() => execCmd('formatBlock', '<h1>')} className="font-bold">
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<h1>');
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="font-bold"
+                  >
                     Title (H1)
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => execCmd('formatBlock', '<h2>')} className="font-semibold">
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<h2>');
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="font-semibold"
+                  >
                     Heading (H2)
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => execCmd('formatBlock', '<h3>')} className="font-medium">
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<h3>');
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="font-medium"
+                  >
                     Subheading (H3)
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => execCmd('formatBlock', '<p>')}>Body Text</button>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<p>');
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                  >
+                    Body Text
+                  </button>
                 </li>
                 <li>
-                  <button onClick={() => execCmd('formatBlock', '<pre>')} className="font-mono">
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<pre>');
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="font-mono"
+                  >
                     Monospaced
                   </button>
                 </li>
@@ -648,6 +712,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </div>
             <div className="w-px h-4 bg-base-300 mx-0.5" />
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={insertChecklistItem}
               className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
               title="Add Checklist Item (Cmd+Shift+L)"
@@ -655,6 +720,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <BsCardChecklist className="w-4 h-4" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('bold')}
               className="btn btn-ghost btn-xs btn-square"
               title="Bold (Cmd+B)"
@@ -662,6 +728,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <FiBold className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('italic')}
               className="btn btn-ghost btn-xs btn-square"
               title="Italic (Cmd+I)"
@@ -669,6 +736,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <FiItalic className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('underline')}
               className="btn btn-ghost btn-xs btn-square"
               title="Underline (Cmd+U)"
@@ -676,6 +744,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <FiUnderline className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('strikeThrough')}
               className="btn btn-ghost btn-xs btn-square"
               title="Strikethrough"
@@ -683,6 +752,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <BsTypeStrikethrough className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={applyHighlighter}
               className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
               title="Highlighter"
@@ -691,6 +761,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
             <div className="w-px h-4 bg-base-300 mx-0.5" />
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('insertUnorderedList')}
               className="btn btn-ghost btn-xs btn-square"
               title="Bulleted List"
@@ -698,6 +769,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <BsListUl className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('insertOrderedList')}
               className="btn btn-ghost btn-xs btn-square"
               title="Numbered List"
@@ -705,6 +777,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <BsListOl className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={insertTable}
               className="btn btn-ghost btn-xs btn-square"
               title="Insert Table"
@@ -712,6 +785,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <BsTable className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('formatBlock', '<blockquote>')}
               className="btn btn-ghost btn-xs btn-square"
               title="Quote"
@@ -719,6 +793,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <BsQuote className="w-4 h-4" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCmd('formatBlock', '<pre>')}
               className="btn btn-ghost btn-xs btn-square"
               title="Code Block"
@@ -726,6 +801,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <FiCode className="w-3.5 h-3.5" />
             </button>
             <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={insertLink}
               className="btn btn-ghost btn-xs btn-square"
               title="Insert Link"
@@ -778,7 +854,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </button>
             </>
           )}
-          <div className="dropdown dropdown-end">
+          <div className="dropdown dropdown-end relative">
             <div
               tabIndex={0}
               role="button"
@@ -789,7 +865,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content z-30 menu p-2 shadow-xl bg-base-100 rounded-box w-52 text-xs border border-base-200"
+              className="dropdown-content z-50 menu p-2 shadow-2xl bg-base-100 rounded-box w-52 text-xs border border-base-200 mt-1"
             >
               {!isTrash && (
                 <li>
@@ -1010,6 +1086,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             onInput={handleContentChange}
             onClick={handleEditorClick}
             onKeyDown={handleKeyDown}
+            onKeyUp={saveSelection}
+            onMouseUp={saveSelection}
             className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text min-h-[300px]"
             data-placeholder="Start typing or tap the checklist button below..."
           />
@@ -1071,82 +1149,125 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         </div>
       </div>
       {!isTrash && isMobileScreen && (
-        <div className="p-2 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between gap-1 select-none overflow-x-auto qn-scrollbar flex-shrink-0 z-20 sticky bottom-0">
+        <div className="p-2 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between gap-1 select-none overflow-visible flex-shrink-0 relative z-40 sticky bottom-0">
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={insertChecklistItem}
-            className="btn btn-ghost btn-sm btn-circle text-primary min-h-[42px] min-w-[42px]"
+            className="btn btn-ghost btn-sm btn-circle text-primary min-h-[40px] min-w-[40px]"
             title="Checklist"
           >
             <BsCardChecklist className="w-5 h-5" />
           </button>
-          <div className="dropdown dropdown-top">
+          <div className="dropdown dropdown-top relative">
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-sm font-bold text-sm min-h-[42px] px-2"
+              onMouseDown={(e) => e.preventDefault()}
+              className="btn btn-ghost btn-sm font-bold text-sm min-h-[40px] px-2"
             >
               Aa
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content z-30 menu p-1.5 shadow-xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mb-1"
+              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mb-2 bottom-full"
             >
               <li>
-                <button onClick={() => execCmd('formatBlock', '<h1>')} className="font-bold">
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<h1>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-bold"
+                >
                   Title
                 </button>
               </li>
               <li>
-                <button onClick={() => execCmd('formatBlock', '<h2>')} className="font-semibold">
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<h2>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-semibold"
+                >
                   Heading
                 </button>
               </li>
               <li>
-                <button onClick={() => execCmd('formatBlock', '<h3>')} className="font-medium">
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<h3>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-medium"
+                >
                   Subheading
                 </button>
               </li>
               <li>
-                <button onClick={() => execCmd('formatBlock', '<p>')}>Body</button>
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<p>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                >
+                  Body
+                </button>
               </li>
               <li>
-                <button onClick={() => execCmd('formatBlock', '<pre>')} className="font-mono">
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<pre>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-mono"
+                >
                   Code
                 </button>
               </li>
             </ul>
           </div>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('bold')}
-            className="btn btn-ghost btn-sm btn-square min-h-[42px] min-w-[42px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
             title="Bold"
           >
             <FiBold className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('italic')}
-            className="btn btn-ghost btn-sm btn-square min-h-[42px] min-w-[42px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
             title="Italic"
           >
             <FiItalic className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={applyHighlighter}
-            className="btn btn-ghost btn-sm btn-square text-primary min-h-[42px] min-w-[42px]"
+            className="btn btn-ghost btn-sm btn-square text-primary min-h-[40px] min-w-[40px]"
             title="Highlight"
           >
             <BsHighlighter className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('insertUnorderedList')}
-            className="btn btn-ghost btn-sm btn-square min-h-[42px] min-w-[42px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
             title="Bullets"
           >
             <BsListUl className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={insertTable}
-            className="btn btn-ghost btn-sm btn-square min-h-[42px] min-w-[42px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
             title="Table"
           >
             <BsTable className="w-4 h-4" />
