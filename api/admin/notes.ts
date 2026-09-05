@@ -1,5 +1,7 @@
+import { put, del } from '@vercel/blob';
 import { ensureTables, getDb, getUserFromRequest, jsonResponse, isPaidUser } from '../_db';
 export const config = { runtime: 'edge' };
+declare const process: { env: Record<string, string | undefined> };
 interface NoteRow {
   id: string;
   user_id?: string | null;
@@ -11,8 +13,36 @@ interface NoteRow {
   lock_password_hash: string | null;
   is_trashed: boolean | null;
   tags: string | null;
+  blob_url?: string | null;
   created_at: string;
   updated_at: string;
+}
+async function uploadToVercelBlob(userId: string, noteId: string, content: string): Promise<string | null> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token || !content) return null;
+  try {
+    const filename = `notes/${userId}/${noteId}.txt`;
+    const res = await put(filename, content, {
+      access: 'public',
+      addRandomSuffix: true,
+      token,
+    });
+    return res.url;
+  } catch (err) {
+    console.warn('Vercel Blob upload failed, falling back to database:', err);
+    return null;
+  }
+}
+async function deleteFromVercelBlob(urls: (string | null | undefined)[]): Promise<void> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return;
+  const validUrls = urls.filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
+  if (validUrls.length === 0) return;
+  try {
+    await del(validUrls, { token });
+  } catch (err) {
+    console.warn('Vercel Blob deletion failed:', err);
+  }
 }
 function parseTags(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw.filter((t) => typeof t === 'string');
@@ -58,7 +88,7 @@ export default async function handler(request: Request): Promise<Response> {
                 SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
                        COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
                        lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
-                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                       COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
                 FROM admin_notes
                 WHERE user_id = ${user.id} OR user_id IS NULL
                 ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
@@ -68,7 +98,7 @@ export default async function handler(request: Request): Promise<Response> {
                 SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
                        COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
                        lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
-                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                       COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
                 FROM admin_notes
                 WHERE user_id = ${user.id}
                 ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
@@ -79,7 +109,7 @@ export default async function handler(request: Request): Promise<Response> {
                 SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
                        COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
                        lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
-                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                       COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
                 FROM admin_notes
                 WHERE (is_trashed = FALSE OR is_trashed IS NULL) AND (user_id = ${user.id} OR user_id IS NULL)
                 ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
@@ -89,7 +119,7 @@ export default async function handler(request: Request): Promise<Response> {
                 SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
                        COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
                        lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
-                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                       COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
                 FROM admin_notes
                 WHERE (is_trashed = FALSE OR is_trashed IS NULL) AND user_id = ${user.id}
                 ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
@@ -105,6 +135,7 @@ export default async function handler(request: Request): Promise<Response> {
         lock_password_hash: note.lock_password_hash || undefined,
         is_trashed: Boolean(note.is_trashed),
         tags: parseTags(note.tags),
+        blob_url: note.blob_url || undefined,
         created_at: note.created_at,
         updated_at: note.updated_at || note.created_at,
       }));
@@ -199,12 +230,13 @@ export default async function handler(request: Request): Promise<Response> {
       const lockHash = body.lock_password_hash || null;
       const isTrashed = Boolean(body.is_trashed);
       const tagsJson = JSON.stringify(parseTags(body.tags));
+      const blobUrl = await uploadToVercelBlob(user.id, id, content);
       await sql`
         INSERT INTO admin_notes (
-          id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
+          id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, blob_url, created_at, updated_at
         )
         VALUES (
-          ${id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
+          ${id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, ${blobUrl}, NOW(), NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
           title = EXCLUDED.title,
@@ -215,6 +247,7 @@ export default async function handler(request: Request): Promise<Response> {
           lock_password_hash = EXCLUDED.lock_password_hash,
           is_trashed = EXCLUDED.is_trashed,
           tags = EXCLUDED.tags,
+          blob_url = COALESCE(EXCLUDED.blob_url, admin_notes.blob_url),
           user_id = ${user.id},
           updated_at = NOW()
       `;
@@ -229,6 +262,7 @@ export default async function handler(request: Request): Promise<Response> {
         lock_password_hash: lockHash || undefined,
         is_trashed: isTrashed,
         tags: parseTags(body.tags),
+        blob_url: blobUrl || undefined,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -255,10 +289,11 @@ export default async function handler(request: Request): Promise<Response> {
       if (!body?.id) {
         return jsonResponse({ error: 'Note ID is required' }, 400);
       }
+      const noteId: string = body.id;
       // Check existing note
       const existing = (user.role === 'admin'
-        ? await sql`SELECT id FROM admin_notes WHERE id = ${body.id} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
-        : await sql`SELECT id FROM admin_notes WHERE id = ${body.id} AND user_id = ${user.id} LIMIT 1`) as NoteRow[];
+        ? await sql`SELECT id FROM admin_notes WHERE id = ${noteId} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
+        : await sql`SELECT id FROM admin_notes WHERE id = ${noteId} AND user_id = ${user.id} LIMIT 1`) as NoteRow[];
       if (existing.length === 0) {
         // Upsert if not found
         const title = body.title || '';
@@ -269,15 +304,16 @@ export default async function handler(request: Request): Promise<Response> {
         const lockHash = body.lock_password_hash || null;
         const isTrashed = Boolean(body.is_trashed);
         const tagsJson = JSON.stringify(parseTags(body.tags));
+        const blobUrl = await uploadToVercelBlob(user.id, noteId, content);
         await sql`
           INSERT INTO admin_notes (
-            id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
+            id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, blob_url, created_at, updated_at
           )
           VALUES (
-            ${body.id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
+            ${noteId}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, ${blobUrl}, NOW(), NOW()
           )
         `;
-        return jsonResponse({ success: true, id: body.id });
+        return jsonResponse({ success: true, id: noteId });
       }
       // Update fields
       const hasTitle = body.title !== undefined;
@@ -296,6 +332,15 @@ export default async function handler(request: Request): Promise<Response> {
       const lockHashVal = hasLockHash ? body.lock_password_hash : null;
       const isTrashedVal = hasTrashed ? body.is_trashed : null;
       const tagsVal = hasTags ? JSON.stringify(parseTags(body.tags)) : null;
+      let blobUrl: string | null = null;
+      if (hasContent && typeof contentVal === 'string') {
+        const oldRow = (await sql`SELECT blob_url FROM admin_notes WHERE id = ${noteId} LIMIT 1`) as { blob_url?: string | null }[];
+        blobUrl = await uploadToVercelBlob(user.id, noteId, contentVal);
+        if (blobUrl && oldRow.length > 0 && oldRow[0].blob_url && oldRow[0].blob_url !== blobUrl) {
+          await deleteFromVercelBlob([oldRow[0].blob_url]);
+        }
+      }
+      const hasBlob = blobUrl !== null;
       if (user.role === 'admin') {
         await sql`
           UPDATE admin_notes
@@ -309,8 +354,9 @@ export default async function handler(request: Request): Promise<Response> {
             lock_password_hash = CASE WHEN ${hasLockHash} THEN ${lockHashVal} ELSE lock_password_hash END,
             is_trashed = CASE WHEN ${hasTrashed} THEN ${isTrashedVal} ELSE is_trashed END,
             tags = CASE WHEN ${hasTags} THEN ${tagsVal} ELSE tags END,
+            blob_url = CASE WHEN ${hasBlob} THEN ${blobUrl} ELSE blob_url END,
             updated_at = NOW()
-          WHERE id = ${body.id} AND (user_id = ${user.id} OR user_id IS NULL)
+          WHERE id = ${noteId} AND (user_id = ${user.id} OR user_id IS NULL)
         `;
       } else {
         await sql`
@@ -324,11 +370,12 @@ export default async function handler(request: Request): Promise<Response> {
             lock_password_hash = CASE WHEN ${hasLockHash} THEN ${lockHashVal} ELSE lock_password_hash END,
             is_trashed = CASE WHEN ${hasTrashed} THEN ${isTrashedVal} ELSE is_trashed END,
             tags = CASE WHEN ${hasTags} THEN ${tagsVal} ELSE tags END,
+            blob_url = CASE WHEN ${hasBlob} THEN ${blobUrl} ELSE blob_url END,
             updated_at = NOW()
-          WHERE id = ${body.id} AND user_id = ${user.id}
+          WHERE id = ${noteId} AND user_id = ${user.id}
         `;
       }
-      return jsonResponse({ success: true, id: body.id });
+      return jsonResponse({ success: true, id: noteId });
     } catch (err) {
       return jsonResponse({ error: 'Failed to update note', detail: String(err) }, 500);
     }
@@ -338,27 +385,55 @@ export default async function handler(request: Request): Promise<Response> {
   // ─────────────────────────────────────────────────────────────────────────────
   if (request.method === 'DELETE') {
     try {
-      const emptyTrash = url.searchParams.get('empty_trash') === 'true';
+      const emptyTrash =
+        url.searchParams.get('empty_trash') === 'true' ||
+        url.searchParams.get('action') === 'empty_trash';
       if (emptyTrash) {
+        const trashedRows = (user.role === 'admin'
+          ? await sql`SELECT id, blob_url FROM admin_notes WHERE is_trashed = TRUE AND (user_id = ${user.id} OR user_id IS NULL)`
+          : await sql`SELECT id, blob_url FROM admin_notes WHERE is_trashed = TRUE AND user_id = ${user.id}`) as { id: string; blob_url?: string | null }[];
+        const blobUrls = trashedRows.map((r) => r.blob_url).filter(Boolean);
+        if (blobUrls.length > 0) {
+          await deleteFromVercelBlob(blobUrls);
+        }
         if (user.role === 'admin') {
           await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE AND (user_id = ${user.id} OR user_id IS NULL)`;
         } else {
           await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE AND user_id = ${user.id}`;
         }
-        return jsonResponse({ success: true, message: 'Trash emptied successfully' });
+        return jsonResponse({
+          success: true,
+          count: trashedRows.length,
+          message: 'Trash emptied and notes permanently removed from database',
+        });
       }
       const id = url.searchParams.get('id');
       if (!id) {
         return jsonResponse({ error: 'Note ID is required' }, 400);
       }
       const permanent = url.searchParams.get('permanent') === 'true';
-      if (permanent) {
+      const existing = (user.role === 'admin'
+        ? await sql`SELECT id, is_trashed, blob_url FROM admin_notes WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
+        : await sql`SELECT id, is_trashed, blob_url FROM admin_notes WHERE id = ${id} AND user_id = ${user.id} LIMIT 1`) as { id: string; is_trashed?: boolean | null; blob_url?: string | null }[];
+      if (existing.length === 0) {
+        return jsonResponse({ success: true, deleted: true, message: 'Note not found or already deleted' });
+      }
+      const shouldPermanentlyDelete = permanent || Boolean(existing[0].is_trashed);
+      if (shouldPermanentlyDelete) {
+        if (existing[0].blob_url) {
+          await deleteFromVercelBlob([existing[0].blob_url]);
+        }
         if (user.role === 'admin') {
           await sql`DELETE FROM admin_notes WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL)`;
         } else {
           await sql`DELETE FROM admin_notes WHERE id = ${id} AND user_id = ${user.id}`;
         }
-        return jsonResponse({ success: true, deleted: true, permanent: true });
+        return jsonResponse({
+          success: true,
+          deleted: true,
+          permanent: true,
+          message: 'Note permanently removed from database',
+        });
       }
       // Soft delete -> move to trash
       if (user.role === 'admin') {

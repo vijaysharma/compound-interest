@@ -39,6 +39,7 @@ interface NotesListProps {
   onSortChange: (sort: SortOption) => void;
   onTogglePin: (id: string, e: React.MouseEvent) => void;
   onDeleteNote: (id: string, e?: React.MouseEvent) => void;
+  onPermanentDelete?: (id: string) => void;
   onDuplicateNote: (note: Note, e: React.MouseEvent) => void;
   onRestoreNote: (id: string, e: React.MouseEvent) => void;
   onEmptyTrash: () => void;
@@ -65,6 +66,7 @@ export const NotesList: React.FC<NotesListProps> = ({
   onSortChange,
   onTogglePin,
   onDeleteNote,
+  onPermanentDelete,
   onDuplicateNote,
   onRestoreNote,
   onEmptyTrash,
@@ -134,7 +136,15 @@ export const NotesList: React.FC<NotesListProps> = ({
   };
   const handleConfirmDelete = () => {
     if (noteToDelete) {
-      onDeleteNote(noteToDelete.id);
+      if (isTrash) {
+        if (onPermanentDelete) {
+          onPermanentDelete(noteToDelete.id);
+        } else {
+          onDeleteNote(noteToDelete.id);
+        }
+      } else {
+        onDeleteNote(noteToDelete.id);
+      }
       setNoteToDelete(null);
     }
   };
@@ -246,13 +256,25 @@ export const NotesList: React.FC<NotesListProps> = ({
             </>
           )}
           {isTrash ? (
-            <button
-              onClick={(e) => onRestoreNote(note.id, e)}
-              className="p-1 hover:text-success text-base-content/60 rounded transition-colors"
-              title="Restore Note"
-            >
-              <FiRotateCcw className="w-3 h-3" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => onRestoreNote(note.id, e)}
+                className="p-1 hover:text-success text-base-content/60 rounded transition-colors"
+                title="Restore Note"
+              >
+                <FiRotateCcw className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNoteToDelete(note);
+                }}
+                className="p-1 hover:text-error text-base-content/60 rounded transition-colors"
+                title="Delete Permanently"
+              >
+                <FiTrash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           ) : (
             <button
               onClick={(e) => {
@@ -436,7 +458,27 @@ export const NotesList: React.FC<NotesListProps> = ({
                       </h4>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {note.is_pinned && <BsPinFill className="w-3 h-3 text-primary" />}
-                        {!isTrash && (
+                        {isTrash ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => onRestoreNote(note.id, e)}
+                              className="p-0.5 text-base-content/40 hover:text-success rounded"
+                              title="Restore Note"
+                            >
+                              <FiRotateCcw className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setNoteToDelete(note);
+                              }}
+                              className="p-0.5 text-base-content/40 hover:text-error rounded"
+                              title="Delete Permanently"
+                            >
+                              <FiTrash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -504,10 +546,22 @@ export const NotesList: React.FC<NotesListProps> = ({
         <div className="modal modal-open z-50">
           <div className="modal-box max-w-sm rounded-2xl bg-base-100 p-5 shadow-2xl border border-base-300">
             <h3 className="font-bold text-base text-base-content flex items-center gap-2">
-              <FiTrash2 className="text-error w-5 h-5" /> Move to Trash
+              <FiTrash2 className="text-error w-5 h-5" />{' '}
+              {isTrash ? 'Permanently Delete Note' : 'Move to Trash'}
             </h3>
             <p className="text-xs text-base-content/70 mt-2">
-              Are you sure you want to move <strong>"{noteToDelete.title || 'Untitled Note'}"</strong> to Recently Deleted?
+              {isTrash ? (
+                <>
+                  Are you sure you want to permanently delete{' '}
+                  <strong>"{noteToDelete.title || 'Untitled Note'}"</strong>? This will remove it
+                  completely from your database and cloud storage. This action cannot be undone.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to move{' '}
+                  <strong>"{noteToDelete.title || 'Untitled Note'}"</strong> to Recently Deleted?
+                </>
+              )}
             </p>
             <div className="modal-action mt-4 flex justify-end gap-2">
               <button
@@ -520,7 +574,7 @@ export const NotesList: React.FC<NotesListProps> = ({
                 onClick={handleConfirmDelete}
                 className="btn btn-error btn-sm text-xs text-white rounded-xl"
               >
-                Move to Trash
+                {isTrash ? 'Delete Permanently' : 'Move to Trash'}
               </button>
             </div>
           </div>

@@ -867,9 +867,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 Put Back
               </button>
               <button
-                onClick={onPermanentDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 className="btn btn-ghost btn-xs text-error min-h-[38px]"
-                title="Delete Immediately"
+                title="Delete Permanently"
               >
                 <FiTrash2 className="w-4 h-4 mr-1" />
                 Delete
@@ -1162,10 +1162,22 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         <div className="modal modal-open z-50">
           <div className="modal-box max-w-sm rounded-2xl bg-base-100 p-5 shadow-2xl border border-base-300">
             <h3 className="font-bold text-base text-base-content flex items-center gap-2">
-              <FiTrash2 className="text-error w-5 h-5" /> Move to Trash
+              <FiTrash2 className="text-error w-5 h-5" />{' '}
+              {isTrash || note.is_trashed ? 'Permanently Delete Note' : 'Move to Trash'}
             </h3>
             <p className="text-xs text-base-content/70 mt-2">
-              Are you sure you want to move <strong>"{note.title || 'Untitled Note'}"</strong> to Recently Deleted?
+              {isTrash || note.is_trashed ? (
+                <>
+                  Are you sure you want to permanently delete{' '}
+                  <strong>"{note.title || 'Untitled Note'}"</strong>? This will remove it completely
+                  from the database and cloud storage. This action cannot be undone.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to move <strong>"{note.title || 'Untitled Note'}"</strong> to
+                  Recently Deleted?
+                </>
+              )}
             </p>
             <div className="modal-action mt-4 flex justify-end gap-2">
               <button
@@ -1177,11 +1189,15 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <button
                 onClick={() => {
                   setShowDeleteConfirm(false);
-                  onDeleteNote();
+                  if (isTrash || note.is_trashed) {
+                    onPermanentDelete();
+                  } else {
+                    onDeleteNote();
+                  }
                 }}
                 className="btn btn-error btn-sm text-xs text-white rounded-xl"
               >
-                Move to Trash
+                {isTrash || note.is_trashed ? 'Delete Permanently' : 'Move to Trash'}
               </button>
             </div>
           </div>

@@ -294,52 +294,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     },
     [notes, selectedNoteId, persistNoteToServer]
   );
-  const handleDeleteNote = useCallback(
-    (id?: string, e?: React.MouseEvent) => {
-      if (e) e.stopPropagation();
-      const targetId = id || selectedNoteId;
-      if (!targetId) return;
-      const updatedTime = new Date().toISOString();
-      setNotes((prev) => {
-        const next = prev.map((n) =>
-          n.id === targetId ? { ...n, is_trashed: true, updated_at: updatedTime } : n
-        );
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
-        return next;
-      });
-      if (selectedNoteId === targetId) {
-        const remaining = notes.filter((n) => n.id !== targetId && !n.is_trashed);
-        setSelectedNoteId(remaining.length > 0 ? remaining[0].id : null);
-        setMobileScreen('list');
-      }
-      persistNoteToServer(targetId, { is_trashed: true, updated_at: updatedTime });
-    },
-    [notes, selectedNoteId, persistNoteToServer]
-  );
-  const handleRestoreNote = useCallback(
-    (id?: string, e?: React.MouseEvent) => {
-      if (e) e.stopPropagation();
-      const targetId = id || selectedNoteId;
-      if (!targetId) return;
-      const updatedTime = new Date().toISOString();
-      setNotes((prev) => {
-        const next = prev.map((n) =>
-          n.id === targetId ? { ...n, is_trashed: false, updated_at: updatedTime } : n
-        );
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
-        return next;
-      });
-      persistNoteToServer(targetId, { is_trashed: false, updated_at: updatedTime });
-    },
-    [selectedNoteId, persistNoteToServer]
-  );
   const handlePermanentDelete = useCallback(
     async (id?: string) => {
       const targetId = id || selectedNoteId;
       if (!targetId) return;
-      if (!window.confirm('Are you sure you want to permanently delete this note?')) {
-        return;
-      }
       setNotes((prev) => {
         const next = prev.filter((n) => n.id !== targetId);
         localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
@@ -361,6 +319,51 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       }
     },
     [notes, selectedNoteId, token]
+  );
+  const handleDeleteNote = useCallback(
+    (id?: string, e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      const targetId = id || selectedNoteId;
+      if (!targetId) return;
+      const target = notes.find((n) => n.id === targetId);
+      if (!target) return;
+      if (target.is_trashed) {
+        handlePermanentDelete(targetId);
+        return;
+      }
+      const updatedTime = new Date().toISOString();
+      setNotes((prev) => {
+        const next = prev.map((n) =>
+          n.id === targetId ? { ...n, is_trashed: true, updated_at: updatedTime } : n
+        );
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
+        return next;
+      });
+      if (selectedNoteId === targetId) {
+        const remaining = notes.filter((n) => n.id !== targetId && !n.is_trashed);
+        setSelectedNoteId(remaining.length > 0 ? remaining[0].id : null);
+        setMobileScreen('list');
+      }
+      persistNoteToServer(targetId, { is_trashed: true, updated_at: updatedTime });
+    },
+    [notes, selectedNoteId, persistNoteToServer, handlePermanentDelete]
+  );
+  const handleRestoreNote = useCallback(
+    (id?: string, e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      const targetId = id || selectedNoteId;
+      if (!targetId) return;
+      const updatedTime = new Date().toISOString();
+      setNotes((prev) => {
+        const next = prev.map((n) =>
+          n.id === targetId ? { ...n, is_trashed: false, updated_at: updatedTime } : n
+        );
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
+        return next;
+      });
+      persistNoteToServer(targetId, { is_trashed: false, updated_at: updatedTime });
+    },
+    [selectedNoteId, persistNoteToServer]
   );
   const handleDuplicateNote = useCallback(
     async (noteToDupe?: Note, e?: React.MouseEvent) => {
@@ -437,7 +440,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     });
     if (!token) return;
     try {
-      await fetch('/api/admin/notes?action=empty_trash', {
+      await fetch('/api/admin/notes?empty_trash=true&action=empty_trash', {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -626,6 +629,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onSortChange={setSortOption}
           onTogglePin={handleTogglePin}
           onDeleteNote={handleDeleteNote}
+          onPermanentDelete={handlePermanentDelete}
           onDuplicateNote={handleDuplicateNote}
           onRestoreNote={handleRestoreNote}
           onEmptyTrash={handleEmptyTrash}

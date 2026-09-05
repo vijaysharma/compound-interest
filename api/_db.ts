@@ -264,6 +264,7 @@ export async function ensureTables(sql: Query) {
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS tags TEXT NOT NULL DEFAULT '[]'`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS user_id TEXT`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS blob_url TEXT`;
       await sql`
         CREATE INDEX IF NOT EXISTS admin_notes_created_at_idx
         ON admin_notes (created_at DESC)

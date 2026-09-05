@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "@vercel/blob": "^2.8.0",
     "ag-charts-react": "^14.1.0",
     "ag-charts-types": "^14.1.0",
     "react": "^19.2.8",
