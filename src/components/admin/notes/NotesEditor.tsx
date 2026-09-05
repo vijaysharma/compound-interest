@@ -543,37 +543,40 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const currentFolder = note.folder || 'Quick Notes';
   const allFolderOptions = Array.from(new Set(['Quick Notes', ...folders]));
   return (
-    <div className="flex-1 flex flex-col h-full bg-base-100/90 overflow-hidden relative qn-paper">
-      <div className="border-b border-base-300/70 flex items-center justify-between gap-1 z-10 select-none min-h-[50px]">
-        <div className="flex items-center gap-1 min-w-0">
+    <div
+      className="flex-1 flex flex-col h-full bg-base-100/90 overflow-hidden relative qn-paper min-h-0"
+      style={{ height: '100%' }}
+    >
+      <div className="border-b border-base-300/70 flex items-center justify-between gap-1 z-10 select-none min-h-[48px] px-2 sm:px-3 flex-shrink-0">
+        <div className="flex items-center gap-1 min-w-0 flex-1">
           {onBackMobile && (
             <button
               onClick={onBackMobile}
-              className="btn btn-ghost btn-sm px-1.5 flex items-center gap-0.5 text-primary md:hidden font-semibold min-h-[44px]"
+              className="btn btn-ghost btn-sm px-1.5 flex items-center gap-0.5 text-primary md:hidden font-semibold min-h-[38px] flex-shrink-0"
             >
               <FiChevronLeft className="w-5 h-5" />
-              <span className="truncate max-w-[100px]">{folderTitle || 'Notes'}</span>
+              <span className="truncate max-w-[80px] xs:max-w-[100px]">{folderTitle || 'Notes'}</span>
             </button>
           )}
           {onToggleSidebar && !isMobileScreen && (
             <button
               onClick={onToggleSidebar}
-              className={`btn btn-ghost btn-xs btn-square ${isSidebarOpen ? 'text-primary' : 'text-base-content/60'}`}
+              className={`btn btn-ghost btn-xs btn-square ${isSidebarOpen ? 'text-primary' : 'text-base-content/60'} flex-shrink-0`}
               title="Toggle Sidebar"
             >
               <FiMenu className="w-4 h-4" />
             </button>
           )}
           {!isTrash && (
-            <div className="dropdown dropdown-bottom">
+            <div className="dropdown dropdown-bottom min-w-0">
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-xs gap-1 font-medium text-xs text-base-content/75 hover:text-base-content"
+                className="btn btn-ghost btn-xs gap-1 font-medium text-xs text-base-content/75 hover:text-base-content max-w-full"
                 title="Move to another folder"
               >
                 <FiFolder className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                <span className="truncate max-w-[90px] sm:max-w-[130px]">{currentFolder}</span>
+                <span className="truncate max-w-[80px] xs:max-w-[110px] sm:max-w-[140px]">{currentFolder}</span>
               </div>
               <ul
                 tabIndex={0}
@@ -731,25 +734,25 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
           </div>
         )}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
           {onOpenSecurityModal && (
             <button
               onClick={onOpenSecurityModal}
-              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-success bg-success/10 hover:bg-success/20 border border-success/25 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+              className="hidden md:inline-flex items-center gap-1 text-[11px] font-semibold text-success bg-success/10 hover:bg-success/20 border border-success/25 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
               title="End-to-End Encrypted (AES-256-GCM): Click for details"
             >
               <FiShield className="w-3 h-3 flex-shrink-0" />
-              <span className="hidden xs:inline">E2E</span> Encrypted
+              <span>E2E Encrypted</span>
             </button>
           )}
-          <span className="text-[11px] font-medium text-base-content/40 md:hidden mr-1">
+          <span className="text-[11px] font-medium text-base-content/40 hidden md:inline mr-1">
             {isSaving ? 'Saving...' : 'Saved'}
           </span>
           {!isTrash && (
             <>
               <button
                 onClick={onTogglePin}
-                className={`btn btn-ghost btn-xs sm:btn-sm btn-square min-h-[38px] min-w-[38px] ${
+                className={`btn btn-ghost btn-xs sm:btn-sm btn-square min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0 ${
                   note.is_pinned ? 'text-primary' : 'text-base-content/60'
                 }`}
                 title={note.is_pinned ? 'Unpin Note' : 'Pin Note'}
@@ -762,7 +765,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </button>
               <button
                 onClick={onOpenLockModal}
-                className={`btn btn-ghost btn-xs sm:btn-sm btn-square min-h-[38px] min-w-[38px] ${
+                className={`btn btn-ghost btn-xs sm:btn-sm btn-square min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0 ${
                   note.is_locked ? 'text-primary' : 'text-base-content/60'
                 }`}
                 title={note.is_locked ? 'Lock Settings' : 'Lock Note'}
@@ -779,7 +782,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-xs sm:btn-sm btn-square text-base-content/75 hover:text-base-content min-h-[38px] min-w-[38px]"
+              className="btn btn-ghost btn-xs sm:btn-sm btn-square text-base-content/75 hover:text-base-content min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0"
               title="Share & Export"
             >
               <FiShare2 className="w-4 h-4" />
@@ -878,7 +881,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           ) : (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="btn btn-ghost btn-xs sm:btn-sm btn-square text-base-content/60 hover:text-error min-h-[38px] min-w-[38px]"
+              className="btn btn-ghost btn-xs sm:btn-sm btn-square text-base-content/60 hover:text-error min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0"
               title="Move to Trash"
             >
               <FiTrash2 className="w-4 h-4" />
@@ -960,31 +963,31 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             }
           }
         }}
-        className="flex-1 overflow-y-auto qn-scrollbar px-1 pt-4 sm:pt-6 md:pt-8 flex flex-col w-full h-full cursor-text"
+        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 flex flex-col w-full min-h-0 cursor-text"
       >
         <div className="qn-canvas-inner max-w-4xl mx-auto w-full flex-1 flex flex-col min-h-full">
-          <div className="flex items-center justify-between text-xs text-base-content/40 mb-3 sm:mb-4 select-none border-b border-base-200/60 pb-2 flex-shrink-0">
-            <span className="text-[11px] font-medium">
+          <div className="flex items-center justify-between text-xs text-base-content/40 mb-3 sm:mb-4 select-none border-b border-base-200/60 pb-2 flex-shrink-0 gap-2">
+            <span className="text-[11px] font-medium truncate">
               {formatNoteHeaderDate(note.updated_at || note.created_at)}
             </span>
-            <div className="hidden sm:flex items-center gap-3 text-[11px]">
+            <div className="flex items-center gap-2 sm:gap-3 text-[11px] flex-shrink-0">
               {onOpenSecurityModal && (
                 <button
                   type="button"
                   onClick={onOpenSecurityModal}
-                  className="inline-flex items-center gap-1 text-[11px] text-success hover:underline font-medium cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-success bg-success/10 hover:bg-success/20 border border-success/25 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
                   title="Zero-Knowledge AES-256-GCM End-to-End Encrypted: Click for details"
                 >
-                  <FiShield className="w-3.5 h-3.5" />
-                  E2E Encrypted
+                  <FiShield className="w-3 h-3 flex-shrink-0" />
+                  <span>E2E Encrypted</span>
                 </button>
               )}
-              <span>
+              <span className="hidden sm:inline">
                 {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} characters
               </span>
               <span
-                className={`font-medium ${
-                  isSaving ? 'text-primary animate-pulse' : 'text-base-content/40'
+                className={`font-medium text-[10px] sm:text-[11px] ${
+                  isSaving ? 'text-primary animate-pulse' : 'text-base-content/50'
                 }`}
               >
                 {isSaving ? 'Saving...' : 'Saved'}
@@ -1007,7 +1010,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             onInput={handleContentChange}
             onClick={handleEditorClick}
             onKeyDown={handleKeyDown}
-            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text"
+            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text min-h-[300px]"
             data-placeholder="Start typing or tap the checklist button below..."
           />
           <div className="mt-auto pt-6 pb-6 border-t border-base-200/80 flex items-center flex-wrap gap-1.5 select-none flex-shrink-0">
@@ -1068,7 +1071,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         </div>
       </div>
       {!isTrash && isMobileScreen && (
-        <div className="p-2 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between gap-1 select-none overflow-x-auto qn-scrollbar">
+        <div className="p-2 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between gap-1 select-none overflow-x-auto qn-scrollbar flex-shrink-0 z-20 sticky bottom-0">
           <button
             onClick={insertChecklistItem}
             className="btn btn-ghost btn-sm btn-circle text-primary min-h-[42px] min-w-[42px]"

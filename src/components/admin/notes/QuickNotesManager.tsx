@@ -653,7 +653,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         />
       </div>
       <div
-        className={`h-full flex-1 ${mobileScreen === 'editor' ? 'flex w-full' : 'hidden md:flex'}`}
+        className={`h-full flex-1 min-h-0 ${mobileScreen === 'editor' ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'}`}
       >
         <NotesEditor
           note={selectedNote}
