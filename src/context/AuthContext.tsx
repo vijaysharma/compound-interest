@@ -12,7 +12,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   });
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => {
+    const hasToken = Boolean(localStorage.getItem('auth_token'));
+    const hasUser = Boolean(localStorage.getItem('auth_user'));
+    return hasToken && !hasUser;
+  });
   const [showPaywall, setShowPaywall] = useState<boolean>(false);
   const isTrackingRef = useRef(false);
   const refreshUser = useCallback(async () => {

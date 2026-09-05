@@ -89,7 +89,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       return 'updated_desc';
     }
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(() => notes.length === 0);
   const [isSaving, setIsSaving] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
     try {
@@ -126,21 +126,15 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     const load = async () => {
       if (!token) return;
       try {
-        fetch('/api/admin/notes?action=storage_status', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (data?.storage_provider && isMounted) {
-              setStorageProvider(data.storage_provider);
-            }
-          })
-          .catch(() => {});
         const key = await getUserEncryptionKey(userId, userEmail);
         const res = await fetch('/api/admin/notes?include_trashed=true', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok && isMounted) {
+          const providerHeader = res.headers.get('x-storage-provider') as 'vercel_blob' | 'database_fallback' | null;
+          if (providerHeader) {
+            setStorageProvider(providerHeader);
+          }
           const rawData = (await res.json()) as Note[];
           const decryptedNotes: Note[] = await Promise.all(
             (rawData || []).map(async (n) => ({
@@ -169,33 +163,35 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
               return firstActive ? firstActive.id : null;
             });
           }
-          // Auto-migrate any unencrypted legacy notes to ciphertext in the background
+          // Auto-migrate any unencrypted legacy notes in the background without blocking UI
           const unencryptedLegacy = (rawData || []).filter(
             (n) =>
               (n.title && !isEncrypted(n.title)) ||
               (n.content && !isEncrypted(n.content))
           );
           if (unencryptedLegacy.length > 0) {
-            for (const legacy of unencryptedLegacy) {
-              try {
-                const encTitle = await encryptText(legacy.title || '', key);
-                const encContent = await encryptText(legacy.content || '', key);
-                await fetch('/api/admin/notes', {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({
-                    id: legacy.id,
-                    title: encTitle,
-                    content: encContent,
-                  }),
-                });
-              } catch {
-                // Ignore individual background migration error
-              }
-            }
+            void Promise.all(
+              unencryptedLegacy.map(async (legacy) => {
+                try {
+                  const encTitle = await encryptText(legacy.title || '', key);
+                  const encContent = await encryptText(legacy.content || '', key);
+                  await fetch('/api/admin/notes', {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                      id: legacy.id,
+                      title: encTitle,
+                      content: encContent,
+                    }),
+                  });
+                } catch {
+                  // Ignore individual background migration error
+                }
+              })
+            );
           }
         }
       } catch (err) {
@@ -662,6 +658,21 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [handleNewNote]);
+  const handleOpenSecurityModal = useCallback(() => {
+    setIsSecurityModalOpen(true);
+    if (!storageProvider && token) {
+      fetch('/api/admin/notes?action=storage_status', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.storage_provider) {
+            setStorageProvider(data.storage_provider);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [storageProvider, token]);
   const trashedCount = notes.filter((n) => n.is_trashed).length;
   const isSelectedNoteUnlocked = selectedNoteId ? unlockedNotes.has(selectedNoteId) : false;
   return (
@@ -701,7 +712,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           isOpen={isSidebarOpen || effectiveMobileScreen === 'folders'}
           onCloseMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
-          onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
+          onOpenSecurityModal={handleOpenSecurityModal}
           onNewNote={handleNewNote}
           isMobileScreen={effectiveMobileScreen === 'folders'}
         />
@@ -740,7 +751,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onCreateFolder={handleCreateFolder}
           onBackToFolders={() => setMobileScreen('folders')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
-          onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
+          onOpenSecurityModal={handleOpenSecurityModal}
           isMobileScreen={effectiveMobileScreen === 'list'}
         />
       </div>
@@ -765,7 +776,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           isSidebarOpen={isSidebarOpen}
           onBackMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
-          onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
+          onOpenSecurityModal={handleOpenSecurityModal}
           onCreateFolder={handleCreateFolder}
           folderTitle={activeFolder === SYSTEM_FOLDERS.ALL ? 'All Notes' : activeFolder}
           isMobileScreen={effectiveMobileScreen === 'editor'}

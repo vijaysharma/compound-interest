@@ -51,14 +51,24 @@ async function uploadToVercelBlob(userId: string, noteId: string, content: strin
   }
   return null;
 }
+const blobCache = new Map<string, string>();
 async function fetchBlobContent(url: string): Promise<string | null> {
+  if (blobCache.has(url)) {
+    return blobCache.get(url)!;
+  }
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   try {
     const res = await fetch(url, {
       headers: token ? { authorization: `Bearer ${token}` } : undefined,
     });
     if (res.ok) {
-      return await res.text();
+      const text = await res.text();
+      if (blobCache.size > 500) {
+        const first = blobCache.keys().next().value;
+        if (first) blobCache.delete(first);
+      }
+      blobCache.set(url, text);
+      return text;
     }
     console.warn('Vercel Blob fetch error status:', res.status);
     return null;
@@ -72,6 +82,9 @@ async function deleteFromVercelBlob(urls: (string | null | undefined)[]): Promis
   if (!token) return;
   const validUrls = urls.filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
   if (validUrls.length === 0) return;
+  for (const u of validUrls) {
+    blobCache.delete(u);
+  }
   try {
     await fetch('https://blob.vercel-storage.com/delete', {
       method: 'POST',
@@ -212,7 +225,16 @@ export default async function handler(request: Request): Promise<Response> {
           }
         }
       }
-      return jsonResponse(formatted);
+      const isBlobActive = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+      return new Response(JSON.stringify(formatted), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-store',
+          'x-storage-provider': isBlobActive ? 'vercel_blob' : 'database_fallback',
+        },
+      });
     } catch (err) {
       return jsonResponse({ error: 'Failed to fetch notes', detail: String(err) }, 500);
     }

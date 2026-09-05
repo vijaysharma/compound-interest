@@ -43,7 +43,6 @@ export interface PaymentSubmission {
   created_at: string;
   updated_at: string;
 }
-let tablesReady: Promise<void> | null = null;
 export function getDb(): Query {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -133,9 +132,19 @@ export async function verifyPassword(
   const computed = await hashPassword(password, saltHex);
   return computed.hash === hash;
 }
+let tablesReady: Promise<void> | null = null;
+let tablesInitialized = false;
 export async function ensureTables(sql: Query) {
+  if (tablesInitialized) return;
   if (!tablesReady) {
     tablesReady = (async () => {
+      try {
+        await sql`SELECT blob_url FROM admin_notes LIMIT 1`;
+        tablesInitialized = true;
+        return;
+      } catch {
+        // Tables not initialized yet, run migrations below
+      }
       await sql`
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
