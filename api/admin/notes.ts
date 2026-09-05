@@ -101,6 +101,16 @@ export default async function handler(request: Request): Promise<Response> {
   // ─────────────────────────────────────────────────────────────────────────────
   if (request.method === 'GET') {
     try {
+      if (url.searchParams.get('action') === 'storage_status') {
+        const isBlobActive = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+        return jsonResponse({
+          vercel_blob_enabled: isBlobActive,
+          storage_provider: isBlobActive ? 'vercel_blob' : 'database_fallback',
+          message: isBlobActive
+            ? 'Vercel Blob storage is active. Notes are stored in Vercel Blob and offloaded from database.'
+            : 'BLOB_READ_WRITE_TOKEN is not configured in environment variables. Notes are temporarily saved in the PostgreSQL database.',
+        });
+      }
       const includeTrashed = url.searchParams.get('include_trashed') === 'true';
       const rows = (includeTrashed
         ? (user.role === 'admin'
@@ -145,20 +155,48 @@ export default async function handler(request: Request): Promise<Response> {
                 ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
                 LIMIT 500
               `)) as NoteRow[];
-      const formatted = rows.map((note) => ({
-        id: note.id,
-        title: note.title || '',
-        content: note.content || '',
-        folder: note.folder || 'Notes',
-        is_pinned: Boolean(note.is_pinned),
-        is_locked: Boolean(note.is_locked),
-        lock_password_hash: note.lock_password_hash || undefined,
-        is_trashed: Boolean(note.is_trashed),
-        tags: parseTags(note.tags),
-        blob_url: note.blob_url || undefined,
-        created_at: note.created_at,
-        updated_at: note.updated_at || note.created_at,
-      }));
+      // If any notes were offloaded to blob, fetch content in parallel
+      const formatted = await Promise.all(
+        rows.map(async (note) => {
+          let noteContent = note.content || '';
+          if (!noteContent && note.blob_url) {
+            try {
+              const blobRes = await fetch(note.blob_url);
+              if (blobRes.ok) {
+                noteContent = await blobRes.text();
+              }
+            } catch (err) {
+              console.warn('Failed to fetch blob content for note:', note.id, err);
+            }
+          }
+          return {
+            id: note.id,
+            title: note.title || '',
+            content: noteContent,
+            folder: note.folder || 'Notes',
+            is_pinned: Boolean(note.is_pinned),
+            is_locked: Boolean(note.is_locked),
+            lock_password_hash: note.lock_password_hash || undefined,
+            is_trashed: Boolean(note.is_trashed),
+            tags: parseTags(note.tags),
+            blob_url: note.blob_url || undefined,
+            created_at: note.created_at,
+            updated_at: note.updated_at || note.created_at,
+          };
+        })
+      );
+      // Auto-migrate legacy DB content to Vercel Blob in background if token is active
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        for (const n of rows) {
+          if (n.content && !n.blob_url) {
+            uploadToVercelBlob(user.id, n.id, n.content).then(async (bUrl) => {
+              if (bUrl) {
+                await sql`UPDATE admin_notes SET content = '', blob_url = ${bUrl} WHERE id = ${n.id}`;
+              }
+            }).catch(() => {});
+          }
+        }
+      }
       return jsonResponse(formatted);
     } catch (err) {
       return jsonResponse({ error: 'Failed to fetch notes', detail: String(err) }, 500);
@@ -251,12 +289,13 @@ export default async function handler(request: Request): Promise<Response> {
       const isTrashed = Boolean(body.is_trashed);
       const tagsJson = JSON.stringify(parseTags(body.tags));
       const blobUrl = await uploadToVercelBlob(user.id, id, content);
+      const dbContent = blobUrl ? '' : content;
       await sql`
         INSERT INTO admin_notes (
           id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, blob_url, created_at, updated_at
         )
         VALUES (
-          ${id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, ${blobUrl}, NOW(), NOW()
+          ${id}, ${user.id}, ${title}, ${dbContent}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, ${blobUrl}, NOW(), NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
           title = EXCLUDED.title,
@@ -325,12 +364,13 @@ export default async function handler(request: Request): Promise<Response> {
         const isTrashed = Boolean(body.is_trashed);
         const tagsJson = JSON.stringify(parseTags(body.tags));
         const blobUrl = await uploadToVercelBlob(user.id, noteId, content);
+        const dbContent = blobUrl ? '' : content;
         await sql`
           INSERT INTO admin_notes (
             id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, blob_url, created_at, updated_at
           )
           VALUES (
-            ${noteId}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, ${blobUrl}, NOW(), NOW()
+            ${noteId}, ${user.id}, ${title}, ${dbContent}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, ${blobUrl}, NOW(), NOW()
           )
         `;
         return jsonResponse({ success: true, id: noteId });
@@ -367,7 +407,7 @@ export default async function handler(request: Request): Promise<Response> {
           SET
             user_id = ${user.id},
             title = CASE WHEN ${hasTitle} THEN ${titleVal} ELSE title END,
-            content = CASE WHEN ${hasContent} THEN ${contentVal} ELSE content END,
+            content = CASE WHEN ${hasBlob} THEN '' WHEN ${hasContent} THEN ${contentVal} ELSE content END,
             folder = CASE WHEN ${hasFolder} THEN ${folderVal} ELSE folder END,
             is_pinned = CASE WHEN ${hasPinned} THEN ${isPinnedVal} ELSE is_pinned END,
             is_locked = CASE WHEN ${hasLocked} THEN ${isLockedVal} ELSE is_locked END,
@@ -383,7 +423,7 @@ export default async function handler(request: Request): Promise<Response> {
           UPDATE admin_notes
           SET
             title = CASE WHEN ${hasTitle} THEN ${titleVal} ELSE title END,
-            content = CASE WHEN ${hasContent} THEN ${contentVal} ELSE content END,
+            content = CASE WHEN ${hasBlob} THEN '' WHEN ${hasContent} THEN ${contentVal} ELSE content END,
             folder = CASE WHEN ${hasFolder} THEN ${folderVal} ELSE folder END,
             is_pinned = CASE WHEN ${hasPinned} THEN ${isPinnedVal} ELSE is_pinned END,
             is_locked = CASE WHEN ${hasLocked} THEN ${isLockedVal} ELSE is_locked END,

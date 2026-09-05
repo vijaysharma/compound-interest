@@ -63,6 +63,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const [isLockModalOpen, setIsLockModalOpen] = useState(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+  const [storageProvider, setStorageProvider] = useState<'vercel_blob' | 'database_fallback' | null>(null);
   const [mobileScreen, setMobileScreen] = useState<'folders' | 'list' | 'editor'>('list');
   const [unlockedNotes, setUnlockedNotes] = useState<Set<string>>(new Set());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,6 +79,16 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     const load = async () => {
       if (!token) return;
       try {
+        fetch('/api/admin/notes?action=storage_status', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data?.storage_provider && isMounted) {
+              setStorageProvider(data.storage_provider);
+            }
+          })
+          .catch(() => {});
         const key = await getUserEncryptionKey(userId, userEmail);
         const res = await fetch('/api/admin/notes?include_trashed=true', {
           headers: { Authorization: `Bearer ${token}` },
@@ -692,6 +703,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       />
       <NotesSecurityModal
         isOpen={isSecurityModalOpen}
+        storageProvider={storageProvider}
         onClose={() => setIsSecurityModalOpen(false)}
       />
     </div>
