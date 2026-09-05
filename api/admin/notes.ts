@@ -1,4 +1,3 @@
-import { put, del } from '@vercel/blob';
 import { ensureTables, getDb, getUserFromRequest, jsonResponse, isPaidUser } from '../_db';
 export const config = { runtime: 'edge' };
 declare const process: { env: Record<string, string | undefined> };
@@ -21,13 +20,25 @@ async function uploadToVercelBlob(userId: string, noteId: string, content: strin
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token || !content) return null;
   try {
-    const filename = `notes/${userId}/${noteId}.txt`;
-    const res = await put(filename, content, {
-      access: 'public',
-      addRandomSuffix: true,
-      token,
+    const pathname = `notes/${userId}/${noteId}.txt`;
+    const baseUrl = process.env.VERCEL_BLOB_API_URL || 'https://vercel.com/api/blob';
+    const res = await fetch(`${baseUrl}/?pathname=${encodeURIComponent(pathname)}`, {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'x-api-version': '12',
+        'x-vercel-blob-access': 'public',
+        'x-add-random-suffix': '1',
+        'x-content-type': 'text/plain; charset=utf-8',
+      },
+      body: content,
     });
-    return res.url;
+    if (!res.ok) {
+      console.warn('Vercel Blob upload response not ok:', res.status);
+      return null;
+    }
+    const data = (await res.json()) as { url?: string };
+    return data.url || null;
   } catch (err) {
     console.warn('Vercel Blob upload failed, falling back to database:', err);
     return null;
@@ -39,7 +50,16 @@ async function deleteFromVercelBlob(urls: (string | null | undefined)[]): Promis
   const validUrls = urls.filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
   if (validUrls.length === 0) return;
   try {
-    await del(validUrls, { token });
+    const baseUrl = process.env.VERCEL_BLOB_API_URL || 'https://vercel.com/api/blob';
+    await fetch(`${baseUrl}/delete`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'x-api-version': '12',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ urls: validUrls }),
+    });
   } catch (err) {
     console.warn('Vercel Blob deletion failed:', err);
   }

@@ -118,10 +118,10 @@ export async function hashPassword(
     256
   );
   const hash = Array.from(new Uint8Array(derivedBits))
-    .map((b) => b.toString(16).padStart(2, '0'))
+    .map((b: number) => b.toString(16).padStart(2, '0'))
     .join('');
   const saltOut = Array.from(salt)
-    .map((b) => b.toString(16).padStart(2, '0'))
+    .map((b: number) => b.toString(16).padStart(2, '0'))
     .join('');
   return { hash, salt: saltOut };
 }
