@@ -25,9 +25,9 @@ export default async function handler(request: Request): Promise<Response> {
               title: 'Rupee Calculator Pro Subscription',
               upi_id: '',
               upi_qr_code_url: '',
-              amount: 29,
+              amount: 54,
               instructions:
-                'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.',
+                'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.',
               updated_at: new Date().toISOString(),
             };
       return jsonResponse({ settings });
@@ -44,10 +44,10 @@ export default async function handler(request: Request): Promise<Response> {
       const title = body.title ?? 'Rupee Calculator Pro Subscription';
       const upiId = body.upi_id ?? '';
       const qrCodeUrl = body.upi_qr_code_url ?? '';
-      const amount = typeof body.amount === 'number' ? body.amount : 29;
+      const amount = typeof body.amount === 'number' ? body.amount : 54;
       const instructions =
         body.instructions ??
-        'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.';
+        'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.';
       const updated = (await sql`
         INSERT INTO payment_settings (id, title, upi_id, upi_qr_code_url, amount, instructions, updated_at)
         VALUES ('default', ${title}, ${upiId}, ${qrCodeUrl}, ${amount}, ${instructions}, NOW())

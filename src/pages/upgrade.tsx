@@ -26,7 +26,7 @@ const Upgrade = () => {
     };
     void fetchSettings();
   }, []);
-  const amount = settings?.amount ?? 29;
+  const amount = settings?.amount ?? 54;
   const isTrialActive =
     user && !user.isBlocked && user.role !== 'admin' && user.subscription_status !== 'active';
   const remainingCalculations = Math.max(0, (user?.freeLimit || 15) - (user?.api_usage_count || 0));
@@ -143,7 +143,7 @@ const Upgrade = () => {
     <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
       <SEOHead
         title="Upgrade to Pro | Rupee Calculator"
-        description="Unlock unlimited live AMFI mutual fund syncing, institutional-grade calculation limits, and World Bank PPP economic modeling for ₹29/month."
+        description="Unlock unlimited live AMFI mutual fund syncing, institutional-grade calculation limits, and World Bank PPP economic modeling for ₹54/month."
         canonicalPath="/upgrade"
         noIndex={true}
       />
@@ -168,19 +168,19 @@ const Upgrade = () => {
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-bold text-info uppercase tracking-wider mb-1">
                 <FiClock className="h-3.5 w-3.5" />
-                <span>Mutual Funds &amp; PPP Trial Active</span>
+                <span>Live Analytics Trial Active</span>
               </div>
               <p className="text-xs sm:text-sm font-medium">
                 You have{' '}
                 <span className="font-bold text-primary">
                   {remainingCalculations} of {user?.freeLimit || 15}
                 </span>{' '}
-                Mutual Fund &amp; PPP calculation runs left
+                live Mutual Fund, Inflation &amp; PPP calculation runs left
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}.
               </p>
               <p className="text-[11px] opacity-65 mt-0.5">
-                All other tools (FD, RD, SWP, SIP, EMI, Inflation) are 100% free for 48 hours from
-                first usage.
+                All other tools (FD, RD, SWP, SIP, EMI, Utilities) are 100% free for 48 hours from
+                first usage, and remain free to use afterwards.
               </p>
             </div>
             <Link to="/mutual-funds/lumpsum" className="btn btn-outline btn-info btn-xs shrink-0">
@@ -204,7 +204,7 @@ const Upgrade = () => {
           </div>
           <div>
             <h2 className="text-lg font-bold">A quick note from the developer</h2>
-            <p className="text-xs opacity-60">Why ₹29/month makes a huge difference</p>
+            <p className="text-xs opacity-60">Why ₹54/month makes a huge difference</p>
           </div>
         </div>
         <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
@@ -224,9 +224,9 @@ const Upgrade = () => {
             costs money every month.
           </p>
           <p className="font-semibold text-primary">
-            ₹29 a month is literally less than a cutting chai and samosa. If this platform saved you
-            time or gave you clarity on your financial goals, your support directly keeps this
-            project alive, ad-free, and growing.
+            ₹54 a month is less than ₹1.80 a day—literally less than a cutting chai. If this
+            platform saved you time or gave you clarity on your financial goals, your support
+            directly keeps this project alive, ad-free, and growing.
           </p>
         </div>
       </div>

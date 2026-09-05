@@ -33,7 +33,7 @@ const PaywallModal = () => {
       navigate('/upgrade');
     }
   };
-  const amount = settings?.amount ?? 29;
+  const amount = settings?.amount ?? 54;
   const isTrialActive = user && !user.isBlocked && user.subscription_status !== 'active';
   const remainingCalculations = Math.max(0, (user?.freeLimit || 15) - (user?.api_usage_count || 0));
   const getRemainingHours = () => {
@@ -179,17 +179,17 @@ const PaywallModal = () => {
                 <span className="font-bold text-primary">
                   {remainingCalculations} of {user?.freeLimit || 15}
                 </span>{' '}
-                live Mutual Fund &amp; PPP calculation runs remaining
+                live Mutual Fund, Inflation &amp; PPP calculation runs remaining
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other
-                tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Inflation) are 100% free for
+                tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Utilities) are 100% free for
                 48 hours from first usage. Unlock unlimited access for just ₹{amount}/month.
               </>
             ) : (
               <>
-                Your 48-hour trial / {user?.freeLimit || 15}-run limit for live AMFI Mutual Funds
-                &amp; PPP analytics has ended for{' '}
-                <span className="font-semibold">{user?.email}</span>. Unlock unlimited access for
-                just ₹{amount}/month.
+                Your free trial / {user?.freeLimit || 15}-run limit for live AMFI Mutual Funds,
+                Inflation &amp; PPP analytics has ended for{' '}
+                <span className="font-semibold">{user?.email}</span>. Calculators Suite tools remain
+                free to use. Unlock unlimited access for just ₹{amount}/month.
               </>
             )}
           </p>

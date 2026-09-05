@@ -13,7 +13,7 @@ export default async function handler(request: Request): Promise<Response> {
     }
     const body = (await request.json()) as { utr_ref?: string; amount?: number };
     const utrRef = body.utr_ref ? body.utr_ref.trim() : '';
-    const amount = typeof body.amount === 'number' ? body.amount : 29;
+    const amount = typeof body.amount === 'number' ? body.amount : 54;
     if (!utrRef || utrRef.length < 4) {
       return jsonResponse(
         { error: 'Please enter a valid 12-digit UPI UTR / Transaction Reference number' },

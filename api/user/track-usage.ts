@@ -30,8 +30,8 @@ export default async function handler(request: Request): Promise<Response> {
       user.trial_expires_at && new Date(user.trial_expires_at).getTime() < Date.now();
     if (isUserBlocked(user, !isInitOnly)) {
       const message = isTimeExpired
-        ? 'Your 48-hour free trial period has ended. Unlock 30 days unlimited Pro for ₹29.'
-        : `Free trial limit of ${limit} live calculation runs reached. Unlock 30 days unlimited Pro for ₹29.`;
+        ? 'Your 48-hour free trial period has ended. Unlock 30 days unlimited Pro for ₹54.'
+        : `Free trial limit of ${limit} live calculation runs reached. Unlock 30 days unlimited Pro for ₹54.`;
       return jsonResponse(
         {
           error: message,

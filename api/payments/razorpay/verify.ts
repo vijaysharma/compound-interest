@@ -34,10 +34,7 @@ export default async function handler(request: Request): Promise<Response> {
     }
     const rawKeySecret = process.env.RAZORPAY_KEY_SECRET;
     if (!rawKeySecret) {
-      return jsonResponse(
-        { error: 'Razorpay secret key is not configured.' },
-        500
-      );
+      return jsonResponse({ error: 'Razorpay secret key is not configured.' }, 500);
     }
     const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
     const body = (await request.json().catch(() => ({}))) as {
@@ -76,7 +73,7 @@ export default async function handler(request: Request): Promise<Response> {
     const newSubId = crypto.randomUUID();
     await sql`
       INSERT INTO payment_submissions (id, user_id, user_email, utr_ref, amount, status, created_at, updated_at)
-      VALUES (${newSubId}, ${user.id}, ${user.email}, ${razorpay_payment_id}, 29, 'approved', NOW(), NOW())
+      VALUES (${newSubId}, ${user.id}, ${user.email}, ${razorpay_payment_id}, 54, 'approved', NOW(), NOW())
     `;
     return jsonResponse({
       success: true,

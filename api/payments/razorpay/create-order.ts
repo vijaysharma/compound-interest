@@ -23,7 +23,7 @@ export default async function handler(request: Request): Promise<Response> {
     const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
     const body = (await request.json().catch(() => ({}))) as { amount?: number | string };
     const parsed = Number(body.amount);
-    const amountInRupees = !isNaN(parsed) && parsed > 0 ? parsed : 29;
+    const amountInRupees = !isNaN(parsed) && parsed > 0 ? parsed : 54;
     const amountInPaise = Math.round(amountInRupees * 100);
     const authHeader = btoa(`${keyId}:${keySecret}`);
     const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;
@@ -44,9 +44,9 @@ export default async function handler(request: Request): Promise<Response> {
     const rzpRes = await fetch(proxyUrl.toString(), {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${authHeader}`,
+        Authorization: `Basic ${authHeader}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: orderPayload,
     });

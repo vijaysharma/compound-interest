@@ -40,6 +40,9 @@ const getNavTitle = (pathname: string) => {
     '/inflation-calculator': 'Inflation Rates',
     '/economics/ppp-exchange-rate': 'PPP Exchange Rate',
     '/ppp-calculator': 'PPP Exchange Rate',
+    '/currency-converter': 'Currency Converter',
+    '/utilities/currency-converter': 'Currency Converter',
+    '/economics/currency-converter': 'Currency Converter',
     '/fixed-plans/fixed-rate-sip': 'Fixed Rate SIP',
     '/sip-calculator': 'SIP Calculator',
     '/fixed-plans/fixed-rate-swp': 'Fixed Rate SWP',
@@ -103,13 +106,13 @@ const TopBar = ({ className }: { className?: string }) => {
                   type="button"
                   onClick={() => setShowPaywall(true)}
                   className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} items-center gap-1 font-normal`}
-                  title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 10} Mutual Fund live calculations used in 48h trial. Other calculators are free for 48 hours.`}
+                  title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 15} live calculations used in 48h trial. Other calculators are free for 48 hours.`}
                 >
                   <FiZap className="h-3 w-3" />
                   <span className="hidden md:inline">
-                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 10} MF Runs
+                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 15} Live Runs
                   </span>
-                  <span className="font-bold underline text-[10px]">₹29 Pro</span>
+                  <span className="font-bold underline text-[10px]">₹54 Pro</span>
                 </button>
               )}
               <div className="hidden sm:flex flex-col items-end text-right leading-tight">
@@ -263,6 +266,13 @@ const TopBar = ({ className }: { className?: string }) => {
                   >
                     PPP Exchange Rate
                   </Link>
+                  <Link
+                    to="/currency-converter"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Currency Converter
+                  </Link>
                 </div>
                 <div className="mt-1.5">
                   <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
@@ -377,7 +387,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <FiZap className="h-3.5 w-3.5" />
-                    <span>Unlock Pro (₹29/mo)</span>
+                    <span>Unlock Pro (₹54/mo)</span>
                   </Link>
                 )}
                 <button

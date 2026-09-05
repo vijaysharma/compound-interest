@@ -92,6 +92,14 @@
     <priority>0.85</priority>
   </url>
 
+  <!-- ==================== CURRENCY CONVERTER ==================== -->
+  <url>
+    <loc>https://rupees.vercel.app/currency-converter</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
   <!-- ==================== EMI CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/emi-calculator</loc>

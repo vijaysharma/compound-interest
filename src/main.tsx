@@ -96,11 +96,15 @@ const router = createBrowserRouter([
       },
       {
         path: 'inflation-calculator',
-        lazy: protectedRoute(() => import('./pages/inflationRates.tsx')),
+        lazy: protectedRoute(() => import('./pages/inflationRates.tsx'), false, true),
       },
       {
         path: 'ppp-calculator',
         lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx'), false, true),
+      },
+      {
+        path: 'currency-converter',
+        lazy: protectedRoute(() => import('./pages/currencyConverter.tsx')),
       },
       {
         path: 'sip-calculator',
@@ -133,6 +137,10 @@ const router = createBrowserRouter([
           {
             path: 'unit-converter',
             lazy: protectedRoute(() => import('./pages/unitConverter.tsx')),
+          },
+          {
+            path: 'currency-converter',
+            lazy: protectedRoute(() => import('./pages/currencyConverter.tsx')),
           },
         ],
       },
@@ -192,11 +200,15 @@ const router = createBrowserRouter([
         children: [
           {
             path: 'inflation-rates',
-            lazy: protectedRoute(() => import('./pages/inflationRates.tsx')),
+            lazy: protectedRoute(() => import('./pages/inflationRates.tsx'), false, true),
           },
           {
             path: 'ppp-exchange-rate',
             lazy: protectedRoute(() => import('./pages/pppExchangeRate.tsx'), false, true),
+          },
+          {
+            path: 'currency-converter',
+            lazy: protectedRoute(() => import('./pages/currencyConverter.tsx')),
           },
         ],
       },

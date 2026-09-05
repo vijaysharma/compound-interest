@@ -8,6 +8,7 @@ import {
   FiGlobe,
   FiLayers,
   FiPercent,
+  FiRepeat,
   FiShield,
   FiTool,
   FiTrendingUp,
@@ -70,7 +71,7 @@ const homeSchema = {
           name: 'What calculators are available on Rupee Calculator?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Rupee Calculator provides 8+ institutional-grade tools including SIP Calculator, SWP Calculator, Fixed Deposit (FD) Compounding Calculator, Recurring Deposit (RD) Calculator, Loan EMI & Amortization Calculator, Inflation Calculator, Purchasing Power Parity (PPP) Converter, and Mutual Fund CAGR Analytics Engine.',
+            text: 'Rupee Calculator provides 9+ institutional-grade tools including SIP Calculator, SWP Calculator, Fixed Deposit (FD) Compounding Calculator, Recurring Deposit (RD) Calculator, Loan EMI & Amortization Calculator, Inflation Calculator, Purchasing Power Parity (PPP) Converter, Live Currency Converter, and Mutual Fund CAGR Analytics Engine.',
           },
         },
       ],
@@ -469,6 +470,23 @@ const Home = () => {
                 className="text-xs text-primary font-semibold hover:underline"
               >
                 Open Date Calculator &rarr;
+              </Link>
+            </div>
+            <div className="card bg-base-100 border border-base-300 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  <FiRepeat className="h-5 w-5 inline text-primary mr-1" /> Currency Converter
+                </h3>
+                <p className="text-sm opacity-70 mb-4">
+                  Convert 160+ global currencies in real time with live mid-market forex rates, zero
+                  bank markups, and instant bidirectional calculation.
+                </p>
+              </div>
+              <Link
+                to="/currency-converter"
+                className="text-xs text-primary font-semibold hover:underline"
+              >
+                Open Currency Converter &rarr;
               </Link>
             </div>
           </div>

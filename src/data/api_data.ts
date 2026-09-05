@@ -93,11 +93,21 @@ export const fetchMFbySchemeCode = async (schemeCode: string, signal?: AbortSign
     mfNavRequests.delete(schemeCode);
   }
 };
-export const fetchExchangeRates = async () => {
-  void recordApiUsage();
+let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
+const EXCHANGE_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes client cache
+export const fetchExchangeRates = async (recordUsage = false): Promise<Record<string, number>> => {
+  if (exchangeRatesCache && Date.now() - exchangeRatesCache.timestamp < EXCHANGE_CACHE_TTL_MS) {
+    if (recordUsage) void recordApiUsage();
+    return exchangeRatesCache.rates;
+  }
+  if (recordUsage) void recordApiUsage();
   const response = await fetch(EXCHANGE_URL);
   const data = await response.json();
-  return data.rates;
+  if (data && data.rates) {
+    exchangeRatesCache = { rates: data.rates as Record<string, number>, timestamp: Date.now() };
+    return data.rates as Record<string, number>;
+  }
+  return (data?.rates as Record<string, number>) || {};
 };
 // ----------------
 export interface WorldBankPPPRecord {

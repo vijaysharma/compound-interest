@@ -208,8 +208,8 @@ const Login = () => {
                     Step 1 of 2: Verify Your Google / Gmail Account
                   </div>
                   <p className="text-xs opacity-75">
-                    Includes 48-hour trial with 10 live Mutual Fund calculation runs. All other
-                    tools are free for 48 hours.
+                    Includes 48-hour trial with 15 live Mutual Fund, Inflation &amp; PPP calculation
+                    runs. Suite tools remain free post-48 hours.
                   </p>
                 </div>
                 <div className="flex justify-center py-1">

@@ -4,6 +4,7 @@ import { FiAlertTriangle, FiClock, FiLock, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import LoadingFallback from './LoadingFallback';
 import GoogleSignInButton from './GoogleSignInButton';
+import SubscriptionPromptBanner from './SubscriptionPromptBanner';
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAdmin?: boolean;
@@ -94,7 +95,7 @@ const ProtectedRoute = ({
       </div>
     );
   }
-  // 3. For Authenticated Users: Check Trial Expiration
+  // 3. For Authenticated Users: Check Trial Expiration & Quota
   const isTimeExpired = Boolean(
     isAuthenticated &&
     user?.trial_expires_at &&
@@ -102,38 +103,6 @@ const ProtectedRoute = ({
     !isAdmin &&
     user?.subscription_status !== 'active'
   );
-  if (isTimeExpired) {
-    return (
-      <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
-        <div className="card bg-base-100 border border-warning/40 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning">
-            <FiClock className="h-7 w-7" />
-          </div>
-          <h2 className="mb-2 text-xl font-bold">48-Hour Free Trial Expired</h2>
-          <p className="mb-2 text-xs sm:text-sm opacity-75">
-            Your 48-hour free trial period for the Calculators Suite has ended for{' '}
-            <span className="font-semibold">{user?.email}</span>.
-          </p>
-          <p className="mb-6 text-xs opacity-60">
-            Unlock 30 days of unlimited Pro access across all financial tools for just ₹29/month.
-          </p>
-          <div className="space-y-2">
-            <Link
-              to="/upgrade"
-              className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
-            >
-              <FiZap className="h-4 w-4" />
-              <span>Unlock Pro for ₹29 / Month &rarr;</span>
-            </Link>
-            <Link to="/" className="btn btn-ghost btn-xs w-full opacity-80">
-              &larr; Back to Home
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  // 4. For Authenticated Users: Check Quota
   const limit = user?.freeLimit || 15;
   const isQuotaExceeded = Boolean(
     isAuthenticated &&
@@ -141,21 +110,26 @@ const ProtectedRoute = ({
     !isAdmin &&
     user?.subscription_status !== 'active'
   );
-  if (requireApiQuota && isQuotaExceeded) {
+  // Live calculation tools (Mutual Funds, Inflation, PPP): Trial expires whichever earlier (15 runs or 48h)
+  if (requireApiQuota && (isQuotaExceeded || isTimeExpired)) {
     return (
       <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
         <div className="card bg-base-100 border border-warning/40 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning">
-            <FiZap className="h-7 w-7" />
+            {isQuotaExceeded ? <FiZap className="h-7 w-7" /> : <FiClock className="h-7 w-7" />}
           </div>
-          <h2 className="mb-2 text-xl font-bold">Calculation Limit Reached</h2>
+          <h2 className="mb-2 text-xl font-bold">
+            {isQuotaExceeded ? 'Calculation Limit Reached' : '48-Hour Free Trial Expired'}
+          </h2>
           <p className="mb-2 text-xs sm:text-sm opacity-75">
-            You have used all {limit} live Mutual Fund &amp; PPP calculation runs for{' '}
+            {isQuotaExceeded
+              ? `You have used all ${limit} free live Mutual Fund, Inflation & PPP calculation runs for `
+              : 'Your 48-hour free trial period for live financial analytics has ended for '}
             <span className="font-semibold">{user?.email}</span>.
           </p>
           <p className="mb-6 text-xs opacity-60">
-            Support the creator for just ₹29/mo to unlock unlimited live AMFI &amp; PPP sync. Other
-            tools (FD, RD, EMI, Inflation) remain free.
+            Unlock unlimited live calculations across all financial tools for just ₹54/month. Core
+            calculators (FD, RD, EMI, SIP, SWP, Utilities) remain free.
           </p>
           <div className="space-y-2">
             <Link
@@ -163,16 +137,22 @@ const ProtectedRoute = ({
               className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
             >
               <FiZap className="h-4 w-4" />
-              <span>Unlock Unlimited Access for ₹29 / Month &rarr;</span>
+              <span>Unlock Pro for ₹54 / Month &rarr;</span>
             </Link>
-            <Link to="/deposits/fd" className="btn btn-ghost btn-xs w-full opacity-80">
-              Back to Free Calculators &rarr;
+            <Link to="/fd-calculator" className="btn btn-ghost btn-xs w-full opacity-80">
+              Continue with Free Calculators Suite &rarr;
             </Link>
           </div>
         </div>
       </div>
     );
   }
-  return <>{children}</>;
+  // Calculators Suite tools: remain free, but show SubscriptionPromptBanner post-48 hours
+  return (
+    <>
+      <SubscriptionPromptBanner />
+      {children}
+    </>
+  );
 };
 export default ProtectedRoute;

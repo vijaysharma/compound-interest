@@ -66,19 +66,18 @@ export function isUserBlocked(user: DbUser, checkApiQuota = false): boolean {
     if (expiry > Date.now()) return false;
     return true;
   }
-  // Check 48-hour free trial from first usage (if trial has started)
+  // Calculators Suite tools (offline/math) remain free and are not hard-blocked
+  if (!checkApiQuota) {
+    return false;
+  }
+  // For live calculation tools: trial expires whichever is earlier (48h or 15 runs)
   if (user.trial_expires_at) {
     const trialExpiry = new Date(user.trial_expires_at).getTime();
     if (Date.now() > trialExpiry) {
       return true;
     }
   }
-  // Check free trial API calculation quota (default 15 requests, or custom free_limit)
   const limit = user.free_limit ?? FREE_USAGE_LIMIT;
-  if (checkApiQuota && (user.api_usage_count ?? 0) >= limit) {
-    return true;
-  }
-  // Overall blocked if calculation quota reached
   if ((user.api_usage_count ?? 0) >= limit) {
     return true;
   }
@@ -168,8 +167,8 @@ export async function ensureTables(sql: Query) {
           title TEXT NOT NULL DEFAULT 'Rupee Calculator Pro Subscription',
           upi_id TEXT NOT NULL DEFAULT '',
           upi_qr_code_url TEXT NOT NULL DEFAULT '',
-          amount NUMERIC NOT NULL DEFAULT 29,
-          instructions TEXT NOT NULL DEFAULT 'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.',
+          amount NUMERIC NOT NULL DEFAULT 54,
+          instructions TEXT NOT NULL DEFAULT 'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.',
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `;
@@ -180,19 +179,19 @@ export async function ensureTables(sql: Query) {
           'Rupee Calculator Pro Subscription',
           '',
           '',
-          29,
-          'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
+          54,
+          'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
         )
         ON CONFLICT (id) DO NOTHING
       `;
-      await sql`UPDATE payment_settings SET amount = 29 WHERE id = 'default' AND amount = 19`;
+      await sql`UPDATE payment_settings SET amount = 54, instructions = 'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.' WHERE id = 'default' AND amount IN (19, 29)`;
       await sql`
         CREATE TABLE IF NOT EXISTS payment_submissions (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
           user_email TEXT NOT NULL,
           utr_ref TEXT NOT NULL,
-          amount NUMERIC NOT NULL DEFAULT 29,
+          amount NUMERIC NOT NULL DEFAULT 54,
           status TEXT NOT NULL DEFAULT 'pending',
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

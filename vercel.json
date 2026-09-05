@@ -38,6 +38,16 @@
       "permanent": true
     },
     {
+      "source": "/economics/currency-converter",
+      "destination": "/currency-converter",
+      "permanent": true
+    },
+    {
+      "source": "/utilities/currency-converter",
+      "destination": "/currency-converter",
+      "permanent": true
+    },
+    {
       "source": "/compound-interest-calculator",
       "destination": "/fd-calculator",
       "permanent": true

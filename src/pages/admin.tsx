@@ -39,9 +39,9 @@ const Admin = () => {
   const [payTitle, setPayTitle] = useState('Rupee Calculator Pro Subscription');
   const [payUpiId, setPayUpiId] = useState('');
   const [payQrUrl, setPayQrUrl] = useState('');
-  const [payAmount, setPayAmount] = useState(29);
+  const [payAmount, setPayAmount] = useState(54);
   const [payInstructions, setPayInstructions] = useState(
-    'Pay ₹29 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
+    'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.'
   );
   // Submissions state
   const [submissions, setSubmissions] = useState<PaymentSubmission[]>([]);
@@ -92,7 +92,7 @@ const Admin = () => {
           setPayTitle(data.settings.title || '');
           setPayUpiId(data.settings.upi_id || '');
           setPayQrUrl(data.settings.upi_qr_code_url || '');
-          setPayAmount(data.settings.amount || 29);
+          setPayAmount(data.settings.amount || 54);
           setPayInstructions(data.settings.instructions || '');
         }
       } catch (err) {
@@ -323,7 +323,7 @@ const Admin = () => {
         <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
           <h2 className="text-lg font-bold mb-1">UPI Payment &amp; QR Code Configuration</h2>
           <p className="text-xs opacity-70 mb-6">
-            Customize the ₹29 paywall payment details, UPI ID, QR code image, and instructions shown
+            Customize the ₹54 paywall payment details, UPI ID, QR code image, and instructions shown
             to users.
           </p>
           <form onSubmit={handleSavePaymentSettings} className="space-y-4">

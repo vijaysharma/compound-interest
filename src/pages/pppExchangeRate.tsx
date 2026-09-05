@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import InputAmount from '../components/InputAmount';
 import DisplayCard from '../components/DisplayCard';
 import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
@@ -344,6 +345,19 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
               : `Nominal Forex Conversion in ${tgtCountry}`
           }`}
         />
+        <div className="card bg-base-100 border border-base-300 p-3.5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+            <span className="opacity-80">
+              Looking for pure real-time foreign exchange rates across 160+ world currencies?
+            </span>
+            <Link
+              to="/currency-converter"
+              className="text-primary font-bold hover:underline shrink-0 flex items-center gap-1"
+            >
+              <span>Try Currency Converter &rarr;</span>
+            </Link>
+          </div>
+        </div>
       </div>
       <CalculatorContentSection
         title="Why Purchasing Power Parity (PPP) Matters for Global Salaries"
