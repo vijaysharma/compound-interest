@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FiSearch,
   FiX,
@@ -9,6 +9,7 @@ import {
   FiCopy,
   FiRotateCcw,
   FiChevronLeft,
+  FiFolder,
 } from 'react-icons/fi';
 import { BsPinFill, BsPin, BsLockFill, BsCloudArrowUp } from 'react-icons/bs';
 import {
@@ -20,6 +21,7 @@ import {
   extractSnippet,
   extractHashtags,
 } from './NotesTypes';
+import { MoveNoteModal } from './MoveNoteModal';
 interface NotesListProps {
   notes: Note[];
   selectedNoteId: string | null;
@@ -28,16 +30,19 @@ interface NotesListProps {
   searchQuery: string;
   viewMode: ViewMode;
   sortOption: SortOption;
+  folders: string[];
   onSelectNote: (note: Note) => void;
   onNewNote: () => void;
   onSearchChange: (query: string) => void;
   onViewModeChange: (mode: ViewMode) => void;
   onSortChange: (sort: SortOption) => void;
   onTogglePin: (id: string, e: React.MouseEvent) => void;
-  onDeleteNote: (id: string, e: React.MouseEvent) => void;
+  onDeleteNote: (id: string, e?: React.MouseEvent) => void;
   onDuplicateNote: (note: Note, e: React.MouseEvent) => void;
   onRestoreNote: (id: string, e: React.MouseEvent) => void;
   onEmptyTrash: () => void;
+  onMoveNoteToFolder: (noteId: string, targetFolder: string) => void;
+  onCreateFolder: (name: string) => void;
   onBackToFolders?: () => void;
   onOpenBackupModal?: () => void;
   isMobileScreen?: boolean;
@@ -50,6 +55,7 @@ export const NotesList: React.FC<NotesListProps> = ({
   searchQuery,
   viewMode,
   sortOption,
+  folders,
   onSelectNote,
   onNewNote,
   onSearchChange,
@@ -60,11 +66,15 @@ export const NotesList: React.FC<NotesListProps> = ({
   onDuplicateNote,
   onRestoreNote,
   onEmptyTrash,
+  onMoveNoteToFolder,
+  onCreateFolder,
   onBackToFolders,
   onOpenBackupModal,
   isMobileScreen,
 }) => {
   const isTrash = activeFolder === SYSTEM_FOLDERS.TRASH;
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+  const [noteToMove, setNoteToMove] = useState<Note | null>(null);
   const filteredNotes = notes.filter((note) => {
     if (isTrash) {
       if (!note.is_trashed) return false;
@@ -119,6 +129,12 @@ export const NotesList: React.FC<NotesListProps> = ({
     if (activeFolder === SYSTEM_FOLDERS.TRASH) return 'Recently Deleted';
     return activeFolder;
   };
+  const handleConfirmDelete = () => {
+    if (noteToDelete) {
+      onDeleteNote(noteToDelete.id);
+      setNoteToDelete(null);
+    }
+  };
   const renderNoteCard = (note: Note) => {
     const isSelected = note.id === selectedNoteId;
     const title = note.title?.trim() || 'New Note';
@@ -126,9 +142,15 @@ export const NotesList: React.FC<NotesListProps> = ({
     const dateFormatted = formatNoteDate(note.updated_at || note.created_at);
     const hashtags = extractHashtags(note.title + ' ' + note.content);
     const noteTags = Array.from(new Set([...(note.tags || []), ...hashtags])).slice(0, 3);
+    const displayFolder = note.folder || 'Quick Notes';
     return (
       <div
         key={note.id}
+        draggable={!note.is_trashed}
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', note.id);
+          e.dataTransfer.effectAllowed = 'move';
+        }}
         onClick={() => onSelectNote(note)}
         className={`group relative p-3.5 rounded-xl cursor-pointer transition-all duration-150 border text-left select-none min-h-[58px] ${
           isSelected
@@ -168,10 +190,17 @@ export const NotesList: React.FC<NotesListProps> = ({
           <span className="text-base-content/50 truncate flex-1">{snippet}</span>
         </div>
         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-          {activeFolder === SYSTEM_FOLDERS.ALL && note.folder && note.folder !== 'Notes' && (
-            <span className="badge badge-ghost badge-xs text-[10px] py-1 px-2 bg-base-300/60 rounded">
-              📁 {note.folder}
-            </span>
+          {displayFolder && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isTrash) setNoteToMove(note);
+              }}
+              className="badge badge-ghost badge-xs text-[10px] py-1 px-2 bg-base-300/60 hover:bg-primary/15 hover:text-primary rounded cursor-pointer transition-colors"
+              title="Click to move folder"
+            >
+              📁 {displayFolder}
+            </button>
           )}
           {noteTags.map((t) => (
             <span
@@ -182,9 +211,19 @@ export const NotesList: React.FC<NotesListProps> = ({
             </span>
           ))}
         </div>
-        <div className="absolute top-2 right-2 hidden md:group-hover:flex items-center gap-1 bg-base-100/95 px-1.5 py-0.5 rounded-lg shadow-sm border border-base-300">
+        <div className="absolute top-2 right-2 flex md:hidden md:group-hover:flex items-center gap-1 bg-base-100/95 px-1.5 py-0.5 rounded-lg shadow-xs border border-base-300">
           {!isTrash && (
             <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNoteToMove(note);
+                }}
+                className="p-1 hover:text-primary text-base-content/60 rounded transition-colors"
+                title="Move to Folder"
+              >
+                <FiFolder className="w-3 h-3" />
+              </button>
               <button
                 onClick={(e) => onTogglePin(note.id, e)}
                 className={`p-1 hover:text-primary rounded transition-colors ${
@@ -213,7 +252,10 @@ export const NotesList: React.FC<NotesListProps> = ({
             </button>
           ) : (
             <button
-              onClick={(e) => onDeleteNote(note.id, e)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setNoteToDelete(note);
+              }}
               className="p-1 hover:text-error text-base-content/60 rounded transition-colors"
               title="Move to Trash"
             >
@@ -265,11 +307,7 @@ export const NotesList: React.FC<NotesListProps> = ({
               className="btn btn-ghost btn-xs btn-square min-h-[36px] min-w-[36px]"
               title={viewMode === 'list' ? 'Switch to Gallery view' : 'Switch to List view'}
             >
-              {viewMode === 'list' ? (
-                <FiGrid className="w-4 h-4" />
-              ) : (
-                <FiList className="w-4 h-4" />
-              )}
+              {viewMode === 'list' ? <FiGrid className="w-4 h-4" /> : <FiList className="w-4 h-4" />}
             </button>
             {!isTrash && (
               <button
@@ -335,7 +373,10 @@ export const NotesList: React.FC<NotesListProps> = ({
                   : 'No notes in this folder'}
             </p>
             {!isTrash && !searchQuery && (
-              <button onClick={onNewNote} className="btn btn-primary btn-xs mt-1">
+              <button
+                onClick={onNewNote}
+                className="btn btn-primary btn-xs mt-1"
+              >
                 Create a Note
               </button>
             )}
@@ -349,6 +390,11 @@ export const NotesList: React.FC<NotesListProps> = ({
               return (
                 <div
                   key={note.id}
+                  draggable={!note.is_trashed}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', note.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
                   onClick={() => onSelectNote(note)}
                   className={`p-3 rounded-xl border text-left cursor-pointer transition-all aspect-square flex flex-col justify-between ${
                     isSelected
@@ -365,17 +411,44 @@ export const NotesList: React.FC<NotesListProps> = ({
                       >
                         {title}
                       </h4>
-                      {note.is_pinned && (
-                        <BsPinFill className="w-3 h-3 text-primary flex-shrink-0" />
-                      )}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {note.is_pinned && <BsPinFill className="w-3 h-3 text-primary" />}
+                        {!isTrash && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNoteToDelete(note);
+                            }}
+                            className="p-0.5 text-base-content/40 hover:text-error rounded"
+                            title="Delete note"
+                          >
+                            <FiTrash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-[11px] text-base-content/50 line-clamp-3 leading-snug">
                       {snippet}
                     </p>
                   </div>
-                  <span className="text-[10px] text-base-content/40 font-medium">
-                    {formatNoteDate(note.updated_at || note.created_at)}
-                  </span>
+                  <div className="flex items-center justify-between gap-1 pt-1 border-t border-base-200/40">
+                    <span className="text-[10px] text-base-content/40 font-medium">
+                      {formatNoteDate(note.updated_at || note.created_at)}
+                    </span>
+                    {!isTrash && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNoteToMove(note);
+                        }}
+                        className="text-[10px] text-primary hover:underline flex items-center gap-0.5"
+                        title="Move to Folder"
+                      >
+                        <FiFolder className="w-2.5 h-2.5" />
+                        <span className="truncate max-w-[60px]">{note.folder || 'Quick Notes'}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -404,6 +477,40 @@ export const NotesList: React.FC<NotesListProps> = ({
           </>
         )}
       </div>
+      {noteToDelete && (
+        <div className="modal modal-open z-50">
+          <div className="modal-box max-w-sm rounded-2xl bg-base-100 p-5 shadow-2xl border border-base-300">
+            <h3 className="font-bold text-base text-base-content flex items-center gap-2">
+              <FiTrash2 className="text-error w-5 h-5" /> Move to Trash
+            </h3>
+            <p className="text-xs text-base-content/70 mt-2">
+              Are you sure you want to move <strong>"{noteToDelete.title || 'Untitled Note'}"</strong> to Recently Deleted?
+            </p>
+            <div className="modal-action mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setNoteToDelete(null)}
+                className="btn btn-ghost btn-sm text-xs rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="btn btn-error btn-sm text-xs text-white rounded-xl"
+              >
+                Move to Trash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <MoveNoteModal
+        isOpen={Boolean(noteToMove)}
+        note={noteToMove}
+        folders={folders}
+        onClose={() => setNoteToMove(null)}
+        onMove={(id, targetFolder) => onMoveNoteToFolder(id, targetFolder)}
+        onCreateFolder={onCreateFolder}
+      />
     </div>
   );
 };

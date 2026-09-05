@@ -51,6 +51,11 @@
       "source": "/compound-interest-calculator",
       "destination": "/fd-calculator",
       "permanent": true
+    },
+    {
+      "source": "/admin/quick-notes",
+      "destination": "/utilities/quick-notes",
+      "permanent": true
     }
   ],
   "headers": [

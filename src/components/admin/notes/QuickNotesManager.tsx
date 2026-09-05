@@ -443,6 +443,20 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       setSelectedNoteId(first.id);
     }
   };
+  const handleMoveNoteToFolder = useCallback(
+    (noteId: string, targetFolder: string) => {
+      const updatedTime = new Date().toISOString();
+      setNotes((prev) => {
+        const next = prev.map((n) =>
+          n.id === noteId ? { ...n, folder: targetFolder, updated_at: updatedTime } : n
+        );
+        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        return next;
+      });
+      persistNoteToServer(noteId, { folder: targetFolder, updated_at: updatedTime });
+    },
+    [persistNoteToServer]
+  );
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const isMeta = e.metaKey || e.ctrlKey;
@@ -492,6 +506,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onCreateFolder={handleCreateFolder}
           onRenameFolder={handleRenameFolder}
           onDeleteFolder={handleDeleteFolder}
+          onMoveNoteToFolder={handleMoveNoteToFolder}
           isOpen={isSidebarOpen || mobileScreen === 'folders'}
           onCloseMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
@@ -514,6 +529,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           searchQuery={searchQuery}
           viewMode={viewMode}
           sortOption={sortOption}
+          folders={folders}
           onSelectNote={(note) => {
             setSelectedNoteId(note.id);
             setMobileScreen('editor');
@@ -527,6 +543,8 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onDuplicateNote={handleDuplicateNote}
           onRestoreNote={handleRestoreNote}
           onEmptyTrash={handleEmptyTrash}
+          onMoveNoteToFolder={handleMoveNoteToFolder}
+          onCreateFolder={handleCreateFolder}
           onBackToFolders={() => setMobileScreen('folders')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           isMobileScreen={mobileScreen === 'list'}
@@ -553,6 +571,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           isSidebarOpen={isSidebarOpen}
           onBackMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
+          onCreateFolder={handleCreateFolder}
           folderTitle={activeFolder === SYSTEM_FOLDERS.ALL ? 'All Notes' : activeFolder}
           isMobileScreen={mobileScreen === 'editor'}
         />

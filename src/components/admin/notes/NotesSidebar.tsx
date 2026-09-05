@@ -24,6 +24,7 @@ interface NotesSidebarProps {
   onCreateFolder: (name: string) => void;
   onRenameFolder: (oldName: string, newName: string) => void;
   onDeleteFolder: (name: string) => void;
+  onMoveNoteToFolder?: (noteId: string, folder: string) => void;
   isOpen: boolean;
   onCloseMobile?: () => void;
   onOpenBackupModal?: () => void;
@@ -41,6 +42,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
+  onMoveNoteToFolder,
   isOpen,
   onCloseMobile,
   onOpenBackupModal,
@@ -53,6 +55,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   const [renameValue, setRenameValue] = useState('');
   const [foldersCollapsed, setFoldersCollapsed] = useState(false);
   const [tagsCollapsed, setTagsCollapsed] = useState(false);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const allCount = notes.filter((n) => !n.is_trashed).length;
   const quickNotesCount = notes.filter((n) => !n.is_trashed && n.folder === 'Quick Notes').length;
   const pinnedCount = notes.filter((n) => !n.is_trashed && n.is_pinned).length;
@@ -84,6 +87,14 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
     }
     setEditingFolder(null);
     setRenameValue('');
+  };
+  const handleFolderDrop = (e: React.DragEvent, targetFolder: string) => {
+    e.preventDefault();
+    const noteId = e.dataTransfer.getData('text/plain');
+    if (noteId && onMoveNoteToFolder) {
+      onMoveNoteToFolder(noteId, targetFolder);
+    }
+    setDragOverFolder(null);
   };
   if (!isOpen) return null;
   return (
@@ -152,10 +163,19 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
               onSelectFolder(SYSTEM_FOLDERS.QUICK_NOTES);
               onSelectTag(null);
             }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              setDragOverFolder('Quick Notes');
+            }}
+            onDragLeave={() => setDragOverFolder(null)}
+            onDrop={(e) => handleFolderDrop(e, 'Quick Notes')}
             className={`w-full flex items-center justify-between px-3.5 py-2.5 min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
-              activeFolder === SYSTEM_FOLDERS.QUICK_NOTES && !activeTag
-                ? 'bg-primary/15 text-primary font-semibold shadow-xs'
-                : 'hover:bg-base-300/60 text-base-content/85'
+              dragOverFolder === 'Quick Notes'
+                ? 'ring-2 ring-primary ring-inset bg-primary/25 scale-[1.02]'
+                : activeFolder === SYSTEM_FOLDERS.QUICK_NOTES && !activeTag
+                  ? 'bg-primary/15 text-primary font-semibold shadow-xs'
+                  : 'hover:bg-base-300/60 text-base-content/85'
             }`}
           >
             <span className="flex items-center gap-3">
@@ -231,6 +251,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
               {folders.map((folder) => {
                 const isEditing = editingFolder === folder;
                 const isCurrent = activeFolder === folder && !activeTag;
+                const isDragOver = dragOverFolder === folder;
                 const count = getFolderCount(folder);
                 if (isEditing) {
                   return (
@@ -265,10 +286,19 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                 return (
                   <div
                     key={folder}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      setDragOverFolder(folder);
+                    }}
+                    onDragLeave={() => setDragOverFolder(null)}
+                    onDrop={(e) => handleFolderDrop(e, folder)}
                     className={`group flex items-center justify-between px-3.5 py-2 min-h-[42px] rounded-xl text-sm font-medium transition-colors ${
-                      isCurrent
-                        ? 'bg-primary/15 text-primary font-semibold shadow-xs'
-                        : 'hover:bg-base-300/60 text-base-content/85'
+                      isDragOver
+                        ? 'ring-2 ring-primary ring-inset bg-primary/25 scale-[1.02]'
+                        : isCurrent
+                          ? 'bg-primary/15 text-primary font-semibold shadow-xs'
+                          : 'hover:bg-base-300/60 text-base-content/85'
                     }`}
                   >
                     <button
@@ -359,9 +389,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                         <FiTag className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                         <span className="truncate">#{tag}</span>
                       </span>
-                      <span className="text-[11px] text-base-content/50 font-semibold">
-                        {count}
-                      </span>
+                      <span className="text-[11px] text-base-content/50 font-semibold">{count}</span>
                     </button>
                   );
                 })}

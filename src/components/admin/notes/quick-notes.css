@@ -134,6 +134,16 @@
 .qn-note-canvas {
   font-family: inherit;
   line-height: 1.6;
+  flex: 1;
+  display: block;
+  width: 100%;
+}
+
+.qn-note-canvas:empty:before {
+  content: attr(data-placeholder);
+  color: var(--color-base-content, #888888);
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .qn-note-canvas h1 {

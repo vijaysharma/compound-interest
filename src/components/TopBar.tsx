@@ -26,6 +26,7 @@ const getNavTitle = (pathname: string) => {
     '/admin/volumetric-weight': 'Volumetric Weight',
     '/admin/wood-calculator': 'Wood Calculator',
     '/admin/quick-notes': 'Quick Notes',
+    '/utilities/quick-notes': 'Quick Notes',
     '/about': 'About',
     '/privacy': 'Privacy Policy',
     '/disclaimer': 'Disclaimer',
@@ -205,13 +206,6 @@ const TopBar = ({ className }: { className?: string }) => {
                     >
                       Wood Calculator
                     </Link>
-                    <Link
-                      to="/admin/quick-notes"
-                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Quick Notes
-                    </Link>
                   </div>
                 )}
                 <div className="mt-1.5">
@@ -346,6 +340,13 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Unit Converter
+                  </Link>
+                  <Link
+                    to="/utilities/quick-notes"
+                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Quick Notes
                   </Link>
                 </div>
                 <div className="mt-2 border-t border-primary-content/20 pt-2">

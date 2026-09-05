@@ -58,8 +58,12 @@ const router = createBrowserRouter([
         lazy: protectedRoute(() => import('./pages/admin/woodCalculatorPage.tsx'), true),
       },
       {
+        path: 'utilities/quick-notes',
+        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), true),
+      },
+      {
         path: 'admin/quick-notes',
-        lazy: protectedRoute(() => import('./pages/admin/quickNotesPage.tsx'), true),
+        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), true),
       },
       // ── Trust & Info Pages (E-E-A-T) ──────────────────────────────
       {
@@ -141,6 +145,10 @@ const router = createBrowserRouter([
           {
             path: 'currency-converter',
             lazy: protectedRoute(() => import('./pages/currencyConverter.tsx')),
+          },
+          {
+            path: 'quick-notes',
+            lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), true),
           },
         ],
       },

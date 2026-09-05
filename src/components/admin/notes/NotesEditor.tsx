@@ -20,6 +20,7 @@ import {
   FiMenu,
   FiChevronLeft,
   FiFolder,
+  FiFolderPlus,
   FiEdit3,
 } from 'react-icons/fi';
 import {
@@ -44,6 +45,7 @@ import {
   extractHashtags,
   hashPasscode,
 } from './NotesTypes';
+import { MoveNoteModal } from './MoveNoteModal';
 interface NotesEditorProps {
   note: Note | null;
   folders: string[];
@@ -62,6 +64,7 @@ interface NotesEditorProps {
   isSidebarOpen?: boolean;
   onBackMobile?: () => void;
   onOpenBackupModal?: () => void;
+  onCreateFolder?: (name: string) => void;
   folderTitle?: string;
   isMobileScreen?: boolean;
 }
@@ -83,11 +86,13 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   isSidebarOpen,
   onBackMobile,
   onOpenBackupModal,
+  onCreateFolder,
   folderTitle,
   isMobileScreen,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
@@ -96,6 +101,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const [activeTable, setActiveTable] = useState<HTMLTableElement | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMoveModal, setShowMoveModal] = useState(false);
   const calculateStats = useCallback((text: string) => {
     const clean = text.replace(/<[^>]+>/g, ' ').trim();
     const chars = clean.replace(/\s+/g, '').length;
@@ -292,9 +299,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const node = selection.anchorNode;
-        const currentItem = (node instanceof HTMLElement ? node : node?.parentElement)?.closest(
-          '.qn-checklist-item'
-        );
+        const currentItem = (
+          node instanceof HTMLElement ? node : node?.parentElement
+        )?.closest('.qn-checklist-item');
         if (currentItem) {
           e.preventDefault();
           const content = currentItem.querySelector('.qn-checklist-content');
@@ -477,7 +484,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             <span className="font-bold text-sm">Locked Note</span>
           </div>
           <button
-            onClick={onDeleteNote}
+            onClick={() => setShowDeleteConfirm(true)}
             className="btn btn-ghost btn-sm text-error min-h-[44px] min-w-[44px]"
             title="Delete Note"
           >
@@ -519,17 +526,19 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     );
   }
   const isTrash = Boolean(note.is_trashed);
+  const currentFolder = note.folder || 'Quick Notes';
+  const allFolderOptions = Array.from(new Set(['Quick Notes', ...folders]));
   return (
     <div className="flex-1 flex flex-col h-full bg-base-100/90 overflow-hidden relative qn-paper">
-      <div className="border-b border-base-300/70 flex items-center justify-between gap-1  z-10 select-none min-h-[50px]">
-        <div className="flex items-center gap-1">
+      <div className="border-b border-base-300/70 flex items-center justify-between gap-1 z-10 select-none min-h-[50px]">
+        <div className="flex items-center gap-1 min-w-0">
           {onBackMobile && (
             <button
               onClick={onBackMobile}
               className="btn btn-ghost btn-sm px-1.5 flex items-center gap-0.5 text-primary md:hidden font-semibold min-h-[44px]"
             >
               <FiChevronLeft className="w-5 h-5" />
-              <span className="truncate max-w-[120px]">{folderTitle || 'Notes'}</span>
+              <span className="truncate max-w-[100px]">{folderTitle || 'Notes'}</span>
             </button>
           )}
           {onToggleSidebar && !isMobileScreen && (
@@ -541,35 +550,44 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <FiMenu className="w-4 h-4" />
             </button>
           )}
-          <div className="dropdown dropdown-bottom hidden md:inline-block">
-            <div
-              tabIndex={0}
-              role="button"
-              className="btn btn-ghost btn-xs gap-1 font-medium text-xs text-base-content/75 hover:text-base-content"
-            >
-              <FiFolder className="w-3.5 h-3.5 text-primary" />
-              <span className="truncate max-w-[90px]">{note.folder || 'Notes'}</span>
-            </div>
-            {!isTrash && (
+          {!isTrash && (
+            <div className="dropdown dropdown-bottom">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-xs gap-1 font-medium text-xs text-base-content/75 hover:text-base-content"
+                title="Move to another folder"
+              >
+                <FiFolder className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                <span className="truncate max-w-[90px] sm:max-w-[130px]">{currentFolder}</span>
+              </div>
               <ul
                 tabIndex={0}
                 className="dropdown-content z-30 menu p-1.5 shadow-xl bg-base-100 rounded-box w-48 text-xs border border-base-200"
               >
                 <li className="menu-title text-[10px] text-base-content/50">Move to Folder</li>
-                {folders.map((f) => (
+                {allFolderOptions.map((f) => (
                   <li key={f}>
                     <button
                       onClick={() => onUpdateNote({ folder: f })}
-                      className={note.folder === f ? 'active font-semibold' : ''}
+                      className={currentFolder === f ? 'active font-bold' : ''}
                     >
-                      <FiFolder className="w-3.5 h-3.5 text-primary" />
                       {f}
                     </button>
                   </li>
                 ))}
+                <li className="border-t border-base-200 mt-1 pt-1">
+                  <button
+                    onClick={() => setShowMoveModal(true)}
+                    className="text-primary font-semibold flex items-center gap-1"
+                  >
+                    <FiFolderPlus className="w-3.5 h-3.5" />
+                    Manage Folders...
+                  </button>
+                </li>
               </ul>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         {!isTrash && (
           <div className="hidden md:flex items-center gap-0.5 flex-wrap">
@@ -712,7 +730,11 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 }`}
                 title={note.is_pinned ? 'Unpin Note' : 'Pin Note'}
               >
-                {note.is_pinned ? <BsPinFill className="w-4 h-4" /> : <BsPin className="w-4 h-4" />}
+                {note.is_pinned ? (
+                  <BsPinFill className="w-4 h-4" />
+                ) : (
+                  <BsPin className="w-4 h-4" />
+                )}
               </button>
               <button
                 onClick={onOpenLockModal}
@@ -721,7 +743,11 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 }`}
                 title={note.is_locked ? 'Lock Settings' : 'Lock Note'}
               >
-                {note.is_locked ? <FiLock className="w-4 h-4" /> : <FiUnlock className="w-4 h-4" />}
+                {note.is_locked ? (
+                  <FiLock className="w-4 h-4" />
+                ) : (
+                  <FiUnlock className="w-4 h-4" />
+                )}
               </button>
             </>
           )}
@@ -738,6 +764,14 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               tabIndex={0}
               className="dropdown-content z-30 menu p-2 shadow-xl bg-base-100 rounded-box w-52 text-xs border border-base-200"
             >
+              {!isTrash && (
+                <li>
+                  <button onClick={() => setShowMoveModal(true)} className="flex items-center gap-2">
+                    <FiFolder className="w-3.5 h-3.5 text-primary" />
+                    Move to Folder...
+                  </button>
+                </li>
+              )}
               <li>
                 <button onClick={handleDumpToGoogleDrive} className="flex items-center gap-2">
                   <SiGoogledrive className="w-3.5 h-3.5 text-blue-500" />
@@ -754,10 +788,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </li>
               {onOpenBackupModal && (
                 <li>
-                  <button
-                    onClick={onOpenBackupModal}
-                    className="flex items-center gap-2 text-primary font-semibold"
-                  >
+                  <button onClick={onOpenBackupModal} className="flex items-center gap-2 text-primary font-semibold">
                     <BsCloudArrowUp className="w-3.5 h-3.5" />
                     Backup & Restore
                   </button>
@@ -822,7 +853,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </div>
           ) : (
             <button
-              onClick={onDeleteNote}
+              onClick={() => setShowDeleteConfirm(true)}
               className="btn btn-ghost btn-xs sm:btn-sm btn-square text-base-content/60 hover:text-error min-h-[38px] min-w-[38px]"
               title="Move to Trash"
             >
@@ -845,7 +876,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           <span className="text-primary font-medium">
             This note is in Recently Deleted. You cannot edit it unless you restore it.
           </span>
-          <button onClick={onRestoreNote} className="btn btn-xs btn-primary font-semibold">
+          <button
+            onClick={onRestoreNote}
+            className="btn btn-xs btn-primary font-semibold"
+          >
             <FiRotateCcw className="w-3 h-3 mr-1" />
             Restore Note
           </button>
@@ -882,97 +916,120 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           </button>
         </div>
       )}
-      <div className="flex-1 overflow-y-auto qn-scrollbar px-1 pt-4 sm:pt-8 md:pt-10 flex flex-col max-w-4xl mx-auto w-full">
-        <div className="flex items-center justify-between text-xs text-base-content/40 mb-4 sm:mb-6 select-none border-b border-base-200/60 pb-2">
-          <span className="text-[11px] font-medium">
-            {formatNoteHeaderDate(note.updated_at || note.created_at)}
-          </span>
-          <div className="hidden sm:flex items-center gap-3 text-[11px]">
-            <span>
-              {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} characters
+      <div
+        ref={canvasContainerRef}
+        onClick={(e) => {
+          if (
+            e.target === canvasContainerRef.current ||
+            (e.target as HTMLElement).classList?.contains('qn-canvas-inner')
+          ) {
+            if (editorRef.current && !isTrash) {
+              editorRef.current.focus();
+              const sel = window.getSelection();
+              if (sel) {
+                const range = document.createRange();
+                range.selectNodeContents(editorRef.current);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          }
+        }}
+        className="flex-1 overflow-y-auto qn-scrollbar px-1 pt-4 sm:pt-6 md:pt-8 flex flex-col w-full h-full cursor-text"
+      >
+        <div className="qn-canvas-inner max-w-4xl mx-auto w-full flex-1 flex flex-col min-h-full">
+          <div className="flex items-center justify-between text-xs text-base-content/40 mb-3 sm:mb-4 select-none border-b border-base-200/60 pb-2 flex-shrink-0">
+            <span className="text-[11px] font-medium">
+              {formatNoteHeaderDate(note.updated_at || note.created_at)}
             </span>
-            <span
-              className={`font-medium ${
-                isSaving ? 'text-primary animate-pulse' : 'text-base-content/40'
-              }`}
-            >
-              {isSaving ? 'Saving...' : 'Saved'}
-            </span>
+            <div className="hidden sm:flex items-center gap-3 text-[11px]">
+              <span>
+                {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} characters
+              </span>
+              <span
+                className={`font-medium ${
+                  isSaving ? 'text-primary animate-pulse' : 'text-base-content/40'
+                }`}
+              >
+                {isSaving ? 'Saving...' : 'Saved'}
+              </span>
+            </div>
           </div>
-        </div>
-        <input
-          ref={titleInputRef}
-          type="text"
-          disabled={isTrash}
-          placeholder="Title"
-          value={note.title || ''}
-          onChange={handleTitleChange}
-          className="w-full text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-base-content placeholder-base-content/30 border-none outline-none bg-transparent mb-3"
-        />
-        <div
-          ref={editorRef}
-          contentEditable={!isTrash}
-          suppressContentEditableWarning
-          onInput={handleContentChange}
-          onClick={handleEditorClick}
-          onKeyDown={handleKeyDown}
-          className="flex-1 qn-note-canvas outline-none min-h-[280px] text-base-content/90 text-base leading-relaxed"
-          data-placeholder="Start typing or tap the checklist button below..."
-        />
-        <div className="mt-6 pt-4 border-t border-base-200/80 flex items-center flex-wrap gap-1.5 select-none pb-4">
-          <FiTag className="w-3.5 h-3.5 text-base-content/40 mr-1" />
-          {(note.tags || []).map((tag) => (
-            <span
-              key={tag}
-              className="badge badge-primary badge-outline badge-sm py-2 px-2.5 rounded-full text-xs font-medium flex items-center gap-1"
-            >
-              #{tag}
-              {!isTrash && (
-                <button
-                  onClick={() => handleRemoveTag(tag)}
-                  className="hover:text-error transition-colors p-0.5"
-                  title="Remove tag"
-                >
-                  <FiX className="w-2.5 h-2.5" />
-                </button>
-              )}
-            </span>
-          ))}
-          {!isTrash && (
-            <>
-              {isAddingTag ? (
-                <form onSubmit={handleAddTag} className="inline-flex items-center gap-1">
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder="tag name"
-                    value={newTagInput}
-                    onChange={(e) => setNewTagInput(e.target.value)}
-                    className="input input-xs input-bordered input-primary rounded-full w-24 text-xs"
-                    onKeyDown={(e) => e.key === 'Escape' && setIsAddingTag(false)}
-                  />
-                  <button type="submit" className="btn btn-ghost btn-xs px-1 text-success">
-                    <FiCheck className="w-3 h-3" />
-                  </button>
+          <input
+            ref={titleInputRef}
+            type="text"
+            disabled={isTrash}
+            placeholder="Title"
+            value={note.title || ''}
+            onChange={handleTitleChange}
+            className="w-full text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-base-content placeholder-base-content/30 border-none outline-none bg-transparent mb-3 flex-shrink-0"
+          />
+          <div
+            ref={editorRef}
+            contentEditable={!isTrash}
+            suppressContentEditableWarning
+            onInput={handleContentChange}
+            onClick={handleEditorClick}
+            onKeyDown={handleKeyDown}
+            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text"
+            data-placeholder="Start typing or tap the checklist button below..."
+          />
+          <div className="mt-auto pt-6 pb-6 border-t border-base-200/80 flex items-center flex-wrap gap-1.5 select-none flex-shrink-0">
+            <FiTag className="w-3.5 h-3.5 text-base-content/40 mr-1" />
+            {(note.tags || []).map((tag) => (
+              <span
+                key={tag}
+                className="badge badge-primary badge-outline badge-sm py-2 px-2.5 rounded-full text-xs font-medium flex items-center gap-1"
+              >
+                #{tag}
+                {!isTrash && (
                   <button
-                    type="button"
-                    onClick={() => setIsAddingTag(false)}
-                    className="btn btn-ghost btn-xs px-1 text-error"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="hover:text-error transition-colors p-0.5"
+                    title="Remove tag"
                   >
-                    <FiX className="w-3 h-3" />
+                    <FiX className="w-2.5 h-2.5" />
                   </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setIsAddingTag(true)}
-                  className="badge badge-sm py-2 px-2.5 rounded-full text-xs font-medium badge-ghost hover:bg-base-300 text-base-content/60 cursor-pointer flex items-center gap-1"
-                >
-                  <FiPlus className="w-2.5 h-2.5" />
-                  Add Tag
-                </button>
-              )}
-            </>
-          )}
+                )}
+              </span>
+            ))}
+            {!isTrash && (
+              <>
+                {isAddingTag ? (
+                  <form onSubmit={handleAddTag} className="inline-flex items-center gap-1">
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="tag name"
+                      value={newTagInput}
+                      onChange={(e) => setNewTagInput(e.target.value)}
+                      className="input input-xs input-bordered input-primary rounded-full w-24 text-xs"
+                      onKeyDown={(e) => e.key === 'Escape' && setIsAddingTag(false)}
+                    />
+                    <button type="submit" className="btn btn-ghost btn-xs px-1 text-success">
+                      <FiCheck className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingTag(false)}
+                      className="btn btn-ghost btn-xs px-1 text-error"
+                    >
+                      <FiX className="w-3 h-3" />
+                    </button>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setIsAddingTag(true)}
+                    className="badge badge-sm py-2 px-2.5 rounded-full text-xs font-medium badge-ghost hover:bg-base-300 text-base-content/60 cursor-pointer flex items-center gap-1"
+                  >
+                    <FiPlus className="w-2.5 h-2.5" />
+                    Add Tag
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
       {!isTrash && isMobileScreen && (
@@ -1066,6 +1123,46 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           )}
         </div>
       )}
+      {showDeleteConfirm && (
+        <div className="modal modal-open z-50">
+          <div className="modal-box max-w-sm rounded-2xl bg-base-100 p-5 shadow-2xl border border-base-300">
+            <h3 className="font-bold text-base text-base-content flex items-center gap-2">
+              <FiTrash2 className="text-error w-5 h-5" /> Move to Trash
+            </h3>
+            <p className="text-xs text-base-content/70 mt-2">
+              Are you sure you want to move <strong>"{note.title || 'Untitled Note'}"</strong> to Recently Deleted?
+            </p>
+            <div className="modal-action mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="btn btn-ghost btn-sm text-xs rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  onDeleteNote();
+                }}
+                className="btn btn-error btn-sm text-xs text-white rounded-xl"
+              >
+                Move to Trash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <MoveNoteModal
+        isOpen={showMoveModal}
+        note={note}
+        folders={folders}
+        onClose={() => setShowMoveModal(false)}
+        onMove={(_id, targetFolder) => onUpdateNote({ folder: targetFolder })}
+        onCreateFolder={(name) => {
+          if (onCreateFolder) onCreateFolder(name);
+          onUpdateNote({ folder: name });
+        }}
+      />
     </div>
   );
 };
