@@ -4,14 +4,19 @@ import { NotesList } from './NotesList';
 import { NotesEditor } from './NotesEditor';
 import { NotesLockModal } from './NotesLockModal';
 import { NotesBackupModal } from './NotesBackupModal';
+import { useAuth } from '../../../context/useAuth';
 import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS } from './NotesTypes';
 import './quick-notes.css';
-const LOCAL_STORAGE_CACHE_KEY = 'quick_notes_cache_v2';
-const LOCAL_STORAGE_FOLDERS_KEY = 'quick_notes_custom_folders_v2';
 export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
+  const { user } = useAuth();
+  const userId = user?.id || 'default';
+  const cacheKey = `quick_notes_cache_${userId}_v2`;
+  const foldersKey = `quick_notes_custom_folders_${userId}_v2`;
   const [notes, setNotes] = useState<Note[]>(() => {
     try {
-      const cached = localStorage.getItem(LOCAL_STORAGE_CACHE_KEY);
+      const userCached = user?.id ? localStorage.getItem(`quick_notes_cache_${user.id}_v2`) : null;
+      const legacyCached = localStorage.getItem('quick_notes_cache_v2');
+      const cached = userCached || legacyCached;
       return cached ? JSON.parse(cached) : [];
     } catch {
       return [];
@@ -19,7 +24,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   });
   const [folders, setFolders] = useState<string[]>(() => {
     try {
-      const cached = localStorage.getItem(LOCAL_STORAGE_FOLDERS_KEY);
+      const userCached = user?.id ? localStorage.getItem(`quick_notes_custom_folders_${user.id}_v2`) : null;
+      const legacyCached = localStorage.getItem('quick_notes_custom_folders_v2');
+      const cached = userCached || legacyCached;
       return cached ? JSON.parse(cached) : DEFAULT_CUSTOM_FOLDERS;
     } catch {
       return DEFAULT_CUSTOM_FOLDERS;
@@ -27,7 +34,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   });
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(() => {
     try {
-      const cached = localStorage.getItem(LOCAL_STORAGE_CACHE_KEY);
+      const userCached = user?.id ? localStorage.getItem(`quick_notes_cache_${user.id}_v2`) : null;
+      const legacyCached = localStorage.getItem('quick_notes_cache_v2');
+      const cached = userCached || legacyCached;
       const list = cached ? JSON.parse(cached) : [];
       const firstActive = list.find((n: Note) => !n.is_trashed);
       return firstActive ? firstActive.id : null;
@@ -49,6 +58,12 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const [unlockedNotes, setUnlockedNotes] = useState<Set<string>>(new Set());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingUpdatesRef = useRef<{ id: string; updates: Partial<Note> } | null>(null);
+  const cacheKeyRef = useRef(cacheKey);
+  const foldersKeyRef = useRef(foldersKey);
+  useEffect(() => {
+    cacheKeyRef.current = cacheKey;
+    foldersKeyRef.current = foldersKey;
+  }, [cacheKey, foldersKey]);
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
@@ -60,12 +75,12 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         if (res.ok && isMounted) {
           const data = (await res.json()) as Note[];
           setNotes(data || []);
-          localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(data || []));
+          localStorage.setItem(cacheKeyRef.current, JSON.stringify(data || []));
           if (Array.isArray(data)) {
             const fetchedFolders = data.map((n) => n.folder).filter(Boolean);
             setFolders((prev) => {
               const combined = Array.from(new Set([...prev, ...fetchedFolders]));
-              localStorage.setItem(LOCAL_STORAGE_FOLDERS_KEY, JSON.stringify(combined));
+              localStorage.setItem(foldersKeyRef.current, JSON.stringify(combined));
               return combined;
             });
             setSelectedNoteId((curr) => {
@@ -119,7 +134,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       };
       setNotes((prevNotes) => {
         const next = prevNotes.map((n) => (n.id === selectedNoteId ? { ...n, ...payload } : n));
-        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       pendingUpdatesRef.current = {
@@ -163,7 +178,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     };
     setNotes((prev) => {
       const next = [newNote, ...prev];
-      localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+      localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
       return next;
     });
     setSelectedNoteId(tempId);
@@ -188,7 +203,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const created = (await res.json()) as Note;
         setNotes((prev) => {
           const next = prev.map((n) => (n.id === tempId ? created : n));
-          localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+          localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
           return next;
         });
         setSelectedNoteId(created.id);
@@ -210,7 +225,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const next = prev.map((n) =>
           n.id === targetId ? { ...n, is_pinned: newPinState, updated_at: updatedTime } : n
         );
-        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       persistNoteToServer(targetId, { is_pinned: newPinState, updated_at: updatedTime });
@@ -227,7 +242,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const next = prev.map((n) =>
           n.id === targetId ? { ...n, is_trashed: true, updated_at: updatedTime } : n
         );
-        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       if (selectedNoteId === targetId) {
@@ -249,7 +264,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const next = prev.map((n) =>
           n.id === targetId ? { ...n, is_trashed: false, updated_at: updatedTime } : n
         );
-        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       persistNoteToServer(targetId, { is_trashed: false, updated_at: updatedTime });
@@ -265,7 +280,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       }
       setNotes((prev) => {
         const next = prev.filter((n) => n.id !== targetId);
-        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       if (selectedNoteId === targetId) {
@@ -302,7 +317,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       };
       setNotes((prev) => {
         const next = [duplicated, ...prev];
-        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       setSelectedNoteId(tempId);
@@ -328,7 +343,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           const created = (await res.json()) as Note;
           setNotes((prev) => {
             const next = prev.map((n) => (n.id === tempId ? created : n));
-            localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+            localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
             return next;
           });
           setSelectedNoteId(created.id);
@@ -347,7 +362,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     }
     setNotes((prev) => {
       const next = prev.filter((n) => !n.is_trashed);
-      localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+      localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
       return next;
     });
     if (!token) return;
@@ -365,7 +380,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     if (!cleanName || folders.includes(cleanName)) return;
     const next = [...folders, cleanName];
     setFolders(next);
-    localStorage.setItem(LOCAL_STORAGE_FOLDERS_KEY, JSON.stringify(next));
+    localStorage.setItem(foldersKeyRef.current, JSON.stringify(next));
     setActiveFolder(cleanName);
     setMobileScreen('list');
   };
@@ -375,13 +390,13 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     if (!cleanNew || cleanOld === cleanNew) return;
     const nextFolders = folders.map((f) => (f === cleanOld ? cleanNew : f));
     setFolders(nextFolders);
-    localStorage.setItem(LOCAL_STORAGE_FOLDERS_KEY, JSON.stringify(nextFolders));
+    localStorage.setItem(foldersKeyRef.current, JSON.stringify(nextFolders));
     if (activeFolder === cleanOld) {
       setActiveFolder(cleanNew);
     }
     setNotes((prev) => {
       const nextNotes = prev.map((n) => (n.folder === cleanOld ? { ...n, folder: cleanNew } : n));
-      localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(nextNotes));
+      localStorage.setItem(cacheKeyRef.current, JSON.stringify(nextNotes));
       return nextNotes;
     });
     notes
@@ -391,13 +406,13 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const handleDeleteFolder = (name: string) => {
     const nextFolders = folders.filter((f) => f !== name);
     setFolders(nextFolders);
-    localStorage.setItem(LOCAL_STORAGE_FOLDERS_KEY, JSON.stringify(nextFolders));
+    localStorage.setItem(foldersKeyRef.current, JSON.stringify(nextFolders));
     if (activeFolder === name) {
       setActiveFolder(SYSTEM_FOLDERS.ALL);
     }
     setNotes((prev) => {
       const nextNotes = prev.map((n) => (n.folder === name ? { ...n, folder: 'Quick Notes' } : n));
-      localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(nextNotes));
+      localStorage.setItem(cacheKeyRef.current, JSON.stringify(nextNotes));
       return nextNotes;
     });
     notes
@@ -430,11 +445,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   };
   const handleRestoreSuccess = (restoredNotes: Note[], restoredFolders: string[]) => {
     setNotes(restoredNotes);
-    localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(restoredNotes));
+    localStorage.setItem(cacheKeyRef.current, JSON.stringify(restoredNotes));
     if (restoredFolders && restoredFolders.length > 0) {
       setFolders((prev) => {
         const combined = Array.from(new Set([...prev, ...restoredFolders]));
-        localStorage.setItem(LOCAL_STORAGE_FOLDERS_KEY, JSON.stringify(combined));
+        localStorage.setItem(foldersKeyRef.current, JSON.stringify(combined));
         return combined;
       });
     }
@@ -450,7 +465,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const next = prev.map((n) =>
           n.id === noteId ? { ...n, folder: targetFolder, updated_at: updatedTime } : n
         );
-        localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(next));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       persistNoteToServer(noteId, { folder: targetFolder, updated_at: updatedTime });

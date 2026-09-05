@@ -343,10 +343,13 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                   <Link
                     to="/utilities/quick-notes"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className="flex items-center justify-between px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Quick Notes
+                    <span>Quick Notes</span>
+                    <span className="badge badge-accent badge-xs text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5">
+                      Pro
+                    </span>
                   </Link>
                 </div>
                 <div className="mt-2 border-t border-primary-content/20 pt-2">

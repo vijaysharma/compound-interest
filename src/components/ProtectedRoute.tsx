@@ -10,11 +10,13 @@ interface ProtectedRouteProps {
   requireAdmin?: boolean;
   requireApiQuota?: boolean;
   requireAuth?: boolean;
+  requirePaid?: boolean;
 }
 const ProtectedRoute = ({
   children,
   requireAdmin = false,
   requireApiQuota = false,
+  requirePaid = false,
 }: ProtectedRouteProps) => {
   const { user, loading, isAuthenticated, isAdmin, trackUsage } = useAuth();
   const [now] = useState(() => Date.now());
@@ -95,7 +97,47 @@ const ProtectedRoute = ({
       </div>
     );
   }
-  // 3. For Authenticated Users: Check Trial Expiration & Quota
+  // 3. Paid-Only Route Check (e.g. Quick Notes)
+  const isPaid = Boolean(
+    isAdmin ||
+    (user?.subscription_status === 'active' &&
+      (!user?.subscription_expires_at || new Date(user.subscription_expires_at).getTime() > now))
+  );
+  if (requirePaid) {
+    if (!isPaid) {
+      return (
+        <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
+          <div className="card bg-base-100 border border-primary/30 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <FiZap className="h-7 w-7" />
+            </div>
+            <h2 className="mb-2 text-xl font-bold">Pro Feature Required</h2>
+            <p className="mb-2 text-xs sm:text-sm opacity-75">
+              Quick Notes is available exclusively for active Pro members. Signed in as{' '}
+              <span className="font-semibold">{user?.email}</span>.
+            </p>
+            <p className="mb-6 text-xs opacity-60">
+              Upgrade to Pro for just ₹54/month to get unlimited rich-text Quick Notes with auto-sync, folders, tags, search, password protection, and cloud backups.
+            </p>
+            <div className="space-y-2">
+              <Link
+                to="/upgrade"
+                className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
+              >
+                <FiZap className="h-4 w-4" />
+                <span>Unlock Pro for ₹54 / Month &rarr;</span>
+              </Link>
+              <Link to="/" className="btn btn-ghost btn-xs w-full opacity-80">
+                &larr; Return to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return <>{children}</>;
+  }
+  // 4. For Authenticated Users: Check Trial Expiration & Quota
   const isTimeExpired = Boolean(
     isAuthenticated &&
     user?.trial_expires_at &&

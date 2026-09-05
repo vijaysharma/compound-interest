@@ -1,7 +1,8 @@
-import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../_db';
+import { ensureTables, getDb, getUserFromRequest, jsonResponse, isPaidUser } from '../_db';
 export const config = { runtime: 'edge' };
 interface NoteRow {
   id: string;
+  user_id?: string | null;
   title: string | null;
   content: string;
   folder: string | null;
@@ -28,10 +29,21 @@ function parseTags(raw: unknown): string[] {
 export default async function handler(request: Request): Promise<Response> {
   const sql = getDb();
   await ensureTables(sql);
-  // Authenticate Admin
+  // Authenticate user & verify paid status or admin role
   const user = await getUserFromRequest(request, sql);
-  if (!user || user.role !== 'admin') {
-    return jsonResponse({ error: 'Unauthorized: Admin access required' }, 401);
+  if (!user) {
+    return jsonResponse({ error: 'Authentication required' }, 401);
+  }
+  if (!isPaidUser(user)) {
+    return jsonResponse({ error: 'Pro subscription required' }, 403);
+  }
+  // If admin, backfill any legacy notes without user_id
+  if (user.role === 'admin') {
+    try {
+      await sql`UPDATE admin_notes SET user_id = ${user.id} WHERE user_id IS NULL`;
+    } catch {
+      // ignore
+    }
   }
   const url = new URL(request.url);
   // ─────────────────────────────────────────────────────────────────────────────
@@ -41,25 +53,48 @@ export default async function handler(request: Request): Promise<Response> {
     try {
       const includeTrashed = url.searchParams.get('include_trashed') === 'true';
       const rows = (includeTrashed
-        ? await sql`
-            SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
-                   COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
-                   lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
-                   COALESCE(tags, '[]') AS tags, created_at, updated_at
-            FROM admin_notes
-            ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
-            LIMIT 500
-          `
-        : await sql`
-            SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
-                   COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
-                   lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
-                   COALESCE(tags, '[]') AS tags, created_at, updated_at
-            FROM admin_notes
-            WHERE is_trashed = FALSE OR is_trashed IS NULL
-            ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
-            LIMIT 500
-          `) as NoteRow[];
+        ? (user.role === 'admin'
+            ? await sql`
+                SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
+                       COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
+                       lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
+                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                FROM admin_notes
+                WHERE user_id = ${user.id} OR user_id IS NULL
+                ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
+                LIMIT 500
+              `
+            : await sql`
+                SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
+                       COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
+                       lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
+                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                FROM admin_notes
+                WHERE user_id = ${user.id}
+                ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
+                LIMIT 500
+              `)
+        : (user.role === 'admin'
+            ? await sql`
+                SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
+                       COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
+                       lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
+                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                FROM admin_notes
+                WHERE (is_trashed = FALSE OR is_trashed IS NULL) AND (user_id = ${user.id} OR user_id IS NULL)
+                ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
+                LIMIT 500
+              `
+            : await sql`
+                SELECT id, COALESCE(title, '') AS title, content, COALESCE(folder, 'Notes') AS folder,
+                       COALESCE(is_pinned, FALSE) AS is_pinned, COALESCE(is_locked, FALSE) AS is_locked,
+                       lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
+                       COALESCE(tags, '[]') AS tags, created_at, updated_at
+                FROM admin_notes
+                WHERE (is_trashed = FALSE OR is_trashed IS NULL) AND user_id = ${user.id}
+                ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
+                LIMIT 500
+              `)) as NoteRow[];
       const formatted = rows.map((note) => ({
         id: note.id,
         title: note.title || '',
@@ -104,7 +139,11 @@ export default async function handler(request: Request): Promise<Response> {
           return jsonResponse({ error: 'No notes provided in backup' }, 400);
         }
         if (body.replace) {
-          await sql`DELETE FROM admin_notes`;
+          if (user.role === 'admin') {
+            await sql`DELETE FROM admin_notes WHERE user_id = ${user.id} OR user_id IS NULL`;
+          } else {
+            await sql`DELETE FROM admin_notes WHERE user_id = ${user.id}`;
+          }
         }
         let count = 0;
         for (const n of backupNotes) {
@@ -119,10 +158,10 @@ export default async function handler(request: Request): Promise<Response> {
           const tagsJson = JSON.stringify(parseTags(n.tags));
           await sql`
             INSERT INTO admin_notes (
-              id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
+              id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
             )
             VALUES (
-              ${id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
+              ${id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
             )
             ON CONFLICT (id) DO UPDATE SET
               title = EXCLUDED.title,
@@ -133,6 +172,7 @@ export default async function handler(request: Request): Promise<Response> {
               lock_password_hash = EXCLUDED.lock_password_hash,
               is_trashed = EXCLUDED.is_trashed,
               tags = EXCLUDED.tags,
+              user_id = ${user.id},
               updated_at = NOW()
           `;
           count++;
@@ -161,10 +201,10 @@ export default async function handler(request: Request): Promise<Response> {
       const tagsJson = JSON.stringify(parseTags(body.tags));
       await sql`
         INSERT INTO admin_notes (
-          id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
+          id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
         )
         VALUES (
-          ${id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
+          ${id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
         )
         ON CONFLICT (id) DO UPDATE SET
           title = EXCLUDED.title,
@@ -175,6 +215,7 @@ export default async function handler(request: Request): Promise<Response> {
           lock_password_hash = EXCLUDED.lock_password_hash,
           is_trashed = EXCLUDED.is_trashed,
           tags = EXCLUDED.tags,
+          user_id = ${user.id},
           updated_at = NOW()
       `;
       return jsonResponse({
@@ -215,7 +256,9 @@ export default async function handler(request: Request): Promise<Response> {
         return jsonResponse({ error: 'Note ID is required' }, 400);
       }
       // Check existing note
-      const existing = (await sql`SELECT id FROM admin_notes WHERE id = ${body.id} LIMIT 1`) as NoteRow[];
+      const existing = (user.role === 'admin'
+        ? await sql`SELECT id FROM admin_notes WHERE id = ${body.id} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
+        : await sql`SELECT id FROM admin_notes WHERE id = ${body.id} AND user_id = ${user.id} LIMIT 1`) as NoteRow[];
       if (existing.length === 0) {
         // Upsert if not found
         const title = body.title || '';
@@ -228,10 +271,10 @@ export default async function handler(request: Request): Promise<Response> {
         const tagsJson = JSON.stringify(parseTags(body.tags));
         await sql`
           INSERT INTO admin_notes (
-            id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
+            id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
           )
           VALUES (
-            ${body.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
+            ${body.id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
           )
         `;
         return jsonResponse({ success: true, id: body.id });
@@ -253,20 +296,38 @@ export default async function handler(request: Request): Promise<Response> {
       const lockHashVal = hasLockHash ? body.lock_password_hash : null;
       const isTrashedVal = hasTrashed ? body.is_trashed : null;
       const tagsVal = hasTags ? JSON.stringify(parseTags(body.tags)) : null;
-      await sql`
-        UPDATE admin_notes
-        SET
-          title = CASE WHEN ${hasTitle} THEN ${titleVal} ELSE title END,
-          content = CASE WHEN ${hasContent} THEN ${contentVal} ELSE content END,
-          folder = CASE WHEN ${hasFolder} THEN ${folderVal} ELSE folder END,
-          is_pinned = CASE WHEN ${hasPinned} THEN ${isPinnedVal} ELSE is_pinned END,
-          is_locked = CASE WHEN ${hasLocked} THEN ${isLockedVal} ELSE is_locked END,
-          lock_password_hash = CASE WHEN ${hasLockHash} THEN ${lockHashVal} ELSE lock_password_hash END,
-          is_trashed = CASE WHEN ${hasTrashed} THEN ${isTrashedVal} ELSE is_trashed END,
-          tags = CASE WHEN ${hasTags} THEN ${tagsVal} ELSE tags END,
-          updated_at = NOW()
-        WHERE id = ${body.id}
-      `;
+      if (user.role === 'admin') {
+        await sql`
+          UPDATE admin_notes
+          SET
+            user_id = ${user.id},
+            title = CASE WHEN ${hasTitle} THEN ${titleVal} ELSE title END,
+            content = CASE WHEN ${hasContent} THEN ${contentVal} ELSE content END,
+            folder = CASE WHEN ${hasFolder} THEN ${folderVal} ELSE folder END,
+            is_pinned = CASE WHEN ${hasPinned} THEN ${isPinnedVal} ELSE is_pinned END,
+            is_locked = CASE WHEN ${hasLocked} THEN ${isLockedVal} ELSE is_locked END,
+            lock_password_hash = CASE WHEN ${hasLockHash} THEN ${lockHashVal} ELSE lock_password_hash END,
+            is_trashed = CASE WHEN ${hasTrashed} THEN ${isTrashedVal} ELSE is_trashed END,
+            tags = CASE WHEN ${hasTags} THEN ${tagsVal} ELSE tags END,
+            updated_at = NOW()
+          WHERE id = ${body.id} AND (user_id = ${user.id} OR user_id IS NULL)
+        `;
+      } else {
+        await sql`
+          UPDATE admin_notes
+          SET
+            title = CASE WHEN ${hasTitle} THEN ${titleVal} ELSE title END,
+            content = CASE WHEN ${hasContent} THEN ${contentVal} ELSE content END,
+            folder = CASE WHEN ${hasFolder} THEN ${folderVal} ELSE folder END,
+            is_pinned = CASE WHEN ${hasPinned} THEN ${isPinnedVal} ELSE is_pinned END,
+            is_locked = CASE WHEN ${hasLocked} THEN ${isLockedVal} ELSE is_locked END,
+            lock_password_hash = CASE WHEN ${hasLockHash} THEN ${lockHashVal} ELSE lock_password_hash END,
+            is_trashed = CASE WHEN ${hasTrashed} THEN ${isTrashedVal} ELSE is_trashed END,
+            tags = CASE WHEN ${hasTags} THEN ${tagsVal} ELSE tags END,
+            updated_at = NOW()
+          WHERE id = ${body.id} AND user_id = ${user.id}
+        `;
+      }
       return jsonResponse({ success: true, id: body.id });
     } catch (err) {
       return jsonResponse({ error: 'Failed to update note', detail: String(err) }, 500);
@@ -279,7 +340,11 @@ export default async function handler(request: Request): Promise<Response> {
     try {
       const emptyTrash = url.searchParams.get('empty_trash') === 'true';
       if (emptyTrash) {
-        await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE`;
+        if (user.role === 'admin') {
+          await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE AND (user_id = ${user.id} OR user_id IS NULL)`;
+        } else {
+          await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE AND user_id = ${user.id}`;
+        }
         return jsonResponse({ success: true, message: 'Trash emptied successfully' });
       }
       const id = url.searchParams.get('id');
@@ -288,11 +353,19 @@ export default async function handler(request: Request): Promise<Response> {
       }
       const permanent = url.searchParams.get('permanent') === 'true';
       if (permanent) {
-        await sql`DELETE FROM admin_notes WHERE id = ${id}`;
+        if (user.role === 'admin') {
+          await sql`DELETE FROM admin_notes WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL)`;
+        } else {
+          await sql`DELETE FROM admin_notes WHERE id = ${id} AND user_id = ${user.id}`;
+        }
         return jsonResponse({ success: true, deleted: true, permanent: true });
       }
       // Soft delete -> move to trash
-      await sql`UPDATE admin_notes SET is_trashed = TRUE, updated_at = NOW() WHERE id = ${id}`;
+      if (user.role === 'admin') {
+        await sql`UPDATE admin_notes SET is_trashed = TRUE, updated_at = NOW() WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL)`;
+      } else {
+        await sql`UPDATE admin_notes SET is_trashed = TRUE, updated_at = NOW() WHERE id = ${id} AND user_id = ${user.id}`;
+      }
       return jsonResponse({ success: true, trashed: true });
     } catch (err) {
       return jsonResponse({ error: 'Failed to delete note', detail: String(err) }, 500);

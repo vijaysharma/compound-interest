@@ -83,6 +83,15 @@ export function isUserBlocked(user: DbUser, checkApiQuota = false): boolean {
   }
   return false;
 }
+export function isPaidUser(user: DbUser): boolean {
+  if (user.role === 'admin') return true;
+  if (user.subscription_status === 'active') {
+    if (!user.subscription_expires_at) return true;
+    const expiry = new Date(user.subscription_expires_at).getTime();
+    return expiry > Date.now();
+  }
+  return false;
+}
 export async function hashPassword(
   password: string,
   saltHex?: string
@@ -254,6 +263,7 @@ export async function ensureTables(sql: Query) {
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS is_trashed BOOLEAN NOT NULL DEFAULT FALSE`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS tags TEXT NOT NULL DEFAULT '[]'`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
+      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS user_id TEXT`;
       await sql`
         CREATE INDEX IF NOT EXISTS admin_notes_created_at_idx
         ON admin_notes (created_at DESC)
@@ -261,6 +271,10 @@ export async function ensureTables(sql: Query) {
       await sql`
         CREATE INDEX IF NOT EXISTS admin_notes_updated_at_idx
         ON admin_notes (updated_at DESC)
+      `;
+      await sql`
+        CREATE INDEX IF NOT EXISTS admin_notes_user_id_idx
+        ON admin_notes (user_id)
       `;
     })();
   }

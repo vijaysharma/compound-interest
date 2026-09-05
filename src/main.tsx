@@ -9,12 +9,17 @@ import './index.css';
 const protectedRoute = (
   importer: () => Promise<{ default: ComponentType }>,
   requireAdmin = false,
-  requireApiQuota = false
+  requireApiQuota = false,
+  requirePaid = false
 ) => {
   return async () => {
     const Component = (await importer()).default;
     const ProtectedComponent = () => (
-      <ProtectedRoute requireAdmin={requireAdmin} requireApiQuota={requireApiQuota}>
+      <ProtectedRoute
+        requireAdmin={requireAdmin}
+        requireApiQuota={requireApiQuota}
+        requirePaid={requirePaid}
+      >
         <Component />
       </ProtectedRoute>
     );
@@ -59,11 +64,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'utilities/quick-notes',
-        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), true),
+        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), false, false, true),
       },
       {
         path: 'admin/quick-notes',
-        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), true),
+        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), false, false, true),
       },
       // ── Trust & Info Pages (E-E-A-T) ──────────────────────────────
       {
@@ -148,7 +153,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'quick-notes',
-            lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), true),
+            lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), false, false, true),
           },
         ],
       },
