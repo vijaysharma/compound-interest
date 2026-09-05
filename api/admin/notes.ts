@@ -19,28 +19,51 @@ interface NoteRow {
 async function uploadToVercelBlob(userId: string, noteId: string, content: string): Promise<string | null> {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token || !content) return null;
-  try {
-    const pathname = `notes/${userId}/${noteId}.txt`;
-    const baseUrl = process.env.VERCEL_BLOB_API_URL || 'https://vercel.com/api/blob';
-    const res = await fetch(`${baseUrl}/?pathname=${encodeURIComponent(pathname)}`, {
-      method: 'PUT',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'x-api-version': '12',
-        'x-vercel-blob-access': 'public',
-        'x-add-random-suffix': '1',
-        'x-content-type': 'text/plain; charset=utf-8',
-      },
-      body: content,
-    });
-    if (!res.ok) {
-      console.warn('Vercel Blob upload response not ok:', res.status);
-      return null;
+  const pathname = `notes/${userId}/${noteId}.txt`;
+  const uploadUrl = `https://blob.vercel-storage.com/${pathname}`;
+  // Modern Vercel stores default to private; try private first, then public fallback
+  for (const access of ['private', 'public'] as const) {
+    try {
+      const res = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          authorization: `Bearer ${token}`,
+          'x-api-version': '7',
+          'x-vercel-blob-access': access,
+          'x-add-random-suffix': '1',
+          'x-content-type': 'text/plain; charset=utf-8',
+        },
+        body: content,
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { url?: string };
+        return data.url || null;
+      }
+      const errData = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+      if (errData?.error?.message?.includes('access')) {
+        continue;
+      }
+      console.warn('Vercel Blob upload error:', res.status, errData);
+      break;
+    } catch (err) {
+      console.warn('Vercel Blob upload failed:', err);
     }
-    const data = (await res.json()) as { url?: string };
-    return data.url || null;
+  }
+  return null;
+}
+async function fetchBlobContent(url: string): Promise<string | null> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  try {
+    const res = await fetch(url, {
+      headers: token ? { authorization: `Bearer ${token}` } : undefined,
+    });
+    if (res.ok) {
+      return await res.text();
+    }
+    console.warn('Vercel Blob fetch error status:', res.status);
+    return null;
   } catch (err) {
-    console.warn('Vercel Blob upload failed, falling back to database:', err);
+    console.warn('Vercel Blob fetch exception:', err);
     return null;
   }
 }
@@ -50,12 +73,11 @@ async function deleteFromVercelBlob(urls: (string | null | undefined)[]): Promis
   const validUrls = urls.filter((u): u is string => typeof u === 'string' && u.startsWith('http'));
   if (validUrls.length === 0) return;
   try {
-    const baseUrl = process.env.VERCEL_BLOB_API_URL || 'https://vercel.com/api/blob';
-    await fetch(`${baseUrl}/delete`, {
+    await fetch('https://blob.vercel-storage.com/delete', {
       method: 'POST',
       headers: {
         authorization: `Bearer ${token}`,
-        'x-api-version': '12',
+        'x-api-version': '7',
         'content-type': 'application/json',
       },
       body: JSON.stringify({ urls: validUrls }),
@@ -160,14 +182,7 @@ export default async function handler(request: Request): Promise<Response> {
         rows.map(async (note) => {
           let noteContent = note.content || '';
           if (!noteContent && note.blob_url) {
-            try {
-              const blobRes = await fetch(note.blob_url);
-              if (blobRes.ok) {
-                noteContent = await blobRes.text();
-              }
-            } catch (err) {
-              console.warn('Failed to fetch blob content for note:', note.id, err);
-            }
+            noteContent = (await fetchBlobContent(note.blob_url)) || '';
           }
           return {
             id: note.id,
