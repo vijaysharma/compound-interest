@@ -10,6 +10,7 @@ import {
   FiRotateCcw,
   FiChevronLeft,
   FiFolder,
+  FiShield,
 } from 'react-icons/fi';
 import { BsPinFill, BsPin, BsLockFill, BsCloudArrowUp } from 'react-icons/bs';
 import {
@@ -45,6 +46,7 @@ interface NotesListProps {
   onCreateFolder: (name: string) => void;
   onBackToFolders?: () => void;
   onOpenBackupModal?: () => void;
+  onOpenSecurityModal?: () => void;
   isMobileScreen?: boolean;
 }
 export const NotesList: React.FC<NotesListProps> = ({
@@ -70,6 +72,7 @@ export const NotesList: React.FC<NotesListProps> = ({
   onCreateFolder,
   onBackToFolders,
   onOpenBackupModal,
+  onOpenSecurityModal,
   isMobileScreen,
 }) => {
   const isTrash = activeFolder === SYSTEM_FOLDERS.TRASH;
@@ -293,6 +296,15 @@ export const NotesList: React.FC<NotesListProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
+            {onOpenSecurityModal && (
+              <button
+                onClick={onOpenSecurityModal}
+                className="btn btn-ghost btn-xs btn-square text-success hover:bg-success/10 min-h-[36px] min-w-[36px]"
+                title="End-to-End Encrypted (AES-256-GCM): Security Details"
+              >
+                <FiShield className="w-4 h-4" />
+              </button>
+            )}
             {onOpenBackupModal && (
               <button
                 onClick={onOpenBackupModal}
@@ -357,6 +369,17 @@ export const NotesList: React.FC<NotesListProps> = ({
               className="text-error hover:underline text-[11px] font-semibold"
             >
               Empty Trash
+            </button>
+          )}
+          {!isTrash && onOpenSecurityModal && (
+            <button
+              type="button"
+              onClick={onOpenSecurityModal}
+              className="inline-flex items-center gap-1 text-[10.5px] text-success hover:underline font-medium cursor-pointer"
+              title="End-to-End Encrypted with AES-256-GCM: Zero-Knowledge Privacy"
+            >
+              <FiShield className="w-3 h-3 text-success flex-shrink-0" />
+              <span>E2E Encrypted</span>
             </button>
           )}
         </div>

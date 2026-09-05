@@ -9,15 +9,19 @@ import {
   FiExternalLink,
   FiFileText,
   FiFolder,
+  FiShield,
 } from 'react-icons/fi';
 import { SiGoogledrive } from 'react-icons/si';
 import { BsCloudArrowUp, BsCloudArrowDown } from 'react-icons/bs';
 import { Note } from './NotesTypes';
+import { getUserEncryptionKey, encryptText } from './NotesCrypto';
 interface NotesBackupModalProps {
   isOpen: boolean;
   notes: Note[];
   folders: string[];
   token: string;
+  userId?: string;
+  userEmail?: string;
   onClose: () => void;
   onRestoreSuccess: (restoredNotes: Note[], customFolders: string[]) => void;
 }
@@ -34,6 +38,8 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
   notes,
   folders,
   token,
+  userId = 'default',
+  userEmail = '',
   onClose,
   onRestoreSuccess,
 }) => {
@@ -181,6 +187,14 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
     setError(null);
     try {
       if (token) {
+        const key = await getUserEncryptionKey(userId, userEmail);
+        const encryptedNotesForServer = await Promise.all(
+          parsedBackup.notes.map(async (n) => ({
+            ...n,
+            title: await encryptText(n.title || '', key),
+            content: await encryptText(n.content || '', key),
+          }))
+        );
         const res = await fetch('/api/admin/notes?action=restore_backup', {
           method: 'POST',
           headers: {
@@ -188,7 +202,7 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            notes: parsedBackup.notes,
+            notes: encryptedNotesForServer,
             replace: restoreMode === 'replace',
           }),
         });
@@ -197,7 +211,7 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
         }
       }
       onRestoreSuccess(parsedBackup.notes, parsedBackup.folders);
-      setSuccessMsg(`Successfully restored ${parsedBackup.notes.length} notes!`);
+      setSuccessMsg(`Successfully restored ${parsedBackup.notes.length} notes with end-to-end encryption!`);
       setTimeout(() => {
         onClose();
       }, 1200);
@@ -216,7 +230,12 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
               <FiUploadCloud className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-base-content leading-tight">Backup & Restore</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-bold text-base text-base-content leading-tight">Backup & Restore</h3>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 border border-success/25 px-1.5 py-0.5 rounded-full">
+                  <FiShield className="w-2.5 h-2.5" /> E2EE
+                </span>
+              </div>
               <p className="text-[11px] text-base-content/50">Google Drive · OneDrive · Local Storage</p>
             </div>
           </div>

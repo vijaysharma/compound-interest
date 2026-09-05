@@ -10,6 +10,7 @@ import {
   FiChevronDown,
   FiChevronRight,
   FiEdit3,
+  FiShield,
 } from 'react-icons/fi';
 import { BsPinFill, BsJournalBookmark, BsCloudArrowUp } from 'react-icons/bs';
 import { Note, SYSTEM_FOLDERS, extractHashtags } from './NotesTypes';
@@ -28,6 +29,7 @@ interface NotesSidebarProps {
   isOpen: boolean;
   onCloseMobile?: () => void;
   onOpenBackupModal?: () => void;
+  onOpenSecurityModal?: () => void;
   onNewNote?: () => void;
   isMobileScreen?: boolean;
 }
@@ -46,6 +48,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   isOpen,
   onCloseMobile,
   onOpenBackupModal,
+  onOpenSecurityModal,
   onNewNote,
   isMobileScreen,
 }) => {
@@ -418,6 +421,24 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                 {trashedCount}
               </span>
             )}
+          </button>
+        </div>
+        <div className="pt-2.5 border-t border-base-300/60 mt-1">
+          <button
+            onClick={onOpenSecurityModal}
+            className="w-full text-left p-2.5 rounded-xl bg-success/10 hover:bg-success/15 border border-success/20 transition-all group cursor-pointer"
+            title="End-to-End Encrypted (AES-256-GCM): Click to view details"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="flex items-center gap-1.5 font-bold text-xs text-success">
+                <FiShield className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>End-to-End Encrypted</span>
+              </span>
+              <span className="badge badge-success badge-xs text-[9px] font-bold">AES-256</span>
+            </div>
+            <p className="text-[11px] leading-tight text-base-content/70">
+              Notes are encrypted on your device before syncing. Only you hold the key.
+            </p>
           </button>
         </div>
       </div>

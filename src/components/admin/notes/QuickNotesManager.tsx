@@ -4,12 +4,20 @@ import { NotesList } from './NotesList';
 import { NotesEditor } from './NotesEditor';
 import { NotesLockModal } from './NotesLockModal';
 import { NotesBackupModal } from './NotesBackupModal';
+import { NotesSecurityModal } from './NotesSecurityModal';
+import {
+  getUserEncryptionKey,
+  encryptText,
+  decryptText,
+  isEncrypted,
+} from './NotesCrypto';
 import { useAuth } from '../../../context/useAuth';
 import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS } from './NotesTypes';
 import './quick-notes.css';
 export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const { user } = useAuth();
   const userId = user?.id || 'default';
+  const userEmail = user?.email || '';
   const cacheKey = `quick_notes_cache_${userId}_v2`;
   const foldersKey = `quick_notes_custom_folders_${userId}_v2`;
   const [notes, setNotes] = useState<Note[]>(() => {
@@ -54,6 +62,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLockModalOpen, setIsLockModalOpen] = useState(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [mobileScreen, setMobileScreen] = useState<'folders' | 'list' | 'editor'>('list');
   const [unlockedNotes, setUnlockedNotes] = useState<Set<string>>(new Set());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,25 +78,62 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     const load = async () => {
       if (!token) return;
       try {
+        const key = await getUserEncryptionKey(userId, userEmail);
         const res = await fetch('/api/admin/notes?include_trashed=true', {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok && isMounted) {
-          const data = (await res.json()) as Note[];
-          setNotes(data || []);
-          localStorage.setItem(cacheKeyRef.current, JSON.stringify(data || []));
-          if (Array.isArray(data)) {
-            const fetchedFolders = data.map((n) => n.folder).filter(Boolean);
+          const rawData = (await res.json()) as Note[];
+          const decryptedNotes: Note[] = await Promise.all(
+            (rawData || []).map(async (n) => ({
+              ...n,
+              title: await decryptText(n.title || '', key),
+              content: await decryptText(n.content || '', key),
+            }))
+          );
+          if (!isMounted) return;
+          setNotes(decryptedNotes);
+          localStorage.setItem(cacheKeyRef.current, JSON.stringify(decryptedNotes));
+          if (Array.isArray(decryptedNotes)) {
+            const fetchedFolders = decryptedNotes.map((n) => n.folder).filter(Boolean);
             setFolders((prev) => {
               const combined = Array.from(new Set([...prev, ...fetchedFolders]));
               localStorage.setItem(foldersKeyRef.current, JSON.stringify(combined));
               return combined;
             });
             setSelectedNoteId((curr) => {
-              if (curr && data.some((n) => n.id === curr)) return curr;
-              const firstActive = data.find((n) => !n.is_trashed);
+              if (curr && decryptedNotes.some((n) => n.id === curr)) return curr;
+              const firstActive = decryptedNotes.find((n) => !n.is_trashed);
               return firstActive ? firstActive.id : null;
             });
+          }
+          // Auto-migrate any unencrypted legacy notes to ciphertext in the background
+          const unencryptedLegacy = (rawData || []).filter(
+            (n) =>
+              (n.title && !isEncrypted(n.title)) ||
+              (n.content && !isEncrypted(n.content))
+          );
+          if (unencryptedLegacy.length > 0) {
+            for (const legacy of unencryptedLegacy) {
+              try {
+                const encTitle = await encryptText(legacy.title || '', key);
+                const encContent = await encryptText(legacy.content || '', key);
+                await fetch('/api/admin/notes', {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    id: legacy.id,
+                    title: encTitle,
+                    content: encContent,
+                  }),
+                });
+              } catch {
+                // Ignore individual background migration error
+              }
+            }
           }
         }
       } catch (err) {
@@ -100,7 +146,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [token, userId, userEmail]);
   const effectiveNoteId = selectedNoteId || notes.find((n) => !n.is_trashed)?.id || null;
   const selectedNote = notes.find((n) => n.id === effectiveNoteId) || null;
   const persistNoteToServer = useCallback(
@@ -108,13 +154,21 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       if (!token) return;
       setIsSaving(true);
       try {
+        const key = await getUserEncryptionKey(userId, userEmail);
+        const serverPayload: Partial<Note> = { ...updates };
+        if (typeof updates.title === 'string') {
+          serverPayload.title = await encryptText(updates.title, key);
+        }
+        if (typeof updates.content === 'string') {
+          serverPayload.content = await encryptText(updates.content, key);
+        }
         await fetch('/api/admin/notes', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ id: noteId, ...updates }),
+          body: JSON.stringify({ id: noteId, ...serverPayload }),
         });
       } catch (err) {
         console.error('Failed to save note:', err);
@@ -122,7 +176,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         setIsSaving(false);
       }
     },
-    [token]
+    [token, userId, userEmail]
   );
   const handleUpdateNote = useCallback(
     (updatedFields: Partial<Note>) => {
@@ -185,6 +239,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     setMobileScreen('editor');
     if (!token) return;
     try {
+      const key = await getUserEncryptionKey(userId, userEmail);
+      const encTitle = await encryptText('', key);
+      const encContent = await encryptText('', key);
       const res = await fetch('/api/admin/notes', {
         method: 'POST',
         headers: {
@@ -193,25 +250,30 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         },
         body: JSON.stringify({
           id: tempId,
-          title: '',
-          content: '',
+          title: encTitle,
+          content: encContent,
           folder: targetFolder,
           tags: newNote.tags,
         }),
       });
       if (res.ok) {
         const created = (await res.json()) as Note;
+        const decryptedCreated: Note = {
+          ...created,
+          title: await decryptText(created.title || '', key),
+          content: await decryptText(created.content || '', key),
+        };
         setNotes((prev) => {
-          const next = prev.map((n) => (n.id === tempId ? created : n));
+          const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
           localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
           return next;
         });
-        setSelectedNoteId(created.id);
+        setSelectedNoteId(decryptedCreated.id);
       }
     } catch (err) {
       console.error('Failed to create note on server:', err);
     }
-  }, [activeFolder, activeTag, token]);
+  }, [activeFolder, activeTag, token, userId, userEmail]);
   const handleTogglePin = useCallback(
     (id?: string, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
@@ -324,6 +386,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       setMobileScreen('editor');
       if (!token) return;
       try {
+        const key = await getUserEncryptionKey(userId, userEmail);
+        const encTitle = await encryptText(duplicated.title || '', key);
+        const encContent = await encryptText(duplicated.content || '', key);
         const res = await fetch('/api/admin/notes', {
           method: 'POST',
           headers: {
@@ -332,8 +397,8 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           },
           body: JSON.stringify({
             id: tempId,
-            title: duplicated.title,
-            content: duplicated.content,
+            title: encTitle,
+            content: encContent,
             folder: duplicated.folder,
             tags: duplicated.tags,
             is_pinned: false,
@@ -341,18 +406,23 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         });
         if (res.ok) {
           const created = (await res.json()) as Note;
+          const decryptedCreated: Note = {
+            ...created,
+            title: await decryptText(created.title || '', key),
+            content: await decryptText(created.content || '', key),
+          };
           setNotes((prev) => {
-            const next = prev.map((n) => (n.id === tempId ? created : n));
+            const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
             localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
             return next;
           });
-          setSelectedNoteId(created.id);
+          setSelectedNoteId(decryptedCreated.id);
         }
       } catch (err) {
         console.error('Failed to duplicate note:', err);
       }
     },
-    [selectedNote, token]
+    [selectedNote, token, userId, userEmail]
   );
   const handleEmptyTrash = useCallback(async () => {
     if (
@@ -525,6 +595,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           isOpen={isSidebarOpen || mobileScreen === 'folders'}
           onCloseMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
+          onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
           onNewNote={handleNewNote}
           isMobileScreen={mobileScreen === 'folders'}
         />
@@ -562,6 +633,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onCreateFolder={handleCreateFolder}
           onBackToFolders={() => setMobileScreen('folders')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
+          onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
           isMobileScreen={mobileScreen === 'list'}
         />
       </div>
@@ -586,6 +658,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           isSidebarOpen={isSidebarOpen}
           onBackMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
+          onOpenSecurityModal={() => setIsSecurityModalOpen(true)}
           onCreateFolder={handleCreateFolder}
           folderTitle={activeFolder === SYSTEM_FOLDERS.ALL ? 'All Notes' : activeFolder}
           isMobileScreen={mobileScreen === 'editor'}
@@ -608,8 +681,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         notes={notes}
         folders={folders}
         token={token}
+        userId={userId}
+        userEmail={userEmail}
         onClose={() => setIsBackupModalOpen(false)}
         onRestoreSuccess={handleRestoreSuccess}
+      />
+      <NotesSecurityModal
+        isOpen={isSecurityModalOpen}
+        onClose={() => setIsSecurityModalOpen(false)}
       />
     </div>
   );

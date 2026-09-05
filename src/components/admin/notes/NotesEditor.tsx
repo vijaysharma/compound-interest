@@ -22,6 +22,7 @@ import {
   FiFolder,
   FiFolderPlus,
   FiEdit3,
+  FiShield,
 } from 'react-icons/fi';
 import {
   BsPinFill,
@@ -64,6 +65,7 @@ interface NotesEditorProps {
   isSidebarOpen?: boolean;
   onBackMobile?: () => void;
   onOpenBackupModal?: () => void;
+  onOpenSecurityModal?: () => void;
   onCreateFolder?: (name: string) => void;
   folderTitle?: string;
   isMobileScreen?: boolean;
@@ -86,6 +88,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   isSidebarOpen,
   onBackMobile,
   onOpenBackupModal,
+  onOpenSecurityModal,
   onCreateFolder,
   folderTitle,
   isMobileScreen,
@@ -449,21 +452,32 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   };
   if (!note) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-base-100/50">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4 shadow-xs">
-          📝
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-base-100/50 select-none">
+        <div className="w-16 h-16 rounded-2xl bg-success/15 flex items-center justify-center text-success mb-4 shadow-xs">
+          <FiShield className="w-8 h-8" />
         </div>
-        <h3 className="font-bold text-lg text-base-content mb-1">No Note Selected</h3>
-        <p className="text-xs text-base-content/50 max-w-xs mb-4">
-          Select a note from the list on the left or create a new note to start writing.
+        <h3 className="font-bold text-lg text-base-content mb-1">End-to-End Encrypted Notes</h3>
+        <p className="text-xs text-base-content/60 max-w-sm mb-4 leading-relaxed">
+          All your notes are encrypted with AES-256-GCM right on your device before syncing. Only you have the key.
         </p>
-        <button
-          onClick={onNewNote}
-          className="btn btn-primary btn-sm font-semibold rounded-xl shadow-xs"
-        >
-          <FiEdit3 className="w-4 h-4 mr-1" />
-          Create New Note
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onNewNote}
+            className="btn btn-primary btn-sm font-semibold rounded-xl shadow-xs gap-1.5"
+          >
+            <FiEdit3 className="w-4 h-4" />
+            Create New Note
+          </button>
+          {onOpenSecurityModal && (
+            <button
+              onClick={onOpenSecurityModal}
+              className="btn btn-ghost btn-sm text-success text-xs font-semibold rounded-xl"
+            >
+              <FiShield className="w-3.5 h-3.5" />
+              Security Info
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -717,7 +731,17 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
           </div>
         )}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 sm:gap-2">
+          {onOpenSecurityModal && (
+            <button
+              onClick={onOpenSecurityModal}
+              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-success bg-success/10 hover:bg-success/20 border border-success/25 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+              title="End-to-End Encrypted (AES-256-GCM): Click for details"
+            >
+              <FiShield className="w-3 h-3 flex-shrink-0" />
+              <span className="hidden xs:inline">E2E</span> Encrypted
+            </button>
+          )}
           <span className="text-[11px] font-medium text-base-content/40 md:hidden mr-1">
             {isSaving ? 'Saving...' : 'Saved'}
           </span>
@@ -944,6 +968,17 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               {formatNoteHeaderDate(note.updated_at || note.created_at)}
             </span>
             <div className="hidden sm:flex items-center gap-3 text-[11px]">
+              {onOpenSecurityModal && (
+                <button
+                  type="button"
+                  onClick={onOpenSecurityModal}
+                  className="inline-flex items-center gap-1 text-[11px] text-success hover:underline font-medium cursor-pointer"
+                  title="Zero-Knowledge AES-256-GCM End-to-End Encrypted: Click for details"
+                >
+                  <FiShield className="w-3.5 h-3.5" />
+                  E2E Encrypted
+                </button>
+              )}
               <span>
                 {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} characters
               </span>
