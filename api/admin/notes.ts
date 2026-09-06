@@ -103,17 +103,47 @@ async function deleteFromVercelBlob(urls: (string | null | undefined)[]): Promis
     console.warn('Vercel Blob deletion failed:', err);
   }
 }
+function sanitizeServerContent(raw: unknown): string {
+  if (typeof raw !== 'string') return '';
+  const content = raw.length > 5_000_000 ? raw.slice(0, 5_000_000) : raw;
+  return content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/\bon\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
+    .replace(/href\s*=\s*['"]?(?:javascript|data|vbscript):[^'">\s]*/gi, 'href="#"');
+}
+function sanitizeServerPlain(input: unknown, maxLen = 250): string {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/\0/g, '')
+    .replace(/<[^>]*>/g, '')
+    .trim()
+    .slice(0, maxLen);
+}
+function sanitizeServerId(id: unknown): string {
+  if (typeof id === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(id.trim())) {
+    return id.trim();
+  }
+  return crypto.randomUUID();
+}
 function parseTags(raw: unknown): string[] {
-  if (Array.isArray(raw)) return raw.filter((t) => typeof t === 'string');
-  if (typeof raw === 'string') {
+  let list: unknown[] = [];
+  if (Array.isArray(raw)) list = raw;
+  else if (typeof raw === 'string') {
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed.filter((t) => typeof t === 'string');
+      if (Array.isArray(parsed)) list = parsed;
     } catch {
       return [];
     }
   }
-  return [];
+  return list
+    .filter((t): t is string => typeof t === 'string')
+    .map((t) => (t as string).replace(/[^\w-]/g, '').slice(0, 50).toLowerCase())
+    .filter(Boolean)
+    .slice(0, 30);
 }
 export default async function handler(request: Request): Promise<Response> {
   const sql = getDb();
@@ -284,10 +314,10 @@ export default async function handler(request: Request): Promise<Response> {
         }
         let count = 0;
         for (const n of backupNotes) {
-          const id = n.id?.trim() || crypto.randomUUID();
-          const title = n.title?.trim() || '';
-          const content = n.content ?? '';
-          const folder = n.folder?.trim() || 'Notes';
+          const id = sanitizeServerId(n.id);
+          const title = sanitizeServerPlain(n.title, 250);
+          const content = sanitizeServerContent(n.content);
+          const folder = sanitizeServerPlain(n.folder, 100) || 'Notes';
           const isPinned = Boolean(n.is_pinned);
           const isLocked = Boolean(n.is_locked);
           const lockHash = n.lock_password_hash || null;
@@ -327,10 +357,10 @@ export default async function handler(request: Request): Promise<Response> {
         is_trashed?: boolean;
         tags?: string[];
       };
-      const id = body.id?.trim() || crypto.randomUUID();
-      const title = body.title?.trim() || '';
-      const content = body.content ?? '';
-      const folder = body.folder?.trim() || 'Notes';
+      const id = sanitizeServerId(body.id);
+      const title = sanitizeServerPlain(body.title, 250);
+      const content = sanitizeServerContent(body.content);
+      const folder = sanitizeServerPlain(body.folder, 100) || 'Notes';
       const isPinned = Boolean(body.is_pinned);
       const isLocked = Boolean(body.is_locked);
       const lockHash = body.lock_password_hash || null;
@@ -385,16 +415,16 @@ export default async function handler(request: Request): Promise<Response> {
       if (!body?.id) {
         return jsonResponse({ error: 'Note ID is required' }, 400);
       }
-      const noteId: string = body.id;
+      const noteId: string = sanitizeServerId(body.id);
       // Check existing note
       const existing = (user.role === 'admin'
         ? await sql`SELECT id FROM admin_notes WHERE id = ${noteId} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
         : await sql`SELECT id FROM admin_notes WHERE id = ${noteId} AND user_id = ${user.id} LIMIT 1`) as NoteRow[];
       if (existing.length === 0) {
         // Upsert if not found
-        const title = body.title || '';
-        const content = body.content || '';
-        const folder = body.folder || 'Notes';
+        const title = sanitizeServerPlain(body.title, 250);
+        const content = sanitizeServerContent(body.content);
+        const folder = sanitizeServerPlain(body.folder, 100) || 'Notes';
         const isPinned = Boolean(body.is_pinned);
         const isLocked = Boolean(body.is_locked);
         const lockHash = body.lock_password_hash || null;
@@ -421,9 +451,9 @@ export default async function handler(request: Request): Promise<Response> {
       const hasLockHash = body.lock_password_hash !== undefined;
       const hasTrashed = body.is_trashed !== undefined;
       const hasTags = body.tags !== undefined;
-      const titleVal = hasTitle ? body.title : null;
-      const contentVal = hasContent ? body.content : null;
-      const folderVal = hasFolder ? body.folder : null;
+      const titleVal = hasTitle ? sanitizeServerPlain(body.title, 250) : null;
+      const contentVal = hasContent ? sanitizeServerContent(body.content) : null;
+      const folderVal = hasFolder ? (sanitizeServerPlain(body.folder, 100) || 'Notes') : null;
       const isPinnedVal = hasPinned ? body.is_pinned : null;
       const isLockedVal = hasLocked ? body.is_locked : null;
       const lockHashVal = hasLockHash ? body.lock_password_hash : null;

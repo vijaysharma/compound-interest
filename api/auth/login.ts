@@ -15,10 +15,11 @@ export default async function handler(request: Request): Promise<Response> {
   }
   try {
     const body = (await request.json()) as { email?: string; password?: string };
-    const email = body.email ? body.email.toLowerCase().trim() : '';
-    const password = body.password ? body.password.trim() : '';
-    if (!email || !password) {
-      return jsonResponse({ error: 'Email and password are required' }, 400);
+    const rawEmail = typeof body.email === 'string' ? body.email.toLowerCase().trim() : '';
+    const email = rawEmail.slice(0, 254);
+    const password = typeof body.password === 'string' ? body.password.slice(0, 128) : '';
+    if (!email || !password || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return jsonResponse({ error: 'Valid email and password are required' }, 400);
     }
     const sql = getDb();
     await ensureTables(sql);

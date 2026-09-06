@@ -199,10 +199,19 @@ export const getNearest = (dateString: string, data: NavType[]): NavType | undef
    */
   return sortedData[nearestIndex < 0 ? 0 : nearestIndex]?.nav;
 };
-export const sanctnum = (inputValue: string | number): number => {
-  let intValue = typeof inputValue === 'string' ? parseFloat(inputValue) : inputValue;
-  intValue = isFinite(intValue) ? intValue : 0;
-  return intValue;
+export const sanctnum = (
+  inputValue: string | number | null | undefined,
+  min?: number,
+  max?: number
+): number => {
+  if (inputValue === null || inputValue === undefined) return min ?? 0;
+  let val = typeof inputValue === 'string' ? parseFloat(inputValue) : inputValue;
+  if (!Number.isFinite(val) || Number.isNaN(val)) {
+    val = min ?? 0;
+  }
+  if (min !== undefined && val < min) val = min;
+  if (max !== undefined && val > max) val = max;
+  return val;
 };
 export const calculateInterest = (
   p: string,

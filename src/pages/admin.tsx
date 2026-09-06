@@ -159,10 +159,18 @@ const Admin = () => {
   const handleQrFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file (PNG, JPEG, WebP, etc.)');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image file size must be less than 2MB');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      if (result) {
+      if (result && result.startsWith('data:image/')) {
         setPayQrUrl(result);
       }
     };

@@ -54,6 +54,7 @@ import {
   hashPasscode,
 } from './NotesTypes';
 import { MoveNoteModal } from './MoveNoteModal';
+import { sanitizeNoteHtml, isSafeUrl, sanitizePlainInput } from './sanitizeHtml';
 const FONT_SIZES = [
   { label: 'Small', size: '13px', cmdVal: '2' },
   { label: 'Normal', size: '16px', cmdVal: '3' },
@@ -189,7 +190,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   useEffect(() => {
     if (!note || !editorRef.current) return;
     if (lastLoadedNoteIdRef.current !== note.id) {
-      const initialHtml = note.content && note.content.trim() ? note.content : '<p><br></p>';
+      const rawHtml = note.content && note.content.trim() ? note.content : '<p><br></p>';
+      const initialHtml = sanitizeNoteHtml(rawHtml);
       editorRef.current.innerHTML = initialHtml;
       const isBlank = !note.content || !note.content.trim() || initialHtml === '<p><br></p>';
       editorRef.current.setAttribute('data-empty', String(isBlank));
@@ -290,9 +292,22 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
     onUpdateNote({ content: html, tags: combinedTags });
   };
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const clipboardData = e.clipboardData;
+    const htmlData = clipboardData.getData('text/html');
+    const textData = clipboardData.getData('text/plain');
+    if (htmlData) {
+      const cleanHtml = sanitizeNoteHtml(htmlData);
+      document.execCommand('insertHTML', false, cleanHtml);
+    } else if (textData) {
+      document.execCommand('insertText', false, textData);
+    }
+    handleContentChange();
+  };
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!note) return;
-    const newTitle = e.target.value;
+    const newTitle = sanitizePlainInput(e.target.value, 250);
     calculateStats(newTitle + ' ' + (note.content || ''));
     const contentTags = extractHashtags(newTitle + ' ' + (note.content || ''));
     const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
@@ -606,10 +621,18 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   };
   const insertLink = () => {
-    const url = prompt('Enter URL:');
-    if (url) {
-      execCmd('createLink', url);
+    const rawUrl = prompt('Enter URL:');
+    if (!rawUrl) return;
+    const trimmed = rawUrl.trim();
+    let url = trimmed;
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url) && !url.startsWith('#') && !url.startsWith('/')) {
+      url = `https://${url}`;
     }
+    if (!isSafeUrl(url)) {
+      alert('Invalid URL. Only http, https, mailto, and tel links are permitted.');
+      return;
+    }
+    execCmd('createLink', url);
   };
   const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (activeMobileMenu) {
@@ -824,7 +847,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const handleAddTag = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTagInput.trim() || !note) return;
-    const cleanTag = newTagInput.trim().replace(/^#/, '').toLowerCase();
+    const cleanTag = newTagInput.trim().replace(/^#+/, '').replace(/[^\w-]/g, '').slice(0, 30).toLowerCase();
+    if (!cleanTag) return;
     const updated = Array.from(new Set([...(note.tags || []), cleanTag]));
     onUpdateNote({ tags: updated });
     setNewTagInput('');
@@ -1620,6 +1644,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             type="text"
             disabled={isTrash}
             placeholder="Title"
+            maxLength={250}
             value={note.title || ''}
             onChange={handleTitleChange}
             className="w-full text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-base-content placeholder-base-content/30 border-none outline-none bg-transparent mb-2 flex-shrink-0"
@@ -1652,6 +1677,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       type="text"
                       autoFocus
                       placeholder="tag name"
+                      maxLength={30}
                       value={newTagInput}
                       onChange={(e) => setNewTagInput(e.target.value)}
                       className="input input-xs input-bordered input-primary rounded-full w-24 text-xs"
@@ -1684,6 +1710,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             ref={editorRef}
             contentEditable={!isTrash}
             suppressContentEditableWarning
+            onPaste={handlePaste}
             onInput={handleContentChange}
             onClick={handleEditorClick}
             onKeyDown={handleKeyDown}

@@ -92,9 +92,10 @@ const MutualFundSelectorModal = ({
         <input
           type="text"
           placeholder="Search Mutual Funds..."
+          maxLength={80}
           className="input input-sm input-primary mb-2 w-full"
           value={searchKey}
-          onChange={(event) => setSearchKey(event.target.value.replace(/[.*+?^${}()|[\]\\]/g, ''))}
+          onChange={(event) => setSearchKey(event.target.value.replace(/[.*+?^${}()|[\]\\]/g, '').slice(0, 80))}
           autoFocus
         />
         {pinnedFunds.length > 0 && (

@@ -439,9 +439,10 @@ const DateCalculator: React.FC = () => {
                 className={numberInputBase}
                 type="number"
                 min="0"
+                max="1000"
                 value={years || ''}
                 placeholder="0"
-                onChange={(e) => setYears(Math.max(0, Number(e.target.value)))}
+                onChange={(e) => setYears(Math.min(1000, Math.max(0, Number(e.target.value) || 0)))}
               />
             </div>
             <div className="text-center">
@@ -450,9 +451,10 @@ const DateCalculator: React.FC = () => {
                 className={numberInputBase}
                 type="number"
                 min="0"
+                max="12000"
                 value={months || ''}
                 placeholder="0"
-                onChange={(e) => setMonths(Math.max(0, Number(e.target.value)))}
+                onChange={(e) => setMonths(Math.min(12000, Math.max(0, Number(e.target.value) || 0)))}
               />
             </div>
             <div className="text-center">
@@ -461,9 +463,10 @@ const DateCalculator: React.FC = () => {
                 className={numberInputBase}
                 type="number"
                 min="0"
+                max="365000"
                 value={days || ''}
                 placeholder="0"
-                onChange={(e) => setDays(Math.max(0, Number(e.target.value)))}
+                onChange={(e) => setDays(Math.min(365000, Math.max(0, Number(e.target.value) || 0)))}
               />
             </div>
             <div className="text-center">
@@ -472,9 +475,10 @@ const DateCalculator: React.FC = () => {
                 className={numberInputBase}
                 type="number"
                 min="0"
+                max="8760000"
                 value={hours || ''}
                 placeholder="0"
-                onChange={(e) => setHours(Math.max(0, Number(e.target.value)))}
+                onChange={(e) => setHours(Math.min(8760000, Math.max(0, Number(e.target.value) || 0)))}
               />
             </div>
           </div>

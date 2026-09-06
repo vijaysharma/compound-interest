@@ -118,6 +118,7 @@ const CountrySelect = ({ label, value, countries, onChange }: CountrySelectProps
         role="combobox"
         aria-expanded={open}
         aria-controls={`${label}-country-options`}
+        maxLength={60}
         className="join-item w-full input input-primary focus:outline-none"
         value={open ? query : value}
         placeholder={value}
@@ -126,7 +127,7 @@ const CountrySelect = ({ label, value, countries, onChange }: CountrySelectProps
           setOpen(true);
         }}
         onChange={(event) => {
-          setQuery(event.target.value);
+          setQuery(event.target.value.slice(0, 60));
           setOpen(true);
         }}
       />

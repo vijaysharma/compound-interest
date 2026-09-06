@@ -12,12 +12,25 @@ export default async function handler(request: Request): Promise<Response> {
       return jsonResponse({ error: 'Authentication required to submit payment' }, 401);
     }
     const body = (await request.json()) as { utr_ref?: string; amount?: number };
-    const utrRef = body.utr_ref ? body.utr_ref.trim() : '';
-    const amount = typeof body.amount === 'number' ? body.amount : 54;
+    const rawUtr = typeof body.utr_ref === 'string' ? body.utr_ref.trim() : '';
+    const utrRef = rawUtr.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
     if (!utrRef || utrRef.length < 4) {
       return jsonResponse(
         { error: 'Please enter a valid 12-digit UPI UTR / Transaction Reference number' },
         400
+      );
+    }
+    const rawAmount = typeof body.amount === 'number' ? body.amount : 54;
+    const amount = Math.max(1, Math.min(100000, Number.isFinite(rawAmount) ? rawAmount : 54));
+    const duplicate = (await sql`
+      SELECT id, status FROM payment_submissions
+      WHERE utr_ref = ${utrRef} AND status IN ('pending', 'approved')
+      LIMIT 1
+    `) as { id: string; status: string }[];
+    if (duplicate.length > 0) {
+      return jsonResponse(
+        { error: 'A payment submission with this UTR reference has already been submitted or approved.' },
+        409
       );
     }
     const newId = crypto.randomUUID();

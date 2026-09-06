@@ -29,12 +29,12 @@ export default async function handler(request: Request): Promise<Response> {
       picture?: string;
       credential?: string;
     };
-    const password = body.password ? body.password.trim() : '';
+    const password = typeof body.password === 'string' ? body.password.slice(0, 128).trim() : '';
     if (!password || password.length < 6) {
       return jsonResponse({ error: 'Password is required and must be at least 6 characters' }, 400);
     }
     let verifiedEmail = '';
-    let verifiedName = body.name ? body.name.trim() : '';
+    let verifiedName = typeof body.name === 'string' ? body.name.replace(/<[^>]*>/g, '').trim().slice(0, 100) : '';
     let verifiedPicture = body.picture || '';
     let providerId = '';
     let isGoogleVerified = false;

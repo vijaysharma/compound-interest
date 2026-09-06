@@ -7,7 +7,8 @@ export default async function handler(request: Request): Promise<Response> {
   try {
     const sql = getDb();
     await ensureTables(sql);
-    const search = new URL(request.url).searchParams.get('q')?.trim() ?? '';
+    const rawSearch = new URL(request.url).searchParams.get('q')?.trim() ?? '';
+    const search = rawSearch.replace(/[%_\\]/g, ' ').trim().slice(0, 80);
     const cacheKey = search.toLowerCase();
     const cached = searchCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
@@ -16,6 +17,7 @@ export default async function handler(request: Request): Promise<Response> {
     const searchPatterns = search
       .split(/\s+/)
       .filter(Boolean)
+      .slice(0, 8)
       .map((term) => `%${term}%`);
     const rows = (await sql`
       SELECT scheme_code, scheme_name FROM mutual_fund_schemes

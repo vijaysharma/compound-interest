@@ -41,13 +41,16 @@ export default async function handler(request: Request): Promise<Response> {
     }
     try {
       const body = (await request.json()) as Partial<PaymentSettings>;
-      const title = body.title ?? 'Rupee Calculator Pro Subscription';
-      const upiId = body.upi_id ?? '';
-      const qrCodeUrl = body.upi_qr_code_url ?? '';
-      const amount = typeof body.amount === 'number' ? body.amount : 54;
-      const instructions =
-        body.instructions ??
-        'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.';
+      const title = typeof body.title === 'string' ? body.title.replace(/<[^>]*>/g, '').trim().slice(0, 100) : 'Rupee Calculator Pro Subscription';
+      const upiId = typeof body.upi_id === 'string' ? body.upi_id.replace(/[^a-zA-Z0-9._@-]/g, '').trim().slice(0, 100) : '';
+      let qrCodeUrl = typeof body.upi_qr_code_url === 'string' ? body.upi_qr_code_url.trim() : '';
+      if (qrCodeUrl && !qrCodeUrl.startsWith('https://') && !qrCodeUrl.startsWith('http://') && !qrCodeUrl.startsWith('data:image/')) {
+        qrCodeUrl = '';
+      }
+      if (qrCodeUrl.length > 500_000) qrCodeUrl = '';
+      const rawAmount = typeof body.amount === 'number' ? body.amount : 54;
+      const amount = Math.max(1, Math.min(100000, Number.isFinite(rawAmount) ? rawAmount : 54));
+      const instructions = typeof body.instructions === 'string' ? body.instructions.replace(/<[^>]*>/g, '').trim().slice(0, 1000) : 'Pay ₹54 for 1 Month Unlimited Access. Scan the QR code or pay to the UPI ID, then enter your Transaction UTR number.';
       const updated = (await sql`
         INSERT INTO payment_settings (id, title, upi_id, upi_qr_code_url, amount, instructions, updated_at)
         VALUES ('default', ${title}, ${upiId}, ${qrCodeUrl}, ${amount}, ${instructions}, NOW())

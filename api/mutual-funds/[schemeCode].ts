@@ -4,8 +4,11 @@ const navCache = new Map<string, { expiresAt: number; data: unknown }>();
 const NAV_MEMORY_TTL_MS = 5 * 60 * 1000; // 5 minutes in-memory Edge cache
 const DB_NAV_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours Postgres DB TTL
 export default async function handler(request: Request): Promise<Response> {
-  const schemeCode = decodeURIComponent(new URL(request.url).pathname.split('/').pop() ?? '');
-  if (!schemeCode) return jsonResponse({ error: 'Scheme code is required' }, 400);
+  const rawCode = decodeURIComponent(new URL(request.url).pathname.split('/').pop() ?? '').trim();
+  if (!/^\d{1,10}$/.test(rawCode)) {
+    return jsonResponse({ error: 'Invalid scheme code. Must be numeric.' }, 400);
+  }
+  const schemeCode = rawCode;
   try {
     // 1. Check in-memory Edge worker cache
     const cached = navCache.get(schemeCode);

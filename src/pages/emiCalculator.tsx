@@ -599,7 +599,7 @@ const EmiCalculator: React.FC = () => {
               min="1"
               max="31"
               value={emiDate}
-              onChange={(e) => setEmiDate(Number(e.target.value))}
+              onChange={(e) => setEmiDate(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
             />
           </div>
           <label className="label cursor-pointer justify-center gap-2 pt-1 pb-0">
@@ -759,7 +759,7 @@ const EmiCalculator: React.FC = () => {
                   type="number"
                   placeholder="Payment Amount (₹)"
                   value={p.amount || ''}
-                  onChange={(e) => updatePartPayment(idx, 'amount', Number(e.target.value))}
+                  onChange={(e) => updatePartPayment(idx, 'amount', Math.max(0, Number(e.target.value) || 0))}
                   disabled={!p.enabled}
                 />
                 <input
@@ -863,7 +863,9 @@ const EmiCalculator: React.FC = () => {
                 step="0.1"
                 placeholder="New Interest Rate (%)"
                 value={r.rate || ''}
-                onChange={(e) => updateRateChange(idx, 'rate', Number(e.target.value))}
+                min="0"
+                max="100"
+                onChange={(e) => updateRateChange(idx, 'rate', Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
                 disabled={!r.enabled}
               />
               <input

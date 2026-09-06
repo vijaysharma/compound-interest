@@ -95,8 +95,9 @@ const UnitInputRow: React.FC<UnitInputRowProps> = ({
       className={`join-item input input-md input-primary input-bordered ${
         isResult ? 'bg-success/10 text-success font-bold' : ''
       }`}
+      maxLength={20}
       value={value}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+      onChange={onChange ? (e) => onChange(e.target.value.slice(0, 20)) : undefined}
       placeholder={readOnly ? '0' : 'Enter value'}
       readOnly={readOnly}
     />
@@ -120,17 +121,23 @@ interface SavedState {
   toUnit: string;
   inputValue: string;
 }
+const VALID_CATEGORIES: Set<string> = new Set(['Length', 'Weight', 'Temperature', 'Area', 'Volume', 'Speed', 'Time']);
 const getSavedState = (): SavedState => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed && typeof parsed === 'object') {
+        const cat: UnitCategory = VALID_CATEGORIES.has(parsed.category) ? parsed.category : 'Length';
+        const validUnits = cat === 'Temperature' ? ['C', 'F', 'K'] : Object.keys(unitTypes[cat]);
+        const fUnit = validUnits.includes(parsed.fromUnit) ? parsed.fromUnit : validUnits[0] || 'm';
+        const tUnit = validUnits.includes(parsed.toUnit) ? parsed.toUnit : validUnits[1] || 'ft';
+        const rawInput = typeof parsed.inputValue === 'string' ? parsed.inputValue.slice(0, 20) : '1';
         return {
-          category: parsed.category || 'Length',
-          fromUnit: parsed.fromUnit || 'm',
-          toUnit: parsed.toUnit || 'ft',
-          inputValue: parsed.inputValue || '1',
+          category: cat,
+          fromUnit: fUnit,
+          toUnit: tUnit,
+          inputValue: rawInput,
         };
       }
     }
@@ -173,7 +180,7 @@ const UnitConverter: React.FC = () => {
   // Calculate output on the fly during render
   let outputValue = '';
   const val = parseFloat(inputValue);
-  if (!isNaN(val)) {
+  if (Number.isFinite(val) && !isNaN(val)) {
     if (category === 'Temperature') {
       let c = 0;
       if (fromUnit === 'C') c = val;

@@ -15,6 +15,7 @@ import { SiGoogledrive } from 'react-icons/si';
 import { BsCloudArrowUp, BsCloudArrowDown } from 'react-icons/bs';
 import { Note } from './NotesTypes';
 import { getUserEncryptionKey, encryptText } from './NotesCrypto';
+import { sanitizeNoteHtml, sanitizePlainInput } from './sanitizeHtml';
 interface NotesBackupModalProps {
   isOpen: boolean;
   notes: Note[];
@@ -152,6 +153,10 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
     setParsedBackup(null);
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 20 * 1024 * 1024) {
+      setError('Backup file exceeds maximum allowed size of 20MB.');
+      return;
+    }
     setFileName(file.name);
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -162,8 +167,21 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
           setError('Invalid backup file: notes array not found.');
           return;
         }
-        const notesList: Note[] = Array.isArray(parsed.notes) ? parsed.notes : parsed;
-        const foldersList: string[] = Array.isArray(parsed.folders) ? parsed.folders : ['Notes'];
+        const rawNotesList: Note[] = Array.isArray(parsed.notes) ? parsed.notes : parsed;
+        const rawFoldersList: string[] = Array.isArray(parsed.folders) ? parsed.folders : ['Notes'];
+        const notesList: Note[] = rawNotesList.map((n) => ({
+          ...n,
+          id: typeof n.id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(n.id) ? n.id : crypto.randomUUID(),
+          title: sanitizePlainInput(n.title, 250),
+          content: sanitizeNoteHtml(n.content || ''),
+          folder: sanitizePlainInput(n.folder || 'Notes', 100) || 'Notes',
+          tags: Array.isArray(n.tags)
+            ? n.tags.map((t) => sanitizePlainInput(t, 30).toLowerCase()).filter(Boolean)
+            : [],
+        }));
+        const foldersList: string[] = rawFoldersList
+          .map((f) => sanitizePlainInput(f, 50))
+          .filter(Boolean);
         setParsedBackup({
           app: parsed.app || 'Quick Notes',
           version: parsed.version || 1,
