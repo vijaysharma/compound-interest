@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiTruck, FiMapPin, FiStar } from 'react-icons/fi';
+import { FiTruck, FiMapPin, FiStar, FiRefreshCw } from 'react-icons/fi';
 interface CourierCompany {
   courier_company_id: number;
   courier_name: string;
@@ -8,6 +8,7 @@ interface CourierCompany {
   rating: number | string;
 }
 const STORAGE_KEY = 'shiprocket_rates_state';
+const RATES_STORAGE_KEY = 'shiprocket_rates_result';
 interface SavedState {
   pickup: string;
   delivery: string;
@@ -46,6 +47,20 @@ const getSavedState = (): SavedState => {
     height: '',
     cod: false,
   };
+};
+const getSavedRates = (): CourierCompany[] | null => {
+  try {
+    const saved = localStorage.getItem(RATES_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load shiprocket saved rates:', err);
+  }
+  return null;
 };
 interface PincodeInfo {
   display: string;
@@ -143,7 +158,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
   const [deliveryLocation, setDeliveryLocation] = useState<PincodeInfo | null>(null);
   const [deliveryLoading, setDeliveryLoading] = useState(saved.delivery.length === 6);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<CourierCompany[] | null>(null);
+  const [result, setResult] = useState<CourierCompany[] | null>(getSavedRates);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     try {
@@ -163,6 +178,15 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       console.warn('Failed to persist shiprocket rates state:', err);
     }
   }, [pickup, delivery, weight, length, breadth, height, cod]);
+  useEffect(() => {
+    try {
+      if (result) {
+        localStorage.setItem(RATES_STORAGE_KEY, JSON.stringify(result));
+      }
+    } catch (err) {
+      console.warn('Failed to persist shiprocket rates result:', err);
+    }
+  }, [result]);
   useEffect(() => {
     const trimmed = pickup.trim();
     if (!/^\d{6}$/.test(trimmed)) {
@@ -216,7 +240,6 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
     }
     setLoading(true);
     setError(null);
-    setResult(null);
     try {
       const res = await fetch('/api/admin/shiprocket-rates', {
         method: 'POST',
@@ -422,7 +445,13 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       </div>
       <div className="flex justify-end">
         <button className="btn btn-primary" onClick={fetchRates} disabled={loading}>
-          {loading ? <span className="loading loading-spinner"></span> : 'Get Rates'}
+          {loading ? (
+            <span className="loading loading-spinner"></span>
+          ) : result && result.length > 0 ? (
+            'Refresh Rates'
+          ) : (
+            'Get Rates'
+          )}
         </button>
       </div>
       {result && (
@@ -433,7 +462,21 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
               <thead>
                 <tr>
                   <th>Courier</th>
-                  <th>Est. Time</th>
+                  <th>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span>Est. Time</span>
+                      <button
+                        type="button"
+                        onClick={fetchRates}
+                        disabled={loading}
+                        className="badge badge-xs badge-info/20 text-info hover:badge-info hover:text-white cursor-pointer font-normal border border-info/30 gap-0.5 py-0 px-1.5 transition-all"
+                        title="Refresh Rates"
+                      >
+                        <FiRefreshCw className={`w-2.5 h-2.5 ${loading ? 'animate-spin' : ''}`} />
+                        refresh
+                      </button>
+                    </span>
+                  </th>
                   <th>Rate</th>
                   <th>Rating</th>
                 </tr>

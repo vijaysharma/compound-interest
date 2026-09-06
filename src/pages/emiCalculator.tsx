@@ -507,6 +507,20 @@ const EmiCalculator: React.FC = () => {
     () => (totalPayable > 0 ? (totalInterest / totalPayable) * 100 : 0),
     [totalInterest, totalPayable]
   );
+  const pieSlices = useMemo(() => {
+    if (totalPayable <= 0) return null;
+    if (principalPercent >= 100) return { type: 'full-principal' as const };
+    if (principalPercent <= 0) return { type: 'full-interest' as const };
+    const angle = (principalPercent / 100) * 2 * Math.PI;
+    const x = 100 + 85 * Math.sin(angle);
+    const y = 100 - 85 * Math.cos(angle);
+    const largeArc = principalPercent > 50 ? 1 : 0;
+    return {
+      type: 'slices' as const,
+      principalD: `M 100 100 L 100 15 A 85 85 0 ${largeArc} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`,
+      interestD: `M 100 100 L ${x.toFixed(2)} ${y.toFixed(2)} A 85 85 0 ${largeArc ? 0 : 1} 1 100 15 Z`,
+    };
+  }, [totalPayable, principalPercent]);
   return (
     <main className="w-full max-w-4xl mx-auto px-2 py-4 space-y-6">
       <SEOHead
@@ -585,13 +599,9 @@ const EmiCalculator: React.FC = () => {
         <DisplayCard
           primaryAmount={Math.round(baseMonthlyEmi)}
           title="Monthly EMI Amount"
-          secondaryInfo={{
-            title: 'Total Interest Payable',
-            amount: Math.round(totalInterest),
-          }}
         />
       </div>
-      {/* Loan Statistics & Pie/Donut Chart Section */}
+      {/* Loan Statistics & Pie Chart Section */}
       {principalAmount > 0 && (
         <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-base-200 pb-3">
@@ -608,64 +618,39 @@ const EmiCalculator: React.FC = () => {
             )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            {/* Donut Chart Visual */}
+            {/* Pie Chart Visual */}
             <div className="flex flex-col items-center justify-center p-2">
               <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
                 <svg
                   viewBox="0 0 200 200"
-                  className="w-full h-full -rotate-90 transform"
+                  className="w-full h-full drop-shadow-sm transition-transform duration-500"
                   aria-label="Loan Principal vs Interest Pie Chart"
                 >
-                  {/* Background Circle */}
-                  <circle
-                    cx="100"
-                    cy="100"
-                    r="70"
-                    className="stroke-base-200"
-                    strokeWidth="28"
-                    fill="transparent"
-                  />
-                  {/* Principal Segment */}
-                  {totalPayable > 0 && (
-                    <circle
-                      cx="100"
-                      cy="100"
-                      r="70"
-                      className="stroke-primary transition-all duration-700 ease-out"
-                      strokeWidth="28"
-                      fill="transparent"
-                      strokeDasharray={`${(principalPercent / 100) * 439.82} 439.82`}
-                      strokeDashoffset="0"
-                    />
+                  {pieSlices?.type === 'full-principal' && (
+                    <circle cx="100" cy="100" r="85" className="fill-primary" />
                   )}
-                  {/* Interest Segment */}
-                  {totalPayable > 0 && (
-                    <circle
-                      cx="100"
-                      cy="100"
-                      r="70"
-                      className="stroke-error transition-all duration-700 ease-out"
-                      strokeWidth="28"
-                      fill="transparent"
-                      strokeDasharray={`${(interestPercent / 100) * 439.82} 439.82`}
-                      strokeDashoffset={`-${(principalPercent / 100) * 439.82}`}
-                    />
+                  {pieSlices?.type === 'full-interest' && (
+                    <circle cx="100" cy="100" r="85" className="fill-error" />
+                  )}
+                  {pieSlices?.type === 'slices' && (
+                    <>
+                      <path
+                        d={pieSlices.principalD}
+                        className="fill-primary stroke-base-100 transition-all duration-700 ease-out"
+                        strokeWidth="1.5"
+                      >
+                        <title>Principal: ₹{Math.round(principalAmount).toLocaleString('en-IN')} ({principalPercent.toFixed(1)}%)</title>
+                      </path>
+                      <path
+                        d={pieSlices.interestD}
+                        className="fill-error stroke-base-100 transition-all duration-700 ease-out"
+                        strokeWidth="1.5"
+                      >
+                        <title>Interest: ₹{Math.round(totalInterest).toLocaleString('en-IN')} ({interestPercent.toFixed(1)}%)</title>
+                      </path>
+                    </>
                   )}
                 </svg>
-                {/* Center Readout */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                  <span className="text-[11px] uppercase tracking-wider font-semibold opacity-60">
-                    Total Payable
-                  </span>
-                  <span className="text-base sm:text-lg font-extrabold text-base-content">
-                    ₹{Math.round(totalPayable).toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-[10px] opacity-60 mt-0.5">
-                    {schedule[schedule.length - 1]?.date
-                      ? `Payoff: ${schedule[schedule.length - 1].date}`
-                      : ''}
-                  </span>
-                </div>
               </div>
             </div>
             {/* Legend & Key Metrics */}
@@ -913,7 +898,7 @@ const EmiCalculator: React.FC = () => {
             {schedule.map((row, idx) => (
               <article
                 key={idx}
-                className={`text-base-content/70 border border-base-300 rounded-xl p-3 shadow-xs ${
+                className={`text-base-content border border-base-300 rounded-xl p-3 shadow-xs ${
                   row.note?.includes('Part Payment')
                     ? 'border-warning bg-warning/10'
                     : row.note?.includes('ROI Change')
@@ -921,54 +906,54 @@ const EmiCalculator: React.FC = () => {
                       : 'bg-base-100'
                 }`}
               >
-                <div className="mb-1 flex items-start justify-between gap-3">
-                  <p className="font-semibold text-sm">
+                <div className="mb-1.5 flex items-start justify-between gap-3">
+                  <p className="font-bold text-sm text-base-content">
                     {idx + 1}. {row.date}
                   </p>
                   {row.note && (
-                    <span className="badge badge-warning badge text-xs">{row.note}</span>
+                    <span className="badge badge-warning text-xs font-semibold">{row.note}</span>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs sm:text-sm">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-xs sm:text-sm">
                   <div>
-                    EMI:{' '}
-                    <span className="font-semibold text-secondary">
+                    <span className="text-base-content/80 font-medium">EMI: </span>
+                    <span className="font-bold text-primary">
                       ₹{parseFloat(row.emi).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div>
-                    Balance:{' '}
-                    <span className="font-semibold text-secondary">
+                    <span className="text-base-content/80 font-medium">Balance: </span>
+                    <span className="font-bold text-base-content">
                       ₹{parseFloat(row.balance).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div>
-                    Principal:{' '}
-                    <span className="font-semibold text-success">
+                    <span className="text-base-content/80 font-medium">Principal: </span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
                       ₹{parseFloat(row.principal).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div>
-                    Interest:{' '}
-                    <span className="font-semibold text-error">
+                    <span className="text-base-content/80 font-medium">Interest: </span>
+                    <span className="font-bold text-rose-700 dark:text-rose-400">
                       ₹{parseFloat(row.interest).toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <div className="border-t border-base-300/50 pt-1">
-                    Cum. Principal:{' '}
-                    <span className="font-semibold text-success">
+                  <div className="border-t border-base-300 pt-1.5">
+                    <span className="text-base-content/80 font-medium">Cum. Principal: </span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
                       ₹{parseFloat(row.cumulativePrincipal).toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <div className="border-t border-base-300/50 pt-1">
-                    Cum. Interest:{' '}
-                    <span className="font-semibold text-error">
+                  <div className="border-t border-base-300 pt-1.5">
+                    <span className="text-base-content/80 font-medium">Cum. Interest: </span>
+                    <span className="font-bold text-rose-700 dark:text-rose-400">
                       ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <div className="col-span-2 border-t border-base-300/50 pt-1 text-xs">
-                    Remaining Interest:{' '}
-                    <span className="font-semibold text-warning">
+                  <div className="col-span-2 border-t border-base-300 pt-1.5 text-xs">
+                    <span className="text-base-content/80 font-medium">Remaining Interest: </span>
+                    <span className="font-bold text-amber-800 dark:text-amber-300">
                       ₹{parseFloat(row.remainingInterest).toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -992,13 +977,13 @@ const EmiCalculator: React.FC = () => {
                   <th className="border-b border-base-300 px-3 py-3 text-right font-bold">
                     Balance
                   </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-success">
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-emerald-800 dark:text-emerald-400">
                     Cum. Principal
                   </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-error">
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-rose-800 dark:text-rose-400">
                     Cum. Interest
                   </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-warning">
+                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-amber-800 dark:text-amber-300">
                     Remaining Interest
                   </th>
                   <th className="border-b border-base-300 px-3 py-3 text-left font-bold">Note</th>
@@ -1016,28 +1001,28 @@ const EmiCalculator: React.FC = () => {
                           : 'hover:bg-base-200/50'
                     }`}
                   >
-                    <td className="border-b border-base-300 px-3 py-2.5 text-xs font-mono">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-xs font-mono font-medium">
                       {row.date}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-semibold">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-bold text-primary">
                       ₹{parseFloat(row.emi).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right text-success">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-semibold text-emerald-700 dark:text-emerald-400">
                       ₹{parseFloat(row.principal).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right text-error">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-semibold text-rose-700 dark:text-rose-400">
                       ₹{parseFloat(row.interest).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono font-medium">
                       ₹{parseFloat(row.balance).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-success text-xs font-medium">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
                       ₹{parseFloat(row.cumulativePrincipal).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-error text-xs font-medium">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-rose-700 dark:text-rose-400 text-xs font-semibold">
                       ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-warning text-xs font-medium">
+                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-amber-800 dark:text-amber-300 text-xs font-semibold">
                       ₹{parseFloat(row.remainingInterest).toLocaleString('en-IN')}
                     </td>
                     <td className="border-b border-base-300 px-3 py-2.5">

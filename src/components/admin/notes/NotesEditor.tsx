@@ -36,6 +36,9 @@ import {
   BsTable,
   BsLockFill,
   BsCloudArrowUp,
+  BsTextIndentLeft,
+  BsTextIndentRight,
+  BsCheck2All,
 } from 'react-icons/bs';
 import { SiGoogledrive } from 'react-icons/si';
 import {
@@ -122,6 +125,30 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     }
     calculateStats((note.title || '') + ' ' + (note.content || ''));
   }, [note?.id, calculateStats, note?.title, note]);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    const handleViewportChange = () => {
+      if (editorRef.current && document.activeElement === editorRef.current) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          if (rect && canvasContainerRef.current) {
+            const containerRect = canvasContainerRef.current.getBoundingClientRect();
+            if (rect.bottom > containerRect.bottom - 40) {
+              canvasContainerRef.current.scrollTop += rect.bottom - containerRect.bottom + 60;
+            }
+          }
+        }
+      }
+    };
+    window.visualViewport.addEventListener('resize', handleViewportChange);
+    window.visualViewport.addEventListener('scroll', handleViewportChange);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+    };
+  }, []);
   const handleContentChange = () => {
     if (!editorRef.current || !note) return;
     const html = editorRef.current.innerHTML;
@@ -163,6 +190,78 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     document.execCommand(cmd, false, value);
     saveSelection();
     handleContentChange();
+  };
+  const handleIndent = () => {
+    if (!editorRef.current) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const node = sel.anchorNode;
+    const checklistItem = (
+      node instanceof HTMLElement ? node : node?.parentElement
+    )?.closest('.qn-checklist-item') as HTMLElement | null;
+    if (checklistItem) {
+      const currentLevel = parseInt(checklistItem.getAttribute('data-level') || '0', 10);
+      if (currentLevel < 4) {
+        checklistItem.setAttribute('data-level', String(currentLevel + 1));
+        handleContentChange();
+      }
+      return;
+    }
+    execCmd('indent');
+  };
+  const handleOutdent = () => {
+    if (!editorRef.current) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const node = sel.anchorNode;
+    const checklistItem = (
+      node instanceof HTMLElement ? node : node?.parentElement
+    )?.closest('.qn-checklist-item') as HTMLElement | null;
+    if (checklistItem) {
+      const currentLevel = parseInt(checklistItem.getAttribute('data-level') || '0', 10);
+      if (currentLevel > 0) {
+        if (currentLevel === 1) {
+          checklistItem.removeAttribute('data-level');
+        } else {
+          checklistItem.setAttribute('data-level', String(currentLevel - 1));
+        }
+        handleContentChange();
+      }
+      return;
+    }
+    execCmd('outdent');
+  };
+  const handleSelectAll = () => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    const range = document.createRange();
+    range.selectNodeContents(editorRef.current);
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  };
+  const handleCopySelection = async () => {
+    const sel = window.getSelection();
+    let textToCopy = '';
+    if (sel && !sel.isCollapsed && sel.toString().trim()) {
+      textToCopy = sel.toString();
+    } else if (editorRef.current) {
+      textToCopy = editorRef.current.innerText || '';
+    }
+    if (!textToCopy && note) {
+      textToCopy = htmlToPlainText(note.title, note.content);
+    }
+    if (textToCopy) {
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
   const insertChecklistItem = () => {
     if (!editorRef.current) return;
@@ -320,6 +419,15 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       }
       return;
     }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        handleOutdent();
+      } else {
+        handleIndent();
+      }
+      return;
+    }
     if (e.key === 'Enter') {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
@@ -330,7 +438,17 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         if (currentItem) {
           e.preventDefault();
           const content = currentItem.querySelector('.qn-checklist-content');
+          const currentLevel = parseInt(currentItem.getAttribute('data-level') || '0', 10);
           if (!content?.textContent?.trim()) {
+            if (currentLevel > 0) {
+              if (currentLevel === 1) {
+                currentItem.removeAttribute('data-level');
+              } else {
+                currentItem.setAttribute('data-level', String(currentLevel - 1));
+              }
+              handleContentChange();
+              return;
+            }
             const p = document.createElement('p');
             p.innerHTML = '<br>';
             currentItem.parentNode?.replaceChild(p, currentItem);
@@ -345,9 +463,13 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           const newItem = document.createElement('div');
           newItem.className = 'qn-checklist-item';
           newItem.setAttribute('data-checked', 'false');
+          if (currentLevel > 0) {
+            newItem.setAttribute('data-level', String(currentLevel));
+          }
           const circle = document.createElement('span');
           circle.className = 'qn-checkbox-circle';
           circle.setAttribute('contenteditable', 'false');
+          circle.title = 'Mark as done';
           const span = document.createElement('span');
           span.className = 'qn-checklist-content';
           span.innerHTML = '<br>';
@@ -778,6 +900,22 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
             <button
               onMouseDown={(e) => e.preventDefault()}
+              onClick={handleOutdent}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Decrease Indent (Shift+Tab)"
+            >
+              <BsTextIndentLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleIndent}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Increase Indent (Tab)"
+            >
+              <BsTextIndentRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onMouseDown={(e) => e.preventDefault()}
               onClick={insertTable}
               className="btn btn-ghost btn-xs btn-square"
               title="Insert Table"
@@ -807,6 +945,27 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               title="Insert Link"
             >
               <FiLink className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-px h-4 bg-base-300 mx-0.5" />
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleSelectAll}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Select All Content"
+            >
+              <BsCheck2All className="w-4 h-4" />
+            </button>
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleCopySelection}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Copy Selected Text"
+            >
+              {copySuccess ? (
+                <FiCheck className="w-3.5 h-3.5 text-success" />
+              ) : (
+                <FiCopy className="w-3.5 h-3.5" />
+              )}
             </button>
           </div>
         )}
@@ -1039,7 +1198,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             }
           }
         }}
-        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 flex flex-col w-full min-h-0 cursor-text"
+        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 pb-36 sm:pb-20 flex flex-col w-full min-h-0 cursor-text"
       >
         <div className="qn-canvas-inner max-w-4xl mx-auto w-full flex-1 flex flex-col min-h-full">
           <div className="flex items-center justify-between text-xs text-base-content/40 mb-3 sm:mb-4 select-none border-b border-base-200/60 pb-2 flex-shrink-0 gap-2">
@@ -1077,21 +1236,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             placeholder="Title"
             value={note.title || ''}
             onChange={handleTitleChange}
-            className="w-full text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-base-content placeholder-base-content/30 border-none outline-none bg-transparent mb-3 flex-shrink-0"
+            className="w-full text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-base-content placeholder-base-content/30 border-none outline-none bg-transparent mb-2 flex-shrink-0"
           />
-          <div
-            ref={editorRef}
-            contentEditable={!isTrash}
-            suppressContentEditableWarning
-            onInput={handleContentChange}
-            onClick={handleEditorClick}
-            onKeyDown={handleKeyDown}
-            onKeyUp={saveSelection}
-            onMouseUp={saveSelection}
-            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text min-h-[300px]"
-            data-placeholder="Start typing or tap the checklist button below..."
-          />
-          <div className="mt-auto pt-6 pb-6 border-t border-base-200/80 flex items-center flex-wrap gap-1.5 select-none flex-shrink-0">
+          {/* Tags section placed under title to prevent obscuring editor canvas */}
+          <div className="flex items-center flex-wrap gap-1.5 select-none mb-3 pb-2 border-b border-base-200/60 flex-shrink-0">
             <FiTag className="w-3.5 h-3.5 text-base-content/40 mr-1" />
             {(note.tags || []).map((tag) => (
               <span
@@ -1146,24 +1294,36 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </>
             )}
           </div>
+          <div
+            ref={editorRef}
+            contentEditable={!isTrash}
+            suppressContentEditableWarning
+            onInput={handleContentChange}
+            onClick={handleEditorClick}
+            onKeyDown={handleKeyDown}
+            onKeyUp={saveSelection}
+            onMouseUp={saveSelection}
+            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text min-h-[160px] sm:min-h-[300px]"
+            data-placeholder="Start typing or tap the checklist button below..."
+          />
         </div>
       </div>
       {!isTrash && isMobileScreen && (
-        <div className="p-2 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between gap-1 select-none overflow-visible flex-shrink-0 relative z-40 sticky bottom-0">
+        <div className="p-1.5 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center gap-1 select-none overflow-x-auto no-scrollbar flex-shrink-0 relative z-40 sticky bottom-0">
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={insertChecklistItem}
-            className="btn btn-ghost btn-sm btn-circle text-primary min-h-[40px] min-w-[40px]"
+            className="btn btn-ghost btn-sm btn-circle text-primary min-h-[38px] min-w-[38px] flex-shrink-0"
             title="Checklist"
           >
             <BsCardChecklist className="w-5 h-5" />
           </button>
-          <div className="dropdown dropdown-top relative">
+          <div className="dropdown dropdown-top relative flex-shrink-0">
             <div
               tabIndex={0}
               role="button"
               onMouseDown={(e) => e.preventDefault()}
-              className="btn btn-ghost btn-sm font-bold text-sm min-h-[40px] px-2"
+              className="btn btn-ghost btn-sm font-bold text-sm min-h-[38px] px-2"
             >
               Aa
             </div>
@@ -1235,7 +1395,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('bold')}
-            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
             title="Bold"
           >
             <FiBold className="w-4 h-4" />
@@ -1243,7 +1403,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('italic')}
-            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
             title="Italic"
           >
             <FiItalic className="w-4 h-4" />
@@ -1251,7 +1411,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={applyHighlighter}
-            className="btn btn-ghost btn-sm btn-square text-primary min-h-[40px] min-w-[40px]"
+            className="btn btn-ghost btn-sm btn-square text-primary min-h-[38px] min-w-[38px] flex-shrink-0"
             title="Highlight"
           >
             <BsHighlighter className="w-4 h-4" />
@@ -1259,23 +1419,59 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('insertUnorderedList')}
-            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
             title="Bullets"
           >
             <BsListUl className="w-4 h-4" />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
+            onClick={handleOutdent}
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
+            title="Outdent"
+          >
+            <BsTextIndentLeft className="w-4 h-4" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleIndent}
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
+            title="Indent"
+          >
+            <BsTextIndentRight className="w-4 h-4" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={insertTable}
-            className="btn btn-ghost btn-sm btn-square min-h-[40px] min-w-[40px]"
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
             title="Table"
           >
             <BsTable className="w-4 h-4" />
           </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleSelectAll}
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
+            title="Select All"
+          >
+            <BsCheck2All className="w-4 h-4" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleCopySelection}
+            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
+            title="Copy Selection"
+          >
+            {copySuccess ? (
+              <FiCheck className="w-4 h-4 text-success" />
+            ) : (
+              <FiCopy className="w-4 h-4" />
+            )}
+          </button>
           {onBackMobile && (
             <button
               onClick={onBackMobile}
-              className="btn btn-primary btn-sm px-3 ml-1 rounded-xl min-h-[38px] font-semibold"
+              className="btn btn-primary btn-sm px-3 ml-auto rounded-xl min-h-[36px] font-semibold flex-shrink-0"
             >
               Done
             </button>

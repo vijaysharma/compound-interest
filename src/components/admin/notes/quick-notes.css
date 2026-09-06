@@ -76,6 +76,23 @@
   outline: none;
 }
 
+/* Multi-level Todo Indentation */
+.qn-checklist-item[data-level="1"] {
+  margin-left: 1.5rem;
+}
+
+.qn-checklist-item[data-level="2"] {
+  margin-left: 3rem;
+}
+
+.qn-checklist-item[data-level="3"] {
+  margin-left: 4.5rem;
+}
+
+.qn-checklist-item[data-level="4"] {
+  margin-left: 6rem;
+}
+
 /* Quick Notes Table */
 .qn-table {
   width: 100%;
@@ -137,6 +154,8 @@
   flex: 1;
   display: block;
   width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .qn-note-canvas:empty:before {
@@ -175,10 +194,34 @@
   margin: 0.5rem 0;
 }
 
+.qn-note-canvas ul ul:not(.checklist) {
+  list-style-type: circle;
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+}
+
+.qn-note-canvas ul ul ul:not(.checklist) {
+  list-style-type: square;
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+}
+
 .qn-note-canvas ol {
   list-style-type: decimal;
   padding-left: 1.5rem;
   margin: 0.5rem 0;
+}
+
+.qn-note-canvas ol ol {
+  list-style-type: lower-alpha;
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+}
+
+.qn-note-canvas ol ol ol {
+  list-style-type: lower-roman;
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
 }
 
 .qn-note-canvas hr {
