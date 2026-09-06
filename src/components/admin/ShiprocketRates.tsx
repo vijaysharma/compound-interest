@@ -454,7 +454,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       {result && (
         <div className="mt-2">
           <h3 className="font-bold mb-3 border-b pb-2">Available Couriers ({result.length})</h3>
-          <div className="overflow-y-auto h-[calc(100dvh-480px)]">
+          <div className="overflow-y-auto overflow-x-hidden h-[calc(100dvh-480px)]">
             <table className="table table-primary table-sm table-zebra">
               <thead>
                 <tr>
@@ -479,16 +479,6 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                 </tr>
               </thead>
               <tbody>
-                {result.map((c) => (
-                  <tr key={c.courier_company_id}>
-                    <td className="font-semibold">{c.courier_name}</td>
-                    <td>{c.etd}</td>
-                    <td className="font-semibold text-primary text-[15px]">₹{c.rate}</td>
-                    <td>
-                      {c.rating} <FiStar className="inline text-primary" />
-                    </td>
-                  </tr>
-                ))}
                 {result.map((c) => (
                   <tr key={c.courier_company_id}>
                     <td className="font-semibold">{c.courier_name}</td>

@@ -168,17 +168,33 @@ body:has(.quick-notes-theme) {
   -webkit-user-select: text !important;
   -webkit-touch-callout: default !important;
   touch-action: manipulation;
+  caret-color: var(--color-primary, #6e0b75) !important;
+  cursor: text !important;
 }
 
 .qn-note-canvas * {
   user-select: text;
   -webkit-user-select: text;
+  caret-color: var(--color-primary, #6e0b75) !important;
+}
+
+.qn-note-canvas::selection,
+.qn-note-canvas *::selection {
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 30%, transparent) !important;
+  color: inherit !important;
+}
+
+.qn-note-canvas::-moz-selection,
+.qn-note-canvas *::-moz-selection {
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 30%, transparent) !important;
+  color: inherit !important;
 }
 
 .qn-note-canvas .qn-checkbox-circle,
 .qn-note-canvas [contenteditable="false"] {
   user-select: none !important;
   -webkit-user-select: none !important;
+  cursor: pointer;
 }
 
 .qn-note-canvas p {
@@ -214,7 +230,8 @@ body:has(.quick-notes-theme) {
 .qn-note-canvas font[size="6"] { font-size: 28px; }
 .qn-note-canvas font[size="7"] { font-size: 32px; }
 
-.qn-note-canvas:empty:before {
+.qn-note-canvas:empty:before,
+.qn-note-canvas[data-empty="true"]:before {
   content: attr(data-placeholder);
   color: var(--color-base-content, #888888);
   opacity: 0.35;

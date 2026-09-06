@@ -153,7 +153,15 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const [charCount, setCharCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [viewportState, setViewportState] = useState<{ height: number; offsetTop: number } | null>(() => {
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      return {
+        height: window.visualViewport.height,
+        offsetTop: window.visualViewport.offsetTop,
+      };
+    }
+    return null;
+  });
   const [activeMobileMenu, setActiveMobileMenu] = useState<'format' | 'palette' | 'lists' | 'more' | null>(null);
   const [currentFontSize, setCurrentFontSize] = useState<string>(() => {
     if (note?.id) {
@@ -181,7 +189,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   useEffect(() => {
     if (!note || !editorRef.current) return;
     if (lastLoadedNoteIdRef.current !== note.id) {
-      editorRef.current.innerHTML = note.content || '';
+      const initialHtml = note.content && note.content.trim() ? note.content : '<p><br></p>';
+      editorRef.current.innerHTML = initialHtml;
+      const isBlank = !note.content || !note.content.trim() || initialHtml === '<p><br></p>';
+      editorRef.current.setAttribute('data-empty', String(isBlank));
       lastLoadedNoteIdRef.current = note.id;
       const initialSize =
         (note.id ? localStorage.getItem(`quick_notes_font_size_${note.id}`) : null) ||
@@ -204,31 +215,33 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         editorRef.current.contains(sel.anchorNode)
       ) {
         savedRangeRef.current = sel.getRangeAt(0).cloneRange();
-        let curr: Node | null = sel.anchorNode;
-        if (curr && !(curr instanceof HTMLElement)) {
-          curr = curr.parentElement;
-        }
-        let foundSize: string | null = null;
-        while (curr && curr !== editorRef.current && curr instanceof HTMLElement) {
-          if (curr.style.fontSize) {
-            foundSize = curr.style.fontSize;
-            break;
+        if (sel.isCollapsed) {
+          let curr: Node | null = sel.anchorNode;
+          if (curr && !(curr instanceof HTMLElement)) {
+            curr = curr.parentElement;
           }
-          if (curr.tagName === 'FONT' && curr.getAttribute('size')) {
-            const sz = curr.getAttribute('size');
-            const match = FONT_SIZES.find((f) => f.cmdVal === sz);
-            if (match) {
-              foundSize = match.size;
+          let foundSize: string | null = null;
+          while (curr && curr !== editorRef.current && curr instanceof HTMLElement) {
+            if (curr.style.fontSize) {
+              foundSize = curr.style.fontSize;
               break;
             }
+            if (curr.tagName === 'FONT' && curr.getAttribute('size')) {
+              const sz = curr.getAttribute('size');
+              const match = FONT_SIZES.find((f) => f.cmdVal === sz);
+              if (match) {
+                foundSize = match.size;
+                break;
+              }
+            }
+            curr = curr.parentElement;
           }
-          curr = curr.parentElement;
-        }
-        if (!foundSize && editorRef.current) {
-          foundSize = editorRef.current.style.fontSize || '16px';
-        }
-        if (foundSize) {
-          setCurrentFontSize(foundSize);
+          if (!foundSize && editorRef.current) {
+            foundSize = editorRef.current.style.fontSize || '16px';
+          }
+          if (foundSize) {
+            setCurrentFontSize((prev) => (prev !== foundSize ? foundSize : prev));
+          }
         }
       }
     };
@@ -239,10 +252,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   }, []);
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
+    const vv = window.visualViewport;
     const handleViewportChange = () => {
-      if (window.visualViewport) {
-        setViewportHeight(window.visualViewport.height);
-      }
+      setViewportState({
+        height: vv.height,
+        offsetTop: vv.offsetTop,
+      });
       if (editorRef.current && document.activeElement === editorRef.current) {
         const sel = window.getSelection();
         if (sel && sel.rangeCount > 0) {
@@ -250,7 +265,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           const rect = range.getBoundingClientRect();
           if (rect && canvasContainerRef.current) {
             const containerRect = canvasContainerRef.current.getBoundingClientRect();
-            if (rect.bottom > containerRect.bottom - 40) {
+            if (rect.bottom > containerRect.bottom - 44) {
               canvasContainerRef.current.scrollTop += rect.bottom - containerRect.bottom + 60;
             }
           }
@@ -258,16 +273,18 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       }
     };
     handleViewportChange();
-    window.visualViewport.addEventListener('resize', handleViewportChange);
-    window.visualViewport.addEventListener('scroll', handleViewportChange);
+    vv.addEventListener('resize', handleViewportChange);
+    vv.addEventListener('scroll', handleViewportChange);
     return () => {
-      window.visualViewport?.removeEventListener('resize', handleViewportChange);
-      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+      vv.removeEventListener('resize', handleViewportChange);
+      vv.removeEventListener('scroll', handleViewportChange);
     };
   }, []);
   const handleContentChange = () => {
     if (!editorRef.current || !note) return;
     const html = editorRef.current.innerHTML;
+    const isBlank = !html || html === '<p><br></p>' || html === '<br>' || html === '<div><br></div>';
+    editorRef.current.setAttribute('data-empty', String(isBlank));
     calculateStats((note.title || '') + ' ' + html);
     const contentTags = extractHashtags((note.title || '') + ' ' + html);
     const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
@@ -929,10 +946,21 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   return (
     <div
       className="flex-1 flex flex-col h-full bg-base-100/90 overflow-hidden relative qn-paper min-h-0"
-      style={{
-        height: viewportHeight && isMobileScreen ? `${viewportHeight - 48}px` : '100%',
-        maxHeight: viewportHeight && isMobileScreen ? `${viewportHeight - 48}px` : '100%',
-      }}
+      style={
+        isMobileScreen && viewportState
+          ? {
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              top: `${viewportState.offsetTop}px`,
+              height: `${viewportState.height}px`,
+              zIndex: 40,
+            }
+          : {
+              height: '100%',
+              maxHeight: '100%',
+            }
+      }
     >
       <div className="sticky top-0 bg-base-100/95 backdrop-blur-md border-b border-base-300/70 flex items-center justify-between gap-1 z-40 select-none min-h-[48px] px-2 sm:px-3 flex-shrink-0 overflow-visible">
         <div className="flex items-center gap-1 min-w-0 flex-1">
@@ -1538,14 +1566,25 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           if (activeMobileMenu) {
             setActiveMobileMenu(null);
           }
-          if (e.target === canvasContainerRef.current) {
-            const sel = window.getSelection();
-            if (editorRef.current && !isTrash && (!sel || sel.isCollapsed)) {
+          const target = e.target as HTMLElement;
+          if (
+            target === canvasContainerRef.current ||
+            target.classList.contains('qn-canvas-inner')
+          ) {
+            if (editorRef.current && !isTrash) {
               editorRef.current.focus();
+              const sel = window.getSelection();
+              if (sel && (sel.rangeCount === 0 || !editorRef.current.contains(sel.anchorNode))) {
+                const range = document.createRange();
+                range.selectNodeContents(editorRef.current);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
             }
           }
         }}
-        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 pb-24 sm:pb-20 flex flex-col w-full min-h-0 cursor-text overscroll-contain"
+        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 pb-6 sm:pb-12 flex flex-col w-full min-h-0 cursor-text overscroll-contain"
       >
         <div className="qn-canvas-inner max-w-4xl mx-auto w-full flex-1 flex flex-col min-h-full">
           <div className="flex items-center justify-between text-xs text-base-content/40 mb-3 sm:mb-4 select-none border-b border-base-200/60 pb-2 flex-shrink-0 gap-2">
@@ -1650,7 +1689,6 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             onKeyDown={handleKeyDown}
             onKeyUp={saveSelection}
             onMouseUp={saveSelection}
-            style={{ fontSize: currentFontSize }}
             className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 leading-relaxed cursor-text min-h-[160px] sm:min-h-[300px] select-text"
             data-placeholder="Start typing or tap the checklist button below..."
           />
@@ -1663,7 +1701,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         />
       )}
       {!isTrash && (
-        <div className="md:hidden sticky bottom-0 z-40 px-2 py-1.5 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between select-none flex-shrink-0 w-full gap-1">
+        <div className="md:hidden border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between select-none flex-shrink-0 w-full px-2 py-1 gap-1 min-h-[44px] z-40">
           <button
             type="button"
             onClick={handleUndo}
@@ -2024,7 +2062,17 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               type="button"
               onClick={() => {
                 setActiveMobileMenu(null);
-                onBackMobile();
+                const isKeypadOpen =
+                  (typeof window !== 'undefined' &&
+                    viewportState &&
+                    window.innerHeight - viewportState.height > 100) ||
+                  document.activeElement === editorRef.current ||
+                  (editorRef.current && editorRef.current.contains(document.activeElement));
+                if (isKeypadOpen) {
+                  (document.activeElement as HTMLElement)?.blur();
+                } else {
+                  onBackMobile();
+                }
               }}
               className="btn btn-primary btn-xs px-3 rounded-xl font-semibold min-h-[30px]"
             >
