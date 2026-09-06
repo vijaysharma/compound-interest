@@ -103,7 +103,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   return (
     <aside
       className={`flex flex-col h-full select-none transition-all duration-200 z-20 ${
-        isMobileScreen ? 'w-full' : 'w-64 sm:w-60 md:w-64 flex-shrink-0'
+        isMobileScreen ? 'w-full' : 'w-64 sm:w-60 md:w-64 md:px-3 flex-shrink-0'
       }`}
       aria-label="Notes Folders Sidebar"
     >

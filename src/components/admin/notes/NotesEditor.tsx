@@ -1056,344 +1056,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </div>
           )}
         </div>
-        {!isTrash && (
-          <div className="hidden md:flex items-center gap-0.5 flex-wrap">
-            <button
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleUndo}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Undo (Cmd+Z)"
-            >
-              <BsArrowCounterclockwise className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleRedo}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Redo (Cmd+Shift+Z / Ctrl+Y)"
-            >
-              <BsArrowClockwise className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px h-4 bg-base-300 mx-0.5" />
-            <div className="dropdown dropdown-bottom relative">
-              <div
-                tabIndex={0}
-                role="button"
-                className="btn btn-ghost btn-xs text-xs font-semibold px-2"
-                title="Heading style"
-              >
-                Format
-              </div>
-              <ul
-                tabIndex={0}
-                className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
-              >
-                <li>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      execCmd('formatBlock', '<h1>');
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className="font-bold"
-                  >
-                    Title (H1)
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      execCmd('formatBlock', '<h2>');
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className="font-semibold"
-                  >
-                    Heading (H2)
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      execCmd('formatBlock', '<h3>');
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className="font-medium"
-                  >
-                    Subheading (H3)
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      execCmd('formatBlock', '<p>');
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                  >
-                    Body Text
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      execCmd('formatBlock', '<pre>');
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className="font-mono"
-                  >
-                    Monospaced
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <div className="dropdown dropdown-bottom relative">
-              <div
-                tabIndex={0}
-                role="button"
-                className="btn btn-ghost btn-xs text-xs font-semibold px-2 flex items-center gap-1"
-                title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
-              >
-                <span>{FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Size'}</span>
-                <span className="text-[9px] opacity-60">▼</span>
-              </div>
-              <ul
-                tabIndex={0}
-                className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
-              >
-                {FONT_SIZES.map((fs) => {
-                  const isActive = currentFontSize === fs.size;
-                  return (
-                    <li key={fs.size}>
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          applyFontSize(fs.size, fs.cmdVal);
-                          (document.activeElement as HTMLElement)?.blur();
-                        }}
-                        className={`flex items-center justify-between py-1 px-2 ${isActive ? 'active font-bold bg-primary/10 text-primary' : ''}`}
-                        style={{ fontSize: fs.size }}
-                      >
-                        <span>{fs.label}</span>
-                        {isActive && <span className="text-xs text-primary font-bold">✓</span>}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-            <div className="dropdown dropdown-bottom relative">
-              <div
-                tabIndex={0}
-                role="button"
-                className="btn btn-ghost btn-xs btn-square text-primary"
-                title="Color & Highlight"
-              >
-                <BsPalette className="w-3.5 h-3.5" />
-              </div>
-              <div
-                tabIndex={0}
-                className="dropdown-content z-50 p-2.5 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200 mt-1"
-              >
-                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5">Text Color</div>
-                <div className="grid grid-cols-5 gap-1.5 mb-2.5">
-                  {TEXT_COLORS.map((c) => (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        applyTextColor(c.value);
-                        (document.activeElement as HTMLElement)?.blur();
-                      }}
-                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
-                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
-                      title={c.label}
-                    />
-                  ))}
-                </div>
-                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5 border-t border-base-200 pt-1.5">Highlight Color</div>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {HIGHLIGHT_COLORS.map((c) => (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        applyHighlightColor(c.value);
-                        (document.activeElement as HTMLElement)?.blur();
-                      }}
-                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
-                      style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
-                      title={c.label}
-                    >
-                      {c.value === 'transparent' ? '✕' : ''}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="w-px h-4 bg-base-300 mx-0.5" />
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={insertChecklistItem}
-              className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
-              title="Add Checklist Item (Cmd+Shift+L)"
-            >
-              <BsCardChecklist className="w-4 h-4" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('bold')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Bold (Cmd+B)"
-            >
-              <FiBold className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('italic')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Italic (Cmd+I)"
-            >
-              <FiItalic className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('underline')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Underline (Cmd+U)"
-            >
-              <FiUnderline className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('strikeThrough')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Strikethrough"
-            >
-              <BsTypeStrikethrough className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={applyHighlighter}
-              className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
-              title="Highlighter"
-            >
-              <BsHighlighter className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px h-4 bg-base-300 mx-0.5" />
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('insertUnorderedList')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Bulleted List"
-            >
-              <BsListUl className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('insertOrderedList')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Numbered List"
-            >
-              <BsListOl className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleOutdent}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Decrease Indent (Shift+Tab)"
-            >
-              <BsTextIndentLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleIndent}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Increase Indent (Tab)"
-            >
-              <BsTextIndentRight className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={insertTable}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Insert Table"
-            >
-              <BsTable className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('formatBlock', '<blockquote>')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Quote"
-            >
-              <BsQuote className="w-4 h-4" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => execCmd('formatBlock', '<pre>')}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Code Block"
-            >
-              <FiCode className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={insertLink}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Insert Link"
-            >
-              <FiLink className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px h-4 bg-base-300 mx-0.5" />
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleSelectAll}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Select All Content"
-            >
-              <BsCheck2All className="w-4 h-4" />
-            </button>
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleCopySelection}
-              className="btn btn-ghost btn-xs btn-square"
-              title="Copy Selected Text"
-            >
-              {copySuccess ? (
-                <FiCheck className="w-3.5 h-3.5 text-success" />
-              ) : (
-                <FiCopy className="w-3.5 h-3.5" />
-              )}
-            </button>
-          </div>
-        )}
         <div className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
-          {onOpenSecurityModal && (
-            <button
-              onClick={onOpenSecurityModal}
-              className="hidden md:inline-flex items-center gap-1 text-[11px] font-semibold text-success bg-success/10 hover:bg-success/20 border border-success/25 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
-              title="End-to-End Encrypted (AES-256-GCM): Click for details"
-            >
-              <FiShield className="w-3 h-3 flex-shrink-0" />
-              <span>E2E Encrypted</span>
-            </button>
-          )}
-          <span className="text-[11px] font-medium text-base-content/40 hidden md:inline mr-1">
-            {isSaving ? 'Saving...' : 'Saved'}
-          </span>
           {!isTrash && (
             <>
               <button
@@ -1544,6 +1207,330 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           )}
         </div>
       </div>
+      {!isTrash && (
+        <div className="hidden md:flex items-center gap-0.5 px-3 py-1 bg-base-100/90 border-b border-base-200/80 z-30 select-none flex-shrink-0 flex-wrap overflow-visible">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleUndo}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Undo (Cmd+Z)"
+          >
+            <BsArrowCounterclockwise className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleRedo}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Redo (Cmd+Shift+Z / Ctrl+Y)"
+          >
+            <BsArrowClockwise className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px h-4 bg-base-300 mx-0.5" />
+          <div className="dropdown dropdown-bottom relative">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-xs text-xs font-semibold px-2"
+              title="Heading style"
+            >
+              Format
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
+            >
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<h1>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-bold"
+                >
+                  Title (H1)
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<h2>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-semibold"
+                >
+                  Heading (H2)
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<h3>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-medium"
+                >
+                  Subheading (H3)
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<p>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                >
+                  Body Text
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<pre>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="font-mono"
+                >
+                  Monospaced
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div className="dropdown dropdown-bottom relative">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-xs text-xs font-semibold px-2 flex items-center gap-1"
+              title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
+            >
+              <span>{FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Size'}</span>
+              <span className="text-[9px] opacity-60">▼</span>
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
+            >
+              {FONT_SIZES.map((fs) => {
+                const isActive = currentFontSize === fs.size;
+                return (
+                  <li key={fs.size}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        applyFontSize(fs.size, fs.cmdVal);
+                        (document.activeElement as HTMLElement)?.blur();
+                      }}
+                      className={`flex items-center justify-between py-1 px-2 ${isActive ? 'active font-bold bg-primary/10 text-primary' : ''}`}
+                      style={{ fontSize: fs.size }}
+                    >
+                      <span>{fs.label}</span>
+                      {isActive && <span className="text-xs text-primary font-bold">✓</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className="dropdown dropdown-bottom relative">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-xs btn-square text-primary"
+              title="Color & Highlight"
+            >
+              <BsPalette className="w-3.5 h-3.5" />
+            </div>
+            <div
+              tabIndex={0}
+              className="dropdown-content z-50 p-2.5 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200 mt-1"
+            >
+              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5">Text Color</div>
+              <div className="grid grid-cols-5 gap-1.5 mb-2.5">
+                {TEXT_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      applyTextColor(c.value);
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
+                    style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
+                    title={c.label}
+                  />
+                ))}
+              </div>
+              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5 border-t border-base-200 pt-1.5">Highlight Color</div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {HIGHLIGHT_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      applyHighlightColor(c.value);
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
+                    style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
+                    title={c.label}
+                  >
+                    {c.value === 'transparent' ? '✕' : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="w-px h-4 bg-base-300 mx-0.5" />
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={insertChecklistItem}
+            className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
+            title="Add Checklist Item (Cmd+Shift+L)"
+          >
+            <BsCardChecklist className="w-4 h-4" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('bold')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Bold (Cmd+B)"
+          >
+            <FiBold className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('italic')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Italic (Cmd+I)"
+          >
+            <FiItalic className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('underline')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Underline (Cmd+U)"
+          >
+            <FiUnderline className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('strikeThrough')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Strikethrough"
+          >
+            <BsTypeStrikethrough className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={applyHighlighter}
+            className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
+            title="Highlighter"
+          >
+            <BsHighlighter className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px h-4 bg-base-300 mx-0.5" />
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('insertUnorderedList')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Bulleted List"
+          >
+            <BsListUl className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('insertOrderedList')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Numbered List"
+          >
+            <BsListOl className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleOutdent}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Decrease Indent (Shift+Tab)"
+          >
+            <BsTextIndentLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleIndent}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Increase Indent (Tab)"
+          >
+            <BsTextIndentRight className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={insertTable}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Insert Table"
+          >
+            <BsTable className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('formatBlock', '<blockquote>')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Quote"
+          >
+            <BsQuote className="w-4 h-4" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => execCmd('formatBlock', '<pre>')}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Code Block"
+          >
+            <FiCode className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={insertLink}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Insert Link"
+          >
+            <FiLink className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px h-4 bg-base-300 mx-0.5" />
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleSelectAll}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Select All Content"
+          >
+            <BsCheck2All className="w-4 h-4" />
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleCopySelection}
+            className="btn btn-ghost btn-xs btn-square"
+            title="Copy Selected Text"
+          >
+            {copySuccess ? (
+              <FiCheck className="w-3.5 h-3.5 text-success" />
+            ) : (
+              <FiCopy className="w-3.5 h-3.5" />
+            )}
+          </button>
+        </div>
+      )}
       {isTrash && (
         <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 flex items-center justify-between text-xs">
           <span className="text-primary font-medium">

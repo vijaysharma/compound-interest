@@ -295,7 +295,7 @@ export const NotesList: React.FC<NotesListProps> = ({
   return (
     <div
       className={`flex flex-col h-full bg-base-100/60 select-none overflow-hidden ${
-        isMobileScreen ? 'w-full' : 'w-full md:w-80 lg:w-88 flex-shrink-0'
+        isMobileScreen ? 'w-full' : 'w-full md:w-80 lg:w-88 md:px-3 md:py-2 flex-shrink-0'
       }`}
       aria-label="Notes List Column"
     >
@@ -409,7 +409,7 @@ export const NotesList: React.FC<NotesListProps> = ({
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto qn-scrollbar space-y-1">
+      <div className="flex-1 overflow-y-auto qn-scrollbar space-y-1 md:space-y-2.5">
         {filteredNotes.length === 0 ? (
           <div className="h-48 flex flex-col items-center justify-center text-center p-4 text-base-content/40 space-y-2">
             <FiEdit3 className="w-8 h-8 opacity-30" />

@@ -763,7 +763,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         </div>
       )}
       <div
-        className={`h-full ${
+        className={`h-full md:border-r md:border-base-300/80 ${
           effectiveMobileScreen === 'folders'
             ? 'flex flex-1 w-full md:flex-none'
             : isSidebarOpen
@@ -798,7 +798,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         />
       </div>
       <div
-        className={`h-full ${
+        className={`h-full md:border-r md:border-base-300/80 ${
           effectiveMobileScreen === 'list'
             ? 'flex flex-1 w-full md:w-80 lg:w-88 md:flex-initial'
             : 'hidden md:flex'
