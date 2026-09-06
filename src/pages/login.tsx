@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiCheckCircle } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
@@ -24,12 +24,18 @@ const Login = () => {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const getTargetRoute = useCallback(() => {
+    const from = (location.state as { from?: { pathname?: string } })?.from?.pathname;
+    const saved = localStorage.getItem('last_visited_route');
+    if (from && from !== '/login' && from !== '/upgrade') return from;
+    if (saved && saved !== '/login' && saved !== '/upgrade') return saved;
+    return '/';
+  }, [location.state]);
   useEffect(() => {
     if (isAuthenticated) {
-      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      navigate(getTargetRoute(), { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, navigate, getTargetRoute]);
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     const cleanEmail = loginEmail.trim();
@@ -45,7 +51,7 @@ const Login = () => {
     setError(null);
     try {
       await loginWithPassword({ email: cleanEmail, password: loginPassword });
-      navigate('/', { replace: true });
+      navigate(getTargetRoute(), { replace: true });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Sign in failed. Please check your credentials.'
@@ -77,7 +83,7 @@ const Login = () => {
         name: googleProfile.name,
         credential: googleProfile.credential,
       });
-      navigate('/', { replace: true });
+      navigate(getTargetRoute(), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
@@ -221,7 +227,7 @@ const Login = () => {
                       setError(null);
                     }}
                     onSuccess={() => {
-                      navigate('/', { replace: true });
+                      navigate(getTargetRoute(), { replace: true });
                     }}
                   />
                 </div>

@@ -227,6 +227,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
+    try {
+      localStorage.removeItem('last_visited_route');
+      sessionStorage.setItem('stay_on_home', 'true');
+    } catch {
+      // ignore
+    }
     setToken(null);
     setUser(null);
     setShowPaywall(false);

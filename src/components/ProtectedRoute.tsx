@@ -44,7 +44,19 @@ const ProtectedRoute = ({
             </p>
             <GoogleSignInButton className="w-full" />
             <div className="mt-6 border-t border-base-200 pt-4">
-              <Link to="/" className="text-xs text-primary hover:underline">
+              <Link
+                to="/"
+                state={{ stayOnHome: true }}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('stay_on_home', 'true');
+                    localStorage.setItem('last_visited_route', '/');
+                  } catch {
+                    // ignore
+                  }
+                }}
+                className="text-xs text-primary hover:underline"
+              >
                 &larr; Back to Home
               </Link>
             </div>
@@ -67,7 +79,19 @@ const ProtectedRoute = ({
             <p className="mb-6 text-xs opacity-60">
               This administration portal is restricted to accounts with administrator privileges.
             </p>
-            <Link to="/" className="btn btn-primary btn-sm">
+            <Link
+              to="/"
+              state={{ stayOnHome: true }}
+              onClick={() => {
+                try {
+                  sessionStorage.setItem('stay_on_home', 'true');
+                  localStorage.setItem('last_visited_route', '/');
+                } catch {
+                  // ignore
+                }
+              }}
+              className="btn btn-primary btn-sm"
+            >
               Return to Dashboard
             </Link>
           </div>
@@ -89,7 +113,19 @@ const ProtectedRoute = ({
           </p>
           <GoogleSignInButton className="w-full" />
           <div className="mt-6 border-t border-base-200 pt-4">
-            <Link to="/" className="text-xs text-primary hover:underline">
+            <Link
+              to="/"
+              state={{ stayOnHome: true }}
+              onClick={() => {
+                try {
+                  sessionStorage.setItem('stay_on_home', 'true');
+                  localStorage.setItem('last_visited_route', '/');
+                } catch {
+                  // ignore
+                }
+              }}
+              className="text-xs text-primary hover:underline"
+            >
               &larr; Back to Home
             </Link>
           </div>
@@ -127,7 +163,19 @@ const ProtectedRoute = ({
                 <FiZap className="h-4 w-4" />
                 <span>Unlock Pro for ₹54 / Month &rarr;</span>
               </Link>
-              <Link to="/" className="btn btn-ghost btn-xs w-full opacity-80">
+              <Link
+                to="/"
+                state={{ stayOnHome: true }}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('stay_on_home', 'true');
+                    localStorage.setItem('last_visited_route', '/');
+                  } catch {
+                    // ignore
+                  }
+                }}
+                className="btn btn-ghost btn-xs w-full opacity-80"
+              >
                 &larr; Return to Dashboard
               </Link>
             </div>

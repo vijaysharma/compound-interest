@@ -114,7 +114,9 @@ const PaywallModal = () => {
             await refreshUser();
             setTimeout(() => {
               setShowPaywall(false);
-              navigate('/', { replace: true });
+              const saved = localStorage.getItem('last_visited_route');
+              const target = saved && saved !== '/login' && saved !== '/upgrade' ? saved : '/';
+              navigate(target, { replace: true });
             }, 1200);
           } catch (err) {
             setMessage({

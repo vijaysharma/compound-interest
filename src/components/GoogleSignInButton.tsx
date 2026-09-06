@@ -191,7 +191,9 @@ const GoogleSignInButton = ({
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate('/', { replace: true });
+        const saved = localStorage.getItem('last_visited_route');
+        const target = saved && saved !== '/login' && saved !== '/upgrade' ? saved : '/';
+        navigate(target, { replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');

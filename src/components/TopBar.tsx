@@ -27,6 +27,8 @@ const getNavTitle = (pathname: string) => {
     '/admin/wood-calculator': 'Wood Calculator',
     '/admin/quick-notes': 'Quick Notes',
     '/utilities/quick-notes': 'Quick Notes',
+    '/admin/notes': 'Quick Notes',
+    '/notes': 'Quick Notes',
     '/about': 'About',
     '/privacy': 'Privacy Policy',
     '/disclaimer': 'Disclaimer',
@@ -66,8 +68,14 @@ const TopBar = ({ className }: { className?: string }) => {
   const { user, isAuthenticated, isAdmin, logout, setShowPaywall } = useAuth();
   const navTitle = getNavTitle(pathname);
   const handleLogout = async () => {
+    try {
+      localStorage.removeItem('last_visited_route');
+      sessionStorage.setItem('stay_on_home', 'true');
+    } catch {
+      // ignore
+    }
     await logout();
-    navigate('/', { replace: true });
+    navigate('/', { replace: true, state: { stayOnHome: true } });
   };
   return (
     <>
@@ -85,7 +93,19 @@ const TopBar = ({ className }: { className?: string }) => {
           >
             <FiMenu className="h-5 w-5" aria-hidden="true" />
           </button>
-          <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <Link
+            to="/"
+            state={{ stayOnHome: true }}
+            onClick={() => {
+              try {
+                sessionStorage.setItem('stay_on_home', 'true');
+                localStorage.setItem('last_visited_route', '/');
+              } catch {
+                // ignore
+              }
+            }}
+            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+          >
             <Logo /> <span className="truncate">{navTitle}</span>
           </Link>
         </div>

@@ -70,6 +70,14 @@ const router = createBrowserRouter([
         path: 'admin/quick-notes',
         lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), false, false, true),
       },
+      {
+        path: 'admin/notes',
+        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), false, false, true),
+      },
+      {
+        path: 'notes',
+        lazy: protectedRoute(() => import('./pages/quickNotesPage.tsx'), false, false, true),
+      },
       // ── Trust & Info Pages (E-E-A-T) ──────────────────────────────
       {
         path: 'about',
