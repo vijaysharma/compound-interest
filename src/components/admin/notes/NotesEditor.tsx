@@ -189,7 +189,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const lastLoadedNoteIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!note || !editorRef.current) return;
-    if (lastLoadedNoteIdRef.current !== note.id) {
+    const isEditorEmpty =
+      !editorRef.current.innerHTML ||
+      editorRef.current.innerHTML === '<p><br></p>' ||
+      editorRef.current.innerHTML === '<br>' ||
+      editorRef.current.getAttribute('data-empty') === 'true';
+    if (lastLoadedNoteIdRef.current !== note.id || (isEditorEmpty && note.content && note.content.trim())) {
       const rawHtml = note.content && note.content.trim() ? note.content : '<p><br></p>';
       const initialHtml = sanitizeNoteHtml(rawHtml);
       editorRef.current.innerHTML = initialHtml;

@@ -105,6 +105,9 @@ async function deleteFromVercelBlob(urls: (string | null | undefined)[]): Promis
 }
 function sanitizeServerContent(raw: unknown): string {
   if (typeof raw !== 'string') return '';
+  if (raw.startsWith('e2e:v1:')) {
+    return raw.length > 10_000_000 ? raw.slice(0, 10_000_000) : raw;
+  }
   const content = raw.length > 5_000_000 ? raw.slice(0, 5_000_000) : raw;
   return content
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -113,6 +116,17 @@ function sanitizeServerContent(raw: unknown): string {
     .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
     .replace(/\bon\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
     .replace(/href\s*=\s*['"]?(?:javascript|data|vbscript):[^'">\s]*/gi, 'href="#"');
+}
+function sanitizeServerTitle(input: unknown): string {
+  if (typeof input !== 'string') return '';
+  if (input.startsWith('e2e:v1:')) {
+    return input.slice(0, 4000);
+  }
+  return input
+    .replace(/\0/g, '')
+    .replace(/<[^>]*>/g, '')
+    .trim()
+    .slice(0, 250);
 }
 function sanitizeServerPlain(input: unknown, maxLen = 250): string {
   if (typeof input !== 'string') return '';
@@ -315,7 +329,7 @@ export default async function handler(request: Request): Promise<Response> {
         let count = 0;
         for (const n of backupNotes) {
           const id = sanitizeServerId(n.id);
-          const title = sanitizeServerPlain(n.title, 250);
+          const title = sanitizeServerTitle(n.title);
           const content = sanitizeServerContent(n.content);
           const folder = sanitizeServerPlain(n.folder, 100) || 'Notes';
           const isPinned = Boolean(n.is_pinned);
@@ -358,7 +372,7 @@ export default async function handler(request: Request): Promise<Response> {
         tags?: string[];
       };
       const id = sanitizeServerId(body.id);
-      const title = sanitizeServerPlain(body.title, 250);
+      const title = sanitizeServerTitle(body.title);
       const content = sanitizeServerContent(body.content);
       const folder = sanitizeServerPlain(body.folder, 100) || 'Notes';
       const isPinned = Boolean(body.is_pinned);
@@ -422,7 +436,7 @@ export default async function handler(request: Request): Promise<Response> {
         : await sql`SELECT id FROM admin_notes WHERE id = ${noteId} AND user_id = ${user.id} LIMIT 1`) as NoteRow[];
       if (existing.length === 0) {
         // Upsert if not found
-        const title = sanitizeServerPlain(body.title, 250);
+        const title = sanitizeServerTitle(body.title);
         const content = sanitizeServerContent(body.content);
         const folder = sanitizeServerPlain(body.folder, 100) || 'Notes';
         const isPinned = Boolean(body.is_pinned);
@@ -451,7 +465,7 @@ export default async function handler(request: Request): Promise<Response> {
       const hasLockHash = body.lock_password_hash !== undefined;
       const hasTrashed = body.is_trashed !== undefined;
       const hasTags = body.tags !== undefined;
-      const titleVal = hasTitle ? sanitizeServerPlain(body.title, 250) : null;
+      const titleVal = hasTitle ? sanitizeServerTitle(body.title) : null;
       const contentVal = hasContent ? sanitizeServerContent(body.content) : null;
       const folderVal = hasFolder ? (sanitizeServerPlain(body.folder, 100) || 'Notes') : null;
       const isPinnedVal = hasPinned ? body.is_pinned : null;

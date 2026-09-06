@@ -1,8 +1,9 @@
 const ALLOWED_TAGS = new Set([
-  'A', 'B', 'BLOCKQUOTE', 'BR', 'CODE', 'DEL', 'DIV', 'EM', 'FONT', 'H1',
-  'H2', 'H3', 'H4', 'H5', 'H6', 'HR', 'I', 'IMG', 'INPUT', 'LI', 'MARK',
-  'OL', 'P', 'PRE', 'S', 'SPAN', 'STRIKE', 'STRONG', 'TABLE', 'TBODY',
-  'TD', 'TH', 'THEAD', 'TR', 'U', 'UL',
+  'A', 'B', 'BLOCKQUOTE', 'BODY', 'BR', 'CAPTION', 'CODE', 'COL', 'COLGROUP',
+  'DEL', 'DETAILS', 'DIV', 'EM', 'FONT', 'H1', 'H2', 'H3', 'H4', 'H5',
+  'H6', 'HR', 'I', 'IMG', 'INPUT', 'KBD', 'LI', 'MARK', 'OL', 'P',
+  'PRE', 'S', 'SAMP', 'SMALL', 'SPAN', 'STRIKE', 'STRONG', 'SUB', 'SUMMARY',
+  'SUP', 'TABLE', 'TBODY', 'TD', 'TFOOT', 'TH', 'THEAD', 'TR', 'U', 'UL', 'VAR',
 ]);
 const DISALLOWED_TAGS = new Set([
   'SCRIPT', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'FORM', 'BUTTON',
@@ -29,6 +30,13 @@ function cleanNode(node: Node): void {
   if (node.nodeType === Node.ELEMENT_NODE) {
     const el = node as HTMLElement;
     const tagName = el.tagName.toUpperCase();
+    if (tagName === 'BODY') {
+      const children = Array.from(el.childNodes);
+      for (const child of children) {
+        cleanNode(child);
+      }
+      return;
+    }
     if (DISALLOWED_TAGS.has(tagName)) {
       el.remove();
       return;
@@ -36,8 +44,10 @@ function cleanNode(node: Node): void {
     if (!ALLOWED_TAGS.has(tagName)) {
       const parent = el.parentNode;
       if (parent) {
-        while (el.firstChild) {
-          parent.insertBefore(el.firstChild, el);
+        const children = Array.from(el.childNodes);
+        for (const child of children) {
+          parent.insertBefore(child, el);
+          cleanNode(child);
         }
         parent.removeChild(el);
       } else {
@@ -112,7 +122,10 @@ export function sanitizeNoteHtml(html: string): string {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    cleanNode(doc.body);
+    const childNodes = Array.from(doc.body.childNodes);
+    for (const child of childNodes) {
+      cleanNode(child);
+    }
     return doc.body.innerHTML;
   } catch {
     return '';
