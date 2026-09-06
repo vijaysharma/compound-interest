@@ -462,16 +462,6 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                   <th>
                     <span className="inline-flex items-center gap-1.5">
                       <span>Est. Time</span>
-                      <button
-                        type="button"
-                        onClick={fetchRates}
-                        disabled={loading}
-                        className="badge badge-xs badge-info/20 text-info hover:badge-info hover:text-white cursor-pointer font-normal border border-info/30 gap-0.5 py-0 px-1.5 transition-all"
-                        title="Refresh Rates"
-                      >
-                        <FiRefreshCw className={`w-2.5 h-2.5 ${loading ? 'animate-spin' : ''}`} />
-                        refresh
-                      </button>
                     </span>
                   </th>
                   <th>Rate</th>
