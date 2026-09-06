@@ -164,6 +164,21 @@ body:has(.quick-notes-theme) {
   width: 100%;
   word-break: break-word;
   overflow-wrap: break-word;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -webkit-touch-callout: default !important;
+  touch-action: manipulation;
+}
+
+.qn-note-canvas * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.qn-note-canvas .qn-checkbox-circle,
+.qn-note-canvas [contenteditable="false"] {
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .qn-note-canvas p {

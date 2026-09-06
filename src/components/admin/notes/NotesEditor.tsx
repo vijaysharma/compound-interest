@@ -131,6 +131,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
@@ -142,6 +143,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [activeMobileMenu, setActiveMobileMenu] = useState<'format' | 'palette' | 'lists' | 'more' | null>(null);
   const calculateStats = useCallback((text: string) => {
     const clean = text.replace(/<[^>]+>/g, ' ').trim();
     const chars = clean.replace(/\s+/g, '').length;
@@ -158,6 +160,23 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     }
     calculateStats((note.title || '') + ' ' + (note.content || ''));
   }, [note?.id, calculateStats, note?.title, note]);
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const sel = window.getSelection();
+      if (
+        sel &&
+        sel.rangeCount > 0 &&
+        editorRef.current &&
+        editorRef.current.contains(sel.anchorNode)
+      ) {
+        savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+      }
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, []);
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
     const handleViewportChange = () => {
@@ -202,7 +221,6 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
     onUpdateNote({ title: newTitle, tags: combinedTags });
   };
-  const savedRangeRef = useRef<Range | null>(null);
   const saveSelection = useCallback(() => {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
@@ -230,14 +248,14 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   };
   const handleUndo = () => {
     if (!editorRef.current) return;
-    restoreSelection();
+    editorRef.current.focus();
     document.execCommand('undo', false);
     saveSelection();
     handleContentChange();
   };
   const handleRedo = () => {
     if (!editorRef.current) return;
-    restoreSelection();
+    editorRef.current.focus();
     document.execCommand('redo', false);
     saveSelection();
     handleContentChange();
@@ -337,6 +355,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     if (sel) {
       sel.removeAllRanges();
       sel.addRange(range);
+      savedRangeRef.current = range.cloneRange();
     }
   };
   const handleCopySelection = async () => {
@@ -471,6 +490,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     }
   };
   const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (activeMobileMenu) {
+      setActiveMobileMenu(null);
+    }
     const target = e.target as HTMLElement;
     const checkbox = target.closest('.qn-checkbox-circle');
     if (checkbox) {
@@ -1396,20 +1418,13 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       <div
         ref={canvasContainerRef}
         onClick={(e) => {
-          if (
-            e.target === canvasContainerRef.current ||
-            (e.target as HTMLElement).classList?.contains('qn-canvas-inner')
-          ) {
-            if (editorRef.current && !isTrash) {
+          if (activeMobileMenu) {
+            setActiveMobileMenu(null);
+          }
+          if (e.target === canvasContainerRef.current) {
+            const sel = window.getSelection();
+            if (editorRef.current && !isTrash && (!sel || sel.isCollapsed)) {
               editorRef.current.focus();
-              const sel = window.getSelection();
-              if (sel) {
-                const range = document.createRange();
-                range.selectNodeContents(editorRef.current);
-                range.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(range);
-              }
             }
           }
         }}
@@ -1518,16 +1533,21 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             onKeyDown={handleKeyDown}
             onKeyUp={saveSelection}
             onMouseUp={saveSelection}
-            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text min-h-[160px] sm:min-h-[300px]"
+            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text min-h-[160px] sm:min-h-[300px] select-text"
             data-placeholder="Start typing or tap the checklist button below..."
           />
         </div>
       </div>
+      {activeMobileMenu && (
+        <div
+          className="md:hidden fixed inset-0 z-30"
+          onClick={() => setActiveMobileMenu(null)}
+        />
+      )}
       {!isTrash && (
         <div className="md:hidden sticky bottom-0 z-40 px-2 py-1.5 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between select-none flex-shrink-0 w-full gap-1">
           <button
             type="button"
-            onMouseDown={(e) => e.preventDefault()}
             onClick={handleUndo}
             className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
             title="Undo"
@@ -1536,370 +1556,353 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           </button>
           <button
             type="button"
-            onMouseDown={(e) => e.preventDefault()}
             onClick={handleRedo}
             className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
             title="Redo"
           >
             <BsArrowClockwise className="w-4 h-4" />
           </button>
-          <div className="dropdown dropdown-top relative">
-            <div
-              tabIndex={0}
-              role="button"
-              onMouseDown={(e) => e.preventDefault()}
-              className="btn btn-ghost btn-xs font-bold text-xs min-h-[34px] min-w-[34px] px-1"
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setActiveMobileMenu(activeMobileMenu === 'format' ? null : 'format')}
+              className={`btn btn-ghost btn-xs font-bold text-xs min-h-[34px] min-w-[34px] px-1 ${activeMobileMenu === 'format' ? 'btn-active text-primary' : ''}`}
               title="Format & Font Size"
             >
               Aa
-            </div>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200 mb-2 bottom-full"
-            >
-              <li className="menu-title text-[10px] text-base-content/50 uppercase">Heading Style</li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<h1>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="font-bold"
-                >
-                  Title (H1)
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<h2>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="font-semibold"
-                >
-                  Heading (H2)
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<h3>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="font-medium"
-                >
-                  Subheading (H3)
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<p>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                >
-                  Body Text
-                </button>
-              </li>
-              <li className="menu-title text-[10px] text-base-content/50 uppercase border-t border-base-200 mt-1 pt-1">
-                Font Size
-              </li>
-              {FONT_SIZES.map((fs) => (
-                <li key={fs.size}>
+            </button>
+            {activeMobileMenu === 'format' && (
+              <ul className="absolute bottom-full mb-2 left-0 z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200">
+                <li className="menu-title text-[10px] text-base-content/50 uppercase">Heading Style</li>
+                <li>
                   <button
                     type="button"
-                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
-                      applyFontSize(fs.size, fs.cmdVal);
-                      (document.activeElement as HTMLElement)?.blur();
+                      execCmd('formatBlock', '<h1>');
+                      setActiveMobileMenu(null);
                     }}
-                    style={{ fontSize: fs.size }}
+                    className="font-bold"
                   >
-                    {fs.label}
+                    Title (H1)
                   </button>
                 </li>
-              ))}
-            </ul>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      execCmd('formatBlock', '<h2>');
+                      setActiveMobileMenu(null);
+                    }}
+                    className="font-semibold"
+                  >
+                    Heading (H2)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      execCmd('formatBlock', '<h3>');
+                      setActiveMobileMenu(null);
+                    }}
+                    className="font-medium"
+                  >
+                    Subheading (H3)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      execCmd('formatBlock', '<p>');
+                      setActiveMobileMenu(null);
+                    }}
+                  >
+                    Body Text
+                  </button>
+                </li>
+                <li className="menu-title text-[10px] text-base-content/50 uppercase border-t border-base-200 mt-1 pt-1">
+                  Font Size
+                </li>
+                {FONT_SIZES.map((fs) => (
+                  <li key={fs.size}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        applyFontSize(fs.size, fs.cmdVal);
+                        setActiveMobileMenu(null);
+                      }}
+                      style={{ fontSize: fs.size }}
+                    >
+                      {fs.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <div className="dropdown dropdown-top relative">
-            <div
-              tabIndex={0}
-              role="button"
-              onMouseDown={(e) => e.preventDefault()}
-              className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] text-primary"
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setActiveMobileMenu(activeMobileMenu === 'palette' ? null : 'palette')}
+              className={`btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] text-primary ${activeMobileMenu === 'palette' ? 'btn-active' : ''}`}
               title="Color & Style"
             >
               <BsPalette className="w-4 h-4" />
-            </div>
-            <div
-              tabIndex={0}
-              className="dropdown-content z-50 p-2 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200 mb-2 bottom-full"
-            >
-              <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-base-200">
-                <span className="text-[10px] font-bold text-base-content/50 uppercase">Styles</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => execCmd('bold')}
-                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
-                    title="Bold"
-                  >
-                    <FiBold className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => execCmd('italic')}
-                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
-                    title="Italic"
-                  >
-                    <FiItalic className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => execCmd('underline')}
-                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
-                    title="Underline"
-                  >
-                    <FiUnderline className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => execCmd('strikeThrough')}
-                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
-                    title="Strikethrough"
-                  >
-                    <BsTypeStrikethrough className="w-3.5 h-3.5" />
-                  </button>
+            </button>
+            {activeMobileMenu === 'palette' && (
+              <div className="absolute bottom-full mb-2 left-0 z-50 p-2 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200">
+                <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-base-200">
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase">Styles</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        execCmd('bold');
+                      }}
+                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      title="Bold"
+                    >
+                      <FiBold className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        execCmd('italic');
+                      }}
+                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      title="Italic"
+                    >
+                      <FiItalic className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        execCmd('underline');
+                      }}
+                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      title="Underline"
+                    >
+                      <FiUnderline className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        execCmd('strikeThrough');
+                      }}
+                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      title="Strikethrough"
+                    >
+                      <BsTypeStrikethrough className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1">Text Color</div>
+                <div className="grid grid-cols-5 gap-1.5 mb-2">
+                  {TEXT_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => {
+                        applyTextColor(c.value);
+                        setActiveMobileMenu(null);
+                      }}
+                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
+                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1 border-t border-base-200 pt-1">
+                  Highlight
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {HIGHLIGHT_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => {
+                        applyHighlightColor(c.value);
+                        setActiveMobileMenu(null);
+                      }}
+                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
+                      style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
+                      title={c.label}
+                    >
+                      {c.value === 'transparent' ? '✕' : ''}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1">Text Color</div>
-              <div className="grid grid-cols-5 gap-1.5 mb-2">
-                {TEXT_COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      applyTextColor(c.value);
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
-                    style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
-                    title={c.label}
-                  />
-                ))}
-              </div>
-              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1 border-t border-base-200 pt-1">
-                Highlight
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {HIGHLIGHT_COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      applyHighlightColor(c.value);
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
-                    style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
-                    title={c.label}
-                  >
-                    {c.value === 'transparent' ? '✕' : ''}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
           <button
             type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={insertChecklistItem}
+            onClick={() => {
+              setActiveMobileMenu(null);
+              insertChecklistItem();
+            }}
             className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] text-primary"
             title="Checklist"
           >
             <BsCardChecklist className="w-4 h-4" />
           </button>
-          <div className="dropdown dropdown-top relative">
-            <div
-              tabIndex={0}
-              role="button"
-              onMouseDown={(e) => e.preventDefault()}
-              className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setActiveMobileMenu(activeMobileMenu === 'lists' ? null : 'lists')}
+              className={`btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] ${activeMobileMenu === 'lists' ? 'btn-active text-primary' : ''}`}
               title="Lists & Indentation"
             >
               <BsListUl className="w-4 h-4" />
-            </div>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200 mb-2 bottom-full"
-            >
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('insertUnorderedList');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <BsListUl className="w-3.5 h-3.5" /> Bulleted List
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('insertOrderedList');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <BsListOl className="w-3.5 h-3.5" /> Numbered List
-                </button>
-              </li>
-              <li className="border-t border-base-200 mt-1 pt-1">
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    handleIndent();
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <BsTextIndentRight className="w-3.5 h-3.5" /> Indent
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    handleOutdent();
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <BsTextIndentLeft className="w-3.5 h-3.5" /> Outdent
-                </button>
-              </li>
-            </ul>
+            </button>
+            {activeMobileMenu === 'lists' && (
+              <ul className="absolute bottom-full mb-2 left-0 z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      execCmd('insertUnorderedList');
+                      setActiveMobileMenu(null);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <BsListUl className="w-3.5 h-3.5" /> Bulleted List
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      execCmd('insertOrderedList');
+                      setActiveMobileMenu(null);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <BsListOl className="w-3.5 h-3.5" /> Numbered List
+                  </button>
+                </li>
+                <li className="border-t border-base-200 mt-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleIndent();
+                      setActiveMobileMenu(null);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <BsTextIndentRight className="w-3.5 h-3.5" /> Indent
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleOutdent();
+                      setActiveMobileMenu(null);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <BsTextIndentLeft className="w-3.5 h-3.5" /> Outdent
+                  </button>
+                </li>
+              </ul>
+            )}
           </div>
-          <div className="dropdown dropdown-top dropdown-end relative">
-            <div
-              tabIndex={0}
-              role="button"
-              onMouseDown={(e) => e.preventDefault()}
-              className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setActiveMobileMenu(activeMobileMenu === 'more' ? null : 'more')}
+              className={`btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] ${activeMobileMenu === 'more' ? 'btn-active text-primary' : ''}`}
               title="More Tools"
             >
               <FiMoreHorizontal className="w-4 h-4" />
-            </div>
-            <ul
-              tabIndex={0}
-              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200 mb-2 bottom-full right-0"
-            >
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    insertTable();
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <BsTable className="w-3.5 h-3.5" /> Insert Table
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    insertLink();
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <FiLink className="w-3.5 h-3.5" /> Insert Link
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<blockquote>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <BsQuote className="w-3.5 h-3.5" /> Quote
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<pre>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <FiCode className="w-3.5 h-3.5" /> Code Block
-                </button>
-              </li>
-              <li className="border-t border-base-200 mt-1 pt-1">
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    handleSelectAll();
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <BsCheck2All className="w-3.5 h-3.5" /> Select All
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    void handleCopySelection();
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  {copySuccess ? <FiCheck className="w-3.5 h-3.5 text-success" /> : <FiCopy className="w-3.5 h-3.5" />}
-                  {copySuccess ? 'Copied!' : 'Copy'}
-                </button>
-              </li>
-            </ul>
+            </button>
+            {activeMobileMenu === 'more' && (
+              <ul className="absolute bottom-full mb-2 right-0 z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMobileMenu(null);
+                      insertTable();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <BsTable className="w-3.5 h-3.5" /> Insert Table
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMobileMenu(null);
+                      insertLink();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <FiLink className="w-3.5 h-3.5" /> Insert Link
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      execCmd('formatBlock', '<blockquote>');
+                      setActiveMobileMenu(null);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <BsQuote className="w-3.5 h-3.5" /> Quote
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      execCmd('formatBlock', '<pre>');
+                      setActiveMobileMenu(null);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <FiCode className="w-3.5 h-3.5" /> Code Block
+                  </button>
+                </li>
+                <li className="border-t border-base-200 mt-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMobileMenu(null);
+                      handleSelectAll();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <BsCheck2All className="w-3.5 h-3.5" /> Select All
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleCopySelection();
+                      setActiveMobileMenu(null);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    {copySuccess ? <FiCheck className="w-3.5 h-3.5 text-success" /> : <FiCopy className="w-3.5 h-3.5" />}
+                    {copySuccess ? 'Copied!' : 'Copy'}
+                  </button>
+                </li>
+              </ul>
+            )}
           </div>
           {onBackMobile && (
             <button
               type="button"
-              onClick={onBackMobile}
+              onClick={() => {
+                setActiveMobileMenu(null);
+                onBackMobile();
+              }}
               className="btn btn-primary btn-xs px-3 rounded-xl font-semibold min-h-[30px]"
             >
               Done
