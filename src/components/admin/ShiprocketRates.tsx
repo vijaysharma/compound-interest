@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiTruck, FiMapPin, FiStar, FiRefreshCw } from 'react-icons/fi';
+import { FiTruck, FiMapPin, FiStar } from 'react-icons/fi';
 interface CourierCompany {
   courier_company_id: number;
   courier_name: string;
