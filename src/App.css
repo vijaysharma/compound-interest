@@ -3,6 +3,20 @@
   padding: 0.5rem;
 }
 
+.container:has(.quick-notes-theme) {
+  height: calc(100dvh - 48px);
+  padding: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .container:has(.quick-notes-theme) {
+    height: calc(100dvh - 64px);
+    padding: 0 0.5rem;
+    overflow: hidden;
+  }
+}
+
 .calc-tabs .tab.calc-tab {
   /* width: calc(100dvw / 5); */
   max-width: 90px;

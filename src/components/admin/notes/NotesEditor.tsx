@@ -23,6 +23,7 @@ import {
   FiFolderPlus,
   FiEdit3,
   FiShield,
+  FiMoreHorizontal,
 } from 'react-icons/fi';
 import {
   BsPinFill,
@@ -39,6 +40,9 @@ import {
   BsTextIndentLeft,
   BsTextIndentRight,
   BsCheck2All,
+  BsArrowCounterclockwise,
+  BsArrowClockwise,
+  BsPalette,
 } from 'react-icons/bs';
 import { SiGoogledrive } from 'react-icons/si';
 import {
@@ -50,6 +54,34 @@ import {
   hashPasscode,
 } from './NotesTypes';
 import { MoveNoteModal } from './MoveNoteModal';
+const FONT_SIZES = [
+  { label: 'Small', size: '13px', cmdVal: '2' },
+  { label: 'Normal', size: '16px', cmdVal: '3' },
+  { label: 'Medium', size: '18px', cmdVal: '4' },
+  { label: 'Large', size: '22px', cmdVal: '5' },
+  { label: 'Huge', size: '28px', cmdVal: '6' },
+];
+const TEXT_COLORS = [
+  { label: 'Default', value: 'inherit' },
+  { label: 'Slate', value: '#475569' },
+  { label: 'Red', value: '#ef4444' },
+  { label: 'Orange', value: '#f97316' },
+  { label: 'Amber', value: '#d97706' },
+  { label: 'Green', value: '#16a34a' },
+  { label: 'Teal', value: '#0d9488' },
+  { label: 'Blue', value: '#2563eb' },
+  { label: 'Purple', value: '#9333ea' },
+  { label: 'Pink', value: '#db2777' },
+];
+const HIGHLIGHT_COLORS = [
+  { label: 'None', value: 'transparent' },
+  { label: 'Yellow', value: '#fef08a' },
+  { label: 'Green', value: '#bbf7d0' },
+  { label: 'Blue', value: '#bfdbfe' },
+  { label: 'Purple', value: '#e9d5ff' },
+  { label: 'Pink', value: '#fbcfe8' },
+  { label: 'Orange', value: '#fed7aa' },
+];
 interface NotesEditorProps {
   note: Note | null;
   folders: string[];
@@ -109,6 +141,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const [charCount, setCharCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const calculateStats = useCallback((text: string) => {
     const clean = text.replace(/<[^>]+>/g, ' ').trim();
     const chars = clean.replace(/\s+/g, '').length;
@@ -128,6 +161,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
     const handleViewportChange = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+      }
       if (editorRef.current && document.activeElement === editorRef.current) {
         const sel = window.getSelection();
         if (sel && sel.rangeCount > 0) {
@@ -142,6 +178,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         }
       }
     };
+    handleViewportChange();
     window.visualViewport.addEventListener('resize', handleViewportChange);
     window.visualViewport.addEventListener('scroll', handleViewportChange);
     return () => {
@@ -188,6 +225,66 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     if (!editorRef.current) return;
     restoreSelection();
     document.execCommand(cmd, false, value);
+    saveSelection();
+    handleContentChange();
+  };
+  const handleUndo = () => {
+    if (!editorRef.current) return;
+    restoreSelection();
+    document.execCommand('undo', false);
+    saveSelection();
+    handleContentChange();
+  };
+  const handleRedo = () => {
+    if (!editorRef.current) return;
+    restoreSelection();
+    document.execCommand('redo', false);
+    saveSelection();
+    handleContentChange();
+  };
+  const applyFontSize = (sizePx: string, cmdVal: string) => {
+    if (!editorRef.current) return;
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) {
+      const span = document.createElement('span');
+      span.style.fontSize = sizePx;
+      span.innerHTML = '&#8203;';
+      range.insertNode(span);
+      const newRange = document.createRange();
+      newRange.setStart(span.childNodes[0], 1);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+    } else {
+      document.execCommand('fontSize', false, cmdVal);
+      const fontEls = editorRef.current.querySelectorAll(`font[size="${cmdVal}"]`);
+      fontEls.forEach((el) => {
+        (el as HTMLElement).style.fontSize = sizePx;
+      });
+    }
+    saveSelection();
+    handleContentChange();
+  };
+  const applyTextColor = (color: string) => {
+    if (!editorRef.current) return;
+    restoreSelection();
+    document.execCommand('foreColor', false, color === 'inherit' ? 'var(--color-base-content, #333333)' : color);
+    saveSelection();
+    handleContentChange();
+  };
+  const applyHighlightColor = (color: string) => {
+    if (!editorRef.current) return;
+    restoreSelection();
+    if (color === 'transparent') {
+      document.execCommand('removeFormat', false);
+    } else {
+      if (!document.execCommand('hiliteColor', false, color)) {
+        document.execCommand('backColor', false, color);
+      }
+    }
     saveSelection();
     handleContentChange();
   };
@@ -401,6 +498,16 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const isMeta = e.metaKey || e.ctrlKey;
     if (isMeta) {
+      if ((e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+      if (((e.key === 'z' || e.key === 'Z') && e.shiftKey) || e.key === 'y' || e.key === 'Y') {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
       if (e.key === 'b' || e.key === 'B') {
         e.preventDefault();
         execCmd('bold');
@@ -689,9 +796,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   return (
     <div
       className="flex-1 flex flex-col h-full bg-base-100/90 overflow-hidden relative qn-paper min-h-0"
-      style={{ height: '100%' }}
+      style={{
+        height: viewportHeight && isMobileScreen ? `${viewportHeight - 48}px` : '100%',
+        maxHeight: viewportHeight && isMobileScreen ? `${viewportHeight - 48}px` : '100%',
+      }}
     >
-      <div className="relative border-b border-base-300/70 flex items-center justify-between gap-1 z-40 select-none min-h-[48px] px-2 sm:px-3 flex-shrink-0 overflow-visible">
+      <div className="sticky top-0 bg-base-100/95 backdrop-blur-md border-b border-base-300/70 flex items-center justify-between gap-1 z-40 select-none min-h-[48px] px-2 sm:px-3 flex-shrink-0 overflow-visible">
         <div className="flex items-center gap-1 min-w-0 flex-1">
           {onBackMobile && (
             <button
@@ -758,6 +868,25 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         </div>
         {!isTrash && (
           <div className="hidden md:flex items-center gap-0.5 flex-wrap">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleUndo}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Undo (Cmd+Z)"
+            >
+              <BsArrowCounterclockwise className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleRedo}
+              className="btn btn-ghost btn-xs btn-square"
+              title="Redo (Cmd+Shift+Z / Ctrl+Y)"
+            >
+              <BsArrowClockwise className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-px h-4 bg-base-300 mx-0.5" />
             <div className="dropdown dropdown-bottom relative">
               <div
                 tabIndex={0}
@@ -773,6 +902,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               >
                 <li>
                   <button
+                    type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       execCmd('formatBlock', '<h1>');
@@ -785,6 +915,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 </li>
                 <li>
                   <button
+                    type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       execCmd('formatBlock', '<h2>');
@@ -797,6 +928,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 </li>
                 <li>
                   <button
+                    type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       execCmd('formatBlock', '<h3>');
@@ -809,6 +941,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 </li>
                 <li>
                   <button
+                    type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       execCmd('formatBlock', '<p>');
@@ -820,6 +953,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 </li>
                 <li>
                   <button
+                    type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       execCmd('formatBlock', '<pre>');
@@ -831,6 +965,87 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   </button>
                 </li>
               </ul>
+            </div>
+            <div className="dropdown dropdown-bottom relative">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-xs text-xs font-semibold px-2"
+                title="Font size"
+              >
+                Size
+              </div>
+              <ul
+                tabIndex={0}
+                className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
+              >
+                {FONT_SIZES.map((fs) => (
+                  <li key={fs.size}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        applyFontSize(fs.size, fs.cmdVal);
+                        (document.activeElement as HTMLElement)?.blur();
+                      }}
+                      style={{ fontSize: fs.size }}
+                    >
+                      {fs.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="dropdown dropdown-bottom relative">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-xs btn-square text-primary"
+                title="Color & Highlight"
+              >
+                <BsPalette className="w-3.5 h-3.5" />
+              </div>
+              <div
+                tabIndex={0}
+                className="dropdown-content z-50 p-2.5 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200 mt-1"
+              >
+                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5">Text Color</div>
+                <div className="grid grid-cols-5 gap-1.5 mb-2.5">
+                  {TEXT_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        applyTextColor(c.value);
+                        (document.activeElement as HTMLElement)?.blur();
+                      }}
+                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
+                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5 border-t border-base-200 pt-1.5">Highlight Color</div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {HIGHLIGHT_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        applyHighlightColor(c.value);
+                        (document.activeElement as HTMLElement)?.blur();
+                      }}
+                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
+                      style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
+                      title={c.label}
+                    >
+                      {c.value === 'transparent' ? '✕' : ''}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="w-px h-4 bg-base-300 mx-0.5" />
             <button
@@ -1198,7 +1413,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             }
           }
         }}
-        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 pb-36 sm:pb-20 flex flex-col w-full min-h-0 cursor-text"
+        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 pb-24 sm:pb-20 flex flex-col w-full min-h-0 cursor-text overscroll-contain"
       >
         <div className="qn-canvas-inner max-w-4xl mx-auto w-full flex-1 flex flex-col min-h-full">
           <div className="flex items-center justify-between text-xs text-base-content/40 mb-3 sm:mb-4 select-none border-b border-base-200/60 pb-2 flex-shrink-0 gap-2">
@@ -1308,31 +1523,44 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           />
         </div>
       </div>
-      {!isTrash && isMobileScreen && (
-        <div className="p-1.5 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center gap-1 select-none overflow-x-auto no-scrollbar flex-shrink-0 relative z-40 sticky bottom-0">
+      {!isTrash && (
+        <div className="md:hidden sticky bottom-0 z-40 px-2 py-1.5 border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between select-none flex-shrink-0 w-full gap-1">
           <button
+            type="button"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={insertChecklistItem}
-            className="btn btn-ghost btn-sm btn-circle text-primary min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Checklist"
+            onClick={handleUndo}
+            className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+            title="Undo"
           >
-            <BsCardChecklist className="w-5 h-5" />
+            <BsArrowCounterclockwise className="w-4 h-4" />
           </button>
-          <div className="dropdown dropdown-top relative flex-shrink-0">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleRedo}
+            className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+            title="Redo"
+          >
+            <BsArrowClockwise className="w-4 h-4" />
+          </button>
+          <div className="dropdown dropdown-top relative">
             <div
               tabIndex={0}
               role="button"
               onMouseDown={(e) => e.preventDefault()}
-              className="btn btn-ghost btn-sm font-bold text-sm min-h-[38px] px-2"
+              className="btn btn-ghost btn-xs font-bold text-xs min-h-[34px] min-w-[34px] px-1"
+              title="Format & Font Size"
             >
               Aa
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mb-2 bottom-full"
+              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200 mb-2 bottom-full"
             >
+              <li className="menu-title text-[10px] text-base-content/50 uppercase">Heading Style</li>
               <li>
                 <button
+                  type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     execCmd('formatBlock', '<h1>');
@@ -1340,11 +1568,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   }}
                   className="font-bold"
                 >
-                  Title
+                  Title (H1)
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     execCmd('formatBlock', '<h2>');
@@ -1352,11 +1581,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   }}
                   className="font-semibold"
                 >
-                  Heading
+                  Heading (H2)
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     execCmd('formatBlock', '<h3>');
@@ -1364,114 +1594,313 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   }}
                   className="font-medium"
                 >
-                  Subheading
+                  Subheading (H3)
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     execCmd('formatBlock', '<p>');
                     (document.activeElement as HTMLElement)?.blur();
                   }}
                 >
-                  Body
+                  Body Text
+                </button>
+              </li>
+              <li className="menu-title text-[10px] text-base-content/50 uppercase border-t border-base-200 mt-1 pt-1">
+                Font Size
+              </li>
+              {FONT_SIZES.map((fs) => (
+                <li key={fs.size}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      applyFontSize(fs.size, fs.cmdVal);
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    style={{ fontSize: fs.size }}
+                  >
+                    {fs.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="dropdown dropdown-top relative">
+            <div
+              tabIndex={0}
+              role="button"
+              onMouseDown={(e) => e.preventDefault()}
+              className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] text-primary"
+              title="Color & Style"
+            >
+              <BsPalette className="w-4 h-4" />
+            </div>
+            <div
+              tabIndex={0}
+              className="dropdown-content z-50 p-2 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200 mb-2 bottom-full"
+            >
+              <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-base-200">
+                <span className="text-[10px] font-bold text-base-content/50 uppercase">Styles</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => execCmd('bold')}
+                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                    title="Bold"
+                  >
+                    <FiBold className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => execCmd('italic')}
+                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                    title="Italic"
+                  >
+                    <FiItalic className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => execCmd('underline')}
+                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                    title="Underline"
+                  >
+                    <FiUnderline className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => execCmd('strikeThrough')}
+                    className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                    title="Strikethrough"
+                  >
+                    <BsTypeStrikethrough className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1">Text Color</div>
+              <div className="grid grid-cols-5 gap-1.5 mb-2">
+                {TEXT_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      applyTextColor(c.value);
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
+                    style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
+                    title={c.label}
+                  />
+                ))}
+              </div>
+              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1 border-t border-base-200 pt-1">
+                Highlight
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {HIGHLIGHT_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      applyHighlightColor(c.value);
+                      (document.activeElement as HTMLElement)?.blur();
+                    }}
+                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
+                    style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
+                    title={c.label}
+                  >
+                    {c.value === 'transparent' ? '✕' : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={insertChecklistItem}
+            className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] text-primary"
+            title="Checklist"
+          >
+            <BsCardChecklist className="w-4 h-4" />
+          </button>
+          <div className="dropdown dropdown-top relative">
+            <div
+              tabIndex={0}
+              role="button"
+              onMouseDown={(e) => e.preventDefault()}
+              className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+              title="Lists & Indentation"
+            >
+              <BsListUl className="w-4 h-4" />
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200 mb-2 bottom-full"
+            >
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('insertUnorderedList');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <BsListUl className="w-3.5 h-3.5" /> Bulleted List
                 </button>
               </li>
               <li>
                 <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('insertOrderedList');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <BsListOl className="w-3.5 h-3.5" /> Numbered List
+                </button>
+              </li>
+              <li className="border-t border-base-200 mt-1 pt-1">
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    handleIndent();
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <BsTextIndentRight className="w-3.5 h-3.5" /> Indent
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    handleOutdent();
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <BsTextIndentLeft className="w-3.5 h-3.5" /> Outdent
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div className="dropdown dropdown-top dropdown-end relative">
+            <div
+              tabIndex={0}
+              role="button"
+              onMouseDown={(e) => e.preventDefault()}
+              className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+              title="More Tools"
+            >
+              <FiMoreHorizontal className="w-4 h-4" />
+            </div>
+            <ul
+              tabIndex={0}
+              className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200 mb-2 bottom-full right-0"
+            >
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    insertTable();
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <BsTable className="w-3.5 h-3.5" /> Insert Table
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    insertLink();
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <FiLink className="w-3.5 h-3.5" /> Insert Link
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    execCmd('formatBlock', '<blockquote>');
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <BsQuote className="w-3.5 h-3.5" /> Quote
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     execCmd('formatBlock', '<pre>');
                     (document.activeElement as HTMLElement)?.blur();
                   }}
-                  className="font-mono"
+                  className="flex items-center gap-2"
                 >
-                  Code
+                  <FiCode className="w-3.5 h-3.5" /> Code Block
+                </button>
+              </li>
+              <li className="border-t border-base-200 mt-1 pt-1">
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    handleSelectAll();
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <BsCheck2All className="w-3.5 h-3.5" /> Select All
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    void handleCopySelection();
+                    (document.activeElement as HTMLElement)?.blur();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  {copySuccess ? <FiCheck className="w-3.5 h-3.5 text-success" /> : <FiCopy className="w-3.5 h-3.5" />}
+                  {copySuccess ? 'Copied!' : 'Copy'}
                 </button>
               </li>
             </ul>
           </div>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => execCmd('bold')}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Bold"
-          >
-            <FiBold className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => execCmd('italic')}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Italic"
-          >
-            <FiItalic className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={applyHighlighter}
-            className="btn btn-ghost btn-sm btn-square text-primary min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Highlight"
-          >
-            <BsHighlighter className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => execCmd('insertUnorderedList')}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Bullets"
-          >
-            <BsListUl className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleOutdent}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Outdent"
-          >
-            <BsTextIndentLeft className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleIndent}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Indent"
-          >
-            <BsTextIndentRight className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={insertTable}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Table"
-          >
-            <BsTable className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleSelectAll}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Select All"
-          >
-            <BsCheck2All className="w-4 h-4" />
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleCopySelection}
-            className="btn btn-ghost btn-sm btn-square min-h-[38px] min-w-[38px] flex-shrink-0"
-            title="Copy Selection"
-          >
-            {copySuccess ? (
-              <FiCheck className="w-4 h-4 text-success" />
-            ) : (
-              <FiCopy className="w-4 h-4" />
-            )}
-          </button>
           {onBackMobile && (
             <button
+              type="button"
               onClick={onBackMobile}
-              className="btn btn-primary btn-sm px-3 ml-auto rounded-xl min-h-[36px] font-semibold flex-shrink-0"
+              className="btn btn-primary btn-xs px-3 rounded-xl font-semibold min-h-[30px]"
             >
               Done
             </button>
