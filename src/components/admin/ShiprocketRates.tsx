@@ -96,7 +96,9 @@ function parseShiprocketData(data: unknown): PincodeInfo | null {
     (data as { success: boolean }).success &&
     'postcode_details' in data
   ) {
-    const details = (data as { postcode_details?: { city?: string; state?: string; locality?: unknown } }).postcode_details;
+    const details = (
+      data as { postcode_details?: { city?: string; state?: string; locality?: unknown } }
+    ).postcode_details;
     if (details) {
       const { city, state, locality } = details;
       const locList: string[] = Array.isArray(locality)
@@ -346,7 +348,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                 title={pickupLocation.tooltip || pickupLocation.display}
               >
                 <FiMapPin className="shrink-0 w-3 h-3 text-primary" />
-                <span className="text-wrap">{pickupLocation.display}</span>
+                <span className="text-wrap leading-tight">{pickupLocation.display}</span>
               </span>
             )}
             {!pickupLoading && !pickupLocation && pickup.length === 6 && (
@@ -388,7 +390,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                 title={deliveryLocation.tooltip || deliveryLocation.display}
               >
                 <FiMapPin className="shrink-0 w-3 h-3 text-primary" />
-                <span className="text-wrap">{deliveryLocation.display}</span>
+                <span className="text-wrap leading-tight">{deliveryLocation.display}</span>
               </span>
             )}
             {!deliveryLoading && !deliveryLocation && delivery.length === 6 && (
@@ -485,9 +487,9 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       </div>
       {result && (
         <div className="mt-2">
-          <h3 className="font-bold mb-3 border-b pb-2">Available Couriers ({result.length})</h3>
+          <h3 className="font-bold mb-1">Available Couriers ({result.length})</h3>
           <div className="overflow-y-auto overflow-x-hidden h-[calc(100dvh-485px)]">
-            <table className="table table-primary table-sm table-zebra">
+            <table className="table table-sm table-zebra">
               <thead>
                 <tr>
                   <th>Courier</th>
@@ -506,8 +508,8 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                     <td className="font-semibold">{c.courier_name}</td>
                     <td>{c.etd}</td>
                     <td className="font-semibold text-primary text-[15px]">₹{c.rate}</td>
-                    <td>
-                      {c.rating} <FiStar className="inline text-primary" />
+                    <td className="font-semibold text-primary text-right">
+                      {c.rating} <FiStar className="inline" />
                     </td>
                   </tr>
                 ))}
