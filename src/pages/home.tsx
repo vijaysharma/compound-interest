@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from '../components/PrefetchLink';
 import {
   FiBarChart2,
   FiCalendar,

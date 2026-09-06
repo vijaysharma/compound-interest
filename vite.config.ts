@@ -130,12 +130,6 @@ const VITE_CONFIGS = {
           ) {
             return 'vendor-react';
           }
-          if (
-            id.includes('node_modules/ag-charts-community') ||
-            id.includes('node_modules/ag-charts-react')
-          ) {
-            return 'vendor-charts';
-          }
         },
       },
     },

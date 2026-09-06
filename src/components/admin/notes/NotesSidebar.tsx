@@ -392,7 +392,9 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                         <FiTag className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                         <span className="truncate">#{tag}</span>
                       </span>
-                      <span className="text-[11px] text-base-content/50 font-semibold">{count}</span>
+                      <span className="text-[11px] text-base-content/50 font-semibold">
+                        {count}
+                      </span>
                     </button>
                   );
                 })}
@@ -434,7 +436,9 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                 <FiShield className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>End-to-End Encrypted</span>
               </span>
-              <span className="badge badge-success badge-xs text-[9px] font-bold">AES-256</span>
+              <span className="badge badge-success badge-xs text-[9px] font-bold whitespace-nowrap">
+                AES-256
+              </span>
             </div>
             <p className="text-[11px] leading-tight text-base-content/70">
               Notes are encrypted on your device before syncing. Only you hold the key.
