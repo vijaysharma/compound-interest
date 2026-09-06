@@ -15,7 +15,7 @@ export default async function handler(): Promise<Response> {
         404
       );
     }
-    return jsonResponse(rows[0].payload);
+    return jsonResponse(rows[0].payload, 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     return jsonResponse({ error: 'Failed to read PPP data', detail: String(err) }, 503);
   }

@@ -12,7 +12,7 @@ export default async function handler(): Promise<Response> {
     if (rows.length === 0) {
       return jsonResponse({ error: 'IMF data has not been synced by an administrator' }, 404);
     }
-    return jsonResponse(rows[0].payload);
+    return jsonResponse(rows[0].payload, 200, 'public, s-maxage=3600, stale-while-revalidate=86400');
   } catch (err) {
     return jsonResponse({ error: 'Failed to read IMF data', detail: String(err) }, 503);
   }

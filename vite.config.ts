@@ -104,6 +104,7 @@ const VITE_CONFIGS = {
     outDir: './build',
     emptyOutDir: true,
     cssCodeSplit: true,
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks(id: string) {
@@ -114,6 +115,12 @@ const VITE_CONFIGS = {
             id.includes('node_modules/react-router-dom/')
           ) {
             return 'vendor-react';
+          }
+          if (
+            id.includes('node_modules/ag-charts-community') ||
+            id.includes('node_modules/ag-charts-react')
+          ) {
+            return 'vendor-charts';
           }
         },
       },

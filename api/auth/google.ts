@@ -21,55 +21,44 @@ export default async function handler(request: Request): Promise<Response> {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
   try {
-    const body = (await request.json()) as {
+    const body = (await request.json().catch(() => ({}))) as {
       credential?: string;
-      email?: string;
-      name?: string;
-      picture?: string;
     };
-    let email = body.email ? body.email.toLowerCase().trim() : '';
-    let name = body.name || '';
-    let picture = body.picture || '';
-    let sub = '';
-    if (body.credential) {
-      // Verify credential with Google OAuth tokeninfo endpoint
-      try {
-        const verifyRes = await fetch(
-          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`
-        );
-        if (verifyRes.ok) {
-          const info = (await verifyRes.json()) as GoogleTokenInfo;
-          if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
-            email = info.email.toLowerCase();
-            name = info.name || name;
-            picture = info.picture || picture;
-            sub = info.sub || sub;
-          }
-        }
-      } catch (err) {
-        console.warn('Google tokeninfo fetch error:', err);
-      }
-      // Fallback for JWT payload parsing if tokeninfo is unreachable or client token
-      if (!email) {
-        try {
-          const parts = body.credential.split('.');
-          if (parts.length === 3) {
-            const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-            const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
-            if (payload.email) {
-              email = payload.email.toLowerCase();
-              name = payload.name || name;
-              picture = payload.picture || picture;
-              sub = payload.sub || sub;
-            }
-          }
-        } catch {
-          // invalid jwt format
-        }
-      }
+    const credential = body.credential?.trim();
+    if (!credential) {
+      return jsonResponse({ error: 'Google credential is required' }, 400);
     }
-    if (!email || !email.includes('@')) {
-      return jsonResponse({ error: 'Valid Google email account is required' }, 400);
+    let email = '';
+    let name = '';
+    let picture = '';
+    let sub = '';
+    try {
+      const verifyRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+      );
+      if (!verifyRes.ok) {
+        return jsonResponse(
+          { error: 'Google authentication failed: invalid or expired credential' },
+          401
+        );
+      }
+      const info = (await verifyRes.json()) as GoogleTokenInfo;
+      const isEmailVerified = info.email_verified === 'true' || info.email_verified === true;
+      if (!info.email || !isEmailVerified) {
+        return jsonResponse(
+          { error: 'Unverified Google email address. Verified email is required.' },
+          401
+        );
+      }
+      email = info.email.toLowerCase().trim();
+      name = info.name?.trim() || email.split('@')[0];
+      picture = info.picture || '';
+      sub = info.sub || '';
+    } catch (err) {
+      return jsonResponse(
+        { error: 'Failed to verify token with Google OAuth service', detail: String(err) },
+        502
+      );
     }
     if (!name) {
       name = email.split('@')[0];

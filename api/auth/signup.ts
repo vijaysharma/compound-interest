@@ -37,9 +37,9 @@ export default async function handler(request: Request): Promise<Response> {
     let verifiedName = body.name ? body.name.trim() : '';
     let verifiedPicture = body.picture || '';
     let providerId = '';
+    let isGoogleVerified = false;
     const credential = body.credential?.trim();
     if (credential) {
-      // 1. Verify Google ID Token with Google OAuth tokeninfo endpoint
       try {
         const verifyRes = await fetch(
           `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
@@ -48,46 +48,27 @@ export default async function handler(request: Request): Promise<Response> {
           const info = (await verifyRes.json()) as GoogleTokenInfo;
           if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
             verifiedEmail = info.email.toLowerCase().trim();
-            verifiedName = info.name || verifiedName;
+            verifiedName = info.name?.trim() || verifiedName;
             verifiedPicture = info.picture || verifiedPicture;
             providerId = info.sub || '';
+            isGoogleVerified = true;
           }
         }
       } catch (err) {
         console.warn('Google tokeninfo fetch error:', err);
       }
-      // 2. Parse verified JWT payload fallback if tokeninfo is unreachable
-      if (!verifiedEmail) {
-        try {
-          const parts = credential.split('.');
-          if (parts.length === 3) {
-            const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-            const payload = JSON.parse(payloadJson) as GoogleTokenInfo;
-            if (
-              payload.email &&
-              (payload.email_verified === 'true' ||
-                payload.email_verified === true ||
-                payload.email.endsWith('@gmail.com') ||
-                payload.email.endsWith('@googlemail.com'))
-            ) {
-              verifiedEmail = payload.email.toLowerCase().trim();
-              verifiedName = payload.name || verifiedName;
-              verifiedPicture = payload.picture || verifiedPicture;
-              providerId = payload.sub || '';
-            }
-          }
-        } catch {
-          // invalid jwt
-        }
-      }
     }
-    // 3. If direct email was provided (or fallback)
     if (!verifiedEmail && body.email) {
       const inputEmail = body.email.toLowerCase().trim();
+      if (isEmailAdmin(inputEmail)) {
+        return jsonResponse(
+          { error: 'Admin accounts must register and authenticate via Google Sign-In with verified OAuth.' },
+          403
+        );
+      }
       const isGmail =
         inputEmail.endsWith('@gmail.com') ||
-        inputEmail.endsWith('@googlemail.com') ||
-        isEmailAdmin(inputEmail);
+        inputEmail.endsWith('@googlemail.com');
       if (!isGmail) {
         return jsonResponse(
           {
@@ -122,7 +103,7 @@ export default async function handler(request: Request): Promise<Response> {
       WHERE email = ${verifiedEmail}
     `) as DbUser[];
     const { hash, salt } = await hashPassword(password);
-    const isAdmin = isEmailAdmin(verifiedEmail);
+    const isAdmin = isGoogleVerified && isEmailAdmin(verifiedEmail);
     let user: DbUser;
     if (existingUsers.length > 0) {
       const existing = existingUsers[0];

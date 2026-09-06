@@ -27,7 +27,7 @@ export default async function handler(request: Request): Promise<Response> {
         expiresAt: Date.now() + NAV_MEMORY_TTL_MS,
         data: stored[0].payload,
       });
-      return jsonResponse(stored[0].payload);
+      return jsonResponse(stored[0].payload, 200, 'public, s-maxage=300, stale-while-revalidate=3600');
     }
     // 3. Stale or missing: Fetch from upstream AMFI/mfapi
     try {
@@ -43,7 +43,7 @@ export default async function handler(request: Request): Promise<Response> {
           expiresAt: Date.now() + NAV_MEMORY_TTL_MS,
           data: payload,
         });
-        return jsonResponse(payload);
+        return jsonResponse(payload, 200, 'public, s-maxage=300, stale-while-revalidate=3600');
       }
     } catch (fetchError) {
       console.warn('Upstream MF fetch failed, checking fallback:', fetchError);
@@ -54,7 +54,7 @@ export default async function handler(request: Request): Promise<Response> {
         expiresAt: Date.now() + NAV_MEMORY_TTL_MS,
         data: stored[0].payload,
       });
-      return jsonResponse(stored[0].payload);
+      return jsonResponse(stored[0].payload, 200, 'public, s-maxage=300, stale-while-revalidate=3600');
     }
     return jsonResponse({ error: 'Failed to fetch mutual fund NAV data from upstream' }, 502);
   } catch (error) {

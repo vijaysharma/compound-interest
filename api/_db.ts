@@ -124,13 +124,21 @@ export async function hashPassword(
     .join('');
   return { hash, salt: saltOut };
 }
+export function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
 export async function verifyPassword(
   password: string,
   hash: string,
   saltHex: string
 ): Promise<boolean> {
   const computed = await hashPassword(password, saltHex);
-  return computed.hash === hash;
+  return timingSafeEqual(computed.hash, hash);
 }
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
@@ -324,13 +332,17 @@ export async function getUserFromRequest(request: Request, sql: Query): Promise<
   `) as DbUser[];
   return rows.length > 0 ? rows[0] : null;
 }
-export function jsonResponse(body: unknown, status = 200): Response {
+export function jsonResponse(
+  body: unknown,
+  status = 200,
+  cacheControl = 'no-store'
+): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'no-store',
+      'Cache-Control': cacheControl,
     },
   });
 }
@@ -339,7 +351,7 @@ export async function isAuthorized(request: Request, sql?: Query): Promise<boole
   const supplied =
     request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
     request.headers.get('x-admin-token');
-  if (expected && supplied === expected) return true;
+  if (expected && supplied && timingSafeEqual(supplied, expected)) return true;
   if (sql && supplied) {
     const user = await getUserFromRequest(request, sql);
     if (user && user.role === 'admin') return true;

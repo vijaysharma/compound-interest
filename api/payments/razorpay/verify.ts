@@ -1,5 +1,13 @@
 import { ensureTables, getDb, getUserFromRequest, jsonResponse } from '../../_db';
 export const config = { runtime: 'edge' };
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
 async function verifyRazorpaySignature(
   orderId: string,
   paymentId: string,
@@ -19,7 +27,7 @@ async function verifyRazorpaySignature(
   const generatedSignature = Array.from(new Uint8Array(signatureBytes))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
-  return generatedSignature.toLowerCase() === signature.toLowerCase().trim();
+  return timingSafeEqual(generatedSignature.toLowerCase(), signature.toLowerCase().trim());
 }
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
@@ -61,6 +69,24 @@ export default async function handler(request: Request): Promise<Response> {
         400
       );
     }
+    const existingPayment = (await sql`
+      SELECT id FROM payment_submissions
+      WHERE utr_ref = ${razorpay_payment_id} AND status = 'approved'
+      LIMIT 1
+    `) as Array<{ id: string }>;
+    if (existingPayment.length > 0) {
+      return jsonResponse(
+        { error: 'This payment has already been verified and processed.' },
+        400
+      );
+    }
+    const settingsRows = (await sql`
+      SELECT amount FROM payment_settings WHERE id = 'default' LIMIT 1
+    `) as Array<{ amount?: number | string }>;
+    const recordedAmount =
+      settingsRows.length > 0 && Number(settingsRows[0].amount) > 0
+        ? Number(settingsRows[0].amount)
+        : 54;
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     await sql`
       UPDATE users
@@ -73,7 +99,7 @@ export default async function handler(request: Request): Promise<Response> {
     const newSubId = crypto.randomUUID();
     await sql`
       INSERT INTO payment_submissions (id, user_id, user_email, utr_ref, amount, status, created_at, updated_at)
-      VALUES (${newSubId}, ${user.id}, ${user.email}, ${razorpay_payment_id}, 54, 'approved', NOW(), NOW())
+      VALUES (${newSubId}, ${user.id}, ${user.email}, ${razorpay_payment_id}, ${recordedAmount}, 'approved', NOW(), NOW())
     `;
     return jsonResponse({
       success: true,

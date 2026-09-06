@@ -84,6 +84,19 @@ const DateCalculator: React.FC = () => {
   const [endDate, setEndDate] = useState(saved.endDate);
   const [endTime, setEndTime] = useState(saved.endTime);
   const [isInclusive, setIsInclusive] = useState(saved.isInclusive);
+  const handleStartDateChange = (newStart: string) => {
+    setStartDate(newStart);
+    if (newStart && endDate && newStart > endDate) {
+      setEndDate(newStart);
+    }
+  };
+  const handleEndDateChange = (newEnd: string) => {
+    if (newEnd && startDate && newEnd < startDate) {
+      setEndDate(startDate);
+      return;
+    }
+    setEndDate(newEnd);
+  };
   // Add/Subtract mode state
   const [baseDate, setBaseDate] = useState(saved.baseDate);
   const [baseTime, setBaseTime] = useState(saved.baseTime);
@@ -274,8 +287,9 @@ const DateCalculator: React.FC = () => {
                   <input
                     className="input input-sm input-primary input-bordered font-medium"
                     type="date"
+                    max={endDate || undefined}
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
                   />
                   <input
                     className="min-w-[100px] input input-sm input-primary input-bordered font-medium px-1"
@@ -299,8 +313,9 @@ const DateCalculator: React.FC = () => {
                   <input
                     className="input input-sm input-primary input-bordered font-medium"
                     type="date"
+                    min={startDate || undefined}
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={(e) => handleEndDateChange(e.target.value)}
                   />
                   <input
                     className="min-w-[100px] input input-sm input-primary input-bordered font-medium"

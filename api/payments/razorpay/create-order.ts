@@ -21,9 +21,14 @@ export default async function handler(request: Request): Promise<Response> {
     }
     const keyId = rawKeyId.trim().replace(/^["']|["']$/g, '');
     const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
-    const body = (await request.json().catch(() => ({}))) as { amount?: number | string };
-    const parsed = Number(body.amount);
-    const amountInRupees = !isNaN(parsed) && parsed > 0 ? parsed : 54;
+    const settingsRows = (await sql`
+      SELECT amount FROM payment_settings WHERE id = 'default' LIMIT 1
+    `) as Array<{ amount?: number | string }>;
+    const configuredAmount =
+      settingsRows.length > 0 && Number(settingsRows[0].amount) > 0
+        ? Number(settingsRows[0].amount)
+        : 54;
+    const amountInRupees = configuredAmount;
     const amountInPaise = Math.round(amountInRupees * 100);
     const authHeader = btoa(`${keyId}:${keySecret}`);
     const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;

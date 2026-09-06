@@ -34,7 +34,23 @@ const StartEndDate = ({
     if (startDate) getNearest(startDate, data);
     if (endDate) getNearest(endDate, data);
   }, [startDate, endDate, data, mode]);
+  const handleStartYearChange = (value: string) => {
+    setStartDate?.(value);
+    if (endDate && Number(value) > Number(endDate)) {
+      setEndDate?.(value);
+    }
+  };
+  const handleEndYearChange = (value: string) => {
+    if (startDate && Number(value) < Number(startDate)) {
+      setEndDate?.(startDate);
+      return;
+    }
+    setEndDate?.(value);
+  };
   if (mode === 'year') {
+    const availableEndOptions = endOptions.filter(
+      (year) => !startDate || Number(year) >= Number(startDate)
+    );
     return (
       <div className="join mb-2 w-full date-picker">
         <div className="label join-item px-2 w-20 bg-primary text-primary-content border-primary text-center text-sm">
@@ -43,7 +59,7 @@ const StartEndDate = ({
         <select
           className="join-item grow select border-primary focus:border-primary focus:outline-none shadow-none"
           value={startDate ?? ''}
-          onChange={(event) => setStartDate?.(event.target.value)}
+          onChange={(event) => handleStartYearChange(event.target.value)}
         >
           {startOptions.map((year) => (
             <option key={`s-${year}`} value={year}>
@@ -54,9 +70,9 @@ const StartEndDate = ({
         <select
           className="join-item grow select border-primary focus:border-primary focus:outline-none shadow-none"
           value={endDate ?? ''}
-          onChange={(event) => setEndDate?.(event.target.value)}
+          onChange={(event) => handleEndYearChange(event.target.value)}
         >
-          {endOptions.map((year) => (
+          {availableEndOptions.map((year) => (
             <option key={`e-${year}`} value={year}>
               {year}
             </option>
@@ -70,8 +86,15 @@ const StartEndDate = ({
   }
   const handleStartChange = (value: string) => {
     setStartDate?.(value);
+    if (endDate && value && value > endDate) {
+      setEndDate?.(value);
+    }
   };
   const handleEndChange = (value: string) => {
+    if (startDate && value && value < startDate) {
+      setEndDate?.(startDate);
+      return;
+    }
     setEndDate?.(value);
   };
   const today = getDateAsISO();

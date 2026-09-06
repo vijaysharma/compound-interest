@@ -32,7 +32,7 @@ export default async function handler(request: Request): Promise<Response> {
       const oldestKey = searchCache.keys().next().value;
       if (oldestKey) searchCache.delete(oldestKey);
     }
-    return jsonResponse(data);
+    return jsonResponse(data, 200, 'public, s-maxage=300, stale-while-revalidate=3600');
   } catch (error) {
     return jsonResponse({ error: 'Failed to read mutual funds', detail: String(error) }, 503);
   }

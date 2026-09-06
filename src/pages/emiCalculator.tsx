@@ -453,6 +453,17 @@ const EmiCalculator: React.FC = () => {
       { amount: 0, date: getTodayDateString(), mode: 'emi', enabled: true },
     ]);
   };
+  const handleDisbursementDateChange = (newDate: string) => {
+    setDisbursementDate(newDate);
+    if (newDate) {
+      setPartPayments((prev) =>
+        prev.map((p) => (p.date && p.date < newDate ? { ...p, date: newDate } : p))
+      );
+      setRateChanges((prev) =>
+        prev.map((r) => (r.date && r.date < newDate ? { ...r, date: newDate } : r))
+      );
+    }
+  };
   const removePartPayment = (index: number) => {
     const updated = partPayments.filter((_, i) => i !== index);
     setPartPayments(updated);
@@ -462,8 +473,12 @@ const EmiCalculator: React.FC = () => {
     field: K,
     value: PartPayment[K]
   ) => {
+    let finalValue = value;
+    if (field === 'date' && disbursementDate && typeof value === 'string' && value < disbursementDate) {
+      finalValue = disbursementDate as PartPayment[K];
+    }
     const updated = [...partPayments];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: finalValue };
     setPartPayments(updated);
   };
   const isAddRateChangeDisabled = useMemo(() => {
@@ -487,8 +502,12 @@ const EmiCalculator: React.FC = () => {
     field: K,
     value: RateChange[K]
   ) => {
+    let finalValue = value;
+    if (field === 'date' && disbursementDate && typeof value === 'string' && value < disbursementDate) {
+      finalValue = disbursementDate as RateChange[K];
+    }
     const updated = [...rateChanges];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: finalValue };
     setRateChanges(updated);
   };
   const totalInterest = useMemo(
@@ -567,7 +586,7 @@ const EmiCalculator: React.FC = () => {
               title="Disbursement Date"
               type="date"
               value={disbursementDate}
-              onChange={(e) => setDisbursementDate(e.target.value)}
+              onChange={(e) => handleDisbursementDateChange(e.target.value)}
             />
             <div className="label join-item px-2.5 bg-primary text-primary-content border-primary text-center text-xs font-semibold whitespace-nowrap">
               EMI Day
@@ -747,6 +766,7 @@ const EmiCalculator: React.FC = () => {
                   className="input input-bordered w-full lg:flex-1"
                   title={`Part Payment Date #${idx + 1}`}
                   type="date"
+                  min={disbursementDate || undefined}
                   value={p.date}
                   onChange={(e) => updatePartPayment(idx, 'date', e.target.value)}
                   disabled={!p.enabled}
@@ -850,6 +870,7 @@ const EmiCalculator: React.FC = () => {
                 className="input input-bordered w-full lg:flex-1"
                 title={`Rate Change Date #${idx + 1}`}
                 type="date"
+                min={disbursementDate || undefined}
                 value={r.date}
                 onChange={(e) => updateRateChange(idx, 'date', e.target.value)}
                 disabled={!r.enabled}
