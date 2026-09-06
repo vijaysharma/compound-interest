@@ -1,4 +1,3 @@
-import { del } from '@vercel/blob';
 import { ensureTables, getDb, getUserFromRequest, jsonResponse, isPaidUser } from '../_db';
 export const config = { runtime: 'edge' };
 declare const process: { env: Record<string, string | undefined> };
@@ -87,7 +86,19 @@ async function deleteFromVercelBlob(urls: (string | null | undefined)[]): Promis
     blobCache.delete(u);
   }
   try {
-    await del(validUrls, { token });
+    const res = await fetch('https://blob.vercel-storage.com/delete', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${token}`,
+        'x-api-version': '7',
+      },
+      body: JSON.stringify({ urls: validUrls }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      console.warn('Vercel Blob deletion HTTP error:', res.status, err);
+    }
   } catch (err) {
     console.warn('Vercel Blob deletion failed:', err);
   }
