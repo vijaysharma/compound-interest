@@ -454,7 +454,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       {result && (
         <div className="mt-2">
           <h3 className="font-bold mb-3 border-b pb-2">Available Couriers ({result.length})</h3>
-          <div className="overflow-y-auto overflow-x-hidden h-[calc(100dvh-480px)]">
+          <div className="overflow-y-auto overflow-x-hidden h-[calc(100dvh-485px)]">
             <table className="table table-primary table-sm table-zebra">
               <thead>
                 <tr>
