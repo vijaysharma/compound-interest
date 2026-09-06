@@ -157,7 +157,7 @@ body:has(.quick-notes-theme) {
 /* Clean formatting in editor content */
 .qn-note-canvas {
   font-family: inherit;
-  font-size: 16px;
+  font-size: var(--qn-canvas-font-size, 16px);
   line-height: 1.6;
   flex: 1;
   display: block;
@@ -182,18 +182,18 @@ body:has(.quick-notes-theme) {
 }
 
 .qn-note-canvas p {
-  font-size: 16px;
+  font-size: inherit;
   margin: 0.35rem 0;
   line-height: 1.6;
 }
 
 .qn-note-canvas div:not(.qn-checklist-item):not(.qn-table):not(.dropdown) {
-  font-size: 16px;
+  font-size: inherit;
   line-height: 1.6;
 }
 
 .qn-note-canvas li {
-  font-size: 16px;
+  font-size: inherit;
   line-height: 1.6;
 }
 
@@ -202,7 +202,7 @@ body:has(.quick-notes-theme) {
 }
 
 .qn-note-canvas .qn-checklist-content {
-  font-size: 16px;
+  font-size: inherit;
   line-height: 1.5;
 }
 

@@ -61,6 +61,17 @@ const FONT_SIZES = [
   { label: 'Large', size: '22px', cmdVal: '5' },
   { label: 'Huge', size: '28px', cmdVal: '6' },
 ];
+function detectContentFontSize(html: string): string | null {
+  if (!html) return null;
+  const styleMatch = /style=["'][^"']*font-size:\s*(\d+px)[^"']*["']/i.exec(html);
+  if (styleMatch) return styleMatch[1];
+  const fontMatch = /<font[^>]*size=["'](\d)["']/i.exec(html);
+  if (fontMatch) {
+    const fs = FONT_SIZES.find((f) => f.cmdVal === fontMatch[1]);
+    if (fs) return fs.size;
+  }
+  return null;
+}
 const TEXT_COLORS = [
   { label: 'Default', value: 'inherit' },
   { label: 'Slate', value: '#475569' },
@@ -144,6 +155,21 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const [activeMobileMenu, setActiveMobileMenu] = useState<'format' | 'palette' | 'lists' | 'more' | null>(null);
+  const [currentFontSize, setCurrentFontSize] = useState<string>(() => {
+    if (note?.id) {
+      try {
+        const saved = localStorage.getItem(`quick_notes_font_size_${note.id}`);
+        if (saved) return saved;
+      } catch {
+        // ignore
+      }
+    }
+    try {
+      return localStorage.getItem('quick_notes_default_font_size') || '16px';
+    } catch {
+      return '16px';
+    }
+  });
   const calculateStats = useCallback((text: string) => {
     const clean = text.replace(/<[^>]+>/g, ' ').trim();
     const chars = clean.replace(/\s+/g, '').length;
@@ -157,6 +183,14 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     if (lastLoadedNoteIdRef.current !== note.id) {
       editorRef.current.innerHTML = note.content || '';
       lastLoadedNoteIdRef.current = note.id;
+      const initialSize =
+        (note.id ? localStorage.getItem(`quick_notes_font_size_${note.id}`) : null) ||
+        detectContentFontSize(note.content || '') ||
+        localStorage.getItem('quick_notes_default_font_size') ||
+        '16px';
+      editorRef.current.style.fontSize = initialSize;
+      editorRef.current.style.setProperty('--qn-canvas-font-size', initialSize);
+      setCurrentFontSize(initialSize);
     }
     calculateStats((note.title || '') + ' ' + (note.content || ''));
   }, [note?.id, calculateStats, note?.title, note]);
@@ -170,6 +204,32 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         editorRef.current.contains(sel.anchorNode)
       ) {
         savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+        let curr: Node | null = sel.anchorNode;
+        if (curr && !(curr instanceof HTMLElement)) {
+          curr = curr.parentElement;
+        }
+        let foundSize: string | null = null;
+        while (curr && curr !== editorRef.current && curr instanceof HTMLElement) {
+          if (curr.style.fontSize) {
+            foundSize = curr.style.fontSize;
+            break;
+          }
+          if (curr.tagName === 'FONT' && curr.getAttribute('size')) {
+            const sz = curr.getAttribute('size');
+            const match = FONT_SIZES.find((f) => f.cmdVal === sz);
+            if (match) {
+              foundSize = match.size;
+              break;
+            }
+          }
+          curr = curr.parentElement;
+        }
+        if (!foundSize && editorRef.current) {
+          foundSize = editorRef.current.style.fontSize || '16px';
+        }
+        if (foundSize) {
+          setCurrentFontSize(foundSize);
+        }
       }
     };
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -262,11 +322,50 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   };
   const applyFontSize = (sizePx: string, cmdVal: string) => {
     if (!editorRef.current) return;
+    setCurrentFontSize(sizePx);
+    if (note?.id) {
+      try {
+        localStorage.setItem(`quick_notes_font_size_${note.id}`, sizePx);
+      } catch {
+        // ignore
+      }
+    }
+    try {
+      localStorage.setItem('quick_notes_default_font_size', sizePx);
+    } catch {
+      // ignore
+    }
+    editorRef.current.style.fontSize = sizePx;
+    editorRef.current.style.setProperty('--qn-canvas-font-size', sizePx);
     restoreSelection();
     const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
+    if (!sel || sel.rangeCount === 0 || !editorRef.current.contains(sel.anchorNode)) {
+      editorRef.current.focus();
+      handleContentChange();
+      return;
+    }
     const range = sel.getRangeAt(0);
     if (range.collapsed) {
+      const block = (
+        sel.anchorNode instanceof HTMLElement ? sel.anchorNode : sel.anchorNode?.parentElement
+      )?.closest('p, div:not(.qn-note-canvas), li, .qn-checklist-content, h1, h2, h3, blockquote');
+      if (block && editorRef.current.contains(block)) {
+        (block as HTMLElement).style.fontSize = sizePx;
+      }
+      const topBlocks = editorRef.current.children;
+      for (let i = 0; i < topBlocks.length; i++) {
+        const child = topBlocks[i] as HTMLElement;
+        if (child.classList.contains('qn-checklist-item')) {
+          const content = child.querySelector('.qn-checklist-content') as HTMLElement | null;
+          if (content && (!content.style.fontSize || content.style.fontSize === currentFontSize)) {
+            content.style.fontSize = sizePx;
+          }
+        } else if (child.tagName === 'P' || child.tagName === 'DIV') {
+          if (!child.style.fontSize || child.style.fontSize === currentFontSize) {
+            child.style.fontSize = sizePx;
+          }
+        }
+      }
       const span = document.createElement('span');
       span.style.fontSize = sizePx;
       span.innerHTML = '&#8203;';
@@ -282,6 +381,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       fontEls.forEach((el) => {
         (el as HTMLElement).style.fontSize = sizePx;
       });
+      const anchorBlock = (
+        sel.anchorNode instanceof HTMLElement ? sel.anchorNode : sel.anchorNode?.parentElement
+      )?.closest('p, div:not(.qn-note-canvas), li, .qn-checklist-content');
+      if (anchorBlock && editorRef.current.contains(anchorBlock)) {
+        (anchorBlock as HTMLElement).style.fontSize = sizePx;
+      }
     }
     saveSelection();
     handleContentChange();
@@ -580,6 +685,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             }
             const p = document.createElement('p');
             p.innerHTML = '<br>';
+            if ((content as HTMLElement)?.style.fontSize) {
+              p.style.fontSize = (content as HTMLElement).style.fontSize;
+            }
             currentItem.parentNode?.replaceChild(p, currentItem);
             const r = document.createRange();
             r.selectNodeContents(p);
@@ -602,6 +710,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           const span = document.createElement('span');
           span.className = 'qn-checklist-content';
           span.innerHTML = '<br>';
+          if ((content as HTMLElement)?.style.fontSize) {
+            span.style.fontSize = (content as HTMLElement).style.fontSize;
+          }
           newItem.appendChild(circle);
           newItem.appendChild(span);
           currentItem.after(newItem);
@@ -992,30 +1103,36 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-xs text-xs font-semibold px-2"
-                title="Font size"
+                className="btn btn-ghost btn-xs text-xs font-semibold px-2 flex items-center gap-1"
+                title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
               >
-                Size
+                <span>{FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Size'}</span>
+                <span className="text-[9px] opacity-60">▼</span>
               </div>
               <ul
                 tabIndex={0}
                 className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
               >
-                {FONT_SIZES.map((fs) => (
-                  <li key={fs.size}>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        applyFontSize(fs.size, fs.cmdVal);
-                        (document.activeElement as HTMLElement)?.blur();
-                      }}
-                      style={{ fontSize: fs.size }}
-                    >
-                      {fs.label}
-                    </button>
-                  </li>
-                ))}
+                {FONT_SIZES.map((fs) => {
+                  const isActive = currentFontSize === fs.size;
+                  return (
+                    <li key={fs.size}>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          applyFontSize(fs.size, fs.cmdVal);
+                          (document.activeElement as HTMLElement)?.blur();
+                        }}
+                        className={`flex items-center justify-between py-1 px-2 ${isActive ? 'active font-bold bg-primary/10 text-primary' : ''}`}
+                        style={{ fontSize: fs.size }}
+                      >
+                        <span>{fs.label}</span>
+                        {isActive && <span className="text-xs text-primary font-bold">✓</span>}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             <div className="dropdown dropdown-bottom relative">
@@ -1533,7 +1650,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             onKeyDown={handleKeyDown}
             onKeyUp={saveSelection}
             onMouseUp={saveSelection}
-            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 text-base leading-relaxed cursor-text min-h-[160px] sm:min-h-[300px] select-text"
+            style={{ fontSize: currentFontSize }}
+            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 leading-relaxed cursor-text min-h-[160px] sm:min-h-[300px] select-text"
             data-placeholder="Start typing or tap the checklist button below..."
           />
         </div>
@@ -1624,20 +1742,25 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 <li className="menu-title text-[10px] text-base-content/50 uppercase border-t border-base-200 mt-1 pt-1">
                   Font Size
                 </li>
-                {FONT_SIZES.map((fs) => (
-                  <li key={fs.size}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        applyFontSize(fs.size, fs.cmdVal);
-                        setActiveMobileMenu(null);
-                      }}
-                      style={{ fontSize: fs.size }}
-                    >
-                      {fs.label}
-                    </button>
-                  </li>
-                ))}
+                {FONT_SIZES.map((fs) => {
+                  const isActive = currentFontSize === fs.size;
+                  return (
+                    <li key={fs.size}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          applyFontSize(fs.size, fs.cmdVal);
+                          setActiveMobileMenu(null);
+                        }}
+                        className={`flex items-center justify-between py-1.5 px-2 ${isActive ? 'active font-bold bg-primary/10 text-primary' : ''}`}
+                        style={{ fontSize: fs.size }}
+                      >
+                        <span>{fs.label}</span>
+                        {isActive && <span className="text-xs text-primary font-bold">✓</span>}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
