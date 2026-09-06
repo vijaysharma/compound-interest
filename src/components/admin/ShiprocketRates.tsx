@@ -75,7 +75,7 @@ function formatLocation(localities: string[], city?: string, state?: string): Pi
   const cleanState = state?.trim() || '';
   const locSummary =
     cleanLocs.length > 2
-      ? `${cleanLocs.slice(0, 2).join(', ')} (+${cleanLocs.length - 2} more)`
+      ? `${cleanLocs.slice(0, 4).join(', ')} (+${cleanLocs.length - 4} more)`
       : cleanLocs.join(', ');
   const parts = [locSummary, cleanCity, cleanState].filter(
     (val, idx, arr) => Boolean(val) && arr.indexOf(val) === idx
@@ -152,7 +152,6 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
   const [length, setLength] = useState(saved.length);
   const [breadth, setBreadth] = useState(saved.breadth);
   const [height, setHeight] = useState(saved.height);
-  const [cod, setCod] = useState(saved.cod);
   const [pickupLocation, setPickupLocation] = useState<PincodeInfo | null>(null);
   const [pickupLoading, setPickupLoading] = useState(saved.pickup.length === 6);
   const [deliveryLocation, setDeliveryLocation] = useState<PincodeInfo | null>(null);
@@ -171,13 +170,12 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
           length,
           breadth,
           height,
-          cod,
         })
       );
     } catch (err) {
       console.warn('Failed to persist shiprocket rates state:', err);
     }
-  }, [pickup, delivery, weight, length, breadth, height, cod]);
+  }, [pickup, delivery, weight, length, breadth, height]);
   useEffect(() => {
     try {
       if (result) {
@@ -254,7 +252,6 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
           length,
           breadth,
           height,
-          cod,
         }),
       });
       const data = await res.json();
@@ -282,7 +279,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
         <FiTruck className="text-primary" /> Shiprocket Rate Calculator
       </h2>
       {error && <div className="alert alert-error text-sm my-2 py-2">{error}</div>}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 mt-2 md:grid-cols-4 gap-4 mb-4">
         <div className="min-h-[120px]">
           <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
             Pickup Pincode*
@@ -334,7 +331,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
             className="input input-sm input-primary input-bordered w-full"
             value={delivery}
             maxLength={6}
-            placeholder="e.g. 700120"
+            placeholder="e.g. 560083"
             onChange={(e) => {
               const val = e.target.value.replace(/\D/g, '').slice(0, 6);
               setDelivery(val);
@@ -367,18 +364,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
             )}
           </div>
         </div>
-        <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-            Dead Weight (kg)*
-          </label>
-          <input
-            type="number"
-            className="input input-sm input-primary input-bordered w-full"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-          />
-        </div>
-        <div>
+        {/* <div>
           <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
             COD Required?
           </label>
@@ -390,11 +376,11 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
               onChange={(e) => setCod(e.target.checked)}
             />
           </div>
-        </div>
+        </div> */}
       </div>
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-4 gap-2 mb-4">
         <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
             Length (cm)*
           </label>
           <input
@@ -406,7 +392,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
             Breadth (cm)*
           </label>
           <input
@@ -418,7 +404,7 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
             Height (cm)*
           </label>
           <input
@@ -429,8 +415,19 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
             placeholder="Required"
           />
         </div>
+        <div>
+          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            D. Weight (kg)*
+          </label>
+          <input
+            type="number"
+            className="input input-sm input-primary input-bordered w-full"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+          />
+        </div>
       </div>
-      <div className="mb-4 bg-primary/5 text-primary p-3 rounded-lg flex justify-between items-center text-sm">
+      <div className="mb-4 bg-primary/5 text-primary px-4 py-1 rounded-lg flex justify-between items-center text-sm">
         <span>
           Volumetric Weight
           <br /> <span className="text-md">{volumetricWeight} kg</span>
@@ -455,9 +452,9 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
         </button>
       </div>
       {result && (
-        <div className="mt-6">
+        <div className="mt-2">
           <h3 className="font-bold mb-3 border-b pb-2">Available Couriers ({result.length})</h3>
-          <div className="overflow-x-auto">
+          <div className="overflow-y-auto h-[calc(100dvh-480px)]">
             <table className="table table-primary table-sm table-zebra">
               <thead>
                 <tr>
@@ -482,6 +479,16 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
                 </tr>
               </thead>
               <tbody>
+                {result.map((c) => (
+                  <tr key={c.courier_company_id}>
+                    <td className="font-semibold">{c.courier_name}</td>
+                    <td>{c.etd}</td>
+                    <td className="font-semibold text-primary text-[15px]">₹{c.rate}</td>
+                    <td>
+                      {c.rating} <FiStar className="inline text-primary" />
+                    </td>
+                  </tr>
+                ))}
                 {result.map((c) => (
                   <tr key={c.courier_company_id}>
                     <td className="font-semibold">{c.courier_name}</td>

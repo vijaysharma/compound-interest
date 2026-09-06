@@ -596,10 +596,7 @@ const EmiCalculator: React.FC = () => {
             </span>
           </label>
         </div>
-        <DisplayCard
-          primaryAmount={Math.round(baseMonthlyEmi)}
-          title="Monthly EMI Amount"
-        />
+        <DisplayCard primaryAmount={Math.round(baseMonthlyEmi)} title="Monthly EMI Amount" />
       </div>
       {/* Loan Statistics & Pie Chart Section */}
       {principalAmount > 0 && (
@@ -639,14 +636,20 @@ const EmiCalculator: React.FC = () => {
                         className="fill-primary stroke-base-100 transition-all duration-700 ease-out"
                         strokeWidth="1.5"
                       >
-                        <title>Principal: ₹{Math.round(principalAmount).toLocaleString('en-IN')} ({principalPercent.toFixed(1)}%)</title>
+                        <title>
+                          Principal: ₹{Math.round(principalAmount).toLocaleString('en-IN')} (
+                          {principalPercent.toFixed(1)}%)
+                        </title>
                       </path>
                       <path
                         d={pieSlices.interestD}
                         className="fill-error stroke-base-100 transition-all duration-700 ease-out"
                         strokeWidth="1.5"
                       >
-                        <title>Interest: ₹{Math.round(totalInterest).toLocaleString('en-IN')} ({interestPercent.toFixed(1)}%)</title>
+                        <title>
+                          Interest: ₹{Math.round(totalInterest).toLocaleString('en-IN')} (
+                          {interestPercent.toFixed(1)}%)
+                        </title>
                       </path>
                     </>
                   )}
@@ -1042,23 +1045,6 @@ const EmiCalculator: React.FC = () => {
       <CalculatorContentSection
         title="Understanding Loan Amortization & Smart Prepayment Strategies"
         subtitle="An Equated Monthly Installment (EMI) consists of two components: the interest on the outstanding loan balance and the principal repayment. In the initial years of a loan, up to 75% of your EMI goes toward interest rather than principal reduction."
-        formulaTitle="Mathematical Formula for Loan EMI Calculation"
-        formula="E = P × r × (1 + r)^n / [((1 + r)^n) - 1]"
-        formulaExplanation={[
-          { symbol: 'E', label: 'Equated Monthly Installment (EMI) payable each month (₹)' },
-          { symbol: 'P', label: 'Loan Principal borrowed amount (₹)' },
-          { symbol: 'r', label: 'Monthly interest rate: Annual rate / 12 / 100' },
-          { symbol: 'n', label: 'Total loan repayment tenure in months (Years × 12)' },
-        ]}
-        workedExample={{
-          title: 'Worked Example: ₹30 Lakh Home Loan for 20 Years at 8.75%',
-          description:
-            'Borrowing ₹30,00,000 at 8.75% annual interest over 240 months (r = 0.0072916):',
-          calculation:
-            'E = 30,00,000 × 0.0072916 × (1.0072916)^240 / [(1.0072916)^240 - 1] = ₹26,511 / month',
-          result:
-            'Total Amount Payable: ₹63,62,708 | Total Interest Paid: ₹33,62,708 (Exceeds Principal Loan Amount!)',
-        }}
         comparisonTable={{
           headers: [
             'Prepayment Option',

@@ -28,9 +28,9 @@ export interface InputType {
   locale?: string;
   compact?: boolean;
 }
-export interface ButtonDataType {
+export interface ButtonDataType<T = string> {
   id: string;
-  value: string;
+  value: T;
   title: string;
 }
 export interface StepAmountType {
@@ -38,12 +38,10 @@ export interface StepAmountType {
   value: string;
   title: string;
 }
-export interface JoinedButtonType {
-  data: ButtonDataType[];
-  selectedValue: string;
-  updateSelectedValue: (
-    amnt: string
-  ) => void | React.Dispatch<SetStateAction<string>> | React.Dispatch<SetStateAction<number>>;
+export interface JoinedButtonType<T = string> {
+  data: ButtonDataType<T>[];
+  selectedValue?: T;
+  updateSelectedValue: (value: T) => void;
   title?: string;
   sizePrefix?: string;
   className?: string;

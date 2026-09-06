@@ -286,22 +286,8 @@ const CurrencyConverter = () => {
     setSourceCode(targetCode);
     setTargetCode(sourceCode);
   };
-  const conversionSteps = useMemo(() => {
-    const values = [1, 5, 10, 25, 50, 100, 500, 1000, 5000];
-    return values.map((val) => ({
-      val,
-      converted: (val * exchangeRate).toLocaleString(targetCurrency.locale, {
-        maximumFractionDigits: 2,
-        minimumFractionDigits: 2,
-      }),
-      inverseConverted: (val * inverseRate).toLocaleString(sourceCurrency.locale, {
-        maximumFractionDigits: 2,
-        minimumFractionDigits: 2,
-      }),
-    }));
-  }, [exchangeRate, inverseRate, sourceCurrency.locale, targetCurrency.locale]);
   return (
-    <main className="w-full max-w-4xl mx-auto px-2 py-4">
+    <main className="w-full max-w-4xl mx-auto px-2 py-2">
       <SEOHead
         title="Currency Converter — Live Foreign Exchange Rates India 2026"
         description="Free real-time currency converter with live mid-market forex rates for 160+ currencies including USD to INR, EUR to INR, GBP to INR, AED to INR. 100% private."
@@ -320,8 +306,56 @@ const CurrencyConverter = () => {
           Convert 160+ global currencies in real time with zero bank markup.
         </p>
       </header>
-      <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 shadow-sm mb-6 space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div>
+        <InputAmount
+          inputAmount={amount}
+          setInputAmount={setAmount}
+          className="mb-1"
+          title={`Amount (${sourceCurrency.code})`}
+          stepData={[
+            {
+              id: 'c1',
+              value: '100000',
+              title: `${IndianFormat.includes(sourceCurrency.locale) ? '1L' : '100K'}`,
+            },
+            {
+              id: 'c2',
+              value: '50000',
+              title: '50K',
+            },
+            {
+              id: 'c3',
+              value: '10000',
+              title: '10K',
+            },
+            {
+              id: 'c4',
+              value: '5000',
+              title: '5K',
+            },
+            {
+              id: 'c5',
+              value: '1000',
+              title: '1K',
+            },
+            {
+              id: 'c6',
+              value: '500',
+              title: '500',
+            },
+            {
+              id: 'c7',
+              value: '100',
+              title: '100',
+            },
+          ]}
+          currencySymbol={sourceCurrency.symbol}
+          locale={sourceCurrency.locale}
+          typeSizePrefix="base"
+          stepSizePrefix="sm"
+        />
+        <br />
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-3 mb-4">
           <div className="space-y-1.5">
             <label
               htmlFor="source-currency"
@@ -374,53 +408,6 @@ const CurrencyConverter = () => {
             </select>
           </div>
         </div>
-        <InputAmount
-          inputAmount={amount}
-          setInputAmount={setAmount}
-          className="mb-1"
-          title={`Amount (${sourceCurrency.code})`}
-          stepData={[
-            {
-              id: 'c1',
-              value: '100000',
-              title: `${IndianFormat.includes(sourceCurrency.locale) ? '1L' : '100K'}`,
-            },
-            {
-              id: 'c2',
-              value: '50000',
-              title: '50K',
-            },
-            {
-              id: 'c3',
-              value: '10000',
-              title: '10K',
-            },
-            {
-              id: 'c4',
-              value: '5000',
-              title: '5K',
-            },
-            {
-              id: 'c5',
-              value: '1000',
-              title: '1K',
-            },
-            {
-              id: 'c6',
-              value: '500',
-              title: '500',
-            },
-            {
-              id: 'c7',
-              value: '100',
-              title: '100',
-            },
-          ]}
-          currencySymbol={sourceCurrency.symbol}
-          locale={sourceCurrency.locale}
-          typeSizePrefix="base"
-          stepSizePrefix="sm"
-        />
         {error ? (
           <div className="alert alert-error text-xs p-3">
             <span>{error}</span>
@@ -433,7 +420,7 @@ const CurrencyConverter = () => {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 mb-4">
             <DisplayCard
               primaryAmount={parseFloat(convertedAmount.toFixed(2))}
               currencySymbol={targetCurrency.symbol}
@@ -494,111 +481,9 @@ const CurrencyConverter = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
-          <h3 className="text-xs font-bold uppercase tracking-wider opacity-70 mb-3">
-            Convert {sourceCurrency.code} to {targetCurrency.code}
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="table table-xs w-full">
-              <thead>
-                <tr>
-                  <th>{sourceCurrency.code}</th>
-                  <th className="text-right">{targetCurrency.code}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conversionSteps.map((step) => (
-                  <tr key={`fwd-${step.val}`} className="hover:bg-base-200/50">
-                    <td className="font-semibold">
-                      {step.val} {sourceCurrency.code}
-                    </td>
-                    <td className="text-right">
-                      {targetCurrency.symbol} {step.converted}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div className="card bg-base-100 border border-base-300 p-4 shadow-sm">
-          <h3 className="text-xs font-bold uppercase tracking-wider opacity-70 mb-3">
-            Convert {targetCurrency.code} to {sourceCurrency.code}
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="table table-xs w-full">
-              <thead>
-                <tr>
-                  <th>{targetCurrency.code}</th>
-                  <th className="text-right">{sourceCurrency.code}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conversionSteps.map((step) => (
-                  <tr key={`inv-${step.val}`} className="hover:bg-base-200/50">
-                    <td className="font-semibold">
-                      {step.val} {targetCurrency.code}
-                    </td>
-                    <td className="text-right">
-                      {sourceCurrency.symbol} {step.inverseConverted}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
       <CalculatorContentSection
         title="Live Foreign Exchange (Forex) Rates & Currency Conversion"
         subtitle="Global exchange rates change by the millisecond driven by interest rate decisions, global trade flows, inflation rates, and geopolitical shifts. Understand mid-market rates to make smarter travel, remittance, and international business transactions."
-        comparisonTable={{
-          headers: [
-            'Currency Pair',
-            'Typical Mid-Market Rate',
-            'Standard Bank Rate (2-3% Spread)',
-            'Best Use Case',
-          ],
-          rows: [
-            [
-              'USD / INR',
-              '₹86.50 – ₹87.00',
-              '₹84.50 – ₹89.00',
-              'Tech Salaries, US Stocks, Software Subscriptions',
-            ],
-            [
-              'EUR / INR',
-              '₹92.00 – ₹94.00',
-              '₹89.50 – ₹96.50',
-              'Eurozone Travel, Higher Education in Europe',
-            ],
-            [
-              'GBP / INR',
-              '₹108.00 – ₹111.00',
-              '₹105.00 – ₹114.00',
-              'UK Tuition Fees, Expat Remittances',
-            ],
-            [
-              'AED / INR',
-              '₹23.50 – ₹23.80',
-              '₹22.80 – ₹24.40',
-              'Gulf Expat Remittances, Dubai Tourism',
-            ],
-            [
-              'CAD / INR',
-              '₹61.00 – ₹63.00',
-              '₹59.00 – ₹65.00',
-              'Canadian Permanent Residency, Tuition Fees',
-            ],
-            [
-              'SGD / INR',
-              '₹64.00 – ₹66.00',
-              '₹62.00 – ₹68.00',
-              'Southeast Asia Business, Tech Hub Commerce',
-            ],
-          ],
-        }}
         keyBenefits={[
           {
             title: 'Real Mid-Market Rates',

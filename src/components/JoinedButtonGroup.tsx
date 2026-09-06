@@ -1,5 +1,5 @@
-import { JoinedButtonType } from "../types/types";
-const JoinedButtonGroup = ({
+import { JoinedButtonType } from '../types/types';
+function JoinedButtonGroup<T = string>({
   data,
   selectedValue,
   updateSelectedValue,
@@ -7,9 +7,9 @@ const JoinedButtonGroup = ({
   sizePrefix,
   className,
   btnClass,
-}: JoinedButtonType) => {
+}: JoinedButtonType<T>) {
   return (
-    <div className={`flex flex-col w-full text-center ${className}`}>
+    <div className={`flex flex-col w-full text-center ${className ?? ''}`}>
       {title && <h5>{title}</h5>}
       <div className="join mx-auto w-full">
         {data &&
@@ -17,7 +17,7 @@ const JoinedButtonGroup = ({
             <button
               key={p.id}
               className={`join-item btn border-primary grow flex-1 ${
-                selectedValue === p.value && "btn-primary"
+                selectedValue === p.value && 'btn-primary'
               } ${sizePrefix && `btn-${sizePrefix}`} ${btnClass}`}
               onClick={() => updateSelectedValue(p.value)}
             >
@@ -27,5 +27,5 @@ const JoinedButtonGroup = ({
       </div>
     </div>
   );
-};
+}
 export default JoinedButtonGroup;

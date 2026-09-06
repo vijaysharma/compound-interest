@@ -797,7 +797,7 @@ const Lumpsum = ({
     return <h3 className="text-error">{error.message}</h3>;
   }
   return (
-    <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
+    <main className="w-full max-w-5xl mx-auto px-0 py-2 space-y-2">
       <SEOHead
         title="Mutual Fund Calculator — Lumpsum Return & CAGR Calculator India 2026"
         description="Analyze historical mutual fund lumpsum returns, CAGR growth, and rolling NAV trajectories with live AMFI data. Compare up to 8 funds simultaneously."
@@ -820,7 +820,7 @@ const Lumpsum = ({
       <div className="flex gap-2">
         <button
           type="button"
-          className="btn btn-primary btn-sm mb-2 "
+          className="btn btn-primary btn-sm"
           onClick={() => setIsFundSelectorOpen(true)}
         >
           Select mutual funds ({pinnedFunds.length}/8)
@@ -846,7 +846,7 @@ const Lumpsum = ({
        * ======================================================
        */}
       {!showDate && (
-        <>
+        <div>
           <JoinedButtonGroup
             data={[
               {
@@ -992,7 +992,7 @@ const Lumpsum = ({
             className="mb-2"
             btnClass="rounded-tl-none rounded-tr-none"
           />
-        </>
+        </div>
       )}
       {/*
        * ======================================================

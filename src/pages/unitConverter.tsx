@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
-import { HiArrowsRightLeft } from 'react-icons/hi2';
-import { FiNavigation } from 'react-icons/fi';
+import { FiNavigation, FiRepeat } from 'react-icons/fi';
+import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 const unitTypes = {
   Length: {
     mm: 0.001,
@@ -63,7 +63,7 @@ const unitTypes = {
 };
 type UnitCategory = keyof typeof unitTypes | 'Temperature';
 interface UnitInputRowProps {
-  label: string;
+  label?: string;
   value: string;
   onChange?: (val: string) => void;
   unit: string;
@@ -71,6 +71,7 @@ interface UnitInputRowProps {
   availableUnits: string[];
   readOnly?: boolean;
   isResult?: boolean;
+  className?: string;
 }
 const UnitInputRow: React.FC<UnitInputRowProps> = ({
   label,
@@ -81,14 +82,17 @@ const UnitInputRow: React.FC<UnitInputRowProps> = ({
   availableUnits,
   readOnly = false,
   isResult = false,
+  className,
 }) => (
-  <div className="join w-full min-w-0">
-    <span className="inline-block join-item border border-primary text-[11px]/[30px] w-32 text-center align-middle bg-primary text-primary-content font-bold uppercase tracking-wider">
-      {label}
-    </span>
+  <div className={`join w-full min-w-0 ${className ?? ''}`}>
+    {label && (
+      <span className="inline-block join-item border border-primary text-[11px]/[30px] w-32 text-center align-middle bg-primary text-primary-content font-bold uppercase tracking-wider">
+        {label}
+      </span>
+    )}
     <input
       type={readOnly ? 'text' : 'number'}
-      className={`join-item input input-sm input-primary input-bordered ${
+      className={`join-item input input-md input-primary input-bordered ${
         isResult ? 'bg-success/10 text-success font-bold' : ''
       }`}
       value={value}
@@ -97,7 +101,7 @@ const UnitInputRow: React.FC<UnitInputRowProps> = ({
       readOnly={readOnly}
     />
     <select
-      className="join-item w-48 select select-sm select-bordered select-primary  font-medium"
+      className="join-item w-36 select select-md select-bordered select-primary  font-medium"
       value={unit}
       onChange={(e) => onUnitChange(e.target.value)}
     >
@@ -141,15 +145,6 @@ const getSavedState = (): SavedState => {
   };
 };
 const UnitConverter: React.FC = () => {
-  const categories: UnitCategory[] = [
-    'Length',
-    'Area',
-    'Weight',
-    'Volume',
-    'Temperature',
-    'Speed',
-    'Data',
-  ];
   const [saved] = useState<SavedState>(getSavedState);
   const [category, setCategory] = useState<UnitCategory>(saved.category);
   const [fromUnit, setFromUnit] = useState<string>(saved.fromUnit);
@@ -224,50 +219,88 @@ const UnitConverter: React.FC = () => {
           temperature, and speed.
         </p>
         {/* Category Selector */}
-        <div className="join w-full justify-center mb-4">
-          {categories.map((c) => (
-            <span
-              key={c}
-              onClick={() => handleCategoryChange(c)}
-              className={`btn btn-primary py-4 btn-xs ${category === c ? 'btn-primary' : 'btn-outline'}`}
-            >
-              {c}
-            </span>
-          ))}
+        <div className="mb-6">
+          <JoinedButtonGroup
+            data={[
+              {
+                id: 'uc1',
+                title: 'Length',
+                value: 'Length',
+              },
+              {
+                id: 'uc2',
+                title: 'Area',
+                value: 'Area',
+              },
+              {
+                id: 'uc3',
+                title: 'Weight',
+                value: 'Weight',
+              },
+              {
+                id: 'uc4',
+                title: 'Volume',
+                value: 'Volume',
+              },
+            ]}
+            selectedValue={category}
+            updateSelectedValue={handleCategoryChange}
+            btnClass="rounded-bl-none rounded-br-none border-b-0"
+            sizePrefix="md"
+          />
+          <JoinedButtonGroup
+            data={[
+              {
+                id: 'uc5',
+                title: 'Temperature',
+                value: 'Temperature',
+              },
+              {
+                id: 'uc6',
+                title: 'Speed',
+                value: 'Speed',
+              },
+              {
+                id: 'uc7',
+                title: 'Data',
+                value: 'Data',
+              },
+            ]}
+            selectedValue={category}
+            updateSelectedValue={handleCategoryChange}
+            btnClass="rounded-tl-none rounded-tr-none"
+            sizePrefix="md"
+          />
         </div>
         {/* Converter Logic: Single row input container */}
-        <div>
-          <div className="flex flex-col md:flex-row items-center gap-3">
-            <UnitInputRow
-              label="From"
-              value={inputValue}
-              onChange={setInputValue}
-              unit={fromUnit}
-              onUnitChange={setFromUnit}
-              availableUnits={getAvailableUnits()}
-            />
-            {/* Swap Button */}
-            <div className="flex justify-center md:pt-5 shrink-0">
-              <button
-                type="button"
-                onClick={handleSwap}
-                className="btn btn-circle btn-sm btn-ghost bg-base-200 hover:bg-base-300 hover:text-primary transition-all shadow-sm"
-                title="Swap units"
-                aria-label="Swap units"
-              >
-                <HiArrowsRightLeft className="w-4 h-4" />
-              </button>
-            </div>
-            <UnitInputRow
-              label="To"
-              value={outputValue}
-              unit={toUnit}
-              onUnitChange={setToUnit}
-              availableUnits={getAvailableUnits()}
-              readOnly
-              isResult
-            />
+        <div className="flex flex-col gap-6 w-full">
+          <UnitInputRow
+            value={inputValue}
+            onChange={setInputValue}
+            unit={fromUnit}
+            onUnitChange={setFromUnit}
+            availableUnits={getAvailableUnits()}
+          />
+          {/* Swap Button */}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={handleSwap}
+              className="btn btn-circle btn-primary btn-sm sm:btn-md shadow hover:scale-105 transition-transform"
+              title="Swap units"
+              aria-label="Swap units"
+            >
+              <FiRepeat className="h-4 w-4" />
+            </button>
           </div>
+          <UnitInputRow
+            value={outputValue}
+            unit={toUnit}
+            onUnitChange={setToUnit}
+            availableUnits={getAvailableUnits()}
+            readOnly
+            isResult
+          />
         </div>
       </>
     </main>

@@ -34,7 +34,7 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
   faqs,
 }) => {
   return (
-    <section className="mt-12 border-t border-base-300 pt-10 text-base-content">
+    <section className="mt-6 border-t border-base-300 pt-6 text-base-content">
       <div className="max-w-4xl mx-auto space-y-10">
         {/* Title & Introduction */}
         <div>

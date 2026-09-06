@@ -71,7 +71,7 @@ const rdSchema = {
           name: 'How to calculate recurring deposit maturity amount?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank\'s quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).',
+            text: "RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank's quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).",
           },
         },
         {
@@ -123,7 +123,7 @@ const rdFaqs = [
   {
     question: 'How to calculate recurring deposit maturity amount?',
     answer:
-      'RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank\'s quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).',
+      "RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank's quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).",
   },
   {
     question: 'RD vs SIP: Which is better for monthly savings?',
@@ -174,7 +174,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
   };
   const payoutAmount = Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi));
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
+    <main className={`w-full max-w-4xl mx-auto px-2 py-2 ${className || ''}`}>
       <SEOHead
         title="RD Calculator — Recurring Deposit Maturity & Interest Calculator India 2026"
         description="Free recurring deposit calculator for Indian banks & Post Office RD. Calculate RD maturity amount with quarterly compounding. Compare RD vs FD vs SIP returns."
@@ -197,7 +197,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
       <div>
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
-          className="mb-1"
+          className="mb-2"
           inputAmount={pa}
           setInputAmount={setPa}
           type={invType}
@@ -210,8 +210,8 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
           stepSizePrefix={'sm'}
           title={invType === 'my' ? 'Monthly Investment' : 'Target amount'}
         />
-        <RateOfInterest className="mb-1" rt={rt} setRt={setRt} />
-        <Tenure className="mb-1" rt={rt} setRt={setRt} />
+        <RateOfInterest className="mb-2" rt={rt} setRt={setRt} />
+        <Tenure className="mb-3" rt={rt} setRt={setRt} />
         <DisplayCard
           primaryAmount={payoutAmount}
           title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}

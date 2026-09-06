@@ -205,7 +205,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
     [pa, rt.tenure, rt.tenureFormat, invType, rt.roi]
   );
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
+    <main className={`w-full max-w-4xl mx-auto px-2 py-2 ${className || ''}`}>
       <SEOHead
         title="SIP Calculator — Free Mutual Fund SIP Return Calculator India 2026"
         description="Calculate SIP returns with step-up SIP & target corpus planning. Estimate mutual fund growth for ₹500–₹1 Lakh monthly SIP over 1–35 years. 100% free & private."
@@ -227,7 +227,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
       <div className="space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
-          className="mb-1"
+          className="mb-2"
           inputAmount={pa}
           setInputAmount={setPa}
           type={invType}
@@ -240,8 +240,8 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
           stepSizePrefix={'sm'}
           title={invType === 'my' ? 'Monthly Investment' : 'Target amount'}
         />
-        <RateOfInterest className="mb-1" rt={rt} setRt={setRt} />
-        <Tenure className="mb-1" rt={rt} setRt={setRt} />
+        <RateOfInterest className="mb-2" rt={rt} setRt={setRt} />
+        <Tenure className="mb-3" rt={rt} setRt={setRt} />
         <DisplayCard
           primaryAmount={payoutAmount}
           title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}

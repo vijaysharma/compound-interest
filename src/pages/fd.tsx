@@ -190,7 +190,7 @@ const FD: React.FC = () => {
     return Math.round(finalAmount);
   }, [pa, rt, mode, invType, frequency]);
   return (
-    <main className="w-full max-w-4xl mx-auto px-2 py-4">
+    <main className="w-full max-w-2xl mx-auto px-2 py-2">
       <SEOHead
         title="Compound Interest Calculator & FD Calculator — Fixed Deposit India 2026"
         description="Free compound interest calculator for Indian fixed deposits. Calculate FD maturity with daily, monthly & quarterly compounding. Compare cumulative vs non-cumulative FD returns."
@@ -212,7 +212,7 @@ const FD: React.FC = () => {
       </header>
       <div>
         <InputAmount
-          className="mb-1"
+          className="mb-2"
           inputAmount={pa}
           setInputAmount={setPa}
           type={invType}
@@ -225,10 +225,10 @@ const FD: React.FC = () => {
           stepSizePrefix={'sm'}
           title={invType === 'tgt' ? 'Target amount' : ''}
         />
-        <RateOfInterest className="mb-1" rt={rt} setRt={setRt} />
-        <Tenure className="mb-1" rt={rt} setRt={setRt} />
+        <RateOfInterest className="mb-2" rt={rt} setRt={setRt} />
+        <Tenure className="mb-2" rt={rt} setRt={setRt} />
         <JoinedButtonGroup
-          className="mb-1"
+          className="mb-2"
           data={FREQUENCY_DATA}
           sizePrefix="sm"
           selectedValue={frequency}
@@ -237,7 +237,7 @@ const FD: React.FC = () => {
         />
         {invType === 'inv' && (
           <JoinedButtonGroup
-            className="mb-1"
+            className="mb-3"
             data={PAYOUT_MODE_DATA}
             sizePrefix="sm"
             selectedValue={mode}

@@ -192,7 +192,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
     [pa, rt, irt, inflationFreq, t.tenure, t.tenureFormat, wa]
   );
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
+    <main className={`w-full max-w-4xl mx-auto px-2 py-2 ${className || ''}`}>
       <SEOHead
         title="SWP Calculator — Systematic Withdrawal Plan Calculator India 2026"
         description="Free SWP calculator to plan retirement income. Model monthly pension withdrawals, inflation-adjusted cashflows & corpus longevity from mutual funds. 100% private."
@@ -215,7 +215,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
       <div className="space-y-4">
         {title && <h5 className="font-bold">{title}</h5>}
         <InputAmount
-          className="mb-1"
+          className="mb-2"
           inputAmount={pa}
           setInputAmount={setPa}
           type={pa}
@@ -225,15 +225,15 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           stepSizePrefix={'sm'}
         />
         <InputAmount
-          className="mb-1"
+          className="mb-2"
           inputAmount={wa}
           setInputAmount={setWa}
           stepData={wdStepData}
           stepSizePrefix={'sm'}
           title="Withdrawal amount per month"
         />
-        <ROI className="mb-1" rt={rt} setRt={setRt} title={'Expected return rate per annum (%)'} />
-        <ROI className="mb-1" rt={irt} setRt={setIRt} title={'Inflation rate (%)'} />
+        <ROI className="mb-2" rt={rt} setRt={setRt} title={'Expected return rate per annum (%)'} />
+        <ROI className="mb-2" rt={irt} setRt={setIRt} title={'Inflation rate (%)'} />
         <JoinedButtonGroup
           title="Inflation calculated per"
           className="mb-1"
@@ -249,7 +249,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
             { id: 'ir6', title: '5Y', value: '60' },
           ]}
         />
-        <Tenure className="mb-1" rt={t} setRt={setT} />
+        <Tenure className="mb-3" rt={t} setRt={setT} />
         <DisplayCard
           colorClass={`${parseInt(remainingAmount) < parseInt(pa) ? 'text-error' : 'text-primary'}`}
           primaryAmount={parseInt(remainingAmount)}

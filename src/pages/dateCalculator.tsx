@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import DisplayCard from '../components/DisplayCard.tsx';
+import { FiCalendar } from 'react-icons/fi';
 type DateMode = 'difference' | 'add-subtract';
 const MODE_DATA = [
   { id: 'diff', value: 'difference', title: 'Date Difference' },
@@ -238,7 +239,7 @@ const DateCalculator: React.FC = () => {
   const numberInputBase =
     'input input-bordered input-primary input-sm text-center w-full font-semibold';
   return (
-    <main className="w-full max-w-lg mx-auto px-2 py-4 space-y-4">
+    <main className="w-full max-w-lg mx-auto px-2 py-2 space-y-4">
       <SEOHead
         title="Date & Time Calculator — Days & Hours Difference, Add/Subtract"
         description="Free date and time calculator to find the number of days, hours, weeks, months, and years between two dates/times, or add/subtract days and hours."
@@ -246,11 +247,12 @@ const DateCalculator: React.FC = () => {
         canonicalPath="/date-calculator"
         noIndex={false}
       />
-      <header className="text-center">
-        <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+      <header>
+        <h2 className="card-title text-lg flex items-center gap-2">
+          <FiCalendar className="text-primary" />
           Date &amp; Time Calculator
-        </h1>
-        <p className="text-xs opacity-70 mt-1">
+        </h2>
+        <p className="text-sm opacity-70 mb-4">
           Find the duration in days &amp; hours between dates, or add/subtract time from a date.
         </p>
       </header>
@@ -263,20 +265,20 @@ const DateCalculator: React.FC = () => {
       {mode === 'difference' ? (
         <div className="space-y-4">
           <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-base-100 border border-base-300 rounded-xl p-3 shadow-sm">
+            <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex sm:gap-3 w-full">
+              <div className="flex-1">
                 <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
                   From Date &amp; Time
                 </label>
                 <div className="w-full join join-horizonal">
                   <input
-                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
+                    className="input input-sm input-primary input-bordered font-medium"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                   />
                   <input
-                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
+                    className="min-w-[100px] input input-sm input-primary input-bordered font-medium px-1"
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
@@ -289,19 +291,19 @@ const DateCalculator: React.FC = () => {
                   </p>
                 )}
               </div>
-              <div className="bg-base-100 border border-base-300 rounded-xl p-3 shadow-sm">
+              <div className="flex-1">
                 <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
                   To Date &amp; Time
                 </label>
                 <div className="w-full join join-horizonal">
                   <input
-                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
+                    className="input input-sm input-primary input-bordered font-medium"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                   />
                   <input
-                    className="w-1/2 input input-sm input-primary input-bordered font-medium"
+                    className="min-w-[100px] input input-sm input-primary input-bordered font-medium"
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
@@ -335,6 +337,7 @@ const DateCalculator: React.FC = () => {
           {diff && (
             <div className="space-y-3">
               <DisplayCard
+                currencySymbol=""
                 primaryAmount={diff.totalDays}
                 title={isInclusive ? 'Total Days (Inclusive)' : 'Total Days'}
                 secondaryInfo={{
@@ -342,7 +345,7 @@ const DateCalculator: React.FC = () => {
                   amount: diff.totalHours,
                 }}
               />
-              <div className="card bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
+              <div className="space-y-3">
                 <div className="grid grid-cols-4 gap-2 text-center">
                   <div>
                     <p className="text-xl sm:text-2xl font-bold text-primary">{diff.years}</p>
@@ -383,7 +386,7 @@ const DateCalculator: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-base-100 border border-base-300 rounded-xl p-3 shadow-sm">
+          <div>
             <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
               Starting Date &amp; Time
             </label>

@@ -23,6 +23,7 @@ import {
   extractHashtags,
 } from './NotesTypes';
 import { MoveNoteModal } from './MoveNoteModal';
+import { AiFillFileAdd } from 'react-icons/ai';
 interface NotesListProps {
   notes: Note[];
   selectedNoteId: string | null;
@@ -341,16 +342,18 @@ export const NotesList: React.FC<NotesListProps> = ({
               className="btn btn-ghost btn-xs btn-square min-h-[36px] min-w-[36px]"
               title={viewMode === 'list' ? 'Switch to Gallery view' : 'Switch to List view'}
             >
-              {viewMode === 'list' ? <FiGrid className="w-4 h-4" /> : <FiList className="w-4 h-4" />}
+              {viewMode === 'list' ? (
+                <FiGrid className="w-4 h-4" />
+              ) : (
+                <FiList className="w-4 h-4" />
+              )}
             </button>
             {!isTrash && (
-              <button
+              <AiFillFileAdd
                 onClick={onNewNote}
-                className="btn btn-primary btn-xs btn-square min-h-[36px] min-w-[36px]"
+                className="text-primary hover:bg-primary/10 h-[22px] w-[22px]"
                 title="Compose New Note"
-              >
-                <FiEdit3 className="w-4 h-4" />
-              </button>
+              />
             )}
           </div>
         </div>
@@ -373,7 +376,7 @@ export const NotesList: React.FC<NotesListProps> = ({
           )}
         </div>
         <div className="flex items-center justify-between text-[11px] text-base-content/60 pt-0.5">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1">
             <span className="grow w-[80px]">Sort by:</span>
             <select
               value={sortOption}
@@ -418,10 +421,7 @@ export const NotesList: React.FC<NotesListProps> = ({
                   : 'No notes in this folder'}
             </p>
             {!isTrash && !searchQuery && (
-              <button
-                onClick={onNewNote}
-                className="btn btn-primary btn-xs mt-1"
-              >
+              <button onClick={onNewNote} className="btn btn-primary btn-xs mt-1">
                 Create a Note
               </button>
             )}
@@ -510,7 +510,9 @@ export const NotesList: React.FC<NotesListProps> = ({
                         title="Move to Folder"
                       >
                         <FiFolder className="w-2.5 h-2.5" />
-                        <span className="truncate max-w-[60px]">{note.folder || 'Quick Notes'}</span>
+                        <span className="truncate max-w-[60px]">
+                          {note.folder || 'Quick Notes'}
+                        </span>
                       </button>
                     )}
                   </div>
