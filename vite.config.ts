@@ -16,6 +16,20 @@ const localApiPlugin = (): Plugin => ({
         return;
       }
       const path = request.url.split('?')[0];
+      if (path.startsWith('/api/shiprocket-postcode/')) {
+        const query = request.url.includes('?') ? '?' + request.url.split('?')[1] : '';
+        const targetUrl = `https://apiv2.shiprocket.in/v1/external/open/postcode/${path.replace('/api/shiprocket-postcode/', '')}${query}`;
+        try {
+          const fetchRes = await fetch(targetUrl);
+          response.statusCode = fetchRes.status;
+          fetchRes.headers.forEach((value, key) => response.setHeader(key, value));
+          response.end(Buffer.from(await fetchRes.arrayBuffer()));
+        } catch (e) {
+          response.statusCode = 502;
+          response.end(JSON.stringify({ error: 'Proxy failed', detail: String(e) }));
+        }
+        return;
+      }
       let modulePath: string | null = null;
       if (path === '/api/auth/signup') {
         modulePath = '/api/auth/signup';

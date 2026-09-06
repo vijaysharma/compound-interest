@@ -88,6 +88,30 @@ function formatLocation(localities: string[], city?: string, state?: string): Pi
     tooltip: cleanLocs.length > 2 ? fullParts.join(', ') : undefined,
   };
 }
+function parseShiprocketData(data: unknown): PincodeInfo | null {
+  if (
+    data &&
+    typeof data === 'object' &&
+    'success' in data &&
+    (data as { success: boolean }).success &&
+    'postcode_details' in data
+  ) {
+    const details = (data as { postcode_details?: { city?: string; state?: string; locality?: unknown } }).postcode_details;
+    if (details) {
+      const { city, state, locality } = details;
+      const locList: string[] = Array.isArray(locality)
+        ? locality.map(String)
+        : locality
+          ? [String(locality)]
+          : [];
+      const result = formatLocation(locList, city, state);
+      if (result.display) {
+        return result;
+      }
+    }
+  }
+  return null;
+}
 async function lookupPincode(code: string, signal?: AbortSignal): Promise<PincodeInfo | null> {
   const trimmed = code.trim();
   if (!/^\d{6}$/.test(trimmed)) return null;
@@ -99,18 +123,26 @@ async function lookupPincode(code: string, signal?: AbortSignal): Promise<Pincod
     );
     if (res.ok) {
       const data = await res.json();
-      if (data.success && data.postcode_details) {
-        const { city, state, locality } = data.postcode_details;
-        const locList: string[] = Array.isArray(locality)
-          ? locality
-          : locality
-            ? [String(locality)]
-            : [];
-        const result = formatLocation(locList, city, state);
-        if (result.display) {
-          pincodeCache.set(trimmed, result);
-          return result;
-        }
+      const result = parseShiprocketData(data);
+      if (result) {
+        pincodeCache.set(trimmed, result);
+        return result;
+      }
+    }
+  } catch (err) {
+    if ((err as Error)?.name === 'AbortError') return null;
+  }
+  try {
+    const res = await fetch(
+      `/api/shiprocket-postcode/details?postcode=${encodeURIComponent(trimmed)}`,
+      { signal }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const result = parseShiprocketData(data);
+      if (result) {
+        pincodeCache.set(trimmed, result);
+        return result;
       }
     }
   } catch (err) {
