@@ -61,6 +61,8 @@ const localApiPlugin = (): Plugin => ({
         modulePath = '/api/ppp-rates';
       } else if (path === '/api/admin/sync-ppp') {
         modulePath = '/api/admin/sync-ppp';
+      } else if (path === '/api/exchange-rates') {
+        modulePath = '/api/exchange-rates';
       } else if (path === '/api/mutual-funds') {
         modulePath = '/api/mutual-funds/index';
       } else if (path === '/api/admin/sync-mutual-funds') {

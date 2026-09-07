@@ -8,6 +8,7 @@ import {
 } from './API_LIST';
 import { MFJSONType } from '../types/types';
 import { DEFAULT_PPP_RECORDS } from './default_ppp_data';
+import { DEFAULT_EXCHANGE_RATES } from './default_exchange_rates';
 const mfSearchCache = new Map<string, MFJSONType[]>();
 const mfNavCache = new Map<string, { expiresAt: number; data: unknown[] }>();
 const mfNavRequests = new Map<string, Promise<unknown[]>>();
@@ -101,13 +102,20 @@ export const fetchExchangeRates = async (recordUsage = false): Promise<Record<st
     return exchangeRatesCache.rates;
   }
   if (recordUsage) void recordApiUsage();
-  const response = await fetch(EXCHANGE_URL);
-  const data = await response.json();
-  if (data && data.rates) {
-    exchangeRatesCache = { rates: data.rates as Record<string, number>, timestamp: Date.now() };
-    return data.rates as Record<string, number>;
+  try {
+    const response = await fetch(EXCHANGE_URL);
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.rates && typeof data.rates === 'object' && Object.keys(data.rates).length > 0) {
+        exchangeRatesCache = { rates: data.rates as Record<string, number>, timestamp: Date.now() };
+        return data.rates as Record<string, number>;
+      }
+    }
+  } catch (err) {
+    console.warn('Live exchange rates fetch failed, using fallback exchange rates:', err);
   }
-  return (data?.rates as Record<string, number>) || {};
+  exchangeRatesCache = { rates: DEFAULT_EXCHANGE_RATES, timestamp: Date.now() };
+  return DEFAULT_EXCHANGE_RATES;
 };
 // ----------------
 export interface WorldBankPPPRecord {

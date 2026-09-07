@@ -220,8 +220,13 @@ const CurrencyConverter = () => {
     setError(null);
     try {
       const data = await fetchExchangeRates(false);
-      setRates(data);
-      setLastRefreshed(new Date().toLocaleTimeString());
+      if (data && Object.keys(data).length > 0) {
+        setRates(data);
+        setError(null);
+        setLastRefreshed(new Date().toLocaleTimeString());
+      } else {
+        setError('Unable to fetch live exchange rates right now. Please try again in a moment.');
+      }
     } catch (err) {
       console.error('Failed to load exchange rates:', err);
       setError('Unable to fetch live exchange rates right now. Please try again in a moment.');
@@ -235,8 +240,13 @@ const CurrencyConverter = () => {
       try {
         const data = await fetchExchangeRates(false);
         if (!cancelled) {
-          setRates(data);
-          setLastRefreshed(new Date().toLocaleTimeString());
+          if (data && Object.keys(data).length > 0) {
+            setRates(data);
+            setError(null);
+            setLastRefreshed(new Date().toLocaleTimeString());
+          } else {
+            setError('Unable to fetch live exchange rates right now. Please try again in a moment.');
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -409,7 +419,7 @@ const CurrencyConverter = () => {
           </div>
         </div>
         {error ? (
-          <div className="alert alert-error text-xs p-3">
+          <div className="alert alert-error text-xs p-3 mb-4">
             <span>{error}</span>
             <button
               type="button"
