@@ -213,11 +213,16 @@ async function fetchWorldBankRecords(): Promise<WorldBankInflationRecord[]> {
   return records ?? [];
 }
 async function fetchIMFEstimates(): Promise<IMFDataMapperResponse> {
-  const res = await fetch(IMF_INFLATION_URL);
-  if (!res.ok) {
-    throw new Error(`Stored IMF data request failed: ${res.status}`);
+  try {
+    const res = await fetch(IMF_INFLATION_URL);
+    if (!res.ok) {
+      return { values: { PCPIPCH: {} } };
+    }
+    return (await res.json()) as IMFDataMapperResponse;
+  } catch (err) {
+    console.warn('IMF estimates fetch failed:', err);
+    return { values: { PCPIPCH: {} } };
   }
-  return (await res.json()) as IMFDataMapperResponse;
 }
 /**
  * Fetches India/USA/EU/World inflation, blending two sources:
