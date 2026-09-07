@@ -6,9 +6,11 @@ import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
 import { CountryPPPType, ExchangeRateType } from '../types/types';
 import { fetchExchangeRates, fetchPPPData } from '../data/api_data';
+import { DEFAULT_EXCHANGE_RATES } from '../data/default_exchange_rates';
 import CountrySelect from '../components/CountrySelect';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
+import { FiRepeat } from 'react-icons/fi';
 const pppSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -114,8 +116,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
   const [srcCountry, setSrcCountry] = useState('India');
   const [tgtCountry, setTgtCountry] = useState('United States');
   const [srcAmt, setSrcAmt] = useState('10000');
-  const [tgtExAmt, setTgtExAmt] = useState(0);
-  const [fetchedExData, setFetchExData] = useState<ExchangeRateType>();
+  const [fetchedExData, setFetchExData] = useState<ExchangeRateType>(DEFAULT_EXCHANGE_RATES);
   const calculatePPP = (
     srcCountry: string,
     tgtCountry: string,
@@ -197,40 +198,54 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);
     const source = data[srcCountry];
     const target = data[tgtCountry];
+    const tgtAmt = calculateTargetAmount(srcAmt, sourcePPP, targetPPP);
+    const sourceCurrencySymbol = getCurrencySymbol(source.currencyCode, source.currencyName);
+    const targetCurrencySymbol = getCurrencySymbol(target.currencyCode, target.currencyName);
+    const sAmt = parseFloat(srcAmt || '0');
+    const sourceRate = fetchedExData?.[source.currencyName];
+    const targetRate = fetchedExData?.[target.currencyName];
+    const hasRates = Boolean(sourceRate && targetRate && sourceRate > 0 && targetRate > 0);
+    const nominalForexAmt = hasRates ? (sAmt * (targetRate as number)) / (sourceRate as number) : 0;
+    const tgtAmtNum = parseFloat(tgtAmt) || 0;
+    const convertedToSource = hasRates
+      ? (tgtAmtNum * (sourceRate as number)) / (targetRate as number)
+      : 0;
+    const primarySub =
+      hasRates && convertedToSource > 0
+        ? `(${sourceCurrencySymbol} ${convertedToSource.toLocaleString(source.currencyCode, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })})`
+        : '';
     return {
-      tgtAmt: calculateTargetAmount(srcAmt, sourcePPP, targetPPP),
+      tgtAmt,
+      tgtExAmt: nominalForexAmt,
       targetCurrencyName: target.currencyName,
       sourceCurrencyName: source.currencyName,
-      targetCurrencySymbol: getCurrencySymbol(target.currencyCode, target.currencyName),
-      sourceCurrencySymbol: getCurrencySymbol(source.currencyCode, source.currencyName),
+      targetCurrencySymbol,
+      sourceCurrencySymbol,
       targetLocale: target.currencyCode,
       sourceLocale: source.currencyCode,
+      primarySub,
     };
-  }, [data, pppError, pppLoading, srcAmt, srcCountry, tgtCountry]);
+  }, [data, fetchedExData, pppError, pppLoading, srcAmt, srcCountry, tgtCountry]);
   useEffect(() => {
-    if (!derivedValues) return;
-    const { sourceCurrencyName, targetCurrencyName } = derivedValues;
-    const getExchangeRates = async () => {
-      const sAmt = srcAmt || '0';
-      if (!fetchedExData) {
+    let cancelled = false;
+    const loadExchangeRates = async () => {
+      try {
         const fetchedData = await fetchExchangeRates();
-        setFetchExData(fetchedData);
-        setTgtExAmt(
-          fetchedData[targetCurrencyName] && fetchedData[sourceCurrencyName]
-            ? (parseFloat(sAmt) * fetchedData[targetCurrencyName]) / fetchedData[sourceCurrencyName]
-            : 0
-        );
-      } else {
-        const exhangeAmt =
-          fetchedExData[targetCurrencyName] && fetchedExData[sourceCurrencyName]
-            ? (parseFloat(sAmt) * fetchedExData[targetCurrencyName]) /
-              fetchedExData[sourceCurrencyName]
-            : 0;
-        setTgtExAmt(exhangeAmt);
+        if (!cancelled && fetchedData && Object.keys(fetchedData).length > 0) {
+          setFetchExData(fetchedData);
+        }
+      } catch (err) {
+        console.warn('Failed to load exchange rates in PPP calculator:', err);
       }
     };
-    getExchangeRates();
-  }, [derivedValues, fetchedExData, srcAmt]);
+    void loadExchangeRates();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   if (pppLoading) {
     return (
       <div className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
@@ -247,8 +262,9 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       </div>
     );
   }
+  const tgtExAmt = derivedValues?.tgtExAmt ?? 0;
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
+    <main className={`w-full max-w-4xl mx-auto py-2 ${className || ''}`}>
       <SEOHead
         title="PPP Calculator — Purchasing Power Parity & Salary Comparison India 2026"
         description="Compare salaries and living costs across 150+ countries using World Bank PPP data. Convert Indian Rupee salary to real USD/EUR purchasing power equivalent. 100% free."
@@ -278,12 +294,14 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
             value={srcCountry}
             countries={Object.keys(data)}
             onChange={setSrcCountry}
+            getSecondaryText={(country) => data[country]?.currencyName}
           />
           <CountrySelect
             label="target"
             value={tgtCountry}
             countries={Object.keys(data)}
             onChange={setTgtCountry}
+            getSecondaryText={(country) => data[country]?.currencyName}
           />
           <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-xs font-semibold">
             Target
@@ -295,7 +313,8 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
             onClick={handleSwapCountries}
             className="text-xs text-primary font-semibold hover:underline focus:outline-none cursor-pointer"
           >
-            &harr; Swap source &amp; target countries
+            <FiRepeat className="h-4 w-4 inline" />
+            &nbsp;&nbsp;Swap source &amp; target countries
           </button>
         </div>
         <InputAmount
@@ -331,6 +350,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
         />
         <DisplayCard
           primaryAmount={parseFloat(parseFloat(derivedValues?.tgtAmt || '0').toFixed(2))}
+          primarySub={`${derivedValues?.primarySub || ''}`}
           currencySymbol={derivedValues?.targetCurrencySymbol || 'XYZ'}
           locale={derivedValues?.targetLocale || 'en-US'}
           title={`Equivalent Purchasing Power in ${tgtCountry}`}

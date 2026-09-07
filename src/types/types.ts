@@ -1,6 +1,7 @@
 import { ReactElement, SetStateAction } from 'react';
 export interface DisplayType {
   primaryAmount: number;
+  primarySub?: string;
   title?: string;
   secondaryInfo?: {
     title: string;

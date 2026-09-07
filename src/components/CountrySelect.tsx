@@ -4,6 +4,7 @@ interface CountrySelectProps {
   value: string;
   countries: string[];
   onChange: (country: string) => void;
+  getSecondaryText?: (country: string) => string | undefined;
 }
 const FREQUENT_COUNTRIES = [
   'India',
@@ -20,11 +21,51 @@ const FREQUENT_COUNTRIES = [
 const COUNTRY_USAGE_KEY = 'ppp-country-usage';
 const COUNTRY_USAGE_EVENT = 'ppp-country-usage-updated';
 const COUNTRY_ALIASES: Record<string, string[]> = {
-  'United States': ['us', 'usa', 'america', 'united states'],
-  'United Kingdom': ['uk', 'gb', 'england', 'britain', 'united kingdom'],
-  'United Arab Emirates': ['uae', 'emirates', 'dubai', 'united arab emirates'],
-  'South Korea': ['korea', 'south korea'],
-  Russia: ['russia', 'russian'],
+  'United States': ['us', 'usa', 'america', 'united states', 'usd', 'dollar', 'dollars'],
+  India: ['in', 'india', 'bharat', 'inr', 'rupee', 'rupees'],
+  'United Kingdom': ['uk', 'gb', 'england', 'britain', 'united kingdom', 'gbp', 'pound', 'pounds'],
+  'United Arab Emirates': [
+    'uae',
+    'emirates',
+    'dubai',
+    'united arab emirates',
+    'aed',
+    'dirham',
+    'dirhams',
+  ],
+  Germany: ['germany', 'de', 'deutschland', 'eur', 'euro', 'euros'],
+  France: ['france', 'fr', 'eur', 'euro', 'euros'],
+  'European Union': ['eu', 'europe', 'eurozone', 'eur', 'euro', 'euros'],
+  Canada: ['canada', 'ca', 'cad', 'canadian dollar'],
+  Australia: ['australia', 'au', 'aud', 'australian dollar'],
+  Singapore: ['singapore', 'sg', 'sgd'],
+  Japan: ['japan', 'jp', 'jpy', 'yen'],
+  Switzerland: ['switzerland', 'ch', 'swiss', 'chf', 'franc'],
+  'Saudi Arabia': ['saudi', 'saudi arabia', 'sa', 'sar', 'riyal'],
+  Qatar: ['qatar', 'qa', 'qar', 'qatari riyal'],
+  Kuwait: ['kuwait', 'kw', 'kwd', 'dinar', 'kuwaiti dinar'],
+  China: ['china', 'cn', 'cny', 'yuan', 'rmb', 'renminbi'],
+  Thailand: ['thailand', 'th', 'thb', 'baht'],
+  Malaysia: ['malaysia', 'my', 'myr', 'ringgit'],
+  'South Korea': ['korea', 'south korea', 'kr', 'krw', 'won'],
+  Russia: ['russia', 'russian', 'ru', 'rub', 'ruble', 'rouble'],
+  'New Zealand': ['new zealand', 'nz', 'nzd'],
+  'South Africa': ['south africa', 'za', 'zar', 'rand'],
+  Brazil: ['brazil', 'br', 'brl', 'real'],
+  Sweden: ['sweden', 'se', 'sek', 'krona'],
+  Norway: ['norway', 'no', 'nok', 'krone'],
+  Denmark: ['denmark', 'dk', 'dkk', 'krone'],
+  Turkey: ['turkey', 'tr', 'try', 'lira'],
+  Indonesia: ['indonesia', 'id', 'idr', 'rupiah'],
+  'Hong Kong': ['hong kong', 'hk', 'hkd'],
+  Mexico: ['mexico', 'mx', 'mxn', 'peso'],
+  Poland: ['poland', 'pl', 'pln', 'zloty'],
+  Philippines: ['philippines', 'ph', 'php', 'peso'],
+  Vietnam: ['vietnam', 'vn', 'vnd', 'dong'],
+  Bangladesh: ['bangladesh', 'bd', 'bdt', 'taka'],
+  Pakistan: ['pakistan', 'pk', 'pkr', 'rupee'],
+  'Sri Lanka': ['sri lanka', 'lk', 'lkr', 'rupee'],
+  Nepal: ['nepal', 'np', 'npr', 'rupee'],
 };
 const normalise = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
 const readCountryUsage = (): Record<string, number> => {
@@ -58,7 +99,13 @@ const fuzzyScore = (country: string, query: string) => {
   }
   return best;
 };
-const CountrySelect = ({ label, value, countries, onChange }: CountrySelectProps) => {
+const CountrySelect = ({
+  label,
+  value,
+  countries,
+  onChange,
+  getSecondaryText,
+}: CountrySelectProps) => {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [countryUsage, setCountryUsage] = useState<Record<string, number>>(readCountryUsage);
@@ -142,11 +189,16 @@ const CountrySelect = ({ label, value, countries, onChange }: CountrySelectProps
               <li key={country} role="option" aria-selected={country === value}>
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-base-200"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-base-200 flex items-center justify-between"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectCountry(country)}
                 >
-                  {country}
+                  <span className="truncate">{country}</span>
+                  {getSecondaryText?.(country) && (
+                    <span className="text-xs font-mono font-semibold opacity-70 bg-base-200/80 border border-base-300 px-1.5 py-0.5 rounded ml-2 shrink-0">
+                      {getSecondaryText(country)}
+                    </span>
+                  )}
                 </button>
               </li>
             ))
