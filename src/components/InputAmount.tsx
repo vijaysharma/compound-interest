@@ -38,75 +38,72 @@ const InputAmount = ({
   return (
     <div className={`${styles.container} ${className}`.trim()}>
       {!type && !compact && <h5 className={styles.title}>{title}</h5>}
-      <div className="focus-within:outline-primary rounded-lg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
+      <div className={styles.compoundWrapper}>
         {type && typeData && setType && (
           <JoinedButtonGroup
             data={typeData}
             selectedValue={type}
             updateSelectedValue={setType}
             sizePrefix={typeSizePrefix}
-            btnClass="rounded-bl-none rounded-br-none border-b-0"
+            attached="top"
           />
         )}
-        <div className="join mb-0 w-full">
-          <div
-            className={`join-item bg-primary text-primary-content border border-primary text-center align-middle rounded-bl-none ${
-              type ? 'rounded-tl-none' : ''
-            } ${typeSizePrefix ? `text-${typeSizePrefix}` : 'text-sm'} ${
-              compact ? 'label text-nowrap px-2' : 'w-12'
-            }`.trim()}
-          >
+        <div
+          className={`${styles.middleRow} ${type ? styles.hasTopGroup : ''} ${
+            stepData ? styles.hasBottomGroup : ''
+          }`}
+        >
+          <div className={`${styles.currencyPrefix} ${compact ? styles.compact : ''}`}>
             {compact ? `${title} (${currencySymbol || '₹'})` : currencySymbol || '₹'}
           </div>
           <input
             type="number"
             min="0"
             placeholder="Type here"
-            className={`join-item grow input input-primary w-full focus:outline-none ${
-              typeSizePrefix ? `input-${typeSizePrefix}` : 'input-sm'
-            }`}
+            className={styles.numberInput}
             value={inputAmount?.replace(/^0+/, '') || 0}
             onChange={(e) => setInputAmount(e.target?.value)}
           />
           <button
             type="button"
-            className={`join-item input-primary border-primary btn grow ${
-              typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'
-            }`}
+            className={styles.actionBtn}
             onClick={() => {
               setInputAmount('0');
               setSum('+');
             }}
+            aria-label="Clear amount"
           >
             C
           </button>
           <button
             type="button"
-            className={`join-item btn border-primary grow ${
-              sum === '+' ? 'btn-primary' : ''
-            } ${typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'}`}
+            className={`${styles.actionBtn} ${sum === '+' ? styles.active : ''}`}
             onClick={() => setSum('+')}
+            aria-label="Add amount"
           >
             +
           </button>
           <button
             type="button"
-            className={`join-item btn border-primary grow rounded-br-none ${
-              sum === '-' ? 'btn-primary' : ''
-            } ${type ? 'rounded-tr-none' : ''} ${typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'}`}
+            className={`${styles.actionBtn} ${styles.lastActionBtn} ${
+              sum === '-' ? styles.active : ''
+            }`}
             onClick={() => setSum('-')}
             disabled={inputAmount === '0'}
+            aria-label="Subtract amount"
           >
             -
           </button>
         </div>
-        <JoinedButtonGroup
-          data={stepData}
-          selectedValue={sum}
-          sizePrefix={stepSizePrefix}
-          updateSelectedValue={setSumValue}
-          btnClass="rounded-tl-none rounded-tr-none border-t-0"
-        />
+        {stepData && (
+          <JoinedButtonGroup
+            data={stepData}
+            selectedValue={sum}
+            sizePrefix={stepSizePrefix}
+            updateSelectedValue={setSumValue}
+            attached="bottom"
+          />
+        )}
       </div>
       <div className={styles.words}>
         {convertToWords(sanctnum(inputAmount), locale)}

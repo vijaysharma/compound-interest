@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import styles from './CountrySelect.module.scss';
 interface CountrySelectProps {
   label: string;
   value: string;
@@ -156,8 +157,8 @@ const CountrySelect = ({
     setOpen(false);
   };
   return (
-    <div ref={containerRef} className="relative grow">
-      <label className="sr-only" htmlFor={`${label}-country-search`}>
+    <div ref={containerRef} className={styles.container}>
+      <label className={styles.srOnly} htmlFor={`${label}-country-search`}>
         {label} country
       </label>
       <input
@@ -166,7 +167,7 @@ const CountrySelect = ({
         aria-expanded={open}
         aria-controls={`${label}-country-options`}
         maxLength={60}
-        className="join-item w-full input input-primary focus:outline-none"
+        className={styles.inputField}
         value={open ? query : value}
         placeholder={value}
         onFocus={() => {
@@ -182,20 +183,20 @@ const CountrySelect = ({
         <ul
           id={`${label}-country-options`}
           role="listbox"
-          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-y-auto border border-base-300 bg-base-100 p-1 shadow-lg"
+          className={styles.dropdownList}
         >
           {options.length > 0 ? (
             options.map((country) => (
-              <li key={country} role="option" aria-selected={country === value}>
+              <li key={country} role="option" aria-selected={country === value} className={styles.dropdownItem}>
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-base-200 flex items-center justify-between"
+                  className={styles.optionButton}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectCountry(country)}
                 >
-                  <span className="truncate">{country}</span>
+                  <span className={styles.countryName}>{country}</span>
                   {getSecondaryText?.(country) && (
-                    <span className="text-xs font-mono font-semibold opacity-70 bg-base-200/80 border border-base-300 px-1.5 py-0.5 rounded ml-2 shrink-0">
+                    <span className={styles.secondaryBadge}>
                       {getSecondaryText(country)}
                     </span>
                   )}
@@ -203,7 +204,7 @@ const CountrySelect = ({
               </li>
             ))
           ) : (
-            <li className="px-3 py-2 text-sm opacity-60">No countries found</li>
+            <li className={styles.emptyState}>No countries found</li>
           )}
         </ul>
       )}

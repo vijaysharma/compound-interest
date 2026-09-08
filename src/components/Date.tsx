@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { getDateAsISO, getNearest } from '../utilities/utility';
 import { NavType } from '../types/types';
+import styles from './Date.module.scss';
 interface StartEndDateProps {
   data?: NavType[];
   startDate?: string | null;
@@ -52,12 +53,12 @@ const StartEndDate = ({
       (year) => !startDate || Number(year) >= Number(startDate)
     );
     return (
-      <div className="join mb-2 w-full date-picker">
-        <div className="label join-item px-2 w-20 bg-primary text-primary-content border-primary text-center text-sm">
+      <div className={styles.datePickerRow}>
+        <div className={`${styles.dateBadge} ${styles.fixedWidth}`}>
           {startTitle} Year
         </div>
         <select
-          className="join-item grow select border-primary focus:border-primary focus:outline-none shadow-none"
+          className={styles.selectField}
           value={startDate ?? ''}
           onChange={(event) => handleStartYearChange(event.target.value)}
         >
@@ -68,7 +69,7 @@ const StartEndDate = ({
           ))}
         </select>
         <select
-          className="join-item grow select border-primary focus:border-primary focus:outline-none shadow-none"
+          className={styles.selectField}
           value={endDate ?? ''}
           onChange={(event) => handleEndYearChange(event.target.value)}
         >
@@ -78,7 +79,7 @@ const StartEndDate = ({
             </option>
           ))}
         </select>
-        <div className="label join-item px-2 w-20 bg-primary text-primary-content border-primary text-center text-sm">
+        <div className={`${styles.dateBadge} ${styles.fixedWidth}`}>
           {endTitle} Year
         </div>
       </div>
@@ -99,19 +100,19 @@ const StartEndDate = ({
   };
   const today = getDateAsISO();
   return (
-    <div className="join mb-2 w-full date-picker">
+    <div className={styles.datePickerRow}>
       {setStartDate && (
         <>
-          <div className="label join-item px-2 bg-primary text-primary-content border-primary text-center text-sm">
+          <div className={styles.dateBadge}>
             {startTitle}
           </div>
-          <div className="grow">
+          <div className={styles.inputWrapper}>
             <input
               type="date"
               min={startMinDate || undefined}
               max={endDate || today}
               value={startDate ?? ''}
-              className="join-item w-full input input-sm input-primary focus:outline-none"
+              className={styles.dateInput}
               onChange={(event) => handleStartChange(event.target.value)}
             />
           </div>
@@ -119,17 +120,17 @@ const StartEndDate = ({
       )}
       {setEndDate && (
         <>
-          <div className="grow">
+          <div className={styles.inputWrapper}>
             <input
               type="date"
               min={startDate || undefined}
               max={today}
               value={endDate ?? ''}
-              className="join-item w-full input input-sm input-primary focus:outline-none"
+              className={styles.dateInput}
               onChange={(event) => handleEndChange(event.target.value)}
             />
           </div>
-          <div className="label join-item px-2 bg-primary text-primary-content border-primary text-center text-sm">
+          <div className={styles.dateBadge}>
             {endTitle}
           </div>
         </>

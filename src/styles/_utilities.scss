@@ -265,18 +265,18 @@ $spacings: (
 // BORDERS & SHAPES
 // ==========================================
 .border { border-width: 1px; border-style: solid; }
-.border-0 { border-width: 0px !important; }
+.border-0 { border-width: 0px; }
 .border-2 { border-width: 2px; border-style: solid; }
 .border-t { border-top-width: 1px; border-top-style: solid; }
-.border-t-0 { border-top-width: 0px !important; }
+.border-t-0 { border-top-width: 0px; }
 .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
-.border-b-0 { border-bottom-width: 0px !important; }
+.border-b-0 { border-bottom-width: 0px; }
 .border-l { border-left-width: 1px; border-left-style: solid; }
-.border-l-0 { border-left-width: 0px !important; }
+.border-l-0 { border-left-width: 0px; }
 .border-r { border-right-width: 1px; border-right-style: solid; }
-.border-r-0 { border-right-width: 0px !important; }
+.border-r-0 { border-right-width: 0px; }
 
-.rounded-none { border-radius: 0 !important; }
+.rounded-none { border-radius: 0; }
 .rounded-sm { border-radius: 0.125rem; }
 .rounded { border-radius: 0.25rem; }
 .rounded-md { border-radius: 0.375rem; }
@@ -286,12 +286,12 @@ $spacings: (
 .rounded-3xl { border-radius: 1.5rem; }
 .rounded-full { border-radius: 9999px; }
 
-.rounded-t-none { border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; }
-.rounded-b-none { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
-.rounded-tl-none { border-top-left-radius: 0 !important; }
-.rounded-tr-none { border-top-right-radius: 0 !important; }
-.rounded-bl-none { border-bottom-left-radius: 0 !important; }
-.rounded-br-none { border-bottom-right-radius: 0 !important; }
+.rounded-t-none { border-top-left-radius: 0; border-top-right-radius: 0; }
+.rounded-b-none { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.rounded-tl-none { border-top-left-radius: 0; }
+.rounded-tr-none { border-top-right-radius: 0; }
+.rounded-bl-none { border-bottom-left-radius: 0; }
+.rounded-br-none { border-bottom-right-radius: 0; }
 
 // ==========================================
 // SHADOWS

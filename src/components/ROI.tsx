@@ -1,6 +1,7 @@
 import { sanctnum } from "../utilities/numSanitity";
 import { ROIType } from "../types/types";
-const ROI = ({ rt, setRt, title, className }: ROIType) => {
+import styles from "./ROI.module.scss";
+const ROI = ({ rt, setRt, title, className = "" }: ROIType) => {
   const setROI = (n: number) => {
     let roi = parseFloat(rt);
     roi += n;
@@ -11,17 +12,19 @@ const ROI = ({ rt, setRt, title, className }: ROIType) => {
     setRt(`${Math.round((roi + Number.EPSILON) * 100) / 100}`);
   };
   return (
-    <div className={`text-center w-full ${className}`}>
-      <h5>{title || "Rate of Interest (%)"}</h5>
-      <div className="join focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline w-full">
+    <div className={`${styles.container} ${className}`.trim()}>
+      <h5 className={styles.title}>{title || "Rate of Interest (%)"}</h5>
+      <div className={styles.controlGroup}>
         <button
-          className="join-item btn btn-sm grow border-primary"
+          type="button"
+          className={styles.stepBtn}
           onClick={() => setROI(-0.1)}
         >
           -0.1
         </button>
         <button
-          className="join-item btn btn-sm grow border-primary"
+          type="button"
+          className={styles.stepBtn}
           onClick={() => setROI(-1)}
         >
           -1
@@ -30,7 +33,7 @@ const ROI = ({ rt, setRt, title, className }: ROIType) => {
           type="number"
           placeholder="Type here"
           min="0"
-          className="join-item input input-sm grow focus:outline-none text-center input-primary w-24"
+          className={styles.inputField}
           value={rt.toString().replace(/^0+/, "") || 0}
           onChange={(e) => {
             const iv = e.target.value;
@@ -39,13 +42,15 @@ const ROI = ({ rt, setRt, title, className }: ROIType) => {
           }}
         />
         <button
-          className="join-item btn btn-sm grow border-primary"
+          type="button"
+          className={styles.stepBtn}
           onClick={() => setROI(1)}
         >
           +1
         </button>
         <button
-          className="join-item btn btn-sm grow border-primary"
+          type="button"
+          className={styles.stepBtn}
           onClick={() => setROI(0.1)}
         >
           +0.1

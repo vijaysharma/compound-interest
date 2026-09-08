@@ -14,3 +14,72 @@
   color: var(--color-base-content);
   margin-bottom: 0.25rem;
 }
+
+.buttonGroup {
+  @include joined-row;
+}
+
+.button {
+  @include joined-item;
+  @include button-control(2rem, 0 0.5rem, 0.8125rem);
+  flex: 1;
+
+  // Size variants
+  &.sizeXs {
+    height: 1.5rem;
+    min-height: 1.5rem;
+    font-size: 0.75rem;
+    padding: 0 0.375rem;
+  }
+
+  &.sizeSm {
+    height: 2rem;
+    min-height: 2rem;
+    font-size: 0.8125rem;
+  }
+
+  &.sizeMd {
+    height: 2.5rem;
+    min-height: 2.5rem;
+    font-size: 0.875rem;
+  }
+
+  &.sizeLg {
+    height: 3rem;
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+}
+
+// Stacked attachment variations (SOLID & Encapsulated)
+.attachedTop {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+
+  .button {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-width: 0;
+  }
+}
+
+.attachedBottom {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+
+  .button {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top-width: 0;
+  }
+}
+
+.attachedMiddle {
+  border-radius: 0;
+
+  .button {
+    border-radius: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+  }
+}

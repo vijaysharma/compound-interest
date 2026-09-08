@@ -47,6 +47,7 @@ export interface JoinedButtonType<T = string> {
   sizePrefix?: string;
   className?: string;
   btnClass?: string;
+  attached?: 'none' | 'top' | 'bottom' | 'middle';
 }
 export interface RT {
   roi?: string;
