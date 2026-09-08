@@ -27,24 +27,24 @@ const RateOfInterest = ({
   return (
     <div className={`${styles.container} ${className}`.trim()}>
       <h5 className={styles.title}>{title || 'Rate of Interest (%)'}</h5>
-      <div className={`join ${styles.joinGroup}`}>
+      <div className="join w-full focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
         <button
           type="button"
-          className={`join-item ${styles.stepBtn}`}
+          className="join-item btn btn-sm grow border-primary"
           onClick={() => setROI(0.01)}
         >
           0.01
         </button>
         <button
           type="button"
-          className={`join-item ${styles.stepBtn}`}
+          className="join-item btn btn-sm grow border-primary"
           onClick={() => setROI(0.1)}
         >
           0.1
         </button>
         <button
           type="button"
-          className={`join-item ${styles.stepBtn}`}
+          className="join-item btn btn-sm grow border-primary"
           onClick={() => setROI(1)}
         >
           1
@@ -53,7 +53,7 @@ const RateOfInterest = ({
           type="number"
           placeholder="Type here"
           min="0"
-          className={`join-item ${styles.input}`}
+          className="join-item input input-sm focus:outline-none text-center input-primary w-24"
           value={rt.roi ? rt.roi.toString().replace(/^0+/, '') : '0'}
           onChange={(e) => {
             const iv = e.target.value;
@@ -66,14 +66,18 @@ const RateOfInterest = ({
         />
         <button
           type="button"
-          className={`join-item ${styles.actionBtn} ${expROI === '+' ? styles.active : ''}`}
+          className={`join-item btn btn-sm grow border-primary ${
+            expROI === '+' ? 'btn-primary' : ''
+          }`}
           onClick={() => setExpROI('+')}
         >
           +
         </button>
         <button
           type="button"
-          className={`join-item ${styles.actionBtn} ${expROI === '-' ? styles.active : ''}`}
+          className={`join-item btn btn-sm grow border-primary ${
+            expROI === '-' ? 'btn-primary' : ''
+          }`}
           onClick={() => setExpROI('-')}
           disabled={rt.roi === '0'}
         >

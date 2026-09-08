@@ -38,7 +38,7 @@ const InputAmount = ({
   return (
     <div className={`${styles.container} ${className}`.trim()}>
       {!type && !compact && <h5 className={styles.title}>{title}</h5>}
-      <div className={styles.inputGroup}>
+      <div className="focus-within:outline-primary rounded-lg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
         {type && typeData && setType && (
           <JoinedButtonGroup
             data={typeData}
@@ -48,11 +48,13 @@ const InputAmount = ({
             btnClass="rounded-bl-none rounded-br-none border-b-0"
           />
         )}
-        <div className={`join ${styles.inputRow}`}>
+        <div className="join mb-0 w-full">
           <div
-            className={`join-item ${styles.currencyLabel} ${type ? styles.hasType : ''} ${
-              compact ? 'px-2' : 'w-12'
-            }`}
+            className={`join-item bg-primary text-primary-content border border-primary text-center align-middle rounded-bl-none ${
+              type ? 'rounded-tl-none' : ''
+            } ${typeSizePrefix ? `text-${typeSizePrefix}` : 'text-sm'} ${
+              compact ? 'label text-nowrap px-2' : 'w-12'
+            }`.trim()}
           >
             {compact ? `${title} (${currencySymbol || '₹'})` : currencySymbol || '₹'}
           </div>
@@ -60,13 +62,17 @@ const InputAmount = ({
             type="number"
             min="0"
             placeholder="Type here"
-            className={`join-item input input-primary ${styles.numberInput}`}
+            className={`join-item grow input input-primary w-full focus:outline-none ${
+              typeSizePrefix ? `input-${typeSizePrefix}` : 'input-sm'
+            }`}
             value={inputAmount?.replace(/^0+/, '') || 0}
             onChange={(e) => setInputAmount(e.target?.value)}
           />
           <button
             type="button"
-            className={`join-item ${styles.btnAction}`}
+            className={`join-item input-primary border-primary btn grow ${
+              typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'
+            }`}
             onClick={() => {
               setInputAmount('0');
               setSum('+');
@@ -76,16 +82,18 @@ const InputAmount = ({
           </button>
           <button
             type="button"
-            className={`join-item ${styles.btnAction} ${sum === '+' ? styles.active : ''}`}
+            className={`join-item btn border-primary grow ${
+              sum === '+' ? 'btn-primary' : ''
+            } ${typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'}`}
             onClick={() => setSum('+')}
           >
             +
           </button>
           <button
             type="button"
-            className={`join-item ${styles.btnAction} ${sum === '-' ? styles.active : ''} ${
-              !type ? 'rounded-tr-none' : ''
-            }`}
+            className={`join-item btn border-primary grow rounded-br-none ${
+              sum === '-' ? 'btn-primary' : ''
+            } ${type ? 'rounded-tr-none' : ''} ${typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'}`}
             onClick={() => setSum('-')}
             disabled={inputAmount === '0'}
           >

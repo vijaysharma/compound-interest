@@ -42,6 +42,16 @@
   }
 
   // Variants
+  &.border-primary:not(.btn-primary) {
+    background-color: var(--color-base-100);
+    border-color: var(--color-primary);
+    color: var(--color-base-content);
+
+    &:hover:not(:disabled) {
+      background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-base-100));
+    }
+  }
+
   &.btn-primary {
     background-color: var(--color-primary);
     color: var(--color-primary-content);
@@ -248,51 +258,231 @@
 }
 
 // ==========================================
-// JOIN (Joined Group)
+// JOIN (Joined Group - DaisyUI Specification)
 // ==========================================
 .join {
-  display: flex;
+  display: inline-flex;
   align-items: stretch;
+  border-radius: var(--rounded-btn, var(--radius-field, 0.5rem));
 
-  > .join-item {
-    border-radius: 0;
+  &.w-full,
+  &.flex {
+    display: flex;
+    width: 100%;
+  }
 
-    &:first-child {
-      border-top-left-radius: var(--radius-field, 0.5rem);
-      border-bottom-left-radius: var(--radius-field, 0.5rem);
-    }
+  // Preserve grid display if join is applied on a grid
+  &.grid,
+  &[class*="grid-cols"] {
+    display: grid;
+  }
 
-    &:last-child {
-      border-top-right-radius: var(--radius-field, 0.5rem);
-      border-bottom-right-radius: var(--radius-field, 0.5rem);
-    }
+  // Reset all corners for all join items with 0 specificity (:where)
+  :where(.join-item) {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 
-    &:not(:first-child) {
-      margin-left: -1px;
+  // Ensure intermediate items have flat corners
+  .join-item:not(:first-child):not(:last-child),
+  *:not(:first-child):not(:last-child) .join-item {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  // First item in horizontal join
+  .join-item:first-child:not(:last-child),
+  *:first-child:not(:last-child) .join-item {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  :where(.join-item:first-child:not(:last-child)),
+  :where(*:first-child:not(:last-child) .join-item),
+  > :where(*:first-child:not(:last-child)) {
+    border-top-left-radius: inherit;
+    border-bottom-left-radius: inherit;
+  }
+
+  // Last item in horizontal join
+  .join-item:last-child:not(:first-child),
+  *:last-child:not(:first-child) .join-item {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  :where(.join-item:last-child:not(:first-child)),
+  :where(*:last-child:not(:first-child) .join-item),
+  > :where(*:last-child:not(:first-child)) {
+    border-top-right-radius: inherit;
+    border-bottom-right-radius: inherit;
+  }
+
+  // Single item in join
+  :where(.join-item:only-child),
+  :where(*:only-child .join-item),
+  > :where(*:only-child) {
+    border-radius: inherit;
+  }
+
+  // Negative margin collapses adjacent 1px borders seamlessly
+  > :where(*:not(:first-child)) {
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: -1px;
+
+    &:is(.btn) {
+      margin-left: calc(var(--border-btn, 1px) * -1);
+      margin-top: 0;
     }
   }
 
+  // Z-index stacking: active / focused / hovered items appear above adjacent siblings
+  .join-item,
+  > * {
+    position: relative;
+
+    &:hover {
+      z-index: 2;
+    }
+
+    &.active,
+    &.btn-primary,
+    &:checked {
+      z-index: 1;
+
+      &:hover {
+        z-index: 2;
+      }
+
+      &:focus,
+      &:focus-within {
+        z-index: 3;
+      }
+    }
+
+    &:focus,
+    &:focus-within {
+      z-index: 3;
+      isolation: isolate;
+    }
+  }
+
+  // Vertical layout
   &.join-vertical {
     flex-direction: column;
 
-    > .join-item {
-      &:first-child {
-        border-top-left-radius: var(--radius-field, 0.5rem);
-        border-top-right-radius: var(--radius-field, 0.5rem);
-        border-bottom-left-radius: 0;
-      }
+    .join-item:first-child:not(:last-child),
+    *:first-child:not(:last-child) .join-item {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
 
-      &:last-child {
-        border-bottom-left-radius: var(--radius-field, 0.5rem);
-        border-bottom-right-radius: var(--radius-field, 0.5rem);
-        border-top-right-radius: 0;
-      }
+    :where(.join-item:first-child:not(:last-child)),
+    :where(*:first-child:not(:last-child) .join-item),
+    > :where(*:first-child:not(:last-child)) {
+      border-top-left-radius: inherit;
+      border-top-right-radius: inherit;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
 
-      &:not(:first-child) {
+    .join-item:last-child:not(:first-child),
+    *:last-child:not(:first-child) .join-item {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    :where(.join-item:last-child:not(:first-child)),
+    :where(*:last-child:not(:first-child) .join-item),
+    > :where(*:last-child:not(:first-child)) {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-bottom-left-radius: inherit;
+      border-bottom-right-radius: inherit;
+    }
+
+    > :where(*:not(:first-child)) {
+      margin-left: 0;
+      margin-right: 0;
+      margin-top: -1px;
+
+      &:is(.btn) {
         margin-left: 0;
-        margin-top: -1px;
+        margin-top: calc(var(--border-btn, 1px) * -1);
       }
     }
+  }
+
+  // Horizontal layouts (explicit)
+  &.join-horizontal,
+  &.join-horizonal {
+    flex-direction: row;
+
+    .join-item:first-child:not(:last-child),
+    *:first-child:not(:last-child) .join-item {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    :where(.join-item:first-child:not(:last-child)),
+    :where(*:first-child:not(:last-child) .join-item),
+    > :where(*:first-child:not(:last-child)) {
+      border-top-left-radius: inherit;
+      border-bottom-left-radius: inherit;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .join-item:last-child:not(:first-child),
+    *:last-child:not(:first-child) .join-item {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    :where(.join-item:last-child:not(:first-child)),
+    :where(*:last-child:not(:first-child) .join-item),
+    > :where(*:last-child:not(:first-child)) {
+      border-top-right-radius: inherit;
+      border-bottom-right-radius: inherit;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    > :where(*:not(:first-child)) {
+      margin-left: -1px;
+      margin-top: 0;
+      margin-bottom: 0;
+
+      &:is(.btn) {
+        margin-left: calc(var(--border-btn, 1px) * -1);
+        margin-top: 0;
+      }
+    }
+  }
+
+  // Form controls inside join
+  :where(input.join-item),
+  :where(.input.join-item) {
+    min-width: 0;
+  }
+
+  :where(.join-item.grow),
+  :where(.join-item.flex-1) {
+    flex: 1 1 0%;
+  }
+
+  // Labels and badges inside join
+  :where(.label.join-item),
+  :where(span.join-item),
+  :where(div.join-item.label) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 

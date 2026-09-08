@@ -9,24 +9,10 @@ function JoinedButtonGroup<T = string>({
   className = '',
   btnClass = '',
 }: JoinedButtonType<T>) {
-  const getSizeClass = () => {
-    switch (sizePrefix) {
-      case 'xs':
-        return styles.sizeXs;
-      case 'sm':
-        return styles.sizeSm;
-      case 'md':
-        return styles.sizeMd;
-      case 'lg':
-        return styles.sizeLg;
-      default:
-        return styles.sizeSm;
-    }
-  };
   return (
     <div className={`${styles.container} ${className}`.trim()}>
       {title && <h5 className={styles.title}>{title}</h5>}
-      <div className={`join ${styles.joinGroup}`}>
+      <div className="join mx-auto w-full">
         {data &&
           data.map((p) => {
             const isSelected = selectedValue === p.value;
@@ -34,9 +20,9 @@ function JoinedButtonGroup<T = string>({
               <button
                 key={p.id}
                 type="button"
-                className={`join-item ${styles.joinBtn} ${getSizeClass()} ${
-                  isSelected ? `${styles.active} btn-primary` : ''
-                } ${btnClass}`.trim()}
+                className={`join-item btn border-primary grow flex-1 ${
+                  isSelected ? 'btn-primary' : ''
+                } ${sizePrefix ? `btn-${sizePrefix}` : 'btn-sm'} ${btnClass}`.trim()}
                 onClick={() => updateSelectedValue(p.value)}
               >
                 {p.title}

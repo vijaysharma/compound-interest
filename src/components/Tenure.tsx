@@ -13,17 +13,17 @@ const Tenure = ({ rt, setRt, className = '' }: TenureType) => {
   return (
     <div className={`${styles.container} ${className}`.trim()}>
       <h5 className={styles.title}>Tenure</h5>
-      <div className={`join ${styles.joinGroup}`}>
+      <div className="join focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline w-full">
         <button
           type="button"
-          className={`join-item ${styles.stepBtn}`}
+          className="join-item grow btn btn-sm border-primary"
           onClick={() => setTenure('-10')}
         >
           -10
         </button>
         <button
           type="button"
-          className={`join-item ${styles.stepBtn}`}
+          className="join-item grow btn btn-sm border-primary"
           onClick={() => setTenure('-1')}
         >
           -1
@@ -31,28 +31,28 @@ const Tenure = ({ rt, setRt, className = '' }: TenureType) => {
         <input
           type="number"
           placeholder="Type here"
-          className={`join-item ${styles.input}`}
+          className="input input-sm input-primary focus:outline-none join-item w-24 text-center"
           value={rt.tenure.toString().replace(/^0+/, '') || 0}
           onChange={(e) => setRt({ ...rt, tenure: e.target.value })}
         />
         <button
           type="button"
-          className={`join-item ${styles.stepBtn}`}
+          className="join-item grow btn btn-sm border-primary"
           onClick={() => setTenure('+1')}
         >
           +1
         </button>
         <button
           type="button"
-          className={`join-item ${styles.stepBtn}`}
+          className="join-item grow btn btn-sm border-primary"
           onClick={() => setTenure('+10')}
         >
           +10
         </button>
         <button
           type="button"
-          className={`join-item ${styles.formatBtn} ${
-            rt.tenureFormat === 'm' ? styles.active : ''
+          className={`join-item grow btn btn-sm border-primary ${
+            rt.tenureFormat === 'm' ? 'btn-primary' : ''
           }`}
           onClick={() => {
             setRt({
@@ -69,8 +69,8 @@ const Tenure = ({ rt, setRt, className = '' }: TenureType) => {
         </button>
         <button
           type="button"
-          className={`join-item ${styles.formatBtn} ${
-            rt.tenureFormat === 'y' ? styles.active : ''
+          className={`join-item grow btn btn-sm border-primary ${
+            rt.tenureFormat === 'y' ? 'btn-primary' : ''
           }`}
           onClick={() =>
             setRt({
