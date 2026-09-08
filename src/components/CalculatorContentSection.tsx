@@ -63,7 +63,7 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
         {/* Formula Box (Featured Snippet Optimized) */}
         {formula && formulaTitle && formulaExplanation && (
           <div className={styles.formulaBox}>
-            <h3 className="text-lg font-bold">{formulaTitle}</h3>
+            <h3 className={styles.formulaTitle}>{formulaTitle}</h3>
             <div className={styles.formulaDisplay}>
               {formula}
             </div>
@@ -80,8 +80,8 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
         {/* Worked Example */}
         {workedExample && (
           <div className={styles.workedExampleBox}>
-            <h3 className="text-lg font-bold text-primary">{workedExample.title}</h3>
-            <p className="text-sm opacity-80 leading-relaxed">{workedExample.description}</p>
+            <h3 className={styles.workedExampleTitle}>{workedExample.title}</h3>
+            <p className={styles.workedExampleDesc}>{workedExample.description}</p>
             <div className={styles.exampleCalculation}>
               {workedExample.calculation}
             </div>
@@ -93,14 +93,14 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
         )}
         {/* Comparison Table */}
         {comparisonTable && (
-          <div className="space-y-3">
-            <h3 className="text-xl font-bold">Comparative Analysis</h3>
+          <div className={styles.tableSection}>
+            <h3 className={styles.tableTitle}>Comparative Analysis</h3>
             <div className={styles.tableWrapper}>
-              <table className="table table-zebra w-full text-sm">
+              <table className={styles.table}>
                 <thead>
-                  <tr className="bg-base-200">
+                  <tr className={styles.tableHeaderRow}>
                     {comparisonTable.headers.map((header, i) => (
-                      <th key={i} className="font-bold text-xs uppercase tracking-wider">
+                      <th key={i} className={styles.tableTh}>
                         {header}
                       </th>
                     ))}
@@ -108,9 +108,9 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
                 </thead>
                 <tbody>
                   {comparisonTable.rows.map((row, i) => (
-                    <tr key={i} className="hover:bg-base-200/50">
+                    <tr key={i} className={styles.tableRow}>
                       {row.map((cell, j) => (
-                        <td key={j} className={j === 0 ? 'font-semibold' : ''}>
+                        <td key={j} className={`${styles.tableTd} ${j === 0 ? styles.tableTdFirst : ''}`}>
                           {cell}
                         </td>
                       ))}
@@ -123,7 +123,7 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
         )}
         {/* Accordion FAQs */}
         <div className={styles.faqSection}>
-          <h3 className="text-2xl font-bold">Frequently Asked Questions</h3>
+          <h3 className={styles.faqTitle}>Frequently Asked Questions</h3>
           <div className={styles.faqList}>
             {faqs.map((faq, idx) => (
               <details
@@ -132,7 +132,7 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
               >
                 <summary className={styles.faqSummary}>
                   <span>{faq.question}</span>
-                  <span className="text-primary font-bold text-lg">
+                  <span className={styles.faqArrow}>
                     &darr;
                   </span>
                 </summary>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiShield, FiLock, FiCheckCircle, FiX, FiKey, FiServer, FiSmartphone, FiCloud } from 'react-icons/fi';
+import styles from './NotesModal.module.scss';
 interface NotesSecurityModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,37 +13,39 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
 }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+    <div className={styles.modalOverlay}>
       <div
-        className="card bg-base-100 border border-base-300 shadow-2xl max-w-lg w-full p-6 sm:p-7 relative rounded-2xl animate-scaleUp"
+        className={`${styles.modalBox} ${styles.modalBoxLg}`}
+        style={{ padding: '1.5rem', position: 'relative' }}
         role="dialog"
         aria-labelledby="security-modal-title"
       >
         <button
           onClick={onClose}
-          className="btn btn-ghost btn-sm btn-square absolute top-4 right-4 text-base-content/50 hover:text-base-content"
+          className={styles.closeBtn}
+          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
           aria-label="Close modal"
         >
-          <FiX className="w-5 h-5" />
+          <FiX size={18} />
         </button>
-        <div className="flex items-start gap-3 mb-4 pr-10">
-          <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-success/15 text-success flex-shrink-0 mt-0.5">
-            <FiShield className="h-6 w-6" />
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1rem', paddingRight: '2.5rem' }}>
+          <div className={styles.modalIconSuccess}>
+            <FiShield size={24} />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 id="security-modal-title" className="text-base sm:text-lg font-bold text-base-content leading-snug">
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 id="security-modal-title" className={styles.modalTitle} style={{ fontSize: '1.125rem' }}>
                 End-to-End Encrypted
               </h3>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-success text-success-content shadow-xs whitespace-nowrap flex-shrink-0">
+              <span className={`${styles.badge} ${styles.badgeSuccess}`}>
                 AES-256-GCM
               </span>
             </div>
-            <p className="text-xs text-base-content/60 mt-0.5">Zero-Knowledge Client-Side Protection</p>
+            <p className={styles.modalSubtitle} style={{ marginTop: '0.25rem' }}>Zero-Knowledge Client-Side Protection</p>
           </div>
         </div>
-        <div className="bg-success/10 border border-success/20 rounded-xl p-3 mb-3 text-xs text-success-content/90 flex items-start gap-2.5">
-          <FiCheckCircle className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+        <div className={styles.alertSuccess} style={{ marginBottom: '1rem', lineHeight: 1.4 }}>
+          <FiCheckCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
           <span>
             Your notes and titles are encrypted in your browser before they are synced to the cloud.
             Only your device holds the keys to decrypt and view them.
@@ -50,14 +53,21 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
         </div>
         {storageProvider && (
           <div
-            className={`border rounded-xl p-3 mb-5 text-xs flex items-center justify-between gap-2 ${
-              storageProvider === 'vercel_blob'
-                ? 'bg-info/10 border-info/20 text-info-content'
-                : 'bg-warning/10 border-warning/20 text-warning-content'
-            }`}
+            style={{
+              border: '1px solid var(--color-border)',
+              borderRadius: '10px',
+              padding: '0.65rem 0.85rem',
+              marginBottom: '1rem',
+              fontSize: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.5rem',
+              background: storageProvider === 'vercel_blob' ? 'rgba(59, 130, 246, 0.08)' : 'rgba(245, 158, 11, 0.08)'
+            }}
           >
-            <div className="flex items-center gap-2">
-              <FiCloud className="w-4 h-4 flex-shrink-0" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FiCloud size={16} style={{ flexShrink: 0 }} />
               <span>
                 Storage Engine:{' '}
                 <strong>
@@ -68,78 +78,76 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
               </span>
             </div>
             <span
-              className={`badge badge-xs font-semibold py-2 px-2.5 ${
-                storageProvider === 'vercel_blob' ? 'badge-info' : 'badge-warning'
-              }`}
+              className={`${styles.badge} ${storageProvider === 'vercel_blob' ? styles.badgeInfo : styles.badgeWarning}`}
             >
               {storageProvider === 'vercel_blob' ? 'DB Offloaded' : 'Token Needed'}
             </span>
           </div>
         )}
-        <div className="space-y-3.5 text-xs">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-base-200/80 text-primary flex-shrink-0 mt-0.5">
-              <FiKey className="w-4 h-4" />
+        <div className={styles.featureList}>
+          <div className={styles.featureItem}>
+            <div className={styles.featureIcon}>
+              <FiKey size={16} />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-base-content">AES-GCM 256-Bit Cryptography</h4>
-              <p className="text-base-content/65 mt-0.5 leading-relaxed">
+              <h4 className={styles.featureHeading}>AES-GCM 256-Bit Cryptography</h4>
+              <p className={styles.featureDesc}>
                 Utilizes the native Web Crypto API with Galois/Counter Mode (GCM) for authenticated encryption
                 and tamper detection. Every encryption generates a unique 96-bit cryptographic IV.
               </p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-base-200/80 text-primary flex-shrink-0 mt-0.5">
-              <FiServer className="w-4 h-4" />
+          <div className={styles.featureItem}>
+            <div className={styles.featureIcon}>
+              <FiServer size={16} />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-base-content">Zero-Knowledge Cloud Sync</h4>
-              <p className="text-base-content/65 mt-0.5 leading-relaxed">
+              <h4 className={styles.featureHeading}>Zero-Knowledge Cloud Sync</h4>
+              <p className={styles.featureDesc}>
                 The database server only ever receives and stores ciphertext (scrambled characters).
                 Even in the event of a server inspection or database export, your note content cannot be read.
               </p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-base-200/80 text-primary flex-shrink-0 mt-0.5">
-              <FiSmartphone className="w-4 h-4" />
+          <div className={styles.featureItem}>
+            <div className={styles.featureIcon}>
+              <FiSmartphone size={16} />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-base-content">Cross-Device Key Derivation</h4>
-              <p className="text-base-content/65 mt-0.5 leading-relaxed">
+              <h4 className={styles.featureHeading}>Cross-Device Key Derivation</h4>
+              <p className={styles.featureDesc}>
                 Derived on device using PBKDF2 with 100,000 rounds of SHA-256 tied to your authenticated account session,
                 enabling seamless sync across your mobile phone, tablet, and desktop without tedious key exports.
               </p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-base-200/80 text-primary flex-shrink-0 mt-0.5">
-              <FiCloud className="w-4 h-4" />
+          <div className={styles.featureItem}>
+            <div className={styles.featureIcon}>
+              <FiCloud size={16} />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-base-content">Persistent Object Storage (Vercel Blob / S3)</h4>
-              <p className="text-base-content/65 mt-0.5 leading-relaxed">
+              <h4 className={styles.featureHeading}>Persistent Object Storage (Vercel Blob / S3)</h4>
+              <p className={styles.featureDesc}>
                 Note bodies and media are offloaded directly to persistent S3-compatible cloud object storage
                 (Vercel Blob), freeing up relational database storage while keeping database queries fast and scalable.
               </p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-base-200/80 text-primary flex-shrink-0 mt-0.5">
-              <FiLock className="w-4 h-4" />
+          <div className={styles.featureItem}>
+            <div className={styles.featureIcon}>
+              <FiLock size={16} />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-base-content">Optional Passcode Lock</h4>
-              <p className="text-base-content/65 mt-0.5 leading-relaxed">
+              <h4 className={styles.featureHeading}>Optional Passcode Lock</h4>
+              <p className={styles.featureDesc}>
                 In addition to end-to-end encryption, you can lock individual sensitive notes with a private
                 passcode for on-screen privacy.
               </p>
             </div>
           </div>
         </div>
-        <div className="mt-6 pt-4 border-t border-base-200 flex justify-end">
-          <button onClick={onClose} className="btn btn-primary btn-sm rounded-xl px-5 font-semibold">
+        <div style={{ marginTop: '1.25rem', paddingTop: '0.85rem', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} className={styles.btnPrimary}>
             Got It
           </button>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SEOHead from '../components/SEOHead.tsx';
 import { FiNavigation, FiRepeat } from 'react-icons/fi';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
+import styles from './UnitConverter.module.scss';
 const unitTypes = {
   Length: {
     mm: 0.001,
@@ -84,17 +85,15 @@ const UnitInputRow: React.FC<UnitInputRowProps> = ({
   isResult = false,
   className,
 }) => (
-  <div className={`join w-full min-w-0 ${className ?? ''}`}>
+  <div className={`${styles.rowJoin} ${className ?? ''}`}>
     {label && (
-      <span className="inline-block join-item border border-primary text-[11px]/[30px] w-32 text-center align-middle bg-primary text-primary-content font-bold uppercase tracking-wider">
+      <span className={styles.rowLabel}>
         {label}
       </span>
     )}
     <input
       type={readOnly ? 'text' : 'number'}
-      className={`join-item input input-md input-primary input-bordered ${
-        isResult ? 'bg-success/10 text-success font-bold' : ''
-      }`}
+      className={`${styles.rowInput} ${isResult ? styles.resultInput : ''}`}
       maxLength={20}
       value={value}
       onChange={onChange ? (e) => onChange(e.target.value.slice(0, 20)) : undefined}
@@ -102,7 +101,7 @@ const UnitInputRow: React.FC<UnitInputRowProps> = ({
       readOnly={readOnly}
     />
     <select
-      className="join-item w-36 select select-md select-bordered select-primary  font-medium"
+      className={styles.rowSelect}
       value={unit}
       onChange={(e) => onUnitChange(e.target.value)}
     >
@@ -211,22 +210,22 @@ const UnitConverter: React.FC = () => {
     return Object.keys(unitTypes[category]);
   };
   return (
-    <main className="w-full max-w-3xl mx-auto px-2 py-2">
+    <main className={styles.container}>
       <SEOHead
         title="Unit Converter — Length, Area, Weight, Temp | Rupee Calculator"
         description="Free online unit converter tool. Convert land area (Cent, Kottah, Katha, Acre, Guntha), length, weight, volume, temperature, and speed instantly."
         canonicalPath="/utilities/unit-converter"
       />
       <>
-        <h2 className="card-title text-lg flex items-center gap-2">
-          <FiNavigation className="text-primary" /> Unit Converter
+        <h2 className={styles.title}>
+          <FiNavigation className={styles.titleIcon} /> Unit Converter
         </h2>
-        <p className="text-sm opacity-70 mb-4">
+        <p className={styles.subtitle}>
           Convert between different units of measurement for length, area, weight, volume,
           temperature, and speed.
         </p>
         {/* Category Selector */}
-        <div className="mb-6">
+        <div className={styles.categoryGroup}>
           <JoinedButtonGroup
             data={[
               {
@@ -252,7 +251,7 @@ const UnitConverter: React.FC = () => {
             ]}
             selectedValue={category}
             updateSelectedValue={handleCategoryChange}
-            btnClass="rounded-bl-none rounded-br-none border-b-0"
+            btnClass={styles.btnTopRow}
             sizePrefix="md"
           />
           <JoinedButtonGroup
@@ -275,12 +274,12 @@ const UnitConverter: React.FC = () => {
             ]}
             selectedValue={category}
             updateSelectedValue={handleCategoryChange}
-            btnClass="rounded-tl-none rounded-tr-none"
+            btnClass={styles.btnBottomRow}
             sizePrefix="md"
           />
         </div>
         {/* Converter Logic: Single row input container */}
-        <div className="flex flex-col gap-6 w-full">
+        <div className={styles.converterRows}>
           <UnitInputRow
             value={inputValue}
             onChange={setInputValue}
@@ -289,15 +288,15 @@ const UnitConverter: React.FC = () => {
             availableUnits={getAvailableUnits()}
           />
           {/* Swap Button */}
-          <div className="flex justify-center">
+          <div className={styles.swapWrapper}>
             <button
               type="button"
               onClick={handleSwap}
-              className="btn btn-circle btn-primary btn-sm sm:btn-md shadow hover:scale-105 transition-transform"
+              className={styles.swapCircleBtn}
               title="Swap units"
               aria-label="Swap units"
             >
-              <FiRepeat className="h-4 w-4" />
+              <FiRepeat />
             </button>
           </div>
           <UnitInputRow

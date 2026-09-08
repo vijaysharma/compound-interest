@@ -87,13 +87,13 @@ const TopBar = ({ className }: { className?: string }) => {
         <div className={styles.leftSection}>
           <button
             type="button"
-            className="btn btn-ghost btn-sm btn-square text-primary-content"
+            className={styles.menuBtn}
             aria-label="Open navigation menu"
             aria-expanded={isMenuOpen}
             aria-controls="navigation-drawer"
             onClick={() => setIsMenuOpen(true)}
           >
-            <FiMenu className="h-5 w-5" aria-hidden="true" />
+            <FiMenu className={styles.menuIcon} aria-hidden="true" />
           </button>
           <Link
             to="/"
@@ -113,33 +113,33 @@ const TopBar = ({ className }: { className?: string }) => {
         </div>
         <div className={styles.rightSection}>
           {isAuthenticated && user ? (
-            <div className="flex items-center gap-2">
+            <div className={styles.userContainer}>
               {isAdmin ? (
-                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold uppercase text-[10px] items-center gap-1">
-                  <FiShield className="h-3 w-3" />
+                <span className={styles.badgeAdmin}>
+                  <FiShield className={styles.badgeIcon} />
                   Admin
                 </span>
               ) : user.subscription_status === 'active' ? (
-                <span className="hidden sm:inline-flex badge badge-accent badge-sm font-bold items-center gap-1 text-[10px]">
-                  <FiAward className="h-3 w-3" />
+                <span className={styles.badgePro}>
+                  <FiAward className={styles.badgeIcon} />
                   Pro Active
                 </span>
               ) : (
                 <button
                   type="button"
                   onClick={() => setShowPaywall(true)}
-                  className={`btn btn-xs ${user.isBlocked ? 'btn-warning animate-pulse' : 'btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary'} items-center gap-1 font-normal`}
+                  className={`${styles.paywallBtn} ${user.isBlocked ? styles.warningPulse : ''}`.trim()}
                   title={`${user.api_usage_count ?? 0}/${user.freeLimit ?? 15} live calculations used in 48h trial. Other calculators are free for 48 hours.`}
                 >
-                  <FiZap className="h-3 w-3" />
-                  <span className="hidden md:inline">
-                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 15} Live Runs
+                  <FiZap className={styles.badgeIcon} />
+                  <span>
+                    {user.api_usage_count ?? 0}/{user.freeLimit ?? 15} Live
                   </span>
-                  <span className="font-bold underline text-[10px]">₹54 Pro</span>
+                  <span className={styles.proPrice}>₹54 Pro</span>
                 </button>
               )}
-              <div className="hidden sm:flex flex-col items-end text-right leading-tight">
-                <span className="text-xs font-medium truncate max-w-[130px]">
+              <div className={styles.userEmailCol}>
+                <span className={styles.userNameText}>
                   {user.name || user.email}
                 </span>
               </div>
@@ -147,10 +147,10 @@ const TopBar = ({ className }: { className?: string }) => {
                 <img
                   src={user.picture}
                   alt={user.name || user.email}
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border border-primary-content/40 object-cover"
+                  className={styles.userAvatar}
                 />
               ) : (
-                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary-content/20 text-xs font-bold uppercase text-primary-content">
+                <div className={styles.userInitial}>
                   {(user.name || user.email).charAt(0)}
                 </div>
               )}
@@ -158,7 +158,7 @@ const TopBar = ({ className }: { className?: string }) => {
           ) : (
             <Link
               to="/login"
-              className="btn btn-sm btn-outline border-primary-content text-primary-content hover:bg-primary-content hover:text-primary"
+              className={styles.signInBtn}
             >
               Sign in
             </Link>
@@ -179,223 +179,223 @@ const TopBar = ({ className }: { className?: string }) => {
             aria-label="Navigation menu"
           >
             <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-base font-bold">Rupee Calculator</h2>
+              <div className={styles.drawerHeader}>
+                <h2 className={styles.drawerTitle}>Rupee Calculator</h2>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-xs btn-square text-primary-content"
+                  className={styles.drawerCloseBtn}
                   aria-label="Close navigation menu"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <FiX className="h-4 w-4" aria-hidden="true" />
+                  <FiX className={styles.menuIcon} aria-hidden="true" />
                 </button>
               </div>
               <nav
                 aria-label="Calculator pages"
-                className="text-primary-content flex flex-col gap-0.5"
+                className={styles.navGroup}
               >
                 {isAdmin && (
-                  <div className="mt-1.5">
-                    <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                      <FiShield className="h-3 w-3" />
+                  <div className={styles.navSection}>
+                    <h3 className={styles.navCategoryTitle}>
+                      <FiShield className={styles.navCategoryIcon} />
                       <span>Admin</span>
                     </h3>
                     <Link
                       to="/admin"
-                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      className={styles.navLink}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Data administration
                     </Link>
                     <Link
                       to="/admin/shiprocket-rates"
-                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      className={styles.navLink}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Shiprocket Rates
                     </Link>
                     <Link
                       to="/admin/volumetric-weight"
-                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      className={styles.navLink}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Volumetric Weight
                     </Link>
                     <Link
                       to="/admin/wood-calculator"
-                      className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                      className={styles.navLink}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Wood Calculator
                     </Link>
                   </div>
                 )}
-                <div className="mt-1.5">
-                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                    <FiPercent className="h-3 w-3" />
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiPercent className={styles.navCategoryIcon} />
                     <span>Loans</span>
                   </h3>
                   <Link
                     to="/emi-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     EMI Calculator
                   </Link>
                 </div>
-                <div className="mt-1.5">
-                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                    <FiLayers className="h-3 w-3" />
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiLayers className={styles.navCategoryIcon} />
                     <span>Deposits</span>
                   </h3>
                   <Link
                     to="/fd-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Fixed Deposits
                   </Link>
                   <Link
                     to="/rd-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Recurring Deposits
                   </Link>
                 </div>
-                <div className="mt-1.5">
-                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                    <FiGlobe className="h-3 w-3" />
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiGlobe className={styles.navCategoryIcon} />
                     <span>Economics</span>
                   </h3>
                   <Link
                     to="/inflation-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Inflation Rates
                   </Link>
                   <Link
                     to="/ppp-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     PPP Exchange Rate
                   </Link>
                   <Link
                     to="/currency-converter"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Currency Converter
                   </Link>
                 </div>
-                <div className="mt-1.5">
-                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                    <FiClock className="h-3 w-3" />
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiClock className={styles.navCategoryIcon} />
                     <span>Fixed Plans</span>
                   </h3>
                   <Link
                     to="/sip-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SIP Calculator
                   </Link>
                   <Link
                     to="/swp-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SWP Calculator
                   </Link>
                 </div>
-                <div className="mt-1.5">
-                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                    <FiTrendingUp className="h-3 w-3" />
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiTrendingUp className={styles.navCategoryIcon} />
                     <span>Mutual Funds</span>
                   </h3>
                   <Link
                     to="/mutual-funds/lumpsum"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Lumpsum
                   </Link>
                   <Link
                     to="/mutual-funds/sip"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SIP
                   </Link>
                   <Link
                     to="/mutual-funds/swp"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SWP
                   </Link>
                 </div>
-                <div className="mt-1.5">
-                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                    <FiTool className="h-3 w-3" />
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiTool className={styles.navCategoryIcon} />
                     <span>Utilities</span>
                   </h3>
                   <Link
                     to="/calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Calculator (Basic &amp; Scientific)
                   </Link>
                   <Link
                     to="/date-calculator"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Date Calculator
                   </Link>
                   <Link
                     to="/utilities/unit-converter"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Unit Converter
                   </Link>
                   <Link
                     to="/utilities/quick-notes"
-                    className="flex items-center justify-between px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={`${styles.navLink} ${styles.between}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <span>Quick Notes</span>
-                    <span className="badge badge-accent badge-xs text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5">
+                    <span className={styles.proPill}>
                       Pro
                     </span>
                   </Link>
                 </div>
-                <div className="mt-2 border-t border-primary-content/20 pt-2">
-                  <h3 className="px-2 text-[11px] font-bold uppercase tracking-wider opacity-60 flex items-center gap-1.5 mb-0.5">
-                    <FiInfo className="h-3 w-3" />
+                <div className={`${styles.navSection} ${styles.dividerTop}`}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiInfo className={styles.navCategoryIcon} />
                     <span>Info &amp; Legal</span>
                   </h3>
                   <Link
                     to="/about"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     About Us
                   </Link>
                   <Link
                     to="/privacy"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Privacy Policy
                   </Link>
                   <Link
                     to="/disclaimer"
-                    className="block px-2.5 py-1 rounded hover:bg-primary-content/10 transition-colors text-xs"
+                    className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Disclaimer
@@ -404,15 +404,15 @@ const TopBar = ({ className }: { className?: string }) => {
               </nav>
             </div>
             {isAuthenticated && user && (
-              <div className="border-t border-primary-content/20 pt-2 mt-3 space-y-1.5">
-                <p className="text-xs text-center truncate opacity-70 mb-1  ">{user.email}</p>
+              <div className={styles.drawerFooter}>
+                <p className={styles.userEmailText}>{user.email}</p>
                 {user.subscription_status !== 'active' && user.role !== 'admin' && (
                   <Link
                     to="/upgrade"
-                    className="btn btn-warning btn-xs w-full font-bold shadow-sm flex items-center justify-center gap-1"
+                    className={styles.unlockProBtn}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <FiZap className="h-3.5 w-3.5" />
+                    <FiZap style={{ width: '0.875rem', height: '0.875rem' }} />
                     <span>Unlock Pro (₹54/mo)</span>
                   </Link>
                 )}
@@ -422,9 +422,9 @@ const TopBar = ({ className }: { className?: string }) => {
                     setIsMenuOpen(false);
                     void handleLogout();
                   }}
-                  className="btn btn-outline btn-sm w-full border-primary-content text-primary-content flex items-center justify-center gap-1"
+                  className={styles.signOutBtn}
                 >
-                  <FiLogOut className="h-3.5 w-3.5" />
+                  <FiLogOut style={{ width: '0.875rem', height: '0.875rem' }} />
                   <span>Sign Out</span>
                 </button>
               </div>

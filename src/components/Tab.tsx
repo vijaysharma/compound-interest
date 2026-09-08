@@ -1,13 +1,15 @@
 import { TabType } from '../types/types';
+import styles from './Tab.module.scss';
 const Tab = ({ name, child, selectedId, setSelectedId, isVisited = true }: TabType) => {
+  const isSelected = selectedId === child.props.id;
   return (
     <>
       <input
         type="radio"
         name={name}
-        className={`tab calc-tab ${selectedId === child.props.id ? 'tab-active bg-primary text-primary-content [--tab-bg:var(--color-primary)] [--tab-border-color:var(--color-primary)]' : ''}`}
+        className={`${styles.radioTab} ${isSelected ? styles.active : ''}`.trim()}
         aria-label={child.props['data-label']}
-        checked={selectedId === child.props.id}
+        checked={isSelected}
         onChange={() => {
           if (setSelectedId) {
             setSelectedId(child.props.id);
@@ -15,7 +17,7 @@ const Tab = ({ name, child, selectedId, setSelectedId, isVisited = true }: TabTy
           }
         }}
       />
-      <div role="tabpanel" className="tab-content py-2 w-full overflow-y-auto">
+      <div role="tabpanel" className={styles.tabContent}>
         {isVisited ? child : null}
       </div>
     </>

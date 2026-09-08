@@ -152,7 +152,7 @@ const PaywallModal = () => {
       >
         <button
           type="button"
-          className={`btn btn-ghost btn-xs btn-square ${styles.closeBtn} opacity-70 hover:opacity-100`}
+          className={styles.closeBtn}
           onClick={handleCloseOrLater}
           aria-label="Close paywall"
         >
@@ -177,7 +177,7 @@ const PaywallModal = () => {
             {isTrialActive ? (
               <>
                 You have{' '}
-                <span className="font-bold text-primary">
+                <span className={styles.highlightPrimary}>
                   {remainingCalculations} of {user?.freeLimit || 15}
                 </span>{' '}
                 live Mutual Fund, Inflation &amp; PPP calculation runs remaining
@@ -189,7 +189,7 @@ const PaywallModal = () => {
               <>
                 Your free trial / {user?.freeLimit || 15}-run limit for live AMFI Mutual Funds,
                 Inflation &amp; PPP analytics has ended for{' '}
-                <span className="font-semibold">{user?.email}</span>. Calculators Suite tools remain
+                <span className={styles.highlightSemibold}>{user?.email}</span>. Calculators Suite tools remain
                 free to use. Unlock unlimited access for just ₹{amount}/month.
               </>
             )}
@@ -197,7 +197,7 @@ const PaywallModal = () => {
         </div>
         {message && (
           <div
-            className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} text-xs py-2.5 px-4 mb-4 rounded-lg shadow-sm`}
+            className={`${styles.alert} ${message.type === 'success' ? styles.alertSuccess : styles.alertError}`}
           >
             <span>{message.text}</span>
           </div>
@@ -207,11 +207,11 @@ const PaywallModal = () => {
             type="button"
             disabled={isProcessing}
             onClick={() => void handleRazorpayPayment()}
-            className={`btn btn-primary btn-lg ${styles.payBtn}`}
+            className={styles.payBtn}
           >
             {isProcessing ? (
               <>
-                <span className="loading loading-spinner loading-sm" />
+                <span className={styles.spinner} />
                 <span>Processing Payment...</span>
               </>
             ) : (
@@ -221,7 +221,7 @@ const PaywallModal = () => {
               </>
             )}
           </button>
-          <p className="text-center text-[11px] opacity-60">
+          <p className={styles.securityInfo}>
             Secure checkout via Razorpay • UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking
           </p>
         </div>
@@ -229,7 +229,7 @@ const PaywallModal = () => {
           <button
             type="button"
             onClick={handleCloseOrLater}
-            className="text-xs opacity-60 hover:opacity-100 underline"
+            className={styles.dismissLink}
           >
             {isTrialActive ? 'Continue with Free Trial' : 'Continue with Free Calculators Suite'}
           </button>

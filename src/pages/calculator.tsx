@@ -19,6 +19,7 @@ import {
   type HistoryItem,
   type LastOperation,
 } from '../utilities/calculatorHelper';
+import styles from './Calculator.module.scss';
 const isErrorState = (expr: string) =>
   expr === 'Error' || expr === 'Undefined' || expr === 'Overflow';
 const Calculator: React.FC = () => {
@@ -588,16 +589,14 @@ const Calculator: React.FC = () => {
       <span
         key={key}
         onClick={onClick}
-        className={`hover:bg-primary/20 rounded cursor-pointer transition-colors inline-block ${
-          isSup ? 'text-[0.62em] -translate-y-[0.45em] font-medium leading-none' : ''
-        }`}
+        className={`${styles.charSpan} ${isSup ? styles.charSup : ''}`}
       >
         {ch}
       </span>
     );
   };
   return (
-    <main className="w-full mx-auto px-1 py-2 flex flex-col min-h-[calc(100dvh-56px)] justify-between select-none relative overflow-x-hidden">
+    <main className={styles.calculatorMain}>
       <SEOHead
         title="Online Calculator — Free Scientific & Basic Calculator India 2026"
         description="Fast, institutional-grade online calculator with editable cursor display, implicit multiplication, copy/paste support, memory operations (M+, M-, MC, MR), percentages, y-th root of x (³√(27)), and trigonometry."
@@ -607,43 +606,45 @@ const Calculator: React.FC = () => {
       />
       {/* Floating Toast Notification for Copy/Paste */}
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 animate-bounce">
-          <div className="badge badge-neutral shadow-xl px-3 py-2 text-xs font-semibold gap-1.5 border border-base-300/50 backdrop-blur-md">
-            <FiCheck className="h-3.5 w-3.5 text-success" /> {toastMessage}
+        <div className={styles.toastWrapper}>
+          <div className={styles.toastBadge}>
+            <FiCheck className={styles.toastSuccessIcon} /> {toastMessage}
           </div>
         </div>
       )}
       {/* Top Display Area with Moveable Cursor & Memory Indicator */}
-      <div className="flex-1 flex flex-col justify-end pb-2 sm:pb-3">
+      <div className={styles.displayArea}>
         {/* History Modal / Drawer */}
         {showHistory && (
-          <div className="relative mb-3 bg-base-200/95 border border-base-300 rounded-2xl p-3 shadow-xl max-h-56 overflow-y-auto backdrop-blur-md animate-fadeIn">
-            <div className="flex items-center justify-between pb-2 border-b border-base-300/60 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider opacity-70 flex items-center gap-1">
-                <FiClock className="h-3.5 w-3.5" /> History
+          <div className={styles.historyDrawer}>
+            <div className={styles.historyHeader}>
+              <span className={styles.historyTitle}>
+                <FiClock style={{ width: '0.875rem', height: '0.875rem' }} /> History
               </span>
-              <div className="flex items-center gap-1">
+              <div className={styles.historyControls}>
                 {history.length > 0 && (
                   <button
+                    type="button"
                     onClick={() => setHistory([])}
-                    className="btn btn-ghost btn-xs text-error font-medium"
+                    className={styles.clearHistoryBtn}
                     title="Clear history"
                   >
-                    <FiRotateCcw className="h-3 w-3" /> Clear
+                    <FiRotateCcw style={{ width: '0.75rem', height: '0.75rem' }} /> Clear
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={() => setShowHistory(false)}
-                  className="btn btn-ghost btn-xs btn-circle"
+                  className={styles.closeHistoryBtn}
                 >
-                  <FiX className="h-4 w-4" />
+                  <FiX style={{ width: '1rem', height: '1rem' }} />
                 </button>
               </div>
             </div>
             {history.length === 0 ? (
-              <p className="text-xs opacity-50 text-center py-4">No recent calculations</p>
+              <p className={styles.emptyHistory}>No recent calculations</p>
             ) : (
-              <div className="space-y-2">
+              <div className={styles.historyList}>
                 {history.map((item, idx) => (
                   <div
                     key={idx}
@@ -653,10 +654,10 @@ const Calculator: React.FC = () => {
                       setIsEvaluated(true);
                       setShowHistory(false);
                     }}
-                    className="p-2 rounded-xl bg-base-100/70 hover:bg-base-100 cursor-pointer transition-colors text-right"
+                    className={styles.historyItem}
                   >
-                    <p className="text-xs opacity-60 font-mono truncate">{item.expression}</p>
-                    <p className="text-sm font-bold text-primary font-mono">{item.result}</p>
+                    <p className={styles.historyExpr}>{item.expression}</p>
+                    <p className={styles.historyResult}>{item.result}</p>
                   </div>
                 ))}
               </div>
@@ -665,10 +666,10 @@ const Calculator: React.FC = () => {
         )}
         {/* Memory Indicator */}
         {memory !== 0 && (
-          <div className="flex items-center justify-end px-2 mb-1 gap-1">
+          <div className={styles.memoryRow}>
             <span
               onClick={handleMemoryRecall}
-              className="badge badge-primary badge-sm font-mono font-bold cursor-pointer hover:opacity-80 transition-opacity"
+              className={styles.memoryBadge}
               title="Click to recall memory (MR)"
             >
               M = {memory}
@@ -678,7 +679,7 @@ const Calculator: React.FC = () => {
         {/* Expression Display with Interactive Click-to-Position Cursor */}
         <div
           ref={displayContainerRef}
-          className="w-full overflow-x-auto whitespace-nowrap text-right py-2 px-2 scrollbar-none rounded-xl cursor-text transition-all bg-base-200/30 hover:bg-base-200/50 select-text"
+          className={styles.displayInput}
           onClick={(e) => {
             if (e.target === e.currentTarget && expression.length > 0) {
               setCursorPosition(expression.length);
@@ -691,9 +692,9 @@ const Calculator: React.FC = () => {
               50% { opacity: 0; }
             }
           `}</style>
-          <div className="inline-flex items-center justify-end text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-base-content font-sans min-h-[3rem]">
+          <div className={styles.displayLine}>
             {expression.length === 0 ? (
-              <span className="opacity-30">0</span>
+              <span className={styles.displayPlaceholder}>0</span>
             ) : (
               <>
                 {/* Clickable characters before cursor */}
@@ -706,7 +707,7 @@ const Calculator: React.FC = () => {
                 )}
                 {/* Visible Blinking Cursor (only when content exists) */}
                 <span
-                  className="w-[2.5px] sm:w-[3px] h-[1.1em] bg-primary inline-block align-middle rounded-full mx-[1px]"
+                  className={styles.cursorCaret}
                   style={{
                     animation: 'calcCaretBlink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                   }}
@@ -726,114 +727,115 @@ const Calculator: React.FC = () => {
         {/* Live Calculation Preview */}
         <div
           onClick={handleCopy}
-          className="h-8 flex items-center justify-end px-2 cursor-pointer hover:opacity-80 transition-opacity"
+          className={styles.livePreviewRow}
           title="Click to copy result"
         >
           {liveResult !== null && !isEvaluated ? (
-            <span className="text-xl sm:text-2xl font-light text-base-content/50 font-sans tracking-tight">
+            <span className={styles.livePreviewText}>
               {liveResult}
             </span>
           ) : (
-            <span className="text-sm opacity-0">0</span>
+            <span style={{ fontSize: '0.875rem', opacity: 0 }}>0</span>
           )}
         </div>
         {/* Utility Icon Bar: History, Scientific, Copy, Paste, Cursor Chevrons & Backspace */}
-        <div className="flex items-center justify-between border-b border-base-300/60 pt-2 pb-2 px-1 text-base-content/70">
-          <div className="flex items-center gap-1 sm:gap-1.5">
+        <div className={styles.toolbar}>
+          <div className={styles.toolbarGroup}>
             <button
               type="button"
               onClick={() => setShowHistory(!showHistory)}
-              className={`btn btn-ghost btn-sm btn-circle ${showHistory ? 'btn-active text-primary' : ''}`}
+              className={`${styles.circleBtn} ${showHistory ? styles.active : ''}`}
               title="Calculation History"
             >
-              <FiClock className="h-4 w-4" />
+              <FiClock style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               type="button"
               onClick={() => setShowScientific(!showScientific)}
-              className={`btn btn-sm px-2.5 gap-1.5 text-xs font-semibold ${showScientific ? 'btn-primary shadow-xs' : 'btn-ghost text-base-content/70'}`}
+              className={`${styles.scientificToggleBtn} ${showScientific ? styles.active : ''}`}
               title="Toggle Scientific Keypad (Trig, Hyperbolic, Roots, Exponents)"
             >
-              <TbMathFunction className="h-4 w-4" />
+              <TbMathFunction style={{ width: '1rem', height: '1rem' }} />
               <span>Scientific</span>
             </button>
             <button
               type="button"
               onClick={handleCopy}
               disabled={!expression && !liveResult}
-              className="btn btn-ghost btn-sm btn-circle text-base-content/70 hover:text-primary disabled:opacity-30"
+              className={styles.circleBtn}
               title="Copy expression or result (Ctrl+C / ⌘C)"
             >
-              <FiCopy className="h-4 w-4" />
+              <FiCopy style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               type="button"
               onClick={() => handlePaste()}
-              className="btn btn-ghost btn-sm btn-circle text-base-content/70 hover:text-primary"
+              className={styles.circleBtn}
               title="Paste expression (Ctrl+V / ⌘V)"
             >
-              <FiClipboard className="h-4 w-4" />
+              <FiClipboard style={{ width: '1rem', height: '1rem' }} />
             </button>
           </div>
           {/* Cursor Stepper & Backspace */}
-          <div className="flex items-center gap-1">
+          <div className={styles.toolbarGroup}>
             <button
               type="button"
               onClick={() => moveCursor('left')}
-              className="btn btn-ghost btn-xs btn-circle text-base-content/70 hover:text-primary hover:bg-base-200"
+              className={styles.circleBtn}
               title="Move cursor left"
               disabled={cursorPosition === 0}
             >
-              <FiChevronLeft className="h-4 w-4" />
+              <FiChevronLeft style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               type="button"
               onClick={() => moveCursor('right')}
-              className="btn btn-ghost btn-xs btn-circle text-base-content/70 hover:text-primary hover:bg-base-200"
+              className={styles.circleBtn}
               title="Move cursor right"
               disabled={cursorPosition >= expression.length}
             >
-              <FiChevronRight className="h-4 w-4" />
+              <FiChevronRight style={{ width: '1rem', height: '1rem' }} />
             </button>
             <button
               type="button"
               onClick={handleBackspace}
-              className="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10 ml-1"
+              className={styles.circleBtn}
+              style={{ color: 'var(--color-primary)', marginLeft: '0.25rem' }}
               title="Backspace"
             >
-              <FiDelete className="h-5 w-5" />
+              <FiDelete style={{ width: '1.25rem', height: '1.25rem' }} />
             </button>
           </div>
         </div>
       </div>
       {/* Scientific & Memory Tools Panel (Expandable) */}
       {showScientific && (
-        <div className="mb-2 p-2 bg-base-200/50 rounded-2xl border border-base-300/80 space-y-1.5 animate-fadeIn">
+        <div className={styles.scientificPanel}>
           {/* Top Row: DEG/RAD toggle + Memory Row (MC, MR, M+, M-) */}
-          <div className="flex items-center justify-between px-1 gap-1">
-            <div className="join join-horizontal">
+          <div className={styles.degRadMemoryRow}>
+            <div className={styles.degRadGroup}>
               <button
                 type="button"
-                className={`join-item btn btn-xs ${isDeg ? 'btn-primary' : 'btn-ghost'}`}
+                className={`${styles.degRadBtn} ${isDeg ? styles.active : ''}`}
                 onClick={() => setIsDeg(true)}
               >
                 DEG
               </button>
               <button
                 type="button"
-                className={`join-item btn btn-xs ${!isDeg ? 'btn-primary' : 'btn-ghost'}`}
+                className={`${styles.degRadBtn} ${!isDeg ? styles.active : ''}`}
                 onClick={() => setIsDeg(false)}
               >
                 RAD
               </button>
             </div>
             {/* Memory Toolbar: MC, MR, M+, M- */}
-            <div className="flex items-center gap-1">
+            <div className={styles.memoryActions}>
               <button
                 type="button"
                 onClick={handleMemoryClear}
                 disabled={memory === 0}
-                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-error disabled:opacity-40"
+                className={`${styles.memoryActionBtn} ${styles.memoryActionBtnError}`}
                 title="Memory Clear (MC)"
               >
                 MC
@@ -842,7 +844,7 @@ const Calculator: React.FC = () => {
                 type="button"
                 onClick={handleMemoryRecall}
                 disabled={memory === 0}
-                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-primary disabled:opacity-40"
+                className={styles.memoryActionBtn}
                 title="Memory Recall (MR)"
               >
                 MR
@@ -850,7 +852,7 @@ const Calculator: React.FC = () => {
               <button
                 type="button"
                 onClick={handleMemoryAdd}
-                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-primary hover:bg-primary/10"
+                className={styles.memoryActionBtn}
                 title="Memory Add (M+)"
               >
                 M+
@@ -858,14 +860,14 @@ const Calculator: React.FC = () => {
               <button
                 type="button"
                 onClick={handleMemorySubtract}
-                className="btn btn-ghost btn-xs text-[11px] font-bold px-2 text-primary hover:bg-primary/10"
+                className={styles.memoryActionBtn}
                 title="Memory Subtract (M-)"
               >
                 M-
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-5 gap-1.5 text-xs font-semibold">
+          <div className={styles.scientificGrid}>
             {[
               { label: 'sin', fn: () => insertAtCursor('sin(') },
               { label: 'cos', fn: () => insertAtCursor('cos(') },
@@ -892,7 +894,7 @@ const Calculator: React.FC = () => {
                 key={idx}
                 type="button"
                 onClick={btn.fn}
-                className="btn btn-ghost btn-sm h-9 min-h-0 text-primary font-medium text-xs rounded-xl bg-base-100/60 hover:bg-base-100"
+                className={styles.scientificKey}
               >
                 {btn.label}
               </button>
@@ -901,33 +903,33 @@ const Calculator: React.FC = () => {
         </div>
       )}
       {/* Main Keypad Grid (Circular/Pill Keypad) */}
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-3 pb-2 w-full max-w-full">
+      <div className={styles.keypadGrid}>
         {/* Row 1: C, ( ), %, ÷ */}
         <button
           type="button"
           onClick={handleClear}
-          className="btn h-14 sm:h-16 rounded-full text-lg sm:text-xl font-bold bg-base-200 text-error hover:bg-error/15 border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnClear}`}
         >
           {expression ? 'C' : 'AC'}
         </button>
         <button
           type="button"
           onClick={handleSmartParentheses}
-          className="btn h-14 sm:h-16 rounded-full text-lg sm:text-xl font-bold bg-base-200 text-primary hover:bg-primary/15 border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnFunction}`}
         >
           ( )
         </button>
         <button
           type="button"
           onClick={() => insertAtCursor('%')}
-          className="btn h-14 sm:h-16 rounded-full text-lg sm:text-xl font-bold bg-base-200 text-primary hover:bg-primary/15 border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnFunction}`}
         >
           %
         </button>
         <button
           type="button"
           onClick={() => insertAtCursor('÷')}
-          className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
         >
           ÷
         </button>
@@ -937,7 +939,7 @@ const Calculator: React.FC = () => {
             key={num}
             type="button"
             onClick={() => insertAtCursor(num)}
-            className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
+            className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
           >
             {num}
           </button>
@@ -945,7 +947,7 @@ const Calculator: React.FC = () => {
         <button
           type="button"
           onClick={() => insertAtCursor('×')}
-          className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
         >
           ×
         </button>
@@ -955,7 +957,7 @@ const Calculator: React.FC = () => {
             key={num}
             type="button"
             onClick={() => insertAtCursor(num)}
-            className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
+            className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
           >
             {num}
           </button>
@@ -963,7 +965,7 @@ const Calculator: React.FC = () => {
         <button
           type="button"
           onClick={() => insertAtCursor('−')}
-          className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
         >
           −
         </button>
@@ -973,7 +975,7 @@ const Calculator: React.FC = () => {
             key={num}
             type="button"
             onClick={() => insertAtCursor(num)}
-            className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
+            className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
           >
             {num}
           </button>
@@ -981,7 +983,7 @@ const Calculator: React.FC = () => {
         <button
           type="button"
           onClick={() => insertAtCursor('+')}
-          className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary/15 text-primary hover:bg-primary/25 border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
         >
           +
         </button>
@@ -989,28 +991,29 @@ const Calculator: React.FC = () => {
         <button
           type="button"
           onClick={handleToggleSign}
-          className="btn h-14 sm:h-16 rounded-full text-lg sm:text-xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
         >
           +/−
         </button>
         <button
           type="button"
           onClick={() => insertAtCursor('0')}
-          className="btn h-14 sm:h-16 rounded-full text-xl sm:text-2xl font-normal bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
         >
           0
         </button>
         <button
           type="button"
           onClick={() => insertAtCursor('.')}
-          className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-base-200 hover:bg-base-300 text-base-content border-0 shadow-none"
+          className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
+          style={{ fontWeight: 700 }}
         >
           .
         </button>
         <button
           type="button"
           onClick={handleCalculate}
-          className="btn h-14 sm:h-16 rounded-full text-2xl font-bold bg-primary text-primary-content hover:bg-primary/90 border-0 shadow-md transition-transform active:scale-95"
+          className={`${styles.keypadBtn} ${styles.keypadBtnEquals}`}
         >
           =
         </button>

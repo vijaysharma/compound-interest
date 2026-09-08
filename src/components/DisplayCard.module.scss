@@ -39,6 +39,14 @@
   line-height: 1.2;
   color: var(--color-primary);
   font-variant-numeric: tabular-nums;
+
+  &.textError {
+    color: var(--color-error, #ef4444);
+  }
+
+  &.textPrimary {
+    color: var(--color-primary);
+  }
 }
 
 .currency {

@@ -10,6 +10,7 @@ import { calculateSip, calculateSipGrowth } from '../utilities/mutualFundCalcula
 import { CHART_COLORS } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
+import styles from './MutualFundAnalytics.module.scss';
 const liveSipSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -734,84 +735,84 @@ const SIP = ({
     color: string
   ) => {
     return (
-      <div className="flex flex-col items-center text-center w-full">
-        <div className="stat-title text-xs font-semibold mb-1 max-w-full">
+      <div className={styles.statCard}>
+        <div className={styles.statTitle}>
           <span
-            className="inline-block w-2 h-2 rounded-full mr-1"
+            className={styles.fundColorDot}
             style={{
               backgroundColor: color,
             }}
             aria-hidden="true"
           />
-          <span title={title} className="inline-block fund-name max-w-full align-bottom">
+          <span title={title} className={styles.fundName}>
             {title}
           </span>
         </div>
         {!start || !end ? (
-          <div className="text-xs opacity-60 py-3">Loading NAV data...</div>
+          <div className={styles.statLoading}>Loading NAV data...</div>
         ) : (
           <>
-            <div className="flex gap-3">
-              <div className="text-secondary text-md">
-                <div className="stat-title font-semibold text-xs">{start.date}</div>
-                <span className="text-sm">₹</span>
+            <div className={styles.navDatesRow}>
+              <div className={styles.textSecondary}>
+                <div className={styles.statTitle}>{start.date}</div>
+                <span>₹</span>
                 {formatNav(start.nav)}
               </div>
               <div
-                className={`text-md ${
-                  parseFloat(end.nav) >= parseFloat(start.nav) ? 'text-success' : 'text-error'
-                }`}
+                className={
+                  parseFloat(end.nav) >= parseFloat(start.nav) ? styles.textSuccess : styles.textError
+                }
               >
-                <div className="stat-title font-semibold text-xs">{end.date}</div>
-                <span className="text-sm">₹</span>
+                <div className={styles.statTitle}>{end.date}</div>
+                <span>₹</span>
                 {formatNav(end.nav)}
               </div>
             </div>
-            <div className="stat-title text-xs">Invested Amount</div>
-            <span className="text-lg text-secondary font-semibold">
+            <div className={styles.statTitle}>Invested Amount</div>
+            <span className={`${styles.statValueLg} ${styles.textSecondary}`}>
               {Math.round(invested).toLocaleString('en-IN')}
             </span>
-            <div className="stat-title text-xs">Value as on {end.date}</div>
-            <span className="text-lg font-semibold text-primary">
+            <div className={styles.statTitle}>Value as on {end.date}</div>
+            <span className={`${styles.statValueLg} ${styles.textPrimary}`}>
               {Math.round(matureAmount).toLocaleString('en-IN')}
-              <span className={`text-xs ${(xirr ?? 0) >= 0 ? 'text-success' : 'text-error'}`}>
+              <span className={(xirr ?? 0) >= 0 ? styles.textSuccess : styles.textError}>
                 &nbsp;({xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`})
               </span>
             </span>
             {latestValue !== undefined && latestNavDate && (
               <>
-                <div className="stat-title text-xs">Value as on ({latestNavDate})</div>
-                <span className="text-xl font-semibold text-primary">
+                <div className={styles.statTitle}>Value as on ({latestNavDate})</div>
+                <span className={`${styles.statValueXl} ${styles.textPrimary}`}>
                   {Math.round(latestValue).toLocaleString('en-IN')}
                 </span>
               </>
             )}
-            <div className={`font-semibold ${profitAmount >= 0 ? 'text-success' : 'text-error'}`}>
+            <div className={`${styles.statRow} ${profitAmount >= 0 ? styles.textSuccess : styles.textError}`}>
               {profitAmount < 0 ? '-' : '+'}
               &nbsp;₹
               {Math.abs(profitAmount).toLocaleString('en-IN')}
             </div>
-            <div className="stat-title font-semibold">
-              <span className="text-xs">X:</span>{' '}
-              <span className={(latestXirr ?? 0) >= 0 ? 'text-success' : 'text-error'}>
+            <div className={styles.statRow}>
+              <span>X:</span>{' '}
+              <span className={(latestXirr ?? 0) >= 0 ? styles.textSuccess : styles.textError}>
                 {latestXirr === undefined ? 'N/A' : `${(latestXirr * 100).toFixed(2)}%`}
               </span>
               &nbsp;|&nbsp;
-              <span className="text-xs">A:</span>{' '}
-              <span className={absoluteReturn >= 0 ? 'text-success' : 'text-error'}>
+              <span>A:</span>{' '}
+              <span className={absoluteReturn >= 0 ? styles.textSuccess : styles.textError}>
                 {absoluteReturn.toFixed(2)}%
               </span>
             </div>
-            <div className="stat-title font-semibold">
-              <span className="text-xs">Insts.: </span>
-              <span className="text-primary text-sm">{installments}</span>
+            <div className={styles.statRow}>
+              <span>Insts.: </span>
+              <span className={styles.textPrimary}>{installments}</span>
               &nbsp;|&nbsp;
-              <span className="text-xs">Units: </span>
-              <span className="text-primary text-sm">{units.toFixed(2)}</span>
+              <span>Units: </span>
+              <span className={styles.textPrimary}>{units.toFixed(2)}</span>
             </div>
-            <div className="stat-title font-semibold">
-              <span className="text-xs">Avg. buy price: </span>
-              <span className="text-primary text-md">₹{formatNav(String(averageNav))}</span>
+            <div className={styles.statRow}>
+              <span>Avg. buy price: </span>
+              <span className={styles.textPrimary}>₹{formatNav(String(averageNav))}</span>
             </div>
           </>
         )}
@@ -819,10 +820,10 @@ const SIP = ({
     );
   };
   if (error.status === 'error' && deferredSearchKey.trim()) {
-    return <h3 className="text-error">{error.message}</h3>;
+    return <h3 className={styles.statErrorBanner}>{error.message}</h3>;
   }
   return (
-    <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
+    <main className={styles.container}>
       <SEOHead
         title="Mutual Fund SIP Backtest — XIRR & Historical NAV Calculator India 2026"
         description="Backtest historical mutual fund SIP performance, XIRR returns, units accumulation, and rupee cost averaging on live AMFI data."
@@ -830,36 +831,36 @@ const SIP = ({
         canonicalPath="/mutual-funds/sip"
         schema={liveSipSchema}
       />
-      <header className="mb-4 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           AMFI Live Feed &bull; True XIRR Backtesting
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Mutual Fund SIP Historical Backtest &amp; XIRR Calculator
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Simulate actual historical SIP returns, average purchase price, unit accumulation, and
           internal rate of return (XIRR).
         </p>
       </header>
-      <div className="flex gap-2">
+      <div className={styles.actionButtonGroup}>
         <button
           type="button"
-          className="btn btn-primary btn-sm mb-2 "
+          className={styles.primaryButton}
           onClick={() => setIsFundSelectorOpen(true)}
         >
           Select mutual funds ({pinnedFunds.length}/8)
         </button>
         <button
           type="button"
-          className="btn btn-outline btn-primary btn-sm"
+          className={styles.outlineButton}
           onClick={toggleShowDate}
         >
           {showDate ? 'Time Slots' : 'Date Picker'}
         </button>
         <button
           type="button"
-          className="btn btn-outline btn-primary btn-sm"
+          className={styles.outlineButton}
           onClick={toggleViewChart}
         >
           {viewChart ? 'Hide Chart' : 'Show Chart'}
@@ -1009,7 +1010,7 @@ const SIP = ({
             selectedValue={duration}
             updateSelectedValue={handleDurationChange}
             sizePrefix="sm"
-            className="mb-2"
+            className={styles.fieldTight}
             btnClass="rounded-tl-none rounded-tr-none"
           />
         </div>
@@ -1027,20 +1028,20 @@ const SIP = ({
         (pinnedFunds.length > 0 ? (
           <Suspense
             fallback={
-              <div className="h-[240px] flex items-center justify-center">
-                <span className="loading loading-spinner loading-md text-primary"></span>
+              <div className={styles.chartLoadingWrapper}>
+                <span className={styles.loadingSpinner}></span>
               </div>
             }
           >
             <Chart
-              className="chart-container"
+              className={styles.chartContainer}
               datasets={chartDatasets}
               investmentAmount={parseFloat(monthlyAmount) || 0}
               dataMode="value"
             />
           </Suspense>
         ) : (
-          <div className="text-center py-4 text-sm opacity-60">
+          <div className={styles.chartPlaceholder}>
             Select up to 8 funds to see comparison
           </div>
         ))}
@@ -1061,7 +1062,7 @@ const SIP = ({
       <InputAmount
         inputAmount={monthlyAmount}
         setInputAmount={setMonthlyAmount}
-        className="mb-2"
+        className={styles.fieldTight}
         title="Monthly"
         stepData={[
           {
@@ -1103,12 +1104,12 @@ const SIP = ({
         typeSizePrefix="sm"
         stepSizePrefix="sm"
       />
-      <div className="join join-horizontal mb-3 w-full">
-        <span className="join-item label bg-primary px-2 py-1 text-sm text-primary-content">
+      <div className={styles.joinRow}>
+        <span className={styles.joinLabel}>
           Invested on
         </span>
         <select
-          className="join-item input input-sm input-primary w-full rounded-t-none"
+          className={styles.joinSelect}
           value={dayOfMonth}
           onChange={(event) => setDayOfMonth(event.target.value)}
         >
@@ -1118,11 +1119,11 @@ const SIP = ({
             </option>
           ))}
         </select>
-        <span className="join-item label bg-primary px-2 py-1 text-sm text-primary-content">
+        <span className={styles.joinLabel}>
           Yearly increase
         </span>
         <select
-          className="join-item input input-sm input-primary w-full"
+          className={styles.joinSelect}
           value={investmentStepUp}
           onChange={(event) => setInvestmentStepUp(event.target.value)}
         >
@@ -1134,9 +1135,9 @@ const SIP = ({
         </select>
       </div>
       {pinnedFunds.length > 0 && (
-        <div className="mf-display-grid grid grid-cols-2 w-full join join-horizontal">
+        <div className={styles.mfDisplayGrid}>
           {fundAnalyses.map((fund) => (
-            <div key={fund.schemeCode} className="join-item p-1 min-w-0">
+            <div key={fund.schemeCode} className={styles.mfDisplayItem}>
               {renderStatsCard(
                 fund.startNav,
                 fund.endNav,

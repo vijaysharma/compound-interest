@@ -48,7 +48,7 @@ export const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> =
       <button
         type="button"
         onClick={handleDismiss}
-        className={`btn btn-ghost btn-xs btn-square ${styles.dismissBtn}`}
+        className={styles.dismissBtn}
         aria-label="Dismiss reminder"
       >
         <FiX style={{ width: '0.875rem', height: '0.875rem' }} />
@@ -61,7 +61,7 @@ export const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> =
           </div>
           <p className={styles.description}>
             This tool remains free for you to use. Subscribing for just{' '}
-            <strong className="text-primary font-bold">₹54/month</strong> directly funds our ad-free
+            <strong className={styles.priceHighlight}>₹54/month</strong> directly funds our ad-free
             servers, edge databases, and daily AMFI/IMF sync, while unlocking 15+ live Mutual Fund
             &amp; PPP analytics.
           </p>
@@ -69,7 +69,7 @@ export const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> =
         <div className={styles.actions}>
           <Link
             to="/upgrade"
-            className={`btn btn-primary btn-xs sm:btn-sm font-bold gap-1 ${styles.ctaBtn}`}
+            className={styles.ctaBtn}
           >
             <FiLock style={{ width: '0.75rem', height: '0.75rem' }} />
             <span>Unlock Pro (₹54/mo)</span>
@@ -77,7 +77,7 @@ export const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> =
           <button
             type="button"
             onClick={handleDismiss}
-            className="btn btn-ghost btn-xs opacity-70 hover:opacity-100"
+            className={styles.remindLaterBtn}
           >
             Remind later
           </button>

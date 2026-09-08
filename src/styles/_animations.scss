@@ -1,4 +1,4 @@
-// Animation utilities & keyframes
+// Global Animation keyframes
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -41,37 +41,3 @@
     transform: scale(1);
   }
 }
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-.animate-bounce {
-  animation: bounce 1s infinite;
-}
-
-.animate-in {
-  animation-duration: 150ms;
-  animation-fill-mode: both;
-}
-
-.fade-in {
-  animation-name: fadeIn;
-}
-
-.zoom-in-95 {
-  animation-name: zoomIn95;
-}
-
-.transition-all { transition-property: all; }
-.transition-colors { transition-property: color, background-color, border-color; }
-.transition-opacity { transition-property: opacity; }
-.transition-transform { transition-property: transform; }
-
-.duration-150 { transition-duration: 150ms; }
-.duration-200 { transition-duration: 200ms; }
-.duration-300 { transition-duration: 300ms; }

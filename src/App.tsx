@@ -1,4 +1,4 @@
-import './App.css';
+import styles from './App.module.scss';
 import { Suspense } from 'react';
 import { Outlet, useNavigation } from 'react-router-dom';
 import TopBar from './components/TopBar';
@@ -13,12 +13,12 @@ function App() {
     <AuthProvider>
       <RouteTracker />
       {isNavigating && (
-        <div className="nav-progress-bar">
-          <div className="nav-progress-bar-inner" />
+        <div className={styles.navProgressBar}>
+          <div className={styles.navProgressBarInner} />
         </div>
       )}
-      <TopBar className="app-topbar-sticky" />
-      <div className={`container app-container ${isNavigating ? 'opacity-60 pointer-events-none' : ''}`}>
+      <TopBar className={styles.appTopbarSticky} />
+      <div className={`${styles.appContainer} ${isNavigating ? styles.navigating : ''}`}>
         <Suspense fallback={<LoadingFallback />}>
           <Outlet />
         </Suspense>

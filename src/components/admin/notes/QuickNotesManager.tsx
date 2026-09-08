@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../../context/useAuth';
 import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS } from './NotesTypes';
 import './quick-notes.css';
+import styles from './QuickNotesManager.module.scss';
 export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const { user } = useAuth();
   const userId = user?.id || 'default';
@@ -756,19 +757,19 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const trashedCount = notes.filter((n) => n.is_trashed).length;
   const isSelectedNoteUnlocked = selectedNoteId ? unlockedNotes.has(selectedNoteId) : false;
   return (
-    <div className="relative flex-1 w-full h-full flex overflow-hidden quick-notes-theme">
+    <div className={`${styles.container} quick-notes-theme`}>
       {loading && notes.length === 0 && (
-        <div className="absolute inset-0 bg-base-100/80 backdrop-blur-xs flex items-center justify-center z-50">
-          <span className="loading loading-spinner text-primary"></span>
+        <div className={styles.loadingOverlay}>
+          <span className={styles.spinner}></span>
         </div>
       )}
       <div
-        className={`h-full md:border-r md:border-base-300/80 ${
+        className={`${styles.sidebarPane} ${
           effectiveMobileScreen === 'folders'
-            ? 'flex flex-1 w-full md:flex-none'
+            ? styles.mobileVisible
             : isSidebarOpen
-              ? 'hidden md:flex'
-              : 'hidden'
+              ? styles.desktopVisible
+              : styles.hidden
         }`}
       >
         <NotesSidebar
@@ -798,10 +799,8 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         />
       </div>
       <div
-        className={`h-full md:border-r md:border-base-300/80 ${
-          effectiveMobileScreen === 'list'
-            ? 'flex flex-1 w-full md:w-80 lg:w-88 md:flex-initial'
-            : 'hidden md:flex'
+        className={`${styles.listPane} ${
+          effectiveMobileScreen === 'list' ? styles.mobileVisible : ''
         }`}
       >
         <NotesList
@@ -833,7 +832,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         />
       </div>
       <div
-        className={`h-full flex-1 min-h-0 ${effectiveMobileScreen === 'editor' ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'}`}
+        className={`${styles.editorPane} ${
+          effectiveMobileScreen === 'editor' ? styles.mobileVisible : ''
+        }`}
       >
         <NotesEditor
           note={selectedNote}

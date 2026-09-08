@@ -1,0 +1,45 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.container {
+  width: 100%;
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
+
+  @include desktop-up {
+    max-width: 100%;
+  }
+}
+
+.tabContentSingle {
+  width: 66.666667%;
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tabContentRow {
+  width: 66.666667%;
+  max-width: 48rem;
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tabCol {
+  flex-grow: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.tabContentWide {
+  width: 66.666667%;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}

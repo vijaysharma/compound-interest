@@ -55,6 +55,8 @@ import {
 } from './NotesTypes';
 import { MoveNoteModal } from './MoveNoteModal';
 import { sanitizeNoteHtml, isSafeUrl, sanitizePlainInput } from './sanitizeHtml';
+import styles from './NotesEditor.module.scss';
+import modalStyles from './NotesModal.module.scss';
 const FONT_SIZES = [
   { label: 'Small', size: '13px', cmdVal: '2' },
   { label: 'Normal', size: '16px', cmdVal: '3' },
@@ -882,28 +884,28 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   };
   if (!note) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-base-100/50 select-none">
-        <div className="w-16 h-16 rounded-2xl bg-success/15 flex items-center justify-center text-success mb-4 shadow-xs">
-          <FiShield className="w-8 h-8" />
+      <div className={styles.emptyContainer}>
+        <div className={styles.emptyIconBox}>
+          <FiShield size={32} />
         </div>
-        <h3 className="font-bold text-lg text-base-content mb-1">End-to-End Encrypted Notes</h3>
-        <p className="text-xs text-base-content/60 max-w-sm mb-4 leading-relaxed">
+        <h3 className={styles.emptyTitle}>End-to-End Encrypted Notes</h3>
+        <p className={styles.emptyText}>
           All your notes are encrypted with AES-256-GCM right on your device before syncing. Only you have the key.
         </p>
-        <div className="flex items-center gap-2">
+        <div className={styles.emptyActions}>
           <button
             onClick={onNewNote}
-            className="btn btn-primary btn-sm font-semibold rounded-xl shadow-xs gap-1.5"
+            className={styles.btnPrimary}
           >
-            <FiEdit3 className="w-4 h-4" />
+            <FiEdit3 size={16} />
             Create New Note
           </button>
           {onOpenSecurityModal && (
             <button
               onClick={onOpenSecurityModal}
-              className="btn btn-ghost btn-sm text-success text-xs font-semibold rounded-xl"
+              className={`${styles.btnGhost} ${styles.success}`}
             >
-              <FiShield className="w-3.5 h-3.5" />
+              <FiShield size={14} />
               Security Info
             </button>
           )}
@@ -913,54 +915,54 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   }
   if (note.is_locked && !isUnlockedInSession) {
     return (
-      <div className="flex-1 flex flex-col h-full bg-base-100">
-        <div className="h-14 border-b border-base-200 px-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className={styles.lockedContainer}>
+        <div className={styles.lockedTopBar}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {onBackMobile && (
               <button
                 onClick={onBackMobile}
-                className="btn btn-ghost btn-sm flex items-center gap-0.5 text-primary font-semibold min-h-[44px]"
+                className={styles.backBtn}
               >
-                <FiChevronLeft className="w-5 h-5" />
+                <FiChevronLeft size={20} />
                 <span>{folderTitle || 'Notes'}</span>
               </button>
             )}
-            <span className="font-bold text-sm">Locked Note</span>
+            <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>Locked Note</span>
           </div>
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="btn btn-ghost btn-sm text-error min-h-[44px] min-w-[44px]"
+            className={`${styles.iconBtn} ${styles.danger}`}
             title="Delete Note"
           >
-            <FiTrash2 className="w-4 h-4" />
+            <FiTrash2 size={16} />
           </button>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
-            <BsLockFill className="w-8 h-8" />
+        <div className={styles.lockedCenter}>
+          <div className={styles.lockedIconBox}>
+            <BsLockFill size={32} />
           </div>
-          <h3 className="font-bold text-lg mb-1 text-base-content">This note is locked</h3>
-          <p className="text-xs text-base-content/60 mb-6">
+          <h3 className={styles.emptyTitle} style={{ marginBottom: '0.25rem' }}>This note is locked</h3>
+          <p className={styles.emptyText} style={{ marginBottom: '1.5rem' }}>
             Enter the password for this note to view its contents.
           </p>
           {unlockError && (
-            <div className="alert alert-error text-xs py-2 px-3 mb-4 rounded-lg w-full">
+            <div className={styles.errorAlert}>
               <span>{unlockError}</span>
             </div>
           )}
-          <form onSubmit={handleUnlockNote} className="w-full space-y-3">
+          <form onSubmit={handleUnlockNote} style={{ width: '100%' }}>
             <input
               type="password"
               autoFocus
               placeholder="Enter password"
               value={unlockPassword}
               onChange={(e) => setUnlockPassword(e.target.value)}
-              className="input input-bordered input-primary w-full rounded-xl text-center text-base min-h-[44px]"
+              className={styles.lockedInput}
             />
             <button
               type="submit"
               disabled={!unlockPassword.trim()}
-              className="btn btn-primary w-full rounded-xl font-semibold shadow-xs min-h-[44px]"
+              className={styles.lockedSubmitBtn}
             >
               View Note
             </button>
@@ -974,7 +976,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const allFolderOptions = Array.from(new Set(['Quick Notes', ...folders]));
   return (
     <div
-      className="flex-1 flex flex-col h-full bg-base-100/90 overflow-hidden relative qn-paper min-h-0"
+      className={`${styles.container} qn-paper`}
       style={
         isMobileScreen && viewportState
           ? {
@@ -991,42 +993,42 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             }
       }
     >
-      <div className="sticky top-0 bg-base-100/95 backdrop-blur-md border-b border-base-300/70 flex items-center justify-between gap-1 z-40 select-none min-h-[48px] px-2 sm:px-3 flex-shrink-0 overflow-visible">
-        <div className="flex items-center gap-1 min-w-0 flex-1">
+      <div className={styles.topBar}>
+        <div className={styles.topBarLeft}>
           {onBackMobile && (
             <button
               onClick={onBackMobile}
-              className="btn btn-ghost btn-sm px-1.5 flex items-center gap-0.5 text-primary md:hidden font-semibold min-h-[38px] flex-shrink-0"
+              className={styles.backBtn}
             >
-              <FiChevronLeft className="w-5 h-5" />
-              <span className="truncate max-w-[80px] xs:max-w-[100px]">{folderTitle || 'Notes'}</span>
+              <FiChevronLeft size={20} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }}>{folderTitle || 'Notes'}</span>
             </button>
           )}
           {onToggleSidebar && !isMobileScreen && (
             <button
               onClick={onToggleSidebar}
-              className={`btn btn-ghost btn-xs btn-square ${isSidebarOpen ? 'text-primary' : 'text-base-content/60'} flex-shrink-0`}
+              className={`${styles.iconBtn} ${isSidebarOpen ? styles.active : ''}`}
               title="Toggle Sidebar"
             >
-              <FiMenu className="w-4 h-4" />
+              <FiMenu size={16} />
             </button>
           )}
           {!isTrash && (
-            <div className="dropdown dropdown-bottom min-w-0 relative">
+            <div className={styles.dropdownContainer}>
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-xs gap-1 font-medium text-xs text-base-content/75 hover:text-base-content max-w-full"
+                className={styles.folderSelector}
                 title="Move to another folder"
               >
-                <FiFolder className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                <span className="truncate max-w-[80px] xs:max-w-[110px] sm:max-w-[140px]">{currentFolder}</span>
+                <FiFolder size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>{currentFolder}</span>
               </div>
               <ul
                 tabIndex={0}
-                className="dropdown-content z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-48 text-xs border border-base-200 mt-1"
+                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
               >
-                <li className="menu-title text-[10px] text-base-content/50">Move to Folder</li>
+                <li className={styles.dropdownTitle}>Move to Folder</li>
                 {allFolderOptions.map((f) => (
                   <li key={f}>
                     <button
@@ -1034,21 +1036,23 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         onUpdateNote({ folder: f });
                         (document.activeElement as HTMLElement)?.blur();
                       }}
-                      className={currentFolder === f ? 'active font-bold' : ''}
+                      className={`${styles.dropdownItem} ${currentFolder === f ? styles.active : ''}`}
                     >
                       {f}
                     </button>
                   </li>
                 ))}
-                <li className="border-t border-base-200 mt-1 pt-1">
+                <li className={styles.dropdownDivider} />
+                <li>
                   <button
                     onClick={() => {
                       setShowMoveModal(true);
                       (document.activeElement as HTMLElement)?.blur();
                     }}
-                    className="text-primary font-semibold flex items-center gap-1"
+                    className={styles.dropdownItem}
+                    style={{ color: 'var(--color-primary)', fontWeight: 600 }}
                   >
-                    <FiFolderPlus className="w-3.5 h-3.5" />
+                    <FiFolderPlus size={14} />
                     Manage Folders...
                   </button>
                 </li>
@@ -1056,67 +1060,68 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
+        <div className={styles.topBarRight}>
           {!isTrash && (
             <>
               <button
                 onClick={onTogglePin}
-                className={`btn btn-ghost btn-xs sm:btn-sm btn-square min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0 ${
-                  note.is_pinned ? 'text-primary' : 'text-base-content/60'
+                className={`${styles.iconBtn} ${
+                  note.is_pinned ? styles.active : ''
                 }`}
                 title={note.is_pinned ? 'Unpin Note' : 'Pin Note'}
               >
                 {note.is_pinned ? (
-                  <BsPinFill className="w-4 h-4" />
+                  <BsPinFill size={16} />
                 ) : (
-                  <BsPin className="w-4 h-4" />
+                  <BsPin size={16} />
                 )}
               </button>
               <button
                 onClick={onOpenLockModal}
-                className={`btn btn-ghost btn-xs sm:btn-sm btn-square min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0 ${
-                  note.is_locked ? 'text-primary' : 'text-base-content/60'
+                className={`${styles.iconBtn} ${
+                  note.is_locked ? styles.active : ''
                 }`}
                 title={note.is_locked ? 'Lock Settings' : 'Lock Note'}
               >
                 {note.is_locked ? (
-                  <FiLock className="w-4 h-4" />
+                  <FiLock size={16} />
                 ) : (
-                  <FiUnlock className="w-4 h-4" />
+                  <FiUnlock size={16} />
                 )}
               </button>
             </>
           )}
-          <div className="dropdown dropdown-end relative">
+          <div className={styles.dropdownContainer}>
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-xs sm:btn-sm btn-square text-base-content/75 hover:text-base-content min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0"
+              className={styles.iconBtn}
               title="Share & Export"
             >
-              <FiShare2 className="w-4 h-4" />
+              <FiShare2 size={16} />
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content z-50 menu p-2 shadow-2xl bg-base-100 rounded-box w-52 text-xs border border-base-200 mt-1"
+              className={`${styles.dropdownMenu} ${styles.alignRight}`}
+              style={{ width: '13rem' }}
             >
               {!isTrash && (
                 <li>
-                  <button onClick={() => setShowMoveModal(true)} className="flex items-center gap-2">
-                    <FiFolder className="w-3.5 h-3.5 text-primary" />
+                  <button onClick={() => setShowMoveModal(true)} className={styles.dropdownItem}>
+                    <FiFolder size={14} color="var(--color-primary)" />
                     Move to Folder...
                   </button>
                 </li>
               )}
               <li>
-                <button onClick={handleDumpToGoogleDrive} className="flex items-center gap-2">
-                  <SiGoogledrive className="w-3.5 h-3.5 text-blue-500" />
+                <button onClick={handleDumpToGoogleDrive} className={styles.dropdownItem}>
+                  <SiGoogledrive size={14} color="#3b82f6" />
                   Save to Google Drive
                 </button>
               </li>
               <li>
-                <button onClick={handleDumpToOneDrive} className="flex items-center gap-2">
-                  <svg className="w-3.5 h-3.5 fill-current text-sky-500" viewBox="0 0 24 24">
+                <button onClick={handleDumpToOneDrive} className={styles.dropdownItem}>
+                  <svg style={{ width: 14, height: 14, fill: '#0284c7' }} viewBox="0 0 24 24">
                     <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
                   </svg>
                   Save to OneDrive
@@ -1124,44 +1129,44 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </li>
               {onOpenBackupModal && (
                 <li>
-                  <button onClick={onOpenBackupModal} className="flex items-center gap-2 text-primary font-semibold">
-                    <BsCloudArrowUp className="w-3.5 h-3.5" />
+                  <button onClick={onOpenBackupModal} className={styles.dropdownItem} style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                    <BsCloudArrowUp size={14} />
                     Backup & Restore
                   </button>
                 </li>
               )}
-              <div className="divider my-1"></div>
+              <li className={styles.dropdownDivider} />
               <li>
-                <button onClick={handleCopy} className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FiCopy className="w-3.5 h-3.5" />
+                <button onClick={handleCopy} className={styles.dropdownItem}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <FiCopy size={14} />
                     Copy Content
                   </span>
-                  {copySuccess && <FiCheck className="w-3.5 h-3.5 text-success" />}
+                  {copySuccess && <FiCheck size={14} color="#16a34a" />}
                 </button>
               </li>
               <li>
-                <button onClick={handleExportMarkdown} className="flex items-center gap-2">
-                  <FiDownload className="w-3.5 h-3.5" />
+                <button onClick={handleExportMarkdown} className={styles.dropdownItem}>
+                  <FiDownload size={14} />
                   Download (.md)
                 </button>
               </li>
               <li>
-                <button onClick={handleExportText} className="flex items-center gap-2">
-                  <FiDownload className="w-3.5 h-3.5" />
+                <button onClick={handleExportText} className={styles.dropdownItem}>
+                  <FiDownload size={14} />
                   Download (.txt)
                 </button>
               </li>
               <li>
-                <button onClick={handlePrint} className="flex items-center gap-2">
-                  <FiPrinter className="w-3.5 h-3.5" />
+                <button onClick={handlePrint} className={styles.dropdownItem}>
+                  <FiPrinter size={14} />
                   Print / Save PDF
                 </button>
               </li>
               {!isTrash && (
                 <li>
-                  <button onClick={onDuplicateNote} className="flex items-center gap-2">
-                    <FiCopy className="w-3.5 h-3.5" />
+                  <button onClick={onDuplicateNote} className={styles.dropdownItem}>
+                    <FiCopy size={14} />
                     Duplicate Note
                   </button>
                 </li>
@@ -1169,77 +1174,81 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </ul>
           </div>
           {isTrash ? (
-            <div className="flex items-center gap-1">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <button
                 onClick={onRestoreNote}
-                className="btn btn-ghost btn-xs text-success min-h-[38px]"
+                className={`${styles.btnGhost} ${styles.success}`}
+                style={{ minHeight: '38px' }}
                 title="Restore Note"
               >
-                <FiRotateCcw className="w-4 h-4 mr-1" />
+                <FiRotateCcw size={16} style={{ marginRight: '0.25rem' }} />
                 Put Back
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="btn btn-ghost btn-xs text-error min-h-[38px]"
+                className={styles.btnGhost}
+                style={{ color: '#ef4444', minHeight: '38px' }}
                 title="Delete Permanently"
               >
-                <FiTrash2 className="w-4 h-4 mr-1" />
+                <FiTrash2 size={16} style={{ marginRight: '0.25rem' }} />
                 Delete
               </button>
             </div>
           ) : (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="btn btn-ghost btn-xs sm:btn-sm btn-square text-base-content/60 hover:text-error min-h-[36px] min-w-[36px] sm:min-h-[38px] sm:min-w-[38px] flex-shrink-0"
+              className={`${styles.iconBtn} ${styles.danger}`}
               title="Move to Trash"
             >
-              <FiTrash2 className="w-4 h-4" />
+              <FiTrash2 size={16} />
             </button>
           )}
           {!isTrash && !isMobileScreen && (
             <button
               onClick={onNewNote}
-              className="btn btn-primary btn-xs rounded-lg font-semibold shadow-xs ml-1"
+              className={styles.btnPrimary}
+              style={{ padding: '0.35rem 0.6rem', borderRadius: '8px', marginLeft: '0.25rem' }}
               title="New Note (Cmd+N)"
             >
-              <FiEdit3 className="w-3.5 h-3.5" />
+              <FiEdit3 size={14} />
             </button>
           )}
         </div>
       </div>
       {!isTrash && (
-        <div className="hidden md:flex items-center gap-0.5 px-3 py-1 bg-base-100/90 border-b border-base-200/80 z-30 select-none flex-shrink-0 flex-wrap overflow-visible">
+        <div className={styles.desktopToolbar}>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleUndo}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Undo (Cmd+Z)"
           >
-            <BsArrowCounterclockwise className="w-3.5 h-3.5" />
+            <BsArrowCounterclockwise size={14} />
           </button>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleRedo}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Redo (Cmd+Shift+Z / Ctrl+Y)"
           >
-            <BsArrowClockwise className="w-3.5 h-3.5" />
+            <BsArrowClockwise size={14} />
           </button>
-          <div className="w-px h-4 bg-base-300 mx-0.5" />
-          <div className="dropdown dropdown-bottom relative">
+          <div className={styles.toolbarDivider} />
+          <div className={styles.dropdownContainer}>
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-xs text-xs font-semibold px-2"
+              className={styles.toolbarSelectBtn}
               title="Heading style"
             >
               Format
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
+              className={`${styles.dropdownMenu} ${styles.alignLeft}`}
+              style={{ width: '9rem' }}
             >
               <li>
                 <button
@@ -1249,7 +1258,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     execCmd('formatBlock', '<h1>');
                     (document.activeElement as HTMLElement)?.blur();
                   }}
-                  className="font-bold"
+                  className={styles.dropdownItem}
+                  style={{ fontWeight: 700 }}
                 >
                   Title (H1)
                 </button>
@@ -1262,7 +1272,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     execCmd('formatBlock', '<h2>');
                     (document.activeElement as HTMLElement)?.blur();
                   }}
-                  className="font-semibold"
+                  className={styles.dropdownItem}
+                  style={{ fontWeight: 600 }}
                 >
                   Heading (H2)
                 </button>
@@ -1275,7 +1286,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     execCmd('formatBlock', '<h3>');
                     (document.activeElement as HTMLElement)?.blur();
                   }}
-                  className="font-medium"
+                  className={styles.dropdownItem}
+                  style={{ fontWeight: 500 }}
                 >
                   Subheading (H3)
                 </button>
@@ -1288,6 +1300,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     execCmd('formatBlock', '<p>');
                     (document.activeElement as HTMLElement)?.blur();
                   }}
+                  className={styles.dropdownItem}
                 >
                   Body Text
                 </button>
@@ -1300,26 +1313,28 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     execCmd('formatBlock', '<pre>');
                     (document.activeElement as HTMLElement)?.blur();
                   }}
-                  className="font-mono"
+                  className={styles.dropdownItem}
+                  style={{ fontFamily: 'monospace' }}
                 >
                   Monospaced
                 </button>
               </li>
             </ul>
           </div>
-          <div className="dropdown dropdown-bottom relative">
+          <div className={styles.dropdownContainer}>
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-xs text-xs font-semibold px-2 flex items-center gap-1"
+              className={styles.toolbarSelectBtn}
               title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
             >
               <span>{FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Size'}</span>
-              <span className="text-[9px] opacity-60">▼</span>
+              <span style={{ fontSize: '9px', opacity: 0.6 }}>▼</span>
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content z-50 menu p-1 shadow-2xl bg-base-100 rounded-box w-36 text-xs border border-base-200 mt-1"
+              className={`${styles.dropdownMenu} ${styles.alignLeft}`}
+              style={{ width: '9rem' }}
             >
               {FONT_SIZES.map((fs) => {
                 const isActive = currentFontSize === fs.size;
@@ -1332,32 +1347,33 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         applyFontSize(fs.size, fs.cmdVal);
                         (document.activeElement as HTMLElement)?.blur();
                       }}
-                      className={`flex items-center justify-between py-1 px-2 ${isActive ? 'active font-bold bg-primary/10 text-primary' : ''}`}
+                      className={`${styles.dropdownItem} ${isActive ? styles.active : ''}`}
                       style={{ fontSize: fs.size }}
                     >
                       <span>{fs.label}</span>
-                      {isActive && <span className="text-xs text-primary font-bold">✓</span>}
+                      {isActive && <span style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 700 }}>✓</span>}
                     </button>
                   </li>
                 );
               })}
             </ul>
           </div>
-          <div className="dropdown dropdown-bottom relative">
+          <div className={styles.dropdownContainer}>
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-xs btn-square text-primary"
+              className={`${styles.toolbarBtn} ${styles.primary}`}
               title="Color & Highlight"
             >
-              <BsPalette className="w-3.5 h-3.5" />
+              <BsPalette size={14} />
             </div>
             <div
               tabIndex={0}
-              className="dropdown-content z-50 p-2.5 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200 mt-1"
+              className={`${styles.dropdownMenu} ${styles.alignLeft}`}
+              style={{ width: '14rem', padding: '0.65rem' }}
             >
-              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5">Text Color</div>
-              <div className="grid grid-cols-5 gap-1.5 mb-2.5">
+              <div className={styles.dropdownTitle}>Text Color</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.375rem', marginBottom: '0.65rem' }}>
                 {TEXT_COLORS.map((c) => (
                   <button
                     key={c.value}
@@ -1367,14 +1383,15 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       applyTextColor(c.value);
                       (document.activeElement as HTMLElement)?.blur();
                     }}
-                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
-                    style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
+                    className={styles.colorSwatch}
+                    style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value }}
                     title={c.label}
                   />
                 ))}
               </div>
-              <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1.5 border-t border-base-200 pt-1.5">Highlight Color</div>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className={styles.dropdownDivider} />
+              <div className={styles.dropdownTitle}>Highlight Color</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem' }}>
                 {HIGHLIGHT_COLORS.map((c) => (
                   <button
                     key={c.value}
@@ -1384,7 +1401,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       applyHighlightColor(c.value);
                       (document.activeElement as HTMLElement)?.blur();
                     }}
-                    className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
+                    className={styles.colorSwatch}
                     style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
                     title={c.label}
                   >
@@ -1394,185 +1411,187 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </div>
             </div>
           </div>
-          <div className="w-px h-4 bg-base-300 mx-0.5" />
+          <div className={styles.toolbarDivider} />
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={insertChecklistItem}
-            className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
+            className={`${styles.toolbarBtn} ${styles.primary}`}
             title="Add Checklist Item (Cmd+Shift+L)"
           >
-            <BsCardChecklist className="w-4 h-4" />
+            <BsCardChecklist size={16} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('bold')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Bold (Cmd+B)"
           >
-            <FiBold className="w-3.5 h-3.5" />
+            <FiBold size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('italic')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Italic (Cmd+I)"
           >
-            <FiItalic className="w-3.5 h-3.5" />
+            <FiItalic size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('underline')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Underline (Cmd+U)"
           >
-            <FiUnderline className="w-3.5 h-3.5" />
+            <FiUnderline size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('strikeThrough')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Strikethrough"
           >
-            <BsTypeStrikethrough className="w-3.5 h-3.5" />
+            <BsTypeStrikethrough size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={applyHighlighter}
-            className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10"
+            className={`${styles.toolbarBtn} ${styles.primary}`}
             title="Highlighter"
           >
-            <BsHighlighter className="w-3.5 h-3.5" />
+            <BsHighlighter size={14} />
           </button>
-          <div className="w-px h-4 bg-base-300 mx-0.5" />
+          <div className={styles.toolbarDivider} />
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('insertUnorderedList')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Bulleted List"
           >
-            <BsListUl className="w-3.5 h-3.5" />
+            <BsListUl size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('insertOrderedList')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Numbered List"
           >
-            <BsListOl className="w-3.5 h-3.5" />
+            <BsListOl size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleOutdent}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Decrease Indent (Shift+Tab)"
           >
-            <BsTextIndentLeft className="w-3.5 h-3.5" />
+            <BsTextIndentLeft size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleIndent}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Increase Indent (Tab)"
           >
-            <BsTextIndentRight className="w-3.5 h-3.5" />
+            <BsTextIndentRight size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={insertTable}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Insert Table"
           >
-            <BsTable className="w-3.5 h-3.5" />
+            <BsTable size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('formatBlock', '<blockquote>')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Quote"
           >
-            <BsQuote className="w-4 h-4" />
+            <BsQuote size={16} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCmd('formatBlock', '<pre>')}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Code Block"
           >
-            <FiCode className="w-3.5 h-3.5" />
+            <FiCode size={14} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={insertLink}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Insert Link"
           >
-            <FiLink className="w-3.5 h-3.5" />
+            <FiLink size={14} />
           </button>
-          <div className="w-px h-4 bg-base-300 mx-0.5" />
+          <div className={styles.toolbarDivider} />
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleSelectAll}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Select All Content"
           >
-            <BsCheck2All className="w-4 h-4" />
+            <BsCheck2All size={16} />
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleCopySelection}
-            className="btn btn-ghost btn-xs btn-square"
+            className={styles.toolbarBtn}
             title="Copy Selected Text"
           >
             {copySuccess ? (
-              <FiCheck className="w-3.5 h-3.5 text-success" />
+              <FiCheck size={14} color="#16a34a" />
             ) : (
-              <FiCopy className="w-3.5 h-3.5" />
+              <FiCopy size={14} />
             )}
           </button>
         </div>
       )}
       {isTrash && (
-        <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 flex items-center justify-between text-xs">
-          <span className="text-primary font-medium">
+        <div className={styles.trashBanner}>
+          <span>
             This note is in Recently Deleted. You cannot edit it unless you restore it.
           </span>
           <button
             onClick={onRestoreNote}
-            className="btn btn-xs btn-primary font-semibold"
+            className={styles.btnPrimary}
+            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', borderRadius: '8px' }}
           >
-            <FiRotateCcw className="w-3 h-3 mr-1" />
+            <FiRotateCcw size={12} style={{ marginRight: '0.25rem' }} />
             Restore Note
           </button>
         </div>
       )}
       {activeTable && !isTrash && (
-        <div className="bg-base-200/80 border-b border-base-300 px-4 py-1.5 flex items-center gap-2 text-xs select-none overflow-x-auto">
-          <span className="font-semibold text-base-content/60 text-[11px] whitespace-nowrap">
+        <div className={styles.tableToolsBar}>
+          <span style={{ fontWeight: 600, opacity: 0.6, fontSize: '11px', whiteSpace: 'nowrap' }}>
             Table Tools:
           </span>
           <button
             onClick={addTableRow}
-            className="btn btn-ghost btn-xs text-xs font-normal hover:bg-base-300 whitespace-nowrap min-h-[32px]"
+            className={styles.tableToolBtn}
           >
             + Add Row
           </button>
           <button
             onClick={addTableColumn}
-            className="btn btn-ghost btn-xs text-xs font-normal hover:bg-base-300 whitespace-nowrap min-h-[32px]"
+            className={styles.tableToolBtn}
           >
             + Add Column
           </button>
           <button
             onClick={deleteTable}
-            className="btn btn-ghost btn-xs text-xs font-normal text-error hover:bg-error/10 whitespace-nowrap min-h-[32px]"
+            className={`${styles.tableToolBtn} ${styles.danger}`}
           >
             Delete Table
           </button>
           <button
             onClick={() => setActiveTable(null)}
-            className="btn btn-ghost btn-xs ml-auto text-base-content/50 min-h-[32px]"
+            className={styles.toolbarBtn}
+            style={{ marginLeft: 'auto' }}
           >
-            <FiX className="w-3.5 h-3.5" />
+            <FiX size={14} />
           </button>
         </div>
       )}
@@ -1600,32 +1619,35 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             }
           }
         }}
-        className="flex-1 overflow-y-auto qn-scrollbar px-3 sm:px-6 pt-3 sm:pt-6 pb-6 sm:pb-12 flex flex-col w-full min-h-0 cursor-text overscroll-contain"
+        className={`${styles.canvasContainer} qn-scrollbar`}
       >
-        <div className="qn-canvas-inner max-w-4xl mx-auto w-full flex-1 flex flex-col min-h-full">
-          <div className="flex items-center justify-between text-xs text-base-content/40 mb-3 sm:mb-4 select-none border-b border-base-200/60 pb-2 flex-shrink-0 gap-2">
-            <span className="text-[11px] font-medium truncate">
+        <div className={`${styles.canvasInner} qn-canvas-inner`}>
+          <div className={styles.metaRow}>
+            <span className={styles.metaDate}>
               {formatNoteHeaderDate(note.updated_at || note.created_at)}
             </span>
-            <div className="flex items-center gap-2 sm:gap-3 text-[11px] flex-shrink-0">
+            <div className={styles.metaRight}>
               {onOpenSecurityModal && (
                 <button
                   type="button"
                   onClick={onOpenSecurityModal}
-                  className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-success bg-success/10 hover:bg-success/20 border border-success/25 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                  className={styles.encryptedBadge}
                   title="Zero-Knowledge AES-256-GCM End-to-End Encrypted: Click for details"
                 >
-                  <FiShield className="w-3 h-3 flex-shrink-0" />
+                  <FiShield size={12} style={{ flexShrink: 0 }} />
                   <span>E2E Encrypted</span>
                 </button>
               )}
-              <span className="hidden sm:inline">
+              <span>
                 {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} characters
               </span>
               <span
-                className={`font-medium text-[10px] sm:text-[11px] ${
-                  isSaving ? 'text-primary animate-pulse' : 'text-base-content/50'
-                }`}
+                style={{
+                  fontWeight: 500,
+                  fontSize: '11px',
+                  color: isSaving ? 'var(--color-primary)' : 'var(--color-text)',
+                  opacity: isSaving ? 1 : 0.5,
+                }}
               >
                 {isSaving ? 'Saving...' : 'Saved'}
               </span>
@@ -1639,24 +1661,24 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             maxLength={250}
             value={note.title || ''}
             onChange={handleTitleChange}
-            className="w-full text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-base-content placeholder-base-content/30 border-none outline-none bg-transparent mb-2 flex-shrink-0"
+            className={styles.titleInput}
           />
           {/* Tags section placed under title to prevent obscuring editor canvas */}
-          <div className="flex items-center flex-wrap gap-1.5 select-none mb-3 pb-2 border-b border-base-200/60 flex-shrink-0">
-            <FiTag className="w-3.5 h-3.5 text-base-content/40 mr-1" />
+          <div className={styles.tagsRow}>
+            <FiTag size={14} style={{ color: 'var(--color-text)', opacity: 0.4, marginRight: '0.25rem' }} />
             {(note.tags || []).map((tag) => (
               <span
                 key={tag}
-                className="badge badge-primary badge-outline badge-sm py-2 px-2.5 rounded-full text-xs font-medium flex items-center gap-1"
+                className={styles.tagChip}
               >
                 #{tag}
                 {!isTrash && (
                   <button
                     onClick={() => handleRemoveTag(tag)}
-                    className="hover:text-error transition-colors p-0.5"
+                    className={styles.tagRemoveBtn}
                     title="Remove tag"
                   >
-                    <FiX className="w-2.5 h-2.5" />
+                    <FiX size={10} />
                   </button>
                 )}
               </span>
@@ -1664,7 +1686,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             {!isTrash && (
               <>
                 {isAddingTag ? (
-                  <form onSubmit={handleAddTag} className="inline-flex items-center gap-1">
+                  <form onSubmit={handleAddTag} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                     <input
                       type="text"
                       autoFocus
@@ -1672,26 +1694,27 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       maxLength={30}
                       value={newTagInput}
                       onChange={(e) => setNewTagInput(e.target.value)}
-                      className="input input-xs input-bordered input-primary rounded-full w-24 text-xs"
+                      className={styles.tagInput}
                       onKeyDown={(e) => e.key === 'Escape' && setIsAddingTag(false)}
                     />
-                    <button type="submit" className="btn btn-ghost btn-xs px-1 text-success">
-                      <FiCheck className="w-3 h-3" />
+                    <button type="submit" className={styles.tagRemoveBtn} style={{ color: '#16a34a' }}>
+                      <FiCheck size={12} />
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsAddingTag(false)}
-                      className="btn btn-ghost btn-xs px-1 text-error"
+                      className={styles.tagRemoveBtn}
+                      style={{ color: '#ef4444' }}
                     >
-                      <FiX className="w-3 h-3" />
+                      <FiX size={12} />
                     </button>
                   </form>
                 ) : (
                   <button
                     onClick={() => setIsAddingTag(true)}
-                    className="badge badge-sm py-2 px-2.5 rounded-full text-xs font-medium badge-ghost hover:bg-base-300 text-base-content/60 cursor-pointer flex items-center gap-1"
+                    className={styles.tagAddBtn}
                   >
-                    <FiPlus className="w-2.5 h-2.5" />
+                    <FiPlus size={10} />
                     Add Tag
                   </button>
                 )}
@@ -1708,47 +1731,48 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             onKeyDown={handleKeyDown}
             onKeyUp={saveSelection}
             onMouseUp={saveSelection}
-            className="flex-1 w-full qn-note-canvas outline-none text-base-content/90 leading-relaxed cursor-text min-h-[160px] sm:min-h-[300px] select-text"
+            className={`${styles.editorCanvas} qn-note-canvas`}
             data-placeholder="Start typing or tap the checklist button below..."
           />
         </div>
       </div>
       {activeMobileMenu && (
         <div
-          className="md:hidden fixed inset-0 z-30"
+          className={styles.mobileBackdrop}
           onClick={() => setActiveMobileMenu(null)}
         />
       )}
       {!isTrash && (
-        <div className="md:hidden border-t border-base-300 bg-base-100/95 backdrop-blur-md flex items-center justify-between select-none flex-shrink-0 w-full px-2 py-1 gap-1 min-h-[44px] z-40">
+        <div className={styles.mobileBar}>
           <button
             type="button"
             onClick={handleUndo}
-            className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+            className={styles.mobileBarBtn}
             title="Undo"
           >
-            <BsArrowCounterclockwise className="w-4 h-4" />
+            <BsArrowCounterclockwise size={16} />
           </button>
           <button
             type="button"
             onClick={handleRedo}
-            className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px]"
+            className={styles.mobileBarBtn}
             title="Redo"
           >
-            <BsArrowClockwise className="w-4 h-4" />
+            <BsArrowClockwise size={16} />
           </button>
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'format' ? null : 'format')}
-              className={`btn btn-ghost btn-xs font-bold text-xs min-h-[34px] min-w-[34px] px-1 ${activeMobileMenu === 'format' ? 'btn-active text-primary' : ''}`}
+              className={`${styles.mobileBarBtn} ${activeMobileMenu === 'format' ? styles.active : ''}`}
+              style={{ fontWeight: 700, fontSize: '12px' }}
               title="Format & Font Size"
             >
               Aa
             </button>
             {activeMobileMenu === 'format' && (
-              <ul className="absolute bottom-full mb-2 left-0 z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200">
-                <li className="menu-title text-[10px] text-base-content/50 uppercase">Heading Style</li>
+              <ul className={`${styles.mobilePopup} ${styles.alignLeft}`}>
+                <li className={styles.dropdownTitle}>Heading Style</li>
                 <li>
                   <button
                     type="button"
@@ -1756,7 +1780,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h1>');
                       setActiveMobileMenu(null);
                     }}
-                    className="font-bold"
+                    className={styles.dropdownItem}
+                    style={{ fontWeight: 700 }}
                   >
                     Title (H1)
                   </button>
@@ -1768,7 +1793,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h2>');
                       setActiveMobileMenu(null);
                     }}
-                    className="font-semibold"
+                    className={styles.dropdownItem}
+                    style={{ fontWeight: 600 }}
                   >
                     Heading (H2)
                   </button>
@@ -1780,7 +1806,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h3>');
                       setActiveMobileMenu(null);
                     }}
-                    className="font-medium"
+                    className={styles.dropdownItem}
+                    style={{ fontWeight: 500 }}
                   >
                     Subheading (H3)
                   </button>
@@ -1792,11 +1819,13 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<p>');
                       setActiveMobileMenu(null);
                     }}
+                    className={styles.dropdownItem}
                   >
                     Body Text
                   </button>
                 </li>
-                <li className="menu-title text-[10px] text-base-content/50 uppercase border-t border-base-200 mt-1 pt-1">
+                <li className={styles.dropdownDivider} />
+                <li className={styles.dropdownTitle}>
                   Font Size
                 </li>
                 {FONT_SIZES.map((fs) => {
@@ -1809,11 +1838,11 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                           applyFontSize(fs.size, fs.cmdVal);
                           setActiveMobileMenu(null);
                         }}
-                        className={`flex items-center justify-between py-1.5 px-2 ${isActive ? 'active font-bold bg-primary/10 text-primary' : ''}`}
+                        className={`${styles.dropdownItem} ${isActive ? styles.active : ''}`}
                         style={{ fontSize: fs.size }}
                       >
                         <span>{fs.label}</span>
-                        {isActive && <span className="text-xs text-primary font-bold">✓</span>}
+                        {isActive && <span style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 700 }}>✓</span>}
                       </button>
                     </li>
                   );
@@ -1821,64 +1850,56 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </ul>
             )}
           </div>
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'palette' ? null : 'palette')}
-              className={`btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] text-primary ${activeMobileMenu === 'palette' ? 'btn-active' : ''}`}
+              className={`${styles.mobileBarBtn} ${styles.primary} ${activeMobileMenu === 'palette' ? styles.active : ''}`}
               title="Color & Style"
             >
-              <BsPalette className="w-4 h-4" />
+              <BsPalette size={16} />
             </button>
             {activeMobileMenu === 'palette' && (
-              <div className="absolute bottom-full mb-2 left-0 z-50 p-2 shadow-2xl bg-base-100 rounded-box w-56 text-xs border border-base-200">
-                <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-base-200">
-                  <span className="text-[10px] font-bold text-base-content/50 uppercase">Styles</span>
-                  <div className="flex items-center gap-1">
+              <div className={`${styles.mobilePopup} ${styles.alignLeft} ${styles.wide}`}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.375rem', marginBottom: '0.375rem', borderBottom: '1px solid var(--color-border)' }}>
+                  <span className={styles.dropdownTitle} style={{ padding: 0 }}>Styles</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     <button
                       type="button"
-                      onClick={() => {
-                        execCmd('bold');
-                      }}
-                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      onClick={() => execCmd('bold')}
+                      className={styles.toolbarBtn}
                       title="Bold"
                     >
-                      <FiBold className="w-3.5 h-3.5" />
+                      <FiBold size={14} />
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        execCmd('italic');
-                      }}
-                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      onClick={() => execCmd('italic')}
+                      className={styles.toolbarBtn}
                       title="Italic"
                     >
-                      <FiItalic className="w-3.5 h-3.5" />
+                      <FiItalic size={14} />
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        execCmd('underline');
-                      }}
-                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      onClick={() => execCmd('underline')}
+                      className={styles.toolbarBtn}
                       title="Underline"
                     >
-                      <FiUnderline className="w-3.5 h-3.5" />
+                      <FiUnderline size={14} />
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        execCmd('strikeThrough');
-                      }}
-                      className="btn btn-ghost btn-xs btn-square min-h-[26px] min-w-[26px]"
+                      onClick={() => execCmd('strikeThrough')}
+                      className={styles.toolbarBtn}
                       title="Strikethrough"
                     >
-                      <BsTypeStrikethrough className="w-3.5 h-3.5" />
+                      <BsTypeStrikethrough size={14} />
                     </button>
                   </div>
                 </div>
-                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1">Text Color</div>
-                <div className="grid grid-cols-5 gap-1.5 mb-2">
+                <div className={styles.dropdownTitle} style={{ padding: '0.2rem 0' }}>Text Color</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.375rem', marginBottom: '0.5rem' }}>
                   {TEXT_COLORS.map((c) => (
                     <button
                       key={c.value}
@@ -1887,16 +1908,15 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         applyTextColor(c.value);
                         setActiveMobileMenu(null);
                       }}
-                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs"
-                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-base-content, #333333)' : c.value }}
+                      className={styles.colorSwatch}
+                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value }}
                       title={c.label}
                     />
                   ))}
                 </div>
-                <div className="text-[10px] font-bold text-base-content/50 uppercase mb-1 border-t border-base-200 pt-1">
-                  Highlight
-                </div>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className={styles.dropdownDivider} />
+                <div className={styles.dropdownTitle} style={{ padding: '0.2rem 0' }}>Highlight</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem' }}>
                   {HIGHLIGHT_COLORS.map((c) => (
                     <button
                       key={c.value}
@@ -1905,7 +1925,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         applyHighlightColor(c.value);
                         setActiveMobileMenu(null);
                       }}
-                      className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center hover:scale-110 transition-transform shadow-xs text-[10px] font-bold"
+                      className={styles.colorSwatch}
                       style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
                       title={c.label}
                     >
@@ -1922,22 +1942,22 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               setActiveMobileMenu(null);
               insertChecklistItem();
             }}
-            className="btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] text-primary"
+            className={`${styles.mobileBarBtn} ${styles.primary}`}
             title="Checklist"
           >
-            <BsCardChecklist className="w-4 h-4" />
+            <BsCardChecklist size={16} />
           </button>
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'lists' ? null : 'lists')}
-              className={`btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] ${activeMobileMenu === 'lists' ? 'btn-active text-primary' : ''}`}
+              className={`${styles.mobileBarBtn} ${activeMobileMenu === 'lists' ? styles.active : ''}`}
               title="Lists & Indentation"
             >
-              <BsListUl className="w-4 h-4" />
+              <BsListUl size={16} />
             </button>
             {activeMobileMenu === 'lists' && (
-              <ul className="absolute bottom-full mb-2 left-0 z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200">
+              <ul className={`${styles.mobilePopup} ${styles.alignLeft}`}>
                 <li>
                   <button
                     type="button"
@@ -1945,9 +1965,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('insertUnorderedList');
                       setActiveMobileMenu(null);
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <BsListUl className="w-3.5 h-3.5" /> Bulleted List
+                    <BsListUl size={14} /> Bulleted List
                   </button>
                 </li>
                 <li>
@@ -1957,21 +1977,22 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('insertOrderedList');
                       setActiveMobileMenu(null);
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <BsListOl className="w-3.5 h-3.5" /> Numbered List
+                    <BsListOl size={14} /> Numbered List
                   </button>
                 </li>
-                <li className="border-t border-base-200 mt-1 pt-1">
+                <li className={styles.dropdownDivider} />
+                <li>
                   <button
                     type="button"
                     onClick={() => {
                       handleIndent();
                       setActiveMobileMenu(null);
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <BsTextIndentRight className="w-3.5 h-3.5" /> Indent
+                    <BsTextIndentRight size={14} /> Indent
                   </button>
                 </li>
                 <li>
@@ -1981,25 +2002,25 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       handleOutdent();
                       setActiveMobileMenu(null);
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <BsTextIndentLeft className="w-3.5 h-3.5" /> Outdent
+                    <BsTextIndentLeft size={14} /> Outdent
                   </button>
                 </li>
               </ul>
             )}
           </div>
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'more' ? null : 'more')}
-              className={`btn btn-ghost btn-xs btn-square min-h-[34px] min-w-[34px] ${activeMobileMenu === 'more' ? 'btn-active text-primary' : ''}`}
+              className={`${styles.mobileBarBtn} ${activeMobileMenu === 'more' ? styles.active : ''}`}
               title="More Tools"
             >
-              <FiMoreHorizontal className="w-4 h-4" />
+              <FiMoreHorizontal size={16} />
             </button>
             {activeMobileMenu === 'more' && (
-              <ul className="absolute bottom-full mb-2 right-0 z-50 menu p-1.5 shadow-2xl bg-base-100 rounded-box w-44 text-xs border border-base-200">
+              <ul className={`${styles.mobilePopup} ${styles.alignRight}`}>
                 <li>
                   <button
                     type="button"
@@ -2007,9 +2028,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       setActiveMobileMenu(null);
                       insertTable();
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <BsTable className="w-3.5 h-3.5" /> Insert Table
+                    <BsTable size={14} /> Insert Table
                   </button>
                 </li>
                 <li>
@@ -2019,9 +2040,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       setActiveMobileMenu(null);
                       insertLink();
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <FiLink className="w-3.5 h-3.5" /> Insert Link
+                    <FiLink size={14} /> Insert Link
                   </button>
                 </li>
                 <li>
@@ -2031,9 +2052,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<blockquote>');
                       setActiveMobileMenu(null);
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <BsQuote className="w-3.5 h-3.5" /> Quote
+                    <BsQuote size={14} /> Quote
                   </button>
                 </li>
                 <li>
@@ -2043,21 +2064,22 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<pre>');
                       setActiveMobileMenu(null);
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <FiCode className="w-3.5 h-3.5" /> Code Block
+                    <FiCode size={14} /> Code Block
                   </button>
                 </li>
-                <li className="border-t border-base-200 mt-1 pt-1">
+                <li className={styles.dropdownDivider} />
+                <li>
                   <button
                     type="button"
                     onClick={() => {
                       setActiveMobileMenu(null);
                       handleSelectAll();
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    <BsCheck2All className="w-3.5 h-3.5" /> Select All
+                    <BsCheck2All size={14} /> Select All
                   </button>
                 </li>
                 <li>
@@ -2067,9 +2089,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       void handleCopySelection();
                       setActiveMobileMenu(null);
                     }}
-                    className="flex items-center gap-2"
+                    className={styles.dropdownItem}
                   >
-                    {copySuccess ? <FiCheck className="w-3.5 h-3.5 text-success" /> : <FiCopy className="w-3.5 h-3.5" />}
+                    {copySuccess ? <FiCheck size={14} color="#16a34a" /> : <FiCopy size={14} />}
                     {copySuccess ? 'Copied!' : 'Copy'}
                   </button>
                 </li>
@@ -2093,7 +2115,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   onBackMobile();
                 }
               }}
-              className="btn btn-primary btn-xs px-3 rounded-xl font-semibold min-h-[30px]"
+              className={styles.doneBtn}
             >
               Done
             </button>
@@ -2101,13 +2123,13 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
         </div>
       )}
       {showDeleteConfirm && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box max-w-sm rounded-2xl bg-base-100 p-5 shadow-2xl border border-base-300">
-            <h3 className="font-bold text-base text-base-content flex items-center gap-2">
-              <FiTrash2 className="text-error w-5 h-5" />{' '}
+        <div className={modalStyles.modalOverlay}>
+          <div className={`${modalStyles.modalBox} ${modalStyles.modalBoxSm}`} style={{ padding: '1.25rem' }}>
+            <h3 className={modalStyles.modalTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444' }}>
+              <FiTrash2 size={20} />
               {isTrash || note.is_trashed ? 'Permanently Delete Note' : 'Move to Trash'}
             </h3>
-            <p className="text-xs text-base-content/70 mt-2">
+            <p className={modalStyles.helperText} style={{ marginTop: '0.5rem' }}>
               {isTrash || note.is_trashed ? (
                 <>
                   Are you sure you want to permanently delete{' '}
@@ -2121,10 +2143,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 </>
               )}
             </p>
-            <div className="modal-action mt-4 flex justify-end gap-2">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="btn btn-ghost btn-sm text-xs rounded-xl"
+                className={modalStyles.btnGhost}
               >
                 Cancel
               </button>
@@ -2137,7 +2159,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     onDeleteNote();
                   }
                 }}
-                className="btn btn-error btn-sm text-xs text-white rounded-xl"
+                className={modalStyles.btnPrimary}
+                style={{ background: '#ef4444' }}
               >
                 {isTrash || note.is_trashed ? 'Delete Permanently' : 'Move to Trash'}
               </button>

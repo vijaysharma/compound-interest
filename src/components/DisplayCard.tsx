@@ -14,7 +14,15 @@ const DisplayCard = ({
     <div className={styles.card}>
       <div className={styles.statItem}>
         <div className={styles.title}>{title || 'Balance amount'}</div>
-        <div className={`${styles.value} ${colorClass || ''}`.trim()}>
+        <div
+          className={`${styles.value} ${
+            colorClass === 'error' || colorClass === 'text-error'
+              ? styles.textError
+              : colorClass === 'primary' || colorClass === 'text-primary'
+                ? styles.textPrimary
+                : (colorClass || '')
+          }`.trim()}
+        >
           <span className={styles.currency}>{currencySymbol}&nbsp;</span>
           {primaryAmount.toLocaleString(locale)}{' '}
           {primarySub && <span className={styles.sub}> {primarySub}</span>}

@@ -24,6 +24,8 @@ import {
 } from './NotesTypes';
 import { MoveNoteModal } from './MoveNoteModal';
 import { AiFillFileAdd } from 'react-icons/ai';
+import styles from './NotesList.module.scss';
+import modalStyles from './NotesModal.module.scss';
 interface NotesListProps {
   notes: Note[];
   selectedNoteId: string | null;
@@ -166,51 +168,44 @@ export const NotesList: React.FC<NotesListProps> = ({
           e.dataTransfer.effectAllowed = 'move';
         }}
         onClick={() => onSelectNote(note)}
-        className={`group relative p-3.5 rounded-xl cursor-pointer transition-all duration-150 border text-left select-none min-h-[58px] ${
-          isSelected
-            ? 'bg-primary/10 border-primary/40 shadow-xs'
-            : 'bg-base-100 hover:bg-base-200/70 border-base-200 hover:border-base-300'
-        }`}
+        className={`${styles.noteCard} ${isSelected ? styles.noteCardSelected : ''}`}
       >
-        <div className="flex items-start justify-between gap-2 mb-1">
+        <div className={styles.cardHeader}>
           <h3
-            className={`font-semibold text-sm sm:text-base truncate flex-1 ${
-              isSelected ? 'text-primary font-bold' : 'text-base-content'
-            }`}
+            className={`${styles.cardTitle} ${isSelected ? styles.cardTitleSelected : ''}`}
           >
             {title}
           </h3>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
             {note.is_locked && (
-              <span title="Locked Note" className="text-base-content/60">
-                <BsLockFill className="w-3.5 h-3.5" />
+              <span title="Locked Note" style={{ opacity: 0.6 }}>
+                <BsLockFill size={14} />
               </span>
             )}
             {note.is_pinned && (
-              <span title="Pinned Note" className="text-primary">
-                <BsPinFill className="w-3.5 h-3.5" />
+              <span title="Pinned Note" style={{ color: 'var(--color-primary)' }}>
+                <BsPinFill size={14} />
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-baseline gap-2 text-xs">
+        <div className={styles.cardMeta}>
           <span
-            className={`font-medium flex-shrink-0 ${
-              isSelected ? 'text-primary' : 'text-base-content/60'
-            }`}
+            className={styles.cardDate}
+            style={{ color: isSelected ? 'var(--color-primary)' : undefined }}
           >
             {dateFormatted}
           </span>
-          <span className="text-base-content/50 truncate flex-1">{snippet}</span>
+          <span className={styles.cardSnippet}>{snippet}</span>
         </div>
-        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+        <div className={styles.cardTagsRow}>
           {displayFolder && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 if (!isTrash) setNoteToMove(note);
               }}
-              className="badge badge-ghost badge-xs text-[10px] py-1 px-2 bg-base-300/60 hover:bg-primary/15 hover:text-primary rounded cursor-pointer transition-colors"
+              className={styles.folderBadge}
               title="Click to move folder"
             >
               📁 {displayFolder}
@@ -219,13 +214,13 @@ export const NotesList: React.FC<NotesListProps> = ({
           {noteTags.map((t) => (
             <span
               key={t}
-              className="badge badge-ghost badge-xs text-[10px] py-1 px-2 text-primary bg-primary/10 rounded"
+              className={styles.tagBadge}
             >
               #{t}
             </span>
           ))}
         </div>
-        <div className="absolute top-2 right-2 flex md:hidden md:group-hover:flex items-center gap-1 bg-base-100/95 px-1.5 py-0.5 rounded-lg shadow-xs border border-base-300">
+        <div className={styles.floatingActions}>
           {!isTrash && (
             <>
               <button
@@ -233,47 +228,46 @@ export const NotesList: React.FC<NotesListProps> = ({
                   e.stopPropagation();
                   setNoteToMove(note);
                 }}
-                className="p-1 hover:text-primary text-base-content/60 rounded transition-colors"
+                className={styles.floatingBtn}
                 title="Move to Folder"
               >
-                <FiFolder className="w-3 h-3" />
+                <FiFolder size={12} />
               </button>
               <button
                 onClick={(e) => onTogglePin(note.id, e)}
-                className={`p-1 hover:text-primary rounded transition-colors ${
-                  note.is_pinned ? 'text-primary' : 'text-base-content/60'
-                }`}
+                className={styles.floatingBtn}
+                style={{ color: note.is_pinned ? 'var(--color-primary)' : undefined }}
                 title={note.is_pinned ? 'Unpin' : 'Pin to top'}
               >
-                {note.is_pinned ? <BsPinFill className="w-3 h-3" /> : <BsPin className="w-3 h-3" />}
+                {note.is_pinned ? <BsPinFill size={12} /> : <BsPin size={12} />}
               </button>
               <button
                 onClick={(e) => onDuplicateNote(note, e)}
-                className="p-1 hover:text-primary text-base-content/60 rounded transition-colors"
+                className={styles.floatingBtn}
                 title="Duplicate note"
               >
-                <FiCopy className="w-3 h-3" />
+                <FiCopy size={12} />
               </button>
             </>
           )}
           {isTrash ? (
-            <div className="flex items-center gap-1">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <button
                 onClick={(e) => onRestoreNote(note.id, e)}
-                className="p-1 hover:text-success text-base-content/60 rounded transition-colors"
+                className={`${styles.floatingBtn} ${styles.success}`}
                 title="Restore Note"
               >
-                <FiRotateCcw className="w-3.5 h-3.5" />
+                <FiRotateCcw size={14} />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setNoteToDelete(note);
                 }}
-                className="p-1 hover:text-error text-base-content/60 rounded transition-colors"
+                className={`${styles.floatingBtn} ${styles.danger}`}
                 title="Delete Permanently"
               >
-                <FiTrash2 className="w-3.5 h-3.5" />
+                <FiTrash2 size={14} />
               </button>
             </div>
           ) : (
@@ -282,10 +276,10 @@ export const NotesList: React.FC<NotesListProps> = ({
                 e.stopPropagation();
                 setNoteToDelete(note);
               }}
-              className="p-1 hover:text-error text-base-content/60 rounded transition-colors"
+              className={`${styles.floatingBtn} ${styles.danger}`}
               title="Move to Trash"
             >
-              <FiTrash2 className="w-3 h-3" />
+              <FiTrash2 size={12} />
             </button>
           )}
         </div>
@@ -294,94 +288,92 @@ export const NotesList: React.FC<NotesListProps> = ({
   };
   return (
     <div
-      className={`flex flex-col h-full bg-base-100/60 select-none overflow-hidden ${
-        isMobileScreen ? 'w-full' : 'w-full md:w-80 lg:w-88 md:px-3 md:py-2 flex-shrink-0'
-      }`}
+      className={`${styles.container} ${isMobileScreen ? styles.mobile : styles.desktop}`}
       aria-label="Notes List Column"
     >
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-1">
-          <div className="flex items-center gap-1.5 truncate">
+      <div className={styles.topBar}>
+        <div className={styles.headerRow}>
+          <div className={styles.headerLeft}>
             {onBackToFolders && isMobileScreen && (
               <button
                 onClick={onBackToFolders}
-                className="btn btn-ghost btn-sm px-1.5 flex items-center gap-0.5 text-primary font-semibold min-h-[44px]"
+                className={styles.backBtn}
               >
-                <FiChevronLeft className="w-5 h-5" />
+                <FiChevronLeft size={20} />
                 <span>Folders</span>
               </button>
             )}
-            <h2 className="font-bold text-base sm:text-lg text-base-content tracking-tight truncate">
+            <h2 className={styles.headerTitle}>
               {getHeaderTitle()}
             </h2>
-            <span className="badge badge-sm badge-ghost text-xs font-semibold">
+            <span className={styles.badge}>
               {filteredNotes.length}
             </span>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className={styles.headerActions}>
             {onOpenSecurityModal && (
               <button
                 onClick={onOpenSecurityModal}
-                className="btn btn-ghost btn-xs btn-square text-success hover:bg-success/10 min-h-[36px] min-w-[36px]"
+                className={`${styles.iconBtn} ${styles.btnSuccess}`}
                 title="End-to-End Encrypted (AES-256-GCM): Security Details"
               >
-                <FiShield className="w-4 h-4" />
+                <FiShield size={16} />
               </button>
             )}
             {onOpenBackupModal && (
               <button
                 onClick={onOpenBackupModal}
-                className="btn btn-ghost btn-xs btn-square text-primary hover:bg-primary/10 min-h-[36px] min-w-[36px]"
+                className={`${styles.iconBtn} ${styles.btnPrimary}`}
                 title="Backup & Restore (Google Drive / OneDrive)"
               >
-                <BsCloudArrowUp className="w-4 h-4" />
+                <BsCloudArrowUp size={16} />
               </button>
             )}
             <button
               onClick={() => onViewModeChange(viewMode === 'list' ? 'gallery' : 'list')}
-              className="btn btn-ghost btn-xs btn-square min-h-[36px] min-w-[36px]"
+              className={styles.iconBtn}
               title={viewMode === 'list' ? 'Switch to Gallery view' : 'Switch to List view'}
             >
               {viewMode === 'list' ? (
-                <FiGrid className="w-4 h-4" />
+                <FiGrid size={16} />
               ) : (
-                <FiList className="w-4 h-4" />
+                <FiList size={16} />
               )}
             </button>
             {!isTrash && (
               <AiFillFileAdd
                 onClick={onNewNote}
-                className="text-primary hover:bg-primary/10 h-[22px] w-[22px]"
+                className={styles.addIconBtn}
                 title="Compose New Note"
               />
             )}
           </div>
         </div>
-        <div className="relative flex items-center">
-          <FiSearch className="absolute left-3 w-4 h-4 text-base-content/40 pointer-events-none" />
+        <div className={styles.searchBox}>
+          <FiSearch className={styles.searchIcon} />
           <input
             type="text"
             placeholder="Search all notes, tags, checklists..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="input input-sm input-bordered input-primary w-full pl-9 pr-8 rounded-xl bg-base-200/60 focus:bg-base-100 text-xs"
+            className={styles.searchInput}
           />
           {searchQuery && (
             <button
               onClick={() => onSearchChange('')}
-              className="absolute right-2.5 text-base-content/50 hover:text-base-content p-1"
+              className={styles.clearBtn}
             >
-              <FiX className="w-3.5 h-3.5" />
+              <FiX size={14} />
             </button>
           )}
         </div>
-        <div className="flex items-center justify-between text-[11px] text-base-content/60 pt-0.5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="grow w-[80px]">Sort by:</span>
+        <div className={styles.subBar}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+            <span>Sort by:</span>
             <select
               value={sortOption}
               onChange={(e) => onSortChange(e.target.value as SortOption)}
-              className="select select-ghost select-xs text-[11px] font-semibold py-0 h-6 min-h-0 pl-1 pr-6"
+              className={styles.sortSelect}
             >
               <option value="updated_desc">Date Edited</option>
               <option value="created_desc">Date Created</option>
@@ -391,7 +383,7 @@ export const NotesList: React.FC<NotesListProps> = ({
           {isTrash && filteredNotes.length > 0 && (
             <button
               onClick={onEmptyTrash}
-              className="text-error hover:underline text-[11px] font-semibold"
+              style={{ color: '#ef4444', textDecoration: 'underline', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
             >
               Empty Trash
             </button>
@@ -400,20 +392,20 @@ export const NotesList: React.FC<NotesListProps> = ({
             <button
               type="button"
               onClick={onOpenSecurityModal}
-              className="inline-flex items-center gap-1 text-[10.5px] text-success hover:underline font-medium cursor-pointer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '10.5px', color: '#16a34a', textDecoration: 'underline', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 500 }}
               title="End-to-End Encrypted with AES-256-GCM: Zero-Knowledge Privacy"
             >
-              <FiShield className="w-3 h-3 text-success flex-shrink-0" />
+              <FiShield size={12} />
               <span>E2E Encrypted</span>
             </button>
           )}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto qn-scrollbar space-y-1 md:space-y-2.5">
+      <div className={`${styles.listContent} qn-scrollbar`}>
         {filteredNotes.length === 0 ? (
-          <div className="h-48 flex flex-col items-center justify-center text-center p-4 text-base-content/40 space-y-2">
-            <FiEdit3 className="w-8 h-8 opacity-30" />
-            <p className="text-sm font-medium">
+          <div className={styles.emptyState}>
+            <FiEdit3 size={32} style={{ opacity: 0.3 }} />
+            <p style={{ margin: 0, fontWeight: 500 }}>
               {searchQuery
                 ? 'No matching notes found'
                 : isTrash
@@ -421,13 +413,13 @@ export const NotesList: React.FC<NotesListProps> = ({
                   : 'No notes in this folder'}
             </p>
             {!isTrash && !searchQuery && (
-              <button onClick={onNewNote} className="btn btn-primary btn-xs mt-1">
+              <button onClick={onNewNote} className={modalStyles.btnPrimary}>
                 Create a Note
               </button>
             )}
           </div>
         ) : viewMode === 'gallery' ? (
-          <div className="grid grid-cols-2 gap-2 p-1">
+          <div className={styles.galleryGrid}>
             {sortedNotes.map((note) => {
               const isSelected = note.id === selectedNoteId;
               const title = note.title?.trim() || 'New Note';
@@ -441,41 +433,36 @@ export const NotesList: React.FC<NotesListProps> = ({
                     e.dataTransfer.effectAllowed = 'move';
                   }}
                   onClick={() => onSelectNote(note)}
-                  className={`p-3 rounded-xl border text-left cursor-pointer transition-all aspect-square flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-primary/10 border-primary/40 shadow-xs'
-                      : 'bg-base-100 hover:bg-base-200/70 border-base-200'
-                  }`}
+                  className={`${styles.galleryCard} ${isSelected ? styles.gallerySelected : ''}`}
                 >
                   <div>
-                    <div className="flex items-center justify-between gap-1 mb-1">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem', marginBottom: '0.25rem' }}>
                       <h4
-                        className={`font-semibold text-xs truncate ${
-                          isSelected ? 'text-primary' : 'text-base-content'
-                        }`}
+                        className={`${styles.cardTitle} ${isSelected ? styles.cardTitleSelected : ''}`}
+                        style={{ fontSize: '0.75rem' }}
                       >
                         {title}
                       </h4>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {note.is_pinned && <BsPinFill className="w-3 h-3 text-primary" />}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
+                        {note.is_pinned && <BsPinFill size={12} style={{ color: 'var(--color-primary)' }} />}
                         {isTrash ? (
-                          <div className="flex items-center gap-1">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <button
                               onClick={(e) => onRestoreNote(note.id, e)}
-                              className="p-0.5 text-base-content/40 hover:text-success rounded"
+                              className={`${styles.floatingBtn} ${styles.success}`}
                               title="Restore Note"
                             >
-                              <FiRotateCcw className="w-3 h-3" />
+                              <FiRotateCcw size={12} />
                             </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setNoteToDelete(note);
                               }}
-                              className="p-0.5 text-base-content/40 hover:text-error rounded"
+                              className={`${styles.floatingBtn} ${styles.danger}`}
                               title="Delete Permanently"
                             >
-                              <FiTrash2 className="w-3 h-3" />
+                              <FiTrash2 size={12} />
                             </button>
                           </div>
                         ) : (
@@ -484,20 +471,20 @@ export const NotesList: React.FC<NotesListProps> = ({
                               e.stopPropagation();
                               setNoteToDelete(note);
                             }}
-                            className="p-0.5 text-base-content/40 hover:text-error rounded"
+                            className={`${styles.floatingBtn} ${styles.danger}`}
                             title="Delete note"
                           >
-                            <FiTrash2 className="w-3 h-3" />
+                            <FiTrash2 size={12} />
                           </button>
                         )}
                       </div>
                     </div>
-                    <p className="text-[11px] text-base-content/50 line-clamp-3 leading-snug">
+                    <p style={{ fontSize: '11px', opacity: 0.5, margin: 0, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {snippet}
                     </p>
                   </div>
-                  <div className="flex items-center justify-between gap-1 pt-1 border-t border-base-200/40">
-                    <span className="text-[10px] text-base-content/40 font-medium">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem', paddingTop: '0.25rem', borderTop: '1px solid var(--color-border)' }}>
+                    <span style={{ fontSize: '10px', opacity: 0.5, fontWeight: 500 }}>
                       {formatNoteDate(note.updated_at || note.created_at)}
                     </span>
                     {!isTrash && (
@@ -506,11 +493,11 @@ export const NotesList: React.FC<NotesListProps> = ({
                           e.stopPropagation();
                           setNoteToMove(note);
                         }}
-                        className="text-[10px] text-primary hover:underline flex items-center gap-0.5"
+                        style={{ fontSize: '10px', color: 'var(--color-primary)', textDecoration: 'underline', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
                         title="Move to Folder"
                       >
-                        <FiFolder className="w-2.5 h-2.5" />
-                        <span className="truncate max-w-[60px]">
+                        <FiFolder size={10} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60px' }}>
                           {note.folder || 'Quick Notes'}
                         </span>
                       </button>
@@ -523,35 +510,39 @@ export const NotesList: React.FC<NotesListProps> = ({
         ) : (
           <>
             {pinnedNotes.length > 0 && (
-              <div className="space-y-1 mb-3">
-                <div className="px-2 pt-1 pb-0.5 text-[10px] font-bold text-base-content/40 uppercase tracking-wider flex items-center gap-1">
-                  <BsPinFill className="w-2.5 h-2.5 text-primary" />
+              <div style={{ marginBottom: '0.75rem' }}>
+                <div style={{ padding: '0.25rem 0.5rem', fontSize: '10px', fontWeight: 700, opacity: 0.4, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <BsPinFill size={10} style={{ color: 'var(--color-primary)' }} />
                   <span>Pinned</span>
                 </div>
-                {pinnedNotes.map(renderNoteCard)}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {pinnedNotes.map(renderNoteCard)}
+                </div>
               </div>
             )}
             {unpinnedNotes.length > 0 && (
-              <div className="space-y-1">
+              <div>
                 {pinnedNotes.length > 0 && (
-                  <div className="px-2 pt-2 pb-0.5 text-[10px] font-bold text-base-content/40 uppercase tracking-wider">
+                  <div style={{ padding: '0.5rem 0.5rem 0.25rem', fontSize: '10px', fontWeight: 700, opacity: 0.4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Notes
                   </div>
                 )}
-                {unpinnedNotes.map(renderNoteCard)}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {unpinnedNotes.map(renderNoteCard)}
+                </div>
               </div>
             )}
           </>
         )}
       </div>
       {noteToDelete && (
-        <div className="modal modal-open z-50">
-          <div className="modal-box max-w-sm rounded-2xl bg-base-100 p-5 shadow-2xl border border-base-300">
-            <h3 className="font-bold text-base text-base-content flex items-center gap-2">
-              <FiTrash2 className="text-error w-5 h-5" />{' '}
+        <div className={modalStyles.modalOverlay}>
+          <div className={`${modalStyles.modalBox} ${modalStyles.modalBoxSm}`} style={{ padding: '1.25rem' }}>
+            <h3 className={modalStyles.modalTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444' }}>
+              <FiTrash2 size={20} />
               {isTrash ? 'Permanently Delete Note' : 'Move to Trash'}
             </h3>
-            <p className="text-xs text-base-content/70 mt-2">
+            <p className={modalStyles.helperText} style={{ marginTop: '0.5rem' }}>
               {isTrash ? (
                 <>
                   Are you sure you want to permanently delete{' '}
@@ -565,16 +556,17 @@ export const NotesList: React.FC<NotesListProps> = ({
                 </>
               )}
             </p>
-            <div className="modal-action mt-4 flex justify-end gap-2">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
               <button
                 onClick={() => setNoteToDelete(null)}
-                className="btn btn-ghost btn-sm text-xs rounded-xl"
+                className={modalStyles.btnGhost}
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="btn btn-error btn-sm text-xs text-white rounded-xl"
+                className={modalStyles.btnPrimary}
+                style={{ background: '#ef4444' }}
               >
                 {isTrash ? 'Delete Permanently' : 'Move to Trash'}
               </button>

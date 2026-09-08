@@ -9,6 +9,7 @@ import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalcula
 import { CHART_COLORS } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
+import styles from './MutualFundAnalytics.module.scss';
 const liveSwpSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -727,73 +728,73 @@ const SWP = ({
     color: string
   ) => {
     return (
-      <div className="text-center w-full leading-none">
-        <div className="stat-title text-xs font-semibold mb-1 max-w-full">
+      <div className={`${styles.statCard} ${styles.statCardLeadingNone}`}>
+        <div className={styles.statTitle}>
           <span
-            className="inline-block w-2 h-2 rounded-full mr-1"
+            className={styles.fundColorDot}
             style={{
               backgroundColor: color,
             }}
             aria-hidden="true"
           />
-          <span title={title} className="inline-block fund-name max-w-full align-bottom">
+          <span title={title} className={styles.fundName}>
             {title}
           </span>
         </div>
         {!start || !end ? (
-          <div className="text-xs opacity-60 py-3">Loading NAV data...</div>
+          <div className={styles.statLoading}>Loading NAV data...</div>
         ) : (
           <>
-            <div className="flex w-full justify-around mb-1">
-              <div className="text-secondary text-md ">
-                <div className="stat-title font-semibold text-xs">{start.date}</div>
-                <span className="text-sm">₹</span>
+            <div className={`${styles.navDatesRow} ${styles.navDatesRowSpaced}`}>
+              <div className={styles.textSecondary}>
+                <div className={styles.statTitle}>{start.date}</div>
+                <span>₹</span>
                 {formatNav(start.nav)}
               </div>
               <div
-                className={`text-md ${
-                  parseFloat(end.nav) >= parseFloat(start.nav) ? 'text-success' : 'text-error'
-                }`}
+                className={
+                  parseFloat(end.nav) >= parseFloat(start.nav) ? styles.textSuccess : styles.textError
+                }
               >
-                <div className="stat-title font-semibold text-xs">{end.date}</div>
-                <span className="text-sm">₹</span>
+                <div className={styles.statTitle}>{end.date}</div>
+                <span>₹</span>
                 {formatNav(end.nav)}
               </div>
             </div>
-            <div className="text-lg text-secondary font-semibold leading-none mb-1">
-              <div className="stat-title text-xs">Initial Investment</div>
+            <div className={`${styles.statValueLg} ${styles.textSecondary}`}>
+              <div className={styles.statTitle}>Initial Investment</div>
               {Math.round(invested).toLocaleString('en-IN')}
             </div>
-            <div className="text-lg font-semibold text-primary leading-none mb-1">
-              <div className="stat-title text-xs">No. of Monthly Installments</div>
+            <div className={`${styles.statValueLg} ${styles.textPrimary}`}>
+              <div className={styles.statTitle}>No. of Monthly Installments</div>
               {installments}
             </div>
-            <div className="text-lg font-semibold text-primary leading-none mb-1">
-              <div className="stat-title text-xs">Total Withdrawal Amount</div>
+            <div className={`${styles.statValueLg} ${styles.textPrimary}`}>
+              <div className={styles.statTitle}>Total Withdrawal Amount</div>
               {Math.round(totalWithdrawn ?? 0).toLocaleString('en-IN')}
             </div>
-            <div className="text-lg font-semibold text-primary leading-none mb-1">
-              <div className="stat-title text-xs">
+            <div className={`${styles.statValueLg} ${styles.textPrimary}`}>
+              <div className={styles.statTitle}>
                 Last Withdrawal {lastWithdrawalDate ?? 'N/A'}
               </div>
               {lastWithdrawalAmount === undefined
                 ? 'N/A'
                 : Math.round(lastWithdrawalAmount).toLocaleString('en-IN')}
             </div>
-            <div className="text-lg font-semibold text-primary leading-none mb-1">
-              <div className="stat-title text-xs">Value as on {end.date}</div>
+            <div className={`${styles.statValueLg} ${styles.textPrimary}`}>
+              <div className={styles.statTitle}>Value as on {end.date}</div>
               {Math.round(matureAmount).toLocaleString('en-IN')}
-              <span className={`text-xs ${(xirr ?? 0) >= 0 ? 'text-success' : 'text-error'}`}>
+              <span className={(xirr ?? 0) >= 0 ? styles.textSuccess : styles.textError}>
                 &nbsp;({xirr === undefined ? 'N/A' : `${(xirr * 100).toFixed(2)}%`})
               </span>
             </div>
-            <div className="stat-title font-semibold mb-1">
-              <span className="text-xs">Units Left: </span>
-              <span className="text-primary text-sm">{units.toFixed(2)}</span>
+            <div className={styles.statRow}>
+              <span>Units Left: </span>
+              <span className={styles.textPrimary}>{units.toFixed(2)}</span>
             </div>
-            <div className="stat-title font-semibold">
-              <span className="text-xs">Avg. buy price: </span>
-              <span className="text-primary text-md">₹{formatNav(String(averageNav))}</span>
+            <div className={styles.statRow}>
+              <span>Avg. buy price: </span>
+              <span className={styles.textPrimary}>₹{formatNav(String(averageNav))}</span>
             </div>
           </>
         )}
@@ -801,10 +802,10 @@ const SWP = ({
     );
   };
   if (error.status === 'error' && deferredSearchKey.trim()) {
-    return <h3 className="text-error">{error.message}</h3>;
+    return <h3 className={styles.statErrorBanner}>{error.message}</h3>;
   }
   return (
-    <main className="w-full max-w-5xl mx-auto px-2 py-4 space-y-4">
+    <main className={styles.container}>
       <SEOHead
         title="Mutual Fund SWP Backtest — Retirement Withdrawal Calculator India 2026"
         description="Backtest historical mutual fund SWP cashflows, capital longevity, monthly retirement pension drawdowns, and portfolio yields with verified AMFI daily NAVs."
@@ -812,29 +813,29 @@ const SWP = ({
         canonicalPath="/mutual-funds/swp"
         schema={liveSwpSchema}
       />
-      <header className="mb-4 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Retirement Engine &bull; AMFI Historical Backtest
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Mutual Fund SWP Retirement Backtesting Engine
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Backtest systematic monthly withdrawals, step-up pension payouts, and residual portfolio
           longevity using live AMFI NAV histories.
         </p>
       </header>
-      <div className="flex gap-2">
+      <div className={styles.actionButtonGroup}>
         <button
           type="button"
-          className="btn btn-primary btn-sm mb-2 "
+          className={styles.primaryButton}
           onClick={() => setIsFundSelectorOpen(true)}
         >
           Select mutual funds ({pinnedFunds.length}/8)
         </button>
         <button
           type="button"
-          className="btn btn-outline btn-primary btn-sm"
+          className={styles.outlineButton}
           onClick={toggleViewChart}
         >
           {viewChart ? 'Hide Chart' : 'Show Chart'}
@@ -849,7 +850,7 @@ const SWP = ({
       <InputAmount
         inputAmount={lumpSumInvestmentAmount}
         setInputAmount={setLumpSumInvestmentAmount}
-        className="mb-2"
+        className={styles.fieldTight}
         title="Lump Sum Investment"
         stepData={[
           {
@@ -907,20 +908,20 @@ const SWP = ({
         (pinnedFunds.length > 0 ? (
           <Suspense
             fallback={
-              <div className="h-[240px] flex items-center justify-center">
-                <span className="loading loading-spinner loading-md text-primary"></span>
+              <div className={styles.chartLoadingWrapper}>
+                <span className={styles.loadingSpinner}></span>
               </div>
             }
           >
             <Chart
-              className="chart-container"
+              className={styles.chartContainer}
               datasets={chartDatasets}
               investmentAmount={parseFloat(monthlyWithdrawalAmount) || 0}
               dataMode="value"
             />
           </Suspense>
         ) : (
-          <div className="text-center py-4 text-sm opacity-60">
+          <div className={styles.chartPlaceholder}>
             Select up to 8 funds to see comparison
           </div>
         ))}
@@ -941,7 +942,7 @@ const SWP = ({
       <InputAmount
         inputAmount={monthlyWithdrawalAmount}
         setInputAmount={setMonthlyWithdrawalAmount}
-        className="mb-2"
+        className={styles.fieldTight}
         title="Monthly Withdrawals"
         stepData={[
           {
@@ -983,12 +984,12 @@ const SWP = ({
         typeSizePrefix="sm"
         stepSizePrefix="sm"
       />
-      <div className="join join-horizontal mb-3 w-full">
-        <span className="join-item label bg-primary px-2 py-1 text-sm text-primary-content">
+      <div className={styles.joinRow}>
+        <span className={styles.joinLabel}>
           Withdrawal on
         </span>
         <select
-          className="join-item input input-sm input-primary w-full rounded-t-none"
+          className={styles.joinSelect}
           value={dayOfMonth}
           onChange={(event) => setDayOfMonth(event.target.value)}
         >
@@ -998,11 +999,11 @@ const SWP = ({
             </option>
           ))}
         </select>
-        <span className="join-item label bg-primary px-2 py-1 text-sm text-primary-content">
+        <span className={styles.joinLabel}>
           Yearly increase
         </span>
         <select
-          className="join-item input input-sm input-primary w-full"
+          className={styles.joinSelect}
           value={investmentStepUp}
           onChange={(event) => setInvestmentStepUp(event.target.value)}
         >
@@ -1014,9 +1015,9 @@ const SWP = ({
         </select>
       </div>
       {pinnedFunds.length > 0 && (
-        <div className="mf-display-grid grid grid-cols-2 pb-3 w-full join join-horizontal">
+        <div className={styles.mfDisplayGrid}>
           {fundAnalyses.map((fund) => (
-            <div key={fund.schemeCode} className="join-item p-1 min-w-0">
+            <div key={fund.schemeCode} className={styles.mfDisplayItem}>
               {renderStatsCard(
                 fund.startNav,
                 fund.endNav,

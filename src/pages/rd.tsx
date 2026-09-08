@@ -7,6 +7,7 @@ import { sanctnum } from '../utilities/numSanitity.ts';
 import { RT } from '../types/types.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
+import styles from './CalculatorPage.module.scss';
 const rdSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -174,7 +175,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
   };
   const payoutAmount = Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi));
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-2 ${className || ''}`}>
+    <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
         title="RD Calculator — Recurring Deposit Maturity & Interest Calculator India 2026"
         description="Free recurring deposit calculator for Indian banks & Post Office RD. Calculate RD maturity amount with quarterly compounding. Compare RD vs FD vs SIP returns."
@@ -182,22 +183,22 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
         canonicalPath="/rd-calculator"
         schema={rdSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Disciplined Savings &bull; Guaranteed Returns
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Recurring Deposit (RD) Calculator India
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Calculate maturity values, total interest yield, and compound returns on monthly recurring
           deposits.
         </p>
       </header>
-      <div>
-        {title && <h5 className="font-bold">{title}</h5>}
+      <div className={styles.formStack}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
         <InputAmount
-          className="mb-2"
+          className={styles.field}
           inputAmount={pa}
           setInputAmount={setPa}
           type={invType}
@@ -210,8 +211,8 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
           stepSizePrefix={'sm'}
           title={invType === 'my' ? 'Monthly Investment' : 'Target amount'}
         />
-        <RateOfInterest className="mb-2" rt={rt} setRt={setRt} />
-        <Tenure className="mb-3" rt={rt} setRt={setRt} />
+        <RateOfInterest className={styles.field} rt={rt} setRt={setRt} />
+        <Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
         <DisplayCard
           primaryAmount={payoutAmount}
           title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}

@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import { PaymentSettings, PaymentSubmission } from '../types/auth';
+import styles from './Admin.module.scss';
 interface AdminUser {
   id: string;
   email: string;
@@ -262,82 +263,82 @@ const Admin = () => {
     }
   };
   return (
-    <main className="mx-auto max-w-4xl p-4 py-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-2 border-b border-base-300 pb-4">
+    <main className={styles.container}>
+      <div className={styles.header}>
         <div>
-          <h1 className="text-2xl font-bold">Admin Portal &amp; Management</h1>
-          <p className="text-xs sm:text-sm opacity-70">
+          <h1 className={styles.title}>Admin Portal &amp; Management</h1>
+          <p className={styles.subtitle}>
             Configure UPI QR payments, approve subscriptions, manage user quotas, and sync datasets.
           </p>
         </div>
         {user && (
-          <div className="badge badge-accent font-semibold text-xs py-2 px-3">
+          <div className={styles.adminBadge}>
             Admin: {user.email}
           </div>
         )}
       </div>
       {/* Admin Tabs */}
-      <div className="tabs tabs-boxed mb-6 p-1 bg-base-200 flex flex-wrap gap-1">
+      <div className={styles.tabsNav}>
         <button
           type="button"
-          className={`tab flex items-center gap-1.5 ${activeTab === 'payments' ? 'tab-active font-bold' : ''}`}
+          className={`${styles.tabBtn} ${activeTab === 'payments' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('payments')}
         >
-          <FiSmartphone className="h-4 w-4" />
+          <FiSmartphone size={16} />
           <span>UPI &amp; QR Settings</span>
         </button>
         <button
           type="button"
-          className={`tab flex items-center gap-1.5 ${activeTab === 'submissions' ? 'tab-active font-bold' : ''}`}
+          className={`${styles.tabBtn} ${activeTab === 'submissions' ? styles.tabActive : ''}`}
           onClick={() => {
             setActiveTab('submissions');
             void fetchSubmissions();
           }}
         >
-          <FiCreditCard className="h-4 w-4" />
+          <FiCreditCard size={16} />
           <span>
             Payment Submissions ({submissions.filter((s) => s.status === 'pending').length})
           </span>
         </button>
         <button
           type="button"
-          className={`tab flex items-center gap-1.5 ${activeTab === 'users' ? 'tab-active font-bold' : ''}`}
+          className={`${styles.tabBtn} ${activeTab === 'users' ? styles.tabActive : ''}`}
           onClick={() => {
             setActiveTab('users');
             void fetchUsers();
           }}
         >
-          <FiUsers className="h-4 w-4" />
+          <FiUsers size={16} />
           <span>Users &amp; Quotas ({usersList.length})</span>
         </button>
         <button
           type="button"
-          className={`tab flex items-center gap-1.5 ${activeTab === 'sync' ? 'tab-active font-bold' : ''}`}
+          className={`${styles.tabBtn} ${activeTab === 'sync' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('sync')}
         >
-          <FiRefreshCw className="h-4 w-4" />
+          <FiRefreshCw size={16} />
           <span>Dataset Sync</span>
         </button>
       </div>
       {message && (
         <div
-          className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} text-xs py-3 px-4 mb-6 rounded-lg shadow-sm`}
+          className={`${styles.alert} ${message.type === 'success' ? styles.alertSuccess : styles.alertError}`}
         >
           <span>{message.text}</span>
         </div>
       )}
       {/* Tab 1: UPI & QR Settings */}
       {activeTab === 'payments' && (
-        <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
-          <h2 className="text-lg font-bold mb-1">UPI Payment &amp; QR Code Configuration</h2>
-          <p className="text-xs opacity-70 mb-6">
+        <section className={styles.card}>
+          <h2 className={styles.sectionTitle}>UPI Payment &amp; QR Code Configuration</h2>
+          <p className={styles.sectionDesc}>
             Customize the ₹54 paywall payment details, UPI ID, QR code image, and instructions shown
             to users.
           </p>
-          <form onSubmit={handleSavePaymentSettings} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase mb-1 opacity-80">
+          <form onSubmit={handleSavePaymentSettings}>
+            <div className={styles.formGrid}>
+              <div className={styles.formField}>
+                <label className={styles.label}>
                   Payment Title
                 </label>
                 <input
@@ -345,11 +346,11 @@ const Admin = () => {
                   required
                   value={payTitle}
                   onChange={(e) => setPayTitle(e.target.value)}
-                  className="input input-bordered input-primary w-full text-sm"
+                  className={styles.input}
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase mb-1 opacity-80">
+              <div className={styles.formField}>
+                <label className={styles.label}>
                   UPI ID / VPA
                 </label>
                 <input
@@ -358,13 +359,13 @@ const Admin = () => {
                   value={payUpiId}
                   onChange={(e) => setPayUpiId(e.target.value)}
                   placeholder="e.g. yourname@okhdfcbank or merchant@upi"
-                  className="input input-bordered input-primary w-full text-sm font-mono"
+                  className={`${styles.input} ${styles.inputMono}`}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase mb-1 opacity-80">
+            <div className={styles.formGrid}>
+              <div className={styles.formField}>
+                <label className={styles.label}>
                   Subscription Fee (₹)
                 </label>
                 <input
@@ -373,23 +374,23 @@ const Admin = () => {
                   required
                   value={payAmount}
                   onChange={(e) => setPayAmount(Number(e.target.value))}
-                  className="input input-bordered w-full text-sm font-bold"
+                  className={styles.input}
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase mb-1 opacity-80">
+              <div className={styles.formField}>
+                <label className={styles.label}>
                   Upload QR Code Image
                 </label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleQrFileUpload}
-                  className="file-input file-input-bordered file-input-primary w-full text-xs"
+                  className={styles.fileInput}
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase mb-1 opacity-80">
+            <div className={styles.formField}>
+              <label className={styles.label}>
                 QR Code Image URL or Base64 Data URL
               </label>
               <input
@@ -397,41 +398,41 @@ const Admin = () => {
                 value={payQrUrl}
                 onChange={(e) => setPayQrUrl(e.target.value)}
                 placeholder="https://example.com/upi-qr.png or data:image/png;base64,..."
-                className="input input-bordered w-full text-xs font-mono"
+                className={`${styles.input} ${styles.inputMono}`}
               />
             </div>
             {/* Live QR Preview */}
             {payQrUrl && (
-              <div className="p-4 bg-base-200 rounded-lg border border-base-300 text-center flex flex-col items-center">
-                <span className="text-xs font-semibold uppercase opacity-60 mb-2">
+              <div className={styles.qrPreview}>
+                <span className={styles.qrPreviewTitle}>
                   Live QR Preview in User Paywall
                 </span>
                 <img
                   src={payQrUrl}
                   alt="QR Preview"
-                  className="h-44 w-44 object-contain rounded bg-white p-2 border border-base-300 shadow-sm"
+                  className={styles.qrImage}
                 />
               </div>
             )}
-            <div>
-              <label className="block text-xs font-semibold uppercase mb-1 opacity-80">
+            <div className={styles.formField}>
+              <label className={styles.label}>
                 Instructions Text for Users
               </label>
               <textarea
                 rows={2}
                 value={payInstructions}
                 onChange={(e) => setPayInstructions(e.target.value)}
-                className="textarea textarea-bordered w-full text-xs"
+                className={styles.textarea}
               />
             </div>
             <button
               type="submit"
               disabled={busy === 'saving_settings'}
-              className="btn btn-primary font-semibold"
+              className={styles.btnPrimary}
             >
               {busy === 'saving_settings' ? (
                 <>
-                  <span className="loading loading-spinner loading-xs" />
+                  <span className={styles.spinner} />
                   <span>Saving Settings...</span>
                 </>
               ) : (
@@ -443,29 +444,29 @@ const Admin = () => {
       )}
       {/* Tab 2: Payment Submissions */}
       {activeTab === 'submissions' && (
-        <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
             <div>
-              <h2 className="text-lg font-bold">UPI Payment Submissions</h2>
-              <p className="text-xs opacity-70">
+              <h2 className={styles.sectionTitle}>UPI Payment Submissions</h2>
+              <p className={styles.subtitle}>
                 Review submitted UPI UTR numbers and approve 30-day Pro access.
               </p>
             </div>
             <button
               type="button"
               onClick={() => void fetchSubmissions()}
-              className="btn btn-outline btn-xs"
+              className={styles.btnOutline}
             >
               Refresh
             </button>
           </div>
           {submissions.length === 0 ? (
-            <p className="text-xs opacity-60 py-8 text-center bg-base-200/50 rounded-lg">
+            <p className={styles.emptyPlaceholder}>
               No payment submissions recorded yet.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="table table-zebra table-xs w-full">
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
                 <thead>
                   <tr>
                     <th>User Email</th>
@@ -473,57 +474,57 @@ const Admin = () => {
                     <th>Amount</th>
                     <th>Date</th>
                     <th>Status</th>
-                    <th className="text-right">Actions</th>
+                    <th className={styles.tableRight}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {submissions.map((sub) => (
                     <tr key={sub.id}>
-                      <td className="font-semibold text-xs">{sub.user_email}</td>
-                      <td className="font-mono text-primary text-xs select-all font-bold">
+                      <td style={{ fontWeight: 600 }}>{sub.user_email}</td>
+                      <td style={{ fontFamily: 'monospace', color: 'var(--color-primary)', fontWeight: 'bold' }}>
                         {sub.utr_ref}
                       </td>
-                      <td className="text-xs">₹{sub.amount}</td>
-                      <td className="text-[11px] opacity-70">
+                      <td>₹{sub.amount}</td>
+                      <td style={{ opacity: 0.7, fontSize: '11px' }}>
                         {new Date(sub.created_at).toLocaleString()}
                       </td>
                       <td>
                         <span
-                          className={`badge badge-xs text-[10px] font-bold uppercase ${
+                          className={`${styles.badge} ${
                             sub.status === 'approved'
-                              ? 'badge-success'
+                              ? styles.badgeSuccess
                               : sub.status === 'rejected'
-                                ? 'badge-error'
-                                : 'badge-warning'
+                                ? styles.badgeError
+                                : styles.badgeWarning
                           }`}
                         >
                           {sub.status}
                         </span>
                       </td>
-                      <td className="text-right">
+                      <td className={styles.tableRight}>
                         {sub.status === 'pending' ? (
-                          <div className="inline-flex gap-1">
+                          <div className={styles.actionsGroup}>
                             <button
                               type="button"
                               disabled={busy === `sub_${sub.id}`}
                               onClick={() => void handleProcessPayment(sub.id, 'approve')}
-                              className="btn btn-success btn-xs font-bold flex items-center gap-1"
+                              className={styles.btnSuccess}
                             >
-                              <FiCheck className="h-3 w-3" />
+                              <FiCheck />
                               <span>Approve (+30d)</span>
                             </button>
                             <button
                               type="button"
                               disabled={busy === `sub_${sub.id}`}
                               onClick={() => void handleProcessPayment(sub.id, 'reject')}
-                              className="btn btn-ghost btn-xs text-error flex items-center gap-1"
+                              className={`${styles.btnGhost} ${styles.btnDanger}`}
                             >
-                              <FiX className="h-3 w-3" />
+                              <FiX />
                               <span>Reject</span>
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[11px] opacity-50">Processed</span>
+                          <span style={{ opacity: 0.5, fontSize: '11px' }}>Processed</span>
                         )}
                       </td>
                     </tr>
@@ -536,11 +537,11 @@ const Admin = () => {
       )}
       {/* Tab 3: Users & Quotas */}
       {activeTab === 'users' && (
-        <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
             <div>
-              <h2 className="text-lg font-bold">User Management &amp; Quotas</h2>
-              <p className="text-xs opacity-70">
+              <h2 className={styles.sectionTitle}>User Management &amp; Quotas</h2>
+              <p className={styles.subtitle}>
                 Track user calculation usage, 48-hour first-usage trial windows, and grant access or
                 quota overrides.
               </p>
@@ -548,19 +549,19 @@ const Admin = () => {
             <button
               type="button"
               onClick={() => void fetchUsers()}
-              className="btn btn-outline btn-xs flex items-center gap-1"
+              className={styles.btnOutline}
             >
-              <FiRefreshCw className="h-3 w-3" />
+              <FiRefreshCw />
               <span>Refresh</span>
             </button>
           </div>
           {usersList.length === 0 ? (
-            <p className="text-xs opacity-60 py-8 text-center bg-base-200/50 rounded-lg">
+            <p className={styles.emptyPlaceholder}>
               No registered users found.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="table table-zebra table-xs w-full">
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
                 <thead>
                   <tr>
                     <th>Email</th>
@@ -569,7 +570,7 @@ const Admin = () => {
                     <th>48h Trial (From 1st Use)</th>
                     <th>Subscription</th>
                     <th>Expires At</th>
-                    <th className="text-right">Actions</th>
+                    <th className={styles.tableRight}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -577,18 +578,18 @@ const Admin = () => {
                     const limit = u.free_limit || 15;
                     const isOverLimit = u.api_usage_count >= limit;
                     let trialBadge = (
-                      <span className="badge badge-xs badge-ghost text-[10px]">Not Started</span>
+                      <span className={`${styles.badge} ${styles.badgeGhost}`}>Not Started</span>
                     );
                     if (u.trial_expires_at) {
                       const diff = new Date(u.trial_expires_at).getTime() - now;
                       if (diff <= 0) {
                         trialBadge = (
-                          <span className="badge badge-xs badge-error text-[10px]">Expired</span>
+                          <span className={`${styles.badge} ${styles.badgeError}`}>Expired</span>
                         );
                       } else {
                         const hrs = Math.floor(diff / (1000 * 60 * 60));
                         trialBadge = (
-                          <span className="badge badge-xs badge-info text-[10px]">
+                          <span className={`${styles.badge} ${styles.badgeInfo}`}>
                             Active ({hrs}h left)
                           </span>
                         );
@@ -596,18 +597,22 @@ const Admin = () => {
                     }
                     return (
                       <tr key={u.id}>
-                        <td className="font-semibold text-xs">{u.email}</td>
+                        <td style={{ fontWeight: 600 }}>{u.email}</td>
                         <td>
                           <span
-                            className={`badge badge-xs font-bold uppercase text-[10px] ${u.role === 'admin' ? 'badge-accent' : 'badge-ghost'}`}
+                            className={`${styles.badge} ${u.role === 'admin' ? styles.badgeAccent : styles.badgeGhost}`}
                           >
                             {u.role}
                           </span>
                         </td>
                         <td>
-                          <div className="inline-flex items-center gap-1.5">
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
                             <span
-                              className={`font-mono text-xs font-bold ${isOverLimit && u.role !== 'admin' ? 'text-error' : 'text-primary'}`}
+                              style={{
+                                fontFamily: 'monospace',
+                                fontWeight: 'bold',
+                                color: isOverLimit && u.role !== 'admin' ? '#ef4444' : 'var(--color-primary)'
+                              }}
                             >
                               {u.api_usage_count} / {limit}
                             </span>
@@ -617,42 +622,42 @@ const Admin = () => {
                                 setLimitModalUser(u);
                                 setCustomLimitInput(limit);
                               }}
-                              className="btn btn-ghost btn-xs p-1 h-auto text-primary hover:bg-primary/10"
+                              className={`${styles.btnGhost} ${styles.btnIcon}`}
                               title="Edit calculation quota limit"
                             >
-                              <FiEdit2 className="h-3 w-3" />
+                              <FiEdit2 />
                             </button>
                           </div>
                         </td>
                         <td>{trialBadge}</td>
                         <td>
                           <span
-                            className={`badge badge-xs font-bold text-[10px] uppercase ${
+                            className={`${styles.badge} ${
                               u.subscription_status === 'active'
-                                ? 'badge-success'
+                                ? styles.badgeSuccess
                                 : isOverLimit
-                                  ? 'badge-error'
-                                  : 'badge-info'
+                                  ? styles.badgeError
+                                  : styles.badgeInfo
                             }`}
                           >
                             {u.subscription_status}
                           </span>
                         </td>
-                        <td className="text-[11px] opacity-70">
+                        <td style={{ opacity: 0.7, fontSize: '11px' }}>
                           {u.subscription_expires_at
                             ? new Date(u.subscription_expires_at).toLocaleDateString()
                             : '—'}
                         </td>
-                        <td className="text-right">
-                          <div className="inline-flex gap-1 flex-wrap justify-end">
+                        <td className={styles.tableRight}>
+                          <div className={styles.actionsGroup}>
                             <button
                               type="button"
                               disabled={busy === `user_${u.id}`}
                               onClick={() => void handleUserAction(u.id, 'reset_trial')}
-                              className="btn btn-ghost btn-xs text-xs flex items-center gap-1 text-warning hover:bg-warning/10"
+                              className={`${styles.btnGhost} ${styles.btnWarning}`}
                               title="Reset trial to 0 runs and fresh 48h from next usage"
                             >
-                              <FiRotateCcw className="h-3 w-3" />
+                              <FiRotateCcw />
                               <span>Reset Trial</span>
                             </button>
                             <button
@@ -661,20 +666,20 @@ const Admin = () => {
                               onClick={() =>
                                 void handleUserAction(u.id, 'extend_trial_time', { hours: 48 })
                               }
-                              className="btn btn-outline btn-xs flex items-center gap-1"
+                              className={styles.btnOutline}
                               title="Extend trial time by +48 hours"
                             >
-                              <FiClock className="h-3 w-3" />
+                              <FiClock />
                               <span>+48h</span>
                             </button>
                             <button
                               type="button"
                               disabled={busy === `user_${u.id}`}
                               onClick={() => void handleUserAction(u.id, 'grant_access')}
-                              className="btn btn-outline btn-xs flex items-center gap-1"
+                              className={styles.btnOutline}
                               title="Grant 30 Days Pro Access"
                             >
-                              <FiPlus className="h-3 w-3" />
+                              <FiPlus />
                               <span>+30d Pro</span>
                             </button>
                           </div>
@@ -690,24 +695,24 @@ const Admin = () => {
       )}
       {/* Tab 4: Dataset Sync */}
       {activeTab === 'sync' && (
-        <div className="space-y-6">
-          <label className="block bg-base-100 p-4 rounded-lg border border-base-300">
-            <span className="mb-1 block text-sm font-medium">Admin Auth Token Override</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <label className={styles.card} style={{ display: 'block', margin: 0 }}>
+            <span className={styles.label}>Admin Auth Token Override</span>
             <input
-              className="input input-bordered input-primary w-full text-sm font-mono"
+              className={`${styles.input} ${styles.inputMono}`}
               type="password"
               value={token}
               onChange={(event) => setToken(event.target.value)}
               placeholder="ADMIN_SYNC_TOKEN (auto-filled if signed in as admin)"
             />
           </label>
-          <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
-            <h2 className="mb-1 text-lg font-bold">Mutual Fund Schemes Sync</h2>
-            <p className="mb-4 text-xs opacity-70">
+          <section className={styles.card}>
+            <h2 className={styles.sectionTitle}>Mutual Fund Schemes Sync</h2>
+            <p className={styles.sectionDesc}>
               Fetch and cache the latest scheme list from mfapi.in.
             </p>
             <button
-              className="btn btn-primary btn-sm"
+              className={styles.btnPrimarySm}
               type="button"
               disabled={busy !== null}
               onClick={() => void sync('/api/admin/sync-mutual-funds')}
@@ -715,19 +720,20 @@ const Admin = () => {
               {busy === '/api/admin/sync-mutual-funds' ? 'Syncing...' : 'Sync Mutual Funds'}
             </button>
           </section>
-          <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
-            <h2 className="mb-1 text-lg font-bold">IMF Inflation Data Sync</h2>
-            <p className="mb-2 text-xs opacity-70">
+          <section className={styles.card}>
+            <h2 className={styles.sectionTitle}>IMF Inflation Data Sync</h2>
+            <p className={styles.sectionDesc}>
               Paste the JSON response from the IMF DataMapper API.
             </p>
             <textarea
-              className="textarea textarea-bordered mb-4 h-48 w-full font-mono text-xs"
+              className={styles.textarea}
+              style={{ minHeight: '180px', fontFamily: 'monospace', marginBottom: '1rem' }}
               value={imfJson}
               onChange={(event) => setImfJson(event.target.value)}
               placeholder='{"values":{"PCPIPCH":{...}}}'
             />
             <button
-              className="btn btn-primary btn-sm"
+              className={styles.btnPrimarySm}
               type="button"
               disabled={!imfJson.trim() || busy !== null}
               onClick={() => {
@@ -742,17 +748,17 @@ const Admin = () => {
               {busy === '/api/admin/sync-imf' ? 'Syncing...' : 'Sync IMF JSON'}
             </button>
           </section>
-          <section className="card bg-base-100 border border-base-300 p-6 shadow-sm">
-            <h2 className="mb-1 text-lg font-bold">
+          <section className={styles.card}>
+            <h2 className={styles.sectionTitle}>
               World Bank PPP (Purchasing Power Parity) Sync
             </h2>
-            <p className="mb-4 text-xs opacity-70">
+            <p className={styles.sectionDesc}>
               Fetch and store global Purchasing Power Parity (PA.NUS.PPP) conversion factor datasets
               from the World Bank API directly into our database.
             </p>
-            <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div style={{ marginBottom: '1rem' }}>
               <button
-                className="btn btn-primary btn-sm"
+                className={styles.btnPrimarySm}
                 type="button"
                 disabled={busy !== null}
                 onClick={() => void sync('/api/admin/sync-ppp')}
@@ -762,39 +768,42 @@ const Admin = () => {
                   : 'Sync from World Bank API'}
               </button>
             </div>
-            <details className="collapse collapse-arrow bg-base-200 text-xs rounded-box border border-base-300">
-              <summary className="collapse-title font-semibold py-2">
+            <details className={styles.detailsCollapse}>
+              <summary>
                 Or Paste World Bank PPP JSON Manually
               </summary>
-              <div className="collapse-content space-y-2 pt-2">
-                <p className="opacity-70 text-xs">
+              <div className={styles.detailsContent}>
+                <p style={{ opacity: 0.7, margin: 0 }}>
                   Paste the JSON response array from
                   api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP.
                 </p>
                 <textarea
-                  className="textarea textarea-bordered h-36 w-full font-mono text-xs"
+                  className={styles.textarea}
+                  style={{ minHeight: '140px', fontFamily: 'monospace' }}
                   value={pppJson}
                   onChange={(event) => setPppJson(event.target.value)}
                   placeholder='[{"page":1,...},[{"indicator":{...},"country":{...},"date":"2024","value":23.85},...]]'
                 />
-                <button
-                  className="btn btn-secondary btn-sm"
-                  type="button"
-                  disabled={!pppJson.trim() || busy !== null}
-                  onClick={() => {
-                    try {
-                      const parsed = JSON.parse(pppJson);
-                      void sync('/api/admin/sync-ppp', JSON.stringify(parsed));
-                    } catch {
-                      setMessage({
-                        type: 'error',
-                        text: 'Paste valid JSON before syncing PPP data.',
-                      });
-                    }
-                  }}
-                >
-                  {busy === '/api/admin/sync-ppp' ? 'Syncing...' : 'Sync Pasted PPP JSON'}
-                </button>
+                <div>
+                  <button
+                    className={styles.btnSecondarySm}
+                    type="button"
+                    disabled={!pppJson.trim() || busy !== null}
+                    onClick={() => {
+                      try {
+                        const parsed = JSON.parse(pppJson);
+                        void sync('/api/admin/sync-ppp', JSON.stringify(parsed));
+                      } catch {
+                        setMessage({
+                          type: 'error',
+                          text: 'Paste valid JSON before syncing PPP data.',
+                        });
+                      }
+                    }}
+                  >
+                    {busy === '/api/admin/sync-ppp' ? 'Syncing...' : 'Sync Pasted PPP JSON'}
+                  </button>
+                </div>
               </div>
             </details>
           </section>
@@ -802,52 +811,52 @@ const Admin = () => {
       )}
       {/* Limit Modal */}
       {limitModalUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
-          <div className="card bg-base-100 border border-base-300 w-full max-w-sm p-6 shadow-2xl relative">
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalCard}>
             <button
               type="button"
-              className="btn btn-ghost btn-xs btn-square absolute right-3 top-3 opacity-70 hover:opacity-100"
+              className={styles.modalClose}
               onClick={() => setLimitModalUser(null)}
             >
-              <FiX className="h-4 w-4" />
+              <FiX size={16} />
             </button>
-            <div className="flex items-center gap-2 mb-3">
-              <FiSliders className="h-5 w-5 text-primary" />
-              <h3 className="font-bold text-base">Adjust Calculation Quota</h3>
+            <div className={styles.modalHeader}>
+              <FiSliders className={styles.modalIcon} />
+              <h3>Adjust Calculation Quota</h3>
             </div>
-            <p className="text-xs opacity-75 mb-4">
+            <p className={styles.subtitle} style={{ marginBottom: '1rem' }}>
               Set the maximum allowed free live calculation runs for{' '}
-              <span className="font-semibold text-primary">{limitModalUser.email}</span> (currently{' '}
+              <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{limitModalUser.email}</span> (currently{' '}
               {limitModalUser.api_usage_count} used).
             </p>
-            <div className="mb-4">
-              <label className="block text-xs font-semibold mb-1">Quota Limit (Runs)</label>
+            <div style={{ marginBottom: '1rem' }}>
+              <label className={styles.label}>Quota Limit (Runs)</label>
               <input
                 type="number"
                 min="1"
                 max="99999"
                 value={customLimitInput}
                 onChange={(e) => setCustomLimitInput(Number(e.target.value))}
-                className="input input-bordered input-primary w-full text-sm font-mono"
+                className={`${styles.input} ${styles.inputMono}`}
               />
-              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <div className={styles.presetGrid}>
                 {[15, 25, 50, 100, 250, 1000].map((preset) => (
                   <button
                     key={preset}
                     type="button"
                     onClick={() => setCustomLimitInput(preset)}
-                    className={`btn btn-xs ${customLimitInput === preset ? 'btn-primary' : 'btn-ghost border border-base-300'}`}
+                    className={`${styles.presetBtn} ${customLimitInput === preset ? styles.presetActive : ''}`}
                   >
                     {preset}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className={styles.modalFooter}>
               <button
                 type="button"
                 onClick={() => setLimitModalUser(null)}
-                className="btn btn-ghost btn-xs"
+                className={styles.btnOutline}
               >
                 Cancel
               </button>
@@ -859,7 +868,7 @@ const Admin = () => {
                     free_limit: customLimitInput,
                   })
                 }
-                className="btn btn-primary btn-xs font-bold"
+                className={styles.btnPrimarySm}
               >
                 {busy === `user_${limitModalUser.id}` ? 'Saving...' : 'Save Quota'}
               </button>

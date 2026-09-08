@@ -6,7 +6,7 @@ const LoadingFallback = () => {
         <div className={styles.progressIndicator} />
       </div>
       <div className={styles.content}>
-        <span className="loading loading-spinner loading-lg text-primary" />
+        <span className={styles.spinner} />
         <span className={styles.label}>Loading...</span>
       </div>
     </div>

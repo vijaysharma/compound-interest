@@ -1,0 +1,112 @@
+@use '../../../styles/variables' as *;
+
+.container {
+  position: relative;
+  flex: 1 1 0%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  background-color: var(--color-bg);
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+
+  @at-root [data-theme='dark'] & {
+    background-color: rgba(26, 29, 36, 0.8);
+  }
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(110, 11, 117, 0.2);
+  border-top-color: var(--color-primary, #6e0b75);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sidebarPane {
+  height: 100%;
+  display: none;
+
+  &.mobileVisible {
+    display: flex;
+    flex: 1 1 0%;
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    border-right: 1px solid var(--color-border);
+
+    &.desktopVisible {
+      display: flex;
+      flex: none;
+    }
+
+    &.hidden {
+      display: none;
+    }
+
+    &.mobileVisible {
+      width: auto;
+      flex: none;
+    }
+  }
+}
+
+.listPane {
+  height: 100%;
+  display: none;
+
+  &.mobileVisible {
+    display: flex;
+    flex: 1 1 0%;
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    display: flex;
+    flex: 0 0 20rem;
+    width: 20rem;
+    border-right: 1px solid var(--color-border);
+
+    @media (min-width: 1024px) {
+      flex: 0 0 22rem;
+      width: 22rem;
+    }
+  }
+}
+
+.editorPane {
+  height: 100%;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  display: none;
+
+  &.mobileVisible {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    display: flex;
+    flex-direction: column;
+  }
+}

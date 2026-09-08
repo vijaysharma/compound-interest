@@ -9,6 +9,7 @@ import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { CHART_COLORS } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
+import styles from './MutualFundAnalytics.module.scss';
 const lumpsumSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -732,54 +733,54 @@ const Lumpsum = ({
     color: string
   ) => {
     return (
-      <div className="flex flex-col items-center text-center w-full">
-        <div className="stat-title text-xs font-semibold mb-1 max-w-full">
+      <div className={styles.statCard}>
+        <div className={styles.statTitle}>
           <span
-            className="inline-block w-2 h-2 rounded-full mr-1"
+            className={styles.fundColorDot}
             style={{
               backgroundColor: color,
             }}
             aria-hidden="true"
           />
-          <span title={title} className="inline-block fund-name max-w-full align-bottom">
+          <span title={title} className={styles.fundName}>
             {title}
           </span>
         </div>
         {!start || !end ? (
-          <div className="text-xs opacity-60 py-3">Loading NAV data...</div>
+          <div className={styles.statLoading}>Loading NAV data...</div>
         ) : (
           <>
-            <div className="flex gap-3">
-              <div className="text-secondary text-md">
-                <div className="stat-title font-semibold text-xs">{start.date}</div>
-                <span className="text-sm">₹</span>
+            <div className={styles.navDatesRow}>
+              <div className={styles.textSecondary}>
+                <div className={styles.statTitle}>{start.date}</div>
+                <span>₹</span>
                 {parseFloat(start.nav).toFixed(2)}
               </div>
               <div
-                className={`text-md ${
-                  parseFloat(end.nav) >= parseFloat(start.nav) ? 'text-success' : 'text-error'
-                }`}
+                className={
+                  parseFloat(end.nav) >= parseFloat(start.nav) ? styles.textSuccess : styles.textError
+                }
               >
-                <div className="stat-title font-semibold text-xs">{end.date}</div>
-                <span className="text-sm">₹</span>
+                <div className={styles.statTitle}>{end.date}</div>
+                <span>₹</span>
                 {parseFloat(end.nav).toFixed(2)}
               </div>
             </div>
-            <div className="stat-title text-xs">Final Amount</div>
-            <span className="text-xl text-primary font-semibold">
+            <div className={styles.statTitle}>Final Amount</div>
+            <span className={`${styles.statValueXl} ${styles.textPrimary}`}>
               ₹ {Math.round(matureAmount).toLocaleString('en-IN')}
             </span>
-            <div className={`font-semibold ${profitAmount >= 0 ? 'text-success' : 'text-error'}`}>
+            <div className={`${styles.statRow} ${profitAmount >= 0 ? styles.textSuccess : styles.textError}`}>
               {profitAmount < 0 ? '-' : '+'}
               &nbsp;₹
               {Math.round(profitAmount).toLocaleString('en-IN')}
             </div>
-            <div className="stat-title font-semibold text-sm">
-              <span className="text-xs">C:</span>{' '}
-              <span className={cagr >= 0 ? 'text-success' : 'text-error'}>{cagr.toFixed(2)}%</span>
+            <div className={styles.statRow}>
+              <span>C:</span>{' '}
+              <span className={cagr >= 0 ? styles.textSuccess : styles.textError}>{cagr.toFixed(2)}%</span>
               &nbsp;|&nbsp;
-              <span className="text-xs">A:</span>{' '}
-              <span className={absoluteReturn >= 0 ? 'text-success' : 'text-error'}>
+              <span>A:</span>{' '}
+              <span className={absoluteReturn >= 0 ? styles.textSuccess : styles.textError}>
                 {absoluteReturn.toFixed(2)}%
               </span>
             </div>
@@ -794,10 +795,10 @@ const Lumpsum = ({
    * ==========================================================
    */
   if (error.status === 'error' && deferredSearchKey.trim()) {
-    return <h3 className="text-error">{error.message}</h3>;
+    return <h3 className={styles.statErrorBanner}>{error.message}</h3>;
   }
   return (
-    <main className="w-full max-w-5xl mx-auto px-0 py-2 space-y-2">
+    <main className={styles.container}>
       <SEOHead
         title="Mutual Fund Calculator — Lumpsum Return & CAGR Calculator India 2026"
         description="Analyze historical mutual fund lumpsum returns, CAGR growth, and rolling NAV trajectories with live AMFI data. Compare up to 8 funds simultaneously."
@@ -805,36 +806,36 @@ const Lumpsum = ({
         canonicalPath="/mutual-funds/lumpsum"
         schema={lumpsumSchema}
       />
-      <header className="mb-4 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           AMFI Live Sync &bull; Multi-Fund Backtesting
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Mutual Fund Lumpsum Return &amp; Historical NAV Engine
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Backtest historical mutual fund CAGR, absolute capital gains, and comparative NAV
           performance across 8 schemes.
         </p>
       </header>
-      <div className="flex gap-2">
+      <div className={styles.actionButtonGroup}>
         <button
           type="button"
-          className="btn btn-primary btn-sm"
+          className={styles.primaryButton}
           onClick={() => setIsFundSelectorOpen(true)}
         >
           Select mutual funds ({pinnedFunds.length}/8)
         </button>
         <button
           type="button"
-          className="btn btn-outline btn-primary btn-sm"
+          className={styles.outlineButton}
           onClick={toggleShowDate}
         >
           {showDate ? 'Time Slots' : 'Date Picker'}
         </button>
         <button
           type="button"
-          className="btn btn-outline btn-primary btn-sm"
+          className={styles.outlineButton}
           onClick={toggleViewChart}
         >
           {viewChart ? 'Hide Chart' : 'Show Chart'}
@@ -989,7 +990,7 @@ const Lumpsum = ({
             selectedValue={duration}
             updateSelectedValue={handleDurationChange}
             sizePrefix="sm"
-            className="mb-2"
+            className={styles.fieldTight}
             btnClass="rounded-tl-none rounded-tr-none"
           />
         </div>
@@ -1017,19 +1018,19 @@ const Lumpsum = ({
         (pinnedFunds.length > 0 ? (
           <Suspense
             fallback={
-              <div className="h-[240px] flex items-center justify-center">
-                <span className="loading loading-spinner loading-md text-primary"></span>
+              <div className={styles.chartLoadingWrapper}>
+                <span className={styles.loadingSpinner}></span>
               </div>
             }
           >
             <Chart
-              className="chart-container"
+              className={styles.chartContainer}
               datasets={chartDatasets}
               investmentAmount={parseFloat(invAmt) || 0}
             />
           </Suspense>
         ) : (
-          <div className="text-center py-4 text-sm opacity-60">
+          <div className={styles.chartPlaceholder}>
             Select up to 8 funds to see comparison
           </div>
         ))}
@@ -1055,7 +1056,7 @@ const Lumpsum = ({
       <InputAmount
         inputAmount={invAmt}
         setInputAmount={setInvAmt}
-        className="mb-2"
+        className={styles.fieldTight}
         title="Invested"
         stepData={[
           {
@@ -1108,9 +1109,9 @@ const Lumpsum = ({
        * ======================================================
        */}
       {pinnedFunds.length > 0 && (
-        <div className="mf-display-grid grid grid-cols-2 w-full join join-horizontal">
+        <div className={styles.mfDisplayGrid}>
           {fundAnalyses.map((fund) => (
-            <div key={fund.schemeCode} className="join-item p-1 min-w-0">
+            <div key={fund.schemeCode} className={styles.mfDisplayItem}>
               {renderStatsCard(
                 fund.startNav,
                 fund.endNav,

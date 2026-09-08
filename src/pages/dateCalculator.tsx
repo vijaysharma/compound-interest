@@ -3,6 +3,7 @@ import SEOHead from '../components/SEOHead.tsx';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import DisplayCard from '../components/DisplayCard.tsx';
 import { FiCalendar } from 'react-icons/fi';
+import styles from './DateCalculator.module.scss';
 type DateMode = 'difference' | 'add-subtract';
 const MODE_DATA = [
   { id: 'diff', value: 'difference', title: 'Date Difference' },
@@ -249,10 +250,8 @@ const DateCalculator: React.FC = () => {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'long' });
   };
-  const numberInputBase =
-    'input input-bordered input-primary input-sm text-center w-full font-semibold';
   return (
-    <main className="w-full max-w-lg mx-auto px-2 py-2 space-y-4">
+    <main className={styles.container}>
       <SEOHead
         title="Date & Time Calculator — Days & Hours Difference, Add/Subtract"
         description="Free date and time calculator to find the number of days, hours, weeks, months, and years between two dates/times, or add/subtract days and hours."
@@ -260,12 +259,12 @@ const DateCalculator: React.FC = () => {
         canonicalPath="/date-calculator"
         noIndex={false}
       />
-      <header>
-        <h2 className="card-title text-lg flex items-center gap-2">
-          <FiCalendar className="text-primary" />
+      <header className={styles.header}>
+        <h2 className={styles.title}>
+          <FiCalendar className={styles.icon} />
           Date &amp; Time Calculator
         </h2>
-        <p className="text-sm opacity-70 mb-4">
+        <p className={styles.subtitle}>
           Find the duration in days &amp; hours between dates, or add/subtract time from a date.
         </p>
       </header>
@@ -276,23 +275,23 @@ const DateCalculator: React.FC = () => {
         sizePrefix="sm"
       />
       {mode === 'difference' ? (
-        <div className="space-y-4">
-          <div className="space-y-3">
-            <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex sm:gap-3 w-full">
-              <div className="flex-1">
-                <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+        <div className={styles.modeContainer}>
+          <div className={styles.modeContainer}>
+            <div className={styles.inputsRow}>
+              <div className={styles.inputCol}>
+                <label className={styles.label}>
                   From Date &amp; Time
                 </label>
-                <div className="w-full join join-horizonal">
+                <div className={styles.joinGroup}>
                   <input
-                    className="input input-sm input-primary input-bordered font-medium"
+                    className={styles.dateInput}
                     type="date"
                     max={endDate || undefined}
                     value={startDate}
                     onChange={(e) => handleStartDateChange(e.target.value)}
                   />
                   <input
-                    className="min-w-[100px] input input-sm input-primary input-bordered font-medium px-1"
+                    className={styles.timeInput}
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
@@ -300,25 +299,25 @@ const DateCalculator: React.FC = () => {
                   />
                 </div>
                 {startDate && (
-                  <p className="text-[11px] opacity-60 mt-1">
+                  <p className={styles.helperText}>
                     {dayOfWeek(startDate)} {startTime ? `@ ${startTime}` : ''}
                   </p>
                 )}
               </div>
-              <div className="flex-1">
-                <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+              <div className={styles.inputCol}>
+                <label className={styles.label}>
                   To Date &amp; Time
                 </label>
-                <div className="w-full join join-horizonal">
+                <div className={styles.joinGroup}>
                   <input
-                    className="input input-sm input-primary input-bordered font-medium"
+                    className={styles.dateInput}
                     type="date"
                     min={startDate || undefined}
                     value={endDate}
                     onChange={(e) => handleEndDateChange(e.target.value)}
                   />
                   <input
-                    className="min-w-[100px] input input-sm input-primary input-bordered font-medium"
+                    className={styles.timeInput}
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
@@ -326,18 +325,18 @@ const DateCalculator: React.FC = () => {
                   />
                 </div>
                 {endDate && (
-                  <p className="text-[11px] opacity-60 mt-1">
+                  <p className={styles.helperText}>
                     {dayOfWeek(endDate)} {endTime ? `@ ${endTime}` : ''}
                   </p>
                 )}
               </div>
             </div>
-            <label className="flex items-center justify-between bg-base-200/60 border border-base-300 rounded-xl px-3.5 py-2 cursor-pointer hover:bg-base-200 transition-colors">
+            <label className={styles.toggleCard}>
               <div>
-                <span className="text-xs font-semibold block text-base-content">
+                <span className={styles.toggleTitle}>
                   Include both start and end dates (+1 day)
                 </span>
-                <span className="text-[11px] opacity-60 block">
+                <span className={styles.toggleDesc}>
                   Counts both start and end days as full calendar days
                 </span>
               </div>
@@ -345,12 +344,12 @@ const DateCalculator: React.FC = () => {
                 type="checkbox"
                 checked={isInclusive}
                 onChange={(e) => setIsInclusive(e.target.checked)}
-                className="toggle toggle-primary toggle-sm"
+                className={styles.toggleSwitch}
               />
             </label>
           </div>
           {diff && (
-            <div className="space-y-3">
+            <div className={styles.modeContainer}>
               <DisplayCard
                 currencySymbol=""
                 primaryAmount={diff.totalDays}
@@ -360,39 +359,41 @@ const DateCalculator: React.FC = () => {
                   amount: diff.totalHours,
                 }}
               />
-              <div className="space-y-3">
-                <div className="grid grid-cols-4 gap-2 text-center">
+              <div className={styles.modeContainer}>
+                <div className={styles.breakdownGrid}>
                   <div>
-                    <p className="text-xl sm:text-2xl font-bold text-primary">{diff.years}</p>
-                    <p className="text-xs opacity-70">Years</p>
+                    <p className={styles.breakdownValue}>{diff.years}</p>
+                    <p className={styles.breakdownLabel}>Years</p>
                   </div>
                   <div>
-                    <p className="text-xl sm:text-2xl font-bold text-primary">{diff.months}</p>
-                    <p className="text-xs opacity-70">Months</p>
+                    <p className={styles.breakdownValue}>{diff.months}</p>
+                    <p className={styles.breakdownLabel}>Months</p>
                   </div>
                   <div>
-                    <p className="text-xl sm:text-2xl font-bold text-primary">{diff.days}</p>
-                    <p className="text-xs opacity-70">Days</p>
+                    <p className={styles.breakdownValue}>{diff.days}</p>
+                    <p className={styles.breakdownLabel}>Days</p>
                   </div>
                   <div>
-                    <p className="text-xl sm:text-2xl font-bold text-primary">{diff.hours}</p>
-                    <p className="text-xs opacity-70">Hours</p>
+                    <p className={styles.breakdownValue}>{diff.hours}</p>
+                    <p className={styles.breakdownLabel}>Hours</p>
                   </div>
                 </div>
-                <div className="divider my-0 text-xs opacity-50">or equivalently</div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-base-200/60 rounded-lg px-3 py-2 text-center">
-                    <span className="font-bold text-lg">{diff.totalWeeks}</span>
-                    <span className="text-xs opacity-70 ml-1">weeks</span>
+                <div className={styles.divider}>
+                  <span>or equivalently</span>
+                </div>
+                <div className={styles.weeksGrid}>
+                  <div className={styles.weeksCard}>
+                    <span className={styles.weeksAmount}>{diff.totalWeeks}</span>
+                    <span className={styles.weeksUnit}>weeks</span>
                     {diff.remainingDaysAfterWeeks > 0 && (
-                      <span className="text-xs opacity-70"> + {diff.remainingDaysAfterWeeks}d</span>
+                      <span className={styles.weeksUnit}> + {diff.remainingDaysAfterWeeks}d</span>
                     )}
                   </div>
-                  <div className="bg-base-200/60 rounded-lg px-3 py-2 text-center">
-                    <span className="font-bold text-lg">
+                  <div className={styles.weeksCard}>
+                    <span className={styles.weeksAmount}>
                       {diff.totalHours.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-xs opacity-70 ml-1">total hours</span>
+                    <span className={styles.weeksUnit}>total hours</span>
                   </div>
                 </div>
               </div>
@@ -400,20 +401,20 @@ const DateCalculator: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className={styles.modeContainer}>
           <div>
-            <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+            <label className={styles.label}>
               Starting Date &amp; Time
             </label>
-            <div className="w-full join join-horizonal">
+            <div className={styles.joinGroup}>
               <input
-                className="w-1/2 input input-sm input-primary input-bordered font-medium"
+                className={styles.halfInput}
                 type="date"
                 value={baseDate}
                 onChange={(e) => setBaseDate(e.target.value)}
               />
               <input
-                className="w-1/2 input input-sm input-primary input-bordered font-medium"
+                className={styles.halfInput}
                 type="time"
                 value={baseTime}
                 onChange={(e) => setBaseTime(e.target.value)}
@@ -421,7 +422,7 @@ const DateCalculator: React.FC = () => {
               />
             </div>
             {baseDate && (
-              <p className="text-[11px] opacity-60 mt-1">
+              <p className={styles.helperText}>
                 {dayOfWeek(baseDate)} {baseTime ? `@ ${baseTime}` : ''}
               </p>
             )}
@@ -432,11 +433,11 @@ const DateCalculator: React.FC = () => {
             updateSelectedValue={(v: string) => setAddOrSub(v as 'add' | 'subtract')}
             sizePrefix="sm"
           />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div className="text-center">
-              <label className="text-xs font-semibold opacity-70">Years</label>
+          <div className={styles.durationGrid}>
+            <div className={styles.durationCol}>
+              <label className={styles.durationLabel}>Years</label>
               <input
-                className={numberInputBase}
+                className={styles.durationInput}
                 type="number"
                 min="0"
                 max="1000"
@@ -445,10 +446,10 @@ const DateCalculator: React.FC = () => {
                 onChange={(e) => setYears(Math.min(1000, Math.max(0, Number(e.target.value) || 0)))}
               />
             </div>
-            <div className="text-center">
-              <label className="text-xs font-semibold opacity-70">Months</label>
+            <div className={styles.durationCol}>
+              <label className={styles.durationLabel}>Months</label>
               <input
-                className={numberInputBase}
+                className={styles.durationInput}
                 type="number"
                 min="0"
                 max="12000"
@@ -457,10 +458,10 @@ const DateCalculator: React.FC = () => {
                 onChange={(e) => setMonths(Math.min(12000, Math.max(0, Number(e.target.value) || 0)))}
               />
             </div>
-            <div className="text-center">
-              <label className="text-xs font-semibold opacity-70">Days</label>
+            <div className={styles.durationCol}>
+              <label className={styles.durationLabel}>Days</label>
               <input
-                className={numberInputBase}
+                className={styles.durationInput}
                 type="number"
                 min="0"
                 max="365000"
@@ -469,10 +470,10 @@ const DateCalculator: React.FC = () => {
                 onChange={(e) => setDays(Math.min(365000, Math.max(0, Number(e.target.value) || 0)))}
               />
             </div>
-            <div className="text-center">
-              <label className="text-xs font-semibold opacity-70">Hours</label>
+            <div className={styles.durationCol}>
+              <label className={styles.durationLabel}>Hours</label>
               <input
-                className={numberInputBase}
+                className={styles.durationInput}
                 type="number"
                 min="0"
                 max="8760000"
@@ -482,12 +483,12 @@ const DateCalculator: React.FC = () => {
               />
             </div>
           </div>
-          <label className="flex items-center justify-between bg-base-200/60 border border-base-300 rounded-xl px-3.5 py-2 cursor-pointer hover:bg-base-200 transition-colors">
+          <label className={styles.toggleCard}>
             <div>
-              <span className="text-xs font-semibold block text-base-content">
+              <span className={styles.toggleTitle}>
                 Include start and end days (inclusive count)
               </span>
-              <span className="text-[11px] opacity-60 block">
+              <span className={styles.toggleDesc}>
                 Counts starting date as Day 1 of the period
               </span>
             </div>
@@ -495,18 +496,18 @@ const DateCalculator: React.FC = () => {
               type="checkbox"
               checked={isAddSubInclusive}
               onChange={(e) => setIsAddSubInclusive(e.target.checked)}
-              className="toggle toggle-primary toggle-sm"
+              className={styles.toggleSwitch}
             />
           </label>
           {resultDate && (
-            <div className="card bg-primary/5 border border-primary/20 rounded-xl p-4 text-center space-y-1">
-              <p className="text-xs uppercase tracking-wider opacity-60 font-semibold">
+            <div className={styles.resultCard}>
+              <p className={styles.resultTag}>
                 Resulting Date &amp; Time {isAddSubInclusive ? '(Inclusive)' : ''}
               </p>
-              <p className="text-xl sm:text-2xl font-bold text-primary">
+              <p className={styles.resultDate}>
                 {formatDateTime(resultDate)}
               </p>
-              <p className="text-xs opacity-60">
+              <p className={styles.resultDetail}>
                 {addOrSub === 'add' ? 'Added' : 'Subtracted'}{' '}
                 {[
                   years > 0 ? `${years}y` : '',

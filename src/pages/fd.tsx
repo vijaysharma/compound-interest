@@ -15,6 +15,7 @@ import {
 } from '../data/default_data.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
+import styles from './CalculatorPage.module.scss';
 const fdSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -190,7 +191,7 @@ const FD: React.FC = () => {
     return Math.round(finalAmount);
   }, [pa, rt, mode, invType, frequency]);
   return (
-    <main className="w-full max-w-2xl mx-auto px-2 py-2">
+    <main className={styles.container}>
       <SEOHead
         title="Compound Interest Calculator & FD Calculator — Fixed Deposit India 2026"
         description="Free compound interest calculator for Indian fixed deposits. Calculate FD maturity with daily, monthly & quarterly compounding. Compare cumulative vs non-cumulative FD returns."
@@ -198,21 +199,21 @@ const FD: React.FC = () => {
         canonicalPath="/fd-calculator"
         schema={fdSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Fixed Income &bull; Guaranteed Returns
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Compound Interest Calculator &amp; Fixed Deposit (FD) Calculator India
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Simulate cumulative maturity amounts, periodic payout yields, and compound growth with
           institutional precision.
         </p>
       </header>
-      <div>
+      <div className={styles.formStack}>
         <InputAmount
-          className="mb-2"
+          className={styles.field}
           inputAmount={pa}
           setInputAmount={setPa}
           type={invType}
@@ -225,10 +226,10 @@ const FD: React.FC = () => {
           stepSizePrefix={'sm'}
           title={invType === 'tgt' ? 'Target amount' : ''}
         />
-        <RateOfInterest className="mb-2" rt={rt} setRt={setRt} />
-        <Tenure className="mb-2" rt={rt} setRt={setRt} />
+        <RateOfInterest className={styles.field} rt={rt} setRt={setRt} />
+        <Tenure className={styles.field} rt={rt} setRt={setRt} />
         <JoinedButtonGroup
-          className="mb-2"
+          className={styles.field}
           data={FREQUENCY_DATA}
           sizePrefix="sm"
           selectedValue={frequency}
@@ -237,7 +238,7 @@ const FD: React.FC = () => {
         />
         {invType === 'inv' && (
           <JoinedButtonGroup
-            className="mb-3"
+            className={styles.fieldLast}
             data={PAYOUT_MODE_DATA}
             sizePrefix="sm"
             selectedValue={mode}

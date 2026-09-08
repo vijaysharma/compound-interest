@@ -7,6 +7,7 @@ import InflationRates from './inflationRates';
 import PPPExchangeRate from './pppExchangeRate';
 import FixedRateSWP from './fixedRateSwp';
 import { useAuth } from '../context/useAuth';
+import styles from './InvestmentDetails.module.scss';
 const isApiTrackedTab = (tabId: string, isDesktop: boolean) => {
   return isDesktop ? tabId === '3' || tabId === '4' : tabId === '4' || tabId === '6';
 };
@@ -26,34 +27,34 @@ const InvestmentDetails = () => {
     }
   }, [activeId, trackUsage, isBlocked, screenWidth]);
   return (
-    <div id="container" className="w-full max-w-lg lg:max-w-full bg-primary/5 mx-auto py-2">
+    <div id="container" className={styles.container}>
       {screenWidth >= 1024 ? (
         <Tabs name="tab" activeId={activeId} setActiveId={setActiveId} type="tabs-border">
           <div id="1" data-label="Lumpsum">
-            <div className="w-2/3 max-w-lg justify-self-center">
+            <div className={styles.tabContentSingle}>
               <FD />
             </div>
           </div>
           <div id="2" data-label="SIP & SWP">
-            <div className="w-2/3 max-w-3xl gap-4 flex justify-self-center">
-              <RD title="Recurring Deposit" className="grow basis-1" />
-              <FixedRateSWP title="Systematic Withdrwal Plan" className="grow basis-1" />
+            <div className={styles.tabContentRow}>
+              <RD title="Recurring Deposit" className={styles.tabCol} />
+              <FixedRateSWP title="Systematic Withdrwal Plan" className={styles.tabCol} />
             </div>
           </div>
           <div id="3" data-label="Inflation & PPP">
-            <div className="w-2/3 max-w-3xl gap-4 flex justify-self-center">
-              <InflationRates title="Inflation" className="grow basis-1" />
-              <PPPExchangeRate title="Purchasing Power Parity" className="grow basis-1" />
+            <div className={styles.tabContentRow}>
+              <InflationRates title="Inflation" className={styles.tabCol} />
+              <PPPExchangeRate title="Purchasing Power Parity" className={styles.tabCol} />
             </div>
           </div>
           <div id="4" data-label="MF">
-            <div className="w-2/3 max-w-3xl justify-self-center">
+            <div className={styles.tabContentWide}>
               <MutualFund />
             </div>
           </div>
         </Tabs>
       ) : (
-        <Tabs name="tab" className="calc-tabs" activeId={activeId} setActiveId={setActiveId}>
+        <Tabs name="tab" activeId={activeId} setActiveId={setActiveId}>
           <div id="1" data-label="FD">
             <FD />
           </div>

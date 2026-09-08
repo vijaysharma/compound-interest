@@ -2,6 +2,7 @@ import SEOHead from '../components/SEOHead';
 import Breadcrumb from '../components/Breadcrumb';
 import { Link } from 'react-router-dom';
 import { FiShield, FiZap, FiCheckCircle, FiDatabase, FiGlobe } from 'react-icons/fi';
+import styles from './StaticDocPage.module.scss';
 const aboutSchema = {
   '@context': 'https://schema.org',
   '@type': 'AboutPage',
@@ -23,26 +24,26 @@ const DATA_SOURCES = [
     url: 'https://www.amfiindia.com/',
     usage:
       'Live mutual fund NAV history, scheme metadata, and fund house data for all 2,000+ SEBI-registered schemes.',
-    icon: <FiDatabase className="h-5 w-5 text-primary" />,
+    icon: <FiDatabase />,
   },
   {
     name: 'World Bank Open Data',
     url: 'https://data.worldbank.org/',
     usage:
       'Purchasing Power Parity (PPP) conversion factors, GDP per capita, and macroeconomic indicators for 150+ countries.',
-    icon: <FiGlobe className="h-5 w-5 text-primary" />,
+    icon: <FiGlobe />,
   },
   {
     name: 'IMF DataMapper (International Monetary Fund)',
     url: 'https://www.imf.org/external/datamapper/',
     usage:
       'Historical Consumer Price Index (CPI) inflation data and forward IMF forecasts for India and global economies.',
-    icon: <FiDatabase className="h-5 w-5 text-primary" />,
+    icon: <FiDatabase />,
   },
 ];
 const About = () => {
   return (
-    <main className="w-full max-w-4xl mx-auto px-4 py-8">
+    <main className={styles.container}>
       <SEOHead
         title="About Rupee Calculator — Free Indian Financial Calculators"
         description="Rupee Calculator is India's most precise, free financial calculator suite. Learn about our mission, data sources (AMFI, World Bank, IMF), and privacy-first approach."
@@ -51,14 +52,10 @@ const About = () => {
         noIndex={false}
       />
       <Breadcrumb items={[{ name: 'Home', href: '/' }, { name: 'About Rupee Calculator' }]} />
-      <header className="mb-10">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-wider">
-          Our Mission
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
-          About Rupee Calculator
-        </h1>
-        <p className="text-base opacity-80 leading-relaxed max-w-2xl">
+      <header className={styles.header}>
+        <div className={styles.badge}>Our Mission</div>
+        <h1 className={styles.title}>About Rupee Calculator</h1>
+        <p className={styles.subtitle}>
           Rupee Calculator is a free, privacy-first financial intelligence suite built specifically
           for Indian retail investors, NRIs, salaried professionals, and financial planners. Our
           goal: give every Indian access to institutional-grade financial modeling without ads,
@@ -66,14 +63,14 @@ const About = () => {
         </p>
       </header>
       {/* Mission */}
-      <section className="mb-12 space-y-4">
-        <h2 className="text-2xl font-bold">Our Mission</h2>
-        <p className="text-sm opacity-80 leading-relaxed">
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>Our Mission</h2>
+        <p className={styles.paragraph}>
           Personal finance in India is dominated by platforms that monetize your data, push
           financial products via aggressive recommendations, or bury accurate tools behind
           registration forms. We built Rupee Calculator to be the antithesis of that.
         </p>
-        <p className="text-sm opacity-80 leading-relaxed">
+        <p className={styles.paragraph}>
           Every calculation — from a ₹500/month SIP projection to a ₹2 Crore home loan amortization
           schedule — runs entirely in your browser using JavaScript. Your salary figures, investment
           amounts, and loan balances are never transmitted to any server, stored in any database, or
@@ -81,36 +78,36 @@ const About = () => {
         </p>
       </section>
       {/* USPs */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">Why We're Different</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="card bg-base-100 border border-base-300 p-5 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold">
-              <FiShield className="h-5 w-5" />
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>Why We're Different</h2>
+        <div className={styles.cardGrid}>
+          <div className={styles.card}>
+            <div className={styles.cardTitleGroup}>
+              <FiShield />
               <span>100% Client-Side Privacy</span>
             </div>
-            <p className="text-xs sm:text-sm opacity-75 leading-relaxed">
+            <p className={styles.paragraph}>
               All mathematical models, compound interest algorithms, EMI schedules, and SIP/SWP
               projections execute locally in your browser. Zero server calls for calculations.
             </p>
           </div>
-          <div className="card bg-base-100 border border-base-300 p-5 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold">
-              <FiZap className="h-5 w-5" />
+          <div className={styles.card}>
+            <div className={styles.cardTitleGroup}>
+              <FiZap />
               <span>Institutional Precision</span>
             </div>
-            <p className="text-xs sm:text-sm opacity-75 leading-relaxed">
+            <p className={styles.paragraph}>
               Calculators use the exact mathematical formulas employed by Indian banks, AMFI, and
               financial institutions — not simplified approximations. EMI includes part-payments and
               floating rate scenarios.
             </p>
           </div>
-          <div className="card bg-base-100 border border-base-300 p-5 rounded-xl space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold">
-              <FiCheckCircle className="h-5 w-5" />
+          <div className={styles.card}>
+            <div className={styles.cardTitleGroup}>
+              <FiCheckCircle />
               <span>Verified Live Data</span>
             </div>
-            <p className="text-xs sm:text-sm opacity-75 leading-relaxed">
+            <p className={styles.paragraph}>
               Mutual fund NAVs from AMFI, PPP metrics from World Bank, and inflation from IMF
               DataMapper — all official institutional data sources, updated regularly.
             </p>
@@ -118,23 +115,23 @@ const About = () => {
         </div>
       </section>
       {/* Data Sources */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">Data Sources & Methodology</h2>
-        <div className="space-y-4">
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>Data Sources & Methodology</h2>
+        <div className={styles.section}>
           {DATA_SOURCES.map((src) => (
-            <div key={src.name} className="card bg-base-100 border border-base-300 p-5 rounded-xl">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0">{src.icon}</div>
+            <div key={src.name} className={styles.card}>
+              <div className={styles.sourceItem}>
+                <div className={styles.sourceIcon}>{src.icon}</div>
                 <div>
                   <a
                     href={src.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-bold text-sm hover:text-primary hover:underline transition-colors"
+                    className={styles.sourceLink}
                   >
                     {src.name} ↗
                   </a>
-                  <p className="text-xs opacity-75 leading-relaxed mt-1">{src.usage}</p>
+                  <p className={styles.sourceUsage}>{src.usage}</p>
                 </div>
               </div>
             </div>
@@ -142,13 +139,13 @@ const About = () => {
         </div>
       </section>
       {/* Tools */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">Available Financial Calculators</h2>
-        <p className="text-sm opacity-70 mb-5">
+      <section className={styles.section}>
+        <h2 className={styles.sectionHeading}>Available Financial Calculators</h2>
+        <p className={styles.paragraph}>
           Rupee Calculator provides 8+ institutional-grade tools covering all major personal finance
           scenarios for Indian investors:
         </p>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        <ul className={styles.toolsGrid}>
           {[
             {
               name: 'SIP Calculator',
@@ -192,26 +189,23 @@ const About = () => {
             },
           ].map((tool) => (
             <li key={tool.href}>
-              <Link
-                to={tool.href}
-                className="flex flex-col p-3 rounded-lg border border-base-300 bg-base-100 hover:border-primary/40 hover:bg-primary/5 transition-colors"
-              >
-                <span className="font-semibold text-primary text-sm">{tool.name}</span>
-                <span className="text-xs opacity-60 mt-0.5">{tool.desc}</span>
+              <Link to={tool.href} className={styles.toolCard}>
+                <span className={styles.toolName}>{tool.name}</span>
+                <span className={styles.toolDesc}>{tool.desc}</span>
               </Link>
             </li>
           ))}
         </ul>
       </section>
       {/* Disclaimer Notice */}
-      <section className="p-5 bg-warning/10 border border-warning/30 rounded-xl text-sm">
-        <p className="font-semibold mb-1">Educational Purpose Disclaimer</p>
-        <p className="opacity-80 leading-relaxed text-xs">
+      <section className={styles.calloutWarning}>
+        <p className={styles.calloutTitle}>Educational Purpose Disclaimer</p>
+        <p className={styles.calloutText}>
           All calculators are for educational and analytical purposes only. Results are projections
           based on user-provided inputs and historical data — they do not constitute financial
           advice. Please consult a SEBI-registered financial advisor before making investment
           decisions.{' '}
-          <Link to="/disclaimer" className="text-primary hover:underline">
+          <Link to="/disclaimer" className={styles.link}>
             Read full disclaimer →
           </Link>
         </p>

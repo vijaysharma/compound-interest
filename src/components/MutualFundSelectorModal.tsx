@@ -60,11 +60,11 @@ const MutualFundSelectorModal = ({
           </h2>
           <button
             type="button"
-            className="btn btn-sm btn-square"
+            className={styles.closeBtn}
             aria-label="Close"
             onClick={onClose}
           >
-            <span aria-hidden="true" className="text-xl leading-none">
+            <span aria-hidden="true" className={styles.closeIcon}>
               &times;
             </span>
           </button>
@@ -94,7 +94,7 @@ const MutualFundSelectorModal = ({
           type="text"
           placeholder="Search Mutual Funds..."
           maxLength={80}
-          className="input input-sm input-primary mb-2 w-full"
+          className={styles.searchInput}
           value={searchKey}
           onChange={(event) => setSearchKey(event.target.value.replace(/[.*+?^${}()|[\]\\]/g, '').slice(0, 80))}
           autoFocus
@@ -117,9 +117,9 @@ const MutualFundSelectorModal = ({
                   }
                 >
                   {isLoading && (
-                    <span className="loading loading-spinner loading-xs mr-1 shrink-0" />
+                    <span className={styles.badgeSpinner} />
                   )}
-                  <span className="truncate">
+                  <span className={styles.fundBadgeName}>
                     {index + 1}. {fund.schemeName}
                   </span>
                   <span aria-hidden="true">&times;</span>
@@ -143,13 +143,13 @@ const MutualFundSelectorModal = ({
                   >
                     <input
                       type="checkbox"
-                      className="checkbox checkbox-primary checkbox-sm"
+                      className={styles.checkbox}
                       checked={isPinned}
                       disabled={!isPinned && pinnedFunds.length >= 8}
                       onChange={() => void togglePinFund(fund)}
                     />
                     {isLoading ? (
-                      <span className="loading loading-spinner loading-xs text-primary shrink-0" />
+                      <span className={styles.fundSpinner} />
                     ) : pinnedFund ? (
                       <span
                         className={styles.colorDot}
@@ -162,18 +162,18 @@ const MutualFundSelectorModal = ({
                 );
               })}
               {funds.length > 100 && (
-                <div className="py-2 text-center text-xs opacity-60 italic">
+                <div className={styles.emptyMessage}>
                   Showing top 100 results. Please refine your search.
                 </div>
               )}
             </>
           ) : (
-            <p className="py-4 text-center text-sm opacity-60">
+            <p className={styles.loadingMessage}>
               Enter a search term to find mutual funds.
             </p>
           )}
         </div>
-        <button type="button" className={`btn btn-primary ${styles.doneBtn}`} onClick={onClose}>
+        <button type="button" className={styles.doneBtn} onClick={onClose}>
           Done
         </button>
       </section>
