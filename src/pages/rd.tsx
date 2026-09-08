@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
-import InputAmount from '../components/InputAmount.tsx';
+import ValuePicker from '../components/ValuePicker.tsx';
 import RateOfInterest from '../components/RateOfInterest.tsx';
 import Tenure from '../components/Tenure.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
@@ -197,19 +197,17 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
       </header>
       <div className={styles.formStack}>
         {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <InputAmount
+        <ValuePicker
           className={styles.field}
-          inputAmount={pa}
-          setInputAmount={setPa}
-          type={invType}
-          setType={setInvType}
-          typeData={[
-            { id: 'ty1', value: 'my', title: 'Monthly amount' },
-            { id: 'ty2', value: 'tgt', title: 'Target amount' },
-          ]}
+          value={pa}
+          onChange={setPa}
+          activeTab={invType}
+          onTabChange={setInvType}
           stepData={stepData}
-          stepSizePrefix={'sm'}
-          title={invType === 'my' ? 'Monthly Investment' : 'Target amount'}
+          tabs={[
+            { id: 'my', title: 'Monthly amount' },
+            { id: 'tgt', title: 'Target amount' },
+          ]}
         />
         <RateOfInterest className={styles.field} rt={rt} setRt={setRt} />
         <Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />

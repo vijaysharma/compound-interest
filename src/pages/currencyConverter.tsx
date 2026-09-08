@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowRight, FiInfo, FiRefreshCw, FiRepeat, FiTrendingUp } from 'react-icons/fi';
-import InputAmount from '../components/InputAmount';
+import ValuePicker from '../components/ValuePicker';
 import DisplayCard from '../components/DisplayCard';
 import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
@@ -400,12 +400,12 @@ const CurrencyConverter = () => {
             <span>Swap source &amp; target countries</span>
           </button>
         </div>
-        {/* Amount Input */}
-        <InputAmount
-          inputAmount={amount}
-          setInputAmount={setAmount}
+        <ValuePicker
+          value={amount}
+          onChange={setAmount}
           className={styles.amountField}
           title="Amount"
+          tabs={[]}
           stepData={[
             {
               id: 'ip1',
@@ -429,8 +429,6 @@ const CurrencyConverter = () => {
           ]}
           currencySymbol={sourceCurrency.symbol}
           locale={sourceCurrency.locale}
-          typeSizePrefix="base"
-          stepSizePrefix="sm"
         />
         {/* Error notification */}
         {error && (

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
-import InputAmount from '../components/InputAmount';
+import ValuePicker from '../components/ValuePicker';
 import StartEndDate from '../components/Date';
 import { getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
@@ -1059,50 +1059,12 @@ const SIP = ({
         togglePinFund={togglePinFund}
         loadingSchemeCodes={loadingSchemeCodes}
       />
-      <InputAmount
-        inputAmount={monthlyAmount}
-        setInputAmount={setMonthlyAmount}
+      <ValuePicker
+        value={monthlyAmount}
+        onChange={setMonthlyAmount}
         className={styles.fieldTight}
         title="Monthly"
-        stepData={[
-          {
-            id: 'ip1',
-            value: '50000000',
-            title: '5Cr',
-          },
-          {
-            id: 'ip2',
-            value: '5000000',
-            title: '50L',
-          },
-          {
-            id: 'ip3',
-            value: '500000',
-            title: '5L',
-          },
-          {
-            id: 'ip4',
-            value: '50000',
-            title: '50K',
-          },
-          {
-            id: 'ip5',
-            value: '5000',
-            title: '5K',
-          },
-          {
-            id: 'ip6',
-            value: '500',
-            title: '500',
-          },
-          {
-            id: 'ip7',
-            value: '50',
-            title: '50',
-          },
-        ]}
-        typeSizePrefix="sm"
-        stepSizePrefix="sm"
+        tabs={[]}
       />
       <div className={styles.joinRow}>
         <span className={styles.joinLabel}>

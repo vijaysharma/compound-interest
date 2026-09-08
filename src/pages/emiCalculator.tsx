@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
-import InputAmount from '../components/InputAmount.tsx';
+import ValuePicker from '../components/ValuePicker.tsx';
 import RateOfInterest from '../components/RateOfInterest.tsx';
 import Tenure from '../components/Tenure.tsx';
 import { RT, StepAmountType } from '../types/types.ts';
@@ -564,13 +564,13 @@ const EmiCalculator: React.FC = () => {
       </header>
       {/* Input Section */}
       <div className={styles.inputSection}>
-        <InputAmount
+        <ValuePicker
           className={styles.fieldTight}
-          inputAmount={loanAmount}
-          setInputAmount={setLoanAmount}
+          value={loanAmount}
+          onChange={setLoanAmount}
           title="Loan amount"
           stepData={stepData}
-          stepSizePrefix="sm"
+          tabs={[]}
         />
         <RateOfInterest className={styles.fieldTight} rt={rt} setRt={setRt} />
         <Tenure className={styles.fieldTight} rt={rt} setRt={setRt} />

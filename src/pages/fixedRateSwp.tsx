@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import ROI from '../components/ROI.tsx';
 import Tenure from '../components/Tenure.tsx';
 import DisplayCard from '../components/DisplayCard.tsx';
-import InputAmount from '../components/InputAmount.tsx';
+import ValuePicker from '../components/ValuePicker.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import { RT } from '../types/types.ts';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
@@ -215,23 +215,21 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
       </header>
       <div className={styles.formStack}>
         {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <InputAmount
+        <ValuePicker
           className={styles.field}
-          inputAmount={pa}
-          setInputAmount={setPa}
-          type={pa}
-          setType={setPa}
-          typeData={[{ id: 'abc', title: 'Invested Amount', value: pa }]}
+          value={pa}
+          onChange={setPa}
+          title="Invested Amount"
           stepData={invStepData}
-          stepSizePrefix={'sm'}
+          tabs={[]}
         />
-        <InputAmount
+        <ValuePicker
           className={styles.field}
-          inputAmount={wa}
-          setInputAmount={setWa}
+          value={wa}
+          onChange={setWa}
           stepData={wdStepData}
-          stepSizePrefix={'sm'}
           title="Withdrawal amount per month"
+          tabs={[]}
         />
         <ROI className={styles.field} rt={rt} setRt={setRt} title={'Expected return rate per annum (%)'} />
         <ROI className={styles.field} rt={irt} setRt={setIRt} title={'Inflation rate (%)'} />

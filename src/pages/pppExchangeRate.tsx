@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import InputAmount from '../components/InputAmount';
+import ValuePicker from '../components/ValuePicker';
 import DisplayCard from '../components/DisplayCard';
 import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
@@ -319,11 +319,12 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
             <span>Swap source &amp; target countries</span>
           </button>
         </div>
-        <InputAmount
-          inputAmount={srcAmt}
-          setInputAmount={setSrcAmt}
+        <ValuePicker
+          value={srcAmt}
+          onChange={setSrcAmt}
           className={styles.fieldTight}
           title="Amount"
+          tabs={[]}
           stepData={[
             {
               id: 'ip1',
@@ -347,8 +348,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           ]}
           currencySymbol={derivedValues?.sourceCurrencySymbol || 'XYZ'}
           locale={derivedValues?.sourceLocale || 'en-US'}
-          typeSizePrefix="base"
-          stepSizePrefix="sm"
         />
         <DisplayCard
           primaryAmount={parseFloat(parseFloat(derivedValues?.tgtAmt || '0').toFixed(2))}

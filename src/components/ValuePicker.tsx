@@ -1,4 +1,4 @@
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useMemo } from 'react';
 import styles from './ValuePicker.module.scss';
 import convertToWords from '../utilities/currency';
 import { sanctnum } from '../utilities/numSanitity';
@@ -12,19 +12,23 @@ export interface ValuePickerProps {
   /**
    * Current value (numeric or numeric string)
    */
-  value: string | number;
+  value?: string | number;
+  inputAmount?: string | number;
   /**
    * Change callback receiving the updated string value
    */
-  onChange: (val: string) => void;
+  onChange?: (val: string) => void;
+  setInputAmount?: React.Dispatch<React.SetStateAction<string>> | ((val: string) => void);
   /**
    * Optional tabs for switching modes (e.g., 'One time amount' vs 'Target amount')
    */
   tabs?: ValuePickerTab[];
+  typeData?: ValuePickerTab[];
   /**
    * Active tab identifier (controlled)
    */
   activeTab?: string;
+  type?: string;
   /**
    * Default active tab identifier (uncontrolled)
    */
@@ -33,14 +37,22 @@ export interface ValuePickerProps {
    * Tab switch callback
    */
   onTabChange?: (tabId: string) => void;
+  setType?: React.Dispatch<React.SetStateAction<string>> | ((tabId: string) => void);
   /**
-   * Title shown above the picker when tabs are not rendered
+   * Title shown above the picker
    */
   title?: string;
   /**
-   * Quick-step button rows (2D array). Defaults to the 2 rows from the reference design.
+   * Quick-step button rows (2D or 1D array). Defaults to the 2 rows from the reference design.
    */
-  stepRows?: ValuePickerStep[][];
+  stepRows?: ValuePickerStep[][] | ValuePickerStep[];
+  stepData?: Array<{ id?: string; value: string | number; title?: string; label?: string }>;
+  /**
+   * Size prefix props for backward compatibility
+   */
+  stepSizePrefix?: string;
+  typeSizePrefix?: string;
+  compact?: boolean;
   /**
    * Prefix symbol displayed inside the badge (defaults to '₹')
    */
@@ -92,13 +104,19 @@ export interface ValuePickerProps {
  */
 export const ValuePicker: React.FC<ValuePickerProps> = ({
   value,
+  inputAmount,
   onChange,
-  tabs = DEFAULT_VALUE_PICKER_TABS,
+  setInputAmount,
+  tabs,
+  typeData,
   activeTab: controlledTab,
+  type,
   defaultTab,
   onTabChange,
+  setType,
   title,
-  stepRows = DEFAULT_VALUE_PICKER_ROWS,
+  stepRows,
+  stepData,
   currencySymbol = '₹',
   locale = 'en-IN',
   min = 0,
@@ -112,35 +130,70 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
   placeholder = '0',
 }) => {
   const componentId = useId();
+  // Resolve value and onChange from either prop
+  const effectiveValue = value !== undefined ? value : inputAmount !== undefined ? inputAmount : '0';
+  const effectiveOnChange = onChange || setInputAmount || (() => {});
+  // Resolve tabs and active tab
+  const providedTabs = tabs !== undefined ? tabs : typeData;
+  const resolvedTabs =
+    providedTabs !== undefined
+      ? providedTabs
+      : title
+        ? []
+        : DEFAULT_VALUE_PICKER_TABS;
+  const currentActiveTab = controlledTab !== undefined ? controlledTab : type;
+  const effectiveOnTabChange = onTabChange || setType;
   // Internal tab state when uncontrolled
   const [internalTab, setInternalTab] = useState<string>(
-    controlledTab ?? defaultTab ?? tabs?.[0]?.id ?? ''
+    currentActiveTab ?? defaultTab ?? resolvedTabs?.[0]?.id ?? ''
   );
-  const currentTab = controlledTab !== undefined ? controlledTab : internalTab;
+  const currentTab = currentActiveTab !== undefined ? currentActiveTab : internalTab;
   // Active operation mode: '+' adds quick-steps, '-' subtracts quick-steps
   const [operation, setOperation] = useState<'+' | '-'>('+');
   // Track if input is currently focused for natural numeric editing
   const [isFocused, setIsFocused] = useState(false);
   const [localInput, setLocalInput] = useState('');
+  // Normalize step rows: handles 2D stepRows, 1D stepRows, or 1D stepData
+  const resolvedStepRows = useMemo<ValuePickerStep[][]>(() => {
+    if (stepRows && stepRows.length > 0) {
+      if (Array.isArray(stepRows[0])) {
+        return stepRows as ValuePickerStep[][];
+      }
+      const flat = stepRows as ValuePickerStep[];
+      const mid = Math.ceil(flat.length / 2);
+      return [flat.slice(0, mid), flat.slice(mid)];
+    }
+    if (stepData && stepData.length > 0) {
+      const formatted: ValuePickerStep[] = stepData.map((s, idx) => ({
+        id: s.id || `step-${idx}`,
+        label: s.label || s.title || `${s.value}`,
+        value: typeof s.value === 'string' ? parseInt(s.value, 10) || 0 : Number(s.value) || 0,
+      }));
+      const mid = Math.ceil(formatted.length / 2);
+      return [formatted.slice(0, mid), formatted.slice(mid)];
+    }
+    return DEFAULT_VALUE_PICKER_ROWS;
+  }, [stepRows, stepData]);
   // Sanitize numeric representation
-  const numericValue = sanctnum(value, min, max);
+  const numericValue = sanctnum(effectiveValue, min, max);
   const handleTabClick = (tabId: string) => {
     if (disabled) return;
-    if (controlledTab === undefined) {
+    if (currentActiveTab === undefined) {
       setInternalTab(tabId);
     }
-    onTabChange?.(tabId);
+    effectiveOnTabChange?.(tabId);
   };
   const updateNumericValue = (nextVal: number) => {
     let clamped = nextVal;
     if (min !== undefined && clamped < min) clamped = min;
     if (max !== undefined && clamped > max) clamped = max;
-    onChange(clamped.toString());
+    effectiveOnChange(clamped.toString());
+    setLocalInput(clamped.toString());
   };
   // Quick addition / subtraction through step buttons
   const handleStepClick = (stepAmount: number) => {
     if (disabled) return;
-    const current = sanctnum(value, min, max);
+    const current = sanctnum(effectiveValue, min, max);
     let next: number;
     if (operation === '+') {
       next = current + stepAmount;
@@ -162,7 +215,7 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
     if (operation === '-') {
       setOperation('+');
     } else {
-      updateNumericValue(sanctnum(value, min, max) + defaultStep);
+      updateNumericValue(sanctnum(effectiveValue, min, max) + defaultStep);
     }
   };
   // Minus button: switches mode to '-' and decrements by defaultStep if already '-'
@@ -171,7 +224,7 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
     if (operation === '+') {
       setOperation('-');
     } else {
-      updateNumericValue(Math.max(min, sanctnum(value, min, max) - defaultStep));
+      updateNumericValue(Math.max(min, sanctnum(effectiveValue, min, max) - defaultStep));
     }
   };
   // Direct typing handler with comma / digit handling
@@ -188,10 +241,10 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
     if (disabled || readOnly) return;
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      updateNumericValue(sanctnum(value, min, max) + defaultStep);
+      updateNumericValue(sanctnum(effectiveValue, min, max) + defaultStep);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      updateNumericValue(Math.max(min, sanctnum(value, min, max) - defaultStep));
+      updateNumericValue(Math.max(min, sanctnum(effectiveValue, min, max) - defaultStep));
     } else if (e.key.toLowerCase() === 'c' && e.altKey) {
       e.preventDefault();
       handleClear();
@@ -209,15 +262,16 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
     layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
   return (
     <div className={`${styles.container} ${layoutClass} ${className}`.trim()}>
-      {/* Optional fallback title if tabs are not used */}
-      {(!tabs || tabs.length === 0) && title && <h5 className={styles.title}>{title}</h5>}
+      {/* Title rendered when title is provided */}
+      {title && <h5 className={styles.title}>{title}</h5>}
       {/* Main card enclosing tabs, input row, and step grid */}
       <div className={styles.card}>
         {/* Top segmented tabs */}
-        {tabs && tabs.length > 0 && (
+        {resolvedTabs && resolvedTabs.length > 0 && (
           <div className={styles.tabsHeader} role="tablist" aria-label="Amount type switcher">
-            {tabs.map((tab) => {
-              const isActive = currentTab === tab.id;
+            {resolvedTabs.map((tab) => {
+              const tabIdentifier = tab.value !== undefined ? tab.value : tab.id;
+              const isActive = currentTab === tabIdentifier || currentTab === tab.id;
               return (
                 <button
                   key={tab.id}
@@ -226,7 +280,7 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
                   id={`${componentId}-tab-${tab.id}`}
                   aria-selected={isActive}
                   className={`${styles.tabBtn} ${isActive ? styles.tabActive : ''}`}
-                  onClick={() => handleTabClick(tab.id)}
+                  onClick={() => handleTabClick(tabIdentifier)}
                   disabled={disabled}
                 >
                   {tab.title}
@@ -260,7 +314,11 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
               onBlur={() => setIsFocused(false)}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              aria-label={title || tabs?.find((t) => t.id === currentTab)?.title || 'Amount'}
+              aria-label={
+                title ||
+                resolvedTabs?.find((t) => t.id === currentTab || t.value === currentTab)?.title ||
+                'Amount'
+              }
             />
           </div>
           {/* Action buttons: Clear ('C'), Plus ('+'), Minus ('-') */}
@@ -298,9 +356,9 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
           </div>
         </div>
         {/* Quick steps grid */}
-        {stepRows && stepRows.length > 0 && (
+        {resolvedStepRows && resolvedStepRows.length > 0 && (
           <div className={styles.gridContainer}>
-            {stepRows.map((row, rowIndex) => (
+            {resolvedStepRows.map((row, rowIndex) => (
               <div key={`row-${rowIndex}`} className={styles.gridRow}>
                 {row.map((step, colIndex) => {
                   const isPrimaryRow = rowIndex === 0;

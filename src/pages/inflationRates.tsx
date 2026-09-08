@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import InputAmount from '../components/InputAmount';
+import ValuePicker from '../components/ValuePicker';
 import DisplayCard from '../components/DisplayCard';
 import {
   calculateInflatedPrice,
@@ -217,18 +217,17 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
       </header>
       <div className={styles.formStack}>
         {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <InputAmount
+        <ValuePicker
           className={styles.fieldTight}
-          inputAmount={principal}
-          setInputAmount={setPrincipal}
-          type={place}
-          setType={setPlace}
-          title="Amount"
-          typeData={[
-            { id: 'ty1', value: 'India', title: 'India' },
-            { id: 'ty2', value: 'World', title: 'World' },
-            { id: 'ty3', value: 'USA', title: 'USA' },
-            { id: 'ty4', value: 'EU', title: 'EU' },
+          value={principal}
+          onChange={setPrincipal}
+          activeTab={place}
+          onTabChange={setPlace}
+          tabs={[
+            { id: 'India', title: 'India' },
+            { id: 'World', title: 'World' },
+            { id: 'USA', title: 'USA' },
+            { id: 'EU', title: 'EU' },
           ]}
           stepData={[
             {
@@ -253,8 +252,6 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           ]}
           currencySymbol={currencySymbol}
           locale={locale}
-          typeSizePrefix="base"
-          stepSizePrefix="sm"
         />
         <StartEndDate
           mode="year"
