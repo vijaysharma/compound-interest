@@ -42,6 +42,14 @@ const router = createBrowserRouter([
         element: lazyPublic(() => import('./pages/login.tsx')),
       },
       {
+        path: 'temp-value-picker',
+        element: lazyPublic(() => import('./pages/tempValuePickerPage.tsx')),
+      },
+      {
+        path: 'demo/value-picker',
+        element: lazyPublic(() => import('./pages/tempValuePickerPage.tsx')),
+      },
+      {
         path: 'upgrade',
         element: lazyPublic(() => import('./pages/upgrade.tsx')),
       },

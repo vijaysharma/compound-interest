@@ -1,0 +1,49 @@
+// Shared SCSS Design Tokens & Variables
+
+// Colors (aligned with DaisyUI Fantasy theme & custom palette)
+$primary: var(--color-primary, #6d0b74);
+$primary-content: var(--color-primary-content, #ffffff);
+$primary-hover: #58085e;
+$primary-active: #48064c;
+$primary-light: #f6edf7;
+$primary-subtle: #ebd5ed;
+$primary-dark-text: #2f0432;
+
+// Neutrals
+$bg-white: #ffffff;
+$bg-muted: #f8fafc;
+$bg-tinted-tab: #ece7ee;
+$border-purple: var(--color-primary, #6d0b74);
+$border-light: #e2e8f0;
+$border-subtle: #f1f5f9;
+
+$text-dark: #1e293b;
+$text-body: #334155;
+$text-muted: #64748b;
+$text-purple: #6d0b74;
+
+// Action buttons
+$btn-clear-bg: #e9ecef;
+$btn-clear-hover: #dee2e6;
+$btn-clear-text: #495057;
+
+// Radii
+$radius-xs: 0.25rem;
+$radius-sm: 0.375rem;
+$radius-md: 0.5rem;
+$radius-lg: 0.75rem;
+$radius-xl: 1rem;
+$radius-full: 9999px;
+
+// Breakpoints
+$bp-mobile-sm: 360px;
+$bp-mobile-md: 480px;
+$bp-mobile-lg: 576px;
+$bp-tablet: 640px;
+$bp-laptop: 768px;
+$bp-desktop: 1024px;
+$bp-wide: 1280px;
+
+// Transitions
+$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);

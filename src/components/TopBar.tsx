@@ -21,6 +21,8 @@ import { useAuth } from '../context/useAuth';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
     '/': 'Rupee Calculator',
+    '/temp-value-picker': 'ValuePicker Preview',
+    '/demo/value-picker': 'ValuePicker Preview',
     '/login': 'Sign In',
     '/admin': 'Data administration',
     '/admin/shiprocket-rates': 'Shiprocket Rates',

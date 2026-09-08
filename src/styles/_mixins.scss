@@ -1,0 +1,91 @@
+@use "./variables" as *;
+
+// Responsive breakpoints
+@mixin mobile-sm {
+  @media (max-width: #{$bp-mobile-sm - 1px}) {
+    @content;
+  }
+  @container (max-width: #{$bp-mobile-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile-md {
+  @media (max-width: #{$bp-mobile-md - 1px}) {
+    @content;
+  }
+  @container (max-width: #{$bp-mobile-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile-only {
+  @media (max-width: #{$bp-tablet - 1px}) {
+    @content;
+  }
+  @container (max-width: #{$bp-tablet - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: #{$bp-tablet}) {
+    @content;
+  }
+  @container (min-width: #{$bp-tablet}) {
+    @content;
+  }
+}
+
+@mixin laptop-up {
+  @media (min-width: #{$bp-laptop}) {
+    @content;
+  }
+  @container (min-width: #{$bp-laptop}) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: #{$bp-desktop}) {
+    @content;
+  }
+  @container (min-width: #{$bp-desktop}) {
+    @content;
+  }
+}
+
+// Button reset
+@mixin button-reset {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// Accessible focus visible ring
+@mixin focus-ring($color: $primary) {
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+}
+
+// Interactive press effect
+@mixin pressable {
+  transition:
+    transform $transition-fast,
+    filter $transition-fast,
+    background-color $transition-fast;
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}

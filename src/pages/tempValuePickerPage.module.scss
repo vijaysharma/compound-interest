@@ -1,0 +1,247 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.demoPage {
+  min-height: 100%;
+  padding: 1.5rem 1rem 4rem;
+  background-color: #f8fafc;
+  color: $text-dark;
+
+  @include tablet-up {
+    padding: 2.5rem 2rem 5rem;
+  }
+}
+
+.demoHeader {
+  max-width: 960px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: $radius-full;
+  background-color: $primary-light;
+  color: $primary;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.pageTitle {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  color: $text-dark;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.5rem;
+}
+
+.pageSubtitle {
+  font-size: clamp(0.95rem, 2vw, 1.125rem);
+  color: $text-muted;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+// Device Viewport Switcher
+.viewportSwitcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem auto 2.5rem;
+  padding: 0.35rem;
+  background-color: #e2e8f0;
+  border-radius: $radius-lg;
+  width: fit-content;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.viewportBtn {
+  @include button-reset;
+  @include pressable;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $text-muted;
+  transition: all $transition-fast;
+
+  &:hover:not(.active) {
+    color: $text-dark;
+    background-color: rgba(255, 255, 255, 0.6);
+  }
+
+  &.active {
+    background-color: $bg-white;
+    color: $primary;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  @include focus-ring($primary);
+}
+
+.demoContainer {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+// Viewport Frame Container
+.previewArea {
+  display: flex;
+  justify-content: center;
+  transition: all $transition-normal;
+}
+
+.frameWrapper {
+  width: 100%;
+  transition: max-width $transition-normal;
+  container-type: inline-size;
+
+  &.mobileFrame {
+    max-width: 400px;
+    background: #ffffff;
+    border-radius: 2rem;
+    border: 8px solid #1e293b;
+    padding: 1.5rem 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    position: relative;
+
+    &::before {
+      content: "";
+      display: block;
+      width: 4.5rem;
+      height: 0.35rem;
+      background: #334155;
+      border-radius: $radius-full;
+      margin: 0 auto 1.25rem;
+    }
+  }
+
+  &.tabletFrame {
+    max-width: 640px;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    border: 6px solid #334155;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
+  }
+
+  &.desktopFrame {
+    max-width: 800px;
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid $border-light;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  }
+}
+
+// State Inspector Card
+.inspectorCard {
+  background-color: $bg-white;
+  border-radius: $radius-lg;
+  border: 1px solid $border-light;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+  h4 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $text-muted;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.stateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.stateItem {
+  background-color: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: $radius-md;
+  border: 1px solid #f1f5f9;
+
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    color: $text-muted;
+    margin-bottom: 0.25rem;
+  }
+
+  .val {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: $primary;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Variations Section
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: $text-dark;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.variationsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  @include laptop-up {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.variationCard {
+  background: $bg-white;
+  border-radius: $radius-lg;
+  border: 1px solid $border-light;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: $text-dark;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: $text-muted;
+    margin-bottom: 1.25rem;
+  }
+}
+
+// Code usage block
+.codeSnippet {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  padding: 1.25rem;
+  border-radius: $radius-lg;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  line-height: 1.6;
+}
