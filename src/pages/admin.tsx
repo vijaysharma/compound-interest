@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import {
   FiCheck,
   FiClock,
+  FiCpu,
   FiCreditCard,
   FiEdit2,
   FiPlus,
@@ -31,11 +32,20 @@ interface AdminUser {
 const Admin = () => {
   const { token: authToken, user } = useAuth();
   const [token, setToken] = useState(() => authToken || '');
-  const [activeTab, setActiveTab] = useState<'payments' | 'submissions' | 'users' | 'sync'>(
-    'payments'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'payments' | 'submissions' | 'users' | 'sync' | 'ai'
+  >('payments');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // AI Settings state
+  const [aiEnabled, setAiEnabled] = useState(true);
+  const [aiProvider, setAiProvider] = useState('gemini');
+  const [aiModel, setAiModel] = useState('gemini-2.5-flash');
+  const [aiApiKey, setAiApiKey] = useState('');
+  const [aiHasKey, setAiHasKey] = useState(false);
+  const [aiSystemPrompt, setAiSystemPrompt] = useState(
+    'You are an expert Indian Chartered Accountant and Tax Planner. Analyze the user financial numbers, income sources, deductions, capital gains, and dual regime comparison. Provide actionable, structured, prioritized recommendations to legally minimize Indian income tax, optimize Section 80C/80CCD/80D, capital gains harvesting, and recommend the optimal regime.'
+  );
   // Payment settings state
   const [payTitle, setPayTitle] = useState('Rupee Calculator Pro Subscription');
   const [payUpiId, setPayUpiId] = useState('');
@@ -83,6 +93,65 @@ const Admin = () => {
       console.warn('Failed to fetch users:', err);
     }
   };
+  const fetchAiSettings = async () => {
+    if (!effectiveToken) return;
+    try {
+      const res = await fetch('/api/admin/ai-settings', {
+        headers: { Authorization: `Bearer ${effectiveToken}` },
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          settings?: {
+            enabled?: boolean;
+            provider?: string;
+            model?: string;
+            api_key?: string;
+            has_api_key?: boolean;
+            system_prompt?: string;
+          };
+        };
+        if (data.settings) {
+          if (typeof data.settings.enabled === 'boolean') setAiEnabled(data.settings.enabled);
+          if (data.settings.provider) setAiProvider(data.settings.provider);
+          if (data.settings.model) setAiModel(data.settings.model);
+          if (data.settings.api_key) setAiApiKey(data.settings.api_key);
+          setAiHasKey(Boolean(data.settings.has_api_key));
+          if (data.settings.system_prompt) setAiSystemPrompt(data.settings.system_prompt);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch AI settings:', err);
+    }
+  };
+  const handleSaveAiSettings = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy('saving_ai_settings');
+    setMessage(null);
+    try {
+      const res = await fetch('/api/admin/ai-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${effectiveToken}`,
+        },
+        body: JSON.stringify({
+          enabled: aiEnabled,
+          provider: aiProvider,
+          model: aiModel,
+          api_key: aiApiKey,
+          system_prompt: aiSystemPrompt,
+        }),
+      });
+      const data = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) throw new Error(data.error || 'Failed to save AI settings');
+      setMessage({ type: 'success', text: 'AI Tax Advisor settings updated successfully.' });
+      void fetchAiSettings();
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Save failed' });
+    } finally {
+      setBusy(null);
+    }
+  };
   useEffect(() => {
     let cancelled = false;
     const loadInitialData = async () => {
@@ -121,6 +190,33 @@ const Admin = () => {
           }
         } catch (err) {
           console.warn('Failed to fetch users:', err);
+        }
+        try {
+          const aiRes = await fetch('/api/admin/ai-settings', {
+            headers: { Authorization: `Bearer ${effectiveToken}` },
+          });
+          if (aiRes.ok && !cancelled) {
+            const aiData = (await aiRes.json()) as {
+              settings?: {
+                enabled?: boolean;
+                provider?: string;
+                model?: string;
+                api_key?: string;
+                has_api_key?: boolean;
+                system_prompt?: string;
+              };
+            };
+            if (aiData.settings) {
+              if (typeof aiData.settings.enabled === 'boolean') setAiEnabled(aiData.settings.enabled);
+              if (aiData.settings.provider) setAiProvider(aiData.settings.provider);
+              if (aiData.settings.model) setAiModel(aiData.settings.model);
+              if (aiData.settings.api_key) setAiApiKey(aiData.settings.api_key);
+              setAiHasKey(Boolean(aiData.settings.has_api_key));
+              if (aiData.settings.system_prompt) setAiSystemPrompt(aiData.settings.system_prompt);
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to fetch AI settings in init:', err);
         }
       }
     };
@@ -318,6 +414,17 @@ const Admin = () => {
         >
           <FiRefreshCw size={16} />
           <span>Dataset Sync</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${activeTab === 'ai' ? styles.tabActive : ''}`}
+          onClick={() => {
+            setActiveTab('ai');
+            void fetchAiSettings();
+          }}
+        >
+          <FiCpu size={16} />
+          <span>AI Tax Advisor</span>
         </button>
       </div>
       {message && (
@@ -806,6 +913,107 @@ const Admin = () => {
                 </div>
               </div>
             </details>
+          </section>
+        </div>
+      )}
+      {/* AI Settings Tab */}
+      {activeTab === 'ai' && (
+        <div className={styles.grid}>
+          <section className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>
+                <FiCpu className={styles.cardIcon} />
+                <h2>AI Tax Advisor &amp; Optimizer Settings</h2>
+              </div>
+              <p className={styles.cardDesc}>
+                Control the Gemini AI engine that powers automated income tax optimization reports,
+                regime comparison advice, and customized savings strategies.
+              </p>
+            </div>
+            <form onSubmit={handleSaveAiSettings} className={styles.cardBody}>
+              <div className={styles.formGroup}>
+                <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={aiEnabled}
+                    onChange={(e) => setAiEnabled(e.target.checked)}
+                    style={{ width: '1.125rem', height: '1.125rem', accentColor: 'var(--color-primary)' }}
+                  />
+                  <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>
+                    Enable AI Tax Advisor for Users
+                  </span>
+                </label>
+                <p className={styles.hint}>
+                  When enabled, users on the Income Tax Calculator page can request a personalized AI Tax Optimization Report.
+                </p>
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>AI Provider</label>
+                  <select
+                    value={aiProvider}
+                    onChange={(e) => setAiProvider(e.target.value)}
+                    className={styles.select}
+                  >
+                    <option value="gemini">Google Gemini</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Model Selection</label>
+                  <select
+                    value={aiModel}
+                    onChange={(e) => setAiModel(e.target.value)}
+                    className={styles.select}
+                  >
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended - Fast &amp; High Precision)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </select>
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Gemini API Key
+                  {aiHasKey && (
+                    <span style={{ marginLeft: '0.5rem', color: '#16a34a', fontSize: '0.75rem', fontWeight: 600 }}>
+                      (Key is configured)
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="password"
+                  value={aiApiKey}
+                  onChange={(e) => setAiApiKey(e.target.value)}
+                  placeholder={aiHasKey ? 'Leave blank to keep existing key, or paste new key' : 'Paste Google Gemini API Key (starts with AIza...)'}
+                  className={styles.input}
+                />
+                <p className={styles.hint}>
+                  If left empty, the server will fallback to <code>GEMINI_API_KEY</code> or <code>GOOGLE_API_KEY</code> environment variable if set.
+                </p>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Tax Advisor System Instructions &amp; Prompt</label>
+                <textarea
+                  rows={5}
+                  value={aiSystemPrompt}
+                  onChange={(e) => setAiSystemPrompt(e.target.value)}
+                  className={styles.textarea}
+                  placeholder="System instructions given to the AI tax advisor..."
+                />
+                <p className={styles.hint}>
+                  Directives for the AI advisor (e.g. Indian tax nuances, tone of response, budget regulations).
+                </p>
+              </div>
+              <div className={styles.cardActions}>
+                <button
+                  type="submit"
+                  disabled={busy === 'saving_ai_settings'}
+                  className={styles.btnPrimary}
+                >
+                  {busy === 'saving_ai_settings' ? 'Saving...' : 'Save AI Settings'}
+                </button>
+              </div>
+            </form>
           </section>
         </div>
       )}

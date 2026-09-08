@@ -138,6 +138,22 @@ const router = createBrowserRouter([
         element: lazyProtected(() => import('./pages/calculator.tsx')),
       },
       {
+        path: 'ppf-calculator',
+        element: lazyProtected(() => import('./pages/ppfCalculator.tsx')),
+      },
+      {
+        path: 'nps-calculator',
+        element: lazyProtected(() => import('./pages/npsCalculator.tsx')),
+      },
+      {
+        path: 'income-tax-calculator',
+        element: lazyProtected(() => import('./pages/incomeTaxCalculator.tsx')),
+      },
+      {
+        path: 'tax-calculator',
+        element: lazyProtected(() => import('./pages/incomeTaxCalculator.tsx')),
+      },
+      {
         path: 'date-calculator',
         element: lazyProtected(() => import('./pages/dateCalculator.tsx')),
       },
@@ -198,6 +214,10 @@ const router = createBrowserRouter([
             path: 'rd',
             element: lazyProtected(() => import('./pages/rd.tsx')),
           },
+          {
+            path: 'ppf',
+            element: lazyProtected(() => import('./pages/ppfCalculator.tsx')),
+          },
         ],
       },
       {
@@ -210,6 +230,23 @@ const router = createBrowserRouter([
           {
             path: 'fixed-rate-swp',
             element: lazyProtected(() => import('./pages/fixedRateSwp.tsx')),
+          },
+          {
+            path: 'ppf',
+            element: lazyProtected(() => import('./pages/ppfCalculator.tsx')),
+          },
+          {
+            path: 'nps',
+            element: lazyProtected(() => import('./pages/npsCalculator.tsx')),
+          },
+        ],
+      },
+      {
+        path: 'tax',
+        children: [
+          {
+            path: 'income-tax',
+            element: lazyProtected(() => import('./pages/incomeTaxCalculator.tsx')),
           },
         ],
       },

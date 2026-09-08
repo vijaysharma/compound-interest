@@ -4,6 +4,7 @@ import Link from './PrefetchLink';
 import {
   FiAward,
   FiClock,
+  FiFileText,
   FiGlobe,
   FiInfo,
   FiLayers,
@@ -62,6 +63,14 @@ const getNavTitle = (pathname: string) => {
     '/date-calculator': 'Date Calculator',
     '/utilities/date-calculator': 'Date Calculator',
     '/utilities/unit-converter': 'Unit Converter',
+    '/ppf-calculator': 'PPF Calculator',
+    '/deposits/ppf': 'PPF Calculator',
+    '/fixed-plans/ppf': 'PPF Calculator',
+    '/nps-calculator': 'NPS Calculator',
+    '/fixed-plans/nps': 'NPS Calculator',
+    '/income-tax-calculator': 'Income Tax Calculator',
+    '/tax-calculator': 'Income Tax Calculator',
+    '/tax/income-tax': 'Income Tax Calculator',
   };
   return titles[pathname] ?? 'Rupee Calculator';
 };
@@ -245,6 +254,33 @@ const TopBar = ({ className }: { className?: string }) => {
                 </div>
                 <div className={styles.navSection}>
                   <h3 className={styles.navCategoryTitle}>
+                    <FiFileText className={styles.navCategoryIcon} />
+                    <span>Tax &amp; Planning</span>
+                  </h3>
+                  <Link
+                    to="/income-tax-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Income Tax &amp; AI Optimizer
+                  </Link>
+                  <Link
+                    to="/ppf-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    PPF Calculator
+                  </Link>
+                  <Link
+                    to="/nps-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    NPS Calculator
+                  </Link>
+                </div>
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
                     <FiLayers className={styles.navCategoryIcon} />
                     <span>Deposits</span>
                   </h3>
@@ -261,6 +297,13 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Recurring Deposits
+                  </Link>
+                  <Link
+                    to="/ppf-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    PPF Calculator
                   </Link>
                 </div>
                 <div className={styles.navSection}>
@@ -308,6 +351,13 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     SWP Calculator
+                  </Link>
+                  <Link
+                    to="/nps-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    NPS Calculator
                   </Link>
                 </div>
                 <div className={styles.navSection}>

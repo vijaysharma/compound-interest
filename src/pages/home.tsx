@@ -5,6 +5,7 @@ import {
   FiCalendar,
   FiCheckCircle,
   FiClock,
+  FiFileText,
   FiGlobe,
   FiLayers,
   FiPercent,
@@ -337,6 +338,57 @@ const Home = () => {
             </p>
           </div>
           <div className={styles.pillarsGrid}>
+            <div className={styles.pillarCard}>
+              <div>
+                <h3 className={styles.pillarHeading}>
+                  <FiFileText className={styles.pillarIcon} /> Income Tax &amp; AI Optimizer
+                </h3>
+                <p className={styles.pillarDesc}>
+                  Dual-regime comparison (Old vs New) with Budget 2024 slab updates, capital gains
+                  rules, PPF EEE exemption, breakeven deductions, and personalized AI recommendations.
+                </p>
+              </div>
+              <Link
+                to="/income-tax-calculator"
+                className={styles.pillarLink}
+              >
+                Calculate &amp; Optimize Tax &rarr;
+              </Link>
+            </div>
+            <div className={styles.pillarCard}>
+              <div>
+                <h3 className={styles.pillarHeading}>
+                  <FiShield className={styles.pillarIcon} /> PPF Calculator
+                </h3>
+                <p className={styles.pillarDesc}>
+                  Calculate Public Provident Fund compounding with real historical interest rates
+                  declared by the Ministry of Finance, 5th-of-month banking rules, and 5-year extensions.
+                </p>
+              </div>
+              <Link
+                to="/ppf-calculator"
+                className={styles.pillarLink}
+              >
+                Calculate PPF Growth &rarr;
+              </Link>
+            </div>
+            <div className={styles.pillarCard}>
+              <div>
+                <h3 className={styles.pillarHeading}>
+                  <FiClock className={styles.pillarIcon} /> NPS Retirement Calculator
+                </h3>
+                <p className={styles.pillarDesc}>
+                  Model National Pension System wealth accumulation, 40% mandatory annuity purchase,
+                  60% tax-free lump sum withdrawal, and monthly pension payouts under PFRDA rules.
+                </p>
+              </div>
+              <Link
+                to="/nps-calculator"
+                className={styles.pillarLink}
+              >
+                Plan NPS Retirement &rarr;
+              </Link>
+            </div>
             <div className={styles.pillarCard}>
               <div>
                 <h3 className={styles.pillarHeading}>

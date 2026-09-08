@@ -43,6 +43,15 @@ export interface PaymentSubmission {
   created_at: string;
   updated_at: string;
 }
+export interface AISettings {
+  id: string;
+  enabled: boolean;
+  provider: string;
+  model: string;
+  api_key: string;
+  system_prompt: string;
+  updated_at: string;
+}
 export function getDb(): Query {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -282,6 +291,29 @@ export async function ensureTables(sql: Query) {
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS user_id TEXT`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS blob_url TEXT`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS ai_settings (
+          id TEXT PRIMARY KEY DEFAULT 'default',
+          enabled BOOLEAN NOT NULL DEFAULT true,
+          provider TEXT NOT NULL DEFAULT 'gemini',
+          model TEXT NOT NULL DEFAULT 'gemini-2.5-flash',
+          api_key TEXT NOT NULL DEFAULT '',
+          system_prompt TEXT NOT NULL DEFAULT 'You are an expert Indian Chartered Accountant and Tax Planner. Analyze the user financial numbers, income sources, deductions, capital gains, and dual regime comparison. Provide actionable, structured, prioritized recommendations to legally minimize Indian income tax, optimize Section 80C/80CCD/80D, capital gains harvesting, and recommend the optimal regime.',
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        INSERT INTO ai_settings (id, enabled, provider, model, api_key, system_prompt)
+        VALUES (
+          'default',
+          true,
+          'gemini',
+          'gemini-2.5-flash',
+          '',
+          'You are an expert Indian Chartered Accountant and Tax Planner. Analyze the user financial numbers, income sources, deductions, capital gains, and dual regime comparison. Provide actionable, structured, prioritized recommendations to legally minimize Indian income tax, optimize Section 80C/80CCD/80D, capital gains harvesting, and recommend the optimal regime.'
+        )
+        ON CONFLICT (id) DO NOTHING
+      `;
       await sql`
         CREATE INDEX IF NOT EXISTS admin_notes_created_at_idx
         ON admin_notes (created_at DESC)
