@@ -1,0 +1,94 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  font-weight: 600;
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+
+  @include tablet-up {
+    height: 64px;
+    padding: 0.75rem 1.25rem;
+  }
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+  transition: opacity $transition-fast;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 700;
+
+  @include tablet-up {
+    font-size: 1.125rem;
+  }
+}
+
+.drawerModal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.45);
+  border: none;
+  cursor: default;
+  appearance: none;
+}
+
+.drawerAside {
+  position: relative;
+  height: 100%;
+  width: 16rem;
+  max-width: 80vw;
+  padding: 0.75rem;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
+  z-index: 10;
+}

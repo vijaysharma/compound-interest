@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fi';
 import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
+import styles from './TopBar.module.scss';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
     '/': 'Rupee Calculator',
@@ -82,10 +83,8 @@ const TopBar = ({ className }: { className?: string }) => {
   };
   return (
     <>
-      <header
-        className={`flex items-center justify-between px-3 py-2 bg-primary text-primary-content font-semibold ${className}`}
-      >
-        <div className="flex items-center gap-2">
+      <header className={`${styles.header} ${className || ''}`.trim()}>
+        <div className={styles.leftSection}>
           <button
             type="button"
             className="btn btn-ghost btn-sm btn-square text-primary-content"
@@ -107,12 +106,12 @@ const TopBar = ({ className }: { className?: string }) => {
                 // ignore
               }
             }}
-            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+            className={styles.logoLink}
           >
-            <Logo /> <span className="truncate">{navTitle}</span>
+            <Logo /> <span className={styles.title}>{navTitle}</span>
           </Link>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={styles.rightSection}>
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
               {isAdmin ? (
@@ -167,16 +166,16 @@ const TopBar = ({ className }: { className?: string }) => {
         </div>
       </header>
       {isMenuOpen && (
-        <div className="fixed inset-0 z-50" role="presentation">
+        <div className={styles.drawerModal} role="presentation">
           <button
             type="button"
-            className="absolute inset-0 h-full w-full cursor-default bg-black/40"
+            className={styles.backdrop}
             aria-label="Close navigation menu"
             onClick={() => setIsMenuOpen(false)}
           />
           <aside
             id="navigation-drawer"
-            className="bg-primary relative h-full w-64 max-w-[80vw] p-3 text-primary-content shadow-xl flex flex-col justify-between overflow-y-auto"
+            className={styles.drawerAside}
             aria-label="Navigation menu"
           >
             <div>

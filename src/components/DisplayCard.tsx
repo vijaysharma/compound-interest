@@ -1,5 +1,6 @@
 import convertToWords from '../utilities/currency';
 import { DisplayType } from '../types/types';
+import styles from './DisplayCard.module.scss';
 const DisplayCard = ({
   primaryAmount,
   primarySub,
@@ -10,26 +11,26 @@ const DisplayCard = ({
   locale = 'en-IN',
 }: DisplayType) => {
   return (
-    <div className="stats stats-vertical border-solid border border-primary w-full text-center">
-      <div className="stat">
-        <div className="stat-title text-wrap text-base/[16px]">{title || 'Balance amount'}</div>
-        <div className={`stat-value text-3xl ${colorClass || 'text-primary'}`}>
-          <span className="text-lg">{currencySymbol}&nbsp;</span>
+    <div className={styles.card}>
+      <div className={styles.statItem}>
+        <div className={styles.title}>{title || 'Balance amount'}</div>
+        <div className={`${styles.value} ${colorClass || ''}`.trim()}>
+          <span className={styles.currency}>{currencySymbol}&nbsp;</span>
           {primaryAmount.toLocaleString(locale)}{' '}
-          {primarySub && <span className="text-sm"> {primarySub}</span>}
+          {primarySub && <span className={styles.sub}> {primarySub}</span>}
         </div>
-        <div className="stat-desc text-xs/[1] text-wrap">
+        <div className={styles.words}>
           {convertToWords(primaryAmount, locale)}
         </div>
       </div>
       {secondaryInfo && (
-        <div className="stat">
-          <div className="stat-title text-wrap text-base/[12px]">{secondaryInfo.title}</div>
-          <div className="stat-value text-2xl text-primary">
-            <span className="text-lg">{currencySymbol}&nbsp;</span>
+        <div className={styles.statItem}>
+          <div className={styles.title}>{secondaryInfo.title}</div>
+          <div className={styles.value}>
+            <span className={styles.currency}>{currencySymbol}&nbsp;</span>
             {secondaryInfo.amount.toLocaleString(locale)}
           </div>
-          <div className="stat-desc text-xs/[1] text-wrap">
+          <div className={styles.words}>
             {convertToWords(secondaryInfo.amount, locale)}
           </div>
         </div>

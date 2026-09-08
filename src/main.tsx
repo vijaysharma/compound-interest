@@ -5,7 +5,7 @@ import App from './App.tsx';
 import Home from './pages/home.tsx';
 import LoadingFallback from './components/LoadingFallback.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
-import './index.css';
+import './index.scss';
 const lazyProtected = (
   importer: () => Promise<{ default: ComponentType }>,
   requireAdmin = false,

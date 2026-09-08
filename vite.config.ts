@@ -2,7 +2,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 import type { Plugin, UserConfig } from 'vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -119,7 +118,7 @@ const localApiPlugin = (): Plugin => ({
   },
 });
 const VITE_CONFIGS: UserConfig = {
-  plugins: [react(), tailwindcss(), localApiPlugin()],
+  plugins: [react(), localApiPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

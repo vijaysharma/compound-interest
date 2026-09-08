@@ -3,6 +3,7 @@ import JoinedButtonGroup from './JoinedButtonGroup';
 import convertToWords from '../utilities/currency';
 import { sanctnum } from '../utilities/numSanitity';
 import { InputType } from '../types/types';
+import styles from './InputAmount.module.scss';
 const InputAmount = ({
   inputAmount,
   setInputAmount,
@@ -14,14 +15,14 @@ const InputAmount = ({
   setType,
   typeData,
   title = 'Invested amount',
-  className,
+  className = '',
   locale = 'en-IN',
   compact = true,
 }: InputType) => {
   const [sum, setSum] = useState('+');
   const setSumValue = (amnt: string): void => {
-    const initialAmount = parseInt(amnt);
-    let total = parseInt(inputAmount);
+    const initialAmount = parseInt(amnt, 10);
+    let total = parseInt(inputAmount, 10);
     if (sum === '+') total += initialAmount;
     if (sum === '-') {
       total -= initialAmount;
@@ -35,9 +36,9 @@ const InputAmount = ({
     setInputAmount(total.toString());
   };
   return (
-    <div className={`flex flex-col w-full ${className}`}>
-      {!type && !compact && <h5>{title}</h5>}
-      <div className="focus-within:outline-primary rounded-lg focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
+    <div className={`${styles.container} ${className}`.trim()}>
+      {!type && !compact && <h5 className={styles.title}>{title}</h5>}
+      <div className={styles.inputGroup}>
         {type && typeData && setType && (
           <JoinedButtonGroup
             data={typeData}
@@ -47,15 +48,11 @@ const InputAmount = ({
             btnClass="rounded-bl-none rounded-br-none border-b-0"
           />
         )}
-        <div className="join mb-0 w-full">
+        <div className={`join ${styles.inputRow}`}>
           <div
-            className={`
-              join-item bg-primary text-primary-content border border-primary text-center align-middle rounded-bl-none 
-              ${
-                type ? 'rounded-tl-none' : ''
-              } ${typeSizePrefix ? `text-${typeSizePrefix}` : 'text-sm'} 
-            ${compact ? 'label text-nowrap px-2' : 'w-12'}
-            `}
+            className={`join-item ${styles.currencyLabel} ${type ? styles.hasType : ''} ${
+              compact ? 'px-2' : 'w-12'
+            }`}
           >
             {compact ? `${title} (${currencySymbol || '₹'})` : currencySymbol || '₹'}
           </div>
@@ -63,16 +60,13 @@ const InputAmount = ({
             type="number"
             min="0"
             placeholder="Type here"
-            className={`join-item grow input input-primary w-full focus:outline-none ${
-              typeSizePrefix ? `input-${typeSizePrefix}` : 'input-sm'
-            }`}
+            className={`join-item input input-primary ${styles.numberInput}`}
             value={inputAmount?.replace(/^0+/, '') || 0}
             onChange={(e) => setInputAmount(e.target?.value)}
           />
           <button
-            className={`join-item input-primary border-primary btn grow ${
-              typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'
-            }`}
+            type="button"
+            className={`join-item ${styles.btnAction}`}
             onClick={() => {
               setInputAmount('0');
               setSum('+');
@@ -81,15 +75,17 @@ const InputAmount = ({
             C
           </button>
           <button
-            className={`join-item btn border-primary btn grow ${
-              sum === '+' ? 'btn-primary' : ''
-            } ${typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'}`}
+            type="button"
+            className={`join-item ${styles.btnAction} ${sum === '+' ? styles.active : ''}`}
             onClick={() => setSum('+')}
           >
             +
           </button>
           <button
-            className={`join-item btn border-primary btn grow rounded-br-none ${sum === '-' ? 'btn-primary' : ''} ${type ? 'rounded-tr-none' : ''} ${typeSizePrefix ? `btn-${typeSizePrefix}` : 'btn-sm'}`}
+            type="button"
+            className={`join-item ${styles.btnAction} ${sum === '-' ? styles.active : ''} ${
+              !type ? 'rounded-tr-none' : ''
+            }`}
             onClick={() => setSum('-')}
             disabled={inputAmount === '0'}
           >
@@ -104,7 +100,7 @@ const InputAmount = ({
           btnClass="rounded-tl-none rounded-tr-none border-t-0"
         />
       </div>
-      <div className="text-primary text-sm/5 mt-2">
+      <div className={styles.words}>
         {convertToWords(sanctnum(inputAmount), locale)}
       </div>
     </div>

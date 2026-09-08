@@ -1,29 +1,48 @@
 import { JoinedButtonType } from '../types/types';
+import styles from './JoinedButtonGroup.module.scss';
 function JoinedButtonGroup<T = string>({
   data,
   selectedValue,
   updateSelectedValue,
   title,
-  sizePrefix,
-  className,
-  btnClass,
+  sizePrefix = 'sm',
+  className = '',
+  btnClass = '',
 }: JoinedButtonType<T>) {
+  const getSizeClass = () => {
+    switch (sizePrefix) {
+      case 'xs':
+        return styles.sizeXs;
+      case 'sm':
+        return styles.sizeSm;
+      case 'md':
+        return styles.sizeMd;
+      case 'lg':
+        return styles.sizeLg;
+      default:
+        return styles.sizeSm;
+    }
+  };
   return (
-    <div className={`flex flex-col w-full text-center ${className ?? ''}`}>
-      {title && <h5>{title}</h5>}
-      <div className="join mx-auto w-full">
+    <div className={`${styles.container} ${className}`.trim()}>
+      {title && <h5 className={styles.title}>{title}</h5>}
+      <div className={`join ${styles.joinGroup}`}>
         {data &&
-          data.map((p) => (
-            <button
-              key={p.id}
-              className={`join-item btn border-primary grow flex-1 ${
-                selectedValue === p.value && 'btn-primary'
-              } ${sizePrefix && `btn-${sizePrefix}`} ${btnClass}`}
-              onClick={() => updateSelectedValue(p.value)}
-            >
-              {p.title}
-            </button>
-          ))}
+          data.map((p) => {
+            const isSelected = selectedValue === p.value;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={`join-item ${styles.joinBtn} ${getSizeClass()} ${
+                  isSelected ? `${styles.active} btn-primary` : ''
+                } ${btnClass}`.trim()}
+                onClick={() => updateSelectedValue(p.value)}
+              >
+                {p.title}
+              </button>
+            );
+          })}
       </div>
     </div>
   );
