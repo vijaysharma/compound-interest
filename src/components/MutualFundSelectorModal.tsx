@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import JoinedButtonGroup from './JoinedButtonGroup';
 import { MFType } from '../types/types';
+import styles from './MutualFundSelectorModal.module.scss';
 interface PinnedFund {
   schemeCode: string;
   schemeName: string;
@@ -41,20 +42,20 @@ const MutualFundSelectorModal = ({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3"
+      className={styles.dialogOverlay}
       role="dialog"
       aria-modal="true"
       aria-labelledby="mutual-fund-selector-title"
     >
       <button
         type="button"
-        className="absolute inset-0 h-full w-full bg-black/40"
+        className={styles.backdrop}
         aria-label="Close mutual fund selector"
         onClick={onClose}
       />
-      <section className="relative z-10 flex h-[90dvh] w-full max-w-2xl flex-col bg-base-100 p-4 shadow-xl">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="mutual-fund-selector-title" className="text-lg font-semibold">
+      <section className={styles.modalContent}>
+        <div className={styles.header}>
+          <h2 id="mutual-fund-selector-title" className={styles.headerTitle}>
             Select mutual funds
           </h2>
           <button
@@ -68,7 +69,7 @@ const MutualFundSelectorModal = ({
             </span>
           </button>
         </div>
-        <div className="mb-2 flex gap-2">
+        <div className={styles.filterRow}>
           <JoinedButtonGroup
             data={[
               { id: 'direct', title: 'Direct', value: 'Direct' },
@@ -99,13 +100,13 @@ const MutualFundSelectorModal = ({
           autoFocus
         />
         {pinnedFunds.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1" aria-label="Selected mutual funds">
+          <div className={styles.pinnedRow} aria-label="Selected mutual funds">
             {pinnedFunds.map((fund, index) => {
               const isLoading = loadingSchemeCodes?.has(fund.schemeCode);
               return (
                 <div
                   key={fund.schemeCode}
-                  className="badge badge-primary badge-outline max-w-full gap-1 py-2 text-left cursor-pointer hover:bg-primary hover:text-primary-content transition-colors"
+                  className={styles.pinnedBadge}
                   title={`Remove ${fund.schemeName}`}
                   onClick={() =>
                     togglePinFund({
@@ -127,7 +128,7 @@ const MutualFundSelectorModal = ({
             })}
           </div>
         )}
-        <div className="mf-container min-h-0 flex-1 overflow-y-auto">
+        <div className={styles.fundsList}>
           {funds.length > 0 ? (
             <>
               {funds.slice(0, 100).map((fund) => {
@@ -138,7 +139,7 @@ const MutualFundSelectorModal = ({
                 return (
                   <label
                     key={fund.id}
-                    className={`label cursor-pointer justify-start gap-2 px-1 py-1.5 hover:bg-base-200/60 rounded transition-colors ${isPinned ? 'font-semibold text-primary' : ''}`}
+                    className={`${styles.fundItem} ${isPinned ? styles.pinned : ''}`}
                   >
                     <input
                       type="checkbox"
@@ -151,12 +152,12 @@ const MutualFundSelectorModal = ({
                       <span className="loading loading-spinner loading-xs text-primary shrink-0" />
                     ) : pinnedFund ? (
                       <span
-                        className="inline-block h-2 w-2 shrink-0 rounded-full"
+                        className={styles.colorDot}
                         style={{ backgroundColor: pinnedFund.color }}
                         aria-hidden="true"
                       />
                     ) : null}
-                    <span className="flex-1 text-sm">{fund.name}</span>
+                    <span className={styles.fundName}>{fund.name}</span>
                   </label>
                 );
               })}
@@ -172,7 +173,7 @@ const MutualFundSelectorModal = ({
             </p>
           )}
         </div>
-        <button type="button" className="btn btn-primary mt-3 w-full" onClick={onClose}>
+        <button type="button" className={`btn btn-primary ${styles.doneBtn}`} onClick={onClose}>
           Done
         </button>
       </section>

@@ -4,6 +4,7 @@ import { FiClock, FiLock, FiX, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import { PaymentSettings } from '../types/auth';
 import { loadRazorpayScript } from '../utils/razorpay';
+import styles from './PaywallModal.module.scss';
 const PaywallModal = () => {
   const { user, showPaywall, setShowPaywall, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -65,28 +66,26 @@ const PaywallModal = () => {
       });
       const orderData = (await orderRes.json()) as {
         orderId?: string;
+        keyId?: string;
         amount?: number;
         currency?: string;
-        keyId?: string;
         error?: string;
-        user?: { name?: string; email?: string };
       };
       if (!orderRes.ok || !orderData.orderId || !orderData.keyId) {
-        throw new Error(orderData.error || 'Failed to initialize payment');
+        throw new Error(orderData.error || 'Failed to create payment order');
       }
       const options = {
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency || 'INR',
-        name: 'Rupee Calculator',
-        description: '30 Days Unlimited Pro Access',
+        name: 'Rupee Calculator Pro',
+        description: '30-Day Pro Subscription',
         order_id: orderData.orderId,
         prefill: {
-          name: orderData.user?.name || user?.name || '',
-          email: orderData.user?.email || user?.email || '',
+          email: user?.email || '',
         },
         theme: {
-          color: '#10b981',
+          color: '#6e0b75',
         },
         handler: async (response: {
           razorpay_payment_id: string;
@@ -144,37 +143,37 @@ const PaywallModal = () => {
     }
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs overflow-y-auto">
+    <div className={styles.dialogOverlay}>
       <div
-        className="card bg-base-100 border border-base-300 w-full max-w-md p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 my-8"
+        className={styles.modalCard}
         role="dialog"
         aria-modal="true"
         aria-labelledby="paywall-title"
       >
         <button
           type="button"
-          className="btn btn-ghost btn-xs btn-square absolute right-4 top-4 opacity-70 hover:opacity-100"
+          className={`btn btn-ghost btn-xs btn-square ${styles.closeBtn} opacity-70 hover:opacity-100`}
           onClick={handleCloseOrLater}
           aria-label="Close paywall"
         >
-          <FiX className="h-4 w-4" />
+          <FiX style={{ width: '1rem', height: '1rem' }} />
         </button>
-        <div className="text-center mb-6">
+        <div className={styles.header}>
           {isTrialActive ? (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-info/15 text-info font-bold text-xs uppercase tracking-wider mb-2">
-              <FiClock className="h-3.5 w-3.5" />
+            <div className={`${styles.badgeTrial} ${styles.active}`}>
+              <FiClock style={{ width: '0.875rem', height: '0.875rem' }} />
               <span>Trial Active</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning font-bold text-xs uppercase tracking-wider mb-2">
-              <FiZap className="h-3.5 w-3.5" />
+            <div className={`${styles.badgeTrial} ${styles.expired}`}>
+              <FiZap style={{ width: '0.875rem', height: '0.875rem' }} />
               <span>Trial Expired</span>
             </div>
           )}
-          <h2 id="paywall-title" className="text-2xl font-extrabold">
+          <h2 id="paywall-title" className={styles.title}>
             {isTrialActive ? 'Unlock Unlimited Financial Analytics' : 'Unlock Pro Access'}
           </h2>
-          <p className="mt-2 text-xs sm:text-sm opacity-80 leading-relaxed">
+          <p className={styles.subtitle}>
             {isTrialActive ? (
               <>
                 You have{' '}
@@ -203,12 +202,12 @@ const PaywallModal = () => {
             <span>{message.text}</span>
           </div>
         )}
-        <div className="space-y-4">
+        <div className={styles.actions}>
           <button
             type="button"
             disabled={isProcessing}
             onClick={() => void handleRazorpayPayment()}
-            className="btn btn-primary btn-lg w-full shadow-lg font-bold text-sm sm:text-base flex items-center justify-center gap-2"
+            className={`btn btn-primary btn-lg ${styles.payBtn}`}
           >
             {isProcessing ? (
               <>
@@ -217,7 +216,7 @@ const PaywallModal = () => {
               </>
             ) : (
               <>
-                <FiLock className="h-4 w-4" />
+                <FiLock style={{ width: '1rem', height: '1rem' }} />
                 <span>Pay ₹{amount} &amp; Unlock Pro Access</span>
               </>
             )}
@@ -226,7 +225,7 @@ const PaywallModal = () => {
             Secure checkout via Razorpay • UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking
           </p>
         </div>
-        <div className="mt-4 text-center">
+        <div className={styles.footerNote}>
           <button
             type="button"
             onClick={handleCloseOrLater}
