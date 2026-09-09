@@ -1,13 +1,61 @@
 @use "../styles/variables" as *;
 @use "../styles/mixins" as *;
 
+// =============================================================================
+// ValuePicker Design System Tokens
+// =============================================================================
+
+// Theme
+$primary: var(--color-primary, #6d0b74);
+
+// Typography Tokens
+$font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+// Colors
+$color-primary: var(--color-primary, #6d0b74);
+$color-secondary: var(--color-secondary, #9c27b0);
+$color-neutral-bg: var(--color-neutral-bg, #ffffff);
+$color-neutral-border: var(--color-neutral-border, #e0e0e0);
+$color-text-primary: var(--color-text-primary, #212121);
+$color-text-secondary: var(--color-text-secondary, #757575);
+$color-feedback: var(--color-feedback, #6d0b74);
+
+// Spacing Tokens
+$space-xs: 4px;   // icon padding
+$space-sm: 8px;   // button inner padding, gaps
+$space-md: 16px;  // between buttons, section padding on web
+$space-lg: 24px;  // section spacing
+$space-xl: 32px;  // top/bottom margins
+
+// Component Dimensions & Radius
+$btn-height-mobile: 48px;
+$btn-height-web: 3.5rem; // 56px
+$btn-radius: 8px;
+$input-radius: 6px;
+$tab-radius: 10px;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+// Accessible focus visible ring helper
+@mixin vp-focus-ring($offset: 2px) {
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: $offset;
+  }
+}
+
+// =============================================================================
+// Component Styles
+// =============================================================================
+
 // Main component container
 .container {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 1rem;
-  font-family: inherit;
+  margin-top: $space-xl;
+  margin-bottom: $space-xl;
+  font-family: $font-family;
   box-sizing: border-box;
 
   *,
@@ -15,102 +63,107 @@
   *::after {
     box-sizing: border-box;
   }
+
+  @include tablet-up {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
 }
 
-// Optional header label (when tabs are not present)
+// Header label (when title is provided)
 .title {
-  font-size: 0.95rem;
+  font-size: 19px;
+  line-height: 26px;
   font-weight: 600;
-  color: $text-dark;
-  margin-bottom: 0.5rem;
+  color: $color-text-primary;
+  margin-bottom: $space-sm;
+  letter-spacing: -0.01em;
+
+  @include tablet-up {
+    font-size: 1.3125rem; // 21px
+    line-height: 1.75rem;  // 28px
+  }
 }
 
 // Outer card containing tabs, input, and button grid
 .card {
   display: flex;
   flex-direction: column;
-  background-color: $bg-white;
-  border: 2px solid $border-purple;
-  border-radius: $radius-xl;
+  background-color: $color-neutral-bg;
+  border: 1px solid $color-neutral-border;
+  border-radius: $tab-radius $tab-radius $btn-radius $btn-radius;
   overflow: hidden;
-  box-shadow:
-    0 4px 12px -2px rgba(109, 11, 116, 0.08),
-    0 2px 6px -1px rgba(0, 0, 0, 0.04);
-  transition:
-    box-shadow $transition-normal,
-    border-color $transition-normal;
-
-  &:focus-within {
-    box-shadow:
-      0 0 0 3px rgba(109, 11, 116, 0.2),
-      0 8px 16px -4px rgba(109, 11, 116, 0.12);
-  }
+  transition: border-color $transition-normal, box-shadow $transition-normal;
 }
 
 // Tabs header at the top
 .tabsHeader {
   display: flex;
   width: 100%;
-  border-bottom: 2px solid $border-purple;
-  background-color: $bg-tinted-tab;
+  background-color: $color-neutral-bg;
+  border-bottom: 1px solid $color-neutral-border;
+  border-top-left-radius: $tab-radius;
+  border-top-right-radius: $tab-radius;
 }
 
+// Individual Tab Button
 .tabBtn {
   @include button-reset;
   flex: 1;
-  padding: 0.7rem 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: $btn-height-mobile;
+  min-height: $btn-height-mobile;
+  padding: 0 $space-sm;
+  font-family: $font-family;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
   text-align: center;
-  color: $primary-dark-text;
-  background-color: $bg-tinted-tab;
-  transition:
-    background-color $transition-fast,
-    color $transition-fast;
+  color: $color-text-secondary;
+  background-color: $color-neutral-bg;
+  border-top-left-radius: $tab-radius;
+  border-top-right-radius: $tab-radius;
+  transition: background-color $transition-fast, color $transition-fast;
   position: relative;
 
-  @include tablet-up {
-    font-size: 1.05rem;
-    padding: 0.8rem 0.75rem;
-  }
-  @include mobile-md {
-    font-size: 0.9rem;
-    padding: 0.6rem 0.5rem;
-  }
-
   &:hover:not(.tabActive):not(:disabled) {
-    background-color: #e2dce4;
+    color: $color-text-primary;
+    background-color: #faf5fb;
   }
 
   &.tabActive {
-    background-color: $primary;
-    color: $primary-content;
-    font-weight: 700;
+    background-color: $color-primary;
+    color: #ffffff;
+    font-weight: 600;
   }
 
-  @include focus-ring($primary);
+  @include vp-focus-ring(-2px);
+
+  @include tablet-up {
+    height: $btn-height-web;
+    min-height: $btn-height-web;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    padding: 0 $space-md;
+  }
 }
 
 // Input row section
 .inputRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 0.75rem;
-  background-color: $bg-white;
-  border-bottom: 2px solid $border-purple;
-  min-height: 3.75rem;
+  gap: $space-sm;
+  padding: $space-sm 12px;
+  background-color: $color-neutral-bg;
+  border-bottom: 1px solid $color-neutral-border;
+  min-height: 64px;
 
   @include tablet-up {
-    padding: 0.75rem 1rem;
-    gap: 0.75rem;
-    min-height: 4.25rem;
-  }
-
-  @include mobile-md {
-    padding: 0.25rem;
-    gap: 0.25rem;
-    min-height: 3.25rem;
+    padding: $space-md;
+    gap: $space-md;
+    min-height: 88px;
   }
 }
 
@@ -119,62 +172,81 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.25rem;
-  height: 2.5rem;
-  padding: 0 0.5rem;
-  background-color: #f1f3f5;
-  border-radius: $radius-sm;
-  color: $text-dark;
-  font-size: 1.25rem;
-  font-weight: 700;
+  width: $btn-height-mobile;
+  height: $btn-height-mobile;
+  min-width: $btn-height-mobile;
+  padding: $space-xs;
+  background-color: $color-neutral-bg;
+  border: 1px solid $color-neutral-border;
+  border-radius: $input-radius;
+  color: $color-text-primary;
+  font-family: $font-family;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
   user-select: none;
   flex-shrink: 0;
 
   @include tablet-up {
-    min-width: 2.6rem;
-    height: 2.75rem;
-    font-size: 1.4rem;
-  }
-  @include mobile-md {
-    min-width: 2rem;
-    height: 2.25rem;
-    font-size: 1.1rem;
+    width: $btn-height-web;
+    height: $btn-height-web;
+    min-width: $btn-height-web;
+    font-size: 1.5rem;
   }
 }
 
-// Value input field
+// Value input field container with Shadow-sm elevation
 .inputWrapper {
   flex: 1;
   min-width: 0;
   display: flex;
   align-items: center;
+  height: $btn-height-mobile;
+  padding: 0 $space-sm;
+  background-color: $color-neutral-bg;
+  border: 1px solid $color-neutral-border;
+  border-radius: $input-radius;
+  box-shadow: $shadow-sm;
+  transition: border-color $transition-fast, outline $transition-fast;
+
+  &:focus-within {
+    border-color: $color-primary;
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  @include tablet-up {
+    height: $btn-height-web;
+    padding: 0 $space-md;
+  }
 }
 
 .inputField {
   width: 100%;
   border: none;
   background: transparent;
-  padding: 0 0.25rem;
-  font-size: 1.45rem;
-  font-weight: 600;
-  color: $text-dark;
+  padding: 0;
+  font-family: $font-family;
+  font-size: 23px;
+  line-height: 30px;
+  font-weight: 500;
+  color: $color-text-primary;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   outline: none;
 
-  @include tablet-up {
-    font-size: 1.85rem;
-  }
-  @include mobile-md {
-    font-size: 1.25rem;
-  }
   &::placeholder {
-    color: $text-muted;
-    opacity: 0.5;
+    color: $color-text-secondary;
+    opacity: 0.7;
   }
 
   &:focus {
     outline: none;
+  }
+
+  @include tablet-up {
+    font-size: 1.6875rem; // ~27px
+    line-height: 1.875rem;  // 30px
   }
 }
 
@@ -182,93 +254,114 @@
 .actionsCluster {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: $space-sm;
   flex-shrink: 0;
 
   @include tablet-up {
-    gap: 0.5rem;
-  }
-  @include mobile-md {
-    gap: 0.25rem;
+    gap: $space-md;
   }
 }
 
-// Common action button styles
+// Common action button styles (Tap target size ≥ 48px on mobile, 56px on web)
 .actionBtn {
   @include button-reset;
   @include pressable;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.5rem;
-  border-radius: $radius-sm;
-  font-size: 1.15rem;
-  font-weight: 700;
+  width: $btn-height-mobile;
+  height: $btn-height-mobile;
+  min-width: $btn-height-mobile;
+  border-radius: $btn-radius;
+  border: 1px solid $color-neutral-border;
+  font-family: $font-family;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
   user-select: none;
+  transition:
+    background-color $transition-fast,
+    border-color $transition-fast,
+    color $transition-fast,
+    transform $transition-fast;
 
-  @include tablet-up {
-    width: 2.5rem;
-    height: 2.75rem;
-    font-size: 1.25rem;
-    border-radius: $radius-md;
-  }
-  @include mobile-md {
-    width: 2rem;
-    height: 2.25rem;
-    font-size: 1rem;
-    border-radius: $radius-sm;
-  }
-
-  @include focus-ring($primary);
+  @include vp-focus-ring(2px);
 
   &:disabled {
     opacity: 0.45;
     cursor: not-allowed;
     transform: none;
   }
+
+  @include tablet-up {
+    width: $btn-height-web;
+    height: $btn-height-web;
+    min-width: $btn-height-web;
+    font-size: 1.0625rem;
+    line-height: 1.375rem;
+  }
 }
 
 // Clear button ('C')
 .clearBtn {
-  background-color: $btn-clear-bg;
-  color: $btn-clear-text;
-  font-weight: 600;
+  background-color: $color-neutral-bg;
+  color: $color-text-primary;
+  border: 1px solid $color-neutral-border;
 
   &:hover:not(:disabled) {
-    background-color: $btn-clear-hover;
-    color: $text-dark;
+    border-color: $color-secondary;
+    color: $color-secondary;
+    background-color: #faf5fb;
   }
 }
 
-// Operation toggle / increment button ('+')
+// Operation increment button ('+')
 .plusBtn {
-  background-color: $btn-clear-bg;
-  color: $btn-clear-text;
+  background-color: $color-neutral-bg;
+  color: $color-text-primary;
+  border: 1px solid $color-neutral-border;
+
   &:hover:not(:disabled) {
-    background-color: $primary-hover;
-    color: $primary-content;
+    border-color: $color-secondary;
+    color: $color-secondary;
+    background-color: #faf5fb;
   }
 
   &.activeOp {
-    background-color: $primary;
-    color: $primary-content;
+    background-color: $color-primary;
+    color: #ffffff;
+    border-color: $color-primary;
+
+    &:hover:not(:disabled) {
+      background-color: $color-secondary;
+      border-color: $color-secondary;
+      color: #ffffff;
+    }
   }
 }
 
-// Operation toggle / decrement button ('-')
+// Operation decrement button ('-')
 .minusBtn {
-  background-color: $btn-clear-bg;
-  color: $btn-clear-text;
+  background-color: $color-neutral-bg;
+  color: $color-text-primary;
+  border: 1px solid $color-neutral-border;
 
   &:hover:not(:disabled) {
-    background-color: $primary-hover;
-    color: $primary-content;
+    border-color: $color-secondary;
+    color: $color-secondary;
+    background-color: #faf5fb;
   }
 
   &.activeOp {
-    background-color: $primary;
-    color: $primary-content;
+    background-color: $color-primary;
+    color: #ffffff;
+    border-color: $color-primary;
+
+    &:hover:not(:disabled) {
+      background-color: $color-secondary;
+      border-color: $color-secondary;
+      color: #ffffff;
+    }
   }
 }
 
@@ -277,7 +370,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  background-color: $bg-white;
+  background-color: $color-neutral-bg;
 }
 
 .gridRow {
@@ -286,74 +379,221 @@
   grid-auto-columns: 1fr;
   width: 100%;
 
-  // Purple horizontal divider line between rows
+  // Separator between rows
   &:not(:last-child) {
-    border-bottom: 1px solid $border-purple;
+    border-bottom: 1px solid $color-neutral-border;
   }
 }
 
 .gridCell {
   @include button-reset;
   @include pressable;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 0.25rem;
-  min-height: 2.75rem;
+  height: $btn-height-mobile;
+  min-height: $btn-height-mobile;
+  padding: 0 $space-sm;
   text-align: center;
-  font-size: 1rem;
-  font-weight: 600;
-  color: $primary;
-  background-color: $primary-light;
+  font-family: $font-family;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+  color: $color-primary;
+  background-color: $color-neutral-bg;
   transition:
     background-color $transition-fast,
     color $transition-fast;
 
-  // Vertical dividers between cells in each row
+  // Separator between cells
   &:not(:last-child) {
-    border-right: 1px solid #e2e8f0;
+    border-right: 1px solid $color-neutral-border;
   }
 
   &:hover:not(:disabled) {
-    background-color: $primary-light;
-    color: $primary;
+    color: $color-secondary;
+    background-color: #faf5fb;
   }
 
-  &:active:not(:disabled) {
-    background-color: $primary-light;
-  }
+  @include vp-focus-ring(-2px);
 
-  @include focus-ring($primary);
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
 
   @include tablet-up {
-    padding: 0.85rem 0.5rem;
-    min-height: 3.25rem;
-    font-size: 1.125rem;
-  }
-  @include mobile-md {
-    padding: 0.5rem 0.25rem;
-    min-height: 2.25rem;
-    font-size: 0.9rem;
+    height: $btn-height-web;
+    min-height: $btn-height-web;
+    font-size: 1.0625rem;
+    line-height: 1.375rem;
+    padding: 0 $space-md;
   }
 }
 
-// In-words representation below card
-.wordsDisplay {
-  margin-top: 0.5rem;
-  padding: 0 0.25rem;
-  font-size: 1.05rem;
+.rowPrimary {
   font-weight: 600;
-  color: $primary;
-  line-height: 1.4;
+}
+
+.rowSecondary {
+  font-weight: 500;
+}
+
+// In-words representation below card (“Thirty Lakh” text)
+.wordsDisplay {
+  margin-top: $space-sm;
+  padding: 0 $space-xs;
+  font-family: $font-family;
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
+  color: $color-feedback;
   word-break: break-word;
   transition: color $transition-fast;
 
   @include tablet-up {
-    margin-top: 0.625rem;
-    font-size: 1.25rem;
+    margin-top: $space-md;
+    font-size: 1.1875rem; // 19px
+    line-height: 1.5rem;   // 24px
   }
-  @include mobile-md {
-    margin-top: 0.375rem;
-    font-size: 0.95rem;
+}
+
+// =============================================================================
+// Explicit Layout Modes (Overrides for mobile / desktop preview frames)
+// =============================================================================
+
+.layoutMobile {
+  margin-top: $space-xl;
+  margin-bottom: $space-xl;
+
+  .title {
+    font-size: 19px;
+    line-height: 26px;
+  }
+
+  .tabBtn {
+    height: $btn-height-mobile;
+    min-height: $btn-height-mobile;
+    font-size: 14px;
+    line-height: 20px;
+    padding: 0 $space-sm;
+  }
+
+  .inputRow {
+    padding: $space-sm 12px;
+    gap: $space-sm;
+    min-height: 64px;
+  }
+
+  .currencyBadge {
+    width: $btn-height-mobile;
+    height: $btn-height-mobile;
+    min-width: $btn-height-mobile;
+    font-size: 20px;
+  }
+
+  .inputWrapper {
+    height: $btn-height-mobile;
+    padding: 0 $space-sm;
+  }
+
+  .inputField {
+    font-size: 23px;
+    line-height: 30px;
+  }
+
+  .actionsCluster {
+    gap: $space-sm;
+  }
+
+  .actionBtn {
+    width: $btn-height-mobile;
+    height: $btn-height-mobile;
+    min-width: $btn-height-mobile;
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  .gridCell {
+    height: $btn-height-mobile;
+    min-height: $btn-height-mobile;
+    font-size: 15px;
+    line-height: 22px;
+    padding: 0 $space-sm;
+  }
+
+  .wordsDisplay {
+    margin-top: $space-sm;
+    font-size: 17px;
+    line-height: 24px;
+  }
+}
+
+.layoutDesktop {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+
+  .title {
+    font-size: 1.3125rem;
+    line-height: 1.75rem;
+  }
+
+  .tabBtn {
+    height: $btn-height-web;
+    min-height: $btn-height-web;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    padding: 0 $space-md;
+  }
+
+  .inputRow {
+    padding: $space-md;
+    gap: $space-md;
+    min-height: 88px;
+  }
+
+  .currencyBadge {
+    width: $btn-height-web;
+    height: $btn-height-web;
+    min-width: $btn-height-web;
+    font-size: 1.5rem;
+  }
+
+  .inputWrapper {
+    height: $btn-height-web;
+    padding: 0 $space-md;
+  }
+
+  .inputField {
+    font-size: 1.6875rem;
+    line-height: 1.875rem;
+  }
+
+  .actionsCluster {
+    gap: $space-md;
+  }
+
+  .actionBtn {
+    width: $btn-height-web;
+    height: $btn-height-web;
+    min-width: $btn-height-web;
+    font-size: 1.0625rem;
+    line-height: 1.375rem;
+  }
+
+  .gridCell {
+    height: $btn-height-web;
+    min-height: $btn-height-web;
+    font-size: 1.0625rem;
+    line-height: 1.375rem;
+    padding: 0 $space-md;
+  }
+
+  .wordsDisplay {
+    margin-top: $space-md;
+    font-size: 1.1875rem;
+    line-height: 1.5rem;
   }
 }

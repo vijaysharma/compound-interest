@@ -1,26 +1,50 @@
+// =============================================================================
 // Shared SCSS Design Tokens & Variables
+// Synchronized with _theme.scss design system tokens
+// =============================================================================
 
-// Colors (aligned with DaisyUI Fantasy theme & custom palette)
+// Primary Brand Theme
 $primary: var(--color-primary, #6d0b74);
 $primary-content: var(--color-primary-content, #ffffff);
-$primary-hover: #58085e;
-$primary-active: #48064c;
-$primary-light: #f6edf7;
-$primary-subtle: #ebd5ed;
+$primary-hover: var(--color-primary-hover, #58085e);
+$primary-active: var(--color-primary-active, #48064c);
+$primary-light: var(--color-primary-light, #f6edf7);
+$primary-subtle: var(--color-primary-subtle, #ebd5ed);
 $primary-dark-text: #2f0432;
 
-// Neutrals
-$bg-white: #ffffff;
-$bg-muted: #f8fafc;
+// Secondary & Accent Theme
+$secondary: var(--color-secondary, #9c27b0);
+$secondary-content: var(--color-secondary-content, #ffffff);
+$secondary-hover: var(--color-secondary-hover, #7b1fa2);
+$accent: var(--color-accent, #7b1fa2);
+$accent-content: var(--color-accent-content, #ffffff);
+
+// Neutral Surfaces & Borders
+$color-neutral-bg: var(--color-neutral-bg, #ffffff);
+$color-neutral-border: var(--color-neutral-border, #e0e0e0);
+$color-bg: var(--color-bg, #ffffff);
+$color-bg-secondary: var(--color-bg-secondary, #f8fafc);
+$color-bg-tertiary: var(--color-bg-tertiary, #f1f5f9);
+
+$bg-white: var(--color-bg, #ffffff);
+$bg-muted: var(--color-bg-secondary, #f8fafc);
 $bg-tinted-tab: #ece7ee;
 $border-purple: var(--color-primary, #6d0b74);
-$border-light: #e2e8f0;
-$border-subtle: #f1f5f9;
+$border-light: var(--color-border, #e2e8f0);
+$border-subtle: var(--color-bg-tertiary, #f1f5f9);
 
-$text-dark: #1e293b;
-$text-body: #334155;
-$text-muted: #64748b;
-$text-purple: #6d0b74;
+// Semantic Typography & Text
+$color-heading: var(--color-heading, #212121);
+$color-text: var(--color-text, #212121);
+$color-text-primary: var(--color-text-primary, #212121);
+$color-text-secondary: var(--color-text-secondary, #757575);
+$color-text-muted: var(--color-text-muted, #757575);
+$color-feedback: var(--color-feedback, #6d0b74);
+
+$text-dark: var(--color-heading, #212121);
+$text-body: var(--color-text, #212121);
+$text-muted: var(--color-text-secondary, #757575);
+$text-purple: var(--color-primary, #6d0b74);
 
 // Action buttons
 $btn-clear-bg: #e9ecef;
@@ -28,11 +52,11 @@ $btn-clear-hover: #dee2e6;
 $btn-clear-text: #495057;
 
 // Radii
-$radius-xs: 0.25rem;
-$radius-sm: 0.375rem;
-$radius-md: 0.5rem;
-$radius-lg: 0.75rem;
-$radius-xl: 1rem;
+$radius-xs: var(--radius-xs, 0.25rem);
+$radius-sm: var(--radius-sm, 0.375rem);
+$radius-md: var(--radius-md, 0.5rem);
+$radius-lg: var(--radius-lg, 0.75rem);
+$radius-xl: var(--radius-xl, 1rem);
 $radius-full: 9999px;
 
 // Breakpoints

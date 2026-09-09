@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Link from './PrefetchLink';
 import {
@@ -80,6 +80,29 @@ const TopBar = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout, setShowPaywall } = useAuth();
   const navTitle = getNavTitle(pathname);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setIsMenuOpen(false);
+  }
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
   const handleLogout = async () => {
     try {
       localStorage.removeItem('last_visited_route');
@@ -148,9 +171,7 @@ const TopBar = ({ className }: { className?: string }) => {
                 </button>
               )}
               <div className={styles.userEmailCol}>
-                <span className={styles.userNameText}>
-                  {user.name || user.email}
-                </span>
+                <span className={styles.userNameText}>{user.name || user.email}</span>
               </div>
               {user.picture ? (
                 <img
@@ -159,16 +180,11 @@ const TopBar = ({ className }: { className?: string }) => {
                   className={styles.userAvatar}
                 />
               ) : (
-                <div className={styles.userInitial}>
-                  {(user.name || user.email).charAt(0)}
-                </div>
+                <div className={styles.userInitial}>{(user.name || user.email).charAt(0)}</div>
               )}
             </div>
           ) : (
-            <Link
-              to="/login"
-              className={styles.signInBtn}
-            >
+            <Link to="/login" className={styles.signInBtn}>
               Sign in
             </Link>
           )}
@@ -182,12 +198,8 @@ const TopBar = ({ className }: { className?: string }) => {
             aria-label="Close navigation menu"
             onClick={() => setIsMenuOpen(false)}
           />
-          <aside
-            id="navigation-drawer"
-            className={styles.drawerAside}
-            aria-label="Navigation menu"
-          >
-            <div>
+          <aside id="navigation-drawer" className={styles.drawerAside} aria-label="Navigation menu">
+            <>
               <div className={styles.drawerHeader}>
                 <h2 className={styles.drawerTitle}>Rupee Calculator</h2>
                 <button
@@ -199,10 +211,7 @@ const TopBar = ({ className }: { className?: string }) => {
                   <FiX className={styles.menuIcon} aria-hidden="true" />
                 </button>
               </div>
-              <nav
-                aria-label="Calculator pages"
-                className={styles.navGroup}
-              >
+              <nav aria-label="Calculator pages" className={styles.navGroup}>
                 {isAdmin && (
                   <div className={styles.navSection}>
                     <h3 className={styles.navCategoryTitle}>
@@ -419,9 +428,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <span>Quick Notes</span>
-                    <span className={styles.proPill}>
-                      Pro
-                    </span>
+                    <span className={styles.proPill}>Pro</span>
                   </Link>
                 </div>
                 <div className={`${styles.navSection} ${styles.dividerTop}`}>
@@ -429,11 +436,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     <FiInfo className={styles.navCategoryIcon} />
                     <span>Info &amp; Legal</span>
                   </h3>
-                  <Link
-                    to="/about"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/about" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
                     About Us
                   </Link>
                   <Link
@@ -452,7 +455,7 @@ const TopBar = ({ className }: { className?: string }) => {
                   </Link>
                 </div>
               </nav>
-            </div>
+            </>
             {isAuthenticated && user && (
               <div className={styles.drawerFooter}>
                 <p className={styles.userEmailText}>{user.email}</p>
