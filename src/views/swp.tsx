@@ -9,6 +9,7 @@ import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalcula
 import { CHART_COLORS } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
+import { FiBarChart2 } from 'react-icons/fi';
 import styles from './MutualFundAnalytics.module.scss';
 const liveSwpSchema = {
   '@context': 'https://schema.org',
@@ -835,10 +836,12 @@ const SWP = ({
         </button>
         <button
           type="button"
-          className={styles.outlineButton}
+          className={`${styles.chartIconButton} ${viewChart ? styles.chartIconActive : ''}`}
           onClick={toggleViewChart}
+          title={viewChart ? 'Hide Chart' : 'Show Chart'}
+          aria-label={viewChart ? 'Hide Chart' : 'Show Chart'}
         >
-          {viewChart ? 'Hide Chart' : 'Show Chart'}
+          <FiBarChart2 />
         </button>
       </div>
       <ValuePicker.DateRange

@@ -748,6 +748,11 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 // =============================================================================
 // Scaled Variant 3: Paired / Dual Endpoint Selector (Screenshot 3)
 // =============================================================================
+.pairedRow {
+  overflow: visible;
+  position: relative;
+}
+
 .pairedBadge {
   display: inline-flex;
   align-items: center;
@@ -769,10 +774,14 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   &.leftBadge {
     border-right: 1px solid $color-primary;
+    border-top-left-radius: calc(#{$btn-radius} - 1px);
+    border-bottom-left-radius: calc(#{$btn-radius} - 1px);
   }
 
   &.rightBadge {
     border-left: 1px solid $color-primary;
+    border-top-right-radius: calc(#{$btn-radius} - 1px);
+    border-bottom-right-radius: calc(#{$btn-radius} - 1px);
   }
 
   @include tablet-up {
@@ -793,6 +802,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   justify-content: center;
   padding: 0 $space-sm;
   background-color: $color-neutral-bg;
+  overflow: visible;
+  position: relative;
 
   &.slotLeft {
     border-right: 1px solid $color-primary;

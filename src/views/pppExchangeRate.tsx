@@ -6,13 +6,34 @@ import DisplayCard from '../components/DisplayCard';
 import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
 import { CountryPPPType, ExchangeRateType } from '../types/types';
-import { fetchExchangeRates, fetchPPPData } from '../data/api_data';
+import { fetchExchangeRates, fetchPPPData, WorldBankPPPRecord } from '../data/api_data';
 import { DEFAULT_EXCHANGE_RATES } from '../data/default_exchange_rates';
+import { DEFAULT_PPP_RECORDS } from '../data/default_ppp_data';
 import CountrySelect from '../components/CountrySelect';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import { FiRepeat } from 'react-icons/fi';
 import styles from './CalculatorPage.module.scss';
+const currencyLookup = new Map(CURRENCY_CODES.map((cc) => [cc.name.toLowerCase(), cc]));
+const transformPPPRecords = (records: WorldBankPPPRecord[]): Record<string, CountryPPPType> => {
+  const transformed: Record<string, CountryPPPType> = {};
+  for (const record of records) {
+    if (record.value == null) continue;
+    const country = record.country.value;
+    if (!transformed[country]) {
+      const matchedCurrency = currencyLookup.get(country.toLowerCase());
+      transformed[country] = {
+        currencyName: matchedCurrency
+          ? matchedCurrency.currency_name
+          : country.substring(0, 3).toUpperCase(),
+        currencyCode: matchedCurrency ? matchedCurrency.currency_code : 'en-US',
+      };
+    }
+    transformed[country][parseInt(record.date, 10)] = record.value;
+  }
+  return transformed;
+};
+const DEFAULT_TRANSFORMED_PPP = transformPPPRecords(DEFAULT_PPP_RECORDS);
 const pppSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -112,8 +133,8 @@ const pppFaqs = [
   },
 ];
 const PPPExchangeRate = ({ className, title }: { className?: string; title?: string }) => {
-  const [data, setData] = useState<{ [key: string]: CountryPPPType }>({});
-  const [pppLoading, setPppLoading] = useState(true);
+  const [data, setData] = useState<{ [key: string]: CountryPPPType }>(DEFAULT_TRANSFORMED_PPP);
+  const [pppLoading, setPppLoading] = useState(false);
   const [pppError, setPppError] = useState<string | null>(null);
   const [srcCountry, setSrcCountry] = useState('India');
   const [tgtCountry, setTgtCountry] = useState('United States');
@@ -153,48 +174,32 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
     setSrcCountry(tgtCountry);
     setTgtCountry(srcCountry);
   };
-  const currencyLookup = useMemo(
-    () => new Map(CURRENCY_CODES.map((cc) => [cc.name.toLowerCase(), cc])),
-    []
-  );
   useEffect(() => {
     let cancelled = false;
     const loadPPPData = async () => {
-      setPppLoading(true);
-      setPppError(null);
       try {
         const records = await fetchPPPData();
         if (cancelled) return;
-        const transformed: { [key: string]: CountryPPPType } = {};
-        for (const record of records) {
-          if (record.value == null) continue;
-          const country = record.country.value;
-          if (!transformed[country]) {
-            const matchedCurrency = currencyLookup.get(country.toLowerCase());
-            transformed[country] = {
-              currencyName: matchedCurrency
-                ? matchedCurrency.currency_name
-                : country.substring(0, 3).toUpperCase(),
-              currencyCode: matchedCurrency ? matchedCurrency.currency_code : 'en-US',
-            };
-          }
-          transformed[country][parseInt(record.date, 10)] = record.value;
+        if (records && records.length > 0) {
+          const transformed = transformPPPRecords(records);
+          setData(transformed);
         }
-        setData(transformed);
       } catch (err) {
         if (!cancelled) {
-          console.error('Failed to fetch PPP data:', err);
-          setPppError('Unable to load purchasing power data right now. Please try again shortly.');
+          console.warn('Failed to fetch remote PPP data, using built-in records:', err);
+          setPppError('Using offline verified PPP records.');
         }
       } finally {
-        if (!cancelled) setPppLoading(false);
+        if (!cancelled) {
+          setPppLoading(false);
+        }
       }
     };
-    loadPPPData();
+    void loadPPPData();
     return () => {
       cancelled = true;
     };
-  }, [currencyLookup]);
+  }, []);
   const derivedValues = useMemo(() => {
     if (pppLoading || pppError || !data[srcCountry] || !data[tgtCountry]) return null;
     const [sourcePPP, targetPPP] = calculatePPP(srcCountry, tgtCountry, data);
@@ -248,7 +253,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       cancelled = true;
     };
   }, []);
-  if (pppLoading) {
+  if (pppLoading && Object.keys(data).length === 0) {
     return (
       <div className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
         {title && <h5 className={styles.sectionTitle}>{title}</h5>}
@@ -256,7 +261,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       </div>
     );
   }
-  if (pppError) {
+  if (pppError && Object.keys(data).length === 0) {
     return (
       <div className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
         {title && <h5 className={styles.sectionTitle}>{title}</h5>}

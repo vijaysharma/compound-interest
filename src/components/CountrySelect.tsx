@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { FiCheck, FiChevronDown, FiClock, FiGlobe, FiSearch, FiX } from 'react-icons/fi';
 import styles from './CountrySelect.module.scss';
 interface CountrySelectProps {
   label: string;
@@ -112,34 +113,60 @@ const CountrySelect = ({
   const [open, setOpen] = useState(false);
   const [countryUsage, setCountryUsage] = useState<Record<string, number>>(readCountryUsage);
   const containerRef = useRef<HTMLDivElement>(null);
-  const options = useMemo(() => {
-    const defaultRank = new Map(FREQUENT_COUNTRIES.map((country, index) => [country, index]));
-    const sortByUsage = (first: string, second: string) =>
-      (countryUsage[second] ?? 0) - (countryUsage[first] ?? 0) ||
-      (defaultRank.get(first) ?? FREQUENT_COUNTRIES.length) -
-        (defaultRank.get(second) ?? FREQUENT_COUNTRIES.length) ||
-      first.localeCompare(second);
-    const frequent = FREQUENT_COUNTRIES.filter((country) => countries.includes(country));
-    const remaining = countries.filter((country) => !frequent.includes(country));
-    const ranked = query.trim()
-      ? [...countries]
-          .map((country) => ({ country, score: fuzzyScore(country, query) }))
-          .filter(({ score }) => score > Number.NEGATIVE_INFINITY)
-          .sort((a, b) => b.score - a.score || sortByUsage(a.country, b.country))
-          .map(({ country }) => country)
-      : remaining.sort(sortByUsage);
-    return query.trim() ? ranked : [...frequent, ...ranked].sort(sortByUsage);
-  }, [countries, countryUsage, query]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+  // Frequently used countries: prioritize user-frequented countries, then default top countries
+  const frequentCountries = useMemo(() => {
+    const availableFrequent = FREQUENT_COUNTRIES.filter((c) => countries.includes(c));
+    // Also include any user-frequented countries that have usage > 0
+    const userFrequent = Object.keys(countryUsage)
+      .filter((c) => countries.includes(c) && (countryUsage[c] ?? 0) > 0)
+      .sort((a, b) => (countryUsage[b] ?? 0) - (countryUsage[a] ?? 0));
+    const combined = Array.from(new Set([...userFrequent, ...availableFrequent]));
+    return combined.slice(0, 8);
+  }, [countries, countryUsage]);
+  // All countries sorted alphabetically
+  const allCountriesSorted = useMemo(() => {
+    return [...countries].sort((a, b) => a.localeCompare(b));
+  }, [countries]);
+  // Filtered countries when searching
+  const searchResults = useMemo(() => {
+    if (!query.trim()) return [];
+    return [...countries]
+      .map((country) => ({ country, score: fuzzyScore(country, query) }))
+      .filter(({ score }) => score > Number.NEGATIVE_INFINITY)
+      .sort((a, b) => b.score - a.score || a.country.localeCompare(b.country))
+      .map(({ country }) => country);
+  }, [countries, query]);
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setQuery('');
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        setQuery('');
+      }
     };
     document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
     const updateUsage = () => setCountryUsage(readCountryUsage());
     window.addEventListener('storage', updateUsage);
     window.addEventListener(COUNTRY_USAGE_EVENT, updateUsage);
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('storage', updateUsage);
       window.removeEventListener(COUNTRY_USAGE_EVENT, updateUsage);
     };
@@ -157,57 +184,148 @@ const CountrySelect = ({
     setQuery('');
     setOpen(false);
   };
+  const isSearching = Boolean(query.trim());
   return (
     <div ref={containerRef} className={styles.container}>
-      <label className={styles.srOnly} htmlFor={`${label}-country-search`}>
-        {label} country
-      </label>
-      <input
-        id={`${label}-country-search`}
-        role="combobox"
+      {/* Trigger Button */}
+      <button
+        type="button"
+        className={styles.selectorTrigger}
+        onClick={() =>
+          setOpen((prev) => {
+            if (prev) setQuery('');
+            return !prev;
+          })
+        }
+        aria-haspopup="listbox"
         aria-expanded={open}
-        aria-controls={`${label}-country-options`}
-        maxLength={60}
-        className={styles.inputField}
-        value={open ? query : value}
-        placeholder={value}
-        onFocus={() => {
-          setQuery('');
-          setOpen(true);
-        }}
-        onChange={(event) => {
-          setQuery(event.target.value.slice(0, 60));
-          setOpen(true);
-        }}
-      />
+        aria-label={`Select ${label} country, current selection: ${value}`}
+      >
+        <span className={styles.triggerContent}>
+          <span className={styles.selectedName}>{value || 'Select country'}</span>
+          {value && getSecondaryText?.(value) && (
+            <span className={styles.secondaryBadge}>{getSecondaryText(value)}</span>
+          )}
+        </span>
+        <FiChevronDown className={`${styles.chevronIcon} ${open ? styles.chevronOpen : ''}`} />
+      </button>
+      {/* Floating Dropdown Panel */}
       {open && (
-        <ul
-          id={`${label}-country-options`}
-          role="listbox"
-          className={styles.dropdownList}
-        >
-          {options.length > 0 ? (
-            options.map((country) => (
-              <li key={country} role="option" aria-selected={country === value} className={styles.dropdownItem}>
+        <div className={`${styles.dropdownPanel} ${label.toLowerCase().includes('target') || label.toLowerCase().includes('right') ? styles.alignRight : ''}`}>
+          {/* Search Header */}
+          <div className={styles.searchHeader}>
+            <div className={styles.searchInputWrapper}>
+              <FiSearch className={styles.searchIcon} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                className={styles.searchInput}
+                value={query}
+                onChange={(e) => setQuery(e.target.value.slice(0, 60))}
+                placeholder="Search countries (e.g. US, India, UK)..."
+                aria-label={`Search ${label} countries`}
+              />
+              {query && (
                 <button
                   type="button"
-                  className={styles.optionButton}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => selectCountry(country)}
+                  className={styles.clearButton}
+                  onClick={() => {
+                    setQuery('');
+                    searchInputRef.current?.focus();
+                  }}
+                  aria-label="Clear search"
                 >
-                  <span className={styles.countryName}>{country}</span>
-                  {getSecondaryText?.(country) && (
-                    <span className={styles.secondaryBadge}>
-                      {getSecondaryText(country)}
-                    </span>
-                  )}
+                  <FiX />
                 </button>
-              </li>
-            ))
-          ) : (
-            <li className={styles.emptyState}>No countries found</li>
-          )}
-        </ul>
+              )}
+            </div>
+          </div>
+          {/* Options List */}
+          <div className={styles.optionsScrollArea} role="listbox">
+            {isSearching ? (
+              searchResults.length > 0 ? (
+                <>
+                  <div className={styles.sectionHeader}>
+                    <FiSearch className={styles.sectionIcon} />
+                    <span>Matching Countries ({searchResults.length})</span>
+                  </div>
+                  {searchResults.map((country) => (
+                    <div key={`search-${country}`} role="option" aria-selected={country === value} className={styles.optionItem}>
+                      <button
+                        type="button"
+                        className={`${styles.optionButton} ${country === value ? styles.optionSelected : ''}`}
+                        onClick={() => selectCountry(country)}
+                      >
+                        <span className={styles.optionLabel}>
+                          <span className={styles.countryName}>{country}</span>
+                          {getSecondaryText?.(country) && (
+                            <span className={styles.secondaryBadge}>{getSecondaryText(country)}</span>
+                          )}
+                        </span>
+                        {country === value && <FiCheck className={styles.checkIcon} />}
+                      </button>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className={styles.emptyState}>
+                  <span>No countries matching &ldquo;{query}&rdquo;</span>
+                </div>
+              )
+            ) : (
+              <>
+                {/* Frequently Used Section */}
+                {frequentCountries.length > 0 && (
+                  <>
+                    <div className={styles.sectionHeader}>
+                      <FiClock className={styles.sectionIcon} />
+                      <span>Frequently Used</span>
+                    </div>
+                    {frequentCountries.map((country) => (
+                      <div key={`freq-${country}`} role="option" aria-selected={country === value} className={styles.optionItem}>
+                        <button
+                          type="button"
+                          className={`${styles.optionButton} ${country === value ? styles.optionSelected : ''}`}
+                          onClick={() => selectCountry(country)}
+                        >
+                          <span className={styles.optionLabel}>
+                            <span className={styles.countryName}>{country}</span>
+                            {getSecondaryText?.(country) && (
+                              <span className={styles.secondaryBadge}>{getSecondaryText(country)}</span>
+                            )}
+                          </span>
+                          {country === value && <FiCheck className={styles.checkIcon} />}
+                        </button>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {/* All Countries Section */}
+                <div className={styles.sectionHeader}>
+                  <FiGlobe className={styles.sectionIcon} />
+                  <span>All Countries ({allCountriesSorted.length})</span>
+                </div>
+                {allCountriesSorted.map((country) => (
+                  <div key={`all-${country}`} role="option" aria-selected={country === value} className={styles.optionItem}>
+                    <button
+                      type="button"
+                      className={`${styles.optionButton} ${country === value ? styles.optionSelected : ''}`}
+                      onClick={() => selectCountry(country)}
+                    >
+                      <span className={styles.optionLabel}>
+                        <span className={styles.countryName}>{country}</span>
+                        {getSecondaryText?.(country) && (
+                          <span className={styles.secondaryBadge}>{getSecondaryText(country)}</span>
+                        )}
+                      </span>
+                      {country === value && <FiCheck className={styles.checkIcon} />}
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

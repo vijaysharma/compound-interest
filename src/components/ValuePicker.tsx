@@ -463,7 +463,7 @@ export const ValuePicker: ValuePickerComponent = (({
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
-        <div className={styles.joinedRow}>
+        <div className={`${styles.joinedRow} ${styles.pairedRow}`}>
           <div className={`${styles.pairedBadge} ${styles.leftBadge}`}>{sourceBadgeText}</div>
           <div className={`${styles.pairedSlot} ${styles.slotLeft}`}>
             {sourceSlot ? (
