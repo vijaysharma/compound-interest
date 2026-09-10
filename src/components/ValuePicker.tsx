@@ -463,69 +463,75 @@ export const ValuePicker: ValuePickerComponent = (({
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
-        <div className={`${styles.joinedRow} ${styles.pairedRow}`}>
-          <div className={`${styles.pairedBadge} ${styles.leftBadge}`}>{sourceBadgeText}</div>
-          <div className={`${styles.pairedSlot} ${styles.slotLeft}`}>
-            {sourceSlot ? (
-              sourceSlot
-            ) : sourceOptions && sourceOptions.length > 0 ? (
-              <select
-                className={styles.pairedSelect}
-                value={sourceValue ?? ''}
-                onChange={(e) => onSourceChange?.(e.target.value)}
-                disabled={disabled}
-                aria-label={sourceBadgeText}
-              >
-                {sourceOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                className={styles.pairedInput}
-                value={sourceValue ?? ''}
-                placeholder={sourcePlaceholder || 'Select source'}
-                onChange={(e) => onSourceChange?.(e.target.value)}
-                disabled={disabled}
-                readOnly={readOnly}
-                aria-label={sourceBadgeText}
-              />
-            )}
+        <div className={styles.pairedStackedWrapper}>
+          {/* Source column */}
+          <div className={styles.pairedStackedColumn}>
+            <div className={styles.pairedStackedLabel}>{sourceBadgeText}</div>
+            <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
+              {sourceSlot ? (
+                sourceSlot
+              ) : sourceOptions && sourceOptions.length > 0 ? (
+                <select
+                  className={styles.pairedInput}
+                  value={sourceValue ?? ''}
+                  onChange={(e) => onSourceChange?.(e.target.value)}
+                  disabled={disabled}
+                  aria-label={sourceBadgeText}
+                >
+                  {sourceOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className={styles.pairedInput}
+                  value={sourceValue ?? ''}
+                  placeholder={sourcePlaceholder || 'Select source'}
+                  onChange={(e) => onSourceChange?.(e.target.value)}
+                  disabled={disabled}
+                  readOnly={readOnly}
+                  aria-label={sourceBadgeText}
+                />
+              )}
+            </div>
           </div>
-          <div className={styles.pairedSlot}>
-            {targetSlot ? (
-              targetSlot
-            ) : targetOptions && targetOptions.length > 0 ? (
-              <select
-                className={styles.pairedSelect}
-                value={targetValue ?? ''}
-                onChange={(e) => onTargetChange?.(e.target.value)}
-                disabled={disabled}
-                aria-label={targetBadgeText}
-              >
-                {targetOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                className={styles.pairedInput}
-                value={targetValue ?? ''}
-                placeholder={targetPlaceholder || 'Select target'}
-                onChange={(e) => onTargetChange?.(e.target.value)}
-                disabled={disabled}
-                readOnly={readOnly}
-                aria-label={targetBadgeText}
-              />
-            )}
+          {/* Target column */}
+          <div className={styles.pairedStackedColumn}>
+            <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>{targetBadgeText}</div>
+            <div className={styles.pairedStackedSlot}>
+              {targetSlot ? (
+                targetSlot
+              ) : targetOptions && targetOptions.length > 0 ? (
+                <select
+                  className={styles.pairedInput}
+                  value={targetValue ?? ''}
+                  onChange={(e) => onTargetChange?.(e.target.value)}
+                  disabled={disabled}
+                  aria-label={targetBadgeText}
+                >
+                  {targetOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className={styles.pairedInput}
+                  value={targetValue ?? ''}
+                  placeholder={targetPlaceholder || 'Select target'}
+                  onChange={(e) => onTargetChange?.(e.target.value)}
+                  disabled={disabled}
+                  readOnly={readOnly}
+                  aria-label={targetBadgeText}
+                />
+              )}
+            </div>
           </div>
-          <div className={`${styles.pairedBadge} ${styles.rightBadge}`}>{targetBadgeText}</div>
         </div>
       </div>
     );
