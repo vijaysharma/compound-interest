@@ -1,0 +1,16 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.tabsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  width: 100%;
+  border-bottom: 2px solid var(--color-base-300);
+}
+
+.contentWrapper {
+  padding: 1rem;
+  width: 100%;
+  overflow-y: auto;
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import styles from './WoodCalculator.module.scss';
 interface WoodPiece {
   id: string;
   length: string;
@@ -106,146 +107,146 @@ const WoodCalculator: React.FC = () => {
   const totalCost = totalBasePrice + totalExtra;
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <div className="flex gap-1 bg-base-200 p-1 rounded-lg w-full sm:w-auto shrink-0">
+      <div className={styles.headerRow}>
+        <div className={styles.switchGroup}>
           <button
-            className={`btn btn-sm flex-1 sm:flex-none ${unit === 'feet' ? 'btn-primary' : 'btn-ghost'}`}
+            className={`${styles.switchBtn} ${unit === 'feet' ? styles.active : ''}`}
             onClick={() => setUnit('feet')}
           >
             L/B in ft
           </button>
           <button
-            className={`btn btn-sm flex-1 sm:flex-none ${unit === 'inches' ? 'btn-primary' : 'btn-ghost'}`}
+            className={`${styles.switchBtn} ${unit === 'inches' ? styles.active : ''}`}
             onClick={() => setUnit('inches')}
           >
             All inches
           </button>
         </div>
       </div>
-      <div className="space-y-3 mb-6">
+      <div className={styles.piecesList}>
         {piecesWithCalcs.map((p, index) => (
           <div
             key={p.id}
-            className="bg-base-100 border border-base-300 rounded-xl p-4 relative shadow-sm"
+            className={styles.pieceCard}
           >
-            <div className="absolute top-2 right-2 flex items-center gap-2">
-              <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">
+            <div className={styles.pieceHeader}>
+              <span className={styles.pieceBadge}>
                 Piece {index + 1}
               </span>
               <button
-                className="btn btn-xs btn-circle btn-ghost text-error"
+                className={styles.removeBtn}
                 onClick={() => removePiece(p.id)}
                 disabled={pieces.length === 1}
               >
                 <FiTrash2 />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-3 mt-4">
+            <div className={styles.pieceGrid}>
               <div>
-                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                <label className={styles.label}>
                   Length ({unit === 'feet' ? 'ft' : 'in'})
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-primary input-bordered w-full"
+                  className={styles.input}
                   value={p.length}
                   onChange={(e) => updatePiece(p.id, 'length', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                <label className={styles.label}>
                   Breadth ({unit === 'feet' ? 'ft' : 'in'})
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-primary input-bordered w-full"
+                  className={styles.input}
                   value={p.breadth}
                   onChange={(e) => updatePiece(p.id, 'breadth', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                <label className={styles.label}>
                   Thickness (in)
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-primary input-bordered w-full"
+                  className={styles.input}
                   value={p.thickness}
                   onChange={(e) => updatePiece(p.id, 'thickness', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold opacity-70 mb-1">Quantity</label>
+                <label className={styles.label}>Quantity</label>
                 <input
                   type="number"
-                  className="input input-sm input-primary input-bordered w-full"
+                  className={styles.input}
                   value={p.qty}
                   onChange={(e) => updatePiece(p.id, 'qty', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold opacity-70 mb-1">
+                <label className={styles.label}>
                   Price / CFT (₹)
                 </label>
                 <input
                   type="number"
-                  className="input input-sm input-primary input-bordered w-full text-success font-semibold"
+                  className={`${styles.input} ${styles.priceInput}`}
                   value={p.pricePerCft}
                   onChange={(e) => updatePiece(p.id, 'pricePerCft', e.target.value)}
                 />
               </div>
-              <div className="flex flex-col justify-end items-end pb-1 bg-base-200 rounded px-2">
-                <span className="text-[11px] opacity-70 font-semibold">{p.cft.toFixed(2)} CFT</span>
-                <span className="font-bold text-sm text-primary">₹{p.price.toFixed(0)}</span>
+              <div className={styles.cftBox}>
+                <span className={styles.cftText}>{p.cft.toFixed(2)} CFT</span>
+                <span className={styles.priceText}>₹{p.price.toFixed(0)}</span>
               </div>
             </div>
           </div>
         ))}
         <button
-          className="btn btn-sm btn-outline btn-primary w-full border-dashed"
+          className={styles.addPieceBtn}
           onClick={addPiece}
         >
           <FiPlus /> Add Another Piece
         </button>
       </div>
-      <h3 className="font-bold text-sm opacity-70 uppercase tracking-wider mb-2">Extra Charges</h3>
-      <div className="grid grid-cols-3 gap-3 mb-6 bg-base-200 p-4 rounded-xl">
+      <h3 className={styles.sectionHeader}>Extra Charges</h3>
+      <div className={styles.extraChargesBox}>
         <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1">Cuts (₹)</label>
+          <label className={styles.label}>Cuts (₹)</label>
           <input
             type="number"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={cutsCharge}
             onChange={(e) => setCutsCharge(e.target.value)}
           />
         </div>
         <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1">Labour (₹)</label>
+          <label className={styles.label}>Labour (₹)</label>
           <input
             type="number"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={labourCharge}
             onChange={(e) => setLabourCharge(e.target.value)}
           />
         </div>
         <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1">Shipping (₹)</label>
+          <label className={styles.label}>Shipping (₹)</label>
           <input
             type="number"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={shippingCharge}
             onChange={(e) => setShippingCharge(e.target.value)}
           />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-4 bg-base-200 rounded-xl flex justify-between items-center">
-          <span className="text-xs font-bold opacity-70 uppercase">Total Volume</span>
-          <span className="text-xl font-bold">{totalCft.toFixed(3)} CFT</span>
+      <div className={styles.totalsGrid}>
+        <div className={styles.totalCard}>
+          <span className={styles.totalLabel}>Total Volume</span>
+          <span className={styles.totalVal}>{totalCft.toFixed(3)} CFT</span>
         </div>
-        <div className="p-4 bg-success/10 text-success rounded-xl flex justify-between items-center shadow-inner">
-          <span className="text-xs font-bold uppercase">Final Cost</span>
-          <span className="text-2xl font-bold">₹{totalCost.toFixed(0)}</span>
+        <div className={styles.finalCostCard}>
+          <span className={styles.totalLabel}>Final Cost</span>
+          <span className={styles.finalCostVal}>₹{totalCost.toFixed(0)}</span>
         </div>
       </div>
     </>

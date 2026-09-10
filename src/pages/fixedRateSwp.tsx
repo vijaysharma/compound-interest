@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
-import ROI from '../components/ROI.tsx';
-import Tenure from '../components/Tenure.tsx';
 import DisplayCard from '../components/DisplayCard.tsx';
-import InputAmount from '../components/InputAmount.tsx';
+import ValuePicker from '../components/ValuePicker.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import { RT } from '../types/types.ts';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
+import styles from './CalculatorPage.module.scss';
 const swpSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -192,7 +191,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
     [pa, rt, irt, inflationFreq, t.tenure, t.tenureFormat, wa]
   );
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-2 ${className || ''}`}>
+    <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
         title="SWP Calculator — Systematic Withdrawal Plan Calculator India 2026"
         description="Free SWP calculator to plan retirement income. Model monthly pension withdrawals, inflation-adjusted cashflows & corpus longevity from mutual funds. 100% private."
@@ -200,43 +199,41 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
         canonicalPath="/swp-calculator"
         schema={swpSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Retirement Income &bull; Capital Longevity
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Systematic Withdrawal Plan (SWP) Calculator for Retirement
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Simulate monthly retirement payouts, inflation adjustments, and residual portfolio
           longevity.
         </p>
       </header>
-      <div className="space-y-4">
-        {title && <h5 className="font-bold">{title}</h5>}
-        <InputAmount
-          className="mb-2"
-          inputAmount={pa}
-          setInputAmount={setPa}
-          type={pa}
-          setType={setPa}
-          typeData={[{ id: 'abc', title: 'Invested Amount', value: pa }]}
+      <div className={styles.formStack}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <ValuePicker
+          className={styles.field}
+          value={pa}
+          onChange={setPa}
+          title="Invested Amount"
           stepData={invStepData}
-          stepSizePrefix={'sm'}
+          tabs={[]}
         />
-        <InputAmount
-          className="mb-2"
-          inputAmount={wa}
-          setInputAmount={setWa}
+        <ValuePicker
+          className={styles.field}
+          value={wa}
+          onChange={setWa}
           stepData={wdStepData}
-          stepSizePrefix={'sm'}
           title="Withdrawal amount per month"
+          tabs={[]}
         />
-        <ROI className="mb-2" rt={rt} setRt={setRt} title={'Expected return rate per annum (%)'} />
-        <ROI className="mb-2" rt={irt} setRt={setIRt} title={'Inflation rate (%)'} />
+        <ValuePicker.ROI className={styles.field} value={rt} onChange={setRt} title="Expected return rate per annum (%)" />
+        <ValuePicker.ROI className={styles.field} value={irt} onChange={setIRt} title="Inflation rate (%)" />
         <JoinedButtonGroup
           title="Inflation calculated per"
-          className="mb-1"
+          className={styles.fieldTight}
           selectedValue={inflationFreq}
           updateSelectedValue={setInflationFreq}
           sizePrefix="sm"
@@ -249,9 +246,9 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
             { id: 'ir6', title: '5Y', value: '60' },
           ]}
         />
-        <Tenure className="mb-3" rt={t} setRt={setT} />
+        <ValuePicker.Tenure className={styles.fieldLast} rt={t} setRt={setT} />
         <DisplayCard
-          colorClass={`${parseInt(remainingAmount) < parseInt(pa) ? 'text-error' : 'text-primary'}`}
+          colorClass={parseInt(remainingAmount) < parseInt(pa) ? 'error' : 'primary'}
           primaryAmount={parseInt(remainingAmount)}
           secondaryInfo={{
             title: 'Last monthly withdrawal',

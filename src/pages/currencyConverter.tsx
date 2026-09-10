@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowRight, FiInfo, FiRefreshCw, FiRepeat, FiTrendingUp } from 'react-icons/fi';
-import InputAmount from '../components/InputAmount';
+import ValuePicker from '../components/ValuePicker';
 import DisplayCard from '../components/DisplayCard';
 import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
@@ -10,6 +10,7 @@ import { DEFAULT_EXCHANGE_RATES } from '../data/default_exchange_rates';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import CountrySelect from '../components/CountrySelect';
+import styles from './CurrencyConverter.module.scss';
 interface CountryCurrencyInfo {
   country: string;
   code: string;
@@ -345,7 +346,7 @@ const CurrencyConverter = () => {
     setTgtCountry(srcCountry);
   };
   return (
-    <main className="w-full max-w-4xl mx-auto py-2">
+    <main className={styles.container}>
       <SEOHead
         title="Currency Converter — Live Foreign Exchange Rates India 2026"
         description="Free real-time currency converter with live mid-market forex rates for 160+ currencies including USD to INR, EUR to INR, GBP to INR, AED to INR. 100% private."
@@ -353,58 +354,57 @@ const CurrencyConverter = () => {
         canonicalPath="/currency-converter"
         schema={currencyConverterSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Forex &bull; Live Mid-Market Rates
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Live Currency Converter &amp; Exchange Rates
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Convert 160+ global currencies in real time with zero bank markup.
         </p>
       </header>
-      <div className="space-y-4 mb-6">
-        {/* Source and Target country selector */}
-        <div className="join mb-1 w-full">
-          <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-xs font-semibold">
-            Source
-          </div>
-          <CountrySelect
-            label="source"
-            value={srcCountry}
-            countries={availableCountries}
-            onChange={setSrcCountry}
-            getSecondaryText={(country) => countryData.get(country)?.code}
-          />
-          <CountrySelect
-            label="target"
-            value={tgtCountry}
-            countries={availableCountries}
-            onChange={setTgtCountry}
-            getSecondaryText={(country) => countryData.get(country)?.code}
-          />
-          <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-xs font-semibold">
-            Target
-          </div>
-        </div>
+      <div className={styles.converterSection}>
+        <ValuePicker.Paired
+          sourceBadgeText="Source"
+          targetBadgeText="Target"
+          sourceSlot={(
+            <CountrySelect
+              label="source"
+              value={srcCountry}
+              countries={availableCountries}
+              onChange={setSrcCountry}
+              getSecondaryText={(country) => countryData.get(country)?.code}
+            />
+          )}
+          targetSlot={(
+            <CountrySelect
+              label="target"
+              value={tgtCountry}
+              countries={availableCountries}
+              onChange={setTgtCountry}
+              getSecondaryText={(country) => countryData.get(country)?.code}
+            />
+          )}
+        />
         {/* Swap link */}
-        <div className="text-center">
+        <div className={styles.swapRow}>
           <button
             type="button"
             onClick={handleSwapCountries}
-            className="text-xs text-primary font-semibold hover:underline focus:outline-none cursor-pointer inline-flex items-center gap-1.5"
+            className={styles.swapBtn}
           >
-            <FiRepeat className="h-4 w-4" />
+            <FiRepeat />
             <span>Swap source &amp; target countries</span>
           </button>
         </div>
-        {/* Amount Input */}
-        <InputAmount
-          inputAmount={amount}
-          setInputAmount={setAmount}
-          className="mb-1"
+        <ValuePicker
+          value={amount}
+          onChange={setAmount}
+          className={styles.amountField}
           title="Amount"
+          tabs={[]}
           stepData={[
             {
               id: 'ip1',
@@ -428,17 +428,15 @@ const CurrencyConverter = () => {
           ]}
           currencySymbol={sourceCurrency.symbol}
           locale={sourceCurrency.locale}
-          typeSizePrefix="base"
-          stepSizePrefix="sm"
         />
         {/* Error notification */}
         {error && (
-          <div className="alert alert-error text-xs p-3">
+          <div className={styles.errorAlert}>
             <span>{error}</span>
             <button
               type="button"
               onClick={() => void handleRefresh()}
-              className="btn btn-xs btn-ghost underline"
+              className={styles.retryBtn}
             >
               Retry
             </button>
@@ -456,60 +454,60 @@ const CurrencyConverter = () => {
           }
         />
         {/* Live exchange rate details bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-base-200/50 rounded-xl text-xs border border-base-300">
-          <div className="flex flex-wrap items-center gap-2">
-            <FiTrendingUp className="text-primary h-4 w-4 shrink-0" />
-            <span className="font-medium">
+        <div className={styles.rateBar}>
+          <div className={styles.rateLeft}>
+            <FiTrendingUp className={styles.rateTrendIcon} />
+            <span>
               1 {sourceCurrency.code} ={' '}
-              <strong className="text-primary font-bold">
+              <strong className={styles.rateStrong}>
                 {exchangeRate > 0 ? exchangeRate.toFixed(4) : 'N/A'} {targetCurrency.code}
               </strong>
             </span>
             {inverseRate > 0 && (
               <>
-                <span className="opacity-50">&bull;</span>
-                <span className="opacity-80">
+                <span className={styles.rateDot}>&bull;</span>
+                <span className={styles.rateInverse}>
                   1 {targetCurrency.code} = {inverseRate.toFixed(4)} {sourceCurrency.code}
                 </span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-2 text-[11px] opacity-65">
+          <div className={styles.rateRight}>
             <span>Updated: {lastRefreshed}</span>
             <button
               type="button"
               onClick={() => void handleRefresh()}
               disabled={loading}
-              className="btn btn-ghost btn-xs p-0 h-auto min-h-0 text-primary hover:bg-transparent cursor-pointer"
+              className={styles.refreshBtn}
               title="Refresh live exchange rates"
               aria-label="Refresh live exchange rates"
             >
-              <FiRefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <FiRefreshCw className={loading ? styles.spinning : ''} />
             </button>
           </div>
         </div>
       </div>
       {/* Purchasing Power Parity (PPP) Promo Card */}
-      <div className="card bg-base-100 border border-base-300 p-4 sm:p-6 shadow-sm mb-6">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
-            <FiInfo className="h-5 w-5" />
+      <div className={styles.promoCard}>
+        <div className={styles.promoInner}>
+          <div className={styles.promoIconBox}>
+            <FiInfo />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-base-content">
+            <h3 className={styles.promoTitle}>
               Need to compare purchasing power instead of exchange rates?
             </h3>
-            <p className="text-xs opacity-75 mt-0.5">
+            <p className={styles.promoDesc}>
               Nominal exchange rates don&apos;t account for local costs of living, rent, groceries,
               and services. Use our Purchasing Power Parity (PPP) calculator to see the real
               standard of living equivalent of your income abroad.
             </p>
             <Link
               to="/ppp-calculator"
-              className="inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline mt-2"
+              className={styles.promoLink}
             >
               <span>Compare salaries using PPP Calculator</span>
-              <FiArrowRight className="h-3.5 w-3.5" />
+              <FiArrowRight />
             </Link>
           </div>
         </div>

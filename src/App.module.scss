@@ -1,0 +1,53 @@
+@use "./styles/variables" as *;
+@use "./styles/mixins" as *;
+
+.navProgressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 100;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  pointer-events: none;
+}
+
+.navProgressBarInner {
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-primary);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.appTopbarSticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.appContainer {
+  height: calc(100dvh - 48px);
+  padding: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
+  transition: opacity $transition-fast;
+
+  &:has(:global(.quick-notes-theme)) {
+    height: calc(100dvh - 48px);
+    overflow: hidden;
+  }
+
+  @include tablet-up {
+    &:has(:global(.quick-notes-theme)) {
+      height: calc(100dvh - 64px);
+      padding: 0 0.5rem;
+      overflow: hidden;
+    }
+  }
+
+  &.navigating {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}

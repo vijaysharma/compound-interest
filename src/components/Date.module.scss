@@ -1,0 +1,39 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.datePickerRow {
+  @include joined-row;
+  margin-bottom: 0.5rem;
+}
+
+.dateBadge {
+  @include joined-item;
+  @include badge-prefix(2rem, 0.8125rem);
+  text-align: center;
+  min-width: 4.5rem;
+
+  &.fixedWidth {
+    width: 5rem;
+  }
+}
+
+.selectField {
+  @include joined-item;
+  @include input-control(2rem, 0.8125rem);
+  flex: 1;
+  padding: 0 0.5rem;
+  cursor: pointer;
+}
+
+.inputWrapper {
+  @include joined-item;
+  flex: 1;
+  display: flex;
+}
+
+.dateInput {
+  @include joined-item;
+  @include input-control(2rem, 0.8125rem);
+  width: 100%;
+  padding: 0 0.5rem;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import InputAmount from '../components/InputAmount';
+import ValuePicker from '../components/ValuePicker';
 import DisplayCard from '../components/DisplayCard';
 import CURRENCY_CODES, { IndianFormat } from '../data/currencyCodes';
 import { getCurrencySymbol } from '../utilities/currency';
@@ -11,6 +11,7 @@ import CountrySelect from '../components/CountrySelect';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import { FiRepeat } from 'react-icons/fi';
+import styles from './CalculatorPage.module.scss';
 const pppSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -248,23 +249,23 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
   }, []);
   if (pppLoading) {
     return (
-      <div className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
-        {title && <h5>{title}</h5>}
-        <p className="text-sm opacity-70">Loading global World Bank purchasing power datasets...</p>
+      <div className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <p className={styles.infoMessage}>Loading global World Bank purchasing power datasets...</p>
       </div>
     );
   }
   if (pppError) {
     return (
-      <div className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
-        {title && <h5>{title}</h5>}
-        <p className="text-sm text-error">{pppError}</p>
+      <div className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <p className={styles.errorMessage}>{pppError}</p>
       </div>
     );
   }
   const tgtExAmt = derivedValues?.tgtExAmt ?? 0;
   return (
-    <main className={`w-full max-w-4xl mx-auto py-2 ${className || ''}`}>
+    <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
         title="PPP Calculator — Purchasing Power Parity & Salary Comparison India 2026"
         description="Compare salaries and living costs across 150+ countries using World Bank PPP data. Convert Indian Rupee salary to real USD/EUR purchasing power equivalent. 100% free."
@@ -272,56 +273,58 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
         canonicalPath="/ppp-calculator"
         schema={pppSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Global Economics &bull; World Bank Verified Data
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Purchasing Power Parity (PPP) &amp; Global Salary Calculator
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Compare real standard of living and salary equivalents across 150+ countries.
         </p>
       </header>
-      <div className="space-y-4">
-        {title && <h5 className="font-bold">{title}</h5>}
-        <div className="join mb-1 w-full">
-          <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-xs font-semibold">
-            Source
-          </div>
-          <CountrySelect
-            label="source"
-            value={srcCountry}
-            countries={Object.keys(data)}
-            onChange={setSrcCountry}
-            getSecondaryText={(country) => data[country]?.currencyName}
-          />
-          <CountrySelect
-            label="target"
-            value={tgtCountry}
-            countries={Object.keys(data)}
-            onChange={setTgtCountry}
-            getSecondaryText={(country) => data[country]?.currencyName}
-          />
-          <div className="label join-item px-2 w-16 bg-primary text-primary-content border-primary text-center text-xs font-semibold">
-            Target
-          </div>
-        </div>
+      <div className={styles.formStack}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <ValuePicker.Paired
+          sourceBadgeText="Source"
+          targetBadgeText="Target"
+          sourceSlot={(
+            <CountrySelect
+              label="source"
+              value={srcCountry}
+              countries={Object.keys(data)}
+              onChange={setSrcCountry}
+              getSecondaryText={(country) => data[country]?.currencyName}
+            />
+          )}
+          targetSlot={(
+            <CountrySelect
+              label="target"
+              value={tgtCountry}
+              countries={Object.keys(data)}
+              onChange={setTgtCountry}
+              getSecondaryText={(country) => data[country]?.currencyName}
+            />
+          )}
+        />
         {/* Swap link */}
-        <div className="text-center">
+        <div className={styles.swapRow}>
           <button
+            type="button"
             onClick={handleSwapCountries}
-            className="text-xs text-primary font-semibold hover:underline focus:outline-none cursor-pointer"
+            className={styles.swapBtn}
           >
-            <FiRepeat className="h-4 w-4 inline" />
-            &nbsp;&nbsp;Swap source &amp; target countries
+            <FiRepeat className={styles.swapIcon} />
+            <span>Swap source &amp; target countries</span>
           </button>
         </div>
-        <InputAmount
-          inputAmount={srcAmt}
-          setInputAmount={setSrcAmt}
-          className="mb-1"
+        <ValuePicker
+          value={srcAmt}
+          onChange={setSrcAmt}
+          className={styles.fieldTight}
           title="Amount"
+          tabs={[]}
           stepData={[
             {
               id: 'ip1',
@@ -345,8 +348,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           ]}
           currencySymbol={derivedValues?.sourceCurrencySymbol || 'XYZ'}
           locale={derivedValues?.sourceLocale || 'en-US'}
-          typeSizePrefix="base"
-          stepSizePrefix="sm"
         />
         <DisplayCard
           primaryAmount={parseFloat(parseFloat(derivedValues?.tgtAmt || '0').toFixed(2))}
@@ -365,14 +366,14 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
               : `Nominal Forex Conversion in ${tgtCountry}`
           }`}
         />
-        <div className="card bg-base-100 border border-base-300 p-3.5 shadow-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-            <span className="opacity-80">
+        <div className={styles.promoCard}>
+          <div className={styles.promoContent}>
+            <span className={styles.promoText}>
               Looking for pure real-time foreign exchange rates across 160+ world currencies?
             </span>
             <Link
               to="/currency-converter"
-              className="text-primary font-bold hover:underline shrink-0 flex items-center gap-1"
+              className={styles.promoLink}
             >
               <span>Try Currency Converter &rarr;</span>
             </Link>

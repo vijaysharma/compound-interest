@@ -1,7 +1,10 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import type { Plugin } from 'vite';
+import type { Plugin, UserConfig } from 'vite';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const readRequestBody = async (request: import('node:http').IncomingMessage) => {
   const chunks: Buffer[] = [];
   for await (const chunk of request) chunks.push(Buffer.from(chunk));
@@ -114,8 +117,19 @@ const localApiPlugin = (): Plugin => ({
     });
   },
 });
-const VITE_CONFIGS = {
-  plugins: [react(), tailwindcss(), localApiPlugin()],
+const VITE_CONFIGS: UserConfig = {
+  plugins: [react(), localApiPlugin()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+      generateScopedName: '[name]__[local]___[hash:base64:5]',
+    },
+  },
   server: {
     hmr: { overlay: true },
   },

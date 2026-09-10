@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { AgCharts } from 'ag-charts-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
+import styles from './Chart.module.scss';
 ModuleRegistry.registerModules([AllCommunityModule]);
 interface ChartPoint {
   date: string;
@@ -179,21 +180,21 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
   }, [datasets, initialInvestment, dataMode]);
   if (datasets.length === 0) {
     return (
-      <div className={`${className} flex items-center justify-center`}>
-        <span className="text-sm opacity-60">No chart data available</span>
+      <div className={`${className} ${styles.emptyContainer}`}>
+        <span className={styles.emptyText}>No chart data available</span>
       </div>
     );
   }
   if (initialInvestment <= 0 || !chartOptions) {
     return (
-      <div className={`${className} flex items-center justify-center`}>
-        <span className="text-sm opacity-60">Enter an investment amount to view growth</span>
+      <div className={`${className} ${styles.emptyContainer}`}>
+        <span className={styles.emptyText}>Enter an investment amount to view growth</span>
       </div>
     );
   }
   return (
     <div className={className}>
-      <AgCharts className="chart" options={chartOptions} />
+      <AgCharts className={styles.chart} options={chartOptions} />
     </div>
   );
 };

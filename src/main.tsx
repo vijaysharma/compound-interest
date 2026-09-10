@@ -5,7 +5,7 @@ import App from './App.tsx';
 import Home from './pages/home.tsx';
 import LoadingFallback from './components/LoadingFallback.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
-import './index.css';
+import './index.scss';
 const lazyProtected = (
   importer: () => Promise<{ default: ComponentType }>,
   requireAdmin = false,
@@ -40,6 +40,14 @@ const router = createBrowserRouter([
       {
         path: 'login',
         element: lazyPublic(() => import('./pages/login.tsx')),
+      },
+      {
+        path: 'temp-value-picker',
+        element: lazyPublic(() => import('./pages/tempValuePickerPage.tsx')),
+      },
+      {
+        path: 'demo/value-picker',
+        element: lazyPublic(() => import('./pages/tempValuePickerPage.tsx')),
       },
       {
         path: 'upgrade',
@@ -130,6 +138,22 @@ const router = createBrowserRouter([
         element: lazyProtected(() => import('./pages/calculator.tsx')),
       },
       {
+        path: 'ppf-calculator',
+        element: lazyProtected(() => import('./pages/ppfCalculator.tsx')),
+      },
+      {
+        path: 'nps-calculator',
+        element: lazyProtected(() => import('./pages/npsCalculator.tsx')),
+      },
+      {
+        path: 'income-tax-calculator',
+        element: lazyProtected(() => import('./pages/incomeTaxCalculator.tsx')),
+      },
+      {
+        path: 'tax-calculator',
+        element: lazyProtected(() => import('./pages/incomeTaxCalculator.tsx')),
+      },
+      {
         path: 'date-calculator',
         element: lazyProtected(() => import('./pages/dateCalculator.tsx')),
       },
@@ -190,6 +214,10 @@ const router = createBrowserRouter([
             path: 'rd',
             element: lazyProtected(() => import('./pages/rd.tsx')),
           },
+          {
+            path: 'ppf',
+            element: lazyProtected(() => import('./pages/ppfCalculator.tsx')),
+          },
         ],
       },
       {
@@ -202,6 +230,23 @@ const router = createBrowserRouter([
           {
             path: 'fixed-rate-swp',
             element: lazyProtected(() => import('./pages/fixedRateSwp.tsx')),
+          },
+          {
+            path: 'ppf',
+            element: lazyProtected(() => import('./pages/ppfCalculator.tsx')),
+          },
+          {
+            path: 'nps',
+            element: lazyProtected(() => import('./pages/npsCalculator.tsx')),
+          },
+        ],
+      },
+      {
+        path: 'tax',
+        children: [
+          {
+            path: 'income-tax',
+            element: lazyProtected(() => import('./pages/incomeTaxCalculator.tsx')),
           },
         ],
       },

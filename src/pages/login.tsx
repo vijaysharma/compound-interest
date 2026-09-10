@@ -5,6 +5,7 @@ import { useAuth } from '../context/useAuth';
 import Logo from '../components/Logo';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import SEOHead from '../components/SEOHead';
+import styles from './Login.module.scss';
 const Login = () => {
   const { isAuthenticated, loginWithPassword, signupWithGooglePassword, loading } = useAuth();
   const navigate = useNavigate();
@@ -91,29 +92,29 @@ const Login = () => {
     }
   };
   return (
-    <div className="flex min-h-[80vh] items-center justify-center p-4 py-8">
+    <div className={styles.pageWrapper}>
       <SEOHead
         title="Sign In | Rupee Calculator"
         description="Sign in to your Rupee Calculator account to manage your pro subscription, saved mutual fund portfolios, and economic models."
         canonicalPath="/login"
         noIndex={true}
       />
-      <div className="card bg-base-100 border border-base-300 w-full max-w-lg p-6 sm:p-10 shadow-2xl">
-        <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-3">
+      <div className={styles.card}>
+        <div className={styles.brandHeader}>
+          <div className={styles.brandLogo}>
             <Logo />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold">Rupee Calculators Suite</h1>
-          <p className="mt-1.5 text-xs sm:text-sm opacity-70">
+          <h1 className={styles.brandTitle}>Rupee Calculators Suite</h1>
+          <p className={styles.brandSubtitle}>
             Institutional financial suite with live AMFI mutual fund sync &amp; multi-country
             models.
           </p>
         </div>
         {/* Tab Switcher */}
-        <div className="tabs tabs-boxed mb-6 p-1 bg-base-200 grid grid-cols-2">
+        <div className={styles.tabSwitcher}>
           <button
             type="button"
-            className={`tab ${activeTab === 'signin' ? 'tab-active font-bold' : ''}`}
+            className={`${styles.tabBtn} ${activeTab === 'signin' ? styles.tabBtnActive : ''}`}
             onClick={() => {
               setActiveTab('signin');
               setError(null);
@@ -123,7 +124,7 @@ const Login = () => {
           </button>
           <button
             type="button"
-            className={`tab ${activeTab === 'signup' ? 'tab-active font-bold' : ''}`}
+            className={`${styles.tabBtn} ${activeTab === 'signup' ? styles.tabBtnActive : ''}`}
             onClick={() => {
               setActiveTab('signup');
               setError(null);
@@ -133,17 +134,17 @@ const Login = () => {
           </button>
         </div>
         {error && (
-          <div className="alert alert-error text-xs py-2.5 px-4 mb-6 rounded-lg shadow-sm">
+          <div className={styles.errorAlert}>
             <span>{error}</span>
           </div>
         )}
         {activeTab === 'signin' ? (
           /* Sign In Form */
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
+          <form onSubmit={handleLogin} className={styles.form}>
+            <div className={styles.field}>
               <label
                 htmlFor="signin-email"
-                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+                className={styles.fieldLabel}
               >
                 Email Address
               </label>
@@ -155,13 +156,13 @@ const Login = () => {
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="you@gmail.com"
-                className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                className={styles.input}
               />
             </div>
-            <div>
+            <div className={styles.field}>
               <label
                 htmlFor="signin-password"
-                className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+                className={styles.fieldLabel}
               >
                 Password
               </label>
@@ -172,24 +173,24 @@ const Login = () => {
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="••••••••"
-                className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                className={styles.input}
               />
             </div>
             <button
               type="submit"
               disabled={isSubmitting || loading}
-              className="btn btn-primary w-full shadow-md font-semibold mt-2"
+              className={styles.primaryBtn}
             >
               {isSubmitting ? (
                 <>
-                  <span className="loading loading-spinner loading-sm" />
+                  <span className={styles.spinner} />
                   <span>Signing In...</span>
                 </>
               ) : (
                 <span>Sign In with Password &rarr;</span>
               )}
             </button>
-            <div className="pt-2 text-center text-xs opacity-75">
+            <div className={styles.footerLinkText}>
               <span>New to Rupee Calculator? </span>
               <button
                 type="button"
@@ -197,7 +198,7 @@ const Login = () => {
                   setActiveTab('signup');
                   setError(null);
                 }}
-                className="text-primary font-bold hover:underline"
+                className={styles.linkBtn}
               >
                 Sign Up with Google &rarr;
               </button>
@@ -205,20 +206,20 @@ const Login = () => {
           </form>
         ) : (
           /* Sign Up with Google Form */
-          <div className="space-y-4">
+          <div className={styles.form}>
             {!googleProfile ? (
               /* Step 1: Authenticate with Google / Enter Gmail */
-              <div className="space-y-4">
-                <div className="rounded-xl bg-primary/5 p-3.5 border border-primary/15 space-y-1.5">
-                  <div className="text-xs font-bold text-primary uppercase tracking-wider">
+              <div className={styles.form}>
+                <div className={styles.stepCard}>
+                  <div className={styles.stepEyebrow}>
                     Step 1 of 2: Verify Your Google / Gmail Account
                   </div>
-                  <p className="text-xs opacity-75">
+                  <p className={styles.stepDesc}>
                     Includes 48-hour trial with 15 live Mutual Fund, Inflation &amp; PPP calculation
                     runs. Suite tools remain free post-48 hours.
                   </p>
                 </div>
-                <div className="flex justify-center py-1">
+                <div className={styles.googleBtnWrapper}>
                   <GoogleSignInButton
                     text="signup_with"
                     modalTitle="Verify Google Account"
@@ -231,7 +232,7 @@ const Login = () => {
                     }}
                   />
                 </div>
-                <div className="divider text-[11px] uppercase opacity-50 my-1">
+                <div className={styles.divider}>
                   or continue with email
                 </div>
                 <form
@@ -256,12 +257,12 @@ const Login = () => {
                       name: clean.split('@')[0],
                     });
                   }}
-                  className="space-y-3"
+                  className={styles.formTight}
                 >
-                  <div>
+                  <div className={styles.field}>
                     <label
                       htmlFor="direct-gmail"
-                      className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                      className={styles.fieldLabel}
                     >
                       Gmail Address
                     </label>
@@ -271,12 +272,12 @@ const Login = () => {
                       type="email"
                       required
                       placeholder="e.g. yourname@gmail.com"
-                      className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                      className={styles.input}
                     />
                   </div>
                   <button
                     type="submit"
-                    className="btn btn-outline btn-primary btn-sm w-full font-semibold"
+                    className={styles.outlineBtn}
                   >
                     <span>Continue to Set Password &rarr;</span>
                   </button>
@@ -284,29 +285,29 @@ const Login = () => {
               </div>
             ) : (
               /* Step 2: Create Password for the verified Google Account */
-              <form onSubmit={handleCompleteGoogleSignup} className="space-y-4">
-                <div className="flex items-center gap-3 p-3.5 bg-success/10 rounded-xl border border-success/30">
+              <form onSubmit={handleCompleteGoogleSignup} className={styles.form}>
+                <div className={styles.verifiedCard}>
                   {googleProfile.picture ? (
                     <img
                       src={googleProfile.picture}
                       alt={googleProfile.name || googleProfile.email}
-                      className="w-10 h-10 rounded-full border border-success/40 object-cover shrink-0"
+                      className={styles.avatarImg}
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary text-primary-content font-bold flex items-center justify-center text-sm shrink-0">
+                    <div className={styles.avatarFallback}>
                       {googleProfile.email.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[10px] font-bold text-success uppercase tracking-wider flex items-center gap-1">
-                      <FiCheckCircle className="h-3 w-3" />
+                  <div className={styles.verifiedTextGroup}>
+                    <div className={styles.verifiedBadge}>
+                      <FiCheckCircle />
                       <span>Verified Google Account</span>
                     </div>
-                    <div className="text-xs sm:text-sm font-bold truncate">
+                    <div className={styles.verifiedEmail}>
                       {googleProfile.email}
                     </div>
                     {googleProfile.name && (
-                      <div className="text-[11px] opacity-60 truncate">{googleProfile.name}</div>
+                      <div className={styles.verifiedName}>{googleProfile.name}</div>
                     )}
                   </div>
                   <button
@@ -316,15 +317,15 @@ const Login = () => {
                       setSignupPassword('');
                       setSignupConfirmPassword('');
                     }}
-                    className="btn btn-ghost btn-xs text-[10px] opacity-70 hover:opacity-100 shrink-0"
+                    className={styles.ghostBtn}
                   >
                     Change
                   </button>
                 </div>
-                <div>
+                <div className={styles.field}>
                   <label
                     htmlFor="signup-password"
-                    className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+                    className={styles.fieldLabel}
                   >
                     Create Account Password
                   </label>
@@ -337,13 +338,13 @@ const Login = () => {
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
                     placeholder="Minimum 6 characters"
-                    className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                    className={styles.input}
                   />
                 </div>
-                <div>
+                <div className={styles.field}>
                   <label
                     htmlFor="signup-confirm-password"
-                    className="block text-xs font-semibold uppercase tracking-wider mb-1.5 opacity-80"
+                    className={styles.fieldLabel}
                   >
                     Confirm Password
                   </label>
@@ -355,17 +356,17 @@ const Login = () => {
                     value={signupConfirmPassword}
                     onChange={(e) => setSignupConfirmPassword(e.target.value)}
                     placeholder="Re-enter password"
-                    className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                    className={styles.input}
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isSubmitting || loading}
-                  className="btn btn-primary w-full shadow-md font-semibold mt-2"
+                  className={styles.primaryBtn}
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="loading loading-spinner loading-sm" />
+                      <span className={styles.spinner} />
                       <span>Completing Registration...</span>
                     </>
                   ) : (
@@ -374,7 +375,7 @@ const Login = () => {
                 </button>
               </form>
             )}
-            <div className="pt-2 text-center text-xs opacity-75">
+            <div className={styles.footerLinkText}>
               <span>Already have an account? </span>
               <button
                 type="button"
@@ -382,14 +383,14 @@ const Login = () => {
                   setActiveTab('signin');
                   setError(null);
                 }}
-                className="text-primary font-bold hover:underline"
+                className={styles.linkBtn}
               >
                 Sign In with Password &rarr;
               </button>
             </div>
           </div>
         )}
-        <div className="mt-8 border-t border-base-200 pt-6 text-center text-xs opacity-60">
+        <div className={styles.footerNote}>
           <p>Institutional-grade financial precision. Fast, private, and free.</p>
         </div>
       </div>

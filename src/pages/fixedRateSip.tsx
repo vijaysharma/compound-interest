@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
-import InputAmount from '../components/InputAmount.tsx';
-import RateOfInterest from '../components/RateOfInterest.tsx';
-import Tenure from '../components/Tenure.tsx';
+import ValuePicker from '../components/ValuePicker.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import { RT } from '../types/types.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
+import styles from './CalculatorPage.module.scss';
 const sipSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -205,7 +204,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
     [pa, rt.tenure, rt.tenureFormat, invType, rt.roi]
   );
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-2 ${className || ''}`}>
+    <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
         title="SIP Calculator — Free Mutual Fund SIP Return Calculator India 2026"
         description="Calculate SIP returns with step-up SIP & target corpus planning. Estimate mutual fund growth for ₹500–₹1 Lakh monthly SIP over 1–35 years. 100% free & private."
@@ -213,35 +212,33 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
         canonicalPath="/sip-calculator"
         schema={sipSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Compounding Engine &bull; Wealth Accumulation
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Mutual Fund SIP Calculator India (Systematic Investment Plan)
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Simulate compound growth, total maturity corpus, and required monthly investment targets.
         </p>
       </header>
-      <div className="space-y-4">
-        {title && <h5 className="font-bold">{title}</h5>}
-        <InputAmount
-          className="mb-2"
-          inputAmount={pa}
-          setInputAmount={setPa}
-          type={invType}
-          setType={setInvType}
-          typeData={[
-            { id: 'ty1', value: 'my', title: 'Monthly amount' },
-            { id: 'ty2', value: 'tgt', title: 'Target amount' },
-          ]}
+      <div className={styles.formStack}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <ValuePicker
+          className={styles.field}
+          value={pa}
+          onChange={setPa}
+          activeTab={invType}
+          onTabChange={setInvType}
           stepData={stepData}
-          stepSizePrefix={'sm'}
-          title={invType === 'my' ? 'Monthly Investment' : 'Target amount'}
+          tabs={[
+            { id: 'my', title: 'Monthly amount' },
+            { id: 'tgt', title: 'Target amount' },
+          ]}
         />
-        <RateOfInterest className="mb-2" rt={rt} setRt={setRt} />
-        <Tenure className="mb-3" rt={rt} setRt={setRt} />
+        <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
+        <ValuePicker.Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
         <DisplayCard
           primaryAmount={payoutAmount}
           title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}

@@ -5,6 +5,7 @@ import { useAuth } from '../context/useAuth';
 import LoadingFallback from './LoadingFallback';
 import GoogleSignInButton from './GoogleSignInButton';
 import SubscriptionPromptBanner from './SubscriptionPromptBanner';
+import styles from './ProtectedRoute.module.scss';
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAdmin?: boolean;
@@ -33,17 +34,17 @@ const ProtectedRoute = ({
   if (requireAdmin) {
     if (!isAuthenticated) {
       return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
-          <div className="card bg-base-100 border border-base-300 w-full max-w-md p-6 text-center shadow-lg">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <FiLock className="h-7 w-7" />
+        <div className={styles.container}>
+          <div className={styles.card}>
+            <div className={styles.iconWrapper}>
+              <FiLock className={styles.icon} />
             </div>
-            <h2 className="mb-2 text-xl font-bold">Admin Authentication Required</h2>
-            <p className="mb-6 text-sm opacity-70">
+            <h2 className={styles.title}>Admin Authentication Required</h2>
+            <p className={styles.description}>
               Please sign in with your administrator Google account to access data administration.
             </p>
-            <GoogleSignInButton className="w-full" />
-            <div className="mt-6 border-t border-base-200 pt-4">
+            <GoogleSignInButton className={styles.signInWrapper} />
+            <div className={styles.backRow}>
               <Link
                 to="/"
                 state={{ stayOnHome: true }}
@@ -55,7 +56,7 @@ const ProtectedRoute = ({
                     // ignore
                   }
                 }}
-                className="text-xs text-primary hover:underline"
+                className={styles.backLink}
               >
                 &larr; Back to Home
               </Link>
@@ -66,17 +67,17 @@ const ProtectedRoute = ({
     }
     if (!isAdmin) {
       return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
-          <div className="card bg-base-100 border border-error/30 w-full max-w-md p-6 text-center shadow-lg">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-error/10 text-error">
-              <FiAlertTriangle className="h-7 w-7" />
+        <div className={styles.container}>
+          <div className={`${styles.card} ${styles.cardError}`}>
+            <div className={`${styles.iconWrapper} ${styles.iconWrapperError}`}>
+              <FiAlertTriangle className={styles.icon} />
             </div>
-            <h2 className="mb-2 text-xl font-bold text-error">Admin Access Required</h2>
-            <p className="mb-2 text-sm opacity-70">
-              You are signed in as <span className="font-semibold">{user?.email}</span> (role:{' '}
+            <h2 className={`${styles.title} ${styles.titleError}`}>Admin Access Required</h2>
+            <p className={styles.subtitle}>
+              You are signed in as <span className={styles.userHighlight}>{user?.email}</span> (role:{' '}
               {user?.role}).
             </p>
-            <p className="mb-6 text-xs opacity-60">
+            <p className={styles.description}>
               This administration portal is restricted to accounts with administrator privileges.
             </p>
             <Link
@@ -90,7 +91,7 @@ const ProtectedRoute = ({
                   // ignore
                 }
               }}
-              className="btn btn-primary btn-sm"
+              className={styles.primaryBtn}
             >
               Return to Dashboard
             </Link>
@@ -102,17 +103,17 @@ const ProtectedRoute = ({
   // 2. Authentication Check: Require login for all protected tools
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
-        <div className="card bg-base-100 border border-base-300 w-full max-w-md p-6 text-center shadow-lg">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <FiLock className="h-7 w-7" />
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.iconWrapper}>
+            <FiLock className={styles.icon} />
           </div>
-          <h2 className="mb-2 text-xl font-bold">Authentication Required</h2>
-          <p className="mb-6 text-sm opacity-70">
+          <h2 className={styles.title}>Authentication Required</h2>
+          <p className={styles.description}>
             Please sign in with your Google account to access all features.
           </p>
-          <GoogleSignInButton className="w-full" />
-          <div className="mt-6 border-t border-base-200 pt-4">
+          <GoogleSignInButton className={styles.signInWrapper} />
+          <div className={styles.backRow}>
             <Link
               to="/"
               state={{ stayOnHome: true }}
@@ -124,7 +125,7 @@ const ProtectedRoute = ({
                   // ignore
                 }
               }}
-              className="text-xs text-primary hover:underline"
+              className={styles.backLink}
             >
               &larr; Back to Home
             </Link>
@@ -142,25 +143,25 @@ const ProtectedRoute = ({
   if (requirePaid) {
     if (!isPaid) {
       return (
-        <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
-          <div className="card bg-base-100 border border-primary/30 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <FiZap className="h-7 w-7" />
+        <div className={styles.container}>
+          <div className={`${styles.card} ${styles.cardPrimary}`}>
+            <div className={styles.iconWrapper}>
+              <FiZap className={styles.icon} />
             </div>
-            <h2 className="mb-2 text-xl font-bold">Pro Feature Required</h2>
-            <p className="mb-2 text-xs sm:text-sm opacity-75">
+            <h2 className={styles.title}>Pro Feature Required</h2>
+            <p className={styles.subtitle}>
               Quick Notes is available exclusively for active Pro members. Signed in as{' '}
-              <span className="font-semibold">{user?.email}</span>.
+              <span className={styles.userHighlight}>{user?.email}</span>.
             </p>
-            <p className="mb-6 text-xs opacity-60">
+            <p className={styles.description}>
               Upgrade to Pro for just ₹54/month to get unlimited rich-text Quick Notes with auto-sync, folders, tags, search, password protection, and cloud backups.
             </p>
-            <div className="space-y-2">
+            <div className={styles.actionStack}>
               <Link
                 to="/upgrade"
-                className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
+                className={styles.primaryBtn}
               >
-                <FiZap className="h-4 w-4" />
+                <FiZap className={styles.iconSm} />
                 <span>Unlock Pro for ₹54 / Month &rarr;</span>
               </Link>
               <Link
@@ -174,7 +175,7 @@ const ProtectedRoute = ({
                     // ignore
                   }
                 }}
-                className="btn btn-ghost btn-xs w-full opacity-80"
+                className={styles.ghostBtn}
               >
                 &larr; Return to Dashboard
               </Link>
@@ -203,33 +204,33 @@ const ProtectedRoute = ({
   // Live calculation tools (Mutual Funds, Inflation, PPP): Trial expires whichever earlier (15 runs or 48h)
   if (requireApiQuota && (isQuotaExceeded || isTimeExpired)) {
     return (
-      <div className="flex min-h-[65vh] flex-col items-center justify-center p-4">
-        <div className="card bg-base-100 border border-warning/40 w-full max-w-md p-6 sm:p-8 text-center shadow-xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-warning/15 text-warning">
-            {isQuotaExceeded ? <FiZap className="h-7 w-7" /> : <FiClock className="h-7 w-7" />}
+      <div className={styles.container}>
+        <div className={`${styles.card} ${styles.cardWarning}`}>
+          <div className={`${styles.iconWrapper} ${styles.iconWrapperWarning}`}>
+            {isQuotaExceeded ? <FiZap className={styles.icon} /> : <FiClock className={styles.icon} />}
           </div>
-          <h2 className="mb-2 text-xl font-bold">
+          <h2 className={styles.title}>
             {isQuotaExceeded ? 'Calculation Limit Reached' : '48-Hour Free Trial Expired'}
           </h2>
-          <p className="mb-2 text-xs sm:text-sm opacity-75">
+          <p className={styles.subtitle}>
             {isQuotaExceeded
               ? `You have used all ${limit} free live Mutual Fund, Inflation & PPP calculation runs for `
               : 'Your 48-hour free trial period for live financial analytics has ended for '}
-            <span className="font-semibold">{user?.email}</span>.
+            <span className={styles.userHighlight}>{user?.email}</span>.
           </p>
-          <p className="mb-6 text-xs opacity-60">
+          <p className={styles.description}>
             Unlock unlimited live calculations across all financial tools for just ₹54/month. Core
             calculators (FD, RD, EMI, SIP, SWP, Utilities) remain free.
           </p>
-          <div className="space-y-2">
+          <div className={styles.actionStack}>
             <Link
               to="/upgrade"
-              className="btn btn-primary w-full font-bold shadow-md flex items-center justify-center gap-1.5"
+              className={styles.primaryBtn}
             >
-              <FiZap className="h-4 w-4" />
+              <FiZap className={styles.iconSm} />
               <span>Unlock Pro for ₹54 / Month &rarr;</span>
             </Link>
-            <Link to="/fd-calculator" className="btn btn-ghost btn-xs w-full opacity-80">
+            <Link to="/fd-calculator" className={styles.ghostBtn}>
               Continue with Free Calculators Suite &rarr;
             </Link>
           </div>

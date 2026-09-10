@@ -16,6 +16,7 @@ import { BsCloudArrowUp, BsCloudArrowDown } from 'react-icons/bs';
 import { Note } from './NotesTypes';
 import { getUserEncryptionKey, encryptText } from './NotesCrypto';
 import { sanitizeNoteHtml, sanitizePlainInput } from './sanitizeHtml';
+import styles from './NotesModal.module.scss';
 interface NotesBackupModalProps {
   isOpen: boolean;
   notes: Note[];
@@ -240,41 +241,37 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
     }
   };
   return (
-    <div className="modal modal-open z-50">
-      <div className="modal-box max-w-lg rounded-2xl bg-base-100 p-0 shadow-2xl border border-base-300 overflow-hidden select-none">
-        <div className="p-4 border-b border-base-200 bg-base-200/50 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-content shadow-xs font-bold text-sm">
-              <FiUploadCloud className="w-4 h-4" />
+    <div className={styles.modalOverlay}>
+      <div className={`${styles.modalBox} ${styles.modalBoxLg}`} style={{ userSelect: 'none' }}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalIconBox} style={{ background: 'var(--color-primary)', color: '#ffffff' }}>
+              <FiUploadCloud size={16} />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-bold text-base text-base-content leading-tight">Backup & Restore</h3>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 border border-success/25 px-1.5 py-0.5 rounded-full">
-                  <FiShield className="w-2.5 h-2.5" /> E2EE
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                <h3 className={styles.modalTitle}>Backup &amp; Restore</h3>
+                <span className={`${styles.badge} ${styles.badgeSuccess}`}>
+                  <FiShield size={10} /> E2EE
                 </span>
               </div>
-              <p className="text-[11px] text-base-content/50">Google Drive · OneDrive · Local Storage</p>
+              <p className={styles.modalSubtitle}>Google Drive · OneDrive · Local Storage</p>
             </div>
           </div>
-          <button onClick={onClose} className="btn btn-ghost btn-xs btn-circle">
-            <FiX className="w-4 h-4" />
+          <button onClick={onClose} className={styles.closeBtn}>
+            <FiX size={16} />
           </button>
         </div>
-        <div className="flex border-b border-base-200 bg-base-100 px-4 pt-2">
+        <div className={styles.tabsRow}>
           <button
             onClick={() => {
               setActiveTab('backup');
               setError(null);
               setSuccessMsg(null);
             }}
-            className={`pb-2.5 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
-              activeTab === 'backup'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-base-content/60 hover:text-base-content'
-            }`}
+            className={`${styles.tabItem} ${activeTab === 'backup' ? styles.tabItemActive : ''}`}
           >
-            <BsCloudArrowUp className="w-4 h-4" />
+            <BsCloudArrowUp size={16} />
             Backup / Dump
           </button>
           <button
@@ -283,133 +280,140 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
               setError(null);
               setSuccessMsg(null);
             }}
-            className={`pb-2.5 px-4 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
-              activeTab === 'restore'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-base-content/60 hover:text-base-content'
-            }`}
+            className={`${styles.tabItem} ${activeTab === 'restore' ? styles.tabItemActive : ''}`}
           >
-            <BsCloudArrowDown className="w-4 h-4" />
+            <BsCloudArrowDown size={16} />
             Restore
           </button>
         </div>
-        <div className="px-4 pt-3">
+        <div style={{ padding: '0.75rem 1rem 0' }}>
           {error && (
-            <div className="alert alert-error text-xs py-2 px-3 rounded-lg flex items-center gap-2">
-              <FiAlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className={styles.alertError}>
+              <FiAlertCircle size={16} style={{ flexShrink: 0 }} />
               <span>{error}</span>
             </div>
           )}
           {successMsg && (
-            <div className="alert alert-success text-xs py-2 px-3 rounded-lg flex items-center gap-2 text-white">
-              <FiCheck className="w-4 h-4 flex-shrink-0" />
+            <div className={styles.alertSuccess}>
+              <FiCheck size={16} style={{ flexShrink: 0 }} />
               <span>{successMsg}</span>
             </div>
           )}
         </div>
         {activeTab === 'backup' && (
-          <div className="p-4 space-y-4">
-            <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl text-xs flex items-center justify-between">
+          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div
+              style={{
+                padding: '0.75rem',
+                background: 'rgba(99, 102, 241, 0.08)',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
               <div>
-                <p className="font-semibold text-primary">
+                <p style={{ fontWeight: 600, color: 'var(--color-primary)', margin: 0 }}>
                   Ready to Backup {notes.length} Notes
                 </p>
-                <p className="text-[11px] text-base-content/60 mt-0.5">
-                  {totalActiveNotes} active notes, {folders.length} folders, checklists, tags, & locks
+                <p style={{ fontSize: '11px', opacity: 0.6, margin: '2px 0 0 0' }}>
+                  {totalActiveNotes} active notes, {folders.length} folders, checklists, tags, &amp; locks
                 </p>
               </div>
-              <span className="badge badge-primary font-bold text-[10px]">
+              <span className={`${styles.badge} ${styles.badgeInfo}`}>
                 v2.0
               </span>
             </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.5, marginBottom: '0.5rem' }}>
                 Dump to Cloud Storage
               </label>
               <button
                 onClick={handleDumpToGoogleDrive}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-base-200 hover:border-primary/50 hover:bg-base-200/60 transition-all text-left group"
+                className={styles.cloudOptionBtn}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
-                    <SiGoogledrive className="w-5 h-5" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+                    <SiGoogledrive size={20} />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">
+                    <h4 style={{ fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>
                       Dump to Google Drive
                     </h4>
-                    <p className="text-[11px] text-base-content/60">
+                    <p style={{ fontSize: '11px', opacity: 0.6, margin: '2px 0 0 0' }}>
                       Save directly into your Google Drive folders
                     </p>
                   </div>
                 </div>
-                <FiExternalLink className="w-4 h-4 text-base-content/40 group-hover:text-primary" />
+                <FiExternalLink size={16} style={{ opacity: 0.4 }} />
               </button>
               <button
                 onClick={handleDumpToOneDrive}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-base-200 hover:border-primary/50 hover:bg-base-200/60 transition-all text-left group"
+                className={styles.cloudOptionBtn}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-600">
-                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+                    <svg style={{ width: '20px', height: '20px', fill: 'currentColor' }} viewBox="0 0 24 24">
                       <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">
+                    <h4 style={{ fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>
                       Dump to Microsoft OneDrive
                     </h4>
-                    <p className="text-[11px] text-base-content/60">
+                    <p style={{ fontSize: '11px', opacity: 0.6, margin: '2px 0 0 0' }}>
                       Save directly into your OneDrive personal or work vault
                     </p>
                   </div>
                 </div>
-                <FiExternalLink className="w-4 h-4 text-base-content/40 group-hover:text-primary" />
+                <FiExternalLink size={16} style={{ opacity: 0.4 }} />
               </button>
               <button
                 onClick={handleNativeShare}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-base-200 hover:border-primary/50 hover:bg-base-200/60 transition-all text-left group"
+                className={styles.cloudOptionBtn}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <FiShare2 className="w-5 h-5" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
+                    <FiShare2 size={20} />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">
+                    <h4 style={{ fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>
                       Share to Drive / Files App
                     </h4>
-                    <p className="text-[11px] text-base-content/60">
+                    <p style={{ fontSize: '11px', opacity: 0.6, margin: '2px 0 0 0' }}>
                       Open device share sheet (Drive, OneDrive, Files)
                     </p>
                   </div>
                 </div>
-                <FiShare2 className="w-4 h-4 text-base-content/40 group-hover:text-primary" />
+                <FiShare2 size={16} style={{ opacity: 0.4 }} />
               </button>
               <button
                 onClick={handleDownloadBackup}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-base-200 hover:border-primary/50 hover:bg-base-200/60 transition-all text-left group"
+                className={styles.cloudOptionBtn}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                    <FiDownload className="w-5 h-5" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                    <FiDownload size={20} />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">
+                    <h4 style={{ fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>
                       Download JSON File
                     </h4>
-                    <p className="text-[11px] text-base-content/60">
+                    <p style={{ fontSize: '11px', opacity: 0.6, margin: '2px 0 0 0' }}>
                       Save standard backup file to device or external storage
                     </p>
                   </div>
                 </div>
-                <FiDownload className="w-4 h-4 text-base-content/40 group-hover:text-primary" />
+                <FiDownload size={16} style={{ opacity: 0.4 }} />
               </button>
             </div>
           </div>
         )}
         {activeTab === 'restore' && (
-          <div className="p-4 space-y-4">
-            <p className="text-xs text-base-content/70">
+          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <p className={styles.helperText}>
               Restore notes from any backup file stored in Google Drive, OneDrive, or local device storage.
             </p>
             <input
@@ -417,63 +421,61 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
               type="file"
               accept=".json,application/json"
               onChange={handleFileChange}
-              className="hidden"
+              style={{ display: 'none' }}
             />
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-base-300 hover:border-primary p-6 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer bg-base-200/40 transition-colors"
+              className={styles.dropzone}
             >
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <FiFileText className="w-5 h-5" />
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
+                <FiFileText size={20} />
               </div>
-              <p className="text-sm font-semibold text-base-content">
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
                 {fileName ? fileName : 'Choose Backup File (.json)'}
               </p>
-              <p className="text-[11px] text-base-content/50 mt-1">
+              <p style={{ fontSize: '11px', opacity: 0.5, margin: '4px 0 0 0' }}>
                 Browse from Google Drive, OneDrive, or Device Storage
               </p>
             </div>
             {parsedBackup && (
-              <div className="p-3 bg-base-200/70 border border-base-300 rounded-xl space-y-2 text-xs">
-                <div className="flex items-center justify-between font-semibold">
+              <div style={{ padding: '0.75rem', background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '12px', fontSize: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 600 }}>
                   <span>Backup Details:</span>
-                  <span className="badge badge-sm badge-success text-white">Valid Backup</span>
+                  <span className={`${styles.badge} ${styles.badgeSuccess}`}>Valid Backup</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] text-base-content/70">
-                  <div className="flex items-center gap-1.5">
-                    <FiFileText className="w-3.5 h-3.5 text-primary" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', paddingTop: '0.5rem', fontSize: '11px', opacity: 0.7 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    <FiFileText size={14} style={{ color: 'var(--color-primary)' }} />
                     <span>Total Notes: <b>{parsedBackup.note_count}</b></span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <FiFolder className="w-3.5 h-3.5 text-primary" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    <FiFolder size={14} style={{ color: 'var(--color-primary)' }} />
                     <span>Folders: <b>{parsedBackup.folders?.length || 1}</b></span>
                   </div>
                 </div>
-                <div className="pt-2 border-t border-base-300 space-y-1.5">
-                  <label className="text-[11px] font-bold block text-base-content/60">
+                <div style={{ paddingTop: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, display: 'block', opacity: 0.6, marginBottom: '0.35rem' }}>
                     Restore Mode:
                   </label>
-                  <div className="flex gap-2">
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
                       type="button"
                       onClick={() => setRestoreMode('merge')}
-                      className={`btn btn-xs flex-1 rounded-lg ${
-                        restoreMode === 'merge' ? 'btn-primary font-semibold' : 'btn-ghost'
-                      }`}
+                      className={restoreMode === 'merge' ? styles.btnPrimary : styles.btnGhost}
+                      style={{ flex: 1 }}
                     >
                       Merge (Recommended)
                     </button>
                     <button
                       type="button"
                       onClick={() => setRestoreMode('replace')}
-                      className={`btn btn-xs flex-1 rounded-lg ${
-                        restoreMode === 'replace' ? 'btn-error text-white font-semibold' : 'btn-ghost'
-                      }`}
+                      className={restoreMode === 'replace' ? `${styles.btnGhost} ${styles.btnDanger}` : styles.btnGhost}
+                      style={{ flex: 1, border: restoreMode === 'replace' ? '1px solid #ef4444' : '1px solid var(--color-border)' }}
                     >
                       Replace All
                     </button>
                   </div>
-                  <p className="text-[10px] text-base-content/50 italic">
+                  <p style={{ fontSize: '10px', opacity: 0.5, fontStyle: 'italic', margin: '4px 0 0 0' }}>
                     {restoreMode === 'merge'
                       ? 'Combines backup notes with your current notes without deleting any.'
                       : 'WARNING: Clears current database notes and replaces them entirely with this backup.'}
@@ -481,11 +483,11 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
                 </div>
               </div>
             )}
-            <div className="flex justify-end gap-2 pt-2 border-t border-base-200">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
               <button
                 type="button"
                 onClick={onClose}
-                className="btn btn-ghost btn-sm text-xs rounded-xl"
+                className={styles.btnGhost}
               >
                 Close
               </button>
@@ -494,12 +496,12 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
                   type="button"
                   onClick={executeRestore}
                   disabled={isRestoring}
-                  className="btn btn-primary btn-sm text-xs font-semibold rounded-xl shadow-xs"
+                  className={styles.btnPrimary}
                 >
                   {isRestoring ? (
-                    <span className="loading loading-spinner loading-xs"></span>
+                    <span className={styles.spinner} />
                   ) : (
-                    <FiCheck className="w-3.5 h-3.5 mr-1" />
+                    <FiCheck size={14} />
                   )}
                   {isRestoring ? 'Restoring...' : 'Restore Notes Now'}
                 </button>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiTruck, FiMapPin, FiStar } from 'react-icons/fi';
+import styles from './ShiprocketRates.module.scss';
 interface CourierCompany {
   courier_company_id: number;
   courier_name: string;
@@ -309,18 +310,18 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
       : '0.00';
   return (
     <>
-      <h2 className="card-title text-lg flex items-center gap-2">
-        <FiTruck className="text-primary" /> Shiprocket Rate Calculator
+      <h2 className={styles.cardTitle}>
+        <FiTruck className={styles.titleIcon} /> Shiprocket Rate Calculator
       </h2>
-      {error && <div className="alert alert-error text-sm my-2 py-2">{error}</div>}
-      <div className="grid grid-cols-2 mt-2 md:grid-cols-4 gap-4 mb-4">
-        <div className="min-h-[120px]">
-          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+      {error && <div className={styles.alertError}>{error}</div>}
+      <div className={styles.pincodeGrid}>
+        <div className={styles.pincodeCol}>
+          <label className={styles.label}>
             Pickup Pincode*
           </label>
           <input
             type="text"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={pickup}
             maxLength={6}
             placeholder="e.g. 700157"
@@ -335,34 +336,34 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
               }
             }}
           />
-          <div className="min-h-[16px] mt-1 text-[11px]">
+          <div className={styles.statusContainer}>
             {pickupLoading && (
-              <span className="opacity-60 flex items-center gap-1">
-                <span className="loading loading-spinner loading-xs text-primary" />
+              <span className={styles.statusLoading}>
+                <span className={styles.spinnerSmall} />
                 Looking up location...
               </span>
             )}
             {!pickupLoading && pickupLocation && (
               <span
-                className="font-semibold text-primary flex items-center gap-1 truncate"
+                className={styles.statusSuccess}
                 title={pickupLocation.tooltip || pickupLocation.display}
               >
-                <FiMapPin className="shrink-0 w-3 h-3 text-primary" />
-                <span className="text-wrap leading-tight">{pickupLocation.display}</span>
+                <FiMapPin className={styles.locationIcon} />
+                <span>{pickupLocation.display}</span>
               </span>
             )}
             {!pickupLoading && !pickupLocation && pickup.length === 6 && (
-              <span className="text-error opacity-75">Location not found</span>
+              <span className={styles.statusError}>Location not found</span>
             )}
           </div>
         </div>
-        <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+        <div className={styles.pincodeCol}>
+          <label className={styles.label}>
             Delivery Pincode*
           </label>
           <input
             type="text"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={delivery}
             maxLength={6}
             placeholder="e.g. 560083"
@@ -377,107 +378,93 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
               }
             }}
           />
-          <div className="min-h-[16px] mt-1 text-[11px]">
+          <div className={styles.statusContainer}>
             {deliveryLoading && (
-              <span className="opacity-60 flex items-center gap-1">
-                <span className="loading loading-spinner loading-xs text-primary" />
+              <span className={styles.statusLoading}>
+                <span className={styles.spinnerSmall} />
                 Looking up location...
               </span>
             )}
             {!deliveryLoading && deliveryLocation && (
               <span
-                className="font-semibold text-primary flex items-center gap-1 truncate"
+                className={styles.statusSuccess}
                 title={deliveryLocation.tooltip || deliveryLocation.display}
               >
-                <FiMapPin className="shrink-0 w-3 h-3 text-primary" />
-                <span className="text-wrap leading-tight">{deliveryLocation.display}</span>
+                <FiMapPin className={styles.locationIcon} />
+                <span>{deliveryLocation.display}</span>
               </span>
             )}
             {!deliveryLoading && !deliveryLocation && delivery.length === 6 && (
-              <span className="text-error opacity-75">Location not found</span>
+              <span className={styles.statusError}>Location not found</span>
             )}
           </div>
         </div>
-        {/* <div>
-          <label className="block text-[11px] font-bold opacity-70 mb-1 uppercase tracking-wider">
-            COD Required?
-          </label>
-          <div className="mt-1">
-            <input
-              type="checkbox"
-              className="toggle toggle-primary toggle-sm"
-              checked={cod}
-              onChange={(e) => setCod(e.target.checked)}
-            />
-          </div>
-        </div> */}
       </div>
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <div className={styles.dimensionsGrid}>
         <div>
-          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+          <label className={styles.dimLabel}>
             Length (cm)*
           </label>
           <input
             type="number"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={length}
             onChange={(e) => setLength(e.target.value)}
             placeholder="Required"
           />
         </div>
         <div>
-          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+          <label className={styles.dimLabel}>
             Breadth (cm)*
           </label>
           <input
             type="number"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={breadth}
             onChange={(e) => setBreadth(e.target.value)}
             placeholder="Required"
           />
         </div>
         <div>
-          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+          <label className={styles.dimLabel}>
             Height (cm)*
           </label>
           <input
             type="number"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={height}
             onChange={(e) => setHeight(e.target.value)}
             placeholder="Required"
           />
         </div>
         <div>
-          <label className="block text-[9px] font-bold opacity-70 mb-1 uppercase tracking-wider">
+          <label className={styles.dimLabel}>
             D. Weight (kg)*
           </label>
           <input
             type="number"
-            className="input input-sm input-primary input-bordered w-full"
+            className={styles.input}
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
           />
         </div>
       </div>
-      <div className="mb-4 bg-primary/5 text-primary px-4 py-1 rounded-lg flex justify-between items-center text-sm">
-        <span>
+      <div className={styles.summaryBox}>
+        <div className={styles.summaryVolumetric}>
           Volumetric Weight
-          <br /> <span className="text-md">{volumetricWeight} kg</span>
-        </span>
-        <span className="opacity-80 font-medium">
+          <span>{volumetricWeight} kg</span>
+        </div>
+        <div className={styles.summaryApplied}>
           Applied Weight
-          <br />
-          <strong className="text-lg">
+          <strong>
             {Math.max(Number(weight || 0), Number(volumetricWeight))} kg
           </strong>
-        </span>
+        </div>
       </div>
-      <div className="flex justify-end">
-        <button className="btn btn-primary" onClick={fetchRates} disabled={loading}>
+      <div className={styles.actionsRow}>
+        <button className={styles.submitBtn} onClick={fetchRates} disabled={loading}>
           {loading ? (
-            <span className="loading loading-spinner"></span>
+            <span className={styles.btnSpinner} />
           ) : result && result.length > 0 ? (
             'Refresh Rates'
           ) : (
@@ -486,18 +473,14 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
         </button>
       </div>
       {result && (
-        <div className="mt-2">
-          <h3 className="font-bold mb-1">Available Couriers ({result.length})</h3>
-          <div className="overflow-y-auto overflow-x-hidden h-[calc(100dvh-485px)]">
-            <table className="table table-sm table-zebra">
+        <div className={styles.resultsSection}>
+          <h3 className={styles.resultsTitle}>Available Couriers ({result.length})</h3>
+          <div className={styles.tableContainer}>
+            <table className={styles.ratesTable}>
               <thead>
                 <tr>
                   <th>Courier</th>
-                  <th>
-                    <span className="inline-flex items-center gap-1.5">
-                      <span>Est. Time</span>
-                    </span>
-                  </th>
+                  <th>Est. Time</th>
                   <th>Rate</th>
                   <th>Rating</th>
                 </tr>
@@ -505,17 +488,17 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
               <tbody>
                 {result.map((c) => (
                   <tr key={c.courier_company_id}>
-                    <td className="font-semibold">{c.courier_name}</td>
+                    <td className={styles.courierName}>{c.courier_name}</td>
                     <td>{c.etd}</td>
-                    <td className="font-semibold text-primary text-[15px]">₹{c.rate}</td>
-                    <td className="font-semibold text-primary text-right">
-                      {c.rating} <FiStar className="inline" />
+                    <td className={styles.rateVal}>₹{c.rate}</td>
+                    <td className={styles.ratingVal}>
+                      {c.rating} <FiStar />
                     </td>
                   </tr>
                 ))}
                 {result.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="text-center">
+                    <td colSpan={4} className={styles.emptyState}>
                       No couriers available for this route.
                     </td>
                   </tr>

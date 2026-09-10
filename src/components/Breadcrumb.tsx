@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import styles from './Breadcrumb.module.scss';
 export interface BreadcrumbItem {
   name: string;
   href?: string;
@@ -14,9 +15,9 @@ interface BreadcrumbProps {
  */
 const Breadcrumb = ({ items, className = '' }: BreadcrumbProps) => {
   return (
-    <nav aria-label="breadcrumb" className={`mb-4 ${className}`}>
+    <nav aria-label="breadcrumb" className={`${styles.nav} ${className}`.trim()}>
       <ol
-        className="flex flex-wrap items-center gap-1 text-xs text-base-content/60"
+        className={styles.list}
         itemScope
         itemType="https://schema.org/BreadcrumbList"
       >
@@ -25,19 +26,19 @@ const Breadcrumb = ({ items, className = '' }: BreadcrumbProps) => {
           return (
             <li
               key={index}
-              className="flex items-center gap-1"
+              className={styles.item}
               itemProp="itemListElement"
               itemScope
               itemType="https://schema.org/ListItem"
             >
               {index > 0 && (
-                <span aria-hidden="true" className="opacity-40 select-none">
+                <span aria-hidden="true" className={styles.separator}>
                   ›
                 </span>
               )}
               {isLast || !item.href ? (
                 <span
-                  className="font-medium text-base-content/80"
+                  className={styles.current}
                   aria-current={isLast ? 'page' : undefined}
                   itemProp="name"
                 >
@@ -46,7 +47,7 @@ const Breadcrumb = ({ items, className = '' }: BreadcrumbProps) => {
               ) : (
                 <Link
                   to={item.href}
-                  className="hover:text-primary transition-colors"
+                  className={styles.link}
                   itemProp="item"
                 >
                   <span itemProp="name">{item.name}</span>

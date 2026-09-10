@@ -6,6 +6,7 @@ import Logo from '../components/Logo';
 import { PaymentSettings } from '../types/auth';
 import { loadRazorpayScript } from '../utils/razorpay';
 import SEOHead from '../components/SEOHead';
+import styles from './Upgrade.module.scss';
 const Upgrade = () => {
   const { user, isAuthenticated, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -142,50 +143,50 @@ const Upgrade = () => {
     }
   };
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+    <main className={styles.container}>
       <SEOHead
         title="Upgrade to Pro | Rupee Calculator"
         description="Unlock unlimited live AMFI mutual fund syncing, institutional-grade calculation limits, and World Bank PPP economic modeling for ₹54/month."
         canonicalPath="/upgrade"
         noIndex={true}
       />
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 mb-3">
+      <div className={styles.header}>
+        <div className={styles.badgeGroup}>
           <Logo />
-          <span className="text-xs uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
+          <span className={styles.supportBadge}>
             Support the Creator
           </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Keep Calculators Suite Ad-Free &amp; Alive
         </h1>
-        <p className="mt-2 text-sm sm:text-base opacity-75 max-w-xl mx-auto">
+        <p className={styles.subtitle}>
           An honest, fast, private financial suite built for everyday investors in India.
         </p>
       </div>
       {/* Active Trial Banner vs Expired Status */}
       {isTrialActive && (
-        <div className="card bg-info/10 border border-info/30 p-4 mb-6 rounded-2xl shadow-sm">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div className={styles.trialBanner}>
+          <div className={styles.trialBannerContent}>
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-info uppercase tracking-wider mb-1">
-                <FiClock className="h-3.5 w-3.5" />
+              <div className={styles.trialEyebrow}>
+                <FiClock />
                 <span>Live Analytics Trial Active</span>
               </div>
-              <p className="text-xs sm:text-sm font-medium">
+              <p className={styles.trialMainText}>
                 You have{' '}
-                <span className="font-bold text-primary">
+                <span className={styles.highlightText}>
                   {remainingCalculations} of {user?.freeLimit || 15}
                 </span>{' '}
                 live Mutual Fund, Inflation &amp; PPP calculation runs left
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}.
               </p>
-              <p className="text-[11px] opacity-65 mt-0.5">
+              <p className={styles.trialSubText}>
                 All other tools (FD, RD, SWP, SIP, EMI, Utilities) are 100% free for 48 hours from
                 first usage, and remain free to use afterwards.
               </p>
             </div>
-            <Link to="/mutual-funds/lumpsum" className="btn btn-outline btn-info btn-xs shrink-0">
+            <Link to="/mutual-funds/lumpsum" className={styles.trialReturnBtn}>
               Return to Calculators &rarr;
             </Link>
           </div>
@@ -193,23 +194,23 @@ const Upgrade = () => {
       )}
       {message && (
         <div
-          className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} text-sm py-3 px-4 mb-6 rounded-xl shadow-sm`}
+          className={`${styles.alert} ${message.type === 'success' ? styles.alertSuccess : styles.alertError}`}
         >
           <span>{message.text}</span>
         </div>
       )}
       {/* Human Developer Letter Card */}
-      <div className="card bg-base-100 border border-base-300 p-6 sm:p-8 shadow-xl mb-8 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-warning/15 shrink-0">
-            <FiCoffee className="h-5 w-5 text-warning" />
+      <div className={styles.letterCard}>
+        <div className={styles.letterHeader}>
+          <div className={styles.letterIconWrapper}>
+            <FiCoffee size={20} />
           </div>
           <div>
-            <h2 className="text-lg font-bold">A quick note from the developer</h2>
-            <p className="text-xs opacity-60">Why ₹54/month makes a huge difference</p>
+            <h2 className={styles.letterHeading}>A quick note from the developer</h2>
+            <p className={styles.letterSubhead}>Why ₹54/month makes a huge difference</p>
           </div>
         </div>
-        <div className="text-xs sm:text-sm leading-relaxed opacity-85 space-y-3 pt-2">
+        <div className={styles.letterBody}>
           <p>
             Hey there! I built this platform because I was tired of bloated financial websites
             stuffed with credit card ads, loan banners, and spammy popups asking for phone numbers.
@@ -225,7 +226,7 @@ const Upgrade = () => {
             running PostgreSQL databases, serverless edge compute, and daily mutual fund data feeds
             costs money every month.
           </p>
-          <p className="font-semibold text-primary">
+          <p className={styles.highlightText}>
             ₹54 a month is less than ₹1.80 a day—literally less than a cutting chai. If this
             platform saved you time or gave you clarity on your financial goals, your support
             directly keeps this project alive, ad-free, and growing.
@@ -233,56 +234,56 @@ const Upgrade = () => {
         </div>
       </div>
       {/* Pricing & Checkout Card */}
-      <div className="card bg-gradient-to-br from-primary/10 via-base-100 to-base-200 border-2 border-primary/40 p-6 sm:p-8 shadow-2xl relative overflow-hidden mb-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-center sm:text-left">
-            <span className="badge badge-primary font-bold text-xs uppercase px-3 py-1 mb-2">
+      <div className={styles.pricingCard}>
+        <div className={styles.pricingContent}>
+          <div className={styles.pricingInfo}>
+            <span className={styles.proBadge}>
               Pro Access
             </span>
-            <div className="flex items-baseline justify-center sm:justify-start gap-1">
-              <span className="text-4xl sm:text-5xl font-extrabold text-primary">₹{amount}</span>
-              <span className="text-sm opacity-70 font-medium">/ 30 Days</span>
+            <div className={styles.priceDisplay}>
+              <span className={styles.priceAmount}>₹{amount}</span>
+              <span className={styles.pricePeriod}>/ 30 Days</span>
             </div>
-            <p className="mt-1.5 text-xs opacity-75">
+            <p className={styles.pricingAccount}>
               Instant activation for{' '}
-              <span className="font-semibold">{user?.email || 'your account'}</span>
+              <span>{user?.email || 'your account'}</span>
             </p>
           </div>
-          <div className="w-full sm:w-auto">
+          <div className={styles.checkoutAction}>
             <button
               type="button"
               disabled={isProcessing}
               onClick={() => void handleRazorpayPayment()}
-              className="btn btn-primary btn-lg w-full shadow-lg gap-2 text-sm sm:text-base font-bold flex items-center justify-center"
+              className={styles.payButton}
             >
               {isProcessing ? (
                 <>
-                  <span className="loading loading-spinner loading-sm" />
+                  <span className={styles.spinner} />
                   <span>Processing Payment...</span>
                 </>
               ) : (
                 <>
-                  <FiLock className="h-4 w-4" />
+                  <FiLock />
                   <span>Pay ₹{amount} &amp; Unlock 30 Days Pro</span>
                 </>
               )}
             </button>
-            <p className="mt-2 text-center text-[11px] opacity-60">
+            <p className={styles.payMethodsNote}>
               UPI (GPay, PhonePe, Paytm, BHIM) • Cards • NetBanking
             </p>
           </div>
         </div>
-        <div className="mt-6 pt-6 border-t border-base-300 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs opacity-80">
-          <div className="flex items-center gap-2">
-            <FiCheck className="text-success font-bold h-4 w-4 shrink-0" />
+        <div className={styles.featuresGrid}>
+          <div className={styles.featureItem}>
+            <FiCheck className={styles.featureCheckIcon} />
             <span>Unlimited Mutual Fund Analytics</span>
           </div>
-          <div className="flex items-center gap-2">
-            <FiCheck className="text-success font-bold h-4 w-4 shrink-0" />
+          <div className={styles.featureItem}>
+            <FiCheck className={styles.featureCheckIcon} />
             <span>Daily AMFI Live NAV Sync</span>
           </div>
-          <div className="flex items-center gap-2">
-            <FiCheck className="text-success font-bold h-4 w-4 shrink-0" />
+          <div className={styles.featureItem}>
+            <FiCheck className={styles.featureCheckIcon} />
             <span>Zero Ads &amp; Complete Privacy</span>
           </div>
         </div>

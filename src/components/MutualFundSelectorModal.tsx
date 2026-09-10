@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import JoinedButtonGroup from './JoinedButtonGroup';
 import { MFType } from '../types/types';
+import styles from './MutualFundSelectorModal.module.scss';
 interface PinnedFund {
   schemeCode: string;
   schemeName: string;
@@ -41,34 +42,34 @@ const MutualFundSelectorModal = ({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3"
+      className={styles.dialogOverlay}
       role="dialog"
       aria-modal="true"
       aria-labelledby="mutual-fund-selector-title"
     >
       <button
         type="button"
-        className="absolute inset-0 h-full w-full bg-black/40"
+        className={styles.backdrop}
         aria-label="Close mutual fund selector"
         onClick={onClose}
       />
-      <section className="relative z-10 flex h-[90dvh] w-full max-w-2xl flex-col bg-base-100 p-4 shadow-xl">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="mutual-fund-selector-title" className="text-lg font-semibold">
+      <section className={styles.modalContent}>
+        <div className={styles.header}>
+          <h2 id="mutual-fund-selector-title" className={styles.headerTitle}>
             Select mutual funds
           </h2>
           <button
             type="button"
-            className="btn btn-sm btn-square"
+            className={styles.closeBtn}
             aria-label="Close"
             onClick={onClose}
           >
-            <span aria-hidden="true" className="text-xl leading-none">
+            <span aria-hidden="true" className={styles.closeIcon}>
               &times;
             </span>
           </button>
         </div>
-        <div className="mb-2 flex gap-2">
+        <div className={styles.filterRow}>
           <JoinedButtonGroup
             data={[
               { id: 'direct', title: 'Direct', value: 'Direct' },
@@ -93,19 +94,19 @@ const MutualFundSelectorModal = ({
           type="text"
           placeholder="Search Mutual Funds..."
           maxLength={80}
-          className="input input-sm input-primary mb-2 w-full"
+          className={styles.searchInput}
           value={searchKey}
           onChange={(event) => setSearchKey(event.target.value.replace(/[.*+?^${}()|[\]\\]/g, '').slice(0, 80))}
           autoFocus
         />
         {pinnedFunds.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1" aria-label="Selected mutual funds">
+          <div className={styles.pinnedRow} aria-label="Selected mutual funds">
             {pinnedFunds.map((fund, index) => {
               const isLoading = loadingSchemeCodes?.has(fund.schemeCode);
               return (
                 <div
                   key={fund.schemeCode}
-                  className="badge badge-primary badge-outline max-w-full gap-1 py-2 text-left cursor-pointer hover:bg-primary hover:text-primary-content transition-colors"
+                  className={styles.pinnedBadge}
                   title={`Remove ${fund.schemeName}`}
                   onClick={() =>
                     togglePinFund({
@@ -116,9 +117,9 @@ const MutualFundSelectorModal = ({
                   }
                 >
                   {isLoading && (
-                    <span className="loading loading-spinner loading-xs mr-1 shrink-0" />
+                    <span className={styles.badgeSpinner} />
                   )}
-                  <span className="truncate">
+                  <span className={styles.fundBadgeName}>
                     {index + 1}. {fund.schemeName}
                   </span>
                   <span aria-hidden="true">&times;</span>
@@ -127,7 +128,7 @@ const MutualFundSelectorModal = ({
             })}
           </div>
         )}
-        <div className="mf-container min-h-0 flex-1 overflow-y-auto">
+        <div className={styles.fundsList}>
           {funds.length > 0 ? (
             <>
               {funds.slice(0, 100).map((fund) => {
@@ -138,41 +139,41 @@ const MutualFundSelectorModal = ({
                 return (
                   <label
                     key={fund.id}
-                    className={`label cursor-pointer justify-start gap-2 px-1 py-1.5 hover:bg-base-200/60 rounded transition-colors ${isPinned ? 'font-semibold text-primary' : ''}`}
+                    className={`${styles.fundItem} ${isPinned ? styles.pinned : ''}`}
                   >
                     <input
                       type="checkbox"
-                      className="checkbox checkbox-primary checkbox-sm"
+                      className={styles.checkbox}
                       checked={isPinned}
                       disabled={!isPinned && pinnedFunds.length >= 8}
                       onChange={() => void togglePinFund(fund)}
                     />
                     {isLoading ? (
-                      <span className="loading loading-spinner loading-xs text-primary shrink-0" />
+                      <span className={styles.fundSpinner} />
                     ) : pinnedFund ? (
                       <span
-                        className="inline-block h-2 w-2 shrink-0 rounded-full"
+                        className={styles.colorDot}
                         style={{ backgroundColor: pinnedFund.color }}
                         aria-hidden="true"
                       />
                     ) : null}
-                    <span className="flex-1 text-sm">{fund.name}</span>
+                    <span className={styles.fundName}>{fund.name}</span>
                   </label>
                 );
               })}
               {funds.length > 100 && (
-                <div className="py-2 text-center text-xs opacity-60 italic">
+                <div className={styles.emptyMessage}>
                   Showing top 100 results. Please refine your search.
                 </div>
               )}
             </>
           ) : (
-            <p className="py-4 text-center text-sm opacity-60">
+            <p className={styles.loadingMessage}>
               Enter a search term to find mutual funds.
             </p>
           )}
         </div>
-        <button type="button" className="btn btn-primary mt-3 w-full" onClick={onClose}>
+        <button type="button" className={styles.doneBtn} onClick={onClose}>
           Done
         </button>
       </section>

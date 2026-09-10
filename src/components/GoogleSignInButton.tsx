@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
+import styles from './GoogleSignInButton.module.scss';
 declare global {
   interface Window {
     google?: {
@@ -43,7 +44,7 @@ interface GoogleSignInButtonProps {
   modalTitle?: string;
 }
 const GoogleIcon = () => (
-  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
+  <svg className={styles.googleIcon} viewBox="0 0 24 24">
     <path
       fill="#4285F4"
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -204,9 +205,9 @@ const GoogleSignInButton = ({
   const isAdminCandidate =
     email.trim().toLowerCase() === (import.meta.env.VITE_ALLOWED_EMAIL || '').trim().toLowerCase();
   return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
+    <div className={`${styles.container} ${className}`}>
       {hasValidClientId ? (
-        <div ref={buttonRef} className="min-h-[44px]" />
+        <div ref={buttonRef} className={styles.gsiButtonWrapper} />
       ) : (
         <button
           type="button"
@@ -215,57 +216,57 @@ const GoogleSignInButton = ({
             setError(null);
             setIsModalOpen(true);
           }}
-          className="btn btn-outline border-base-300 hover:border-primary flex items-center justify-center gap-3 bg-base-100 px-5 py-2.5 font-medium shadow-sm transition-all text-sm rounded-lg hover:shadow-md cursor-pointer"
+          className={styles.fallbackButton}
         >
           <GoogleIcon />
           <span>Sign up with Google</span>
         </button>
       )}
-      {error && !isModalOpen && <p className="text-xs text-error text-center">{error}</p>}
+      {error && !isModalOpen && <p className={styles.errorText}>{error}</p>}
       {/* Interactive Authorization Modal Flow */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <div className={styles.modalOverlay}>
           <div
-            className="card bg-base-100 border border-base-300 w-full max-w-md p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150"
+            className={styles.modalCard}
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-modal-title"
           >
             <button
               type="button"
-              className="btn btn-ghost btn-xs btn-square absolute right-4 top-4 opacity-70 hover:opacity-100"
+              className={styles.closeButton}
               onClick={() => setIsModalOpen(false)}
               aria-label="Close dialog"
             >
-              <FiX className="h-4 w-4" />
+              <FiX style={{ width: '1rem', height: '1rem' }} />
             </button>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-base-200 border border-base-300">
+            <div className={styles.modalHeader}>
+              <div className={styles.iconWrapper}>
                 <GoogleIcon />
               </div>
               <div>
-                <h3 id="auth-modal-title" className="text-lg font-bold">
+                <h3 id="auth-modal-title" className={styles.modalTitle}>
                   {modalTitle}
                 </h3>
-                <p className="text-xs opacity-60">
+                <p className={styles.modalSubtitle}>
                   Create password to complete Google registration
                 </p>
               </div>
             </div>
             {error && (
-              <div className="alert alert-error text-xs py-2 px-3 mb-4 rounded-lg">
+              <div className={styles.alertError}>
                 <span>{error}</span>
               </div>
             )}
-            <form onSubmit={handleAuthorizeSubmit} className="space-y-3">
-              <div>
+            <form onSubmit={handleAuthorizeSubmit} className={styles.form}>
+              <div className={styles.formGroup}>
                 <label
                   htmlFor="google-email"
-                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                  className={styles.label}
                 >
                   Google Account Email
                 </label>
-                <div className="relative">
+                <div className={styles.inputWrapper}>
                   <input
                     id="google-email"
                     type="email"
@@ -274,26 +275,26 @@ const GoogleSignInButton = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@gmail.com or workspace account"
-                    className="input input-bordered input-primary w-full text-sm pl-3 pr-8 focus:outline-none"
+                    className={`${styles.input} ${styles.inputWithIcon}`}
                   />
                   {email.includes('@') && (
-                    <span className="absolute right-3 top-3 text-success">
-                      <FiCheck className="h-4 w-4" />
+                    <span className={styles.checkIcon}>
+                      <FiCheck style={{ width: '1rem', height: '1rem' }} />
                     </span>
                   )}
                 </div>
                 {isAdminCandidate && (
-                  <p className="mt-1 text-[11px] text-accent font-medium flex items-center gap-1">
+                  <p className={styles.adminNotice}>
                     Administrator privileges detected for this email
                   </p>
                 )}
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label
                   htmlFor="google-name"
-                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                  className={styles.label}
                 >
-                  Display Name <span className="opacity-50 lowercase font-normal">(optional)</span>
+                  Display Name <span className={styles.labelOptional}>(optional)</span>
                 </label>
                 <input
                   id="google-name"
@@ -301,13 +302,13 @@ const GoogleSignInButton = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="input input-bordered w-full text-sm focus:outline-none"
+                  className={styles.input}
                 />
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label
                   htmlFor="google-password"
-                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                  className={styles.label}
                 >
                   Create Password
                 </label>
@@ -319,13 +320,13 @@ const GoogleSignInButton = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimum 6 characters"
-                  className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                  className={styles.input}
                 />
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label
                   htmlFor="google-confirm-password"
-                  className="block text-xs font-semibold uppercase tracking-wider mb-1 opacity-80"
+                  className={styles.label}
                 >
                   Confirm Password
                 </label>
@@ -337,13 +338,13 @@ const GoogleSignInButton = ({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter password"
-                  className="input input-bordered input-primary w-full text-sm focus:outline-none"
+                  className={styles.input}
                 />
               </div>
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className={styles.buttonRow}>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className={styles.cancelButton}
                   onClick={() => setIsModalOpen(false)}
                 >
                   Cancel
@@ -351,11 +352,11 @@ const GoogleSignInButton = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || loading}
-                  className="btn btn-primary btn-sm px-5 flex items-center gap-2"
+                  className={styles.submitButton}
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="loading loading-spinner loading-xs" />
+                      <span className={styles.spinner} />
                       <span>Creating Account...</span>
                     </>
                   ) : (

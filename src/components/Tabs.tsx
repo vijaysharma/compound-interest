@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Tab from './Tab';
 import { TabsType } from '../types/types';
-const Tabs = ({ name, children, activeId, setActiveId, className, type }: TabsType) => {
+import styles from './Tabs.module.scss';
+const Tabs = ({ name, children, activeId, setActiveId, className }: TabsType) => {
   const currentActiveId = activeId || '1';
   const [visitedIds, setVisitedIds] = useState<Set<string>>(() => new Set([currentActiveId]));
   const handleSelectTab = (id: string) => {
@@ -16,7 +17,7 @@ const Tabs = ({ name, children, activeId, setActiveId, className, type }: TabsTy
     }
   };
   return children instanceof Array ? (
-    <div className={`tabs w-full ${className || ''} ${type || 'tabs-lift'}`}>
+    <div className={`${styles.tabsContainer} ${className || ''}`.trim()}>
       {children.map((child) => (
         <Tab
           key={child.props.id}
@@ -29,7 +30,7 @@ const Tabs = ({ name, children, activeId, setActiveId, className, type }: TabsTy
       ))}
     </div>
   ) : (
-    <div className="p-4 w-full overflow-y-auto">{children}</div>
+    <div className={styles.contentWrapper}>{children}</div>
   );
 };
 export default Tabs;

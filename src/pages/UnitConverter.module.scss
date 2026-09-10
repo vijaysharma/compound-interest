@@ -1,0 +1,175 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.container {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 0.5rem 1rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-base-content);
+}
+
+.titleIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  opacity: 0.7;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.categoryGroup {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.btnTopRow {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 0;
+}
+
+.btnBottomRow {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.converterRows {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.rowJoin {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+
+  > *:not(:first-child):not(:last-child) {
+    border-radius: 0;
+  }
+}
+
+.rowLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-primary);
+  border-right: none;
+  font-size: 0.6875rem;
+  width: 5rem;
+  text-align: center;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-top-left-radius: var(--rounded-btn, 0.5rem);
+  border-bottom-left-radius: var(--rounded-btn, 0.5rem);
+  flex-shrink: 0;
+
+  @include tablet-up {
+    width: 6rem;
+  }
+}
+
+.rowInput {
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  font-size: 0.95rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
+  outline: none;
+
+  &:first-child {
+    border-top-left-radius: var(--rounded-btn, 0.5rem);
+    border-bottom-left-radius: var(--rounded-btn, 0.5rem);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+
+  @include tablet-up {
+    height: 3rem;
+    font-size: 1rem;
+  }
+}
+
+.resultInput {
+  background-color: color-mix(in srgb, #047857 10%, transparent);
+  color: #047857;
+  font-weight: 700;
+}
+
+.rowSelect {
+  width: 6.5rem;
+  height: 2.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-primary);
+  border-left: none;
+  border-top-right-radius: var(--rounded-btn, 0.5rem);
+  border-bottom-right-radius: var(--rounded-btn, 0.5rem);
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
+  outline: none;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  @include tablet-up {
+    width: 8rem;
+    height: 3rem;
+  }
+}
+
+.swapWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.swapCircleBtn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, background-color 0.2s;
+
+  &:hover {
+    transform: scale(1.08);
+  }
+
+  svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  @include tablet-up {
+    width: 3rem;
+    height: 3rem;
+  }
+}

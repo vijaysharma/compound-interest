@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import { BsPinFill, BsJournalBookmark, BsCloudArrowUp } from 'react-icons/bs';
 import { Note, SYSTEM_FOLDERS, extractHashtags } from './NotesTypes';
+import styles from './NotesSidebar.module.scss';
 interface NotesSidebarProps {
   activeFolder: string;
   activeTag: string | null;
@@ -102,64 +103,58 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   if (!isOpen) return null;
   return (
     <aside
-      className={`flex flex-col h-full select-none transition-all duration-200 z-20 ${
-        isMobileScreen ? 'w-full' : 'w-64 sm:w-60 md:w-64 md:px-3 flex-shrink-0'
-      }`}
+      className={`${styles.sidebar} ${isMobileScreen ? styles.mobile : styles.desktop}`}
       aria-label="Notes Folders Sidebar"
     >
-      <div className="flex mt-2 mb-4 items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-primary-content shadow-xs font-bold text-sm">
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <div className={styles.logoBox}>
             📝
           </div>
           <div>
-            <span className="font-bold text-base tracking-tight block leading-tight">
+            <span className={styles.title}>
               {isMobileScreen ? 'Folders' : 'Quick Notes'}
             </span>
             {isMobileScreen && (
-              <span className="text-[11px] text-base-content/50">All Folders & Tags</span>
+              <span className={styles.subtitle}>All Folders &amp; Tags</span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className={styles.headerActions}>
           {onOpenBackupModal && (
             <button
               onClick={onOpenBackupModal}
-              className="btn btn-ghost btn-sm btn-circle text-primary hover:bg-primary/10"
+              className={styles.iconBtn}
               title="Backup & Restore (Google Drive / OneDrive)"
             >
-              <BsCloudArrowUp className="w-4 h-4" />
+              <BsCloudArrowUp size={16} />
             </button>
           )}
           {onCloseMobile && !isMobileScreen && (
             <button
               onClick={onCloseMobile}
-              className="btn btn-ghost btn-xs btn-circle lg:hidden"
+              className={styles.closeBtn}
               title="Close sidebar"
             >
-              <FiX className="w-4 h-4" />
+              <FiX size={16} />
             </button>
           )}
         </div>
       </div>
-      <div className="flex-1 mb-4 overflow-y-auto qn-scrollbar space-y-4">
-        <div className="space-y-1">
+      <div className={`${styles.scrollContent} qn-scrollbar`}>
+        <div className={styles.folderSection}>
           <button
             onClick={() => {
               onSelectFolder(SYSTEM_FOLDERS.ALL);
               onSelectTag(null);
             }}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
-              activeFolder === SYSTEM_FOLDERS.ALL && !activeTag
-                ? 'bg-primary/15 text-primary font-semibold shadow-xs'
-                : 'hover:bg-base-300/60 text-base-content/85'
-            }`}
+            className={`${styles.navItem} ${activeFolder === SYSTEM_FOLDERS.ALL && !activeTag ? styles.navItemActive : ''}`}
           >
-            <span className="flex items-center gap-3">
-              <BsJournalBookmark className="w-4 h-4 text-primary flex-shrink-0" />
+            <span className={styles.navLeft}>
+              <BsJournalBookmark size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
               <span>All Notes</span>
             </span>
-            <span className="text-xs text-base-content/50 font-semibold">{allCount}</span>
+            <span className={styles.navCount}>{allCount}</span>
           </button>
           <button
             onClick={() => {
@@ -173,81 +168,77 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             }}
             onDragLeave={() => setDragOverFolder(null)}
             onDrop={(e) => handleFolderDrop(e, 'Quick Notes')}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
+            className={`${styles.navItem} ${
               dragOverFolder === 'Quick Notes'
-                ? 'ring-2 ring-primary ring-inset bg-primary/25 scale-[1.02]'
+                ? styles.dragOver
                 : activeFolder === SYSTEM_FOLDERS.QUICK_NOTES && !activeTag
-                  ? 'bg-primary/15 text-primary font-semibold shadow-xs'
-                  : 'hover:bg-base-300/60 text-base-content/85'
+                  ? styles.navItemActive
+                  : ''
             }`}
           >
-            <span className="flex items-center gap-3">
-              <FiFolder className="w-4 h-4 text-primary flex-shrink-0" />
+            <span className={styles.navLeft}>
+              <FiFolder size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
               <span>Quick Notes</span>
             </span>
-            <span className="text-xs text-base-content/50 font-semibold">{quickNotesCount}</span>
+            <span className={styles.navCount}>{quickNotesCount}</span>
           </button>
           <button
             onClick={() => {
               onSelectFolder(SYSTEM_FOLDERS.PINNED);
               onSelectTag(null);
             }}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
-              activeFolder === SYSTEM_FOLDERS.PINNED && !activeTag
-                ? 'bg-primary/15 text-primary font-semibold shadow-xs'
-                : 'hover:bg-base-300/60 text-base-content/85'
-            }`}
+            className={`${styles.navItem} ${activeFolder === SYSTEM_FOLDERS.PINNED && !activeTag ? styles.navItemActive : ''}`}
           >
-            <span className="flex items-center gap-3">
-              <BsPinFill className="w-4 h-4 text-primary flex-shrink-0" />
+            <span className={styles.navLeft}>
+              <BsPinFill size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
               <span>Pinned</span>
             </span>
-            <span className="text-xs text-base-content/50 font-semibold">{pinnedCount}</span>
+            <span className={styles.navCount}>{pinnedCount}</span>
           </button>
         </div>
         <div>
-          <div className="flex items-center justify-between px-2.5 py-1 text-xs font-semibold text-base-content/50 uppercase tracking-wider">
+          <div className={styles.sectionHeader}>
             <button
               onClick={() => setFoldersCollapsed(!foldersCollapsed)}
-              className="flex items-center gap-1 hover:text-base-content transition-colors min-h-[32px]"
+              className={styles.sectionToggle}
             >
               {foldersCollapsed ? (
-                <FiChevronRight className="w-3 h-3" />
+                <FiChevronRight size={12} />
               ) : (
-                <FiChevronDown className="w-3 h-3" />
+                <FiChevronDown size={12} />
               )}
               <span>Folders</span>
             </button>
             <button
               onClick={() => setIsCreatingFolder(true)}
-              className="hover:text-primary transition-colors p-1.5 rounded-lg min-h-[32px] min-w-[32px] flex items-center justify-center"
+              className={styles.folderActionBtn}
               title="New Folder"
             >
-              <FiFolderPlus className="w-4 h-4" />
+              <FiFolderPlus size={16} />
             </button>
           </div>
           {!foldersCollapsed && (
-            <div className="space-y-1 mt-1">
+            <div className={styles.folderSection} style={{ marginTop: '0.25rem' }}>
               {isCreatingFolder && (
-                <form onSubmit={handleCreateFolder} className="px-2 py-1 flex items-center gap-1.5">
+                <form onSubmit={handleCreateFolder} className={styles.folderForm}>
                   <input
                     type="text"
                     autoFocus
                     placeholder="Folder name"
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(e.target.value)}
-                    className="input input-sm input-bordered input-primary w-full rounded-lg text-sm"
+                    className={styles.folderInput}
                     onKeyDown={(e) => e.key === 'Escape' && setIsCreatingFolder(false)}
                   />
-                  <button type="submit" className="btn btn-ghost btn-sm px-2 text-success">
-                    <FiCheck className="w-4 h-4" />
+                  <button type="submit" className={styles.folderConfirmBtn}>
+                    <FiCheck size={16} />
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsCreatingFolder(false)}
-                    className="btn btn-ghost btn-sm px-2 text-error"
+                    className={styles.folderCancelBtn}
                   >
-                    <FiX className="w-4 h-4" />
+                    <FiX size={16} />
                   </button>
                 </form>
               )}
@@ -258,7 +249,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                 const count = getFolderCount(folder);
                 if (isEditing) {
                   return (
-                    <div key={folder} className="px-2 py-1 flex items-center gap-1">
+                    <div key={folder} className={styles.folderForm}>
                       <input
                         type="text"
                         autoFocus
@@ -269,19 +260,19 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                           if (e.key === 'Enter') handleSaveRename(folder);
                           if (e.key === 'Escape') setEditingFolder(null);
                         }}
-                        className="input input-sm input-bordered input-primary w-full rounded-lg text-sm"
+                        className={styles.folderInput}
                       />
                       <button
                         onClick={() => handleSaveRename(folder)}
-                        className="btn btn-ghost btn-xs text-success"
+                        className={styles.folderConfirmBtn}
                       >
-                        <FiCheck className="w-3.5 h-3.5" />
+                        <FiCheck size={14} />
                       </button>
                       <button
                         onClick={() => setEditingFolder(null)}
-                        className="btn btn-ghost btn-xs text-error"
+                        className={styles.folderCancelBtn}
                       >
-                        <FiX className="w-3.5 h-3.5" />
+                        <FiX size={14} />
                       </button>
                     </div>
                   );
@@ -296,12 +287,12 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                     }}
                     onDragLeave={() => setDragOverFolder(null)}
                     onDrop={(e) => handleFolderDrop(e, folder)}
-                    className={`group flex items-center justify-between px-3.5 py-2 min-h-[42px] rounded-xl text-sm font-medium transition-colors ${
+                    className={`${styles.folderRow} ${
                       isDragOver
-                        ? 'ring-2 ring-primary ring-inset bg-primary/25 scale-[1.02]'
+                        ? styles.dragOver
                         : isCurrent
-                          ? 'bg-primary/15 text-primary font-semibold shadow-xs'
-                          : 'hover:bg-base-300/60 text-base-content/85'
+                          ? styles.navItemActive
+                          : ''
                     }`}
                   >
                     <button
@@ -309,28 +300,29 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                         onSelectFolder(folder);
                         onSelectTag(null);
                       }}
-                      className="flex items-center gap-3 flex-1 min-w-0 text-left truncate"
+                      className={styles.folderRowBtn}
                     >
                       <FiFolder
-                        className={`w-4 h-4 flex-shrink-0 ${isCurrent ? 'text-primary' : 'text-base-content/60'}`}
+                        size={16}
+                        style={{ flexShrink: 0, color: isCurrent ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
                       />
-                      <span className="truncate">{folder}</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder}</span>
                     </button>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-base-content/50 font-semibold group-hover:hidden">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <span className={styles.navCount}>
                         {count}
                       </span>
-                      <div className="hidden group-hover:flex items-center gap-0.5">
+                      <div className={styles.folderHoverActions}>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditingFolder(folder);
                             setRenameValue(folder);
                           }}
-                          className="p-1 hover:text-primary rounded"
+                          className={styles.actionIcon}
                           title="Rename Folder"
                         >
-                          <FiEdit2 className="w-3 h-3" />
+                          <FiEdit2 size={12} />
                         </button>
                         {folder !== 'Notes' && (
                           <button
@@ -344,10 +336,10 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                                 onDeleteFolder(folder);
                               }
                             }}
-                            className="p-1 hover:text-error rounded"
+                            className={`${styles.actionIcon} ${styles.danger}`}
                             title="Delete Folder"
                           >
-                            <FiTrash2 className="w-3 h-3" />
+                            <FiTrash2 size={12} />
                           </button>
                         )}
                       </div>
@@ -360,39 +352,36 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
         </div>
         {allTags.length > 0 && (
           <div>
-            <div className="flex items-center justify-between px-2.5 py-1 text-xs font-semibold text-base-content/50 uppercase tracking-wider">
+            <div className={styles.sectionHeader}>
               <button
                 onClick={() => setTagsCollapsed(!tagsCollapsed)}
-                className="flex items-center gap-1 hover:text-base-content transition-colors min-h-[32px]"
+                className={styles.sectionToggle}
               >
                 {tagsCollapsed ? (
-                  <FiChevronRight className="w-3 h-3" />
+                  <FiChevronRight size={12} />
                 ) : (
-                  <FiChevronDown className="w-3 h-3" />
+                  <FiChevronDown size={12} />
                 )}
                 <span>Tags</span>
               </button>
-              <span className="text-[10px] text-base-content/40">{allTags.length}</span>
+              <span style={{ fontSize: '10px', opacity: 0.4 }}>{allTags.length}</span>
             </div>
             {!tagsCollapsed && (
-              <div className="space-y-1 mt-1">
+              <div className={styles.folderSection} style={{ marginTop: '0.25rem' }}>
                 {allTags.map(([tag, count]) => {
                   const isCurrent = activeTag === tag;
                   return (
                     <button
                       key={tag}
                       onClick={() => onSelectTag(isCurrent ? null : tag)}
-                      className={`w-full flex items-center justify-between px-3.5 py-2 min-h-[40px] rounded-xl text-xs font-medium transition-colors ${
-                        isCurrent
-                          ? 'bg-primary/15 text-primary font-semibold shadow-xs'
-                          : 'hover:bg-base-300/60 text-base-content/80'
-                      }`}
+                      className={`${styles.navItem} ${isCurrent ? styles.navItemActive : ''}`}
+                      style={{ fontSize: '0.75rem', minHeight: '36px' }}
                     >
-                      <span className="flex items-center gap-2.5 truncate">
-                        <FiTag className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                        <span className="truncate">#{tag}</span>
+                      <span className={styles.navLeft}>
+                        <FiTag size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                        <span>#{tag}</span>
                       </span>
-                      <span className="text-[11px] text-base-content/50 font-semibold">
+                      <span className={styles.navCount}>
                         {count}
                       </span>
                     </button>
@@ -402,45 +391,41 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             )}
           </div>
         )}
-        <div className="pt-2 border-t border-base-300/60">
+        <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
           <button
             onClick={() => {
               onSelectFolder(SYSTEM_FOLDERS.TRASH);
               onSelectTag(null);
             }}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 min-h-[42px] rounded-xl text-sm font-medium transition-colors ${
-              activeFolder === SYSTEM_FOLDERS.TRASH && !activeTag
-                ? 'bg-error/15 text-error font-semibold shadow-xs'
-                : 'hover:bg-base-300/60 text-base-content/75'
-            }`}
+            className={`${styles.navItem} ${styles.navItemDanger} ${activeFolder === SYSTEM_FOLDERS.TRASH && !activeTag ? styles.navItemActive : ''}`}
           >
-            <span className="flex items-center gap-3">
-              <FiTrash2 className="w-4 h-4 text-error/80 flex-shrink-0" />
+            <span className={styles.navLeft}>
+              <FiTrash2 size={16} style={{ color: '#ef4444', flexShrink: 0 }} />
               <span>Recently Deleted</span>
             </span>
             {trashedCount > 0 && (
-              <span className="badge badge-sm badge-error badge-outline text-[11px] font-bold">
+              <span className={`${styles.badge} ${styles.badgeError}`}>
                 {trashedCount}
               </span>
             )}
           </button>
         </div>
-        <div className="pt-2.5 border-t border-base-300/60 mt-1">
+        <div style={{ paddingTop: '0.625rem', borderTop: '1px solid var(--color-border)', marginTop: '0.25rem' }}>
           <button
             onClick={onOpenSecurityModal}
-            className="w-full text-left p-2.5 rounded-xl bg-success/10 hover:bg-success/15 border border-success/20 transition-all group cursor-pointer"
+            className={styles.securityBanner}
             title="End-to-End Encrypted (AES-256-GCM): Click to view details"
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="flex items-center gap-1.5 font-bold text-xs text-success">
-                <FiShield className="w-3.5 h-3.5 flex-shrink-0" />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontWeight: 700, fontSize: '12px', color: '#16a34a' }}>
+                <FiShield size={14} style={{ flexShrink: 0 }} />
                 <span>End-to-End Encrypted</span>
               </span>
-              <span className="badge badge-success badge-xs text-[9px] font-bold whitespace-nowrap">
+              <span className={`${styles.badge} ${styles.badgeSuccess}`}>
                 AES-256
               </span>
             </div>
-            <p className="text-[11px] leading-tight text-base-content/70">
+            <p style={{ fontSize: '11px', lineHeight: 1.25, opacity: 0.7, margin: 0 }}>
               Notes are encrypted on your device before syncing. Only you hold the key.
             </p>
           </button>
@@ -449,9 +434,9 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
       {isMobileScreen && onNewNote && (
         <button
           onClick={onNewNote}
-          className="btn btn-primary w-full gap-2 rounded-xl text-sm font-semibold shadow-sm"
+          className={styles.newNoteBtn}
         >
-          <FiEdit3 className="w-4 h-4" />
+          <FiEdit3 size={16} />
           New Note
         </button>
       )}

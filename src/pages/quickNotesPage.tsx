@@ -2,12 +2,13 @@ import React from 'react';
 import QuickNotes from '../components/admin/QuickNotes';
 import { useAuth } from '../context/useAuth';
 import SEOHead from '../components/SEOHead';
+import styles from './admin/AdminPage.module.scss';
 const QuickNotesPage: React.FC = () => {
   const { token } = useAuth();
   return (
-    <main className="w-full max-w-7xl mx-auto flex flex-col flex-1 overflow-hidden min-h-0 h-full">
+    <main className={styles.notesContainer}>
       <SEOHead title="Quick Notes | Utilities" description="Quick Notes for Utilities" noIndex={true} />
-      <div className="flex-1 w-full h-full flex flex-col overflow-hidden min-h-0">
+      <div className={styles.notesInner}>
         <QuickNotes token={token || ''} />
       </div>
     </main>

@@ -125,8 +125,8 @@ body:has(.quick-notes-theme) {
 
 /* Highlighter with theme adaptation */
 .qn-highlight {
-  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 20%, transparent) !important;
-  color: inherit !important;
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 20%, transparent);
+  color: inherit;
   padding: 0.1rem 0.25rem;
   border-radius: 4px;
   box-decoration-break: clone;
@@ -164,36 +164,36 @@ body:has(.quick-notes-theme) {
   width: 100%;
   word-break: break-word;
   overflow-wrap: break-word;
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -webkit-touch-callout: default !important;
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
   touch-action: manipulation;
-  caret-color: var(--color-primary, #6e0b75) !important;
-  cursor: text !important;
+  caret-color: var(--color-primary, #6e0b75);
+  cursor: text;
 }
 
 .qn-note-canvas * {
   user-select: text;
   -webkit-user-select: text;
-  caret-color: var(--color-primary, #6e0b75) !important;
+  caret-color: var(--color-primary, #6e0b75);
 }
 
 .qn-note-canvas::selection,
 .qn-note-canvas *::selection {
-  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 30%, transparent) !important;
-  color: inherit !important;
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 30%, transparent);
+  color: inherit;
 }
 
 .qn-note-canvas::-moz-selection,
 .qn-note-canvas *::-moz-selection {
-  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 30%, transparent) !important;
-  color: inherit !important;
+  background-color: color-mix(in srgb, var(--color-primary, #6e0b75) 30%, transparent);
+  color: inherit;
 }
 
 .qn-note-canvas .qn-checkbox-circle,
 .qn-note-canvas [contenteditable="false"] {
-  user-select: none !important;
-  -webkit-user-select: none !important;
+  user-select: none;
+  -webkit-user-select: none;
   cursor: pointer;
 }
 
@@ -324,7 +324,7 @@ body:has(.quick-notes-theme) {
     width: 100%;
     margin: 0;
     padding: 20px;
-    background: white !important;
-    color: black !important;
+    background: white;
+    color: black;
   }
 }

@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
-import InputAmount from '../components/InputAmount.tsx';
-import RateOfInterest from '../components/RateOfInterest.tsx';
-import Tenure from '../components/Tenure.tsx';
+import ValuePicker from '../components/ValuePicker.tsx';
 import { RT, StepAmountType } from '../types/types.ts';
 import { STEP_AMOUNT } from '../data/default_data.ts';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import SEOHead from '../components/SEOHead.tsx';
 import CalculatorContentSection from '../components/CalculatorContentSection.tsx';
 import { TbTrash } from 'react-icons/tb';
+import styles from './EmiCalculator.module.scss';
 interface ScheduleRow {
   date: string;
   emi: string;
@@ -541,7 +540,7 @@ const EmiCalculator: React.FC = () => {
     };
   }, [totalPayable, principalPercent]);
   return (
-    <main className="w-full max-w-4xl mx-auto px-2 py-4 space-y-6">
+    <main className={styles.container}>
       <SEOHead
         title="EMI Calculator — Home Loan, Car & Personal Loan EMI Calculator India 2026"
         description="Free online EMI calculator for home loan, car loan & personal loan. Full amortization schedule with part-payment modeling & floating rate simulation. 100% private."
@@ -549,68 +548,68 @@ const EmiCalculator: React.FC = () => {
         canonicalPath="/emi-calculator"
         schema={emiSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Loan Intelligence &bull; Amortization Engine
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Home &amp; Personal Loan EMI Calculator India
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Calculate equated monthly installments, model lump-sum prepayments, and simulate floating
           rate adjustments.
         </p>
       </header>
       {/* Input Section */}
-      <div className="space-y-4">
-        <InputAmount
-          className="mb-1"
-          inputAmount={loanAmount}
-          setInputAmount={setLoanAmount}
+      <div className={styles.inputSection}>
+        <ValuePicker
+          className={styles.fieldTight}
+          value={loanAmount}
+          onChange={setLoanAmount}
           title="Loan amount"
           stepData={stepData}
-          stepSizePrefix="sm"
+          tabs={[]}
         />
-        <RateOfInterest className="mb-1" rt={rt} setRt={setRt} />
-        <Tenure className="mb-1" rt={rt} setRt={setRt} />
+        <ValuePicker.ROI className={styles.fieldTight} rt={rt} setRt={setRt} />
+        <ValuePicker.Tenure className={styles.fieldTight} rt={rt} setRt={setRt} />
         {/* Joined Disbursement Date & EMI Deduction Date */}
-        <div className="w-full text-center">
-          <h5>Disbursement &amp; Repayment</h5>
-          <div className="join w-full date-picker focus-within:outline-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline">
-            <div className="label join-item px-2.5 bg-primary text-primary-content border-primary text-center text-xs font-semibold whitespace-nowrap">
-              Disbursed
-            </div>
-            <input
-              id="disbursement-date"
-              className="join-item input input-sm input-primary grow focus:outline-none text-xs sm:text-sm"
-              title="Disbursement Date"
-              type="date"
-              value={disbursementDate}
-              onChange={(e) => handleDisbursementDateChange(e.target.value)}
-            />
-            <div className="label join-item px-2.5 bg-primary text-primary-content border-primary text-center text-xs font-semibold whitespace-nowrap">
-              EMI Day
-            </div>
-            <input
-              id="emi-date"
-              className="join-item input input-sm input-primary w-16 text-center focus:outline-none text-xs sm:text-sm font-semibold"
-              title="EMI Deduction Date (Day of Month)"
-              type="number"
-              min="1"
-              max="31"
-              value={emiDate}
-              onChange={(e) => setEmiDate(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
-            />
-          </div>
-          <label className="label cursor-pointer justify-center gap-2 pt-1 pb-0">
+        <div className={styles.disbursementWrapper}>
+          <ValuePicker.Paired
+            title="Disbursement & Repayment"
+            sourceBadgeText="Disbursed"
+            targetBadgeText="EMI Day"
+            sourceSlot={
+              <input
+                id="disbursement-date"
+                className={styles.dateInput}
+                title="Disbursement Date"
+                type="date"
+                value={disbursementDate}
+                onChange={(e) => handleDisbursementDateChange(e.target.value)}
+              />
+            }
+            targetSlot={
+              <input
+                id="emi-date"
+                className={styles.dayInput}
+                title="EMI Deduction Date (Day of Month)"
+                type="number"
+                min="1"
+                max="31"
+                value={emiDate}
+                onChange={(e) => setEmiDate(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
+              />
+            }
+          />
+          <label className={styles.advanceEmiLabel}>
             <input
               type="checkbox"
               title="Include Principal Payment in First EMI"
-              className="checkbox checkbox-primary checkbox-xs"
+              className={styles.checkbox}
               checked={includePrincipalInFirstEmi}
               onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
             />
-            <span className="label-text text-xs opacity-80">
+            <span className={styles.checkboxText}>
               Include principal repayment in prorated first EMI
             </span>
           </label>
@@ -619,41 +618,40 @@ const EmiCalculator: React.FC = () => {
       </div>
       {/* Loan Statistics & Pie Chart Section */}
       {principalAmount > 0 && (
-        <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-base-200 pb-3">
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-primary">
+              <p className={styles.cardEyebrow}>
                 Breakdown &amp; Analytics
               </p>
-              <h2 className="text-lg font-bold">Loan Statistics &amp; Payment Proportion</h2>
+              <h2 className={styles.cardHeading}>Loan Statistics &amp; Payment Proportion</h2>
             </div>
             {schedule.length > 0 && (
-              <span className="badge badge-primary badge-outline text-xs font-semibold">
+              <span className={styles.countBadge}>
                 {schedule.length} Total Payments
               </span>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div className={styles.analyticsGrid}>
             {/* Pie Chart Visual */}
-            <div className="flex flex-col items-center justify-center p-2">
-              <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+            <div className={styles.pieContainer}>
+              <div className={styles.pieSvgWrapper}>
                 <svg
                   viewBox="0 0 200 200"
-                  className="w-full h-full drop-shadow-sm transition-transform duration-500"
+                  className={styles.pieSvg}
                   aria-label="Loan Principal vs Interest Pie Chart"
                 >
                   {pieSlices?.type === 'full-principal' && (
-                    <circle cx="100" cy="100" r="85" className="fill-primary" />
+                    <circle cx="100" cy="100" r="85" className={styles.pieSlicePrimary} />
                   )}
                   {pieSlices?.type === 'full-interest' && (
-                    <circle cx="100" cy="100" r="85" className="fill-error" />
+                    <circle cx="100" cy="100" r="85" className={styles.pieSliceError} />
                   )}
                   {pieSlices?.type === 'slices' && (
                     <>
                       <path
                         d={pieSlices.principalD}
-                        className="fill-primary stroke-base-100 transition-all duration-700 ease-out"
-                        strokeWidth="1.5"
+                        className={styles.pieSlicePrimary}
                       >
                         <title>
                           Principal: ₹{Math.round(principalAmount).toLocaleString('en-IN')} (
@@ -662,8 +660,7 @@ const EmiCalculator: React.FC = () => {
                       </path>
                       <path
                         d={pieSlices.interestD}
-                        className="fill-error stroke-base-100 transition-all duration-700 ease-out"
-                        strokeWidth="1.5"
+                        className={styles.pieSliceError}
                       >
                         <title>
                           Interest: ₹{Math.round(totalInterest).toLocaleString('en-IN')} (
@@ -676,43 +673,43 @@ const EmiCalculator: React.FC = () => {
               </div>
             </div>
             {/* Legend & Key Metrics */}
-            <div className="space-y-3 flex flex-col justify-center">
+            <div className={styles.metricsStack}>
               {/* Principal Pill */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-3.5 h-3.5 rounded-full bg-primary flex-shrink-0" />
+              <div className={`${styles.metricPill} ${styles.metricPillPrimary}`}>
+                <div className={styles.metricIndicatorGroup}>
+                  <div className={`${styles.metricDot} ${styles.metricDotPrimary}`} />
                   <div>
-                    <span className="text-xs font-bold block">Principal Loan Amount</span>
-                    <span className="text-[11px] opacity-70 block">
+                    <span className={styles.metricLabel}>Principal Loan Amount</span>
+                    <span className={styles.metricSub}>
                       {principalPercent.toFixed(1)}% of total
                     </span>
                   </div>
                 </div>
-                <span className="text-sm sm:text-base font-bold text-primary">
+                <span className={`${styles.metricValue} ${styles.metricValuePrimary}`}>
                   ₹{Math.round(principalAmount).toLocaleString('en-IN')}
                 </span>
               </div>
               {/* Interest Pill */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-error/10 border border-error/20">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-3.5 h-3.5 rounded-full bg-error flex-shrink-0" />
+              <div className={`${styles.metricPill} ${styles.metricPillError}`}>
+                <div className={styles.metricIndicatorGroup}>
+                  <div className={`${styles.metricDot} ${styles.metricDotError}`} />
                   <div>
-                    <span className="text-xs font-bold block">Total Interest Payable</span>
-                    <span className="text-[11px] opacity-70 block">
+                    <span className={styles.metricLabel}>Total Interest Payable</span>
+                    <span className={styles.metricSub}>
                       {interestPercent.toFixed(1)}% of total
                     </span>
                   </div>
                 </div>
-                <span className="text-sm sm:text-base font-bold text-error">
+                <span className={`${styles.metricValue} ${styles.metricValueError}`}>
                   ₹{Math.round(totalInterest).toLocaleString('en-IN')}
                 </span>
               </div>
               {/* Total Payable Pill */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-base-200/70 border border-base-300">
-                <span className="text-xs font-bold text-base-content/80">
+              <div className={`${styles.metricPill} ${styles.metricPillNeutral}`}>
+                <span className={styles.metricLabel}>
                   Total Loan Cost (P + I)
                 </span>
-                <span className="text-sm sm:text-base font-extrabold text-base-content">
+                <span className={`${styles.metricValue} ${styles.metricValueTotal}`}>
                   ₹{Math.round(totalPayable).toLocaleString('en-IN')}
                 </span>
               </div>
@@ -721,18 +718,18 @@ const EmiCalculator: React.FC = () => {
         </section>
       )}
       {/* Part Payments Section */}
-      <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3 pb-3">
+      <section className={styles.card}>
+        <div className={styles.cardHeader}>
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">
+            <p className={styles.cardEyebrow}>
               Prepayment Optimizer
             </p>
-            <h2 className="text-lg font-bold">Lump-Sum Part Payments</h2>
+            <h2 className={styles.cardHeading}>Lump-Sum Part Payments</h2>
           </div>
         </div>
-        <div className="space-y-4">
+        <div className={styles.inputSection}>
           {partPayments.length === 0 && (
-            <p className="text-xs opacity-60 italic">
+            <p className={styles.emptyStateText}>
               No part payments added yet. Click &quot;Add Part Payment&quot; below to simulate
               prepayments.
             </p>
@@ -740,21 +737,21 @@ const EmiCalculator: React.FC = () => {
           {partPayments.map((p, idx) => (
             <div
               key={idx}
-              className={`grid gap-2 sm:grid-cols-2 lg:flex lg:items-center ${
-                p.enabled ? 'bg-base-100' : 'bg-base-200 opacity-60'
+              className={`${styles.prepaymentItem} ${
+                p.enabled ? styles.prepaymentItemEnabled : styles.prepaymentItemDisabled
               }`}
             >
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-lg font-semibold">#{idx + 1}</span>
+              <div className={styles.prepaymentInputsRow}>
+                <span className={styles.itemIndex}>#{idx + 1}</span>
                 <input
                   type="checkbox"
                   title={`Enable/Disable Part Payment #${idx + 1}`}
                   checked={p.enabled}
                   onChange={(e) => updatePartPayment(idx, 'enabled', e.target.checked)}
-                  className="checkbox checkbox-primary self-center"
+                  className={styles.checkbox}
                 />
                 <input
-                  className="input input-bordered w-full lg:flex-1"
+                  className={styles.textInput}
                   title={`Part Payment Amount #${idx + 1}`}
                   type="number"
                   placeholder="Payment Amount (₹)"
@@ -763,7 +760,7 @@ const EmiCalculator: React.FC = () => {
                   disabled={!p.enabled}
                 />
                 <input
-                  className="input input-bordered w-full lg:flex-1"
+                  className={styles.textInput}
                   title={`Part Payment Date #${idx + 1}`}
                   type="date"
                   min={disbursementDate || undefined}
@@ -774,11 +771,11 @@ const EmiCalculator: React.FC = () => {
                 <TbTrash
                   onClick={() => removePartPayment(idx)}
                   size={24}
-                  className="text-error flex-shrink-0 cursor-pointer"
+                  className={styles.deleteIcon}
                 />
               </div>
-              <div className="flex flex-wrap items-center gap-3 pl-16 text-sm lg:flex-nowrap">
-                <label className="flex items-center gap-2 text-sm whitespace-nowrap cursor-pointer">
+              <div className={styles.radioGroup}>
+                <label className={styles.radioLabel}>
                   <input
                     type="radio"
                     title={`Reduce EMI for Payment #${idx + 1}`}
@@ -786,12 +783,12 @@ const EmiCalculator: React.FC = () => {
                     value="emi"
                     checked={p.mode === 'emi'}
                     onChange={() => updatePartPayment(idx, 'mode', 'emi')}
-                    className="radio radio-primary radio-sm"
+                    className={styles.radio}
                     disabled={!p.enabled}
                   />
                   <span>Reduce EMI</span>
                 </label>
-                <label className="flex items-center gap-2 text-sm whitespace-nowrap cursor-pointer">
+                <label className={styles.radioLabel}>
                   <input
                     type="radio"
                     title={`Reduce Tenure for Payment #${idx + 1}`}
@@ -799,7 +796,7 @@ const EmiCalculator: React.FC = () => {
                     value="tenure"
                     checked={p.mode === 'tenure'}
                     onChange={() => updatePartPayment(idx, 'mode', 'tenure')}
-                    className="radio radio-primary radio-sm"
+                    className={styles.radio}
                     disabled={!p.enabled}
                   />
                   <span>Reduce Tenure</span>
@@ -812,32 +809,32 @@ const EmiCalculator: React.FC = () => {
           type="button"
           onClick={addPartPayment}
           disabled={isAddPartPaymentDisabled}
-          className="btn btn-primary btn-sm"
+          className={styles.primaryButton}
         >
           + Add Part Payment
         </button>
       </section>
       {/* Interest Rate Changes Section */}
-      <section className="card bg-base-100 border border-base-300 p-4 sm:p-6 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-base-300 pb-3">
+      <section className={styles.card}>
+        <div className={styles.cardHeader}>
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">
+            <p className={styles.cardEyebrow}>
               Repo Rate Shifts
             </p>
-            <h2 className="text-lg font-bold">Floating Interest Rate Changes</h2>
+            <h2 className={styles.cardHeading}>Floating Interest Rate Changes</h2>
           </div>
           <button
             type="button"
             onClick={addRateChange}
             disabled={isAddRateChangeDisabled}
-            className="btn btn-primary btn-sm"
+            className={styles.primaryButton}
           >
             + Add Rate Change
           </button>
         </div>
-        <div className="space-y-3">
+        <div className={styles.inputSection}>
           {rateChanges.length === 0 && (
-            <p className="text-xs opacity-60 italic">
+            <p className={styles.emptyStateText}>
               No rate changes added yet. Model RBI rate increases or decreases during the loan
               tenure.
             </p>
@@ -845,40 +842,42 @@ const EmiCalculator: React.FC = () => {
           {rateChanges.map((r, idx) => (
             <div
               key={idx}
-              className={`grid gap-3 rounded-box border border-base-300 p-3 sm:grid-cols-2 lg:flex lg:items-center ${
-                r.enabled ? 'bg-base-100' : 'bg-base-200 opacity-60'
+              className={`${styles.prepaymentItem} ${
+                r.enabled ? styles.prepaymentItemEnabled : styles.prepaymentItemDisabled
               }`}
             >
-              <input
-                type="checkbox"
-                title={`Enable/Disable Rate Change #${idx + 1}`}
-                checked={r.enabled}
-                onChange={(e) => updateRateChange(idx, 'enabled', e.target.checked)}
-                className="checkbox checkbox-primary self-center"
-              />
-              <input
-                className="input input-bordered w-full lg:flex-1"
-                title={`New Interest Rate #${idx + 1}`}
-                type="number"
-                step="0.1"
-                placeholder="New Interest Rate (%)"
-                value={r.rate || ''}
-                min="0"
-                max="100"
-                onChange={(e) => updateRateChange(idx, 'rate', Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-                disabled={!r.enabled}
-              />
-              <input
-                className="input input-bordered w-full lg:flex-1"
-                title={`Rate Change Date #${idx + 1}`}
-                type="date"
-                min={disbursementDate || undefined}
-                value={r.date}
-                onChange={(e) => updateRateChange(idx, 'date', e.target.value)}
-                disabled={!r.enabled}
-              />
-              <div className="flex flex-wrap items-center gap-3 text-sm lg:flex-nowrap">
-                <label className="flex items-center gap-2 text-sm whitespace-nowrap cursor-pointer">
+              <div className={styles.prepaymentInputsRow}>
+                <input
+                  type="checkbox"
+                  title={`Enable/Disable Rate Change #${idx + 1}`}
+                  checked={r.enabled}
+                  onChange={(e) => updateRateChange(idx, 'enabled', e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <input
+                  className={styles.textInput}
+                  title={`New Interest Rate #${idx + 1}`}
+                  type="number"
+                  step="0.1"
+                  placeholder="New Interest Rate (%)"
+                  value={r.rate || ''}
+                  min="0"
+                  max="100"
+                  onChange={(e) => updateRateChange(idx, 'rate', Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                  disabled={!r.enabled}
+                />
+                <input
+                  className={styles.textInput}
+                  title={`Rate Change Date #${idx + 1}`}
+                  type="date"
+                  min={disbursementDate || undefined}
+                  value={r.date}
+                  onChange={(e) => updateRateChange(idx, 'date', e.target.value)}
+                  disabled={!r.enabled}
+                />
+              </div>
+              <div className={styles.radioGroup}>
+                <label className={styles.radioLabel}>
                   <input
                     type="radio"
                     title={`Keep Tenure for Rate Change #${idx + 1}`}
@@ -886,12 +885,12 @@ const EmiCalculator: React.FC = () => {
                     value="emi"
                     checked={r.mode === 'emi'}
                     onChange={() => updateRateChange(idx, 'mode', 'emi')}
-                    className="radio radio-primary radio-sm"
+                    className={styles.radio}
                     disabled={!r.enabled}
                   />
                   <span>Adjust EMI</span>
                 </label>
-                <label className="flex items-center gap-2 text-sm whitespace-nowrap cursor-pointer">
+                <label className={styles.radioLabel}>
                   <input
                     type="radio"
                     title={`Keep EMI for Rate Change #${idx + 1}`}
@@ -899,7 +898,7 @@ const EmiCalculator: React.FC = () => {
                     value="tenure"
                     checked={r.mode === 'tenure'}
                     onChange={() => updateRateChange(idx, 'mode', 'tenure')}
-                    className="radio radio-primary radio-sm"
+                    className={styles.radio}
                     disabled={!r.enabled}
                   />
                   <span>Adjust Tenure</span>
@@ -908,7 +907,7 @@ const EmiCalculator: React.FC = () => {
               <button
                 onClick={() => removeRateChange(idx)}
                 type="button"
-                className="btn btn-error btn-sm"
+                className={styles.removeButton}
               >
                 Remove
               </button>
@@ -920,66 +919,66 @@ const EmiCalculator: React.FC = () => {
       {schedule.length > 0 && (
         <>
           {/* Mobile Amortization Card View */}
-          <div className="md:hidden space-y-2">
+          <div className={styles.mobileScheduleList}>
             {schedule.map((row, idx) => (
               <article
                 key={idx}
-                className={`text-base-content border border-base-300 rounded-xl p-3 shadow-xs ${
+                className={`${styles.mobileCard} ${
                   row.note?.includes('Part Payment')
-                    ? 'border-warning bg-warning/10'
+                    ? styles.mobileCardPartPayment
                     : row.note?.includes('ROI Change')
-                      ? 'border-info bg-info/10'
-                      : 'bg-base-100'
+                      ? styles.mobileCardRoiChange
+                      : ''
                 }`}
               >
-                <div className="mb-1.5 flex items-start justify-between gap-3">
-                  <p className="font-bold text-sm text-base-content">
+                <div className={styles.mobileCardHeader}>
+                  <p className={styles.mobileCardTitle}>
                     {idx + 1}. {row.date}
                   </p>
                   {row.note && (
-                    <span className="badge badge-warning text-xs font-semibold">{row.note}</span>
+                    <span className={styles.badgeWarning}>{row.note}</span>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-xs sm:text-sm">
+                <div className={styles.mobileCardGrid}>
                   <div>
-                    <span className="text-base-content/80 font-medium">EMI: </span>
-                    <span className="font-bold text-primary">
+                    <span className={styles.textMuted}>EMI: </span>
+                    <span className={styles.textPrimary}>
                       ₹{parseFloat(row.emi).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div>
-                    <span className="text-base-content/80 font-medium">Balance: </span>
-                    <span className="font-bold text-base-content">
+                    <span className={styles.textMuted}>Balance: </span>
+                    <span className={styles.textBase}>
                       ₹{parseFloat(row.balance).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div>
-                    <span className="text-base-content/80 font-medium">Principal: </span>
-                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                    <span className={styles.textMuted}>Principal: </span>
+                    <span className={styles.textEmerald}>
                       ₹{parseFloat(row.principal).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div>
-                    <span className="text-base-content/80 font-medium">Interest: </span>
-                    <span className="font-bold text-rose-700 dark:text-rose-400">
+                    <span className={styles.textMuted}>Interest: </span>
+                    <span className={styles.textRose}>
                       ₹{parseFloat(row.interest).toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <div className="border-t border-base-300 pt-1.5">
-                    <span className="text-base-content/80 font-medium">Cum. Principal: </span>
-                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                  <div className={styles.mobileCardRowDivided}>
+                    <span className={styles.textMuted}>Cum. Principal: </span>
+                    <span className={styles.textEmerald}>
                       ₹{parseFloat(row.cumulativePrincipal).toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <div className="border-t border-base-300 pt-1.5">
-                    <span className="text-base-content/80 font-medium">Cum. Interest: </span>
-                    <span className="font-bold text-rose-700 dark:text-rose-400">
+                  <div className={styles.mobileCardRowDivided}>
+                    <span className={styles.textMuted}>Cum. Interest: </span>
+                    <span className={styles.textRose}>
                       ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <div className="col-span-2 border-t border-base-300 pt-1.5 text-xs">
-                    <span className="text-base-content/80 font-medium">Remaining Interest: </span>
-                    <span className="font-bold text-amber-800 dark:text-amber-300">
+                  <div className={styles.mobileCardFullWidth}>
+                    <span className={styles.textMuted}>Remaining Interest: </span>
+                    <span className={styles.textAmber}>
                       ₹{parseFloat(row.remainingInterest).toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -988,72 +987,66 @@ const EmiCalculator: React.FC = () => {
             ))}
           </div>
           {/* Desktop Amortization Table View */}
-          <div className="hidden overflow-x-auto rounded-box border border-base-300 md:block bg-base-100 shadow-xs max-h-[500px] overflow-y-auto">
-            <table className="w-full text-sm" title="EMI Amortization Schedule">
-              <thead className="sticky top-0 bg-base-200 z-10 text-xs uppercase tracking-wider">
+          <div className={styles.desktopTableWrapper}>
+            <table className={styles.table} title="EMI Amortization Schedule">
+              <thead className={styles.thead}>
                 <tr>
-                  <th className="border-b border-base-300 px-3 py-3 text-left font-bold">Date</th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">EMI</th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">
-                    Principal
-                  </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">
-                    Interest
-                  </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold">
-                    Balance
-                  </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-emerald-800 dark:text-emerald-400">
+                  <th className={styles.th}>Date</th>
+                  <th className={`${styles.th} ${styles.thRight}`}>EMI</th>
+                  <th className={`${styles.th} ${styles.thRight}`}>Principal</th>
+                  <th className={`${styles.th} ${styles.thRight}`}>Interest</th>
+                  <th className={`${styles.th} ${styles.thRight}`}>Balance</th>
+                  <th className={`${styles.th} ${styles.thRight} ${styles.textEmerald}`}>
                     Cum. Principal
                   </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-rose-800 dark:text-rose-400">
+                  <th className={`${styles.th} ${styles.thRight} ${styles.textRose}`}>
                     Cum. Interest
                   </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-right font-bold text-amber-800 dark:text-amber-300">
+                  <th className={`${styles.th} ${styles.thRight} ${styles.textAmber}`}>
                     Remaining Interest
                   </th>
-                  <th className="border-b border-base-300 px-3 py-3 text-left font-bold">Note</th>
+                  <th className={styles.th}>Note</th>
                 </tr>
               </thead>
               <tbody>
                 {schedule.map((row, idx) => (
                   <tr
                     key={idx}
-                    className={`${
+                    className={
                       row.note?.includes('Part Payment')
-                        ? 'bg-warning/10'
+                        ? styles.rowPartPayment
                         : row.note?.includes('ROI Change')
-                          ? 'bg-info/10'
-                          : 'hover:bg-base-200/50'
-                    }`}
+                          ? styles.rowRoiChange
+                          : styles.rowNormal
+                    }
                   >
-                    <td className="border-b border-base-300 px-3 py-2.5 text-xs font-mono font-medium">
+                    <td className={`${styles.td} ${styles.tdMono}`}>
                       {row.date}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-bold text-primary">
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.textPrimary}`}>
                       ₹{parseFloat(row.emi).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-semibold text-emerald-700 dark:text-emerald-400">
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.textEmerald}`}>
                       ₹{parseFloat(row.principal).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-semibold text-rose-700 dark:text-rose-400">
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.textRose}`}>
                       ₹{parseFloat(row.interest).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono font-medium">
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono}`}>
                       ₹{parseFloat(row.balance).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textEmerald}`}>
                       ₹{parseFloat(row.cumulativePrincipal).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-rose-700 dark:text-rose-400 text-xs font-semibold">
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textRose}`}>
                       ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5 text-right font-mono text-amber-800 dark:text-amber-300 text-xs font-semibold">
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textAmber}`}>
                       ₹{parseFloat(row.remainingInterest).toLocaleString('en-IN')}
                     </td>
-                    <td className="border-b border-base-300 px-3 py-2.5">
+                    <td className={styles.td}>
                       {row.note && (
-                        <span className="badge badge-outline badge-sm text-[10px] font-medium">
+                        <span className={styles.badgeOutline}>
                           {row.note}
                         </span>
                       )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiFolder, FiFolderPlus, FiCheck, FiX } from 'react-icons/fi';
 import { Note } from './NotesTypes';
+import styles from './NotesModal.module.scss';
 interface MoveNoteModalProps {
   isOpen: boolean;
   note: Note | null;
@@ -37,79 +38,78 @@ export const MoveNoteModal: React.FC<MoveNoteModalProps> = ({
     onClose();
   };
   return (
-    <div className="modal modal-open z-50">
-      <div className="modal-box max-w-sm rounded-2xl bg-base-100 p-5 shadow-2xl border border-base-300">
-        <div className="flex items-center justify-between pb-3 border-b border-base-200">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-              <FiFolder className="w-4 h-4" />
+    <div className={styles.modalOverlay}>
+      <div className={`${styles.modalBox} ${styles.modalBoxSm}`}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalHeaderLeft}>
+            <div className={styles.modalIconBox}>
+              <FiFolder size={16} />
             </div>
             <div>
-              <h3 className="font-bold text-base text-base-content leading-tight">Move to Folder</h3>
-              <p className="text-[11px] text-base-content/60 truncate max-w-[200px]">
+              <h3 className={styles.modalTitle}>Move to Folder</h3>
+              <p className={styles.modalSubtitle}>
                 {note.title || 'Untitled Note'}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="btn btn-ghost btn-xs btn-circle">
-            <FiX className="w-4 h-4" />
+          <button onClick={onClose} className={styles.closeBtn}>
+            <FiX size={16} />
           </button>
         </div>
-        <div className="py-3 space-y-1 max-h-60 overflow-y-auto qn-scrollbar">
-          {allFolderOptions.map((folder) => {
-            const isCurrent = (note.folder || 'Quick Notes') === folder;
-            return (
-              <button
-                key={folder}
-                onClick={() => handleSelectFolder(folder)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  isCurrent
-                    ? 'bg-primary/15 text-primary font-semibold'
-                    : 'hover:bg-base-200 text-base-content'
-                }`}
-              >
-                <span className="flex items-center gap-2.5 truncate">
-                  <FiFolder className={`w-4 h-4 flex-shrink-0 ${isCurrent ? 'text-primary' : 'text-base-content/50'}`} />
-                  <span className="truncate">{folder}</span>
-                </span>
-                {isCurrent && <FiCheck className="w-4 h-4 text-primary flex-shrink-0" />}
-              </button>
-            );
-          })}
+        <div className={styles.modalBodyPadded}>
+          <div className={styles.folderList}>
+            {allFolderOptions.map((folder) => {
+              const isCurrent = (note.folder || 'Quick Notes') === folder;
+              return (
+                <button
+                  key={folder}
+                  onClick={() => handleSelectFolder(folder)}
+                  className={`${styles.folderOption} ${isCurrent ? styles.folderCurrent : ''}`}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <FiFolder size={16} style={{ flexShrink: 0, color: isCurrent ? 'var(--color-primary)' : 'var(--color-text-secondary)' }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder}</span>
+                  </span>
+                  {isCurrent && <FiCheck size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="pt-3 border-t border-base-200">
+        <div className={styles.modalFooter}>
           {isCreating ? (
-            <form onSubmit={handleCreateAndMove} className="flex items-center gap-1.5">
+            <form onSubmit={handleCreateAndMove} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', width: '100%' }}>
               <input
                 type="text"
                 autoFocus
                 placeholder="New folder name..."
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
-                className="input input-sm input-bordered input-primary flex-1 rounded-xl text-xs"
+                className={styles.input}
               />
               <button
                 type="submit"
                 disabled={!newFolderName.trim()}
-                className="btn btn-primary btn-sm px-3 rounded-xl text-xs font-semibold"
+                className={styles.btnPrimary}
               >
                 Move
               </button>
               <button
                 type="button"
                 onClick={() => setIsCreating(false)}
-                className="btn btn-ghost btn-sm px-2 rounded-xl text-xs"
+                className={styles.btnGhost}
               >
-                <FiX className="w-3.5 h-3.5" />
+                <FiX size={14} />
               </button>
             </form>
           ) : (
             <button
               onClick={() => setIsCreating(true)}
-              className="btn btn-ghost btn-sm w-full gap-2 text-xs text-primary font-semibold rounded-xl"
+              className={styles.btnGhost}
+              style={{ width: '100%', color: 'var(--color-primary)', fontWeight: 600 }}
             >
-              <FiFolderPlus className="w-4 h-4" />
-              Create New Folder & Move
+              <FiFolderPlus size={16} />
+              Create New Folder &amp; Move
             </button>
           )}
         </div>

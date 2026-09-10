@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import InputAmount from '../components/InputAmount';
+import ValuePicker from '../components/ValuePicker';
 import DisplayCard from '../components/DisplayCard';
 import {
   calculateInflatedPrice,
@@ -7,9 +7,9 @@ import {
   getCurrencySymbolAndLocale,
 } from '../utilities/utility';
 import { fetchInflationData, InflationRow } from '../data/api_data';
-import StartEndDate from '../components/Date';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
+import styles from './CalculatorPage.module.scss';
 const YEAR = new Date().getFullYear();
 const START_YEAR = (YEAR - 30).toString();
 const CURRENT_YEAR = YEAR.toString();
@@ -179,22 +179,22 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
   const endYearOptions = inflationData.map((inflation) => String(inflation.Year));
   if (inflationLoading) {
     return (
-      <div className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
-        {title && <h5>{title}</h5>}
-        <p className="text-sm opacity-70">Loading verified inflation datasets...</p>
+      <div className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <p className={styles.infoMessage}>Loading verified inflation datasets...</p>
       </div>
     );
   }
   if (inflationError) {
     return (
-      <div className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
-        {title && <h5>{title}</h5>}
-        <p className="text-sm text-error">{inflationError}</p>
+      <div className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <p className={styles.errorMessage}>{inflationError}</p>
       </div>
     );
   }
   return (
-    <main className={`w-full max-w-4xl mx-auto px-2 py-4 ${className || ''}`}>
+    <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
         title="Inflation Calculator India — Future Value of Money & Purchasing Power 2026"
         description="Free inflation calculator with IMF historical CPI data. See how ₹1 Lakh today compares to future purchasing power. Plan retirement with real inflation projections."
@@ -202,32 +202,31 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
         canonicalPath="/inflation-calculator"
         schema={inflationSchema}
       />
-      <header className="mb-6 text-center sm:text-left">
-        <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full mb-2 uppercase tracking-wider">
+      <header className={styles.header}>
+        <div className={styles.badge}>
           Macroeconomic Intelligence &bull; IMF &amp; World Bank Data
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h1 className={styles.title}>
           Historical Inflation &amp; Future Purchasing Power Calculator India
         </h1>
-        <p className="mt-1 text-xs sm:text-sm opacity-70">
+        <p className={styles.subtitle}>
           Analyze purchasing power depreciation, future living expenses, and historical inflation
           benchmarks since 1990.
         </p>
       </header>
-      <div>
-        {title && <h5 className="font-bold">{title}</h5>}
-        <InputAmount
-          className="mb-1"
-          inputAmount={principal}
-          setInputAmount={setPrincipal}
-          type={place}
-          setType={setPlace}
-          title="Amount"
-          typeData={[
-            { id: 'ty1', value: 'India', title: 'India' },
-            { id: 'ty2', value: 'World', title: 'World' },
-            { id: 'ty3', value: 'USA', title: 'USA' },
-            { id: 'ty4', value: 'EU', title: 'EU' },
+      <div className={styles.formStack}>
+        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+        <ValuePicker
+          className={styles.fieldTight}
+          value={principal}
+          onChange={setPrincipal}
+          activeTab={place}
+          onTabChange={setPlace}
+          tabs={[
+            { id: 'India', title: 'India' },
+            { id: 'World', title: 'World' },
+            { id: 'USA', title: 'USA' },
+            { id: 'EU', title: 'EU' },
           ]}
           stepData={[
             {
@@ -252,11 +251,9 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           ]}
           currencySymbol={currencySymbol}
           locale={locale}
-          typeSizePrefix="base"
-          stepSizePrefix="sm"
         />
-        <StartEndDate
-          mode="year"
+        <ValuePicker.DateRange
+          dateMode="year"
           startDate={startYear}
           endDate={endYear}
           setStartDate={setStartYear}
@@ -275,7 +272,7 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           }}
         />
         {endYearIsEstimate && (
-          <p className="text-xs opacity-60 mt-2">
+          <p className={styles.footnote}>
             * {endYear} figure for {place} is an IMF projection — the World Bank has not published a
             confirmed final value for this year yet.
           </p>

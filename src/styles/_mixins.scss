@@ -1,0 +1,224 @@
+@use "./variables" as *;
+
+// Responsive breakpoints
+@mixin mobile-sm {
+  @media (max-width: #{$bp-mobile-sm - 1px}) {
+    @content;
+  }
+  @container (max-width: #{$bp-mobile-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile-md {
+  @media (max-width: #{$bp-mobile-md - 1px}) {
+    @content;
+  }
+  @container (max-width: #{$bp-mobile-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile-only {
+  @media (max-width: #{$bp-tablet - 1px}) {
+    @content;
+  }
+  @container (max-width: #{$bp-tablet - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: #{$bp-tablet}) {
+    @content;
+  }
+  @container (min-width: #{$bp-tablet}) {
+    @content;
+  }
+}
+
+@mixin laptop-up {
+  @media (min-width: #{$bp-laptop}) {
+    @content;
+  }
+  @container (min-width: #{$bp-laptop}) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: #{$bp-desktop}) {
+    @content;
+  }
+  @container (min-width: #{$bp-desktop}) {
+    @content;
+  }
+}
+
+// Button reset
+@mixin button-reset {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// Accessible focus visible ring
+@mixin focus-ring($color: $primary) {
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+}
+
+// Interactive press effect
+@mixin pressable {
+  transition:
+    transform $transition-fast,
+    filter $transition-fast,
+    background-color $transition-fast;
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+// Reusable compound control container mixin (DRY & SOLID)
+@mixin joined-row($radius: var(--radius-field, 0.5rem)) {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border-radius: $radius;
+}
+
+// Reusable child item inside a joined compound row
+@mixin joined-item {
+  border-radius: 0;
+  position: relative;
+
+  &:not(:first-child) {
+    margin-left: -1px;
+  }
+
+  &:hover {
+    z-index: 2;
+  }
+
+  &.active {
+    z-index: 1;
+
+    &:hover {
+      z-index: 2;
+    }
+
+    &:focus,
+    &:focus-within {
+      z-index: 3;
+    }
+  }
+
+  &:focus,
+  &:focus-within {
+    z-index: 3;
+    isolation: isolate;
+  }
+
+  &:first-child:not(:last-child) {
+    border-top-left-radius: inherit;
+    border-bottom-left-radius: inherit;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  &:last-child:not(:first-child) {
+    border-top-right-radius: inherit;
+    border-bottom-right-radius: inherit;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  &:only-child {
+    border-radius: inherit;
+  }
+}
+
+// Reusable focus outline on compound container
+@mixin focus-outline($color: var(--color-primary)) {
+  &:focus-within {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+}
+
+// Reusable themed button control for segmented/joined components
+@mixin button-control($height: 2rem, $padding: 0 0.5rem, $fontSize: 0.8125rem) {
+  @include button-reset;
+  @include pressable;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: $height;
+  min-height: $height;
+  padding: $padding;
+  font-size: $fontSize;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
+  transition: all $transition-fast;
+
+  &:hover:not(:disabled):not(.active) {
+    background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-base-100));
+  }
+
+  &.active {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+    border-color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// Reusable themed input control for segmented/joined components
+@mixin input-control($height: 2rem, $fontSize: 0.875rem) {
+  height: $height;
+  font-size: $fontSize;
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid var(--color-primary);
+  outline: none;
+  min-width: 0;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Reusable themed badge/prefix for input compound controls
+@mixin badge-prefix($height: 2rem, $fontSize: 0.8125rem) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: $height;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  border: 1px solid var(--color-primary);
+  font-size: $fontSize;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0 0.5rem;
+  user-select: none;
+}

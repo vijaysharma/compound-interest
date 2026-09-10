@@ -1,13 +1,14 @@
+import styles from './Toast.module.scss';
 const Toast = ({
   message,
-  type = "alert",
+  type = 'alert',
 }: {
   message: string;
-  type: "info" | "alert" | "success";
+  type: 'info' | 'alert' | 'success';
 }) => {
   return (
-    <div className="toast toast-bottom toast-center">
-      <div className={`${type} ${type}-success`}>
+    <div className={styles.toastContainer} role="status" aria-live="polite">
+      <div className={`${styles.toastAlert} ${styles[type] || styles.alert}`}>
         <span>{message}</span>
       </div>
     </div>

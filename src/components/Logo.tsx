@@ -1,6 +1,7 @@
+import styles from "./Logo.module.scss";
 const Logo = () => {
   return (
-    <div className="text-center ">
+    <div className={styles.container}>
       <svg
         version="1.0"
         xmlns="http://www.w3.org/2000/svg"
@@ -8,7 +9,7 @@ const Logo = () => {
         height="24"
         viewBox="0 0 139.000000 126.000000"
         preserveAspectRatio="xMidYMid meet"
-        className="inline-block animate-jiggle hover:animate-wiggle"
+        className={styles.svg}
         fill="var(--color-primary-content)"
       >
         <g transform="translate(0.000000,126.000000) scale(0.100000,-0.100000)" stroke="none">
