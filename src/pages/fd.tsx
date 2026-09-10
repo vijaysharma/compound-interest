@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
 import ValuePicker from '../components/ValuePicker.tsx';
-import RateOfInterest from '../components/RateOfInterest.tsx';
-import Tenure from '../components/Tenure.tsx';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import { RT, StepAmountType } from '../types/types.ts';
 import { calculateInterest, calculatePrincipal } from '../utilities/utility.ts';
@@ -224,8 +222,8 @@ const FD: React.FC = () => {
             { id: 'tgt', title: 'Target amount' },
           ]}
         />
-        <RateOfInterest className={styles.field} rt={rt} setRt={setRt} />
-        <Tenure className={styles.field} rt={rt} setRt={setRt} />
+        <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
+        <ValuePicker.Tenure className={styles.field} rt={rt} setRt={setRt} />
         <JoinedButtonGroup
           className={styles.field}
           data={FREQUENCY_DATA}

@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
 import ValuePicker from '../components/ValuePicker.tsx';
-import RateOfInterest from '../components/RateOfInterest.tsx';
-import Tenure from '../components/Tenure.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
 import { RT } from '../types/types.ts';
 import SEOHead from '../components/SEOHead.tsx';
@@ -209,8 +207,8 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
             { id: 'tgt', title: 'Target amount' },
           ]}
         />
-        <RateOfInterest className={styles.field} rt={rt} setRt={setRt} />
-        <Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
+        <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
+        <ValuePicker.Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
         <DisplayCard
           primaryAmount={payoutAmount}
           title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DisplayCard from '../components/DisplayCard.tsx';
 import ValuePicker from '../components/ValuePicker.tsx';
-import RateOfInterest from '../components/RateOfInterest.tsx';
-import Tenure from '../components/Tenure.tsx';
 import { RT, StepAmountType } from '../types/types.ts';
 import { STEP_AMOUNT } from '../data/default_data.ts';
 import { sanctnum } from '../utilities/numSanitity.ts';
@@ -572,37 +570,37 @@ const EmiCalculator: React.FC = () => {
           stepData={stepData}
           tabs={[]}
         />
-        <RateOfInterest className={styles.fieldTight} rt={rt} setRt={setRt} />
-        <Tenure className={styles.fieldTight} rt={rt} setRt={setRt} />
+        <ValuePicker.ROI className={styles.fieldTight} rt={rt} setRt={setRt} />
+        <ValuePicker.Tenure className={styles.fieldTight} rt={rt} setRt={setRt} />
         {/* Joined Disbursement Date & EMI Deduction Date */}
         <div className={styles.disbursementWrapper}>
-          <h5>Disbursement &amp; Repayment</h5>
-          <div className={styles.datePickerJoin}>
-            <div className={styles.joinLabel}>
-              Disbursed
-            </div>
-            <input
-              id="disbursement-date"
-              className={styles.dateInput}
-              title="Disbursement Date"
-              type="date"
-              value={disbursementDate}
-              onChange={(e) => handleDisbursementDateChange(e.target.value)}
-            />
-            <div className={styles.joinLabel}>
-              EMI Day
-            </div>
-            <input
-              id="emi-date"
-              className={styles.dayInput}
-              title="EMI Deduction Date (Day of Month)"
-              type="number"
-              min="1"
-              max="31"
-              value={emiDate}
-              onChange={(e) => setEmiDate(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
-            />
-          </div>
+          <ValuePicker.Paired
+            title="Disbursement & Repayment"
+            sourceBadgeText="Disbursed"
+            targetBadgeText="EMI Day"
+            sourceSlot={
+              <input
+                id="disbursement-date"
+                className={styles.dateInput}
+                title="Disbursement Date"
+                type="date"
+                value={disbursementDate}
+                onChange={(e) => handleDisbursementDateChange(e.target.value)}
+              />
+            }
+            targetSlot={
+              <input
+                id="emi-date"
+                className={styles.dayInput}
+                title="EMI Deduction Date (Day of Month)"
+                type="number"
+                min="1"
+                max="31"
+                value={emiDate}
+                onChange={(e) => setEmiDate(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
+              />
+            }
+          />
           <label className={styles.advanceEmiLabel}>
             <input
               type="checkbox"

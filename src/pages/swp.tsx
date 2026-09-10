@@ -1,7 +1,6 @@
 import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import ValuePicker from '../components/ValuePicker';
-import StartEndDate from '../components/Date';
 import { getNearest } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
@@ -841,7 +840,7 @@ const SWP = ({
           {viewChart ? 'Hide Chart' : 'Show Chart'}
         </button>
       </div>
-      <StartEndDate
+      <ValuePicker.DateRange
         data={jsonNavData}
         startTitle="Investment Date"
         startDate={lumpsumStartDate}
@@ -855,7 +854,7 @@ const SWP = ({
         tabs={[]}
       />
       {jsonNavData.length > 0 && (
-        <StartEndDate
+        <ValuePicker.DateRange
           data={jsonNavData}
           startDate={startSwpDate}
           startTitle="Start SWP"

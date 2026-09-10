@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import ValuePicker from '../components/ValuePicker.tsx';
 import SEOHead from '../components/SEOHead.tsx';
 import JoinedButtonGroup from '../components/JoinedButtonGroup.tsx';
 import DisplayCard from '../components/DisplayCard.tsx';
@@ -279,25 +280,30 @@ const DateCalculator: React.FC = () => {
           <div className={styles.modeContainer}>
             <div className={styles.inputsRow}>
               <div className={styles.inputCol}>
-                <label className={styles.label}>
-                  From Date &amp; Time
-                </label>
-                <div className={styles.joinGroup}>
-                  <input
-                    className={styles.dateInput}
-                    type="date"
-                    max={endDate || undefined}
-                    value={startDate}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
-                  />
-                  <input
-                    className={styles.timeInput}
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    title="Start time (defaults to 00:00)"
-                  />
-                </div>
+                <ValuePicker.Paired
+                  sourceBadgeText="From"
+                  targetBadgeText="Time"
+                  sourceSlot={(
+                    <input
+                      className={styles.plainInput}
+                      type="date"
+                      max={endDate || undefined}
+                      value={startDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                      aria-label="From Date"
+                    />
+                  )}
+                  targetSlot={(
+                    <input
+                      className={styles.plainInput}
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      title="Start time (defaults to 00:00)"
+                      aria-label="From Time"
+                    />
+                  )}
+                />
                 {startDate && (
                   <p className={styles.helperText}>
                     {dayOfWeek(startDate)} {startTime ? `@ ${startTime}` : ''}
@@ -305,25 +311,30 @@ const DateCalculator: React.FC = () => {
                 )}
               </div>
               <div className={styles.inputCol}>
-                <label className={styles.label}>
-                  To Date &amp; Time
-                </label>
-                <div className={styles.joinGroup}>
-                  <input
-                    className={styles.dateInput}
-                    type="date"
-                    min={startDate || undefined}
-                    value={endDate}
-                    onChange={(e) => handleEndDateChange(e.target.value)}
-                  />
-                  <input
-                    className={styles.timeInput}
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    title="End time (defaults to 00:00)"
-                  />
-                </div>
+                <ValuePicker.Paired
+                  sourceBadgeText="To"
+                  targetBadgeText="Time"
+                  sourceSlot={(
+                    <input
+                      className={styles.plainInput}
+                      type="date"
+                      min={startDate || undefined}
+                      value={endDate}
+                      onChange={(e) => handleEndDateChange(e.target.value)}
+                      aria-label="To Date"
+                    />
+                  )}
+                  targetSlot={(
+                    <input
+                      className={styles.plainInput}
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      title="End time (defaults to 00:00)"
+                      aria-label="To Time"
+                    />
+                  )}
+                />
                 {endDate && (
                   <p className={styles.helperText}>
                     {dayOfWeek(endDate)} {endTime ? `@ ${endTime}` : ''}
@@ -403,24 +414,30 @@ const DateCalculator: React.FC = () => {
       ) : (
         <div className={styles.modeContainer}>
           <div>
-            <label className={styles.label}>
-              Starting Date &amp; Time
-            </label>
-            <div className={styles.joinGroup}>
-              <input
-                className={styles.halfInput}
-                type="date"
-                value={baseDate}
-                onChange={(e) => setBaseDate(e.target.value)}
-              />
-              <input
-                className={styles.halfInput}
-                type="time"
-                value={baseTime}
-                onChange={(e) => setBaseTime(e.target.value)}
-                title="Start time (defaults to 00:00)"
-              />
-            </div>
+            <ValuePicker.Paired
+              title="Starting Date & Time"
+              sourceBadgeText="Date"
+              targetBadgeText="Time"
+              sourceSlot={(
+                <input
+                  className={styles.plainInput}
+                  type="date"
+                  value={baseDate}
+                  onChange={(e) => setBaseDate(e.target.value)}
+                  aria-label="Starting Date"
+                />
+              )}
+              targetSlot={(
+                <input
+                  className={styles.plainInput}
+                  type="time"
+                  value={baseTime}
+                  onChange={(e) => setBaseTime(e.target.value)}
+                  title="Start time (defaults to 00:00)"
+                  aria-label="Starting Time"
+                />
+              )}
+            />
             {baseDate && (
               <p className={styles.helperText}>
                 {dayOfWeek(baseDate)} {baseTime ? `@ ${baseTime}` : ''}

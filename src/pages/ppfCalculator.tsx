@@ -284,24 +284,13 @@ const PpfCalculator: React.FC = () => {
               </div>
             )}
             <div className={styles.fieldGroup}>
-              <label htmlFor="ppf-projected-rate" className={styles.fieldLabel}>
-                Projected Rate for Future Years ({projectedRate}%)
-              </label>
-              <input
-                id="ppf-projected-rate"
-                type="range"
-                min="5.0"
-                max="10.0"
-                step="0.1"
+              <ValuePicker.ROI
+                title={`Projected Future Rate (%) — Current: ${CURRENT_PPF_RATE}%`}
                 value={projectedRate}
-                onChange={(e) => setProjectedRate(Number(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--color-primary)' }}
+                onChange={(v) => setProjectedRate(parseFloat(v) || 7.1)}
+                min={1}
+                max={15}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6875rem', opacity: 0.7 }}>
-                <span>5.0%</span>
-                <span>Current: {CURRENT_PPF_RATE}%</span>
-                <span>10.0%</span>
-              </div>
             </div>
           </section>
         </div>

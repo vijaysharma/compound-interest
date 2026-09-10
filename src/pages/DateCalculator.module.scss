@@ -84,6 +84,20 @@
   }
 }
 
+.plainInput {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-base-content);
+  outline: none;
+  padding: 0 0.5rem;
+  cursor: pointer;
+}
+
 .dateInput {
   flex: 1;
   min-width: 0;

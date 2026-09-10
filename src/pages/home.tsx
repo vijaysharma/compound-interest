@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import Link from '../components/PrefetchLink';
+import ValuePicker from '../components/ValuePicker';
 import {
   FiBarChart2,
   FiCalendar,
@@ -206,81 +207,71 @@ const Home = () => {
           <div className={styles.simulatorGrid}>
             {/* Interactive Inputs */}
             <div className={styles.inputsCard}>
-              <div className={styles.sliderGroup}>
-                <div className={styles.sliderHeader}>
-                  <span>Monthly Investment</span>
-                  <span className={styles.sliderValue}>
-                    {currencySymbol}
-                    {monthlySip.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1000"
-                  max="100000"
-                  step="1000"
-                  value={monthlySip}
-                  onChange={(e) => {
-                    setMonthlySip(Number(e.target.value));
-                    trackCalculatorEvent(
-                      'home_quick_sip',
-                      'slider_changed',
-                      'monthly_sip',
-                      Number(e.target.value)
-                    );
-                  }}
-                  className={styles.rangeSlider}
-                />
-                <span className={styles.wordsNote}>
-                  {convertToWords(monthlySip, 'en-IN')}
-                </span>
-              </div>
-              <div className={styles.sliderGroup}>
-                <div className={styles.sliderHeader}>
-                  <span>Expected Annual Return (CAGR)</span>
-                  <span className={styles.sliderValue}>{expectedRoi}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="4"
-                  max="25"
-                  step="0.5"
-                  value={expectedRoi}
-                  onChange={(e) => {
-                    setExpectedRoi(Number(e.target.value));
-                    trackCalculatorEvent(
-                      'home_quick_sip',
-                      'slider_changed',
-                      'roi',
-                      Number(e.target.value)
-                    );
-                  }}
-                  className={styles.rangeSlider}
-                />
-              </div>
-              <div className={styles.sliderGroup}>
-                <div className={styles.sliderHeader}>
-                  <span>Investment Horizon</span>
-                  <span className={styles.sliderValue}>{tenureYears} Years</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="35"
-                  step="1"
-                  value={tenureYears}
-                  onChange={(e) => {
-                    setTenureYears(Number(e.target.value));
-                    trackCalculatorEvent(
-                      'home_quick_sip',
-                      'slider_changed',
-                      'tenure_years',
-                      Number(e.target.value)
-                    );
-                  }}
-                  className={styles.rangeSlider}
-                />
-              </div>
+              <ValuePicker.Amount
+                title="Monthly Investment"
+                value={monthlySip.toString()}
+                onChange={(v) => {
+                  const num = Math.max(0, parseInt(v, 10) || 0);
+                  setMonthlySip(num);
+                  trackCalculatorEvent(
+                    'home_quick_sip',
+                    'slider_changed',
+                    'monthly_sip',
+                    num
+                  );
+                }}
+                currencySymbol={currencySymbol}
+                locale="en-IN"
+                tabs={[]}
+                stepRows={[
+                  [
+                    { id: 's1', label: '10K', value: 10000 },
+                    { id: 's2', label: '25K', value: 25000 },
+                    { id: 's3', label: '50K', value: 50000 },
+                  ],
+                  [
+                    { id: 's4', label: '1K', value: 1000 },
+                    { id: 's5', label: '2.5K', value: 2500 },
+                    { id: 's6', label: '5K', value: 5000 },
+                  ],
+                ]}
+              />
+              <ValuePicker.ROI
+                title="Expected Annual Return (CAGR %)"
+                value={expectedRoi}
+                onChange={(v) => {
+                  const num = Math.max(0, parseFloat(v) || 0);
+                  setExpectedRoi(num);
+                  trackCalculatorEvent(
+                    'home_quick_sip',
+                    'slider_changed',
+                    'roi',
+                    num
+                  );
+                }}
+                min={1}
+                max={30}
+              />
+              <ValuePicker.Tenure
+                title="Investment Horizon"
+                value={tenureYears.toString()}
+                onChange={(v) => {
+                  const num = Math.max(1, parseInt(v, 10) || 1);
+                  setTenureYears(num);
+                  trackCalculatorEvent(
+                    'home_quick_sip',
+                    'slider_changed',
+                    'tenure_years',
+                    num
+                  );
+                }}
+                unit="y"
+                units={[{ id: 'y', label: 'Y', title: 'Years' }]}
+                min={1}
+                max={40}
+                tenureDecSteps={[-5, -1]}
+                tenureIncSteps={[1, 5]}
+              />
             </div>
             {/* Live Result Card */}
             <div className={styles.resultCard}>

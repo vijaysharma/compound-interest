@@ -11,6 +11,32 @@ $primary: var(--color-primary, #6d0b74);
 // Typography Tokens
 $font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
+// Streamlined Responsive Typography Tokens
+$font-size-heading-mobile: 14.5px;
+$font-line-height-heading-mobile: 20px;
+$font-size-heading-web: 16px;
+$font-line-height-heading-web: 22px;
+
+$font-size-input-mobile: 16.5px;
+$font-line-height-input-mobile: 22px;
+$font-size-input-web: 20px;
+$font-line-height-input-web: 26px;
+
+$font-size-button-mobile: 13.5px;
+$font-line-height-button-mobile: 18px;
+$font-size-button-web: 14.5px;
+$font-line-height-button-web: 20px;
+
+$font-size-button-sm-mobile: 13px;
+$font-line-height-button-sm-mobile: 18px;
+$font-size-button-sm-web: 14px;
+$font-line-height-button-sm-web: 18px;
+
+$font-size-feedback-mobile: 13px;
+$font-line-height-feedback-mobile: 18px;
+$font-size-feedback-web: 14.5px;
+$font-line-height-feedback-web: 20px;
+
 // Colors
 $color-primary: var(--color-primary, #6d0b74);
 $color-secondary: var(--color-secondary, #9c27b0);
@@ -28,8 +54,8 @@ $space-lg: 24px;  // section spacing
 $space-xl: 32px;  // top/bottom margins
 
 // Component Dimensions & Radius
-$btn-height-mobile: 48px;
-$btn-height-web: 3.5rem; // 56px
+$btn-height-mobile: 42px;
+$btn-height-web: 48px;
 $btn-radius: 8px;
 $input-radius: 6px;
 $tab-radius: 10px;
@@ -53,10 +79,15 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-top: $space-xl;
-  margin-bottom: $space-xl;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
   font-family: $font-family;
   box-sizing: border-box;
+
+  &.compact {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
 
   *,
   *::before,
@@ -65,23 +96,33 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   @include tablet-up {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+
+    &.compact {
+      margin-top: 0.375rem;
+      margin-bottom: 0.375rem;
+    }
   }
 }
 
 // Header label (when title is provided)
 .title {
-  font-size: 19px;
-  line-height: 26px;
+  font-size: $font-size-heading-mobile;
+  line-height: $font-line-height-heading-mobile;
   font-weight: 600;
   color: $color-text-primary;
-  margin-bottom: $space-sm;
+  margin-bottom: $space-xs;
   letter-spacing: -0.01em;
 
+  &.titleCenter {
+    text-align: center;
+  }
+
   @include tablet-up {
-    font-size: 1.3125rem; // 21px
-    line-height: 1.75rem;  // 28px
+    font-size: $font-size-heading-web;
+    line-height: $font-line-height-heading-web;
+    margin-bottom: $space-sm;
   }
 }
 
@@ -117,9 +158,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   min-height: $btn-height-mobile;
   padding: 0 $space-sm;
   font-family: $font-family;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
+  font-size: $font-size-button-mobile;
+  line-height: $font-line-height-button-mobile;
+  font-weight: 600;
   text-align: center;
   color: $color-text-secondary;
   background-color: $color-neutral-bg;
@@ -144,8 +185,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   @include tablet-up {
     height: $btn-height-web;
     min-height: $btn-height-web;
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: $font-size-button-web;
+    line-height: $font-line-height-button-web;
     padding: 0 $space-md;
   }
 }
@@ -154,16 +195,16 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 .inputRow {
   display: flex;
   align-items: center;
-  gap: $space-sm;
-  padding: $space-sm 12px;
+  gap: 6px;
+  padding: 6px 10px;
   background-color: $color-neutral-bg;
   border-bottom: 1px solid $color-neutral-border;
-  min-height: 64px;
+  min-height: 52px;
 
   @include tablet-up {
-    padding: $space-md;
-    gap: $space-md;
-    min-height: 88px;
+    padding: $space-sm $space-md;
+    gap: $space-sm;
+    min-height: 64px;
   }
 }
 
@@ -172,26 +213,26 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: $btn-height-mobile;
-  height: $btn-height-mobile;
-  min-width: $btn-height-mobile;
-  padding: $space-xs;
-  background-color: $color-neutral-bg;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+  background-color: #f1f5f9;
   border: 1px solid $color-neutral-border;
   border-radius: $input-radius;
   color: $color-text-primary;
   font-family: $font-family;
-  font-size: 20px;
-  line-height: 24px;
+  font-size: 16px;
+  line-height: 1;
   font-weight: 600;
   user-select: none;
   flex-shrink: 0;
 
   @include tablet-up {
-    width: $btn-height-web;
-    height: $btn-height-web;
-    min-width: $btn-height-web;
-    font-size: 1.5rem;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 18px;
   }
 }
 
@@ -201,8 +242,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   min-width: 0;
   display: flex;
   align-items: center;
-  height: $btn-height-mobile;
-  padding: 0 $space-sm;
+  height: 38px;
+  padding: 0 8px;
   background-color: $color-neutral-bg;
   border: 1px solid $color-neutral-border;
   border-radius: $input-radius;
@@ -216,7 +257,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   @include tablet-up {
-    height: $btn-height-web;
+    height: 44px;
     padding: 0 $space-md;
   }
 }
@@ -227,9 +268,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background: transparent;
   padding: 0;
   font-family: $font-family;
-  font-size: 23px;
-  line-height: 30px;
-  font-weight: 500;
+  font-size: $font-size-input-mobile;
+  line-height: $font-line-height-input-mobile;
+  font-weight: 600;
   color: $color-text-primary;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -244,9 +285,13 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     outline: none;
   }
 
+  @container (max-width: 380px) {
+    font-size: 16px;
+  }
+
   @include tablet-up {
-    font-size: 1.6875rem; // ~27px
-    line-height: 1.875rem;  // 30px
+    font-size: $font-size-input-web;
+    line-height: $font-line-height-input-web;
   }
 }
 
@@ -254,30 +299,31 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 .actionsCluster {
   display: flex;
   align-items: center;
-  gap: $space-sm;
+  gap: 4px;
   flex-shrink: 0;
 
   @include tablet-up {
-    gap: $space-md;
+    gap: 6px;
   }
 }
 
-// Common action button styles (Tap target size ≥ 48px on mobile, 56px on web)
+// Common action button styles (Touch accessible ≥ 38px on mobile, 44px on web)
 .actionBtn {
   @include button-reset;
   @include pressable;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: $btn-height-mobile;
-  height: $btn-height-mobile;
-  min-width: $btn-height-mobile;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   border-radius: $btn-radius;
-  border: 1px solid $color-neutral-border;
+  border: 1px solid #ebdfee;
+  background-color: #fbf7fb;
   font-family: $font-family;
-  font-size: 15px;
-  line-height: 22px;
-  font-weight: 500;
+  font-size: $font-size-button-mobile;
+  line-height: 1;
+  font-weight: 600;
   user-select: none;
   transition:
     background-color $transition-fast,
@@ -294,37 +340,37 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   @include tablet-up {
-    width: $btn-height-web;
-    height: $btn-height-web;
-    min-width: $btn-height-web;
-    font-size: 1.0625rem;
-    line-height: 1.375rem;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: $font-size-button-web;
+    line-height: 1;
   }
 }
 
 // Clear button ('C')
 .clearBtn {
-  background-color: $color-neutral-bg;
+  background-color: #fbf7fb;
   color: $color-text-primary;
-  border: 1px solid $color-neutral-border;
+  border: 1px solid #ebdfee;
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: #faf5fb;
+    background-color: #f3e5f5;
   }
 }
 
 // Operation increment button ('+')
 .plusBtn {
-  background-color: $color-neutral-bg;
+  background-color: #fbf7fb;
   color: $color-text-primary;
-  border: 1px solid $color-neutral-border;
+  border: 1px solid #ebdfee;
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: #faf5fb;
+    background-color: #f3e5f5;
   }
 
   &.activeOp {
@@ -342,14 +388,14 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
 // Operation decrement button ('-')
 .minusBtn {
-  background-color: $color-neutral-bg;
+  background-color: #fbf7fb;
   color: $color-text-primary;
-  border: 1px solid $color-neutral-border;
+  border: 1px solid #ebdfee;
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: #faf5fb;
+    background-color: #f3e5f5;
   }
 
   &.activeOp {
@@ -381,7 +427,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   // Separator between rows
   &:not(:last-child) {
-    border-bottom: 1px solid $color-neutral-border;
+    border-bottom: 1px solid #ebdfee;
   }
 }
 
@@ -392,28 +438,32 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
-  height: $btn-height-mobile;
-  min-height: $btn-height-mobile;
-  padding: 0 $space-sm;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 4px;
   text-align: center;
   font-family: $font-family;
-  font-size: 15px;
-  line-height: 22px;
-  font-weight: 500;
+  font-size: $font-size-button-sm-mobile;
+  line-height: $font-line-height-button-sm-mobile;
+  font-weight: 600;
   color: $color-primary;
-  background-color: $color-neutral-bg;
+  background-color: #fbf7fc;
   transition:
     background-color $transition-fast,
     color $transition-fast;
 
   // Separator between cells
   &:not(:last-child) {
-    border-right: 1px solid $color-neutral-border;
+    border-right: 1px solid #ebdfee;
   }
 
   &:hover:not(:disabled) {
     color: $color-secondary;
-    background-color: #faf5fb;
+    background-color: #f3e5f5;
+  }
+
+  &:active:not(:disabled) {
+    background-color: #ead5ee;
   }
 
   @include vp-focus-ring(-2px);
@@ -424,12 +474,17 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transform: none;
   }
 
+  @container (max-width: 380px) {
+    font-size: 12px;
+    padding: 0 3px;
+  }
+
   @include tablet-up {
-    height: $btn-height-web;
-    min-height: $btn-height-web;
-    font-size: 1.0625rem;
-    line-height: 1.375rem;
-    padding: 0 $space-md;
+    height: 46px;
+    min-height: 46px;
+    font-size: $font-size-button-sm-web;
+    line-height: $font-line-height-button-sm-web;
+    padding: 0 $space-sm;
   }
 }
 
@@ -443,20 +498,504 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
 // In-words representation below card (“Thirty Lakh” text)
 .wordsDisplay {
-  margin-top: $space-sm;
+  margin-top: 6px;
   padding: 0 $space-xs;
   font-family: $font-family;
-  font-size: 17px;
-  line-height: 24px;
+  font-size: $font-size-feedback-mobile;
+  line-height: $font-line-height-feedback-mobile;
   font-weight: 600;
   color: $color-feedback;
   word-break: break-word;
   transition: color $transition-fast;
 
   @include tablet-up {
-    margin-top: $space-md;
-    font-size: 1.1875rem; // 19px
-    line-height: 1.5rem;   // 24px
+    margin-top: 8px;
+    font-size: $font-size-feedback-web;
+    line-height: $font-line-height-feedback-web;
+  }
+}
+
+// =============================================================================
+// Scaled Variant 1 & 2: Joined Stepper Rows (Rate of Interest & Tenure)
+// =============================================================================
+.joinedRow {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  background-color: $color-neutral-bg;
+  border: 1px solid $color-primary;
+  border-radius: $btn-radius;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  @include tablet-up {
+    height: 48px;
+    min-height: 48px;
+  }
+}
+
+.stepperBtn {
+  @include button-reset;
+  @include pressable;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 38px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 4px;
+  background-color: #fbf7fb;
+  color: $color-primary;
+  border: none;
+  border-right: 1px solid $color-primary;
+  border-radius: 0;
+  font-family: $font-family;
+  font-size: $font-size-button-sm-mobile;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover:not(:disabled) {
+    background-color: #f3e5f5;
+    color: $color-secondary;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @include vp-focus-ring(-2px);
+
+  @container (max-width: 380px) {
+    min-width: 36px;
+    font-size: 12px;
+    padding: 0 3px;
+  }
+
+  @include tablet-up {
+    min-width: 48px;
+    font-size: $font-size-button-sm-web;
+    padding: 0 $space-sm;
+  }
+}
+
+.joinedInputWrapper {
+  flex: 1;
+  min-width: 44px;
+  height: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $color-neutral-bg;
+  border-right: 1px solid $color-primary;
+  padding: 0 4px;
+  transition: background-color $transition-fast;
+
+  &:focus-within {
+    background-color: #fdfaff;
+  }
+
+  @include tablet-up {
+    padding: 0 $space-sm;
+  }
+}
+
+.joinedInputField {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: center;
+  font-family: $font-family;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+  color: $color-text-primary;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: $color-text-secondary;
+    opacity: 0.7;
+  }
+
+  @container (max-width: 380px) {
+    font-size: 15.5px;
+  }
+
+  @include tablet-up {
+    font-size: 18px;
+  }
+}
+
+.opBtn {
+  @include button-reset;
+  @include pressable;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 40px;
+  min-width: 40px;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-right: 1px solid $color-primary;
+  border-radius: 0;
+  background-color: #fbf7fb;
+  color: $color-primary;
+  font-family: $font-family;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover:not(:disabled):not(.activeOp) {
+    background-color: #f3e5f5;
+    color: $color-secondary;
+  }
+
+  &.activeOp {
+    background-color: $color-primary;
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @include vp-focus-ring(-2px);
+
+  @include tablet-up {
+    width: 48px;
+    min-width: 48px;
+    font-size: 17px;
+  }
+}
+
+.unitBtn {
+  @include button-reset;
+  @include pressable;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 38px;
+  min-width: 38px;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-right: 1px solid $color-primary;
+  border-radius: 0;
+  background-color: #fbf7fb;
+  color: $color-primary;
+  font-family: $font-family;
+  font-size: $font-size-button-sm-mobile;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover:not(:disabled):not(.activeUnit) {
+    background-color: #f3e5f5;
+    color: $color-secondary;
+  }
+
+  &.activeUnit {
+    background-color: $color-primary;
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @include vp-focus-ring(-2px);
+
+  @include tablet-up {
+    width: 46px;
+    min-width: 46px;
+    font-size: $font-size-button-sm-web;
+  }
+}
+
+// =============================================================================
+// Scaled Variant 3: Paired / Dual Endpoint Selector (Screenshot 3)
+// =============================================================================
+.pairedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 68px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 8px;
+  background-color: $color-primary;
+  color: #ffffff;
+  border-radius: 0;
+  font-family: $font-family;
+  font-size: 12.5px;
+  line-height: 1;
+  font-weight: 600;
+  user-select: none;
+  flex-shrink: 0;
+
+  &.leftBadge {
+    border-right: 1px solid $color-primary;
+  }
+
+  &.rightBadge {
+    border-left: 1px solid $color-primary;
+  }
+
+  @include tablet-up {
+    min-width: 84px;
+    font-size: 14px;
+    padding: 0 14px;
+  }
+}
+
+.pairedSlot {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $space-sm;
+  background-color: $color-neutral-bg;
+
+  &.slotLeft {
+    border-right: 1px solid $color-primary;
+  }
+
+  @include tablet-up {
+    padding: 0 $space-md;
+  }
+}
+
+.pairedInput {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-family: $font-family;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 500;
+  color: $color-text-primary;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: $color-text-secondary;
+    opacity: 0.7;
+  }
+
+  @include tablet-up {
+    font-size: 15px;
+  }
+}
+
+.pairedSelect {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  text-align-last: center;
+  font-family: $font-family;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 500;
+  color: $color-text-primary;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  @include tablet-up {
+    font-size: 15px;
+  }
+}
+
+// =============================================================================
+// Scaled Variant 4: Date Range Selector (Screenshot 4)
+// =============================================================================
+.dateSlot {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $space-sm;
+  background-color: $color-neutral-bg;
+
+  &.slotLeft {
+    border-right: 1px solid $color-primary;
+  }
+
+  @include tablet-up {
+    padding: 0 $space-md;
+  }
+}
+
+.dateInput {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-family: $font-family;
+  font-size: 13.5px;
+  line-height: 1;
+  font-weight: 500;
+  color: $color-text-primary;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: $color-text-secondary;
+    opacity: 0.7;
+  }
+
+  @include tablet-up {
+    font-size: 14.5px;
+  }
+}
+
+.dateSelect {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  text-align-last: center;
+  font-family: $font-family;
+  font-size: 13.5px;
+  line-height: 1;
+  font-weight: 500;
+  color: $color-text-primary;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  @include tablet-up {
+    font-size: 14.5px;
+  }
+}
+
+// =============================================================================
+// Scaled Variant 5: Multi-Row Duration Matrix Grid (Screenshot 5)
+// =============================================================================
+.matrixContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: $color-neutral-bg;
+  border: 1px solid $color-primary;
+  border-radius: $btn-radius;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.matrixRow {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: 100%;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid $color-primary;
+  }
+}
+
+.matrixCell {
+  @include button-reset;
+  @include pressable;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 2px;
+  border: none;
+  border-right: 1px solid $color-primary;
+  background-color: #fbf7fb;
+  color: $color-primary;
+  font-family: $font-family;
+  font-size: $font-size-button-sm-mobile;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  @container (max-width: 380px) {
+    font-size: 12px;
+    padding: 0 1px;
+  }
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover:not(:disabled):not(.matrixCellActive) {
+    background-color: #f3e5f5;
+    color: $color-secondary;
+  }
+
+  &.matrixCellActive {
+    background-color: $color-primary;
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @include vp-focus-ring(-2px);
+
+  @include tablet-up {
+    height: 46px;
+    min-height: 46px;
+    font-size: $font-size-button-sm-web;
+    padding: 0 4px;
   }
 }
 
@@ -465,135 +1004,274 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 // =============================================================================
 
 .layoutMobile {
-  margin-top: $space-xl;
-  margin-bottom: $space-xl;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  &.compact {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
 
   .title {
-    font-size: 19px;
-    line-height: 26px;
+    font-size: $font-size-heading-mobile;
+    line-height: $font-line-height-heading-mobile;
   }
 
   .tabBtn {
     height: $btn-height-mobile;
     min-height: $btn-height-mobile;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: $font-size-button-mobile;
+    line-height: $font-line-height-button-mobile;
     padding: 0 $space-sm;
   }
 
   .inputRow {
-    padding: $space-sm 12px;
-    gap: $space-sm;
-    min-height: 64px;
+    padding: 6px 8px;
+    gap: 6px;
+    min-height: 52px;
   }
 
   .currencyBadge {
-    width: $btn-height-mobile;
-    height: $btn-height-mobile;
-    min-width: $btn-height-mobile;
-    font-size: 20px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    font-size: 16px;
+    line-height: 1;
   }
 
   .inputWrapper {
-    height: $btn-height-mobile;
-    padding: 0 $space-sm;
+    height: 38px;
+    padding: 0 8px;
   }
 
   .inputField {
-    font-size: 23px;
-    line-height: 30px;
+    font-size: $font-size-input-mobile;
+    line-height: $font-line-height-input-mobile;
   }
 
   .actionsCluster {
-    gap: $space-sm;
+    gap: 6px;
   }
 
   .actionBtn {
-    width: $btn-height-mobile;
-    height: $btn-height-mobile;
-    min-width: $btn-height-mobile;
-    font-size: 15px;
-    line-height: 22px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    font-size: $font-size-button-mobile;
+    line-height: 1;
+    font-weight: 600;
   }
 
   .gridCell {
-    height: $btn-height-mobile;
-    min-height: $btn-height-mobile;
-    font-size: 15px;
-    line-height: 22px;
-    padding: 0 $space-sm;
+    height: 40px;
+    min-height: 40px;
+    font-size: $font-size-button-sm-mobile;
+    line-height: 1;
+    padding: 0 4px;
   }
 
   .wordsDisplay {
-    margin-top: $space-sm;
-    font-size: 17px;
-    line-height: 24px;
+    margin-top: 6px;
+    font-size: $font-size-feedback-mobile;
+    line-height: $font-line-height-feedback-mobile;
+  }
+
+  .joinedRow {
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .stepperBtn {
+    min-width: 38px;
+    font-size: $font-size-button-sm-mobile;
+    line-height: 1;
+    font-weight: 600;
+    padding: 0 6px;
+  }
+
+  .joinedInputField {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .opBtn {
+    width: 40px;
+    min-width: 40px;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 600;
+  }
+
+  .unitBtn {
+    width: 38px;
+    min-width: 38px;
+    font-size: $font-size-button-sm-mobile;
+    line-height: 1;
+    font-weight: 600;
+  }
+
+  .pairedBadge {
+    min-width: 68px;
+    font-size: 12.5px;
+    line-height: 1;
+    font-weight: 600;
+    padding: 0 8px;
+  }
+
+  .pairedInput,
+  .pairedSelect {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .dateInput,
+  .dateSelect {
+    font-size: 13.5px;
+    line-height: 1;
+  }
+
+  .matrixCell {
+    height: 40px;
+    min-height: 40px;
+    font-size: $font-size-button-sm-mobile;
+    line-height: 1;
+    font-weight: 600;
+    padding: 0 2px;
   }
 }
 
 .layoutDesktop {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+
+  &.compact {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
 
   .title {
-    font-size: 1.3125rem;
-    line-height: 1.75rem;
+    font-size: $font-size-heading-web;
+    line-height: $font-line-height-heading-web;
   }
 
   .tabBtn {
     height: $btn-height-web;
     min-height: $btn-height-web;
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: $font-size-button-web;
+    line-height: $font-line-height-button-web;
     padding: 0 $space-md;
   }
 
   .inputRow {
-    padding: $space-md;
-    gap: $space-md;
-    min-height: 88px;
+    padding: 8px 12px;
+    gap: 8px;
+    min-height: 64px;
   }
 
   .currencyBadge {
-    width: $btn-height-web;
-    height: $btn-height-web;
-    min-width: $btn-height-web;
-    font-size: 1.5rem;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 18px;
+    line-height: 1;
   }
 
   .inputWrapper {
-    height: $btn-height-web;
-    padding: 0 $space-md;
+    height: 44px;
+    padding: 0 12px;
   }
 
   .inputField {
-    font-size: 1.6875rem;
-    line-height: 1.875rem;
+    font-size: $font-size-input-web;
+    line-height: $font-line-height-input-web;
   }
 
   .actionsCluster {
-    gap: $space-md;
+    gap: 8px;
   }
 
   .actionBtn {
-    width: $btn-height-web;
-    height: $btn-height-web;
-    min-width: $btn-height-web;
-    font-size: 1.0625rem;
-    line-height: 1.375rem;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: $font-size-button-web;
+    line-height: 1;
+    font-weight: 600;
   }
 
   .gridCell {
-    height: $btn-height-web;
-    min-height: $btn-height-web;
-    font-size: 1.0625rem;
-    line-height: 1.375rem;
+    height: 46px;
+    min-height: 46px;
+    font-size: $font-size-button-sm-web;
+    line-height: 1;
     padding: 0 $space-md;
   }
 
   .wordsDisplay {
-    margin-top: $space-md;
-    font-size: 1.1875rem;
-    line-height: 1.5rem;
+    margin-top: 8px;
+    font-size: $font-size-feedback-web;
+    line-height: $font-line-height-feedback-web;
+  }
+
+  .joinedRow {
+    height: 48px;
+    min-height: 48px;
+  }
+
+  .stepperBtn {
+    min-width: 44px;
+    font-size: $font-size-button-sm-web;
+    line-height: 1;
+    font-weight: 600;
+    padding: 0 10px;
+  }
+
+  .joinedInputField {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .opBtn {
+    width: 46px;
+    min-width: 46px;
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 600;
+  }
+
+  .unitBtn {
+    width: 44px;
+    min-width: 44px;
+    font-size: $font-size-button-sm-web;
+    line-height: 1;
+    font-weight: 600;
+  }
+
+  .pairedBadge {
+    min-width: 84px;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 600;
+    padding: 0 14px;
+  }
+
+  .pairedInput,
+  .pairedSelect {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .dateInput,
+  .dateSelect {
+    font-size: 14.5px;
+    line-height: 1;
+  }
+
+  .matrixCell {
+    height: 46px;
+    min-height: 46px;
+    font-size: $font-size-button-sm-web;
+    line-height: 1;
+    font-weight: 600;
   }
 }

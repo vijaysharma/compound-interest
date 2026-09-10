@@ -2,7 +2,6 @@ import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState 
 import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import ValuePicker from '../components/ValuePicker';
-import StartEndDate from '../components/Date';
 import { getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
@@ -1016,7 +1015,7 @@ const SIP = ({
         </div>
       )}
       {showDate && jsonNavData.length > 0 && (
-        <StartEndDate
+        <ValuePicker.DateRange
           data={jsonNavData}
           startDate={startDate}
           endDate={endDate}

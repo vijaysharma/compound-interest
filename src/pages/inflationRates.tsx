@@ -7,7 +7,6 @@ import {
   getCurrencySymbolAndLocale,
 } from '../utilities/utility';
 import { fetchInflationData, InflationRow } from '../data/api_data';
-import StartEndDate from '../components/Date';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import styles from './CalculatorPage.module.scss';
@@ -253,8 +252,8 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           currencySymbol={currencySymbol}
           locale={locale}
         />
-        <StartEndDate
-          mode="year"
+        <ValuePicker.DateRange
+          dateMode="year"
           startDate={startYear}
           endDate={endYear}
           setStartDate={setStartYear}

@@ -286,28 +286,28 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       </header>
       <div className={styles.formStack}>
         {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <div className={styles.countryJoin}>
-          <div className={styles.countryJoinLabel}>
-            Source
-          </div>
-          <CountrySelect
-            label="source"
-            value={srcCountry}
-            countries={Object.keys(data)}
-            onChange={setSrcCountry}
-            getSecondaryText={(country) => data[country]?.currencyName}
-          />
-          <CountrySelect
-            label="target"
-            value={tgtCountry}
-            countries={Object.keys(data)}
-            onChange={setTgtCountry}
-            getSecondaryText={(country) => data[country]?.currencyName}
-          />
-          <div className={styles.countryJoinLabel}>
-            Target
-          </div>
-        </div>
+        <ValuePicker.Paired
+          sourceBadgeText="Source"
+          targetBadgeText="Target"
+          sourceSlot={(
+            <CountrySelect
+              label="source"
+              value={srcCountry}
+              countries={Object.keys(data)}
+              onChange={setSrcCountry}
+              getSecondaryText={(country) => data[country]?.currencyName}
+            />
+          )}
+          targetSlot={(
+            <CountrySelect
+              label="target"
+              value={tgtCountry}
+              countries={Object.keys(data)}
+              onChange={setTgtCountry}
+              getSecondaryText={(country) => data[country]?.currencyName}
+            />
+          )}
+        />
         {/* Swap link */}
         <div className={styles.swapRow}>
           <button

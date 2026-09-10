@@ -1,6 +1,4 @@
 import { useMemo, useState } from 'react';
-import ROI from '../components/ROI.tsx';
-import Tenure from '../components/Tenure.tsx';
 import DisplayCard from '../components/DisplayCard.tsx';
 import ValuePicker from '../components/ValuePicker.tsx';
 import { sanctnum } from '../utilities/numSanitity.ts';
@@ -231,8 +229,8 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           title="Withdrawal amount per month"
           tabs={[]}
         />
-        <ROI className={styles.field} rt={rt} setRt={setRt} title={'Expected return rate per annum (%)'} />
-        <ROI className={styles.field} rt={irt} setRt={setIRt} title={'Inflation rate (%)'} />
+        <ValuePicker.ROI className={styles.field} value={rt} onChange={setRt} title="Expected return rate per annum (%)" />
+        <ValuePicker.ROI className={styles.field} value={irt} onChange={setIRt} title="Inflation rate (%)" />
         <JoinedButtonGroup
           title="Inflation calculated per"
           className={styles.fieldTight}
@@ -248,7 +246,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
             { id: 'ir6', title: '5Y', value: '60' },
           ]}
         />
-        <Tenure className={styles.fieldLast} rt={t} setRt={setT} />
+        <ValuePicker.Tenure className={styles.fieldLast} rt={t} setRt={setT} />
         <DisplayCard
           colorClass={parseInt(remainingAmount) < parseInt(pa) ? 'error' : 'primary'}
           primaryAmount={parseInt(remainingAmount)}

@@ -366,29 +366,28 @@ const CurrencyConverter = () => {
         </p>
       </header>
       <div className={styles.converterSection}>
-        {/* Source and Target country selector */}
-        <div className={styles.selectorJoin}>
-          <div className={styles.joinLabel}>
-            Source
-          </div>
-          <CountrySelect
-            label="source"
-            value={srcCountry}
-            countries={availableCountries}
-            onChange={setSrcCountry}
-            getSecondaryText={(country) => countryData.get(country)?.code}
-          />
-          <CountrySelect
-            label="target"
-            value={tgtCountry}
-            countries={availableCountries}
-            onChange={setTgtCountry}
-            getSecondaryText={(country) => countryData.get(country)?.code}
-          />
-          <div className={styles.joinLabel}>
-            Target
-          </div>
-        </div>
+        <ValuePicker.Paired
+          sourceBadgeText="Source"
+          targetBadgeText="Target"
+          sourceSlot={(
+            <CountrySelect
+              label="source"
+              value={srcCountry}
+              countries={availableCountries}
+              onChange={setSrcCountry}
+              getSecondaryText={(country) => countryData.get(country)?.code}
+            />
+          )}
+          targetSlot={(
+            <CountrySelect
+              label="target"
+              value={tgtCountry}
+              countries={availableCountries}
+              onChange={setTgtCountry}
+              getSecondaryText={(country) => countryData.get(country)?.code}
+            />
+          )}
+        />
         {/* Swap link */}
         <div className={styles.swapRow}>
           <button

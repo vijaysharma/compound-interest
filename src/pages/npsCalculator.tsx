@@ -169,54 +169,47 @@ const NpsCalculator: React.FC = () => {
             <h2 className={styles.sectionHeading}>
               <FiTrendingUp /> Age &amp; Expected Growth
             </h2>
-            <div className={styles.fieldRow}>
-              <div className={styles.fieldGroup}>
-                <label htmlFor="nps-current-age" className={styles.fieldLabel}>Current Age ({currentAge} Yrs)</label>
-                <input
-                  id="nps-current-age"
-                  type="number"
-                  min="18"
-                  max="65"
-                  value={currentAge}
-                  onChange={(e) => setCurrentAge(Math.min(65, Math.max(18, Number(e.target.value))))}
-                  className={styles.numberInput}
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label htmlFor="nps-retirement-age" className={styles.fieldLabel}>Retirement Age ({retirementAge} Yrs)</label>
-                <input
-                  id="nps-retirement-age"
-                  type="number"
-                  min={currentAge + 1}
-                  max="75"
-                  value={retirementAge}
-                  onChange={(e) =>
-                    setRetirementAge(Math.min(75, Math.max(currentAge + 1, Number(e.target.value))))
-                  }
-                  className={styles.numberInput}
-                />
-              </div>
+            <div className={styles.fieldGroup}>
+              <ValuePicker.Paired
+                title="Investment Period"
+                sourceBadgeText="Current Age"
+                targetBadgeText="Retire Age"
+                sourceSlot={(
+                  <input
+                    id="nps-current-age"
+                    type="number"
+                    min="18"
+                    max="65"
+                    value={currentAge}
+                    onChange={(e) => setCurrentAge(Math.min(65, Math.max(18, Number(e.target.value))))}
+                    className={styles.numberInput}
+                    aria-label="Current Age"
+                  />
+                )}
+                targetSlot={(
+                  <input
+                    id="nps-retirement-age"
+                    type="number"
+                    min={currentAge + 1}
+                    max="75"
+                    value={retirementAge}
+                    onChange={(e) =>
+                      setRetirementAge(Math.min(75, Math.max(currentAge + 1, Number(e.target.value))))
+                    }
+                    className={styles.numberInput}
+                    aria-label="Retirement Age"
+                  />
+                )}
+              />
             </div>
             <div className={styles.fieldGroup}>
-              <label htmlFor="nps-roi" className={styles.fieldLabel}>
-                <span>Expected Investment Return (CAGR)</span>
-                <span>{expectedRoi}%</span>
-              </label>
-              <input
-                id="nps-roi"
-                type="range"
-                min="7.0"
-                max="15.0"
-                step="0.5"
+              <ValuePicker.ROI
+                title="Expected Investment Return (CAGR %)"
                 value={expectedRoi}
-                onChange={(e) => setExpectedRoi(Number(e.target.value))}
-                className={styles.rangeSlider}
+                onChange={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
+                min={1}
+                max={25}
               />
-              <div className={styles.sliderLabels}>
-                <span>7% (Conservative Debt)</span>
-                <span>10% (Balanced)</span>
-                <span>15% (Aggressive Equity)</span>
-              </div>
             </div>
           </section>
           <section className={styles.card}>
@@ -224,46 +217,29 @@ const NpsCalculator: React.FC = () => {
               <FiPieChart /> Annuity &amp; Pension Allocation
             </h2>
             <div className={styles.fieldGroup}>
-              <label htmlFor="nps-annuity-percent" className={styles.fieldLabel}>
-                <span>Annuity Share (PFRDA Min 40%)</span>
-                <span>{annuityPercent}% Annuity / {100 - annuityPercent}% Lump Sum</span>
-              </label>
-              <input
-                id="nps-annuity-percent"
-                type="range"
-                min="40"
-                max="100"
-                step="5"
+              <ValuePicker.ROI
+                title="Annuity Allocation Share (PFRDA Min 40%)"
                 value={annuityPercent}
-                onChange={(e) => setAnnuityPercent(Number(e.target.value))}
-                className={styles.rangeSlider}
+                onChange={(v) => {
+                  const num = parseInt(v, 10) || 40;
+                  setAnnuityPercent(Math.min(100, Math.max(40, num)));
+                }}
+                min={40}
+                max={100}
+                roiSteps={[5, 10, 20]}
               />
-              <div className={styles.sliderLabels}>
-                <span>40% (Min Required)</span>
-                <span>60%</span>
-                <span>100% (Full Pension)</span>
-              </div>
+              <p style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: '0.25rem' }}>
+                {annuityPercent}% Annuity / {100 - annuityPercent}% Lump Sum
+              </p>
             </div>
             <div className={styles.fieldGroup}>
-              <label htmlFor="nps-annuity-rate" className={styles.fieldLabel}>
-                <span>Expected Annuity Return Rate (Pension Yield)</span>
-                <span>{annuityRate}%</span>
-              </label>
-              <input
-                id="nps-annuity-rate"
-                type="range"
-                min="5.0"
-                max="9.0"
-                step="0.25"
+              <ValuePicker.ROI
+                title="Expected Annuity Return Rate (Pension Yield %)"
                 value={annuityRate}
-                onChange={(e) => setAnnuityRate(Number(e.target.value))}
-                className={styles.rangeSlider}
+                onChange={(v) => setAnnuityRate(parseFloat(v) || 6.0)}
+                min={1}
+                max={15}
               />
-              <div className={styles.sliderLabels}>
-                <span>5.0%</span>
-                <span>6.0% (Current Life Annuity Avg)</span>
-                <span>9.0%</span>
-              </div>
             </div>
           </section>
         </div>

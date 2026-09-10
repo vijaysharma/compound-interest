@@ -9,6 +9,7 @@ function JoinedButtonGroup<T = string>({
   className = '',
   btnClass = '',
   attached = 'none',
+  compact = false,
 }: JoinedButtonType<T>) {
   const getSizeClass = () => {
     switch (sizePrefix) {
@@ -25,19 +26,20 @@ function JoinedButtonGroup<T = string>({
     }
   };
   const getAttachmentClass = () => {
+    if (attached === 'middle' || (btnClass.includes('rounded-l-none') && btnClass.includes('border-b-0'))) {
+      return styles.attachedMiddle;
+    }
     if (attached === 'top' || btnClass.includes('border-b-0') || btnClass.includes('rounded-bl-none')) {
       return styles.attachedTop;
     }
     if (attached === 'bottom' || btnClass.includes('border-t-0') || btnClass.includes('rounded-tl-none')) {
       return styles.attachedBottom;
     }
-    if (attached === 'middle') {
-      return styles.attachedMiddle;
-    }
     return '';
   };
+  const compactClass = compact ? styles.compact : '';
   return (
-    <div className={`${styles.container} ${className}`.trim()}>
+    <div className={`${styles.container} ${compactClass} ${className}`.trim()}>
       {title && <h5 className={styles.title}>{title}</h5>}
       <div className={`${styles.buttonGroup} ${getAttachmentClass()}`.trim()}>
         {data &&

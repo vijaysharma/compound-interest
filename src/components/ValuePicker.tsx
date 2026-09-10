@@ -1,108 +1,121 @@
-import React, { useState, useId, useMemo } from 'react';
+import React, { useState, useId, useMemo, useEffect } from 'react';
 import styles from './ValuePicker.module.scss';
 import convertToWords from '../utilities/currency';
 import { sanctnum } from '../utilities/numSanitity';
+import { getDateAsISO, getNearest } from '../utilities/utility';
+import type { RT, NavType } from '../types/types';
 import {
   DEFAULT_VALUE_PICKER_ROWS,
   DEFAULT_VALUE_PICKER_TABS,
+  DEFAULT_ROI_STEPS,
+  DEFAULT_TENURE_DECREMENT_STEPS,
+  DEFAULT_TENURE_INCREMENT_STEPS,
+  DEFAULT_TENURE_UNITS,
+  DEFAULT_DURATION_MATRIX_ROWS,
   type ValuePickerStep,
   type ValuePickerTab,
+  type GridItem,
 } from '../data/valuePickerData';
+export type ValuePickerVariant = 'amount' | 'roi' | 'tenure' | 'paired' | 'date-range' | 'grid';
 export interface ValuePickerProps {
   /**
-   * Current value (numeric or numeric string)
+   * Component variant to render:
+   * - 'amount': Classic currency amount with tabs, badge, and quick step buttons
+   * - 'roi': Rate of interest stepper with + / - mode and customizable decimal steps
+   * - 'tenure': Tenure duration stepper with decrement, increment, and M/Y units
+   * - 'paired': Paired source-target selector bar with purple badges and slots
+   * - 'date-range': Start-end date range selector with purple badges and date inputs
+   * - 'grid': Multi-row duration matrix grid with purple borders and selection highlight
    */
+  variant?: ValuePickerVariant;
+  // --- Common / Amount Props ---
   value?: string | number;
   inputAmount?: string | number;
-  /**
-   * Change callback receiving the updated string value
-   */
   onChange?: (val: string) => void;
   setInputAmount?: React.Dispatch<React.SetStateAction<string>> | ((val: string) => void);
-  /**
-   * Optional tabs for switching modes (e.g., 'One time amount' vs 'Target amount')
-   */
   tabs?: ValuePickerTab[];
   typeData?: ValuePickerTab[];
-  /**
-   * Active tab identifier (controlled)
-   */
   activeTab?: string;
   type?: string;
-  /**
-   * Default active tab identifier (uncontrolled)
-   */
   defaultTab?: string;
-  /**
-   * Tab switch callback
-   */
   onTabChange?: (tabId: string) => void;
   setType?: React.Dispatch<React.SetStateAction<string>> | ((tabId: string) => void);
-  /**
-   * Title shown above the picker
-   */
   title?: string;
-  /**
-   * Quick-step button rows (2D or 1D array). Defaults to the 2 rows from the reference design.
-   */
   stepRows?: ValuePickerStep[][] | ValuePickerStep[];
   stepData?: Array<{ id?: string; value: string | number; title?: string; label?: string }>;
-  /**
-   * Size prefix props for backward compatibility
-   */
   stepSizePrefix?: string;
   typeSizePrefix?: string;
   compact?: boolean;
-  /**
-   * Prefix symbol displayed inside the badge (defaults to '₹')
-   */
   currencySymbol?: string;
-  /**
-   * Locale used for number formatting and words (defaults to 'en-IN')
-   */
   locale?: string;
-  /**
-   * Minimum value allowed (defaults to 0)
-   */
   min?: number;
-  /**
-   * Maximum value allowed
-   */
   max?: number;
-  /**
-   * Default step amount when directly pressing + or - (defaults to 500)
-   */
   defaultStep?: number;
-  /**
-   * Whether to display the value in words below the card (defaults to true)
-   */
   showWords?: boolean;
-  /**
-   * Custom className for root container
-   */
   className?: string;
-  /**
-   * Disabled state
-   */
   disabled?: boolean;
-  /**
-   * Readonly input state
-   */
   readOnly?: boolean;
-  /**
-   * Layout mode: 'auto' adapts via CSS Container Queries, 'mobile' forces mobile styles, 'desktop' forces desktop styles.
-   */
   layout?: 'auto' | 'mobile' | 'desktop';
-  /**
-   * Input placeholder
-   */
   placeholder?: string;
+  // --- Rate of Interest (ROI) Props ---
+  roiSteps?: number[];
+  rt?: RT;
+  setRt?: React.Dispatch<React.SetStateAction<RT>> | ((rt: RT) => void);
+  // --- Tenure Props ---
+  tenureDecSteps?: number[];
+  tenureIncSteps?: number[];
+  unit?: 'm' | 'y';
+  onUnitChange?: (unit: 'm' | 'y') => void;
+  units?: Array<{ id: string; label: string; title?: string }>;
+  // --- Paired / Dual Endpoint Props ---
+  sourceBadgeText?: string;
+  targetBadgeText?: string;
+  sourceSlot?: React.ReactNode;
+  targetSlot?: React.ReactNode;
+  sourceValue?: string;
+  targetValue?: string;
+  onSourceChange?: (val: string) => void;
+  onTargetChange?: (val: string) => void;
+  sourceOptions?: Array<{ label: string; value: string }>;
+  targetOptions?: Array<{ label: string; value: string }>;
+  sourcePlaceholder?: string;
+  targetPlaceholder?: string;
+  // --- Date Range Props ---
+  startDate?: string | null;
+  endDate?: string | null;
+  setStartDate?: (date: string) => void;
+  setEndDate?: (date: string) => void;
+  startBadgeText?: string;
+  endBadgeText?: string;
+  startMinDate?: string;
+  dateMode?: 'date' | 'year';
+  startOptions?: string[];
+  endOptions?: string[];
+  startYearOptions?: string[];
+  endYearOptions?: string[];
+  navData?: NavType[];
+  data?: NavType[];
+  startTitle?: string;
+  endTitle?: string;
+  // --- Duration Grid Props ---
+  gridRows?: GridItem[][];
+  selectedGridId?: string;
+  onGridSelect?: (item: GridItem) => void;
+}
+export interface ValuePickerComponent extends React.FC<ValuePickerProps> {
+  Amount: React.FC<ValuePickerProps>;
+  ROI: React.FC<ValuePickerProps>;
+  Tenure: React.FC<ValuePickerProps>;
+  Paired: React.FC<ValuePickerProps>;
+  DateRange: React.FC<ValuePickerProps>;
+  Grid: React.FC<ValuePickerProps>;
 }
 /**
  * Mobile-first generic ValuePicker component with modular SCSS.
  * Accurately reproduces the visual layout, touch targets, and responsive desktop behavior.
  */
-export const ValuePicker: React.FC<ValuePickerProps> = ({
+export const ValuePicker: ValuePickerComponent = (({
+  variant = 'amount',
   value,
   inputAmount,
   onChange,
@@ -124,11 +137,56 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
   defaultStep = 500,
   showWords = true,
   className = '',
+  compact = false,
   layout = 'auto',
   disabled = false,
   readOnly = false,
-  placeholder = '0',
-}) => {
+  placeholder,
+  // ROI props
+  roiSteps = DEFAULT_ROI_STEPS,
+  rt,
+  setRt,
+  // Tenure props
+  tenureDecSteps = DEFAULT_TENURE_DECREMENT_STEPS,
+  tenureIncSteps = DEFAULT_TENURE_INCREMENT_STEPS,
+  unit,
+  onUnitChange,
+  units = DEFAULT_TENURE_UNITS,
+  // Paired props
+  sourceBadgeText = 'Source',
+  targetBadgeText = 'Target',
+  sourceSlot,
+  targetSlot,
+  sourceValue,
+  targetValue,
+  onSourceChange,
+  onTargetChange,
+  sourceOptions,
+  targetOptions,
+  sourcePlaceholder,
+  targetPlaceholder,
+  // Date props
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
+  startBadgeText,
+  endBadgeText,
+  startMinDate,
+  dateMode = 'date',
+  startOptions,
+  endOptions,
+  startYearOptions,
+  endYearOptions,
+  navData,
+  data,
+  startTitle = 'Start',
+  endTitle = 'End',
+  // Grid props
+  gridRows = DEFAULT_DURATION_MATRIX_ROWS,
+  selectedGridId,
+  onGridSelect,
+}: ValuePickerProps) => {
   const componentId = useId();
   // Resolve value and onChange from either prop
   const effectiveValue = value !== undefined ? value : inputAmount !== undefined ? inputAmount : '0';
@@ -150,6 +208,8 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
   const currentTab = currentActiveTab !== undefined ? currentActiveTab : internalTab;
   // Active operation mode: '+' adds quick-steps, '-' subtracts quick-steps
   const [operation, setOperation] = useState<'+' | '-'>('+');
+  // ROI operation mode
+  const [roiOp, setRoiOp] = useState<'+' | '-'>('+');
   // Track if input is currently focused for natural numeric editing
   const [isFocused, setIsFocused] = useState(false);
   const [localInput, setLocalInput] = useState('');
@@ -174,6 +234,470 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
     }
     return DEFAULT_VALUE_PICKER_ROWS;
   }, [stepRows, stepData]);
+  // Date nearest effect for historical nav data
+  const effectiveNavData = navData || data;
+  useEffect(() => {
+    if (variant !== 'date-range' || dateMode !== 'date' || !effectiveNavData || effectiveNavData.length === 0) {
+      return;
+    }
+    if (startDate) getNearest(startDate, effectiveNavData);
+    if (endDate) getNearest(endDate, effectiveNavData);
+  }, [variant, dateMode, startDate, endDate, effectiveNavData]);
+  const layoutClass =
+    layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
+  const compactClass = compact ? styles.compact : '';
+  const rootContainerClass = `${styles.container} ${layoutClass} ${compactClass} ${className}`.trim();
+  // ===========================================================================
+  // VARIANT 1: Rate of Interest (Screenshot 1)
+  // ===========================================================================
+  if (variant === 'roi') {
+    const roiValStr = rt ? (rt.roi ? rt.roi.toString().replace(/^0+/, '') || '0' : '0') : effectiveValue.toString();
+    const handleRoiStep = (stepAmt: number) => {
+      if (disabled) return;
+      let curr = roiValStr ? parseFloat(roiValStr) : 0;
+      if (Number.isNaN(curr)) curr = 0;
+      if (roiOp === '+') {
+        curr += stepAmt;
+      } else {
+        curr -= stepAmt;
+        if (curr <= (min !== undefined ? min : 0)) {
+          if (rt && setRt) {
+            setRt({ ...rt, roi: '0' });
+          } else {
+            effectiveOnChange('0');
+          }
+          setRoiOp('+');
+          return;
+        }
+      }
+      const rounded = Math.round((curr + Number.EPSILON) * 100) / 100;
+      if (rt && setRt) {
+        setRt({ ...rt, roi: `${rounded}` });
+      } else {
+        effectiveOnChange(`${rounded}`);
+      }
+    };
+    const handleRoiInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled || readOnly) return;
+      const iv = e.target.value;
+      if (sanctnum(iv) < 0) {
+        setRoiOp('+');
+        return;
+      }
+      if (rt && setRt) {
+        setRt({ ...rt, roi: iv });
+      } else {
+        effectiveOnChange(iv);
+      }
+    };
+    return (
+      <div className={rootContainerClass}>
+        <h5 className={`${styles.title} ${styles.titleCenter}`}>{title || 'Rate of Interest (%)'}</h5>
+        <div className={styles.joinedRow}>
+          {roiSteps.map((step) => (
+            <button
+              key={`roi-step-${step}`}
+              type="button"
+              className={styles.stepperBtn}
+              onClick={() => handleRoiStep(step)}
+              disabled={disabled}
+              aria-label={`Change ROI by ${step}%`}
+            >
+              {step}
+            </button>
+          ))}
+          <div className={styles.joinedInputWrapper}>
+            <input
+              type="number"
+              placeholder={placeholder || '0'}
+              min={min !== undefined ? min : 0}
+              max={max}
+              step="any"
+              className={styles.joinedInputField}
+              value={roiValStr}
+              disabled={disabled}
+              readOnly={readOnly}
+              onChange={handleRoiInputChange}
+              aria-label={title || 'Rate of Interest'}
+            />
+          </div>
+          <button
+            type="button"
+            className={`${styles.opBtn} ${roiOp === '+' ? styles.activeOp : ''}`}
+            onClick={() => setRoiOp('+')}
+            disabled={disabled}
+            title="Add mode (+)"
+            aria-label="Add mode"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className={`${styles.opBtn} ${roiOp === '-' ? styles.activeOp : ''}`}
+            onClick={() => setRoiOp('-')}
+            disabled={disabled || roiValStr === '0' || parseFloat(roiValStr) <= 0}
+            title="Subtract mode (-)"
+            aria-label="Subtract mode"
+          >
+            -
+          </button>
+        </div>
+      </div>
+    );
+  }
+  // ===========================================================================
+  // VARIANT 2: Tenure (Screenshot 2)
+  // ===========================================================================
+  if (variant === 'tenure') {
+    const tenureValStr = rt ? rt.tenure.toString().replace(/^0+/, '') || '0' : effectiveValue.toString();
+    const effectiveUnit = rt ? rt.tenureFormat : unit || 'y';
+    const handleTenureStep = (stepDelta: number) => {
+      if (disabled) return;
+      let curr = parseInt(tenureValStr, 10);
+      if (Number.isNaN(curr)) curr = 0;
+      curr += stepDelta;
+      if (curr <= (min !== undefined ? min : 0)) {
+        if (rt && setRt) {
+          setRt({ ...rt, tenure: '0' });
+        } else {
+          effectiveOnChange('0');
+        }
+        return;
+      }
+      if (rt && setRt) {
+        setRt({ ...rt, tenure: `${curr}` });
+      } else {
+        effectiveOnChange(`${curr}`);
+      }
+    };
+    const handleTenureInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled || readOnly) return;
+      const iv = e.target.value;
+      if (rt && setRt) {
+        setRt({ ...rt, tenure: iv });
+      } else {
+        effectiveOnChange(iv);
+      }
+    };
+    const handleUnitSwitch = (newUnit: 'm' | 'y') => {
+      if (disabled || newUnit === effectiveUnit) return;
+      if (rt && setRt) {
+        const rawNum = parseInt(rt.tenure, 10) || 0;
+        const converted =
+          newUnit === 'm' ? `${Math.round(rawNum * 12)}` : `${Math.round(rawNum / 12)}`;
+        setRt({
+          ...rt,
+          tenure: converted,
+          tenureFormat: newUnit,
+        });
+      }
+      onUnitChange?.(newUnit);
+    };
+    return (
+      <div className={rootContainerClass}>
+        <h5 className={`${styles.title} ${styles.titleCenter}`}>{title || 'Tenure'}</h5>
+        <div className={styles.joinedRow}>
+          {tenureDecSteps.map((step) => (
+            <button
+              key={`tenure-dec-${step}`}
+              type="button"
+              className={styles.stepperBtn}
+              onClick={() => handleTenureStep(step)}
+              disabled={disabled}
+              aria-label={`Decrease tenure by ${Math.abs(step)}`}
+            >
+              {step > 0 ? `-${step}` : `${step}`}
+            </button>
+          ))}
+          <div className={styles.joinedInputWrapper}>
+            <input
+              type="number"
+              placeholder={placeholder || '0'}
+              min={min !== undefined ? min : 0}
+              max={max}
+              className={styles.joinedInputField}
+              value={tenureValStr}
+              disabled={disabled}
+              readOnly={readOnly}
+              onChange={handleTenureInputChange}
+              aria-label={title || 'Tenure'}
+            />
+          </div>
+          {tenureIncSteps.map((step) => (
+            <button
+              key={`tenure-inc-${step}`}
+              type="button"
+              className={styles.stepperBtn}
+              onClick={() => handleTenureStep(step)}
+              disabled={disabled}
+              aria-label={`Increase tenure by ${step}`}
+            >
+              {step > 0 ? `+${step}` : `${step}`}
+            </button>
+          ))}
+          {units.map((u) => {
+            const isActive = effectiveUnit === u.id;
+            return (
+              <button
+                key={`unit-${u.id}`}
+                type="button"
+                className={`${styles.unitBtn} ${isActive ? styles.activeUnit : ''}`}
+                onClick={() => handleUnitSwitch(u.id as 'm' | 'y')}
+                disabled={disabled}
+                title={u.title || u.label}
+                aria-label={u.title || u.label}
+              >
+                {u.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  // ===========================================================================
+  // VARIANT 3: Paired / Dual Endpoint Selector (Screenshot 3)
+  // ===========================================================================
+  if (variant === 'paired') {
+    return (
+      <div className={rootContainerClass}>
+        {title && <h5 className={styles.title}>{title}</h5>}
+        <div className={styles.joinedRow}>
+          <div className={`${styles.pairedBadge} ${styles.leftBadge}`}>{sourceBadgeText}</div>
+          <div className={`${styles.pairedSlot} ${styles.slotLeft}`}>
+            {sourceSlot ? (
+              sourceSlot
+            ) : sourceOptions && sourceOptions.length > 0 ? (
+              <select
+                className={styles.pairedSelect}
+                value={sourceValue ?? ''}
+                onChange={(e) => onSourceChange?.(e.target.value)}
+                disabled={disabled}
+                aria-label={sourceBadgeText}
+              >
+                {sourceOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                className={styles.pairedInput}
+                value={sourceValue ?? ''}
+                placeholder={sourcePlaceholder || 'Select source'}
+                onChange={(e) => onSourceChange?.(e.target.value)}
+                disabled={disabled}
+                readOnly={readOnly}
+                aria-label={sourceBadgeText}
+              />
+            )}
+          </div>
+          <div className={styles.pairedSlot}>
+            {targetSlot ? (
+              targetSlot
+            ) : targetOptions && targetOptions.length > 0 ? (
+              <select
+                className={styles.pairedSelect}
+                value={targetValue ?? ''}
+                onChange={(e) => onTargetChange?.(e.target.value)}
+                disabled={disabled}
+                aria-label={targetBadgeText}
+              >
+                {targetOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                className={styles.pairedInput}
+                value={targetValue ?? ''}
+                placeholder={targetPlaceholder || 'Select target'}
+                onChange={(e) => onTargetChange?.(e.target.value)}
+                disabled={disabled}
+                readOnly={readOnly}
+                aria-label={targetBadgeText}
+              />
+            )}
+          </div>
+          <div className={`${styles.pairedBadge} ${styles.rightBadge}`}>{targetBadgeText}</div>
+        </div>
+      </div>
+    );
+  }
+  // ===========================================================================
+  // VARIANT 4: Date Range Selector (Screenshot 4)
+  // ===========================================================================
+  if (variant === 'date-range') {
+    const today = getDateAsISO();
+    const resolvedStartBadge = startBadgeText || startTitle;
+    const resolvedEndBadge = endBadgeText || endTitle;
+    const effectiveStartYearOptions = startYearOptions || startOptions || [];
+    const effectiveEndYearOptions = endYearOptions || endOptions || [];
+    const handleStartYearChange = (val: string) => {
+      setStartDate?.(val);
+      if (endDate && Number(val) > Number(endDate)) {
+        setEndDate?.(val);
+      }
+    };
+    const handleEndYearChange = (val: string) => {
+      if (startDate && Number(val) < Number(startDate)) {
+        setEndDate?.(startDate);
+        return;
+      }
+      setEndDate?.(val);
+    };
+    if (dateMode === 'year') {
+      const availableEndOptions = effectiveEndYearOptions.filter(
+        (year) => !startDate || Number(year) >= Number(startDate)
+      );
+      return (
+        <div className={rootContainerClass}>
+          {title && <h5 className={styles.title}>{title}</h5>}
+          <div className={styles.joinedRow}>
+            <div className={`${styles.pairedBadge} ${styles.leftBadge}`}>
+              {resolvedStartBadge} Year
+            </div>
+            <div className={`${styles.dateSlot} ${styles.slotLeft}`}>
+              <select
+                className={styles.dateSelect}
+                value={startDate ?? ''}
+                onChange={(e) => handleStartYearChange(e.target.value)}
+                disabled={disabled}
+                aria-label={`${resolvedStartBadge} Year`}
+              >
+                {effectiveStartYearOptions.map((year) => (
+                  <option key={`s-${year}`} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.dateSlot}>
+              <select
+                className={styles.dateSelect}
+                value={endDate ?? ''}
+                onChange={(e) => handleEndYearChange(e.target.value)}
+                disabled={disabled}
+                aria-label={`${resolvedEndBadge} Year`}
+              >
+                {availableEndOptions.map((year) => (
+                  <option key={`e-${year}`} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={`${styles.pairedBadge} ${styles.rightBadge}`}>
+              {resolvedEndBadge} Year
+            </div>
+          </div>
+        </div>
+      );
+    }
+    const handleStartDateChange = (val: string) => {
+      setStartDate?.(val);
+      if (endDate && val && val > endDate) {
+        setEndDate?.(val);
+      }
+    };
+    const handleEndDateChange = (val: string) => {
+      if (startDate && val && val < startDate) {
+        setEndDate?.(startDate);
+        return;
+      }
+      setEndDate?.(val);
+    };
+    return (
+      <div className={rootContainerClass}>
+        {title && <h5 className={styles.title}>{title}</h5>}
+        <div className={styles.joinedRow}>
+          {setStartDate && (
+            <>
+              <div className={`${styles.pairedBadge} ${styles.leftBadge}`}>
+                {resolvedStartBadge}
+              </div>
+              <div className={`${styles.dateSlot} ${styles.slotLeft}`}>
+                <input
+                  type="date"
+                  min={startMinDate || undefined}
+                  max={endDate || today}
+                  value={startDate ?? ''}
+                  className={styles.dateInput}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
+                  disabled={disabled}
+                  aria-label={resolvedStartBadge}
+                />
+              </div>
+            </>
+          )}
+          {setEndDate && (
+            <>
+              <div className={styles.dateSlot}>
+                <input
+                  type="date"
+                  min={startDate || undefined}
+                  max={today}
+                  value={endDate ?? ''}
+                  className={styles.dateInput}
+                  onChange={(e) => handleEndDateChange(e.target.value)}
+                  disabled={disabled}
+                  aria-label={resolvedEndBadge}
+                />
+              </div>
+              <div className={`${styles.pairedBadge} ${styles.rightBadge}`}>
+                {resolvedEndBadge}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+  // ===========================================================================
+  // VARIANT 5: Multi-Row Duration Matrix Grid (Screenshot 5)
+  // ===========================================================================
+  if (variant === 'grid') {
+    const handleGridItemClick = (item: GridItem) => {
+      if (disabled) return;
+      onGridSelect?.(item);
+      effectiveOnChange(item.value.toString());
+    };
+    return (
+      <div className={rootContainerClass}>
+        {title && <h5 className={styles.title}>{title}</h5>}
+        <div className={styles.matrixContainer} role="grid" aria-label={title || 'Duration Grid'}>
+          {gridRows.map((row, rowIdx) => (
+            <div key={`matrix-row-${rowIdx}`} className={styles.matrixRow} role="row">
+              {row.map((cell) => {
+                const isSelected = selectedGridId
+                  ? cell.id === selectedGridId
+                  : cell.value.toString() === effectiveValue.toString();
+                return (
+                  <button
+                    key={cell.id}
+                    type="button"
+                    role="gridcell"
+                    className={`${styles.matrixCell} ${isSelected ? styles.matrixCellActive : ''}`}
+                    onClick={() => handleGridItemClick(cell)}
+                    disabled={disabled}
+                    aria-selected={isSelected}
+                    title={`${cell.title} (${cell.value})`}
+                  >
+                    {cell.title}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   // Sanitize numeric representation
   const numericValue = sanctnum(effectiveValue, min, max);
   const handleTabClick = (tabId: string) => {
@@ -188,7 +712,7 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
     if (min !== undefined && clamped < min) clamped = min;
     if (max !== undefined && clamped > max) clamped = max;
     effectiveOnChange(clamped.toString());
-    setLocalInput(clamped.toString());
+    setLocalInput(clamped === 0 ? '' : clamped.toLocaleString(locale));
   };
   // Quick addition / subtraction through step buttons
   const handleStepClick = (stepAmount: number) => {
@@ -227,18 +751,80 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
       updateNumericValue(Math.max(min, sanctnum(effectiveValue, min, max) - defaultStep));
     }
   };
-  // Direct typing handler with comma / digit handling
+  // Direct typing handler with persistent delimiters and smooth cursor preservation
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
-    const rawInput = e.target.value.replace(/[^0-9]/g, '');
-    setLocalInput(rawInput);
-    const parsed = parseInt(rawInput, 10);
+    const input = e.target;
+    const cursor = input.selectionStart ?? input.value.length;
+    const digitsBeforeCursor = input.value.slice(0, cursor).replace(/[^0-9]/g, '').length;
+    const rawDigits = input.value.replace(/[^0-9]/g, '');
+    if (rawDigits === '') {
+      setLocalInput('');
+      updateNumericValue(min);
+      return;
+    }
+    const parsed = parseInt(rawDigits, 10);
     const newVal = Number.isNaN(parsed) ? min : parsed;
+    const formatted = parsed.toLocaleString(locale);
+    setLocalInput(formatted);
     updateNumericValue(newVal);
+    requestAnimationFrame(() => {
+      let count = 0;
+      let newCursor = formatted.length;
+      for (let i = 0; i < formatted.length; i++) {
+        if (/[0-9]/.test(formatted[i])) {
+          count++;
+          if (count === digitsBeforeCursor) {
+            newCursor = i + 1;
+            break;
+          }
+        }
+      }
+      input.setSelectionRange(newCursor, newCursor);
+    });
   };
-  // Keyboard navigation
+  // Keyboard navigation & smart delimiter handling
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
+    if (e.key === 'Backspace') {
+      const input = e.currentTarget;
+      const { selectionStart, selectionEnd } = input;
+      if (selectionStart !== null && selectionStart === selectionEnd && selectionStart > 1) {
+        if (input.value[selectionStart - 1] === ',') {
+          e.preventDefault();
+          const before = input.value.slice(0, selectionStart - 2);
+          const after = input.value.slice(selectionStart);
+          const combined = before + after;
+          const rawDigits = combined.replace(/[^0-9]/g, '');
+          if (rawDigits === '') {
+            setLocalInput('');
+            updateNumericValue(min);
+            return;
+          }
+          const parsed = parseInt(rawDigits, 10);
+          const newVal = Number.isNaN(parsed) ? min : parsed;
+          const formatted = parsed.toLocaleString(locale);
+          setLocalInput(formatted);
+          updateNumericValue(newVal);
+          const targetDigits = before.replace(/[^0-9]/g, '').length;
+          requestAnimationFrame(() => {
+            let count = 0;
+            let newCursor = 0;
+            for (let i = 0; i < formatted.length; i++) {
+              if (/[0-9]/.test(formatted[i])) {
+                count++;
+                if (count === targetDigits) {
+                  newCursor = i + 1;
+                  break;
+                }
+              }
+            }
+            input.setSelectionRange(newCursor, newCursor);
+          });
+          return;
+        }
+      }
+    }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       updateNumericValue(sanctnum(effectiveValue, min, max) + defaultStep);
@@ -250,7 +836,7 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
       handleClear();
     }
   };
-  // Formatted display string: Indian grouping when blurred, raw editing string when focused
+  // Formatted display string: maintains Indian grouping always, preventing visual jump
   const displayValue = isFocused
     ? localInput
     : numericValue === 0
@@ -258,10 +844,8 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
       : numericValue.toLocaleString(locale);
   // In-words string
   const wordsText = showWords && numericValue > 0 ? convertToWords(numericValue, locale) : '';
-  const layoutClass =
-    layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
   return (
-    <div className={`${styles.container} ${layoutClass} ${className}`.trim()}>
+    <div className={rootContainerClass}>
       {/* Title rendered when title is provided */}
       {title && <h5 className={styles.title}>{title}</h5>}
       {/* Main card enclosing tabs, input row, and step grid */}
@@ -309,9 +893,12 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
               readOnly={readOnly}
               onFocus={() => {
                 setIsFocused(true);
-                setLocalInput(numericValue === 0 ? '' : numericValue.toString());
+                setLocalInput(numericValue === 0 ? '' : numericValue.toLocaleString(locale));
               }}
-              onBlur={() => setIsFocused(false)}
+              onBlur={() => {
+                setIsFocused(false);
+                setLocalInput(numericValue === 0 ? '0' : numericValue.toLocaleString(locale));
+              }}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               aria-label={
@@ -394,5 +981,11 @@ export const ValuePicker: React.FC<ValuePickerProps> = ({
       )}
     </div>
   );
-};
+}) as ValuePickerComponent;
+ValuePicker.Amount = (props: ValuePickerProps) => <ValuePicker {...props} variant="amount" />;
+ValuePicker.ROI = (props: ValuePickerProps) => <ValuePicker {...props} variant="roi" />;
+ValuePicker.Tenure = (props: ValuePickerProps) => <ValuePicker {...props} variant="tenure" />;
+ValuePicker.Paired = (props: ValuePickerProps) => <ValuePicker {...props} variant="paired" />;
+ValuePicker.DateRange = (props: ValuePickerProps) => <ValuePicker {...props} variant="date-range" />;
+ValuePicker.Grid = (props: ValuePickerProps) => <ValuePicker {...props} variant="grid" />;
 export default ValuePicker;
