@@ -1,0 +1,1025 @@
+'use client';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import SEOHead from '../components/SEOHead';
+import {
+  FiClock,
+  FiDelete,
+  FiRotateCcw,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+  FiCopy,
+  FiClipboard,
+  FiCheck,
+} from 'react-icons/fi';
+import { TbMathFunction } from 'react-icons/tb';
+import {
+  evaluateExpression,
+  extractLastOperation,
+  toSuperscript,
+  type HistoryItem,
+  type LastOperation,
+} from '../utilities/calculatorHelper';
+import styles from './Calculator.module.scss';
+const isErrorState = (expr: string) =>
+  expr === 'Error' || expr === 'Undefined' || expr === 'Overflow';
+const Calculator: React.FC = () => {
+  const [expression, setExpression] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const [showScientific, setShowScientific] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('calc_show_scientific');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+  const [showHistory, setShowHistory] = useState(false);
+  const [isDeg, setIsDeg] = useState(true);
+  const [isEvaluated, setIsEvaluated] = useState(false);
+  const [lastOp, setLastOp] = useState<LastOperation | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [memory, setMemory] = useState<number>(() => {
+    try {
+      const saved =
+        localStorage.getItem('calc_memory') || localStorage.getItem('android_calc_memory');
+      return saved ? parseFloat(saved) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    try {
+      const saved =
+        localStorage.getItem('calc_history') || localStorage.getItem('android_calc_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const displayContainerRef = useRef<HTMLDivElement>(null);
+  // Persist history, memory & scientific view state
+  useEffect(() => {
+    try {
+      localStorage.setItem('calc_show_scientific', String(showScientific));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [showScientific]);
+  useEffect(() => {
+    try {
+      localStorage.setItem('calc_history', JSON.stringify(history));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [history]);
+  useEffect(() => {
+    try {
+      localStorage.setItem('calc_memory', String(memory));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [memory]);
+  // Live calculation preview
+  const liveResult = useMemo(() => {
+    if (!expression || isEvaluated || isErrorState(expression)) return null;
+    const { result, error } = evaluateExpression(expression, isDeg);
+    if (error || !result || isErrorState(result)) return null;
+    return result;
+  }, [expression, isDeg, isEvaluated]);
+  // Copy to clipboard
+  const handleCopy = async () => {
+    const textToCopy = isEvaluated ? expression : liveResult || expression;
+    if (!textToCopy) return;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setToastMessage('Copied to clipboard');
+      setTimeout(() => setToastMessage(null), 2000);
+    } catch {
+      setToastMessage('Failed to copy');
+      setTimeout(() => setToastMessage(null), 2000);
+    }
+  };
+  // Paste from clipboard or string
+  const handlePaste = async (pastedText?: string) => {
+    try {
+      const text = pastedText !== undefined ? pastedText : await navigator.clipboard.readText();
+      if (!text) return;
+      // Clean & sanitize pasted math expression
+      const sanitized = text
+        .trim()
+        .replace(/\*/g, '×')
+        .replace(/\//g, '÷')
+        .replace(/-/g, '−')
+        .replace(/[^0-9+\-−×÷%^().eEπ√!sincostanloglnabs⁰¹²³⁴⁵⁶⁷⁸⁹]/gi, '');
+      if (!sanitized) return;
+      setLastOp(null);
+      if (isEvaluated || isErrorState(expression)) {
+        setExpression(sanitized);
+        setCursorPosition(sanitized.length);
+        setIsEvaluated(false);
+      } else {
+        const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+        const before = expression.slice(0, pos);
+        const after = expression.slice(pos);
+        const nextExpr = before + sanitized + after;
+        setExpression(nextExpr);
+        setCursorPosition(before.length + sanitized.length);
+      }
+      setToastMessage('Pasted from clipboard');
+      setTimeout(() => setToastMessage(null), 2000);
+    } catch {
+      setToastMessage('Unable to access clipboard');
+      setTimeout(() => setToastMessage(null), 2000);
+    }
+  };
+  // Insert character or token at cursor position (Inline CRUD)
+  const insertAtCursor = (char: string) => {
+    setLastOp(null); // Reset repeat operation on new input
+    if (isErrorState(expression)) {
+      if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
+        setExpression('');
+        setCursorPosition(0);
+      } else {
+        const initial = char === '.' ? '0.' : char;
+        setExpression(initial);
+        setCursorPosition(initial.length);
+      }
+      setIsEvaluated(false);
+      return;
+    }
+    if (isEvaluated) {
+      if (['+', '−', '×', '÷', '%', '^'].includes(char)) {
+        const next = expression + char;
+        setExpression(next);
+        setCursorPosition(next.length);
+      } else {
+        const initial = char === '.' ? '0.' : char;
+        setExpression(initial);
+        setCursorPosition(initial.length);
+      }
+      setIsEvaluated(false);
+      return;
+    }
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+    // Prevent duplicate consecutive decimals within the same number token
+    if (char === '.') {
+      const match = before.match(/(\d*(?:\.\d*)?)$/);
+      if (match && match[1].includes('.')) {
+        return; // Already has a decimal dot
+      }
+      if (!match || match[1] === '') {
+        char = '0.';
+      }
+    }
+    // Prevent duplicate consecutive operators
+    const isOperator = ['+', '−', '×', '÷', '^'].includes(char);
+    const lastIsOperator = ['+', '−', '×', '÷', '^'].includes(before.slice(-1));
+    let newBefore = before;
+    if (isOperator && lastIsOperator) {
+      if (char === '−' && ['×', '÷', '^'].includes(before.slice(-1))) {
+        // Keep negative minus after multiply/divide/power
+      } else {
+        newBefore = before.slice(0, -1);
+      }
+    }
+    const nextExpr = newBefore + char + after;
+    setExpression(nextExpr);
+    setCursorPosition(newBefore.length + char.length);
+  };
+  // Insert y-th root of x (ʸ√x): converts trailing digits to superscript or inserts ³√(
+  const insertYRoot = () => {
+    setLastOp(null);
+    if (isEvaluated || isErrorState(expression)) {
+      setExpression('³√(');
+      setCursorPosition(3);
+      setIsEvaluated(false);
+      return;
+    }
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+    const match = before.match(/(\d+)$/);
+    if (match) {
+      const num = match[1];
+      const prefix = before.slice(0, before.length - num.length);
+      const sup = toSuperscript(num);
+      const nextExpr = prefix + sup + '√(' + after;
+      setExpression(nextExpr);
+      setCursorPosition(prefix.length + sup.length + 2);
+    } else {
+      const nextExpr = before + '³√(' + after;
+      setExpression(nextExpr);
+      setCursorPosition(before.length + 3);
+    }
+  };
+  // Smart Parentheses at cursor position
+  const handleSmartParentheses = () => {
+    setLastOp(null);
+    if (isEvaluated || isErrorState(expression)) {
+      setExpression('(');
+      setCursorPosition(1);
+      setIsEvaluated(false);
+      return;
+    }
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const openCount = (expression.match(/\(/g) || []).length;
+    const closeCount = (expression.match(/\)/g) || []).length;
+    const lastChar = before.slice(-1);
+    if (/[\d%)]/.test(lastChar) && openCount > closeCount) {
+      insertAtCursor(')');
+    } else {
+      insertAtCursor('(');
+    }
+  };
+  // Backspace at cursor position
+  const handleBackspace = () => {
+    setLastOp(null);
+    if (isEvaluated || isErrorState(expression)) {
+      setExpression('');
+      setCursorPosition(0);
+      setIsEvaluated(false);
+      return;
+    }
+    if (cursorPosition === 0 || !expression) return;
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+    // Check if deleting a multi-char scientific function before cursor
+    for (const fn of [
+      'asinh(',
+      'acosh(',
+      'atanh(',
+      'sinh(',
+      'cosh(',
+      'tanh(',
+      'asin(',
+      'acos(',
+      'atan(',
+      'sin(',
+      'cos(',
+      'tan(',
+      'ln(',
+      'log(',
+      'abs(',
+      '1/(',
+      '³√(',
+      '²√(',
+      '⁴√(',
+      '⁵√(',
+      '√(',
+    ]) {
+      if (before.endsWith(fn)) {
+        const newBefore = before.slice(0, -fn.length);
+        setExpression(newBefore + after);
+        setCursorPosition(newBefore.length);
+        return;
+      }
+    }
+    const newBefore = before.slice(0, -1);
+    setExpression(newBefore + after);
+    setCursorPosition(newBefore.length);
+  };
+  // Insert scientific exponent (EE displayed as capital 'E')
+  const insertEE = () => {
+    setLastOp(null);
+    if (isEvaluated || isErrorState(expression)) {
+      setExpression('1E');
+      setCursorPosition(2);
+      setIsEvaluated(false);
+      return;
+    }
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+    const lastChar = before.slice(-1);
+    if (/\d|\./.test(lastChar) || lastChar === 'e' || lastChar === 'π' || lastChar === ')') {
+      const nextExpr = before + 'E' + after;
+      setExpression(nextExpr);
+      setCursorPosition(before.length + 1);
+    } else {
+      const nextExpr = before + '1E' + after;
+      setExpression(nextExpr);
+      setCursorPosition(before.length + 2);
+    }
+  };
+  // Clear all
+  const handleClear = () => {
+    setExpression('');
+    setCursorPosition(0);
+    setIsEvaluated(false);
+    setLastOp(null);
+  };
+  // Move cursor left / right
+  const moveCursor = (dir: 'left' | 'right') => {
+    if (isEvaluated) {
+      setIsEvaluated(false);
+    }
+    if (dir === 'left') {
+      setCursorPosition((prev) => Math.max(0, prev - 1));
+    } else {
+      setCursorPosition((prev) => Math.min(expression.length, prev + 1));
+    }
+  };
+  // Toggle sign of active number at cursor
+  const handleToggleSign = () => {
+    setLastOp(null);
+    if (!expression || isErrorState(expression)) {
+      setExpression('');
+      setCursorPosition(0);
+      setIsEvaluated(false);
+      return;
+    }
+    if (isEvaluated) {
+      const val = parseFloat(expression);
+      if (!isNaN(val)) {
+        const toggled = String(-val);
+        setExpression(toggled);
+        setCursorPosition(toggled.length);
+      }
+      return;
+    }
+    const pos = Math.min(Math.max(0, cursorPosition), expression.length);
+    const before = expression.slice(0, pos);
+    const after = expression.slice(pos);
+    const match = before.match(/([+\-×÷(]?)(-?\d+(?:\.\d+)?)$/);
+    if (!match) return;
+    const [full, op, num] = match;
+    const prefix = before.slice(0, before.length - full.length);
+    let replaced: string;
+    if (num.startsWith('-')) {
+      replaced = prefix + op + num.slice(1);
+    } else {
+      if (op === '−' || op === '-') {
+        replaced = prefix + '+' + num;
+      } else if (op === '+') {
+        replaced = prefix + '−' + num;
+      } else {
+        replaced = prefix + op + '(-' + num + ')';
+      }
+    }
+    setExpression(replaced + after);
+    setCursorPosition(replaced.length);
+  };
+  // Memory Operations
+  const handleMemoryAdd = () => {
+    if (isErrorState(expression)) return;
+    const activeVal =
+      liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
+    const num = parseFloat(activeVal);
+    if (!isNaN(num)) {
+      setMemory((prev) => prev + num);
+    }
+  };
+  const handleMemorySubtract = () => {
+    if (isErrorState(expression)) return;
+    const activeVal =
+      liveResult || (expression && !/[+\-×÷^]$/.test(expression) ? expression : '0');
+    const num = parseFloat(activeVal);
+    if (!isNaN(num)) {
+      setMemory((prev) => prev - num);
+    }
+  };
+  const handleMemoryRecall = () => {
+    if (memory !== 0) {
+      insertAtCursor(String(memory));
+    }
+  };
+  const handleMemoryClear = () => {
+    setMemory(0);
+  };
+  // Evaluate & Commit (Supports repeating last operation if = is pressed repeatedly)
+  const handleCalculate = () => {
+    if (!expression) return;
+    if (isErrorState(expression)) {
+      setExpression('');
+      setCursorPosition(0);
+      setIsEvaluated(false);
+      return;
+    }
+    // Repeating last operation (e.g. 5 + 3 = 8, press = again -> 8 + 3 = 11, press = -> 14)
+    if (isEvaluated && lastOp) {
+      const repeatExpr = `${expression}${lastOp.op}${lastOp.operand}`;
+      const { result, error } = evaluateExpression(repeatExpr, isDeg);
+      if (result !== null && !error && !isErrorState(result)) {
+        setHistory((prev) => [
+          {
+            expression: repeatExpr,
+            result,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+          ...prev.slice(0, 49),
+        ]);
+        setExpression(result);
+        setCursorPosition(result.length);
+        setIsEvaluated(true);
+      } else {
+        const errResult = result && isErrorState(result) ? result : 'Error';
+        setExpression(errResult);
+        setCursorPosition(errResult.length);
+        setIsEvaluated(true);
+      }
+      return;
+    }
+    // Normal calculation
+    const extracted = extractLastOperation(expression);
+    const { result, error } = evaluateExpression(expression, isDeg);
+    if (result !== null && !error && !isErrorState(result)) {
+      setLastOp(extracted);
+      setHistory((prev) => [
+        {
+          expression,
+          result,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+        ...prev.slice(0, 49),
+      ]);
+      setExpression(result);
+      setCursorPosition(result.length);
+      setIsEvaluated(true);
+    } else {
+      const errResult = result && isErrorState(result) ? result : 'Error';
+      setExpression(errResult);
+      setCursorPosition(errResult.length);
+      setIsEvaluated(true);
+    }
+  };
+  const handlersRef = useRef({
+    handleCopy,
+    handlePaste,
+    insertAtCursor,
+    insertEE,
+    handleCalculate,
+    handleBackspace,
+    handleClear,
+    moveCursor,
+    isEvaluated,
+    expression,
+    liveResult,
+  });
+  useEffect(() => {
+    handlersRef.current = {
+      handleCopy,
+      handlePaste,
+      insertAtCursor,
+      insertEE,
+      handleCalculate,
+      handleBackspace,
+      handleClear,
+      moveCursor,
+      isEvaluated,
+      expression,
+      liveResult,
+    };
+  });
+  // Keyboard Event Listeners for Typing, Copy & Paste
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      // Copy: Cmd+C / Ctrl+C
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
+        handlersRef.current.handleCopy();
+        return;
+      }
+      // Paste: Cmd+V / Ctrl+V handled by paste listener
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'v') {
+        return;
+      }
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor(e.key);
+      } else if (e.key === '.') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('.');
+      } else if (e.key === '+') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('+');
+      } else if (e.key === '-') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('−');
+      } else if (e.key === '*' || e.key === 'x' || e.key === 'X') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('×');
+      } else if (e.key === '/') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('÷');
+      } else if (e.key === '%') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('%');
+      } else if (e.key === '(' || e.key === ')') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor(e.key);
+      } else if (e.key === '^') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('^');
+      } else if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        handlersRef.current.handleCalculate();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handlersRef.current.handleBackspace();
+      } else if (e.key === 'Escape' || e.key === 'Delete') {
+        e.preventDefault();
+        handlersRef.current.handleClear();
+      } else if (e.key === 'e') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('e');
+      } else if (e.key === 'E') {
+        e.preventDefault();
+        handlersRef.current.insertEE();
+      } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('π');
+      } else if (e.key === '!') {
+        e.preventDefault();
+        handlersRef.current.insertAtCursor('!');
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlersRef.current.moveCursor('left');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handlersRef.current.moveCursor('right');
+      }
+    };
+    const handleWindowPaste = (e: ClipboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      e.preventDefault();
+      const pastedData = e.clipboardData?.getData('text');
+      if (pastedData) {
+        handlersRef.current.handlePaste(pastedData);
+      }
+    };
+    const handleWindowCopy = (e: ClipboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      if (!window.getSelection()?.toString()) {
+        const { isEvaluated: evaluated, expression: expr, liveResult: live } = handlersRef.current;
+        const textToCopy = evaluated ? expr : live || expr;
+        if (textToCopy) {
+          e.preventDefault();
+          e.clipboardData?.setData('text/plain', textToCopy);
+          setToastMessage('Copied');
+          setTimeout(() => setToastMessage(null), 2000);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('paste', handleWindowPaste);
+    window.addEventListener('copy', handleWindowCopy);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('paste', handleWindowPaste);
+      window.removeEventListener('copy', handleWindowCopy);
+    };
+  }, []);
+  const safeCursor = Math.min(Math.max(0, cursorPosition), expression.length);
+  const textBeforeCursor = expression.slice(0, safeCursor);
+  const textAfterCursor = expression.slice(safeCursor);
+  // Render individual characters with elevated superscript styling for root indices
+  const renderChar = (ch: string, key: string, onClick: (e: React.MouseEvent) => void) => {
+    const isSup = /[⁰¹²³⁴⁵⁶⁷⁸⁹ʸˣ]/.test(ch);
+    return (
+      <span
+        key={key}
+        onClick={onClick}
+        className={`${styles.charSpan} ${isSup ? styles.charSup : ''}`}
+      >
+        {ch}
+      </span>
+    );
+  };
+  return (
+    <main className={styles.calculatorMain}>
+      <SEOHead
+        title="Online Calculator — Free Scientific & Basic Calculator India 2026"
+        description="Fast, institutional-grade online calculator with editable cursor display, implicit multiplication, copy/paste support, memory operations (M+, M-, MC, MR), percentages, y-th root of x (³√(27)), and trigonometry."
+        keywords="online calculator, scientific calculator, basic calculator, percentage calculator, cube root calculator, math calculator, memory operations calculator, fast calculator"
+        canonicalPath="/calculator"
+        noIndex={false}
+      />
+      {/* Floating Toast Notification for Copy/Paste */}
+      {toastMessage && (
+        <div className={styles.toastWrapper}>
+          <div className={styles.toastBadge}>
+            <FiCheck className={styles.toastSuccessIcon} /> {toastMessage}
+          </div>
+        </div>
+      )}
+      {/* Top Display Area with Moveable Cursor & Memory Indicator */}
+      <div className={styles.displayArea}>
+        {/* History Modal / Drawer */}
+        {showHistory && (
+          <div className={styles.historyDrawer}>
+            <div className={styles.historyHeader}>
+              <span className={styles.historyTitle}>
+                <FiClock style={{ width: '0.875rem', height: '0.875rem' }} /> History
+              </span>
+              <div className={styles.historyControls}>
+                {history.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setHistory([])}
+                    className={styles.clearHistoryBtn}
+                    title="Clear history"
+                  >
+                    <FiRotateCcw style={{ width: '0.75rem', height: '0.75rem' }} /> Clear
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowHistory(false)}
+                  className={styles.closeHistoryBtn}
+                >
+                  <FiX style={{ width: '1rem', height: '1rem' }} />
+                </button>
+              </div>
+            </div>
+            {history.length === 0 ? (
+              <p className={styles.emptyHistory}>No recent calculations</p>
+            ) : (
+              <div className={styles.historyList}>
+                {history.map((item, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setExpression(item.result);
+                      setCursorPosition(item.result.length);
+                      setIsEvaluated(true);
+                      setShowHistory(false);
+                    }}
+                    className={styles.historyItem}
+                  >
+                    <p className={styles.historyExpr}>{item.expression}</p>
+                    <p className={styles.historyResult}>{item.result}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {/* Memory Indicator */}
+        {memory !== 0 && (
+          <div className={styles.memoryRow}>
+            <span
+              onClick={handleMemoryRecall}
+              className={styles.memoryBadge}
+              title="Click to recall memory (MR)"
+            >
+              M = {memory}
+            </span>
+          </div>
+        )}
+        {/* Expression Display with Interactive Click-to-Position Cursor */}
+        <div
+          ref={displayContainerRef}
+          className={styles.displayInput}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && expression.length > 0) {
+              setCursorPosition(expression.length);
+            }
+          }}
+        >
+          <style>{`
+            @keyframes calcCaretBlink {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0; }
+            }
+          `}</style>
+          <div className={styles.displayLine}>
+            {expression.length === 0 ? (
+              <span className={styles.displayPlaceholder}>0</span>
+            ) : (
+              <>
+                {/* Clickable characters before cursor */}
+                {textBeforeCursor.split('').map((ch, idx) =>
+                  renderChar(ch, `before-${idx}`, (e) => {
+                    e.stopPropagation();
+                    setCursorPosition(idx);
+                    setIsEvaluated(false);
+                  })
+                )}
+                {/* Visible Blinking Cursor (only when content exists) */}
+                <span
+                  className={styles.cursorCaret}
+                  style={{
+                    animation: 'calcCaretBlink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  }}
+                />
+                {/* Clickable characters after cursor */}
+                {textAfterCursor.split('').map((ch, idx) =>
+                  renderChar(ch, `after-${idx}`, (e) => {
+                    e.stopPropagation();
+                    setCursorPosition(textBeforeCursor.length + idx + 1);
+                    setIsEvaluated(false);
+                  })
+                )}
+              </>
+            )}
+          </div>
+        </div>
+        {/* Live Calculation Preview */}
+        <div
+          onClick={handleCopy}
+          className={styles.livePreviewRow}
+          title="Click to copy result"
+        >
+          {liveResult !== null && !isEvaluated ? (
+            <span className={styles.livePreviewText}>
+              {liveResult}
+            </span>
+          ) : (
+            <span style={{ fontSize: '0.875rem', opacity: 0 }}>0</span>
+          )}
+        </div>
+        {/* Utility Icon Bar: History, Scientific, Copy, Paste, Cursor Chevrons & Backspace */}
+        <div className={styles.toolbar}>
+          <div className={styles.toolbarGroup}>
+            <button
+              type="button"
+              onClick={() => setShowHistory(!showHistory)}
+              className={`${styles.circleBtn} ${showHistory ? styles.active : ''}`}
+              title="Calculation History"
+            >
+              <FiClock style={{ width: '1rem', height: '1rem' }} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowScientific(!showScientific)}
+              className={`${styles.scientificToggleBtn} ${showScientific ? styles.active : ''}`}
+              title="Toggle Scientific Keypad (Trig, Hyperbolic, Roots, Exponents)"
+            >
+              <TbMathFunction style={{ width: '1rem', height: '1rem' }} />
+              <span>Scientific</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={!expression && !liveResult}
+              className={styles.circleBtn}
+              title="Copy expression or result (Ctrl+C / ⌘C)"
+            >
+              <FiCopy style={{ width: '1rem', height: '1rem' }} />
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePaste()}
+              className={styles.circleBtn}
+              title="Paste expression (Ctrl+V / ⌘V)"
+            >
+              <FiClipboard style={{ width: '1rem', height: '1rem' }} />
+            </button>
+          </div>
+          {/* Cursor Stepper & Backspace */}
+          <div className={styles.toolbarGroup}>
+            <button
+              type="button"
+              onClick={() => moveCursor('left')}
+              className={styles.circleBtn}
+              title="Move cursor left"
+              disabled={cursorPosition === 0}
+            >
+              <FiChevronLeft style={{ width: '1rem', height: '1rem' }} />
+            </button>
+            <button
+              type="button"
+              onClick={() => moveCursor('right')}
+              className={styles.circleBtn}
+              title="Move cursor right"
+              disabled={cursorPosition >= expression.length}
+            >
+              <FiChevronRight style={{ width: '1rem', height: '1rem' }} />
+            </button>
+            <button
+              type="button"
+              onClick={handleBackspace}
+              className={styles.circleBtn}
+              style={{ color: 'var(--color-primary)', marginLeft: '0.25rem' }}
+              title="Backspace"
+            >
+              <FiDelete style={{ width: '1.25rem', height: '1.25rem' }} />
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Scientific & Memory Tools Panel (Expandable) */}
+      {showScientific && (
+        <div className={styles.scientificPanel}>
+          {/* Top Row: DEG/RAD toggle + Memory Row (MC, MR, M+, M-) */}
+          <div className={styles.degRadMemoryRow}>
+            <div className={styles.degRadGroup}>
+              <button
+                type="button"
+                className={`${styles.degRadBtn} ${isDeg ? styles.active : ''}`}
+                onClick={() => setIsDeg(true)}
+              >
+                DEG
+              </button>
+              <button
+                type="button"
+                className={`${styles.degRadBtn} ${!isDeg ? styles.active : ''}`}
+                onClick={() => setIsDeg(false)}
+              >
+                RAD
+              </button>
+            </div>
+            {/* Memory Toolbar: MC, MR, M+, M- */}
+            <div className={styles.memoryActions}>
+              <button
+                type="button"
+                onClick={handleMemoryClear}
+                disabled={memory === 0}
+                className={`${styles.memoryActionBtn} ${styles.memoryActionBtnError}`}
+                title="Memory Clear (MC)"
+              >
+                MC
+              </button>
+              <button
+                type="button"
+                onClick={handleMemoryRecall}
+                disabled={memory === 0}
+                className={styles.memoryActionBtn}
+                title="Memory Recall (MR)"
+              >
+                MR
+              </button>
+              <button
+                type="button"
+                onClick={handleMemoryAdd}
+                className={styles.memoryActionBtn}
+                title="Memory Add (M+)"
+              >
+                M+
+              </button>
+              <button
+                type="button"
+                onClick={handleMemorySubtract}
+                className={styles.memoryActionBtn}
+                title="Memory Subtract (M-)"
+              >
+                M-
+              </button>
+            </div>
+          </div>
+          <div className={styles.scientificGrid}>
+            {[
+              { label: 'sin', fn: () => insertAtCursor('sin(') },
+              { label: 'cos', fn: () => insertAtCursor('cos(') },
+              { label: 'tan', fn: () => insertAtCursor('tan(') },
+              { label: 'ln', fn: () => insertAtCursor('ln(') },
+              { label: 'log', fn: () => insertAtCursor('log(') },
+              { label: 'sinh', fn: () => insertAtCursor('sinh(') },
+              { label: 'cosh', fn: () => insertAtCursor('cosh(') },
+              { label: 'tanh', fn: () => insertAtCursor('tanh(') },
+              { label: 'e', fn: () => insertAtCursor('e') },
+              { label: 'EE', fn: insertEE },
+              { label: 'sin⁻¹', fn: () => insertAtCursor('asin(') },
+              { label: 'cos⁻¹', fn: () => insertAtCursor('acos(') },
+              { label: 'tan⁻¹', fn: () => insertAtCursor('atan(') },
+              { label: '√', fn: () => insertAtCursor('√(') },
+              { label: 'ʸ√x', fn: insertYRoot },
+              { label: 'xʸ', fn: () => insertAtCursor('^') },
+              { label: '1/x', fn: () => insertAtCursor('1/(') },
+              { label: 'π', fn: () => insertAtCursor('π') },
+              { label: '|x|', fn: () => insertAtCursor('abs(') },
+              { label: 'x!', fn: () => insertAtCursor('!') },
+            ].map((btn, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={btn.fn}
+                className={styles.scientificKey}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Main Keypad Grid (Circular/Pill Keypad) */}
+      <div className={styles.keypadGrid}>
+        {/* Row 1: C, ( ), %, ÷ */}
+        <button
+          type="button"
+          onClick={handleClear}
+          className={`${styles.keypadBtn} ${styles.keypadBtnClear}`}
+        >
+          {expression ? 'C' : 'AC'}
+        </button>
+        <button
+          type="button"
+          onClick={handleSmartParentheses}
+          className={`${styles.keypadBtn} ${styles.keypadBtnFunction}`}
+        >
+          ( )
+        </button>
+        <button
+          type="button"
+          onClick={() => insertAtCursor('%')}
+          className={`${styles.keypadBtn} ${styles.keypadBtnFunction}`}
+        >
+          %
+        </button>
+        <button
+          type="button"
+          onClick={() => insertAtCursor('÷')}
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
+        >
+          ÷
+        </button>
+        {/* Row 2: 7, 8, 9, × */}
+        {['7', '8', '9'].map((num) => (
+          <button
+            key={num}
+            type="button"
+            onClick={() => insertAtCursor(num)}
+            className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
+          >
+            {num}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => insertAtCursor('×')}
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
+        >
+          ×
+        </button>
+        {/* Row 3: 4, 5, 6, − */}
+        {['4', '5', '6'].map((num) => (
+          <button
+            key={num}
+            type="button"
+            onClick={() => insertAtCursor(num)}
+            className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
+          >
+            {num}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => insertAtCursor('−')}
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
+        >
+          −
+        </button>
+        {/* Row 4: 1, 2, 3, + */}
+        {['1', '2', '3'].map((num) => (
+          <button
+            key={num}
+            type="button"
+            onClick={() => insertAtCursor(num)}
+            className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
+          >
+            {num}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => insertAtCursor('+')}
+          className={`${styles.keypadBtn} ${styles.keypadBtnOperator}`}
+        >
+          +
+        </button>
+        {/* Row 5: +/-, 0, ., = */}
+        <button
+          type="button"
+          onClick={handleToggleSign}
+          className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
+        >
+          +/−
+        </button>
+        <button
+          type="button"
+          onClick={() => insertAtCursor('0')}
+          className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
+        >
+          0
+        </button>
+        <button
+          type="button"
+          onClick={() => insertAtCursor('.')}
+          className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
+          style={{ fontWeight: 700 }}
+        >
+          .
+        </button>
+        <button
+          type="button"
+          onClick={handleCalculate}
+          className={`${styles.keypadBtn} ${styles.keypadBtnEquals}`}
+        >
+          =
+        </button>
+      </div>
+    </main>
+  );
+};
+export default Calculator;

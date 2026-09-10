@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { NotesSidebar } from './NotesSidebar';
 import { NotesList } from './NotesList';
@@ -13,6 +14,14 @@ import {
 } from './NotesCrypto';
 import { useAuth } from '../../../context/useAuth';
 import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS } from './NotesTypes';
+import {
+  getNotesAction,
+  createNoteAction,
+  updateNoteAction,
+  deleteNoteAction,
+  emptyTrashAction,
+  getNotesStorageStatusAction,
+} from '@/actions/notes';
 import './quick-notes.css';
 import styles from './QuickNotesManager.module.scss';
 export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
@@ -134,15 +143,12 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       if (!token) return;
       try {
         const key = await getUserEncryptionKey(userId, userEmail);
-        const res = await fetch('/api/admin/notes?include_trashed=true', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok && isMounted) {
-          const providerHeader = res.headers.get('x-storage-provider') as 'vercel_blob' | 'database_fallback' | null;
-          if (providerHeader) {
-            setStorageProvider(providerHeader);
+        const rawData = (await getNotesAction({ include_trashed: true }, token)) as unknown as Note[];
+        if (isMounted) {
+          const statusRes = await getNotesStorageStatusAction().catch(() => null);
+          if (statusRes?.storage_provider) {
+            setStorageProvider(statusRes.storage_provider as 'vercel_blob' | 'database_fallback');
           }
-          const rawData = (await res.json()) as Note[];
           const decryptedNotes: Note[] = await Promise.all(
             (rawData || []).map(async (n) => ({
               ...n,
@@ -182,18 +188,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
                 try {
                   const encTitle = await encryptText(legacy.title || '', key);
                   const encContent = await encryptText(legacy.content || '', key);
-                  await fetch('/api/admin/notes', {
-                    method: 'PUT',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                      id: legacy.id,
-                      title: encTitle,
-                      content: encContent,
-                    }),
-                  });
+                  await updateNoteAction({
+                    id: legacy.id,
+                    title: encTitle,
+                    content: encContent,
+                  }, token);
                 } catch {
                   // Ignore individual background migration error
                 }
@@ -268,14 +267,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         if (typeof updates.content === 'string') {
           serverPayload.content = await encryptText(updates.content, key);
         }
-        await fetch('/api/admin/notes', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ id: noteId, ...serverPayload }),
-        });
+        await updateNoteAction({ id: noteId, ...serverPayload }, token);
       } catch (err) {
         console.error('Failed to save note:', err);
       } finally {
@@ -394,34 +386,24 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       const key = await getUserEncryptionKey(userId, userEmail);
       const encTitle = await encryptText('', key);
       const encContent = await encryptText('', key);
-      const res = await fetch('/api/admin/notes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          id: tempId,
-          title: encTitle,
-          content: encContent,
-          folder: targetFolder,
-          tags: newNote.tags,
-        }),
+      const created = (await createNoteAction({
+        id: tempId,
+        title: encTitle,
+        content: encContent,
+        folder: targetFolder,
+        tags: newNote.tags,
+      }, token)) as unknown as Note;
+      const decryptedCreated: Note = {
+        ...created,
+        title: await decryptText(created.title || '', key),
+        content: await decryptText(created.content || '', key),
+      };
+      setNotes((prev) => {
+        const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
+        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
+        return next;
       });
-      if (res.ok) {
-        const created = (await res.json()) as Note;
-        const decryptedCreated: Note = {
-          ...created,
-          title: await decryptText(created.title || '', key),
-          content: await decryptText(created.content || '', key),
-        };
-        setNotes((prev) => {
-          const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
-          localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
-          return next;
-        });
-        setSelectedNoteId(decryptedCreated.id);
-      }
+      setSelectedNoteId(decryptedCreated.id);
     } catch (err) {
       console.error('Failed to create note on server:', err);
     }
@@ -473,10 +455,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       }
       if (!token) return;
       try {
-        await fetch(`/api/admin/notes?id=${encodeURIComponent(targetId)}&permanent=true`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await deleteNoteAction({ id: targetId, permanent: true }, token);
       } catch (err) {
         console.error('Failed to permanently delete note:', err);
       }
@@ -572,35 +551,25 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const key = await getUserEncryptionKey(userId, userEmail);
         const encTitle = await encryptText(duplicated.title || '', key);
         const encContent = await encryptText(duplicated.content || '', key);
-        const res = await fetch('/api/admin/notes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            id: tempId,
-            title: encTitle,
-            content: encContent,
-            folder: duplicated.folder,
-            tags: duplicated.tags,
-            is_pinned: false,
-          }),
+        const created = (await createNoteAction({
+          id: tempId,
+          title: encTitle,
+          content: encContent,
+          folder: duplicated.folder,
+          tags: duplicated.tags,
+          is_pinned: false,
+        }, token)) as unknown as Note;
+        const decryptedCreated: Note = {
+          ...created,
+          title: await decryptText(created.title || '', key),
+          content: await decryptText(created.content || '', key),
+        };
+        setNotes((prev) => {
+          const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
+          localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
+          return next;
         });
-        if (res.ok) {
-          const created = (await res.json()) as Note;
-          const decryptedCreated: Note = {
-            ...created,
-            title: await decryptText(created.title || '', key),
-            content: await decryptText(created.content || '', key),
-          };
-          setNotes((prev) => {
-            const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
-            localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
-            return next;
-          });
-          setSelectedNoteId(decryptedCreated.id);
-        }
+        setSelectedNoteId(decryptedCreated.id);
       } catch (err) {
         console.error('Failed to duplicate note:', err);
       }
@@ -620,10 +589,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     });
     if (!token) return;
     try {
-      await fetch('/api/admin/notes?empty_trash=true&action=empty_trash', {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await emptyTrashAction(token);
     } catch (err) {
       console.error('Failed to empty trash on server:', err);
     }
@@ -742,13 +708,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const handleOpenSecurityModal = useCallback(() => {
     setIsSecurityModalOpen(true);
     if (!storageProvider && token) {
-      fetch('/api/admin/notes?action=storage_status', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => (r.ok ? r.json() : null))
+      getNotesStorageStatusAction()
         .then((data) => {
           if (data?.storage_provider) {
-            setStorageProvider(data.storage_provider);
+            setStorageProvider(data.storage_provider as 'vercel_blob' | 'database_fallback');
           }
         })
         .catch(() => {});

@@ -1,9 +1,15 @@
+'use client';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/navigation';
 import { FiClock, FiLock, FiX, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import { PaymentSettings } from '../types/auth';
 import { loadRazorpayScript } from '../utils/razorpay';
+import {
+  createRazorpayOrderAction,
+  getPaymentSettingsAction,
+  verifyRazorpayPaymentAction,
+} from '@/actions/payments';
 import styles from './PaywallModal.module.scss';
 const PaywallModal = () => {
   const { user, showPaywall, setShowPaywall, refreshUser } = useAuth();
@@ -16,11 +22,8 @@ const PaywallModal = () => {
     if (!showPaywall) return;
     const fetchSettings = async () => {
       try {
-        const res = await fetch('/api/payments/settings');
-        if (res.ok) {
-          const data = (await res.json()) as { settings: PaymentSettings };
-          setSettings(data.settings);
-        }
+        const data = await getPaymentSettingsAction();
+        setSettings(data.settings);
       } catch (err) {
         console.warn('Failed to load payment settings:', err);
       }
@@ -56,23 +59,9 @@ const PaywallModal = () => {
         throw new Error('Could not load payment gateway. Please check your internet connection.');
       }
       const storedToken = localStorage.getItem('auth_token');
-      const orderRes = await fetch('/api/payments/razorpay/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${storedToken}`,
-        },
-        body: JSON.stringify({ amount }),
-      });
-      const orderData = (await orderRes.json()) as {
-        orderId?: string;
-        keyId?: string;
-        amount?: number;
-        currency?: string;
-        error?: string;
-      };
-      if (!orderRes.ok || !orderData.orderId || !orderData.keyId) {
-        throw new Error(orderData.error || 'Failed to create payment order');
+      const orderData = await createRazorpayOrderAction(storedToken);
+      if (!orderData.orderId || !orderData.keyId) {
+        throw new Error('Failed to create payment order');
       }
       const options = {
         key: orderData.keyId,
@@ -94,21 +83,10 @@ const PaywallModal = () => {
         }) => {
           try {
             setIsProcessing(true);
-            const verifyRes = await fetch('/api/payments/razorpay/verify', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${storedToken}`,
-              },
-              body: JSON.stringify(response),
-            });
-            const verifyData = (await verifyRes.json()) as { message?: string; error?: string };
-            if (!verifyRes.ok) {
-              throw new Error(verifyData.error || 'Payment verification failed');
-            }
+            const verifyData = await verifyRazorpayPaymentAction(response, storedToken);
             setMessage({
               type: 'success',
-              text: 'Payment successful! 30-day Pro access is now active.',
+              text: verifyData.message || 'Payment successful! 30-day Pro access is now active.',
             });
             await refreshUser();
             setTimeout(() => {

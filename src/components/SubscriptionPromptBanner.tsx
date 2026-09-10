@@ -1,5 +1,6 @@
+'use client';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/navigation';
 import { FiHeart, FiLock, FiX } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import styles from './SubscriptionPromptBanner.module.scss';

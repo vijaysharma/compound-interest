@@ -1,9 +1,12 @@
-import { useMemo } from 'react';
+'use client';
+import { useMemo, useSyncExternalStore } from 'react';
 import { AgCharts } from 'ag-charts-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
 import styles from './Chart.module.scss';
-ModuleRegistry.registerModules([AllCommunityModule]);
+if (typeof window !== 'undefined') {
+  ModuleRegistry.registerModules([AllCommunityModule]);
+}
 interface ChartPoint {
   date: string;
   nav: number;
@@ -55,7 +58,9 @@ const formatAxisCurrency = (value: number): string => {
   if (absoluteValue >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
   return `₹${Math.round(value)}`;
 };
+const emptySubscribe = () => () => {};
 const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: ChartProps) => {
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const initialInvestment =
     Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
   const chartOptions = useMemo<AgCartesianChartOptions | null>(() => {
@@ -189,6 +194,13 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
     return (
       <div className={`${className} ${styles.emptyContainer}`}>
         <span className={styles.emptyText}>Enter an investment amount to view growth</span>
+      </div>
+    );
+  }
+  if (!mounted) {
+    return (
+      <div className={`${className} ${styles.emptyContainer}`}>
+        <span className={styles.emptyText}>Loading chart...</span>
       </div>
     );
   }

@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useId, useMemo, useEffect } from 'react';
 import styles from './ValuePicker.module.scss';
 import convertToWords from '../utilities/currency';

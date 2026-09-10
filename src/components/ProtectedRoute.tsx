@@ -1,5 +1,6 @@
+'use client';
 import { ReactNode, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/navigation';
 import { FiAlertTriangle, FiClock, FiLock, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import LoadingFallback from './LoadingFallback';

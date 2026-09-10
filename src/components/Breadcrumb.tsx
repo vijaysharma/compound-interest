@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '@/navigation';
 import styles from './Breadcrumb.module.scss';
 export interface BreadcrumbItem {
   name: string;

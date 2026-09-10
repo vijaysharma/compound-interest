@@ -1,5 +1,6 @@
+'use client';
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/navigation';
 import { FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import styles from './GoogleSignInButton.module.scss';
@@ -86,7 +87,10 @@ const GoogleSignInButton = ({
     );
   });
   const buttonRef = useRef<HTMLDivElement>(null);
-  const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const rawClientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+    process.env.NEXT_PUBLIC_VITE_GOOGLE_CLIENT_ID ||
+    '';
   const hasValidClientId =
     typeof rawClientId === 'string' &&
     rawClientId.trim().length > 10 &&
@@ -203,7 +207,14 @@ const GoogleSignInButton = ({
     }
   };
   const isAdminCandidate =
-    email.trim().toLowerCase() === (import.meta.env.VITE_ALLOWED_EMAIL || '').trim().toLowerCase();
+    email.trim().toLowerCase() ===
+    (
+      process.env.NEXT_PUBLIC_ALLOWED_EMAIL ||
+      process.env.NEXT_PUBLIC_VITE_ALLOWED_EMAIL ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
   return (
     <div className={`${styles.container} ${className}`}>
       {hasValidClientId ? (

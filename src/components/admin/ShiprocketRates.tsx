@@ -1,5 +1,7 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { FiTruck, FiMapPin, FiStar } from 'react-icons/fi';
+import { calculateShiprocketRatesAction, getPostcodeDetailsAction } from '../../actions/admin';
 import styles from './ShiprocketRates.module.scss';
 interface CourierCompany {
   courier_company_id: number;
@@ -136,13 +138,9 @@ async function lookupPincode(code: string, signal?: AbortSignal): Promise<Pincod
     if ((err as Error)?.name === 'AbortError') return null;
   }
   try {
-    const res = await fetch(
-      `/api/shiprocket-postcode/details?postcode=${encodeURIComponent(trimmed)}`,
-      { signal }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const result = parseShiprocketData(data);
+    const rawData = await getPostcodeDetailsAction(trimmed);
+    if (rawData) {
+      const result = parseShiprocketData(rawData);
       if (result) {
         pincodeCache.set(trimmed, result);
         return result;
@@ -274,26 +272,22 @@ const ShiprocketRates: React.FC<{ token: string }> = ({ token }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/shiprocket-rates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const res = await calculateShiprocketRatesAction(
+        {
           pickup_postcode: pickup,
           delivery_postcode: delivery,
           weight,
           length,
           breadth,
           height,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to fetch rates');
+        },
+        token || ''
+      );
+      if (!res.success) {
+        throw new Error('Failed to fetch rates');
       }
-      setResult(data.data?.data?.available_courier_companies || []);
+      const companies = (res.data as { data?: { available_courier_companies?: CourierCompany[] } })?.data?.available_courier_companies || [];
+      setResult(companies);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

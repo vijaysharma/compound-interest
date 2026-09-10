@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { FiFolder, FiFolderPlus, FiCheck, FiX } from 'react-icons/fi';
 import { Note } from './NotesTypes';

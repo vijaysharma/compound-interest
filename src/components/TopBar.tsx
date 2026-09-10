@@ -1,5 +1,6 @@
+'use client';
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/navigation';
 import Link from './PrefetchLink';
 import {
   FiAward,

@@ -1,5 +1,6 @@
+'use client';
 import { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/navigation';
 const LAST_VISITED_ROUTE_KEY = 'last_visited_route';
 const STAY_ON_HOME_SESSION_KEY = 'stay_on_home';
 const IGNORED_ROUTES = ['/login', '/upgrade'];
