@@ -221,7 +221,8 @@ export async function calculateShiprocketRatesAction(
     throw new Error('Unauthorized: Admin access required');
   }
   const email = process.env.SHIPROCKET_EMAIL;
-  const password = process.env.SHIPROCKET_PASSWORD || process.env.SHIPROCKET_API_TOKEN;
+  const rawPassword = process.env.SHIPROCKET_PASSWORD || process.env.SHIPROCKET_API_TOKEN;
+  const password = rawPassword ? rawPassword.replace(/\\(\$)/g, '$1') : undefined;
   const tokenEnv = process.env.SHIPROCKET_TOKEN;
   if (!email || !password) {
     throw new Error(
@@ -255,9 +256,11 @@ export async function calculateShiprocketRatesAction(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const authData = (await authRes.json()) as { token?: string };
+    const authData = (await authRes.json()) as { token?: string; message?: string };
     if (!authRes.ok || !authData.token) {
-      throw new Error('Shiprocket authentication failed');
+      const errorMsg = authData?.message || `HTTP ${authRes.status}`;
+      console.error('Shiprocket authentication failed:', authRes.status, authData);
+      throw new Error(`Shiprocket authentication failed: ${errorMsg}`);
     }
     authToken = authData.token;
     cachedShiprocketToken = {
@@ -285,6 +288,9 @@ export async function calculateShiprocketRatesAction(
   );
   const data = await serviceabilityRes.json();
   if (!serviceabilityRes.ok) {
+    if (serviceabilityRes.status === 401) {
+      cachedShiprocketToken = null;
+    }
     throw new Error('Shiprocket API error: ' + JSON.stringify(data));
   }
   return { success: true, data };
