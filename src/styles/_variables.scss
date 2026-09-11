@@ -71,3 +71,9 @@ $bp-wide: 1280px;
 // Transitions
 $transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 $transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// Vertical spacing tokens (mobile-first)
+$v-gap-xs:  0.25rem;  // 4px  - between tightly coupled elements
+$v-gap-sm:  0.5rem;   // 8px  - between fields in a form stack
+$v-gap-md:  0.75rem;  // 12px - between sections
+$v-gap-lg:  1.25rem;  // 20px - between major sections (desktop: 2rem)

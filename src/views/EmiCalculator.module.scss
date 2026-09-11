@@ -5,14 +5,19 @@
   width: 100%;
   max-width: 56rem;
   margin-inline: auto;
-  padding: 1rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+
+  @include tablet-up {
+    padding: 1rem 0.5rem;
+    gap: 1.5rem;
+  }
 }
 
 .header {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
   text-align: center;
 
   @include tablet-up {
