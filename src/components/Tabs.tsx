@@ -1,3 +1,4 @@
+'use client';
 import { useState } from 'react';
 import Tab from './Tab';
 import { TabsType } from '../types/types';

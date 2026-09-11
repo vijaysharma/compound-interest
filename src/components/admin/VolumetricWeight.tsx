@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { FiBox } from 'react-icons/fi';
 import styles from './VolumetricWeight.module.scss';

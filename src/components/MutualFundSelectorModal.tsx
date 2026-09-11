@@ -1,3 +1,4 @@
+'use client';
 import { useMemo } from 'react';
 import JoinedButtonGroup from './JoinedButtonGroup';
 import { MFType } from '../types/types';

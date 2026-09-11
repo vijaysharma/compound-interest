@@ -79,8 +79,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   font-family: $font-family;
   box-sizing: border-box;
 
@@ -748,6 +748,94 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 // =============================================================================
 // Scaled Variant 3: Paired / Dual Endpoint Selector (Screenshot 3)
 // =============================================================================
+
+// Outer wrapper: two equal columns side by side, sharing one rounded border
+.pairedStackedWrapper {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid $color-primary;
+  border-radius: $btn-radius;
+  overflow: visible; // allow CountrySelect dropdown to escape
+  box-sizing: border-box;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+// Each half (source / target)
+.pairedStackedColumn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+
+  &:first-child {
+    border-right: 1px solid $color-primary;
+  }
+}
+
+// Small label bar sitting above the input slot
+.pairedStackedLabel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 3px 10px 3px 10px;
+  background-color: $color-primary;
+  color: #ffffff;
+  font-family: $font-family;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  user-select: none;
+  border-radius: 0;
+
+  // round top-left only on source label
+  .pairedStackedColumn:first-child & {
+    border-top-left-radius: calc(#{$btn-radius} - 1px);
+  }
+
+  // round top-right only on target label
+  &.pairedStackedLabelRight {
+    justify-content: flex-end;
+    border-top-right-radius: calc(#{$btn-radius} - 1px);
+  }
+}
+
+// The actual input/slot area — full width, generous height
+.pairedStackedSlot {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  position: relative;
+  background-color: $color-neutral-bg;
+  box-sizing: border-box;
+
+  // round bottom-left on source slot
+  &.pairedStackedSlotLeft {
+    border-bottom-left-radius: calc(#{$btn-radius} - 1px);
+  }
+
+  // round bottom-right on target slot
+  .pairedStackedColumn:last-child > & {
+    border-bottom-right-radius: calc(#{$btn-radius} - 1px);
+  }
+
+  @include tablet-up {
+    min-height: 48px;
+  }
+}
+
+.pairedRow {
+  overflow: visible;
+  position: relative;
+}
+
 .pairedBadge {
   display: inline-flex;
   align-items: center;
@@ -769,10 +857,14 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   &.leftBadge {
     border-right: 1px solid $color-primary;
+    border-top-left-radius: calc(#{$btn-radius} - 1px);
+    border-bottom-left-radius: calc(#{$btn-radius} - 1px);
   }
 
   &.rightBadge {
     border-left: 1px solid $color-primary;
+    border-top-right-radius: calc(#{$btn-radius} - 1px);
+    border-bottom-right-radius: calc(#{$btn-radius} - 1px);
   }
 
   @include tablet-up {
@@ -793,6 +885,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   justify-content: center;
   padding: 0 $space-sm;
   background-color: $color-neutral-bg;
+  overflow: visible;
+  position: relative;
 
   &.slotLeft {
     border-right: 1px solid $color-primary;
@@ -1004,8 +1098,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 // =============================================================================
 
 .layoutMobile {
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 
   &.compact {
     margin-top: 0.25rem;

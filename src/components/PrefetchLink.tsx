@@ -1,26 +1,43 @@
+'use client';
 import React from 'react';
-import { Link, LinkProps } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+import { Link, LinkProps } from '@/navigation';
 import { prefetchRoute } from '../utilities/prefetchRoute';
 export interface PrefetchLinkProps extends LinkProps {
   children: React.ReactNode;
 }
 export const PrefetchLink: React.FC<PrefetchLinkProps> = ({
   to,
+  href,
   children,
   onMouseEnter,
   onTouchStart,
   ...props
 }) => {
+  const router = useRouter();
+  const target = href ?? to;
   const handlePrefetch = () => {
-    if (typeof to === 'string') {
-      prefetchRoute(to);
-    } else if (to && typeof to === 'object' && 'pathname' in to && to.pathname) {
-      prefetchRoute(to.pathname);
+    let cleanPath: string | undefined;
+    if (typeof target === 'string') {
+      cleanPath = target.split('?')[0].split('#')[0];
+    } else if (target && typeof target === 'object' && 'pathname' in target && target.pathname) {
+      cleanPath = target.pathname;
+    }
+    if (cleanPath) {
+      prefetchRoute(cleanPath);
+      if (cleanPath.startsWith('/')) {
+        try {
+          router.prefetch(cleanPath);
+        } catch {
+          // ignore prefetch errors
+        }
+      }
     }
   };
   return (
     <Link
       to={to}
+      href={href}
       onMouseEnter={(e) => {
         handlePrefetch();
         onMouseEnter?.(e);

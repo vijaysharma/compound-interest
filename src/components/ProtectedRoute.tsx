@@ -1,5 +1,6 @@
+'use client';
 import { ReactNode, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/navigation';
 import { FiAlertTriangle, FiClock, FiLock, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
 import LoadingFallback from './LoadingFallback';
@@ -20,14 +21,20 @@ const ProtectedRoute = ({
   requirePaid = false,
 }: ProtectedRouteProps) => {
   const { user, loading, isAuthenticated, isAdmin, trackUsage } = useAuth();
-  const [now] = useState(() => Date.now());
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState<number>(0);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+    setNow(Date.now());
+  }, []);
   // Initialize first_used_at on the first visit to any protected tool for authenticated users
   useEffect(() => {
-    if (isAuthenticated && !user?.first_used_at && !isAdmin) {
+    if (mounted && isAuthenticated && !user?.first_used_at && !isAdmin) {
       void trackUsage(true);
     }
-  }, [isAuthenticated, user?.first_used_at, isAdmin, trackUsage]);
-  if (loading) {
+  }, [mounted, isAuthenticated, user?.first_used_at, isAdmin, trackUsage]);
+  if (!mounted || loading) {
     return <LoadingFallback />;
   }
   // 1. Admin-only Route Check

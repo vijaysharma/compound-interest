@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useRef } from 'react';
 import {
   FiX,
@@ -16,6 +17,7 @@ import { BsCloudArrowUp, BsCloudArrowDown } from 'react-icons/bs';
 import { Note } from './NotesTypes';
 import { getUserEncryptionKey, encryptText } from './NotesCrypto';
 import { sanitizeNoteHtml, sanitizePlainInput } from './sanitizeHtml';
+import { restoreNotesBackupAction } from '@/actions/notes';
 import styles from './NotesModal.module.scss';
 interface NotesBackupModalProps {
   isOpen: boolean;
@@ -214,18 +216,11 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
             content: await encryptText(n.content || '', key),
           }))
         );
-        const res = await fetch('/api/admin/notes?action=restore_backup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            notes: encryptedNotesForServer,
-            replace: restoreMode === 'replace',
-          }),
-        });
-        if (!res.ok) {
+        const res = await restoreNotesBackupAction({
+          notes: encryptedNotesForServer,
+          replace: restoreMode === 'replace',
+        }, token);
+        if (!res.success) {
           throw new Error('Server rejected backup restore');
         }
       }

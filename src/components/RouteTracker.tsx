@@ -1,5 +1,6 @@
+'use client';
 import { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/navigation';
 const LAST_VISITED_ROUTE_KEY = 'last_visited_route';
 const STAY_ON_HOME_SESSION_KEY = 'stay_on_home';
 const IGNORED_ROUTES = ['/login', '/upgrade'];
@@ -11,15 +12,14 @@ const isValidPersistedRoute = (route: string | null | undefined): boolean => {
   return true;
 };
 export const RouteTracker = () => {
-  const location = useLocation();
+  const { pathname, search, hash, state } = useLocation();
   const navigate = useNavigate();
   const isInitialMountRef = useRef(true);
   useEffect(() => {
     if (!isInitialMountRef.current) return;
     isInitialMountRef.current = false;
-    const pathname = location.pathname;
     const isExplicitHome = Boolean(
-      (location.state as { stayOnHome?: boolean })?.stayOnHome ||
+      (state as { stayOnHome?: boolean })?.stayOnHome ||
       sessionStorage.getItem(STAY_ON_HOME_SESSION_KEY) === 'true'
     );
     if (pathname === '/' && !isExplicitHome) {
@@ -41,12 +41,11 @@ export const RouteTracker = () => {
         // ignore
       }
     }
-  }, [location, navigate]);
+  }, [pathname, state, navigate]);
   useEffect(() => {
-    const pathname = location.pathname;
-    const fullPath = location.pathname + location.search + location.hash;
+    const fullPath = pathname + search + hash;
     if (pathname === '/') {
-      if ((location.state as { stayOnHome?: boolean })?.stayOnHome) {
+      if ((state as { stayOnHome?: boolean })?.stayOnHome) {
         try {
           sessionStorage.setItem(STAY_ON_HOME_SESSION_KEY, 'true');
           localStorage.setItem(LAST_VISITED_ROUTE_KEY, '/');
@@ -64,7 +63,7 @@ export const RouteTracker = () => {
         // ignore
       }
     }
-  }, [location]);
+  }, [pathname, search, hash, state]);
   return null;
 };
 export default RouteTracker;

@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { FiLock, FiUnlock, FiX, FiCheck } from 'react-icons/fi';
 import { hashPasscode } from './NotesTypes';

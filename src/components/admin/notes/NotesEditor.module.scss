@@ -335,7 +335,8 @@
   max-width: 100%;
   transition: background-color 0.15s;
 
-  &:hover {
+  &:hover,
+  &.active {
     opacity: 1;
     background-color: var(--color-bg-secondary, rgba(150, 150, 150, 0.1));
   }
@@ -471,7 +472,8 @@
   cursor: pointer;
   transition: background-color 0.12s;
 
-  &:hover {
+  &:hover,
+  &.active {
     background-color: var(--color-bg-secondary, rgba(150, 150, 150, 0.1));
   }
 }

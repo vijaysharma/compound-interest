@@ -1,59 +1,44 @@
-import {
-  EXCHANGE_URL,
-  getMFSchemeCodeUrl,
-  IMF_INFLATION_URL,
-  MF_URL,
-  WORLD_BANK_INFLATION_URL,
-  WORLD_BANK_PPP_URL,
-} from './API_LIST';
-import { MFJSONType } from '../types/types';
+import { MFJSONType, NavType } from '../types/types';
 import { DEFAULT_PPP_RECORDS } from './default_ppp_data';
 import { DEFAULT_EXCHANGE_RATES } from './default_exchange_rates';
+import {
+  getExchangeRatesAction,
+  getIMFInflationAction,
+  getMutualFundNavAction,
+  getPPPDataAction,
+  searchMutualFundsAction,
+} from '@/actions/data';
+import { trackUsageAction } from '@/actions/auth';
 const mfSearchCache = new Map<string, MFJSONType[]>();
-const mfNavCache = new Map<string, { expiresAt: number; data: unknown[] }>();
-const mfNavRequests = new Map<string, Promise<unknown[]>>();
+const mfNavCache = new Map<string, { expiresAt: number; data: NavType[] }>();
+const mfNavRequests = new Map<string, Promise<NavType[]>>();
 const MAX_SEARCH_CACHE_ENTRIES = 50;
 const CLIENT_NAV_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes client cache
 const recordApiUsage = async () => {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     if (!token) return;
-    await fetch('/api/user/track-usage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    await trackUsageAction(token, 'api');
   } catch (err) {
     console.warn('Failed to record API usage:', err);
   }
 };
-export const fetchAllMfs = async (search = '', signal?: AbortSignal): Promise<MFJSONType[]> => {
+export const fetchAllMfs = async (search = '', _signal?: AbortSignal): Promise<MFJSONType[]> => {
   const normalizedSearch = search.trim().toLowerCase();
   const cached = mfSearchCache.get(normalizedSearch);
   if (cached) return cached;
   const request = (async () => {
     try {
       void recordApiUsage();
-      const query = normalizedSearch ? `?q=${encodeURIComponent(normalizedSearch)}` : '';
-      const response = await fetch(`${MF_URL}${query}`, { signal });
-      const data = (await response.json()) as MFJSONType[];
+      const data = await searchMutualFundsAction(normalizedSearch);
       const filteredData = Array.from(
-        new Map(data.map((fund: MFJSONType) => [fund.schemeCode, fund])).values()
+        new Map(data.map((fund) => [fund.schemeCode, fund])).values()
       );
-      //   Sort the data alphabetically by schemeName
-      const sortedData = filteredData.sort(
-        (a: { schemeName: string }, b: { schemeName: string }) => {
-          if (a.schemeName < b.schemeName) {
-            return -1;
-          }
-          if (a.schemeName > b.schemeName) {
-            return 1;
-          }
-          return 0;
-        }
-      );
+      const sortedData = filteredData.sort((a, b) => {
+        if (a.schemeName < b.schemeName) return -1;
+        if (a.schemeName > b.schemeName) return 1;
+        return 0;
+      });
       mfSearchCache.set(normalizedSearch, sortedData);
       if (mfSearchCache.size > MAX_SEARCH_CACHE_ENTRIES) {
         const oldestKey = mfSearchCache.keys().next().value;
@@ -61,25 +46,24 @@ export const fetchAllMfs = async (search = '', signal?: AbortSignal): Promise<MF
       }
       return sortedData;
     } catch {
-      throw Error(`Failed to fetch mutual funds at this url ${MF_URL}`);
+      throw new Error(`Failed to fetch mutual funds`);
     }
   })();
   return request;
 };
-export const fetchMFbySchemeCode = async (schemeCode: string, signal?: AbortSignal) => {
+export const fetchMFbySchemeCode = async (schemeCode: string, _signal?: AbortSignal): Promise<NavType[]> => {
   const cached = mfNavCache.get(schemeCode);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
   const pending = mfNavRequests.get(schemeCode);
   if (pending) return pending;
-  const request = (async () => {
+  const request = (async (): Promise<NavType[]> => {
     void recordApiUsage();
-    const response = await fetch(getMFSchemeCodeUrl(schemeCode), { signal });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error ?? `Mutual fund request failed: ${response.status}`);
-    }
-    if (!Array.isArray(data.data)) {
-      throw new Error('Mutual fund response did not contain NAV data');
+    const data = (await getMutualFundNavAction(schemeCode)) as {
+      data?: NavType[];
+      error?: string;
+    };
+    if (!data || !Array.isArray(data.data)) {
+      throw new Error(data?.error ?? 'Mutual fund response did not contain NAV data');
     }
     mfNavCache.set(schemeCode, {
       expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
@@ -103,13 +87,10 @@ export const fetchExchangeRates = async (recordUsage = false): Promise<Record<st
   }
   if (recordUsage) void recordApiUsage();
   try {
-    const response = await fetch(EXCHANGE_URL);
-    if (response.ok) {
-      const data = await response.json();
-      if (data && data.rates && typeof data.rates === 'object' && Object.keys(data.rates).length > 0) {
-        exchangeRatesCache = { rates: data.rates as Record<string, number>, timestamp: Date.now() };
-        return data.rates as Record<string, number>;
-      }
+    const data = await getExchangeRatesAction();
+    if (data && data.rates && typeof data.rates === 'object' && Object.keys(data.rates).length > 0) {
+      exchangeRatesCache = { rates: data.rates, timestamp: Date.now() };
+      return data.rates;
     }
   } catch (err) {
     console.warn('Live exchange rates fetch failed, using fallback exchange rates:', err);
@@ -136,13 +117,7 @@ export async function fetchPPPData(): Promise<WorldBankPPPRecord[]> {
   }
   void recordApiUsage();
   try {
-    const res = await fetch(WORLD_BANK_PPP_URL);
-    if (!res.ok) {
-      // If DB has not been synced yet by admin, fallback to bundled data
-      pppCache = { data: DEFAULT_PPP_RECORDS, fetchedAt: Date.now() };
-      return DEFAULT_PPP_RECORDS;
-    }
-    const json = await res.json();
+    const json = await getPPPDataAction();
     let records: WorldBankPPPRecord[] = [];
     if (Array.isArray(json)) {
       if (Array.isArray(json[1])) {
@@ -157,13 +132,13 @@ export async function fetchPPPData(): Promise<WorldBankPPPRecord[]> {
     ) {
       records = (json as { records: WorldBankPPPRecord[] }).records;
     }
-    const data = records.length > 0 ? records : DEFAULT_PPP_RECORDS;
+    const data = records.length > 0 ? records : (DEFAULT_PPP_RECORDS as unknown as WorldBankPPPRecord[]);
     pppCache = { data, fetchedAt: Date.now() };
     return data;
   } catch (err) {
     console.warn('Using fallback PPP data:', err);
-    pppCache = { data: DEFAULT_PPP_RECORDS, fetchedAt: Date.now() };
-    return DEFAULT_PPP_RECORDS;
+    pppCache = { data: DEFAULT_PPP_RECORDS as unknown as WorldBankPPPRecord[], fetchedAt: Date.now() };
+    return DEFAULT_PPP_RECORDS as unknown as WorldBankPPPRecord[];
   }
 }
 // ------------------
@@ -185,15 +160,12 @@ export interface InflationRow {
   USA: string;
   World: string;
 }
-// Maps the World Bank's country.value string to the column key used in
-// InflationRow / your existing INFLATION rows.
 const COUNTRY_NAME_TO_COLUMN: Record<string, keyof Omit<InflationRow, 'Year' | 'id'>> = {
   India: 'India',
   'United States': 'USA',
   'European Union': 'EU',
   World: 'World',
 };
-// Maps IMF's country/group codes to the same column keys used above.
 const IMF_CODE_TO_COLUMN: Record<string, keyof Omit<InflationRow, 'Year' | 'id'>> = {
   IND: 'India',
   USA: 'USA',
@@ -211,38 +183,25 @@ interface IMFDataMapperResponse {
 }
 let cache: { data: InflationRow[]; fetchedAt: number } | null = null;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const WORLD_BANK_INFLATION_URL =
+  'https://api.worldbank.org/v2/country/IND;USA;EUU;WLD/indicator/FP.CPI.TOTL.ZG?format=json&per_page=1000&date=1990:2026';
 async function fetchWorldBankRecords(): Promise<WorldBankInflationRecord[]> {
   const res = await fetch(WORLD_BANK_INFLATION_URL);
   if (!res.ok) {
     throw new Error(`World Bank inflation API request failed: ${res.status}`);
   }
-  // Response is a 2-element array: [metadata, records[]]
   const [, records] = (await res.json()) as [unknown, WorldBankInflationRecord[] | null];
   return records ?? [];
 }
 async function fetchIMFEstimates(): Promise<IMFDataMapperResponse> {
   try {
-    const res = await fetch(IMF_INFLATION_URL);
-    if (!res.ok) {
-      return { values: { PCPIPCH: {} } };
-    }
-    return (await res.json()) as IMFDataMapperResponse;
+    const data = await getIMFInflationAction();
+    return data as IMFDataMapperResponse;
   } catch (err) {
     console.warn('IMF estimates fetch failed:', err);
     return { values: { PCPIPCH: {} } };
   }
 }
-/**
- * Fetches India/USA/EU/World inflation, blending two sources:
- *  - World Bank (FP.CPI.TOTL.ZG): confirmed historical values.
- *  - IMF DataMapper (PCPIPCH): includes the current year and near-term
- *    projections, used ONLY to fill in years the World Bank doesn't have yet.
- *
- * World Bank values always win when both sources have a year, since they're
- * confirmed rather than estimated. Values sourced from the IMF are suffixed
- * with "*" (still numeric-parseable — "4.70%*" parses to 4.70 with
- * parseFloat) so the UI can flag them as estimates if desired.
- */
 export async function fetchInflationData(): Promise<InflationRow[]> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
     return cache.data;
@@ -262,15 +221,12 @@ export async function fetchInflationData(): Promise<InflationRow[]> {
     }
     return rowsByYear[year];
   };
-  // 1. Lay down confirmed World Bank values first.
   for (const rec of wbRecords) {
     const column = COUNTRY_NAME_TO_COLUMN[rec.country.value];
     if (!column || rec.value == null) continue;
     const row = ensureRow(rec.date);
     row[column] = `${rec.value.toFixed(2)}%`;
   }
-  // 2. Fill gaps (typically just the current year) with IMF estimates,
-  //    without overwriting any confirmed World Bank value.
   const pcpipch = imfData.values?.PCPIPCH ?? {};
   for (const [code, yearMap] of Object.entries(pcpipch)) {
     const column = IMF_CODE_TO_COLUMN[code];
@@ -279,7 +235,7 @@ export async function fetchInflationData(): Promise<InflationRow[]> {
       if (value == null) continue;
       const row = ensureRow(year);
       if (row[column] === 'NA') {
-        row[column] = `${value.toFixed(2)}%*`; // "*" marks an IMF estimate
+        row[column] = `${value.toFixed(2)}%*`;
       }
     }
   }

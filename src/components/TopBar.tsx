@@ -1,5 +1,6 @@
+'use client';
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from '@/navigation';
 import Link from './PrefetchLink';
 import {
   FiAward,
@@ -76,6 +77,7 @@ const getNavTitle = (pathname: string) => {
 };
 const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout, setShowPaywall } = useAuth();
@@ -85,6 +87,10 @@ const TopBar = ({ className }: { className?: string }) => {
     setPrevPathname(pathname);
     setIsMenuOpen(false);
   }
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
   useEffect(() => {
     if (!isMenuOpen) return;
     const originalBodyOverflow = document.body.style.overflow;
@@ -144,7 +150,7 @@ const TopBar = ({ className }: { className?: string }) => {
           </Link>
         </div>
         <div className={styles.rightSection}>
-          {isAuthenticated && user ? (
+          {mounted && isAuthenticated && user ? (
             <div className={styles.userContainer}>
               {isAdmin ? (
                 <span className={styles.badgeAdmin}>
