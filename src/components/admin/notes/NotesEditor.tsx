@@ -167,6 +167,30 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     return null;
   });
   const [activeMobileMenu, setActiveMobileMenu] = useState<'format' | 'palette' | 'lists' | 'more' | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<'folder' | 'share' | 'format' | 'fontSize' | 'palette' | null>(null);
+  useEffect(() => {
+    if (!activeDropdown) return;
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest(`.${styles.dropdownContainer}`)) {
+        return;
+      }
+      setActiveDropdown(null);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeDropdown]);
   const [currentFontSize, setCurrentFontSize] = useState<string>(() => {
     if (note?.id) {
       try {
@@ -1016,48 +1040,54 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           )}
           {!isTrash && (
             <div className={styles.dropdownContainer}>
-              <div
-                tabIndex={0}
-                role="button"
-                className={styles.folderSelector}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveMobileMenu(null);
+                  setActiveDropdown(activeDropdown === 'folder' ? null : 'folder');
+                }}
+                className={`${styles.folderSelector} ${activeDropdown === 'folder' ? styles.active : ''}`}
                 title="Move to another folder"
               >
                 <FiFolder size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>{currentFolder}</span>
-              </div>
-              <ul
-                tabIndex={0}
-                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
-              >
-                <li className={styles.dropdownTitle}>Move to Folder</li>
-                {allFolderOptions.map((f) => (
-                  <li key={f}>
+              </button>
+              {activeDropdown === 'folder' && (
+                <ul
+                  className={`${styles.dropdownMenu} ${styles.alignLeft}`}
+                >
+                  <li className={styles.dropdownTitle}>Move to Folder</li>
+                  {allFolderOptions.map((f) => (
+                    <li key={f}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onUpdateNote({ folder: f });
+                          setActiveDropdown(null);
+                        }}
+                        className={`${styles.dropdownItem} ${currentFolder === f ? styles.active : ''}`}
+                      >
+                        {f}
+                      </button>
+                    </li>
+                  ))}
+                  <li className={styles.dropdownDivider} />
+                  <li>
                     <button
+                      type="button"
                       onClick={() => {
-                        onUpdateNote({ folder: f });
-                        (document.activeElement as HTMLElement)?.blur();
+                        setShowMoveModal(true);
+                        setActiveDropdown(null);
                       }}
-                      className={`${styles.dropdownItem} ${currentFolder === f ? styles.active : ''}`}
+                      className={styles.dropdownItem}
+                      style={{ color: 'var(--color-primary)', fontWeight: 600 }}
                     >
-                      {f}
+                      <FiFolderPlus size={14} />
+                      Manage Folders...
                     </button>
                   </li>
-                ))}
-                <li className={styles.dropdownDivider} />
-                <li>
-                  <button
-                    onClick={() => {
-                      setShowMoveModal(true);
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className={styles.dropdownItem}
-                    style={{ color: 'var(--color-primary)', fontWeight: 600 }}
-                  >
-                    <FiFolderPlus size={14} />
-                    Manage Folders...
-                  </button>
-                </li>
-              </ul>
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -1093,86 +1123,154 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </>
           )}
           <div className={styles.dropdownContainer}>
-            <div
-              tabIndex={0}
-              role="button"
-              className={styles.iconBtn}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMobileMenu(null);
+                setActiveDropdown(activeDropdown === 'share' ? null : 'share');
+              }}
+              className={`${styles.iconBtn} ${activeDropdown === 'share' ? styles.active : ''}`}
               title="Share & Export"
             >
               <FiShare2 size={16} />
-            </div>
-            <ul
-              tabIndex={0}
-              className={`${styles.dropdownMenu} ${styles.alignRight}`}
-              style={{ width: '13rem' }}
-            >
-              {!isTrash && (
+            </button>
+            {activeDropdown === 'share' && (
+              <ul
+                className={`${styles.dropdownMenu} ${styles.alignRight}`}
+                style={{ width: '13rem' }}
+              >
+                {!isTrash && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMoveModal(true);
+                        setActiveDropdown(null);
+                      }}
+                      className={styles.dropdownItem}
+                    >
+                      <FiFolder size={14} color="var(--color-primary)" />
+                      Move to Folder...
+                    </button>
+                  </li>
+                )}
                 <li>
-                  <button onClick={() => setShowMoveModal(true)} className={styles.dropdownItem}>
-                    <FiFolder size={14} color="var(--color-primary)" />
-                    Move to Folder...
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDumpToGoogleDrive();
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                  >
+                    <SiGoogledrive size={14} color="#3b82f6" />
+                    Save to Google Drive
                   </button>
                 </li>
-              )}
-              <li>
-                <button onClick={handleDumpToGoogleDrive} className={styles.dropdownItem}>
-                  <SiGoogledrive size={14} color="#3b82f6" />
-                  Save to Google Drive
-                </button>
-              </li>
-              <li>
-                <button onClick={handleDumpToOneDrive} className={styles.dropdownItem}>
-                  <svg style={{ width: 14, height: 14, fill: '#0284c7' }} viewBox="0 0 24 24">
-                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
-                  </svg>
-                  Save to OneDrive
-                </button>
-              </li>
-              {onOpenBackupModal && (
                 <li>
-                  <button onClick={onOpenBackupModal} className={styles.dropdownItem} style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-                    <BsCloudArrowUp size={14} />
-                    Backup & Restore
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDumpToOneDrive();
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                  >
+                    <svg style={{ width: 14, height: 14, fill: '#0284c7' }} viewBox="0 0 24 24">
+                      <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+                    </svg>
+                    Save to OneDrive
                   </button>
                 </li>
-              )}
-              <li className={styles.dropdownDivider} />
-              <li>
-                <button onClick={handleCopy} className={styles.dropdownItem}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FiCopy size={14} />
-                    Copy Content
-                  </span>
-                  {copySuccess && <FiCheck size={14} color="#16a34a" />}
-                </button>
-              </li>
-              <li>
-                <button onClick={handleExportMarkdown} className={styles.dropdownItem}>
-                  <FiDownload size={14} />
-                  Download (.md)
-                </button>
-              </li>
-              <li>
-                <button onClick={handleExportText} className={styles.dropdownItem}>
-                  <FiDownload size={14} />
-                  Download (.txt)
-                </button>
-              </li>
-              <li>
-                <button onClick={handlePrint} className={styles.dropdownItem}>
-                  <FiPrinter size={14} />
-                  Print / Save PDF
-                </button>
-              </li>
-              {!isTrash && (
+                {onOpenBackupModal && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenBackupModal();
+                        setActiveDropdown(null);
+                      }}
+                      className={styles.dropdownItem}
+                      style={{ color: 'var(--color-primary)', fontWeight: 600 }}
+                    >
+                      <BsCloudArrowUp size={14} />
+                      Backup & Restore
+                    </button>
+                  </li>
+                )}
+                <li className={styles.dropdownDivider} />
                 <li>
-                  <button onClick={onDuplicateNote} className={styles.dropdownItem}>
-                    <FiCopy size={14} />
-                    Duplicate Note
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleCopy();
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <FiCopy size={14} />
+                      Copy Content
+                    </span>
+                    {copySuccess && <FiCheck size={14} color="#16a34a" />}
                   </button>
                 </li>
-              )}
-            </ul>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleExportMarkdown();
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                  >
+                    <FiDownload size={14} />
+                    Download (.md)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleExportText();
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                  >
+                    <FiDownload size={14} />
+                    Download (.txt)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handlePrint();
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                  >
+                    <FiPrinter size={14} />
+                    Print / Save PDF
+                  </button>
+                </li>
+                {!isTrash && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onDuplicateNote();
+                        setActiveDropdown(null);
+                      }}
+                      className={styles.dropdownItem}
+                    >
+                      <FiCopy size={14} />
+                      Duplicate Note
+                    </button>
+                  </li>
+                )}
+              </ul>
+            )}
           </div>
           {isTrash ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -1238,179 +1336,191 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           </button>
           <div className={styles.toolbarDivider} />
           <div className={styles.dropdownContainer}>
-            <div
-              tabIndex={0}
-              role="button"
-              className={styles.toolbarSelectBtn}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMobileMenu(null);
+                setActiveDropdown(activeDropdown === 'format' ? null : 'format');
+              }}
+              className={`${styles.toolbarSelectBtn} ${activeDropdown === 'format' ? styles.active : ''}`}
               title="Heading style"
             >
               Format
-            </div>
-            <ul
-              tabIndex={0}
-              className={`${styles.dropdownMenu} ${styles.alignLeft}`}
-              style={{ width: '9rem' }}
-            >
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<h1>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className={styles.dropdownItem}
-                  style={{ fontWeight: 700 }}
-                >
-                  Title (H1)
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<h2>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className={styles.dropdownItem}
-                  style={{ fontWeight: 600 }}
-                >
-                  Heading (H2)
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<h3>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className={styles.dropdownItem}
-                  style={{ fontWeight: 500 }}
-                >
-                  Subheading (H3)
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<p>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className={styles.dropdownItem}
-                >
-                  Body Text
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    execCmd('formatBlock', '<pre>');
-                    (document.activeElement as HTMLElement)?.blur();
-                  }}
-                  className={styles.dropdownItem}
-                  style={{ fontFamily: 'monospace' }}
-                >
-                  Monospaced
-                </button>
-              </li>
-            </ul>
+            </button>
+            {activeDropdown === 'format' && (
+              <ul
+                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
+                style={{ width: '9rem' }}
+              >
+                <li>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<h1>');
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                    style={{ fontWeight: 700 }}
+                  >
+                    Title (H1)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<h2>');
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                    style={{ fontWeight: 600 }}
+                  >
+                    Heading (H2)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<h3>');
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                    style={{ fontWeight: 500 }}
+                  >
+                    Subheading (H3)
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<p>');
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                  >
+                    Body Text
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      execCmd('formatBlock', '<pre>');
+                      setActiveDropdown(null);
+                    }}
+                    className={styles.dropdownItem}
+                    style={{ fontFamily: 'monospace' }}
+                  >
+                    Monospaced
+                  </button>
+                </li>
+              </ul>
+            )}
           </div>
           <div className={styles.dropdownContainer}>
-            <div
-              tabIndex={0}
-              role="button"
-              className={styles.toolbarSelectBtn}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMobileMenu(null);
+                setActiveDropdown(activeDropdown === 'fontSize' ? null : 'fontSize');
+              }}
+              className={`${styles.toolbarSelectBtn} ${activeDropdown === 'fontSize' ? styles.active : ''}`}
               title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
             >
               <span>{FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Size'}</span>
               <span style={{ fontSize: '9px', opacity: 0.6 }}>▼</span>
-            </div>
-            <ul
-              tabIndex={0}
-              className={`${styles.dropdownMenu} ${styles.alignLeft}`}
-              style={{ width: '9rem' }}
-            >
-              {FONT_SIZES.map((fs) => {
-                const isActive = currentFontSize === fs.size;
-                return (
-                  <li key={fs.size}>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        applyFontSize(fs.size, fs.cmdVal);
-                        (document.activeElement as HTMLElement)?.blur();
-                      }}
-                      className={`${styles.dropdownItem} ${isActive ? styles.active : ''}`}
-                      style={{ fontSize: fs.size }}
-                    >
-                      <span>{fs.label}</span>
-                      {isActive && <span style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 700 }}>✓</span>}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            </button>
+            {activeDropdown === 'fontSize' && (
+              <ul
+                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
+                style={{ width: '9rem' }}
+              >
+                {FONT_SIZES.map((fs) => {
+                  const isActive = currentFontSize === fs.size;
+                  return (
+                    <li key={fs.size}>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          applyFontSize(fs.size, fs.cmdVal);
+                          setActiveDropdown(null);
+                        }}
+                        className={`${styles.dropdownItem} ${isActive ? styles.active : ''}`}
+                        style={{ fontSize: fs.size }}
+                      >
+                        <span>{fs.label}</span>
+                        {isActive && <span style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 700 }}>✓</span>}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
           <div className={styles.dropdownContainer}>
-            <div
-              tabIndex={0}
-              role="button"
-              className={`${styles.toolbarBtn} ${styles.primary}`}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMobileMenu(null);
+                setActiveDropdown(activeDropdown === 'palette' ? null : 'palette');
+              }}
+              className={`${styles.toolbarBtn} ${styles.primary} ${activeDropdown === 'palette' ? styles.active : ''}`}
               title="Color & Highlight"
             >
               <BsPalette size={14} />
-            </div>
-            <div
-              tabIndex={0}
-              className={`${styles.dropdownMenu} ${styles.alignLeft}`}
-              style={{ width: '14rem', padding: '0.65rem' }}
-            >
-              <div className={styles.dropdownTitle}>Text Color</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.375rem', marginBottom: '0.65rem' }}>
-                {TEXT_COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      applyTextColor(c.value);
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className={styles.colorSwatch}
-                    style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value }}
-                    title={c.label}
-                  />
-                ))}
+            </button>
+            {activeDropdown === 'palette' && (
+              <div
+                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
+                style={{ width: '14rem', padding: '0.65rem' }}
+              >
+                <div className={styles.dropdownTitle}>Text Color</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.375rem', marginBottom: '0.65rem' }}>
+                  {TEXT_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        applyTextColor(c.value);
+                        setActiveDropdown(null);
+                      }}
+                      className={styles.colorSwatch}
+                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value }}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+                <div className={styles.dropdownDivider} />
+                <div className={styles.dropdownTitle}>Highlight Color</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem' }}>
+                  {HIGHLIGHT_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        applyHighlightColor(c.value);
+                        setActiveDropdown(null);
+                      }}
+                      className={styles.colorSwatch}
+                      style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
+                      title={c.label}
+                    >
+                      {c.value === 'transparent' ? '✕' : ''}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className={styles.dropdownDivider} />
-              <div className={styles.dropdownTitle}>Highlight Color</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem' }}>
-                {HIGHLIGHT_COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      applyHighlightColor(c.value);
-                      (document.activeElement as HTMLElement)?.blur();
-                    }}
-                    className={styles.colorSwatch}
-                    style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
-                    title={c.label}
-                  >
-                    {c.value === 'transparent' ? '✕' : ''}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
           <div className={styles.toolbarDivider} />
           <button
@@ -1602,6 +1712,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           if (activeMobileMenu) {
             setActiveMobileMenu(null);
           }
+          if (activeDropdown) {
+            setActiveDropdown(null);
+          }
           const target = e.target as HTMLElement;
           if (
             target === canvasContainerRef.current ||
@@ -1737,10 +1850,13 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           />
         </div>
       </div>
-      {activeMobileMenu && (
+      {(activeMobileMenu || (isMobileScreen && activeDropdown)) && (
         <div
           className={styles.mobileBackdrop}
-          onClick={() => setActiveMobileMenu(null)}
+          onClick={() => {
+            setActiveMobileMenu(null);
+            setActiveDropdown(null);
+          }}
         />
       )}
       {!isTrash && (
