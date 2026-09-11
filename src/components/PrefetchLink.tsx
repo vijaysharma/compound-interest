@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Link, LinkProps } from '@/navigation';
 import { prefetchRoute } from '../utilities/prefetchRoute';
 export interface PrefetchLinkProps extends LinkProps {
@@ -13,12 +14,24 @@ export const PrefetchLink: React.FC<PrefetchLinkProps> = ({
   onTouchStart,
   ...props
 }) => {
+  const router = useRouter();
   const target = href ?? to;
   const handlePrefetch = () => {
+    let cleanPath: string | undefined;
     if (typeof target === 'string') {
-      prefetchRoute(target);
+      cleanPath = target.split('?')[0].split('#')[0];
     } else if (target && typeof target === 'object' && 'pathname' in target && target.pathname) {
-      prefetchRoute(target.pathname);
+      cleanPath = target.pathname;
+    }
+    if (cleanPath) {
+      prefetchRoute(cleanPath);
+      if (cleanPath.startsWith('/')) {
+        try {
+          router.prefetch(cleanPath);
+        } catch {
+          // ignore prefetch errors
+        }
+      }
     }
   };
   return (

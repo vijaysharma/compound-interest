@@ -2,6 +2,8 @@
 import React from 'react';
 import NextLink from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { startNavigationProgress, stopNavigationProgress } from '@/components/NavigationProgressBar';
+export { startNavigationProgress, stopNavigationProgress };
 export interface NavigateOptions {
   replace?: boolean;
   state?: unknown;
@@ -12,12 +14,18 @@ export function useNavigate(): NavigateFunction {
   return React.useCallback(
     (to: string | number, options?: NavigateOptions) => {
       if (typeof to === 'number') {
+        startNavigationProgress();
         if (to === -1) {
           router.back();
         } else if (to === 1) {
           router.forward();
         }
         return;
+      }
+      const targetStr = typeof to === 'string' ? to : '';
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+      if (targetStr && targetStr !== currentPath) {
+        startNavigationProgress();
       }
       if (options?.replace) {
         router.replace(to);
@@ -66,7 +74,7 @@ export interface LinkProps
   state?: unknown;
 }
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ to, href, replace, scroll, prefetch = true, state: _ = undefined, ...props }, ref) => {
+  ({ to, href, replace, scroll, prefetch = true, state: _ = undefined, onClick, ...props }, ref) => {
     const rawTarget = href ?? to ?? '/';
     let target = '/';
     if (typeof rawTarget === 'string') {
@@ -74,6 +82,16 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     } else if (rawTarget && typeof rawTarget === 'object' && rawTarget.pathname) {
       target = `${rawTarget.pathname}${rawTarget.search || ''}${rawTarget.hash || ''}`;
     }
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (!e.defaultPrevented && e.button === 0 && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+        const targetClean = target.split('#')[0];
+        if (targetClean && targetClean !== currentPath) {
+          startNavigationProgress();
+        }
+      }
+      onClick?.(e);
+    };
     return (
       <NextLink
         ref={ref}
@@ -81,6 +99,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         replace={replace}
         scroll={scroll}
         prefetch={prefetch}
+        onClick={handleClick}
         {...props}
       />
     );

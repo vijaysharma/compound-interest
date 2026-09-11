@@ -1,0 +1,30 @@
+.progressBarContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 99999;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity 200ms ease-out;
+}
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8 0%, #818cf8 25%, #c084fc 50%, #f472b6 75%, #fbbf24 100%);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 5px rgba(244, 114, 182, 0.8);
+  transition: width 200ms cubic-bezier(0.1, 0.5, 0.5, 1);
+  will-change: width;
+  position: relative;
+}
+.peg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 100px;
+  box-shadow: 0 0 12px #38bdf8, 0 0 6px #f472b6;
+  opacity: 1;
+  transform: rotate(3deg) translateY(-2px);
+  pointer-events: none;
+}

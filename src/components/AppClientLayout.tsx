@@ -6,6 +6,7 @@ import LoadingFallback from '@/components/LoadingFallback';
 import PaywallModal from '@/components/PaywallModal';
 import { AuthProvider } from '@/context/AuthContext';
 import { RouteTracker } from '@/components/RouteTracker';
+import NavigationProgressBar from '@/components/NavigationProgressBar';
 export default function AppClientLayout({
   children,
 }: {
@@ -13,6 +14,7 @@ export default function AppClientLayout({
 }) {
   return (
     <AuthProvider>
+      <NavigationProgressBar />
       <RouteTracker />
       <TopBar className={styles.appTopbarSticky} />
       <div className={styles.appContainer}>

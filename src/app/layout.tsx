@@ -152,7 +152,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="lazyOnload"
