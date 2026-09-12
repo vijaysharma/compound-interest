@@ -33,11 +33,18 @@
   width: 100%;
   box-sizing: border-box;
 
+  // The topbar grows to 64px at 640px, so the height calc has to change there
+  // regardless of when the sidebar appears — otherwise the body overflows the
+  // viewport by 16px and pushes bottom-anchored content out of reach.
   @include tablet-up {
-    flex-direction: row;
     height: calc(100dvh - 64px);
     min-height: calc(100dvh - 64px);
     overflow: hidden;
+  }
+
+  // The side-by-side layout only starts once the sidebar does, at 768px.
+  @include laptop-up {
+    flex-direction: row;
   }
 }
 

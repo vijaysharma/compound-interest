@@ -253,7 +253,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const queueNoteSync = useCallback(
     (noteId: string) => {
       savePendingRef.current.add(noteId);
-      setUnsyncedCount(savePendingRef.current.size);
+      // Called on every edit, so avoid a state write when the count is
+      // unchanged (React bails out, but the comparison is cheaper).
+      const size = savePendingRef.current.size;
+      setUnsyncedCount((prev) => (prev === size ? prev : size));
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
         saveTimerRef.current = null;
@@ -424,6 +427,52 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   useEffect(() => {
     notesRef.current = notes;
   }, [notes]);
+  /**
+   * Make the device back button walk back through the notes flow
+   * (editor -> list -> folders) before leaving the page.
+   *
+   * Exactly one history entry is parked while a deeper screen is showing. A
+   * back press consumes it, we step one level up, and the next render parks a
+   * fresh one — so each press moves one level. Leaving via the in-app back
+   * arrow releases the entry instead, with a counter so the popstate that
+   * release generates is not mistaken for a user gesture.
+   *
+   * Never calls history.back() and pushState in the same commit: cleanup runs
+   * synchronously but history.back() is async, so the two would race and the
+   * newly parked entry could be popped instead of the old one.
+   */
+  const mobileScreenRef = useRef(mobileScreen);
+  useEffect(() => {
+    mobileScreenRef.current = mobileScreen;
+  }, [mobileScreen]);
+  const parkedEntryRef = useRef(false);
+  const ignorePopCountRef = useRef(0);
+  useEffect(() => {
+    const onPopState = () => {
+      if (ignorePopCountRef.current > 0) {
+        ignorePopCountRef.current -= 1;
+        return;
+      }
+      if (!parkedEntryRef.current) return;
+      parkedEntryRef.current = false;
+      const current = mobileScreenRef.current;
+      if (current === 'editor') setMobileScreen('list');
+      else if (current === 'list') setMobileScreen('folders');
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+  useEffect(() => {
+    const needsEntry = isMobile && mobileScreen !== 'folders';
+    if (needsEntry && !parkedEntryRef.current) {
+      parkedEntryRef.current = true;
+      window.history.pushState({ quickNotesScreen: true }, '');
+    } else if (!needsEntry && parkedEntryRef.current) {
+      parkedEntryRef.current = false;
+      ignorePopCountRef.current += 1;
+      window.history.back();
+    }
+  }, [isMobile, mobileScreen]);
   // Earlier versions mirrored every note into localStorage. Those entries are
   // now unused and can be several megabytes, so clear them once on mount.
   useEffect(() => {

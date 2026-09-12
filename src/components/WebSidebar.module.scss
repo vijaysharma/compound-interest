@@ -4,7 +4,10 @@
 .sidebar {
   display: none;
 
-  @include tablet-up {
+  // Shown from 768px, not 640px: below that the 240px rail squeezed the
+  // content area, and Quick Notes is still in its single-pane mobile layout
+  // until 768px, so the two would disagree about what "mobile" means.
+  @include laptop-up {
     display: flex;
     flex-direction: column;
     height: calc(100dvh - 64px);

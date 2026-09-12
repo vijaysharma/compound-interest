@@ -13,8 +13,9 @@
 .loadingOverlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(4px);
+  background-color: rgba(255, 255, 255, 0.92);
+  // No backdrop-filter: it forces a compositing pass over the whole pane for
+  // an overlay that is only up briefly, and was visibly janky on mobile.
   display: flex;
   align-items: center;
   justify-content: center;

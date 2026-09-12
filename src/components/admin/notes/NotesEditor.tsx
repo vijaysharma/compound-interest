@@ -58,6 +58,12 @@ import {
 import { MoveNoteModal } from './MoveNoteModal';
 import { sanitizeNoteHtml, isSafeUrl, sanitizePlainInput } from './sanitizeHtml';
 import styles from './NotesEditor.module.scss';
+/**
+ * Idle delay before typed content is handed to the manager. Short enough that
+ * the 1.5s save debounce is still the dominant wait, long enough to collapse a
+ * burst of keystrokes into one re-render of the note list.
+ */
+const CONTENT_PROPAGATE_MS = 350;
 import modalStyles from './NotesModal.module.scss';
 const FONT_SIZES = [
   { label: 'Small', size: '13px', cmdVal: '2' },
@@ -298,9 +304,17 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     if (typeof window === 'undefined' || !window.visualViewport) return;
     const vv = window.visualViewport;
     const handleViewportChange = () => {
-      setViewportState({
-        height: vv.height,
-        offsetTop: vv.offsetTop,
+      // Bound to visualViewport 'scroll' as well as 'resize', so this fires on
+      // every scroll frame on mobile. Writing a fresh object each time
+      // re-rendered this whole component per frame, which is what made
+      // scrolling and typing feel sticky. Bail out unless it really changed.
+      setViewportState((prev) => {
+        const height = Math.round(vv.height);
+        const offsetTop = Math.round(vv.offsetTop);
+        if (prev && prev.height === height && prev.offsetTop === offsetTop) {
+          return prev;
+        }
+        return { height, offsetTop };
       });
       if (editorRef.current && document.activeElement === editorRef.current) {
         const sel = window.getSelection();
@@ -349,6 +363,52 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       historyStackRef.current[historyIndexRef.current] = currentHtml;
     }
   }, []);
+  /**
+   * The editor is an uncontrolled contentEditable, so the visible text lives in
+   * the DOM and does not need React state to render. Pushing every keystroke up
+   * to the manager re-rendered the whole three-pane tree (including every note
+   * card) per character, which is what made typing lag on mobile. Coalesce the
+   * propagation instead; the DOM stays instant either way.
+   */
+  const pendingPropagationRef = useRef<Partial<Note> | null>(null);
+  const propagateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onUpdateNoteRef = useRef(onUpdateNote);
+  useEffect(() => {
+    onUpdateNoteRef.current = onUpdateNote;
+  }, [onUpdateNote]);
+  const flushPropagation = useCallback(() => {
+    if (propagateTimerRef.current) {
+      clearTimeout(propagateTimerRef.current);
+      propagateTimerRef.current = null;
+    }
+    const pending = pendingPropagationRef.current;
+    if (!pending) return;
+    pendingPropagationRef.current = null;
+    onUpdateNoteRef.current(pending);
+  }, []);
+  const schedulePropagation = useCallback(
+    (updates: Partial<Note>) => {
+      pendingPropagationRef.current = { ...(pendingPropagationRef.current || {}), ...updates };
+      if (propagateTimerRef.current) clearTimeout(propagateTimerRef.current);
+      propagateTimerRef.current = setTimeout(flushPropagation, CONTENT_PROPAGATE_MS);
+    },
+    [flushPropagation]
+  );
+  // Nothing may be left pending when the note changes, the editor unmounts, or
+  // the tab goes away — that would silently drop the last few keystrokes.
+  useEffect(() => flushPropagation, [note?.id, flushPropagation]);
+  useEffect(() => {
+    const onHide = () => flushPropagation();
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flushPropagation();
+    };
+    window.addEventListener('pagehide', onHide);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', onHide);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [flushPropagation]);
   const handleContentChange = useCallback((forceNewHistory?: boolean | React.SyntheticEvent) => {
     if (!editorRef.current || !note) return;
     const html = editorRef.current.innerHTML;
@@ -372,8 +432,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     if (effectiveTitle !== note.title) {
       updates.title = effectiveTitle;
     }
-    onUpdateNote(updates);
-  }, [note, onUpdateNote, pushSnapshot, calculateStats]);
+    schedulePropagation(updates);
+  }, [note, schedulePropagation, pushSnapshot, calculateStats]);
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     const clipboardData = e.clipboardData;

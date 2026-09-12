@@ -96,7 +96,8 @@
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color, color, border-color, box-shadow, transform;
+  transition-duration: 0.2s;
 
   &:hover {
     background: var(--color-bg-secondary);
@@ -219,6 +220,7 @@
 .listContent {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -243,7 +245,8 @@
   padding: 0.75rem 0.85rem;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color, color, border-color, box-shadow, transform;
+  transition-duration: 0.15s;
   border: 1px solid var(--color-border);
   text-align: left;
   background: var(--color-bg);
@@ -324,7 +327,8 @@
   border: 1px solid var(--color-border);
   cursor: pointer;
   color: var(--color-text);
-  transition: all 0.15s;
+  transition: background-color, color, border-color, box-shadow, transform;
+  transition-duration: 0.15s;
 
   &:hover {
     background: rgba(99, 102, 241, 0.12);

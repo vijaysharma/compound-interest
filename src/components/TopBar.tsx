@@ -130,7 +130,8 @@ const TopBar = ({ className }: { className?: string }) => {
             aria-expanded={isMenuOpen}
             aria-controls="navigation-drawer"
             onClick={() => {
-              if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+              // Matches the 768px breakpoint at which WebSidebar is shown.
+              if (typeof window !== 'undefined' && window.innerWidth >= 768) {
                 toggleSidebar();
               } else {
                 setIsMenuOpen(true);
