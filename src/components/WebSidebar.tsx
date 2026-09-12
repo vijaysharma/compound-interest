@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from '@/navigation';
 import Link from './PrefetchLink';
 import { useSidebar } from '@/context/SidebarContext';
@@ -106,12 +106,20 @@ const WebSidebar: React.FC = () => {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const { pathname } = useLocation();
   const { isAdmin } = useAuth();
+  // AuthContext seeds the user from localStorage, so isAdmin is false during
+  // SSR but true on the first client render. Gate the admin section behind
+  // mount to keep the hydrated tree identical to the server one.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
   const isItemActive = (item: SidebarItem) => {
     if (pathname === item.href) return true;
     if (item.aliases?.includes(pathname)) return true;
     return false;
   };
-  const allSections = isAdmin ? [...SECTIONS, ADMIN_SECTION] : SECTIONS;
+  const allSections = mounted && isAdmin ? [...SECTIONS, ADMIN_SECTION] : SECTIONS;
   return (
     <aside
       className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : styles.expanded}`}
