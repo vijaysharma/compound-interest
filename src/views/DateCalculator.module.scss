@@ -3,7 +3,7 @@
 
 .container {
   width: 100%;
-  max-width: 32rem;
+  max-width: 36rem;
   margin-inline: auto;
   padding: 0.25rem 0.5rem;
   display: flex;
@@ -11,8 +11,43 @@
   gap: 0.75rem;
 
   @include tablet-up {
-    padding: 0.5rem;
+    max-width: 68rem;
+    padding: 0.5rem 1rem;
     gap: 1rem;
+  }
+
+  @include desktop-up {
+    max-width: 76rem;
+  }
+}
+
+.calculatorGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @include tablet-up {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+}
+
+.inputsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resultsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  @include tablet-up {
+    position: sticky;
+    top: 1rem;
   }
 }
 

@@ -561,163 +561,177 @@ const EmiCalculator: React.FC = () => {
           rate adjustments.
         </p>
       </header>
-      {/* Input Section */}
-      <div className={styles.inputSection}>
-        <ValuePicker
-          className={styles.fieldTight}
-          value={loanAmount}
-          onChange={setLoanAmount}
-          title="Loan amount"
-          stepData={stepData}
-          tabs={[]}
-        />
-        <ValuePicker.ROI className={styles.fieldTight} rt={rt} setRt={setRt} />
-        <ValuePicker.Tenure className={styles.fieldTight} rt={rt} setRt={setRt} />
-        {/* Joined Disbursement Date & EMI Deduction Date */}
-        <div className={styles.disbursementWrapper}>
-          <ValuePicker.Paired
-            title="Disbursement & Repayment"
-            sourceBadgeText="Disbursed"
-            targetBadgeText="EMI Day"
-            sourceSlot={
-              <input
-                id="disbursement-date"
-                className={styles.dateInput}
-                title="Disbursement Date"
-                type="date"
-                value={disbursementDate}
-                onChange={(e) => handleDisbursementDateChange(e.target.value)}
-              />
-            }
-            targetSlot={
-              <input
-                id="emi-date"
-                className={styles.dayInput}
-                title="EMI Deduction Date (Day of Month)"
-                type="number"
-                min="1"
-                max="31"
-                value={emiDate}
-                onChange={(e) => setEmiDate(Math.max(1, Math.min(31, Number(e.target.value) || 1)))}
-              />
-            }
-          />
-          <label className={styles.advanceEmiLabel}>
-            <input
-              type="checkbox"
-              title="Include Principal Payment in First EMI"
-              className={styles.checkbox}
-              checked={includePrincipalInFirstEmi}
-              onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
+      {/* Top 2-Column Section: Inputs & Key Results/Visuals */}
+      <div className={styles.calculatorGrid}>
+        <div className={styles.inputsCol}>
+          <div className={styles.inputSection}>
+            <ValuePicker
+              className={styles.fieldTight}
+              value={loanAmount}
+              onChange={setLoanAmount}
+              title="Loan amount"
+              stepData={stepData}
+              tabs={[]}
             />
-            <span className={styles.checkboxText}>
-              Include principal repayment in prorated first EMI
-            </span>
-          </label>
+            <div className={styles.pairedRow}>
+              <ValuePicker.ROI className={styles.fieldTight} rt={rt} setRt={setRt} />
+              <ValuePicker.Tenure className={styles.fieldTight} rt={rt} setRt={setRt} />
+            </div>
+            {/* Joined Disbursement Date & EMI Deduction Date */}
+            <div className={styles.disbursementWrapper}>
+              <ValuePicker.Paired
+                title="Disbursement & Repayment"
+                sourceBadgeText="Disbursed"
+                targetBadgeText="EMI Day"
+                sourceSlot={
+                  <input
+                    id="disbursement-date"
+                    className={styles.dateInput}
+                    title="Disbursement Date"
+                    type="date"
+                    value={disbursementDate}
+                    onChange={(e) => handleDisbursementDateChange(e.target.value)}
+                  />
+                }
+                targetSlot={
+                  <select
+                    id="emi-date"
+                    className={styles.dayInput}
+                    title="EMI Deduction Date (Day of Month)"
+                    value={emiDate}
+                    onChange={(e) => setEmiDate(Number(e.target.value))}
+                    aria-label="EMI Deduction Day"
+                  >
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                }
+              />
+              <label className={styles.advanceEmiLabel}>
+                <input
+                  type="checkbox"
+                  title="Include Principal Payment in First EMI"
+                  className={styles.checkbox}
+                  checked={includePrincipalInFirstEmi}
+                  onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
+                />
+                <span className={styles.checkboxText}>
+                  Include principal repayment in prorated first EMI
+                </span>
+              </label>
+            </div>
+          </div>
         </div>
-        <DisplayCard primaryAmount={Math.round(baseMonthlyEmi)} title="Monthly EMI Amount" />
+        <div className={styles.resultsCol}>
+          <DisplayCard primaryAmount={Math.round(baseMonthlyEmi)} title="Monthly EMI Amount" />
+          {/* Loan Statistics & Pie Chart Section */}
+          {principalAmount > 0 && (
+            <section className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <p className={styles.cardEyebrow}>
+                    Breakdown &amp; Analytics
+                  </p>
+                  <h2 className={styles.cardHeading}>Loan Statistics &amp; Payment Proportion</h2>
+                </div>
+                {schedule.length > 0 && (
+                  <span className={styles.countBadge}>
+                    {schedule.length} Total Payments
+                  </span>
+                )}
+              </div>
+              <div className={styles.analyticsGrid}>
+                {/* Pie Chart Visual */}
+                <div className={styles.pieContainer}>
+                  <div className={styles.pieSvgWrapper}>
+                    <svg
+                      viewBox="0 0 200 200"
+                      className={styles.pieSvg}
+                      aria-label="Loan Principal vs Interest Pie Chart"
+                    >
+                      {pieSlices?.type === 'full-principal' && (
+                        <circle cx="100" cy="100" r="85" className={styles.pieSlicePrimary} />
+                      )}
+                      {pieSlices?.type === 'full-interest' && (
+                        <circle cx="100" cy="100" r="85" className={styles.pieSliceError} />
+                      )}
+                      {pieSlices?.type === 'slices' && (
+                        <>
+                          <path
+                            d={pieSlices.principalD}
+                            className={styles.pieSlicePrimary}
+                          >
+                            <title>
+                              Principal: ₹{Math.round(principalAmount).toLocaleString('en-IN')} (
+                              {principalPercent.toFixed(1)}%)
+                            </title>
+                          </path>
+                          <path
+                            d={pieSlices.interestD}
+                            className={styles.pieSliceError}
+                          >
+                            <title>
+                              Interest: ₹{Math.round(totalInterest).toLocaleString('en-IN')} (
+                              {interestPercent.toFixed(1)}%)
+                            </title>
+                          </path>
+                        </>
+                      )}
+                    </svg>
+                  </div>
+                </div>
+                {/* Legend & Key Metrics */}
+                <div className={styles.metricsStack}>
+                  {/* Principal Pill */}
+                  <div className={`${styles.metricPill} ${styles.metricPillPrimary}`}>
+                    <div className={styles.metricIndicatorGroup}>
+                      <div className={`${styles.metricDot} ${styles.metricDotPrimary}`} />
+                      <div>
+                        <span className={styles.metricLabel}>Principal Loan Amount</span>
+                        <span className={styles.metricSub}>
+                          {principalPercent.toFixed(1)}% of total
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`${styles.metricValue} ${styles.metricValuePrimary}`}>
+                      ₹{Math.round(principalAmount).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  {/* Interest Pill */}
+                  <div className={`${styles.metricPill} ${styles.metricPillError}`}>
+                    <div className={styles.metricIndicatorGroup}>
+                      <div className={`${styles.metricDot} ${styles.metricDotError}`} />
+                      <div>
+                        <span className={styles.metricLabel}>Total Interest Payable</span>
+                        <span className={styles.metricSub}>
+                          {interestPercent.toFixed(1)}% of total
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`${styles.metricValue} ${styles.metricValueError}`}>
+                      ₹{Math.round(totalInterest).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  {/* Total Payable Pill */}
+                  <div className={`${styles.metricPill} ${styles.metricPillNeutral}`}>
+                    <span className={styles.metricLabel}>
+                      Total Loan Cost (P + I)
+                    </span>
+                    <span className={`${styles.metricValue} ${styles.metricValueTotal}`}>
+                      ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
       </div>
-      {/* Loan Statistics & Pie Chart Section */}
-      {principalAmount > 0 && (
-        <section className={styles.card}>
-          <div className={styles.cardHeader}>
-            <div>
-              <p className={styles.cardEyebrow}>
-                Breakdown &amp; Analytics
-              </p>
-              <h2 className={styles.cardHeading}>Loan Statistics &amp; Payment Proportion</h2>
-            </div>
-            {schedule.length > 0 && (
-              <span className={styles.countBadge}>
-                {schedule.length} Total Payments
-              </span>
-            )}
-          </div>
-          <div className={styles.analyticsGrid}>
-            {/* Pie Chart Visual */}
-            <div className={styles.pieContainer}>
-              <div className={styles.pieSvgWrapper}>
-                <svg
-                  viewBox="0 0 200 200"
-                  className={styles.pieSvg}
-                  aria-label="Loan Principal vs Interest Pie Chart"
-                >
-                  {pieSlices?.type === 'full-principal' && (
-                    <circle cx="100" cy="100" r="85" className={styles.pieSlicePrimary} />
-                  )}
-                  {pieSlices?.type === 'full-interest' && (
-                    <circle cx="100" cy="100" r="85" className={styles.pieSliceError} />
-                  )}
-                  {pieSlices?.type === 'slices' && (
-                    <>
-                      <path
-                        d={pieSlices.principalD}
-                        className={styles.pieSlicePrimary}
-                      >
-                        <title>
-                          Principal: ₹{Math.round(principalAmount).toLocaleString('en-IN')} (
-                          {principalPercent.toFixed(1)}%)
-                        </title>
-                      </path>
-                      <path
-                        d={pieSlices.interestD}
-                        className={styles.pieSliceError}
-                      >
-                        <title>
-                          Interest: ₹{Math.round(totalInterest).toLocaleString('en-IN')} (
-                          {interestPercent.toFixed(1)}%)
-                        </title>
-                      </path>
-                    </>
-                  )}
-                </svg>
-              </div>
-            </div>
-            {/* Legend & Key Metrics */}
-            <div className={styles.metricsStack}>
-              {/* Principal Pill */}
-              <div className={`${styles.metricPill} ${styles.metricPillPrimary}`}>
-                <div className={styles.metricIndicatorGroup}>
-                  <div className={`${styles.metricDot} ${styles.metricDotPrimary}`} />
-                  <div>
-                    <span className={styles.metricLabel}>Principal Loan Amount</span>
-                    <span className={styles.metricSub}>
-                      {principalPercent.toFixed(1)}% of total
-                    </span>
-                  </div>
-                </div>
-                <span className={`${styles.metricValue} ${styles.metricValuePrimary}`}>
-                  ₹{Math.round(principalAmount).toLocaleString('en-IN')}
-                </span>
-              </div>
-              {/* Interest Pill */}
-              <div className={`${styles.metricPill} ${styles.metricPillError}`}>
-                <div className={styles.metricIndicatorGroup}>
-                  <div className={`${styles.metricDot} ${styles.metricDotError}`} />
-                  <div>
-                    <span className={styles.metricLabel}>Total Interest Payable</span>
-                    <span className={styles.metricSub}>
-                      {interestPercent.toFixed(1)}% of total
-                    </span>
-                  </div>
-                </div>
-                <span className={`${styles.metricValue} ${styles.metricValueError}`}>
-                  ₹{Math.round(totalInterest).toLocaleString('en-IN')}
-                </span>
-              </div>
-              {/* Total Payable Pill */}
-              <div className={`${styles.metricPill} ${styles.metricPillNeutral}`}>
-                <span className={styles.metricLabel}>
-                  Total Loan Cost (P + I)
-                </span>
-                <span className={`${styles.metricValue} ${styles.metricValueTotal}`}>
-                  ₹{Math.round(totalPayable).toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Middle 2-Column Section: Part Payments & Rate Changes */}
+      <div className={styles.modifiersGrid}>
       {/* Part Payments Section */}
       <section className={styles.card}>
         <div className={styles.cardHeader}>
@@ -916,6 +930,7 @@ const EmiCalculator: React.FC = () => {
           ))}
         </div>
       </section>
+      </div>
       {/* Schedule Table */}
       {schedule.length > 0 && (
         <>

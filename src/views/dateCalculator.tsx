@@ -277,8 +277,8 @@ const DateCalculator: React.FC = () => {
         sizePrefix="sm"
       />
       {mode === 'difference' ? (
-        <div className={styles.modeContainer}>
-          <div className={styles.modeContainer}>
+        <div className={styles.calculatorGrid}>
+          <div className={styles.inputsCol}>
             <div className={styles.inputsRow}>
               <div className={styles.inputCol}>
                 <ValuePicker.Paired
@@ -360,18 +360,18 @@ const DateCalculator: React.FC = () => {
               />
             </label>
           </div>
-          {diff && (
-            <div className={styles.modeContainer}>
-              <DisplayCard
-                currencySymbol=""
-                primaryAmount={diff.totalDays}
-                title={isInclusive ? 'Total Days (Inclusive)' : 'Total Days'}
-                secondaryInfo={{
-                  title: 'Total Hours',
-                  amount: diff.totalHours,
-                }}
-              />
-              <div className={styles.modeContainer}>
+          <div className={styles.resultsCol}>
+            {diff && (
+              <>
+                <DisplayCard
+                  currencySymbol=""
+                  primaryAmount={diff.totalDays}
+                  title={isInclusive ? 'Total Days (Inclusive)' : 'Total Days'}
+                  secondaryInfo={{
+                    title: 'Total Hours',
+                    amount: diff.totalHours,
+                  }}
+                />
                 <div className={styles.breakdownGrid}>
                   <div>
                     <p className={styles.breakdownValue}>{diff.years}</p>
@@ -408,13 +408,13 @@ const DateCalculator: React.FC = () => {
                     <span className={styles.weeksUnit}>total hours</span>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       ) : (
-        <div className={styles.modeContainer}>
-          <div>
+        <div className={styles.calculatorGrid}>
+          <div className={styles.inputsCol}>
             <ValuePicker.Paired
               title="Starting Date & Time"
               sourceBadgeText="Date"
@@ -444,108 +444,110 @@ const DateCalculator: React.FC = () => {
                 {dayOfWeek(baseDate)} {baseTime ? `@ ${baseTime}` : ''}
               </p>
             )}
-          </div>
-          <JoinedButtonGroup
-            data={ADD_SUB_DATA}
-            selectedValue={addOrSub}
-            updateSelectedValue={(v: string) => setAddOrSub(v as 'add' | 'subtract')}
-            sizePrefix="sm"
-          />
-          <div className={styles.durationGrid}>
-            <div className={styles.durationCol}>
-              <label className={styles.durationLabel}>Years</label>
-              <input
-                className={styles.durationInput}
-                type="number"
-                min="0"
-                max="1000"
-                value={years || ''}
-                placeholder="0"
-                onChange={(e) => setYears(Math.min(1000, Math.max(0, Number(e.target.value) || 0)))}
-              />
-            </div>
-            <div className={styles.durationCol}>
-              <label className={styles.durationLabel}>Months</label>
-              <input
-                className={styles.durationInput}
-                type="number"
-                min="0"
-                max="12000"
-                value={months || ''}
-                placeholder="0"
-                onChange={(e) => setMonths(Math.min(12000, Math.max(0, Number(e.target.value) || 0)))}
-              />
-            </div>
-            <div className={styles.durationCol}>
-              <label className={styles.durationLabel}>Days</label>
-              <input
-                className={styles.durationInput}
-                type="number"
-                min="0"
-                max="365000"
-                value={days || ''}
-                placeholder="0"
-                onChange={(e) => setDays(Math.min(365000, Math.max(0, Number(e.target.value) || 0)))}
-              />
-            </div>
-            <div className={styles.durationCol}>
-              <label className={styles.durationLabel}>Hours</label>
-              <input
-                className={styles.durationInput}
-                type="number"
-                min="0"
-                max="8760000"
-                value={hours || ''}
-                placeholder="0"
-                onChange={(e) => setHours(Math.min(8760000, Math.max(0, Number(e.target.value) || 0)))}
-              />
-            </div>
-          </div>
-          <label className={styles.toggleCard}>
-            <div>
-              <span className={styles.toggleTitle}>
-                Include start and end days (inclusive count)
-              </span>
-              <span className={styles.toggleDesc}>
-                Counts starting date as Day 1 of the period
-              </span>
-            </div>
-            <input
-              type="checkbox"
-              checked={isAddSubInclusive}
-              onChange={(e) => setIsAddSubInclusive(e.target.checked)}
-              className={styles.toggleSwitch}
+            <JoinedButtonGroup
+              data={ADD_SUB_DATA}
+              selectedValue={addOrSub}
+              updateSelectedValue={(v: string) => setAddOrSub(v as 'add' | 'subtract')}
+              sizePrefix="sm"
             />
-          </label>
-          {resultDate && (
-            <div className={styles.resultCard}>
-              <p className={styles.resultTag}>
-                Resulting Date &amp; Time {isAddSubInclusive ? '(Inclusive)' : ''}
-              </p>
-              <p className={styles.resultDate}>
-                {formatDateTime(resultDate)}
-              </p>
-              <p className={styles.resultDetail}>
-                {addOrSub === 'add' ? 'Added' : 'Subtracted'}{' '}
-                {[
-                  years > 0 ? `${years}y` : '',
-                  months > 0 ? `${months}m` : '',
-                  days > 0 ? `${days}d` : '',
-                  hours > 0 ? `${hours}h` : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ') || '0d'}{' '}
-                {addOrSub === 'add' ? 'to' : 'from'} {dayOfWeek(baseDate)},{' '}
-                {new Date(`${baseDate}T${baseTime || '00:00'}`).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-                {baseTime !== '00:00' ? ` at ${baseTime}` : ''}
-                {isAddSubInclusive ? ' (counting starting date as Day 1)' : ''}
-              </p>
+            <div className={styles.durationGrid}>
+              <div className={styles.durationCol}>
+                <label className={styles.durationLabel}>Years</label>
+                <input
+                  className={styles.durationInput}
+                  type="number"
+                  min="0"
+                  max="1000"
+                  value={years || ''}
+                  placeholder="0"
+                  onChange={(e) => setYears(Math.min(1000, Math.max(0, Number(e.target.value) || 0)))}
+                />
+              </div>
+              <div className={styles.durationCol}>
+                <label className={styles.durationLabel}>Months</label>
+                <input
+                  className={styles.durationInput}
+                  type="number"
+                  min="0"
+                  max="12000"
+                  value={months || ''}
+                  placeholder="0"
+                  onChange={(e) => setMonths(Math.min(12000, Math.max(0, Number(e.target.value) || 0)))}
+                />
+              </div>
+              <div className={styles.durationCol}>
+                <label className={styles.durationLabel}>Days</label>
+                <input
+                  className={styles.durationInput}
+                  type="number"
+                  min="0"
+                  max="365000"
+                  value={days || ''}
+                  placeholder="0"
+                  onChange={(e) => setDays(Math.min(365000, Math.max(0, Number(e.target.value) || 0)))}
+                />
+              </div>
+              <div className={styles.durationCol}>
+                <label className={styles.durationLabel}>Hours</label>
+                <input
+                  className={styles.durationInput}
+                  type="number"
+                  min="0"
+                  max="8760000"
+                  value={hours || ''}
+                  placeholder="0"
+                  onChange={(e) => setHours(Math.min(8760000, Math.max(0, Number(e.target.value) || 0)))}
+                />
+              </div>
             </div>
-          )}
+            <label className={styles.toggleCard}>
+              <div>
+                <span className={styles.toggleTitle}>
+                  Include start and end days (inclusive count)
+                </span>
+                <span className={styles.toggleDesc}>
+                  Counts starting date as Day 1 of the period
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={isAddSubInclusive}
+                onChange={(e) => setIsAddSubInclusive(e.target.checked)}
+                className={styles.toggleSwitch}
+              />
+            </label>
+          </div>
+          <div className={styles.resultsCol}>
+            {resultDate && (
+              <div className={styles.resultCard}>
+                <p className={styles.resultTag}>
+                  Resulting Date &amp; Time {isAddSubInclusive ? '(Inclusive)' : ''}
+                </p>
+                <p className={styles.resultDate}>
+                  {formatDateTime(resultDate)}
+                </p>
+                <p className={styles.resultDetail}>
+                  {addOrSub === 'add' ? 'Added' : 'Subtracted'}{' '}
+                  {[
+                    years > 0 ? `${years}y` : '',
+                    months > 0 ? `${months}m` : '',
+                    days > 0 ? `${days}d` : '',
+                    hours > 0 ? `${hours}h` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ') || '0d'}{' '}
+                  {addOrSub === 'add' ? 'to' : 'from'} {dayOfWeek(baseDate)},{' '}
+                  {new Date(`${baseDate}T${baseTime || '00:00'}`).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                  {baseTime !== '00:00' ? ` at ${baseTime}` : ''}
+                  {isAddSubInclusive ? ' (counting starting date as Day 1)' : ''}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </main>
