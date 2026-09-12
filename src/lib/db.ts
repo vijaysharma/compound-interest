@@ -318,9 +318,6 @@ export async function ensureTables(sql: Query) {
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS user_id TEXT`;
       await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS blob_url TEXT`;
-      // Tombstone marker. A deleted note keeps its row so that a stale client
-      // replaying an edit cannot resurrect it through the upsert path.
-      await sql`ALTER TABLE admin_notes ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`;
       await sql`
         CREATE TABLE IF NOT EXISTS ai_settings (
           id TEXT PRIMARY KEY DEFAULT 'default',
@@ -355,10 +352,6 @@ export async function ensureTables(sql: Query) {
       await sql`
         CREATE INDEX IF NOT EXISTS admin_notes_user_id_idx
         ON admin_notes (user_id)
-      `;
-      await sql`
-        CREATE INDEX IF NOT EXISTS admin_notes_deleted_at_idx
-        ON admin_notes (deleted_at)
       `;
       // Recorded last, so a migration that fails part way through is retried on
       // the next call rather than being marked complete.

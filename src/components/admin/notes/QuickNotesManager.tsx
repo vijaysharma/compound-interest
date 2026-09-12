@@ -151,6 +151,12 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const savePendingRef = useRef<Set<string>>(new Set());
   /** Ids deleted in this session, so an in-flight fetch cannot re-add them. */
   const locallyDeletedRef = useRef<Set<string>>(new Set());
+  /**
+   * Ids created on this device whose creation the server has not confirmed.
+   * These are the only notes a save is allowed to create; anything else must
+   * already exist server-side, so a missing row means it was deleted.
+   */
+  const unconfirmedCreatesRef = useRef<Set<string>>(new Set());
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveInFlightRef = useRef(false);
   /**
@@ -186,23 +192,35 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         // Never push a body the server told us it could not read, or the empty
         // placeholder would overwrite the real blob.
         if (note.content_unavailable) continue;
+        const payload = {
+          id: note.id,
+          title: await encryptText(note.title || '', key),
+          content: await encryptText(note.content || '', key),
+          folder: note.folder,
+          is_pinned: note.is_pinned,
+          is_locked: note.is_locked,
+          lock_password_hash: note.lock_password_hash ?? null,
+          is_trashed: note.is_trashed,
+          tags: note.tags,
+        };
+        if (unconfirmedCreatesRef.current.has(noteId)) {
+          // Never confirmed server-side, so this save has to create it.
+          await createNoteAction(
+            { ...payload, lock_password_hash: payload.lock_password_hash ?? undefined },
+            token
+          );
+          unconfirmedCreatesRef.current.delete(noteId);
+          savePendingRef.current.delete(noteId);
+          continue;
+        }
         const res = await updateNoteAction(
-          {
-            id: note.id,
-            title: await encryptText(note.title || '', key),
-            content: await encryptText(note.content || '', key),
-            folder: note.folder,
-            is_pinned: note.is_pinned,
-            is_locked: note.is_locked,
-            lock_password_hash: note.lock_password_hash ?? null,
-            is_trashed: note.is_trashed,
-            tags: note.tags,
-            client_updated_at: note.updated_at,
-          },
+          { ...payload, client_updated_at: note.updated_at },
           token
         );
         savePendingRef.current.delete(noteId);
-        if (res?.rejected === 'deleted') {
+        if (res?.rejected === 'missing') {
+          // The row is gone, so it was deleted on another device. Drop it here
+          // rather than recreating it.
           deletedElsewhere = true;
           locallyDeletedRef.current.add(noteId);
           setNotes((prev) => prev.filter((n) => n.id !== noteId));
@@ -492,8 +510,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     });
     setSelectedNoteId(tempId);
     setMobileScreen('editor');
+    // Until the server confirms it, a save for this id must create rather than
+    // update, since there is no row to update yet.
+    unconfirmedCreatesRef.current.add(tempId);
     if (!token) {
-      setSaveError('Not signed in — this change was saved on this device only.');
+      setSaveError('Not signed in — this note has not been saved.');
       return;
     }
     try {
@@ -507,6 +528,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         folder: targetFolder,
         tags: newNote.tags,
       }, token)) as unknown as Note;
+      unconfirmedCreatesRef.current.delete(tempId);
       const decryptedCreated: Note = {
         ...created,
         title: await decryptText(created.title || '', key),
@@ -530,12 +552,13 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       setSelectedNoteId(decryptedCreated.id);
     } catch (err) {
       console.error('Failed to create note on server:', err);
+      queueNoteSync(tempId);
       setSaveError(
         `Could not create note on server on the server — this change exists only on this device. ` +
           (err instanceof Error ? err.message : 'Unknown error')
       );
     }
-  }, [activeFolder, activeTag, token, userId, userEmail, flushPendingUpdates]);
+  }, [activeFolder, activeTag, token, userId, userEmail, flushPendingUpdates, queueNoteSync]);
   const handleTogglePin = useCallback(
     (id?: string, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
@@ -673,8 +696,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       });
       setSelectedNoteId(tempId);
       setMobileScreen('editor');
+      unconfirmedCreatesRef.current.add(tempId);
       if (!token) {
-        setSaveError('Not signed in — this change was saved on this device only.');
+        setSaveError('Not signed in — this note has not been saved.');
         return;
       }
       try {
@@ -689,6 +713,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           tags: duplicated.tags,
           is_pinned: false,
         }, token)) as unknown as Note;
+        unconfirmedCreatesRef.current.delete(tempId);
         const decryptedCreated: Note = {
           ...created,
           title: await decryptText(created.title || '', key),
@@ -701,13 +726,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         setSelectedNoteId(decryptedCreated.id);
       } catch (err) {
         console.error('Failed to duplicate note:', err);
+        queueNoteSync(tempId);
         setSaveError(
           `Could not duplicate note on the server — this change exists only on this device. ` +
             (err instanceof Error ? err.message : 'Unknown error')
         );
       }
     },
-    [selectedNote, token, userId, userEmail, flushPendingUpdates]
+    [selectedNote, token, userId, userEmail, flushPendingUpdates, queueNoteSync]
   );
   const handleEmptyTrash = useCallback(async () => {
     if (

@@ -87,18 +87,24 @@ export async function readNoteBlob(url: string): Promise<string | null> {
   }
   return null;
 }
+/**
+ * Deletes note blobs. Returns false if a delete was attempted and failed, so
+ * callers can report an orphaned blob rather than leaving it unnoticed.
+ */
 export async function deleteNoteBlobs(
   urls: (string | null | undefined)[]
-): Promise<void> {
+): Promise<boolean> {
   const token = blobToken();
-  if (!token) return;
+  if (!token) return true;
   const validUrls = urls.filter(
     (u): u is string => typeof u === 'string' && u.startsWith('http')
   );
-  if (validUrls.length === 0) return;
+  if (validUrls.length === 0) return true;
   try {
     await del(validUrls, { token });
+    return true;
   } catch (err) {
-    console.warn('Vercel Blob deletion failed:', err);
+    console.error('Vercel Blob deletion failed, blob is now orphaned:', err);
+    return false;
   }
 }
