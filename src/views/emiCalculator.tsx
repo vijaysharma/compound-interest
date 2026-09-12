@@ -8,6 +8,7 @@ import { sanctnum } from '../utilities/numSanitity';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import { TbTrash } from 'react-icons/tb';
+import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import styles from './EmiCalculator.module.scss';
 interface ScheduleRow {
   date: string;
@@ -573,10 +574,15 @@ const EmiCalculator: React.FC = () => {
               stepData={stepData}
               tabs={[]}
             />
-            <div className={styles.pairedRow}>
-              <ValuePicker.ROI className={styles.fieldTight} rt={rt} setRt={setRt} />
-              <ValuePicker.Tenure className={styles.fieldTight} rt={rt} setRt={setRt} />
-            </div>
+            {/* Joined Rate & Tenure — same control as Disbursement & Repayment */}
+            <ValuePicker.Paired
+              title="Rate & Tenure"
+              stacked
+              sourceBadgeText="Rate of Interest (%)"
+              targetBadgeText="Tenure"
+              sourceSlot={<ValuePicker.ROI embedded rt={rt} setRt={setRt} />}
+              targetSlot={<ValuePicker.Tenure embedded rt={rt} setRt={setRt} />}
+            />
             {/* Joined Disbursement Date & EMI Deduction Date */}
             <div className={styles.disbursementWrapper}>
               <ValuePicker.Paired
@@ -756,78 +762,82 @@ const EmiCalculator: React.FC = () => {
                 p.enabled ? styles.prepaymentItemEnabled : styles.prepaymentItemDisabled
               }`}
             >
-              <div className={styles.prepaymentInputsRow}>
-                <span className={styles.itemIndex}>#{idx + 1}</span>
-                <input
-                  type="checkbox"
-                  title={`Enable/Disable Part Payment #${idx + 1}`}
-                  checked={p.enabled}
-                  onChange={(e) => updatePartPayment(idx, 'enabled', e.target.checked)}
-                  className={styles.checkbox}
-                />
-                <input
-                  className={styles.textInput}
-                  title={`Part Payment Amount #${idx + 1}`}
-                  type="number"
-                  placeholder="Payment Amount (₹)"
-                  value={p.amount || ''}
-                  onChange={(e) => updatePartPayment(idx, 'amount', Math.max(0, Number(e.target.value) || 0))}
-                  disabled={!p.enabled}
-                />
-                <input
-                  className={styles.textInput}
-                  title={`Part Payment Date #${idx + 1}`}
-                  type="date"
-                  min={disbursementDate || undefined}
-                  value={p.date}
-                  onChange={(e) => updatePartPayment(idx, 'date', e.target.value)}
-                  disabled={!p.enabled}
-                />
-                <TbTrash
+              <div className={styles.prepaymentItemHeader}>
+                <label className={styles.includeToggle}>
+                  <input
+                    type="checkbox"
+                    checked={p.enabled}
+                    onChange={(e) => updatePartPayment(idx, 'enabled', e.target.checked)}
+                    className={styles.checkbox}
+                  />
+                  <span className={styles.itemIndex}>Payment #{idx + 1}</span>
+                </label>
+                <button
+                  type="button"
                   onClick={() => removePartPayment(idx)}
-                  size={24}
-                  className={styles.deleteIcon}
-                />
+                  className={styles.deleteButton}
+                  title={`Remove part payment #${idx + 1}`}
+                  aria-label={`Remove part payment #${idx + 1}`}
+                >
+                  <TbTrash size={18} />
+                </button>
               </div>
-              <div className={styles.radioGroup}>
-                <label className={styles.radioLabel}>
+              <div className={styles.prepaymentFieldGrid}>
+                <label className={styles.fieldLabelled}>
+                  <span className={styles.fieldLabelText}>Amount (₹)</span>
                   <input
-                    type="radio"
-                    title={`Reduce EMI for Payment #${idx + 1}`}
-                    name={`mode-${idx}`}
-                    value="emi"
-                    checked={p.mode === 'emi'}
-                    onChange={() => updatePartPayment(idx, 'mode', 'emi')}
-                    className={styles.radio}
+                    className={styles.textInput}
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="e.g. 200000"
+                    value={p.amount || ''}
+                    onChange={(e) =>
+                      updatePartPayment(idx, 'amount', Math.max(0, Number(e.target.value) || 0))
+                    }
                     disabled={!p.enabled}
                   />
-                  <span>Reduce EMI</span>
                 </label>
-                <label className={styles.radioLabel}>
+                <label className={styles.fieldLabelled}>
+                  <span className={styles.fieldLabelText}>Payment date</span>
                   <input
-                    type="radio"
-                    title={`Reduce Tenure for Payment #${idx + 1}`}
-                    name={`mode-${idx}`}
-                    value="tenure"
-                    checked={p.mode === 'tenure'}
-                    onChange={() => updatePartPayment(idx, 'mode', 'tenure')}
-                    className={styles.radio}
+                    className={styles.textInput}
+                    type="date"
+                    min={disbursementDate || undefined}
+                    value={p.date}
+                    onChange={(e) => updatePartPayment(idx, 'date', e.target.value)}
                     disabled={!p.enabled}
                   />
-                  <span>Reduce Tenure</span>
                 </label>
               </div>
+              <JoinedButtonGroup<'emi' | 'tenure'>
+                title="Apply the saving to"
+                className={styles.prepaymentModeGroup}
+                sizePrefix="sm"
+                data={[
+                  { id: `pp-${idx}-emi`, value: 'emi', title: 'Reduce EMI' },
+                  { id: `pp-${idx}-tenure`, value: 'tenure', title: 'Reduce Tenure' },
+                ]}
+                selectedValue={p.mode}
+                updateSelectedValue={(value) => updatePartPayment(idx, 'mode', value)}
+              />
             </div>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={addPartPayment}
-          disabled={isAddPartPaymentDisabled}
-          className={styles.primaryButton}
-        >
-          + Add Part Payment
-        </button>
+        <div className={styles.addRow}>
+          <button
+            type="button"
+            onClick={addPartPayment}
+            disabled={isAddPartPaymentDisabled}
+            className={styles.primaryButton}
+          >
+            + Add Part Payment
+          </button>
+          {isAddPartPaymentDisabled && (
+            <span className={styles.addHint}>
+              Fill in the amount and date above to add another.
+            </span>
+          )}
+        </div>
       </section>
       {/* Interest Rate Changes Section */}
       <section className={styles.card}>
@@ -861,71 +871,67 @@ const EmiCalculator: React.FC = () => {
                 r.enabled ? styles.prepaymentItemEnabled : styles.prepaymentItemDisabled
               }`}
             >
-              <div className={styles.prepaymentInputsRow}>
-                <input
-                  type="checkbox"
-                  title={`Enable/Disable Rate Change #${idx + 1}`}
-                  checked={r.enabled}
-                  onChange={(e) => updateRateChange(idx, 'enabled', e.target.checked)}
-                  className={styles.checkbox}
-                />
-                <input
-                  className={styles.textInput}
-                  title={`New Interest Rate #${idx + 1}`}
-                  type="number"
-                  step="0.1"
-                  placeholder="New Interest Rate (%)"
-                  value={r.rate || ''}
-                  min="0"
-                  max="100"
-                  onChange={(e) => updateRateChange(idx, 'rate', Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-                  disabled={!r.enabled}
-                />
-                <input
-                  className={styles.textInput}
-                  title={`Rate Change Date #${idx + 1}`}
-                  type="date"
-                  min={disbursementDate || undefined}
-                  value={r.date}
-                  onChange={(e) => updateRateChange(idx, 'date', e.target.value)}
-                  disabled={!r.enabled}
-                />
-              </div>
-              <div className={styles.radioGroup}>
-                <label className={styles.radioLabel}>
+              <div className={styles.prepaymentItemHeader}>
+                <label className={styles.includeToggle}>
                   <input
-                    type="radio"
-                    title={`Keep Tenure for Rate Change #${idx + 1}`}
-                    name={`rate-mode-${idx}`}
-                    value="emi"
-                    checked={r.mode === 'emi'}
-                    onChange={() => updateRateChange(idx, 'mode', 'emi')}
-                    className={styles.radio}
+                    type="checkbox"
+                    checked={r.enabled}
+                    onChange={(e) => updateRateChange(idx, 'enabled', e.target.checked)}
+                    className={styles.checkbox}
+                  />
+                  <span className={styles.itemIndex}>Rate change #{idx + 1}</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => removeRateChange(idx)}
+                  className={styles.deleteButton}
+                  title={`Remove rate change #${idx + 1}`}
+                  aria-label={`Remove rate change #${idx + 1}`}
+                >
+                  <TbTrash size={18} />
+                </button>
+              </div>
+              <div className={styles.prepaymentFieldGrid}>
+                <label className={styles.fieldLabelled}>
+                  <span className={styles.fieldLabelText}>New rate (%)</span>
+                  <input
+                    className={styles.textInput}
+                    type="number"
+                    step="0.1"
+                    inputMode="decimal"
+                    placeholder="e.g. 8.5"
+                    value={r.rate || ''}
+                    min="0"
+                    max="100"
+                    onChange={(e) =>
+                      updateRateChange(idx, 'rate', Math.max(0, Math.min(100, Number(e.target.value) || 0)))
+                    }
                     disabled={!r.enabled}
                   />
-                  <span>Adjust EMI</span>
                 </label>
-                <label className={styles.radioLabel}>
+                <label className={styles.fieldLabelled}>
+                  <span className={styles.fieldLabelText}>Effective from</span>
                   <input
-                    type="radio"
-                    title={`Keep EMI for Rate Change #${idx + 1}`}
-                    name={`rate-mode-${idx}`}
-                    value="tenure"
-                    checked={r.mode === 'tenure'}
-                    onChange={() => updateRateChange(idx, 'mode', 'tenure')}
-                    className={styles.radio}
+                    className={styles.textInput}
+                    type="date"
+                    min={disbursementDate || undefined}
+                    value={r.date}
+                    onChange={(e) => updateRateChange(idx, 'date', e.target.value)}
                     disabled={!r.enabled}
                   />
-                  <span>Adjust Tenure</span>
                 </label>
               </div>
-              <button
-                onClick={() => removeRateChange(idx)}
-                type="button"
-                className={styles.removeButton}
-              >
-                Remove
-              </button>
+              <JoinedButtonGroup<'emi' | 'tenure'>
+                title="Absorb the change by"
+                className={styles.prepaymentModeGroup}
+                sizePrefix="sm"
+                data={[
+                  { id: `rc-${idx}-emi`, value: 'emi', title: 'Adjust EMI' },
+                  { id: `rc-${idx}-tenure`, value: 'tenure', title: 'Adjust Tenure' },
+                ]}
+                selectedValue={r.mode}
+                updateSelectedValue={(value) => updateRateChange(idx, 'mode', value)}
+              />
             </div>
           ))}
         </div>

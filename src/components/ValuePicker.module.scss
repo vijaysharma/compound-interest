@@ -89,6 +89,21 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     margin-bottom: 0.25rem;
   }
 
+  // Sits inside a ValuePicker.Paired slot, which already supplies the border,
+  // radius and label — so shed all three here rather than nesting a second box.
+  &.embedded {
+    margin-top: 0;
+    margin-bottom: 0;
+
+    // Keeps the row's own height — the paired slot sizes to its content, so a
+    // height: 100% child here would have nothing to resolve against.
+    .joinedRow {
+      border: none;
+      border-radius: 0;
+      background-color: transparent;
+    }
+  }
+
   *,
   *::before,
   *::after {
@@ -751,6 +766,34 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 // =============================================================================
 
 // Outer wrapper: two equal columns side by side, sharing one rounded border
+// Stacks the two halves into full-width labelled rows inside the same joined
+// box. Used when a slot holds more than a single input: a stepper row has nine
+// controls and never fits half a column, at any breakpoint. Deliberately not
+// breakpoint-driven — ValuePicker's root sets container-type: inline-size, so a
+// responsive mixin here would resolve against the picker's own width and fire
+// unpredictably.
+.pairedStackedWrapperStack {
+  flex-direction: column;
+
+  .pairedStackedColumn:first-child {
+    border-right: none;
+    border-bottom: 1px solid $color-primary;
+  }
+
+  .pairedStackedLabel {
+    border-top-right-radius: 0;
+
+    &.pairedStackedLabelRight {
+      justify-content: flex-start;
+      border-top-right-radius: 0;
+    }
+  }
+
+  .pairedStackedColumn:first-child .pairedStackedLabel {
+    border-top-right-radius: calc(#{$btn-radius} - 1px);
+  }
+}
+
 .pairedStackedWrapper {
   display: flex;
   align-items: stretch;

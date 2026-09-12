@@ -47,6 +47,17 @@ export interface ValuePickerProps {
   stepSizePrefix?: string;
   typeSizePrefix?: string;
   compact?: boolean;
+  /**
+   * Render the control for placement inside a ValuePicker.Paired slot: drops
+   * the outer margins, the joined row's own border and radius, and the title,
+   * since the paired badge already labels it.
+   */
+  embedded?: boolean;
+  /**
+   * Paired variant: stack the two halves into full-width rows inside the same
+   * joined box, instead of splitting the width between them.
+   */
+  stacked?: boolean;
   currencySymbol?: string;
   locale?: string;
   min?: number;
@@ -139,6 +150,8 @@ export const ValuePicker: ValuePickerComponent = (({
   showWords = true,
   className = '',
   compact = false,
+  embedded = false,
+  stacked = false,
   layout = 'auto',
   disabled = false,
   readOnly = false,
@@ -247,7 +260,8 @@ export const ValuePicker: ValuePickerComponent = (({
   const layoutClass =
     layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
   const compactClass = compact ? styles.compact : '';
-  const rootContainerClass = `${styles.container} ${layoutClass} ${compactClass} ${className}`.trim();
+  const embeddedClass = embedded ? styles.embedded : '';
+  const rootContainerClass = `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
   // ===========================================================================
   // VARIANT 1: Rate of Interest (Screenshot 1)
   // ===========================================================================
@@ -293,7 +307,9 @@ export const ValuePicker: ValuePickerComponent = (({
     };
     return (
       <div className={rootContainerClass}>
-        <h5 className={`${styles.title} ${styles.titleCenter}`}>{title || 'Rate of Interest (%)'}</h5>
+        {!embedded && (
+          <h5 className={`${styles.title} ${styles.titleCenter}`}>{title || 'Rate of Interest (%)'}</h5>
+        )}
         <div className={styles.joinedRow}>
           {roiSteps.map((step) => (
             <button
@@ -396,7 +412,9 @@ export const ValuePicker: ValuePickerComponent = (({
     };
     return (
       <div className={rootContainerClass}>
-        <h5 className={`${styles.title} ${styles.titleCenter}`}>{title || 'Tenure'}</h5>
+        {!embedded && (
+          <h5 className={`${styles.title} ${styles.titleCenter}`}>{title || 'Tenure'}</h5>
+        )}
         <div className={styles.joinedRow}>
           {tenureDecSteps.map((step) => (
             <button
@@ -463,7 +481,11 @@ export const ValuePicker: ValuePickerComponent = (({
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
-        <div className={styles.pairedStackedWrapper}>
+        <div
+          className={`${styles.pairedStackedWrapper} ${
+            stacked ? styles.pairedStackedWrapperStack : ''
+          }`.trim()}
+        >
           {/* Source column */}
           <div className={styles.pairedStackedColumn}>
             <div className={styles.pairedStackedLabel}>{sourceBadgeText}</div>
