@@ -4,7 +4,7 @@ import { DEFAULT_EXCHANGE_RATES } from '@/data/default_exchange_rates';
 import { DEFAULT_PPP_RECORDS } from '@/data/default_ppp_data';
 const OPEN_EXCHANGE_API = 'https://open.er-api.com/v6/latest';
 const WORLD_BANK_PPP_API =
-  'https://api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP?format=json&per_page=300&mrv=1';
+  'https://api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP?format=json&per_page=400&mrv=1&gapfill=y';
 const DB_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 // In-memory caches for fast warm responses
 let memoryExchangeRates: { rates: Record<string, number>; timestamp: number } | null = null;
@@ -92,15 +92,22 @@ export async function getPPPDataAction(): Promise<unknown> {
   if (memoryPppData && Date.now() - memoryPppData.timestamp < 30 * 60 * 1000) {
     return memoryPppData.data;
   }
+  let storedPayload: unknown = null;
   try {
     const sql = getDb();
     await ensureTables(sql);
     const rows = (await sql`
-      SELECT payload FROM inflation_sources WHERE source = 'world-bank-ppp'
-    `) as Array<{ payload: unknown }>;
+      SELECT payload, updated_at FROM inflation_sources WHERE source = 'world-bank-ppp'
+    `) as Array<{ payload: unknown; updated_at?: string }>;
     if (rows.length > 0 && rows[0].payload) {
-      memoryPppData = { data: rows[0].payload, timestamp: Date.now() };
-      return rows[0].payload;
+      storedPayload = rows[0].payload;
+      const isFresh = rows[0].updated_at
+        ? Date.now() - new Date(rows[0].updated_at).getTime() < DB_TTL_MS
+        : false;
+      if (isFresh) {
+        memoryPppData = { data: rows[0].payload, timestamp: Date.now() };
+        return rows[0].payload;
+      }
     }
   } catch (dbErr) {
     console.warn('DB read failed in getPPPDataAction:', dbErr);
@@ -108,7 +115,7 @@ export async function getPPPDataAction(): Promise<unknown> {
   try {
     const upstream = await fetch(WORLD_BANK_PPP_API, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(8000),
     });
     if (upstream.ok) {
       const payload = await upstream.json();
@@ -121,8 +128,8 @@ export async function getPPPDataAction(): Promise<unknown> {
         try {
           const sql = getDb();
           await sql`
-            INSERT INTO inflation_sources (source, payload)
-            VALUES ('world-bank-ppp', ${JSON.stringify(payload)}::jsonb)
+            INSERT INTO inflation_sources (source, payload, updated_at)
+            VALUES ('world-bank-ppp', ${JSON.stringify(payload)}::jsonb, NOW())
             ON CONFLICT (source) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
           `;
         } catch {
@@ -134,6 +141,9 @@ export async function getPPPDataAction(): Promise<unknown> {
     }
   } catch (fetchErr) {
     console.warn('Upstream World Bank PPP fetch failed, falling back to default:', fetchErr);
+  }
+  if (storedPayload) {
+    return storedPayload;
   }
   return DEFAULT_PPP_RECORDS;
 }

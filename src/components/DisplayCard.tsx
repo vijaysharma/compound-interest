@@ -1,4 +1,5 @@
 import convertToWords from '../utilities/currency';
+import { IndianFormat } from '../data/currencyCodes';
 import { DisplayType } from '../types/types';
 import styles from './DisplayCard.module.scss';
 const DisplayCard = ({
@@ -10,6 +11,8 @@ const DisplayCard = ({
   currencySymbol = '₹',
   locale = 'en-IN',
 }: DisplayType) => {
+  // Always use English numerals: en-IN for Indian numbering, en-US for all others
+  const formatLocale = locale === 'en-IN' || IndianFormat.includes(locale) ? 'en-IN' : 'en-US';
   return (
     <div className={styles.card}>
       <div className={styles.statItem}>
@@ -24,11 +27,11 @@ const DisplayCard = ({
           }`.trim()}
         >
           <span className={styles.currency}>{currencySymbol}&nbsp;</span>
-          {primaryAmount.toLocaleString(locale)}{' '}
+          {primaryAmount.toLocaleString(formatLocale)}{' '}
           {primarySub && <span className={styles.sub}> {primarySub}</span>}
         </div>
         <div className={styles.words}>
-          {convertToWords(primaryAmount, locale)}
+          {convertToWords(primaryAmount, formatLocale)}
         </div>
       </div>
       {secondaryInfo && (
@@ -36,10 +39,10 @@ const DisplayCard = ({
           <div className={styles.title}>{secondaryInfo.title}</div>
           <div className={styles.value}>
             <span className={styles.currency}>{currencySymbol}&nbsp;</span>
-            {secondaryInfo.amount.toLocaleString(locale)}
+            {secondaryInfo.amount.toLocaleString(formatLocale)}
           </div>
           <div className={styles.words}>
-            {convertToWords(secondaryInfo.amount, locale)}
+            {convertToWords(secondaryInfo.amount, formatLocale)}
           </div>
         </div>
       )}

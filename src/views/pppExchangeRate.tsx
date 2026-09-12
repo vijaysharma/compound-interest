@@ -17,16 +17,32 @@ import styles from './CalculatorPage.module.scss';
 const currencyLookup = new Map(CURRENCY_CODES.map((cc) => [cc.name.toLowerCase(), cc]));
 const transformPPPRecords = (records: WorldBankPPPRecord[]): Record<string, CountryPPPType> => {
   const transformed: Record<string, CountryPPPType> = {};
+  // 1. Pre-seed with verified fallback records so UAE, USA, India etc. are guaranteed present
+  for (const fallback of DEFAULT_PPP_RECORDS) {
+    if (fallback.value == null) continue;
+    const country = fallback.country.value;
+    const matchedCurrency = currencyLookup.get(country.toLowerCase());
+    const cName = matchedCurrency ? matchedCurrency.currency_name : 'USD';
+    const cLocale = cName === 'INR' ? 'en-IN' : 'en-US';
+    transformed[country] = {
+      currencyName: cName,
+      currencyCode: cLocale,
+      [parseInt(fallback.date, 10)]: fallback.value,
+    };
+  }
+  // 2. Overlay live fetched World Bank records
   for (const record of records) {
     if (record.value == null) continue;
     const country = record.country.value;
     if (!transformed[country]) {
       const matchedCurrency = currencyLookup.get(country.toLowerCase());
+      const cName = matchedCurrency
+        ? matchedCurrency.currency_name
+        : country.substring(0, 3).toUpperCase();
+      const cLocale = cName === 'INR' ? 'en-IN' : 'en-US';
       transformed[country] = {
-        currencyName: matchedCurrency
-          ? matchedCurrency.currency_name
-          : country.substring(0, 3).toUpperCase(),
-        currencyCode: matchedCurrency ? matchedCurrency.currency_code : 'en-US',
+        currencyName: cName,
+        currencyCode: cLocale,
       };
     }
     transformed[country][parseInt(record.date, 10)] = record.value;
@@ -219,7 +235,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       : 0;
     const primarySub =
       hasRates && convertedToSource > 0
-        ? `(${sourceCurrencySymbol} ${convertedToSource.toLocaleString(source.currencyCode, {
+        ? `(${sourceCurrencySymbol} ${convertedToSource.toLocaleString(source.currencyCode === 'en-IN' ? 'en-IN' : 'en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })})`

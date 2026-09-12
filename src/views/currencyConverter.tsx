@@ -203,7 +203,7 @@ const CurrencyConverter = () => {
       if (!code || code.length !== 3) continue;
       const country = cleanCountryName(item.name);
       if (!map.has(country)) {
-        const locale = code === 'INR' ? 'en-IN' : item.currency_code || 'en-US';
+        const locale = code === 'INR' || IndianFormat.includes(item.currency_code) ? 'en-IN' : 'en-US';
         const symbol = getCurrencySymbol(locale, code) || code;
         const name = CURRENCY_NAME_MAP[code] || item.name;
         map.set(country, {
