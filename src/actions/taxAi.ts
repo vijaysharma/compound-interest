@@ -1,5 +1,5 @@
 'use server';
-import { AISettings, ensureTables, getDb } from '@/lib/db';
+import { AISettings, ensureTables, getDb, getUserFromToken } from '@/lib/db';
 export async function getTaxAIStatusAction(): Promise<{
   enabled: boolean;
   provider: string;
@@ -39,16 +39,38 @@ export async function getTaxAIStatusAction(): Promise<{
     ),
   };
 }
-export async function generateTaxAIAdviceAction(body: {
-  financialSummary?: Record<string, unknown>;
-  userQuestion?: string;
-}): Promise<{
+export async function generateTaxAIAdviceAction(
+  body: {
+    financialSummary?: Record<string, unknown>;
+    userQuestion?: string;
+  },
+  token?: string | null
+): Promise<{
   enabled: boolean;
+  needsUpgrade?: boolean;
+  requiredTier?: string;
   model?: string;
   advice?: string;
   error?: string;
   message?: string;
 }> {
+  const sql = getDb();
+  await ensureTables(sql);
+  const user = await getUserFromToken(token, sql);
+  const isTaxPro =
+    user &&
+    (user.role === 'admin' ||
+      (user.subscription_status === 'active' &&
+        (user.subscription_plan === 'tax_monthly' || user.subscription_plan === 'tax_yearly')));
+  if (!isTaxPro) {
+    return {
+      enabled: true,
+      needsUpgrade: true,
+      requiredTier: 'tax_pro',
+      message:
+        'Personalized Tax Strategy & Optimization Advisory is available exclusively with the Tax Pro plan (₹129/month or ₹999/year).',
+    };
+  }
   let aiSettings: AISettings = {
     id: 'default',
     enabled: true,
@@ -60,8 +82,6 @@ export async function generateTaxAIAdviceAction(body: {
     updated_at: new Date().toISOString(),
   };
   try {
-    const sql = getDb();
-    await ensureTables(sql);
     const rows = (await sql`
       SELECT id, enabled, provider, model, api_key, system_prompt, updated_at
       FROM ai_settings
@@ -76,7 +96,7 @@ export async function generateTaxAIAdviceAction(body: {
   if (!aiSettings.enabled) {
     return {
       enabled: false,
-      message: 'AI Tax Advisor is currently disabled by administrator in the Admin Panel.',
+      message: 'Tax Strategy Advisory is currently disabled by administrator.',
     };
   }
   const apiKey =
@@ -88,7 +108,7 @@ export async function generateTaxAIAdviceAction(body: {
       enabled: true,
       error: 'NO_API_KEY',
       message:
-        'Gemini API key is not configured. Please add an API key in the Admin Panel or configure GEMINI_API_KEY in server environment variables.',
+        'Tax Strategy Engine is not configured. Please add an API key in the Admin Panel or configure GEMINI_API_KEY in server environment variables.',
     };
   }
   const { financialSummary, userQuestion } = body;
@@ -111,7 +131,7 @@ Please provide a concise, high-impact, professional tax optimization advisory in
    - Capital gains harvesting for equity (the ₹1.25 Lakh tax-free LTCG limit under Budget 2024).
 3. **Restructuring & Long-Term Wealth Advice**: Practical tips before March 31.
 
-Keep it structured with bullet points, bold key figures in ₹, and maintain a friendly, authoritative tone.
+Keep it structured with bullet points, bold key figures in ₹, and maintain a friendly, authoritative tone. Do not mention artificial intelligence, AI models, or automated bots. Speak as a seasoned Indian Chartered Accountant and tax strategist.
   `.trim();
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     model
@@ -134,11 +154,11 @@ Keep it structured with bullet points, bold key figures in ₹, and maintain a f
   });
   if (!geminiResponse.ok) {
     const errBody = await geminiResponse.text();
-    console.error('Gemini API error:', geminiResponse.status, errBody);
+    console.error('Tax Strategy API error:', geminiResponse.status, errBody);
     return {
       enabled: true,
       error: 'API_ERROR',
-      message: `Gemini API returned an error: ${geminiResponse.statusText}`,
+      message: `Tax Strategy Engine returned an error: ${geminiResponse.statusText}`,
     };
   }
   const data = (await geminiResponse.json()) as {

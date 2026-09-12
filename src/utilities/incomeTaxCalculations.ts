@@ -11,6 +11,9 @@ export interface TaxIncomeInputs {
   hraReceived: number;
   rentPaid: number;
   cityCategory: CityCategory;
+  professionalTax?: number; // Sec 16(iii)
+  exemptAllowances?: number; // LTA, uniform, conveyance allowances under Sec 10
+  customStandardDeduction?: number | null; // Override standard deduction
   // Business / Profession
   businessIncome: number;
   // House Property
@@ -32,10 +35,17 @@ export interface TaxIncomeInputs {
   section80Ccd1b: number;    // Max 50k (NPS additional self-contribution)
   section80Ccd2: number;     // Employer NPS contribution (allowed in both regimes)
   section80D_self: number;   // Health insurance self & family (max 25k/50k)
+  selfSeniorCitizen?: boolean; // Self/Family senior citizen (80D max 50k)
   section80D_parents: number;// Health insurance parents (max 25k/50k)
+  parentsSeniorCitizen?: boolean; // Parents senior citizen (80D max 50k)
   section80E: number;        // Education loan interest (no limit)
   section80G: number;        // Charitable donations
   section80Tta: number;      // Savings bank interest deduction (max 10k or 50k for senior)
+  section80Gg?: number;      // Rent paid when no HRA received (Sec 80GG, max 60k)
+  section80Ddb?: number;     // Medical treatment of specified disease (Sec 80DDB, max 40k/100k)
+  section80U?: number;       // Person with disability (Sec 80U, 75k/125k)
+  section80Eea?: number;     // Additional affordable housing interest (Sec 80EEA, max 1.5L)
+  customDeductions?: Array<{ id: string; name: string; amount: number }>;
   otherDeductions: number;   // Other eligible deductions
 }
 export interface TaxSlabBreakdown {
@@ -235,6 +245,9 @@ export function computeTaxForRegime(
     hraReceived,
     rentPaid,
     cityCategory,
+    professionalTax = 0,
+    exemptAllowances = 0,
+    customStandardDeduction,
     businessIncome,
     isSelfOccupied,
     rentalIncome,
@@ -250,10 +263,17 @@ export function computeTaxForRegime(
     section80Ccd1b,
     section80Ccd2,
     section80D_self,
+    selfSeniorCitizen = false,
     section80D_parents,
+    parentsSeniorCitizen = false,
     section80E,
     section80G,
     section80Tta,
+    section80Gg = 0,
+    section80Ddb = 0,
+    section80U = 0,
+    section80Eea = 0,
+    customDeductions = [],
     otherDeductions,
     ageCategory,
   } = inputs;
@@ -267,7 +287,9 @@ export function computeTaxForRegime(
   // Standard deduction
   let standardDeduction = 0;
   if (isSalaried && grossSalary > 0) {
-    if (regime === 'new') {
+    if (customStandardDeduction !== undefined && customStandardDeduction !== null) {
+      standardDeduction = Math.min(grossSalary, Math.max(0, customStandardDeduction));
+    } else if (regime === 'new') {
       // Enhanced to ₹75,000 in Budget 2024 for FY 2024-25 / 2025-26
       standardDeduction = Math.min(grossSalary, 75000);
     } else {
@@ -279,8 +301,10 @@ export function computeTaxForRegime(
     regime === 'old' && isSalaried
       ? calculateHRAExemption(hraReceived, rentPaid, basicSalary, cityCategory)
       : 0;
+  const pTaxDeduction = regime === 'old' && isSalaried ? Math.max(0, professionalTax) : 0;
+  const allowancesDeduction = regime === 'old' && isSalaried ? Math.max(0, exemptAllowances) : 0;
   // Net salary after salary-specific deductions
-  const netSalary = Math.max(0, grossSalary - standardDeduction - hraExemption);
+  const netSalary = Math.max(0, grossSalary - standardDeduction - hraExemption - pTaxDeduction - allowancesDeduction);
   // House Property loss offset
   const housePropertyNet = hpResult.incomeOrLoss;
   const housePropertyLossDeduction = hpResult.lossForSetOff;
@@ -306,11 +330,21 @@ export function computeTaxForRegime(
     const capped80C = Math.min(150000, Math.max(0, section80C));
     const capped80CCD1B = Math.min(50000, Math.max(0, section80Ccd1b));
     const capped80CCD2 = Math.min(section80Ccd2, basicSalary * 0.14);
-    const maxSelf80D = ageCategory === 'senior' || ageCategory === 'super_senior' ? 50000 : 25000;
+    const maxSelf80D = selfSeniorCitizen || ageCategory === 'senior' || ageCategory === 'super_senior' ? 50000 : 25000;
     const capped80D_self = Math.min(maxSelf80D, Math.max(0, section80D_self));
-    const capped80D_parents = Math.min(50000, Math.max(0, section80D_parents));
+    const maxParents80D = parentsSeniorCitizen ? 50000 : 25000;
+    const capped80D_parents = Math.min(maxParents80D, Math.max(0, section80D_parents));
     const max80TTA = ageCategory === 'senior' || ageCategory === 'super_senior' ? 50000 : 10000;
     const capped80TTA = Math.min(max80TTA, Math.max(0, section80Tta, savingsInterest));
+    const capped80GG = Math.min(60000, Math.max(0, section80Gg));
+    const max80DDB = parentsSeniorCitizen || selfSeniorCitizen || ageCategory !== 'general' ? 100000 : 40000;
+    const capped80DDB = Math.min(max80DDB, Math.max(0, section80Ddb));
+    const capped80U = Math.min(125000, Math.max(0, section80U));
+    const capped80EEA = Math.min(150000, Math.max(0, section80Eea));
+    const customSum = (customDeductions || []).reduce(
+      (sum, item) => sum + Math.max(0, Number(item.amount) || 0),
+      0
+    );
     totalDeductions =
       capped80C +
       capped80CCD1B +
@@ -320,6 +354,11 @@ export function computeTaxForRegime(
       Math.max(0, section80E) +
       Math.max(0, section80G) +
       capped80TTA +
+      capped80GG +
+      capped80DDB +
+      capped80U +
+      capped80EEA +
+      customSum +
       Math.max(0, otherDeductions);
   }
   // Deductions are set off against normal income first (cannot be set off against special rate equity gains)

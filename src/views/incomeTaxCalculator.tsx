@@ -1,5 +1,7 @@
 'use client';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from '@/navigation';
+import { useAuth } from '../context/useAuth';
 import {
   FiAward,
   FiBriefcase,
@@ -7,10 +9,11 @@ import {
   FiCpu,
   FiDollarSign,
   FiHome,
-  FiInfo,
   FiPieChart,
+  FiPlus,
   FiSend,
   FiShield,
+  FiTrash2,
   FiTrendingUp,
 } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
@@ -23,7 +26,7 @@ import {
   compareTaxRegimes,
   TaxIncomeInputs,
 } from '../utilities/incomeTaxCalculations';
-import { generateTaxAIAdviceAction, getTaxAIStatusAction } from '@/actions/taxAi';
+import { generateTaxAIAdviceAction } from '@/actions/taxAi';
 import styles from './IncomeTaxCalculator.module.scss';
 const taxSchema = {
   '@context': 'https://schema.org',
@@ -32,7 +35,7 @@ const taxSchema = {
       '@type': 'FinancialProduct',
       name: 'Income Tax Calculator India FY 2024-25 & FY 2025-26',
       description:
-        'Dual-regime income tax calculator comparing Old vs New Tax Regime with Budget 2024 slab updates, Section 87A rebate, capital gains rules, deductions, and AI Tax Optimizer.',
+        'Dual-regime income tax calculator comparing Old vs New Tax Regime with Budget 2024 slab updates, Section 87A rebate, capital gains rules, deductions, and Tax Strategy Optimizer.',
       category: 'TaxCalculator',
       provider: {
         '@type': 'Organization',
@@ -80,6 +83,8 @@ const DEDUCTION_80C_STEPS = [
   { id: 'd5', value: '0', title: '₹0' },
 ];
 const IncomeTaxCalculator: React.FC = () => {
+  const { user, token } = useAuth();
+  const navigate = useNavigate();
   const [financialYear, setFinancialYear] = useState<'2024-25' | '2025-26'>('2024-25');
   const [ageCategory, setAgeCategory] = useState<AgeCategory>('general');
   const [isSalaried, setIsSalaried] = useState<boolean>(true);
@@ -93,6 +98,10 @@ const IncomeTaxCalculator: React.FC = () => {
   const [hraReceived, setHraReceived] = useState<string>('300000');
   const [rentPaid, setRentPaid] = useState<string>('240000');
   const [cityCategory, setCityCategory] = useState<CityCategory>('metro');
+  const [professionalTax, setProfessionalTax] = useState<string>('2400');
+  const [exemptAllowances, setExemptAllowances] = useState<string>('0');
+  const [useCustomStdDeduction, setUseCustomStdDeduction] = useState<boolean>(false);
+  const [customStdDeduction, setCustomStdDeduction] = useState<string>('75000');
   // Business / Profession
   const [businessIncome, setBusinessIncome] = useState<string>('0');
   // House property
@@ -114,24 +123,49 @@ const IncomeTaxCalculator: React.FC = () => {
   const [section80Ccd1b, setSection80Ccd1b] = useState<string>('50000');
   const [section80Ccd2, setSection80Ccd2] = useState<string>('0');
   const [section80DSelf, setSection80DSelf] = useState<string>('25000');
+  const [seniorSelf80D, setSeniorSelf80D] = useState<boolean>(false);
   const [section80DParents, setSection80DParents] = useState<string>('25000');
+  const [seniorParents80D, setSeniorParents80D] = useState<boolean>(false);
   const [section80E, setSection80E] = useState<string>('0');
   const [section80G, setSection80G] = useState<string>('0');
   const [section80Tta, setSection80Tta] = useState<string>('10000');
+  const [section80Gg, setSection80Gg] = useState<string>('0');
+  const [section80Ddb, setSection80Ddb] = useState<string>('0');
+  const [section80U, setSection80U] = useState<string>('0');
+  const [section80Eea, setSection80Eea] = useState<string>('0');
+  const [customDeductionsList, setCustomDeductionsList] = useState<
+    Array<{ id: string; name: string; amount: string }>
+  >([]);
   const [otherDeductions, setOtherDeductions] = useState<string>('0');
-  // AI Tax Advisor state
-  const [aiStatus, setAiStatus] = useState<{
-    enabled: boolean;
-    provider?: string;
-    model?: string;
-    hasApiKey?: boolean;
-  }>({ enabled: true });
-  const [aiLoading, setAiLoading] = useState<boolean>(false);
-  const [aiAdvice, setAiAdvice] = useState<string | null>(null);
-  const [aiQuestion, setAiQuestion] = useState<string>('');
+  // Strategy Advisory state (Without mentioning AI)
+  const [strategyLoading, setStrategyLoading] = useState<boolean>(false);
+  const [strategyAdvice, setStrategyAdvice] = useState<string | null>(null);
+  const [strategyQuestion, setStrategyQuestion] = useState<string>('');
+  const [showUpgradeGate, setShowUpgradeGate] = useState<boolean>(false);
+  const hasTaxPro = Boolean(
+    user?.role === 'admin' ||
+    user?.subscription_plan === 'tax_monthly' ||
+    user?.subscription_plan === 'tax_yearly'
+  );
   const currencySymbol = getCurrencySymbol('en-IN', 'INR');
   const sanitizeAmount = (val: string): number => {
     return Math.max(0, Number(val.replace(/[^0-9]/g, '')) || 0);
+  };
+  // Add a new custom deduction row
+  const handleAddCustomDeduction = () => {
+    const newId = `custom_${Date.now()}`;
+    setCustomDeductionsList((prev) => [
+      ...prev,
+      { id: newId, name: `Custom Deduction #${prev.length + 1}`, amount: '0' },
+    ]);
+  };
+  const handleUpdateCustomDeduction = (id: string, field: 'name' | 'amount', value: string) => {
+    setCustomDeductionsList((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
+  const handleRemoveCustomDeduction = (id: string) => {
+    setCustomDeductionsList((prev) => prev.filter((item) => item.id !== id));
   };
   // Compile inputs
   const inputs: TaxIncomeInputs = useMemo(() => {
@@ -144,6 +178,9 @@ const IncomeTaxCalculator: React.FC = () => {
       hraReceived: isSalaried ? sanitizeAmount(hraReceived) : 0,
       rentPaid: isSalaried ? sanitizeAmount(rentPaid) : 0,
       cityCategory,
+      professionalTax: isSalaried ? sanitizeAmount(professionalTax) : 0,
+      exemptAllowances: isSalaried ? sanitizeAmount(exemptAllowances) : 0,
+      customStandardDeduction: useCustomStdDeduction ? sanitizeAmount(customStdDeduction) : null,
       businessIncome: sanitizeAmount(businessIncome),
       isSelfOccupied,
       rentalIncome: sanitizeAmount(rentalIncome),
@@ -160,10 +197,21 @@ const IncomeTaxCalculator: React.FC = () => {
       section80Ccd1b: sanitizeAmount(section80Ccd1b),
       section80Ccd2: sanitizeAmount(section80Ccd2),
       section80D_self: sanitizeAmount(section80DSelf),
+      selfSeniorCitizen: seniorSelf80D,
       section80D_parents: sanitizeAmount(section80DParents),
+      parentsSeniorCitizen: seniorParents80D,
       section80E: sanitizeAmount(section80E),
       section80G: sanitizeAmount(section80G),
       section80Tta: sanitizeAmount(section80Tta),
+      section80Gg: sanitizeAmount(section80Gg),
+      section80Ddb: sanitizeAmount(section80Ddb),
+      section80U: sanitizeAmount(section80U),
+      section80Eea: sanitizeAmount(section80Eea),
+      customDeductions: customDeductionsList.map((item) => ({
+        id: item.id,
+        name: item.name,
+        amount: sanitizeAmount(item.amount),
+      })),
       otherDeductions: sanitizeAmount(otherDeductions),
     };
   }, [
@@ -175,6 +223,10 @@ const IncomeTaxCalculator: React.FC = () => {
     hraReceived,
     rentPaid,
     cityCategory,
+    professionalTax,
+    exemptAllowances,
+    useCustomStdDeduction,
+    customStdDeduction,
     businessIncome,
     isSelfOccupied,
     rentalIncome,
@@ -191,67 +243,68 @@ const IncomeTaxCalculator: React.FC = () => {
     section80Ccd1b,
     section80Ccd2,
     section80DSelf,
+    seniorSelf80D,
     section80DParents,
+    seniorParents80D,
     section80E,
     section80G,
     section80Tta,
+    section80Gg,
+    section80Ddb,
+    section80U,
+    section80Eea,
+    customDeductionsList,
     otherDeductions,
   ]);
   // Compute dual-regime comparison
   const comparison = useMemo(() => {
     return compareTaxRegimes(inputs);
   }, [inputs]);
-  // Check AI availability from server
-  useEffect(() => {
-    let cancelled = false;
-    getTaxAIStatusAction()
-      .then((data) => {
-        if (!cancelled && data && typeof data.enabled === 'boolean') {
-          setAiStatus(data);
-        }
-      })
-      .catch(() => {
-        // Non-fatal, assume enabled with fallback
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  const handleGenerateAiAdvice = async (customQuestion?: string) => {
-    setAiLoading(true);
-    setAiAdvice(null);
+  const handleGenerateStrategyAdvice = async (customQuestion?: string) => {
+    if (!hasTaxPro) {
+      setShowUpgradeGate(true);
+      return;
+    }
+    setStrategyLoading(true);
+    setStrategyAdvice(null);
+    setShowUpgradeGate(false);
     try {
-      const data = await generateTaxAIAdviceAction({
-        financialSummary: {
-          financialYear: inputs.financialYear,
-          isSalaried: inputs.isSalaried,
-          grossTotalIncome: comparison.newRegime.grossTotalIncome,
-          newRegimeTax: comparison.newRegime.totalTaxPayable,
-          oldRegimeTax: comparison.oldRegime.totalTaxPayable,
-          recommendedRegime: comparison.recommendedRegime,
-          taxSavings: comparison.taxSavings,
-          breakevenDeductions: comparison.breakevenDeductions,
-          currentDeductions: comparison.currentDeductionsClaimed,
-          salary: inputs.grossSalary,
-          businessIncome: inputs.businessIncome,
-          equityStcg: inputs.equityStcg,
-          equityLtcg: inputs.equityLtcg,
-          ppfInterestExempt: inputs.ppfInterest,
-          section80C: inputs.section80C,
-          section80CCD1B: inputs.section80Ccd1b,
-          section80D: inputs.section80D_self + inputs.section80D_parents,
+      const data = await generateTaxAIAdviceAction(
+        {
+          financialSummary: {
+            financialYear: inputs.financialYear,
+            isSalaried: inputs.isSalaried,
+            grossTotalIncome: comparison.newRegime.grossTotalIncome,
+            newRegimeTax: comparison.newRegime.totalTaxPayable,
+            oldRegimeTax: comparison.oldRegime.totalTaxPayable,
+            recommendedRegime: comparison.recommendedRegime,
+            taxSavings: comparison.taxSavings,
+            breakevenDeductions: comparison.breakevenDeductions,
+            currentDeductions: comparison.currentDeductionsClaimed,
+            salary: inputs.grossSalary,
+            businessIncome: inputs.businessIncome,
+            equityStcg: inputs.equityStcg,
+            equityLtcg: inputs.equityLtcg,
+            ppfInterestExempt: inputs.ppfInterest,
+            section80C: inputs.section80C,
+            section80CCD1B: inputs.section80Ccd1b,
+            section80D: inputs.section80D_self + inputs.section80D_parents,
+          },
+          userQuestion: customQuestion || strategyQuestion || undefined,
         },
-        userQuestion: customQuestion || aiQuestion || undefined,
-      });
-      if (data.advice) {
-        setAiAdvice(data.advice);
+        token || undefined
+      );
+      if (data.needsUpgrade) {
+        setShowUpgradeGate(true);
+      } else if (data.advice) {
+        setStrategyAdvice(data.advice);
       } else {
-        setAiAdvice(data.message || 'Unable to generate advice at this moment.');
+        setStrategyAdvice(data.message || 'Unable to generate optimization strategy at this moment.');
       }
     } catch (err) {
-      setAiAdvice(`Error generating AI tax advice: ${String(err)}`);
+      setStrategyAdvice(`Unable to generate strategy report: ${String(err)}`);
     } finally {
-      setAiLoading(false);
+      setStrategyLoading(false);
     }
   };
   const isNewWinner = comparison.recommendedRegime === 'new';
@@ -259,15 +312,15 @@ const IncomeTaxCalculator: React.FC = () => {
     <main className={styles.container}>
       <SEOHead
         title="Income Tax Calculator FY 2024-25 & 2025-26 — Old vs New Tax Regime | Rupee Calculator"
-        description="Calculate & compare income tax under Old vs New Tax Regime with Budget 2024 slabs, capital gains rules, PPF exemption, breakeven deductions, and AI Tax Advisor."
-        keywords="income tax calculator, old vs new tax regime, tax calculator FY 2024-25, Section 87A rebate, standard deduction 75000, capital gains tax calculator, AI tax advisor India, income tax slab 2025"
+        description="Calculate & compare income tax under Old vs New Tax Regime with Budget 2024 slabs, capital gains rules, PPF exemption, breakeven deductions, and Tax Strategy Advisory."
+        keywords="income tax calculator, old vs new tax regime, tax calculator FY 2024-25, Section 87A rebate, standard deduction 75000, capital gains tax calculator, tax strategy advisory India, income tax slab 2025"
         canonicalPath="/income-tax-calculator"
         schema={taxSchema}
       />
       <header className={styles.header}>
         <div className={styles.badge}>
           <FiShield style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} />
-          Income Tax Department of India &bull; Budget 2024 Updates &bull; AI Powered
+          Income Tax Department of India &bull; Budget 2024 Updates &bull; Strategy Engine
         </div>
         <h1 className={styles.title}>Income Tax Calculator &amp; Optimizer</h1>
         <p className={styles.subtitle}>
@@ -509,73 +562,85 @@ const IncomeTaxCalculator: React.FC = () => {
           </div>
         )}
       </section>
-      {/* AI Tax Advisor Section */}
+      {/* Tax Strategy Advisory Section */}
       <section className={styles.aiCard}>
         <div className={styles.aiHeader}>
           <div className={styles.aiTitleGroup}>
             <FiCpu className={styles.aiIcon} />
-            <h2 className={styles.aiTitle}>AI Tax Advisor &amp; Strategy Optimizer</h2>
+            <h2 className={styles.aiTitle}>Tax Strategy &amp; Optimization Advisory</h2>
           </div>
           <span className={styles.aiBadge}>
-            {aiStatus.enabled ? 'Gemini AI Active' : 'AI Offline'}
+            {hasTaxPro ? 'Tax Pro Active' : 'Tax Pro Feature'}
           </span>
         </div>
         <p className={styles.aiDesc}>
-          Get instant, institutional-grade AI tax planning tailored specifically to your financial
-          figures. Analyzes your salary, second business, PPF earnings, capital gains harvesting,
-          and Section 80C/80CCD deductions.
+          Get institutional-grade tax planning tailored specifically to your financial figures.
+          Analyzes your salary, second business, PPF earnings, capital gains harvesting, and all
+          Section 80 deductions.
         </p>
-        {aiStatus.enabled ? (
-          <div>
+        <div>
+          <button
+            type="button"
+            disabled={strategyLoading}
+            onClick={() => void handleGenerateStrategyAdvice()}
+            className={styles.aiActionBtn}
+          >
+            <FiCpu />
+            <span>
+              {strategyLoading ? 'Generating Optimization Strategy...' : 'Generate Tax Optimization Strategy'}
+            </span>
+          </button>
+          <div className={styles.aiQuestionRow}>
+            <input
+              type="text"
+              value={strategyQuestion}
+              onChange={(e) => setStrategyQuestion(e.target.value)}
+              placeholder="Ask specific tax questions (e.g., 'What if I invest ₹50k in NPS?', 'How should I treat freelance income?')"
+              className={styles.aiQuestionInput}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  void handleGenerateStrategyAdvice(strategyQuestion);
+                }
+              }}
+            />
             <button
               type="button"
-              disabled={aiLoading}
-              onClick={() => void handleGenerateAiAdvice()}
-              className={styles.aiActionBtn}
+              disabled={strategyLoading || !strategyQuestion.trim()}
+              onClick={() => void handleGenerateStrategyAdvice(strategyQuestion)}
+              className={styles.aiAskBtn}
             >
-              <FiCpu />
-              <span>
-                {aiLoading ? 'Generating Optimization Strategy...' : 'Generate AI Tax Strategy'}
-              </span>
+              <FiSend style={{ marginRight: '0.25rem' }} /> Consult Engine
             </button>
-            <div className={styles.aiQuestionRow}>
-              <input
-                type="text"
-                value={aiQuestion}
-                onChange={(e) => setAiQuestion(e.target.value)}
-                placeholder="Ask specific tax questions (e.g., 'What if I invest ₹50k in NPS?', 'How should I treat freelance income?')"
-                className={styles.aiQuestionInput}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    void handleGenerateAiAdvice(aiQuestion);
-                  }
-                }}
-              />
+          </div>
+          {showUpgradeGate && !hasTaxPro && (
+            <div className={styles.taxProTeaser}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--color-heading)' }}>
+                  Unlock Personalized Tax Strategy Advisory
+                </div>
+                <div style={{ fontSize: '0.8125rem', opacity: 0.85, marginTop: '0.25rem' }}>
+                  Institutional-grade tax optimization with multi-source planning, custom deduction modeling, and continuous savings recommendations is exclusive to <strong>Tax Pro</strong> (₹129/mo or ₹999/yr).
+                </div>
+              </div>
               <button
                 type="button"
-                disabled={aiLoading || !aiQuestion.trim()}
-                onClick={() => void handleGenerateAiAdvice(aiQuestion)}
-                className={styles.aiAskBtn}
+                onClick={() => navigate('/upgrade?plan=tax_monthly')}
+                className={styles.taxProUpgradeBtn}
               >
-                <FiSend style={{ marginRight: '0.25rem' }} /> Ask AI
+                Upgrade to Tax Pro &rarr;
               </button>
             </div>
-            {aiAdvice && (
-              <div className={styles.aiResponseBox}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.75rem', color: 'var(--color-primary)', fontWeight: 700 }}>
-                  <FiAward />
-                  <span>Customized Tax Advisory Report</span>
-                </div>
-                <div style={{ whiteSpace: 'pre-wrap' }}>{aiAdvice}</div>
+          )}
+          {strategyAdvice && (
+            <div className={styles.aiResponseBox}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.75rem', color: 'var(--color-primary)', fontWeight: 700 }}>
+                <FiAward />
+                <span>Customized Tax Advisory Report</span>
               </div>
-            )}
-          </div>
-        ) : (
-          <div style={{ fontSize: '0.75rem', opacity: 0.8, color: '#d97706' }}>
-            <FiInfo style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} />
-            AI Tax Advisor is currently disabled by administrator in the Admin Portal.
-          </div>
-        )}
+              <div style={{ whiteSpace: 'pre-wrap' }}>{strategyAdvice}</div>
+            </div>
+          )}
+        </div>
       </section>
       {/* Rule-Based Instant Optimization Recommendations */}
       <section className={styles.card}>
@@ -764,6 +829,61 @@ const IncomeTaxCalculator: React.FC = () => {
                       className={styles.input}
                     />
                   </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-prof-tax" className={styles.label}>
+                      Professional Tax (Sec 16(iii))
+                    </label>
+                    <input
+                      id="tax-prof-tax"
+                      type="text"
+                      value={professionalTax}
+                      onChange={(e) => setProfessionalTax(e.target.value)}
+                      placeholder="e.g. 2400 (Deductible up to ₹2,500 in Old Regime)"
+                      className={styles.input}
+                    />
+                    <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                      Deductible up to ₹2,500/year under Old Regime.
+                    </span>
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-exempt-allowances" className={styles.label}>
+                      Exempt Allowances (Sec 10 - LTA, Conveyance, Uniform)
+                    </label>
+                    <input
+                      id="tax-exempt-allowances"
+                      type="text"
+                      value={exemptAllowances}
+                      onChange={(e) => setExemptAllowances(e.target.value)}
+                      placeholder="e.g. 50000"
+                      className={styles.input}
+                    />
+                    <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                      Exempt from salary in Old Regime with valid receipts.
+                    </span>
+                  </div>
+                </div>
+                {/* Standard Deduction Custom Override */}
+                <div style={{ marginTop: '1rem', padding: '0.875rem', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--color-border)' }}>
+                  <label className={styles.checkboxToggle}>
+                    <input
+                      type="checkbox"
+                      checked={useCustomStdDeduction}
+                      onChange={(e) => setUseCustomStdDeduction(e.target.checked)}
+                      style={{ accentColor: 'var(--color-primary)' }}
+                    />
+                    <span>Override Standard Deduction (Default: ₹75,000 New / ₹50,000 Old)</span>
+                  </label>
+                  {useCustomStdDeduction && (
+                    <div style={{ marginTop: '0.75rem', maxWidth: '300px' }}>
+                      <input
+                        type="text"
+                        value={customStdDeduction}
+                        onChange={(e) => setCustomStdDeduction(e.target.value)}
+                        placeholder="Custom Standard Deduction Amount"
+                        className={styles.input}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1014,24 +1134,50 @@ const IncomeTaxCalculator: React.FC = () => {
                 />
               </div>
               <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80d-self" className={styles.label}>Section 80D — Health Insurance (Self &amp; Family)</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label htmlFor="tax-deduction-80d-self" className={styles.label}>
+                    Section 80D — Health Insurance (Self &amp; Family)
+                  </label>
+                  <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={seniorSelf80D}
+                      onChange={(e) => setSeniorSelf80D(e.target.checked)}
+                      style={{ accentColor: 'var(--color-primary)' }}
+                    />
+                    <span>Senior (Limit ₹50k)</span>
+                  </label>
+                </div>
                 <input
                   id="tax-deduction-80d-self"
                   type="text"
                   value={section80DSelf}
                   onChange={(e) => setSection80DSelf(e.target.value)}
-                  placeholder="Max ₹25,000 (₹50,000 if Senior)"
+                  placeholder={seniorSelf80D ? 'Max ₹50,000 for Senior Citizen' : 'Max ₹25,000'}
                   className={styles.input}
                 />
               </div>
               <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80d-parents" className={styles.label}>Section 80D — Health Insurance (Parents)</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label htmlFor="tax-deduction-80d-parents" className={styles.label}>
+                    Section 80D — Health Insurance (Parents)
+                  </label>
+                  <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={seniorParents80D}
+                      onChange={(e) => setSeniorParents80D(e.target.checked)}
+                      style={{ accentColor: 'var(--color-primary)' }}
+                    />
+                    <span>Senior Parents (Limit ₹50k)</span>
+                  </label>
+                </div>
                 <input
                   id="tax-deduction-80d-parents"
                   type="text"
                   value={section80DParents}
                   onChange={(e) => setSection80DParents(e.target.value)}
-                  placeholder="Max ₹25,000 (₹50,000 if Senior Parents)"
+                  placeholder={seniorParents80D ? 'Max ₹50,000 for Senior Parents' : 'Max ₹25,000'}
                   className={styles.input}
                 />
               </div>
@@ -1070,18 +1216,119 @@ const IncomeTaxCalculator: React.FC = () => {
                 />
               </div>
               <div className={styles.formField}>
+                <label htmlFor="tax-deduction-80gg" className={styles.label}>
+                  Section 80GG — House Rent Paid (No HRA)
+                </label>
+                <input
+                  id="tax-deduction-80gg"
+                  type="text"
+                  value={section80Gg}
+                  onChange={(e) => setSection80Gg(e.target.value)}
+                  placeholder="Max ₹60,000/yr (when HRA is not provided)"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label htmlFor="tax-deduction-80ddb" className={styles.label}>
+                  Section 80DDB — Medical Treatment (Specified Diseases)
+                </label>
+                <input
+                  id="tax-deduction-80ddb"
+                  type="text"
+                  value={section80Ddb}
+                  onChange={(e) => setSection80Ddb(e.target.value)}
+                  placeholder="Max ₹40,000 (₹1,00,000 for Senior)"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label htmlFor="tax-deduction-80u" className={styles.label}>
+                  Section 80U — Person with Disability
+                </label>
+                <input
+                  id="tax-deduction-80u"
+                  type="text"
+                  value={section80U}
+                  onChange={(e) => setSection80U(e.target.value)}
+                  placeholder="₹75,000 (₹1,25,000 for severe disability)"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label htmlFor="tax-deduction-80eea" className={styles.label}>
+                  Section 80EEA — Additional Affordable Home Loan Interest
+                </label>
+                <input
+                  id="tax-deduction-80eea"
+                  type="text"
+                  value={section80Eea}
+                  onChange={(e) => setSection80Eea(e.target.value)}
+                  placeholder="Max ₹1,50,000"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.formField}>
                 <label htmlFor="tax-other-deductions" className={styles.label}>
-                  Other Chapter VI-A Deductions
+                  Other Miscellaneous Deductions
                 </label>
                 <input
                   id="tax-other-deductions"
                   type="text"
                   value={otherDeductions}
                   onChange={(e) => setOtherDeductions(e.target.value)}
-                  placeholder="Section 80GG, 80U, etc."
+                  placeholder="Other eligible tax deductions"
                   className={styles.input}
                 />
               </div>
+            </div>
+            {/* Custom Deductions List */}
+            <div className={styles.customDeductionsContainer}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}>
+                    Custom Tax Deductions
+                  </h4>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', opacity: 0.75 }}>
+                    Add any personalized deductions or state-specific exemptions not listed above.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddCustomDeduction}
+                  className={styles.addDeductionBtn}
+                >
+                  <FiPlus size={14} /> Add Custom Deduction
+                </button>
+              </div>
+              {customDeductionsList.map((item) => (
+                <div key={item.id} className={styles.customDeductionRow}>
+                  <input
+                    type="text"
+                    value={item.name}
+                    onChange={(e) => handleUpdateCustomDeduction(item.id, 'name', e.target.value)}
+                    placeholder="Deduction Name / Section"
+                    className={styles.input}
+                    style={{ flex: 2 }}
+                  />
+                  <input
+                    type="text"
+                    value={item.amount}
+                    onChange={(e) => handleUpdateCustomDeduction(item.id, 'amount', e.target.value)}
+                    placeholder="Amount (₹)"
+                    className={styles.input}
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCustomDeduction(item.id)}
+                    className={styles.deleteDeductionBtn}
+                    title="Remove custom deduction"
+                    aria-label="Remove deduction"
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}
