@@ -6,7 +6,7 @@
 
 .notesContainer {
   width: 100%;
-  max-width: 80rem;
+  // max-width: 80rem;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
@@ -14,6 +14,9 @@
   overflow: hidden;
   min-height: 0;
   height: 100%;
+  @media (max-width: 478px) {
+    padding: 0 0.25rem;
+  }
 }
 
 .notesInner {
