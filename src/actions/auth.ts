@@ -29,6 +29,7 @@ function mapToAuthUser(user: DbUser): AuthUser {
     freeLimit: user.free_limit ?? FREE_USAGE_LIMIT,
     subscription_status: user.subscription_status ?? 'free_trial',
     subscription_expires_at: user.subscription_expires_at,
+    subscription_plan: user.subscription_plan ?? 'pro_monthly',
     first_used_at: user.first_used_at,
     trial_expires_at: user.trial_expires_at,
     isBlocked: isUserBlocked(user),
@@ -87,7 +88,7 @@ export async function signupWithGooglePasswordAction(data: {
     verifiedGooglePicture ||
     `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName || email)}`;
   const existingUsers = (await sql`
-    SELECT id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
+    SELECT id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
     FROM users
     WHERE email = ${email}
   `) as DbUser[];
@@ -106,7 +107,7 @@ export async function signupWithGooglePasswordAction(data: {
           role = ${finalRole},
           updated_at = NOW()
       WHERE email = ${email}
-      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
     `) as DbUser[];
     user = updated[0];
   } else {
@@ -118,7 +119,7 @@ export async function signupWithGooglePasswordAction(data: {
       VALUES (
         ${newId}, ${email}, ${hash}, ${salt}, ${displayName}, ${picture}, 'password', ${verifiedGoogleSub}, ${role}, 0, 15, 'free_trial', NULL, NULL
       )
-      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
     `) as DbUser[];
     user = created[0];
   }
@@ -146,7 +147,7 @@ export async function loginWithPasswordAction(data: {
   const sql = getDb();
   await ensureTables(sql);
   const rows = (await sql`
-    SELECT id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
+    SELECT id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
     FROM users
     WHERE email = ${email}
   `) as DbUser[];
@@ -219,7 +220,7 @@ export async function loginWithGoogleAction(authData: {
   await ensureTables(sql);
   const isAdmin = isEmailAdmin(email);
   const existingUsers = (await sql`
-    SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
+    SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
     FROM users
     WHERE email = ${email}
   `) as DbUser[];
@@ -236,7 +237,7 @@ export async function loginWithGoogleAction(authData: {
           free_limit = COALESCE(free_limit, 15),
           updated_at = NOW()
       WHERE email = ${email}
-      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
     `) as DbUser[];
     user = updated[0];
   } else {
@@ -245,7 +246,7 @@ export async function loginWithGoogleAction(authData: {
     const created = (await sql`
       INSERT INTO users (id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, first_used_at, trial_expires_at)
       VALUES (${newId}, ${email}, ${name || null}, ${picture || null}, 'google', ${sub || null}, ${role}, 0, 15, 'free_trial', NULL, NULL)
-      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
     `) as DbUser[];
     user = created[0];
   }
@@ -270,7 +271,7 @@ export async function getMeAction(token?: string | null): Promise<{ user: AuthUs
       u.id, u.email, u.password_hash, u.password_salt, u.name, u.picture,
       u.provider, u.provider_id, u.role, u.api_usage_count,
       COALESCE(u.free_limit, 15) AS free_limit,
-      u.subscription_status, u.subscription_expires_at,
+      u.subscription_status, u.subscription_expires_at, u.subscription_plan,
       u.first_used_at, u.trial_expires_at, u.created_at, u.updated_at
     FROM user_sessions s
     JOIN users u ON u.id = s.user_id

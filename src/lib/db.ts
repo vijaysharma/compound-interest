@@ -18,6 +18,7 @@ export interface DbUser {
   free_limit?: number;
   subscription_status: 'free_trial' | 'active' | 'expired';
   subscription_expires_at: string | null;
+  subscription_plan?: string | null;
   first_used_at?: string | null;
   trial_expires_at?: string | null;
   created_at: string;
@@ -190,6 +191,7 @@ export async function ensureTables(sql: Query) {
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS free_limit INT NOT NULL DEFAULT 15`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'free_trial'`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_plan TEXT DEFAULT 'pro_monthly'`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS first_used_at TIMESTAMPTZ`;
       await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ`;
       await sql`
@@ -358,6 +360,7 @@ export async function getUserFromToken(token: string | null | undefined, sql: Qu
       COALESCE(u.free_limit, 15) AS free_limit,
       u.subscription_status,
       u.subscription_expires_at,
+      u.subscription_plan,
       u.first_used_at,
       u.trial_expires_at,
       u.created_at,

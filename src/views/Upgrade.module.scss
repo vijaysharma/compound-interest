@@ -376,6 +376,81 @@
   }
 }
 
+.billingToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.billingToggleWrapper {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  background-color: var(--color-base-200);
+  border-radius: 9999px;
+  border: 1px solid var(--color-base-300);
+}
+
+.billingToggleBtn {
+  padding: 0.4rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: inherit;
+  transition: all 0.15s ease;
+
+  &.active {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.saveBadge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #16a34a;
+  background-color: rgba(22, 163, 74, 0.12);
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.pricingCardTax {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #d97706 12%, transparent) 0%,
+    var(--color-base-100) 50%,
+    var(--color-base-200) 100%
+  );
+  border: 2px solid color-mix(in srgb, #d97706 50%, transparent);
+}
+
+.taxBadge {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.taxButton {
+  background-color: #d97706 !important;
+}
+
 .spinner {
   width: 1rem;
   height: 1rem;
@@ -390,3 +465,4 @@
     transform: rotate(360deg);
   }
 }
+

@@ -18,6 +18,7 @@ const PaywallModal = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [now] = useState(() => Date.now());
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
   useEffect(() => {
     if (!showPaywall) return;
     const fetchSettings = async () => {
@@ -37,7 +38,6 @@ const PaywallModal = () => {
       navigate('/upgrade');
     }
   };
-  const amount = settings?.amount ?? 54;
   const isTrialActive = user && !user.isBlocked && user.subscription_status !== 'active';
   const remainingCalculations = Math.max(0, (user?.freeLimit || 15) - (user?.api_usage_count || 0));
   const getRemainingHours = () => {
@@ -50,6 +50,9 @@ const PaywallModal = () => {
     return `${mins}m`;
   };
   const remainingTimeStr = getRemainingHours();
+  const proMonthlyAmount = settings?.amount ?? 54;
+  const planId = billingInterval === 'monthly' ? 'pro_monthly' : 'pro_yearly';
+  const planAmount = billingInterval === 'monthly' ? proMonthlyAmount : 499;
   const handleRazorpayPayment = async () => {
     setIsProcessing(true);
     setMessage(null);
@@ -59,7 +62,7 @@ const PaywallModal = () => {
         throw new Error('Could not load payment gateway. Please check your internet connection.');
       }
       const storedToken = localStorage.getItem('auth_token');
-      const orderData = await createRazorpayOrderAction(storedToken);
+      const orderData = await createRazorpayOrderAction(storedToken, planId);
       if (!orderData.orderId || !orderData.keyId) {
         throw new Error('Failed to create payment order');
       }
@@ -68,7 +71,7 @@ const PaywallModal = () => {
         amount: orderData.amount,
         currency: orderData.currency || 'INR',
         name: 'Rupee Calculator Pro',
-        description: '30-Day Pro Subscription',
+        description: orderData.planName || 'Pro Subscription',
         order_id: orderData.orderId,
         prefill: {
           email: user?.email || '',
@@ -83,10 +86,13 @@ const PaywallModal = () => {
         }) => {
           try {
             setIsProcessing(true);
-            const verifyData = await verifyRazorpayPaymentAction(response, storedToken);
+            const verifyData = await verifyRazorpayPaymentAction(
+              { ...response, plan_id: planId },
+              storedToken
+            );
             setMessage({
               type: 'success',
-              text: verifyData.message || 'Payment successful! 30-day Pro access is now active.',
+              text: verifyData.message || 'Payment successful! Pro access is now active.',
             });
             await refreshUser();
             setTimeout(() => {
@@ -121,20 +127,15 @@ const PaywallModal = () => {
     }
   };
   return (
-    <div className={styles.dialogOverlay}>
-      <div
-        className={styles.modalCard}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="paywall-title"
-      >
+    <div className={styles.dialogOverlay} role="dialog" aria-modal="true" aria-labelledby="paywall-title">
+      <div className={styles.modalCard}>
         <button
           type="button"
-          className={styles.closeBtn}
           onClick={handleCloseOrLater}
-          aria-label="Close paywall"
+          className={styles.closeBtn}
+          aria-label="Close modal"
         >
-          <FiX style={{ width: '1rem', height: '1rem' }} />
+          <FiX style={{ width: '1.25rem', height: '1.25rem' }} />
         </button>
         <div className={styles.header}>
           {isTrialActive ? (
@@ -160,18 +161,51 @@ const PaywallModal = () => {
                 </span>{' '}
                 live Mutual Fund, Inflation &amp; PPP calculation runs remaining
                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other
-                tools in the Calculators Suite (FD, RD, EMI, SIP, SWP, Utilities) are 100% free for
-                48 hours from first usage. Unlock unlimited access for just ₹{amount}/month.
+                tools in the Calculators Suite are 100% free. Unlock unlimited access today.
               </>
             ) : (
               <>
-                Your free trial / {user?.freeLimit || 15}-run limit for live AMFI Mutual Funds,
-                Inflation &amp; PPP analytics has ended for{' '}
+                Your free trial for live AMFI Mutual Funds, Inflation &amp; PPP analytics has ended for{' '}
                 <span className={styles.highlightSemibold}>{user?.email}</span>. Calculators Suite tools remain
-                free to use. Unlock unlimited access for just ₹{amount}/month.
+                free to use.
               </>
             )}
           </p>
+          {/* Monthly / Yearly Plan Toggle */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+            <button
+              type="button"
+              onClick={() => setBillingInterval('monthly')}
+              style={{
+                padding: '0.35rem 0.85rem',
+                borderRadius: '9999px',
+                border: '1px solid var(--color-border, #ccc)',
+                backgroundColor: billingInterval === 'monthly' ? 'var(--color-primary, #6e0b75)' : 'transparent',
+                color: billingInterval === 'monthly' ? '#fff' : 'inherit',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+              }}
+            >
+              ₹{proMonthlyAmount} / 30 Days
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingInterval('yearly')}
+              style={{
+                padding: '0.35rem 0.85rem',
+                borderRadius: '9999px',
+                border: '1px solid var(--color-border, #ccc)',
+                backgroundColor: billingInterval === 'yearly' ? 'var(--color-primary, #6e0b75)' : 'transparent',
+                color: billingInterval === 'yearly' ? '#fff' : 'inherit',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+              }}
+            >
+              ₹499 / Year (Save 23%)
+            </button>
+          </div>
         </div>
         {message && (
           <div
@@ -195,10 +229,30 @@ const PaywallModal = () => {
             ) : (
               <>
                 <FiLock style={{ width: '1rem', height: '1rem' }} />
-                <span>Pay ₹{amount} &amp; Unlock Pro Access</span>
+                <span>Pay ₹{planAmount} &amp; Unlock Pro Access</span>
               </>
             )}
           </button>
+          <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPaywall(false);
+                navigate('/upgrade');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-primary, #6e0b75)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Looking for Tax Advisory? View Tax Pro Plans (₹129/mo) &rarr;
+            </button>
+          </div>
           <p className={styles.securityInfo}>
             Secure checkout via Razorpay • UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking
           </p>

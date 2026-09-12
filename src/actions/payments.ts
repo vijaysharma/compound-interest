@@ -101,11 +101,18 @@ export async function updatePaymentSettingsAction(
   `) as PaymentSettings[];
   return { success: true, settings: updated[0] };
 }
-export async function createRazorpayOrderAction(token?: string | null): Promise<{
+import { SUBSCRIPTION_PLANS, SubscriptionPlanDetails } from '@/types/auth';
+export type { SubscriptionPlanDetails };
+export async function createRazorpayOrderAction(
+  token?: string | null,
+  planId: string = 'pro_monthly'
+): Promise<{
   orderId: string;
   amount: number;
   currency: string;
   keyId: string;
+  planId: string;
+  planName: string;
   user: { name: string; email: string };
 }> {
   const sql = getDb();
@@ -124,16 +131,19 @@ export async function createRazorpayOrderAction(token?: string | null): Promise<
   }
   const keyId = rawKeyId.trim().replace(/^["']|["']$/g, '');
   const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
-  const settingsRows = (await sql`
-    SELECT amount FROM payment_settings WHERE id = 'default' LIMIT 1
-  `) as Array<{ amount?: number | string }>;
-  const configuredAmount =
-    settingsRows.length > 0 && Number(settingsRows[0].amount) > 0
-      ? Number(settingsRows[0].amount)
-      : 54;
-  const amountInPaise = Math.round(configuredAmount * 100);
+  const selectedPlan = SUBSCRIPTION_PLANS[planId] || SUBSCRIPTION_PLANS.pro_monthly;
+  let finalAmount = selectedPlan.amount;
+  if (selectedPlan.id === 'pro_monthly') {
+    const settingsRows = (await sql`
+      SELECT amount FROM payment_settings WHERE id = 'default' LIMIT 1
+    `) as Array<{ amount?: number | string }>;
+    if (settingsRows.length > 0 && Number(settingsRows[0].amount) > 0) {
+      finalAmount = Number(settingsRows[0].amount);
+    }
+  }
+  const amountInPaise = Math.round(finalAmount * 100);
   const authHeader = btoa(`${keyId}:${keySecret}`);
-  const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 10)}_${Date.now().toString().slice(-6)}`;
+  const receipt = `rcpt_${user.id.replace(/-/g, '').slice(0, 8)}_${Date.now().toString().slice(-6)}`;
   const orderPayload = JSON.stringify({
     amount: amountInPaise,
     currency: 'INR',
@@ -141,7 +151,7 @@ export async function createRazorpayOrderAction(token?: string | null): Promise<
     notes: {
       user_id: user.id,
       user_email: user.email,
-      plan: '30_days_pro',
+      plan: selectedPlan.id,
     },
   });
   const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
@@ -179,6 +189,8 @@ export async function createRazorpayOrderAction(token?: string | null): Promise<
     amount: orderData.amount ?? amountInPaise,
     currency: orderData.currency || 'INR',
     keyId,
+    planId: selectedPlan.id,
+    planName: selectedPlan.name,
     user: {
       name: user.name || user.email.split('@')[0],
       email: user.email,
@@ -190,12 +202,14 @@ export async function verifyRazorpayPaymentAction(
     razorpay_order_id?: string;
     razorpay_payment_id?: string;
     razorpay_signature?: string;
+    plan_id?: string;
   },
   token?: string | null
 ): Promise<{
   success: boolean;
   message: string;
   subscription_expires_at: string;
+  subscription_plan: string;
 }> {
   const sql = getDb();
   await ensureTables(sql);
@@ -208,7 +222,7 @@ export async function verifyRazorpayPaymentAction(
     throw new Error('Razorpay secret key is not configured.');
   }
   const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan_id } = body;
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     throw new Error('Missing required Razorpay payment confirmation parameters');
   }
@@ -229,17 +243,13 @@ export async function verifyRazorpayPaymentAction(
   if (existingPayment.length > 0) {
     throw new Error('This payment has already been verified and processed.');
   }
-  const settingsRows = (await sql`
-    SELECT amount FROM payment_settings WHERE id = 'default' LIMIT 1
-  `) as Array<{ amount?: number | string }>;
-  const recordedAmount =
-    settingsRows.length > 0 && Number(settingsRows[0].amount) > 0
-      ? Number(settingsRows[0].amount)
-      : 54;
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const plan = (plan_id && SUBSCRIPTION_PLANS[plan_id]) ? SUBSCRIPTION_PLANS[plan_id] : SUBSCRIPTION_PLANS.pro_monthly;
+  const recordedAmount = plan.amount;
+  const expiresAt = new Date(Date.now() + plan.days * 24 * 60 * 60 * 1000).toISOString();
   await sql`
     UPDATE users
     SET subscription_status = 'active',
+        subscription_plan = ${plan.id},
         subscription_expires_at = ${expiresAt},
         api_usage_count = 0,
         updated_at = NOW()
@@ -252,8 +262,9 @@ export async function verifyRazorpayPaymentAction(
   `;
   return {
     success: true,
-    message: 'Payment verified successfully! Your 30-day Pro access is now active.',
+    message: `Payment verified successfully! Your ${plan.name} access is now active.`,
     subscription_expires_at: expiresAt,
+    subscription_plan: plan.id,
   };
 }
 export async function submitManualPaymentAction(
@@ -355,10 +366,23 @@ export async function processAdminPaymentSubmissionAction(
       SET status = 'approved', updated_at = NOW()
       WHERE id = ${submission_id}
     `;
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    let planId = 'pro_monthly';
+    let days = 30;
+    if (submission.amount >= 900) {
+      planId = 'tax_yearly';
+      days = 365;
+    } else if (submission.amount >= 400) {
+      planId = 'pro_yearly';
+      days = 365;
+    } else if (submission.amount >= 120) {
+      planId = 'tax_monthly';
+      days = 30;
+    }
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     await sql`
       UPDATE users
       SET subscription_status = 'active',
+          subscription_plan = ${planId},
           subscription_expires_at = ${expiresAt},
           api_usage_count = 0,
           updated_at = NOW()
@@ -366,7 +390,7 @@ export async function processAdminPaymentSubmissionAction(
     `;
     return {
       success: true,
-      message: `Payment approved. User ${submission.user_email} granted 30-day Pro access.`,
+      message: `Payment approved. User ${submission.user_email} granted ${days}-day access (${planId}).`,
     };
   }
   await sql`
