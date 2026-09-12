@@ -21,9 +21,9 @@ export type ViewMode = 'list' | 'gallery';
 export type SortOption = 'updated_desc' | 'created_desc' | 'title_asc';
 /**
  * Whether the notes on screen reflect the server.
- * - 'syncing': a fetch is in flight; the list may be locally persisted data
+ * - 'syncing': a fetch is in flight
  * - 'synced': the list came back from the server
- * - 'error': the fetch failed; anything on screen is locally persisted only
+ * - 'error': the fetch failed, so no notes could be loaded
  * - 'unauthenticated': no session on this origin, so no fetch was attempted
  */
 export type SyncState = 'syncing' | 'synced' | 'error' | 'unauthenticated';

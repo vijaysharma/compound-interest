@@ -115,7 +115,7 @@ export async function getNotesAction(
                  lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
                  COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
           FROM admin_notes
-          WHERE user_id = ${user.id} OR user_id IS NULL
+          WHERE deleted_at IS NULL AND (user_id = ${user.id} OR user_id IS NULL)
           ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
           LIMIT 500
         `
@@ -125,7 +125,7 @@ export async function getNotesAction(
                  lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
                  COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
           FROM admin_notes
-          WHERE user_id = ${user.id}
+          WHERE deleted_at IS NULL AND user_id = ${user.id}
           ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
           LIMIT 500
         `
@@ -136,7 +136,7 @@ export async function getNotesAction(
                  lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
                  COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
           FROM admin_notes
-          WHERE (is_trashed = FALSE OR is_trashed IS NULL) AND (user_id = ${user.id} OR user_id IS NULL)
+          WHERE deleted_at IS NULL AND (is_trashed = FALSE OR is_trashed IS NULL) AND (user_id = ${user.id} OR user_id IS NULL)
           ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
           LIMIT 500
         `
@@ -146,7 +146,7 @@ export async function getNotesAction(
                  lock_password_hash, COALESCE(is_trashed, FALSE) AS is_trashed,
                  COALESCE(tags, '[]') AS tags, blob_url, created_at, updated_at
           FROM admin_notes
-          WHERE (is_trashed = FALSE OR is_trashed IS NULL) AND user_id = ${user.id}
+          WHERE deleted_at IS NULL AND (is_trashed = FALSE OR is_trashed IS NULL) AND user_id = ${user.id}
           ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
           LIMIT 500
         `) as NoteRow[];
@@ -255,9 +255,15 @@ export async function updateNoteAction(
     lock_password_hash?: string | null;
     is_trashed?: boolean;
     tags?: string[];
+    /** updated_at of the copy this write is based on, for staleness checks. */
+    client_updated_at?: string;
   },
   token?: string | null
-): Promise<{ success: boolean; id: string }> {
+): Promise<{
+  success: boolean;
+  id: string;
+  rejected?: 'deleted' | 'stale';
+}> {
   const sql = getDb();
   await ensureTables(sql);
   const user = await getUserFromToken(token, sql);
@@ -268,8 +274,27 @@ export async function updateNoteAction(
   }
   const noteId = sanitizeServerId(body.id);
   const existing = (user.role === 'admin'
-    ? await sql`SELECT id FROM admin_notes WHERE id = ${noteId} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
-    : await sql`SELECT id FROM admin_notes WHERE id = ${noteId} AND user_id = ${user.id} LIMIT 1`) as NoteRow[];
+    ? await sql`SELECT id, deleted_at, updated_at FROM admin_notes WHERE id = ${noteId} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
+    : await sql`SELECT id, deleted_at, updated_at FROM admin_notes WHERE id = ${noteId} AND user_id = ${user.id} LIMIT 1`) as {
+    id: string;
+    deleted_at?: string | null;
+    updated_at?: string | null;
+  }[];
+  // A tombstoned note was deleted on another device. Refuse the write rather
+  // than recreating the row — this is what previously let a stale client
+  // resurrect a deleted note.
+  if (existing.length > 0 && existing[0].deleted_at) {
+    return { success: false, id: noteId, rejected: 'deleted' };
+  }
+  // Reject writes based on a copy older than what the server already holds, so
+  // a device that was offline cannot overwrite newer edits made elsewhere.
+  if (existing.length > 0 && body.client_updated_at && existing[0].updated_at) {
+    const incoming = Date.parse(body.client_updated_at);
+    const stored = Date.parse(existing[0].updated_at);
+    if (Number.isFinite(incoming) && Number.isFinite(stored) && incoming < stored) {
+      return { success: false, id: noteId, rejected: 'stale' };
+    }
+  }
   if (existing.length === 0) {
     const title = sanitizeServerTitle(body.title);
     const content = sanitizeServerContent(body.content);
@@ -375,8 +400,8 @@ export async function deleteNoteAction(
   const { id, permanent } = options;
   if (!id) throw new Error('Note ID is required');
   const existing = (user.role === 'admin'
-    ? await sql`SELECT id, is_trashed, blob_url FROM admin_notes WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
-    : await sql`SELECT id, is_trashed, blob_url FROM admin_notes WHERE id = ${id} AND user_id = ${user.id} LIMIT 1`) as {
+    ? await sql`SELECT id, is_trashed, blob_url FROM admin_notes WHERE id = ${id} AND deleted_at IS NULL AND (user_id = ${user.id} OR user_id IS NULL) LIMIT 1`
+    : await sql`SELECT id, is_trashed, blob_url FROM admin_notes WHERE id = ${id} AND deleted_at IS NULL AND user_id = ${user.id} LIMIT 1`) as {
     id: string;
     is_trashed?: boolean | null;
     blob_url?: string | null;
@@ -389,10 +414,22 @@ export async function deleteNoteAction(
     if (existing[0].blob_url) {
       await deleteNoteBlobs([existing[0].blob_url]);
     }
+    // Keep the row as a tombstone instead of deleting it: another device may
+    // still hold this note and would otherwise recreate it via the upsert in
+    // updateNoteAction. Body and blob reference are cleared so nothing is
+    // retained but the marker.
     if (user.role === 'admin') {
-      await sql`DELETE FROM admin_notes WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL)`;
+      await sql`
+        UPDATE admin_notes
+        SET deleted_at = NOW(), content = '', blob_url = NULL, title = '', tags = '[]', updated_at = NOW()
+        WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL)
+      `;
     } else {
-      await sql`DELETE FROM admin_notes WHERE id = ${id} AND user_id = ${user.id}`;
+      await sql`
+        UPDATE admin_notes
+        SET deleted_at = NOW(), content = '', blob_url = NULL, title = '', tags = '[]', updated_at = NOW()
+        WHERE id = ${id} AND user_id = ${user.id}
+      `;
     }
     return { success: true, deleted: true, message: 'Note permanently removed from database' };
   }
@@ -412,8 +449,8 @@ export async function emptyTrashAction(
   if (!user) throw new Error('Authentication required');
   if (!isPaidUser(user)) throw new Error('Pro subscription required');
   const trashedRows = (user.role === 'admin'
-    ? await sql`SELECT id, blob_url FROM admin_notes WHERE is_trashed = TRUE AND (user_id = ${user.id} OR user_id IS NULL)`
-    : await sql`SELECT id, blob_url FROM admin_notes WHERE is_trashed = TRUE AND user_id = ${user.id}`) as {
+    ? await sql`SELECT id, blob_url FROM admin_notes WHERE is_trashed = TRUE AND deleted_at IS NULL AND (user_id = ${user.id} OR user_id IS NULL)`
+    : await sql`SELECT id, blob_url FROM admin_notes WHERE is_trashed = TRUE AND deleted_at IS NULL AND user_id = ${user.id}`) as {
     id: string;
     blob_url?: string | null;
   }[];
@@ -422,9 +459,17 @@ export async function emptyTrashAction(
     await deleteNoteBlobs(blobUrls);
   }
   if (user.role === 'admin') {
-    await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE AND (user_id = ${user.id} OR user_id IS NULL)`;
+    await sql`
+      UPDATE admin_notes
+      SET deleted_at = NOW(), content = '', blob_url = NULL, title = '', tags = '[]', updated_at = NOW()
+      WHERE is_trashed = TRUE AND deleted_at IS NULL AND (user_id = ${user.id} OR user_id IS NULL)
+    `;
   } else {
-    await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE AND user_id = ${user.id}`;
+    await sql`
+      UPDATE admin_notes
+      SET deleted_at = NOW(), content = '', blob_url = NULL, title = '', tags = '[]', updated_at = NOW()
+      WHERE is_trashed = TRUE AND deleted_at IS NULL AND user_id = ${user.id}
+    `;
   }
   return {
     success: true,
