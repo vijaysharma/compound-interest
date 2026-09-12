@@ -28,3 +28,61 @@
   overflow: hidden;
   min-height: 0;
 }
+
+/* Shown instead of the notes UI while the session resolves, or when there is
+   no session on this origin — previously the editor rendered regardless and
+   simply never loaded anything. */
+.notesAuthGate {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.notesAuthTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.notesAuthText {
+  max-width: 32rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  opacity: 0.75;
+}
+
+.notesAuthBtn {
+  margin-top: 0.25rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-field, 0.5rem);
+  text-decoration: none;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.notesAuthSpinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: notes-auth-spin 0.8s linear infinite;
+}
+
+@keyframes notes-auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
