@@ -306,99 +306,105 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
           Compare real standard of living and salary equivalents across 150+ countries.
         </p>
       </header>
-      <div className={styles.formStack}>
-        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <ValuePicker.Paired
-          sourceBadgeText="Source"
-          targetBadgeText="Target"
-          sourceSlot={(
-            <CountrySelect
-              label="source"
-              value={srcCountry}
-              countries={Object.keys(data)}
-              onChange={setSrcCountry}
-              getSecondaryText={(country) => data[country]?.currencyName}
+      <div className={styles.calculatorGrid}>
+        <div className={styles.inputsCol}>
+          <div className={styles.formStack}>
+            {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+            <ValuePicker.Paired
+              sourceBadgeText="Source"
+              targetBadgeText="Target"
+              sourceSlot={(
+                <CountrySelect
+                  label="source"
+                  value={srcCountry}
+                  countries={Object.keys(data)}
+                  onChange={setSrcCountry}
+                  getSecondaryText={(country) => data[country]?.currencyName}
+                />
+              )}
+              targetSlot={(
+                <CountrySelect
+                  label="target"
+                  value={tgtCountry}
+                  countries={Object.keys(data)}
+                  onChange={setTgtCountry}
+                  getSecondaryText={(country) => data[country]?.currencyName}
+                />
+              )}
             />
-          )}
-          targetSlot={(
-            <CountrySelect
-              label="target"
-              value={tgtCountry}
-              countries={Object.keys(data)}
-              onChange={setTgtCountry}
-              getSecondaryText={(country) => data[country]?.currencyName}
+            {/* Swap link */}
+            <div className={styles.swapRow}>
+              <button
+                type="button"
+                onClick={handleSwapCountries}
+                className={styles.swapBtn}
+              >
+                <FiRepeat className={styles.swapIcon} />
+                <span>Swap source &amp; target countries</span>
+              </button>
+            </div>
+            <ValuePicker
+              value={srcAmt}
+              onChange={setSrcAmt}
+              className={styles.fieldTight}
+              title="Amount"
+              tabs={[]}
+              stepData={[
+                {
+                  id: 'ip1',
+                  value: '50000000',
+                  title: `${IndianFormat.includes(derivedValues?.sourceLocale || '') ? '5Cr' : '50M'}`,
+                },
+                {
+                  id: 'ip2',
+                  value: '5000000',
+                  title: `${IndianFormat.includes(derivedValues?.sourceLocale || '') ? '50L' : '5M'}`,
+                },
+                {
+                  id: 'ip3',
+                  value: '500000',
+                  title: `${IndianFormat.includes(derivedValues?.sourceLocale || '') ? '5L' : '500K'}`,
+                },
+                { id: 'ip4', value: '50000', title: '50K' },
+                { id: 'ip5', value: '5000', title: '5K' },
+                { id: 'ip6', value: '500', title: '500' },
+                { id: 'ip7', value: '50', title: '50' },
+              ]}
+              currencySymbol={derivedValues?.sourceCurrencySymbol || 'XYZ'}
+              locale={derivedValues?.sourceLocale || 'en-US'}
             />
-          )}
-        />
-        {/* Swap link */}
-        <div className={styles.swapRow}>
-          <button
-            type="button"
-            onClick={handleSwapCountries}
-            className={styles.swapBtn}
-          >
-            <FiRepeat className={styles.swapIcon} />
-            <span>Swap source &amp; target countries</span>
-          </button>
+          </div>
         </div>
-        <ValuePicker
-          value={srcAmt}
-          onChange={setSrcAmt}
-          className={styles.fieldTight}
-          title="Amount"
-          tabs={[]}
-          stepData={[
-            {
-              id: 'ip1',
-              value: '50000000',
-              title: `${IndianFormat.includes(derivedValues?.sourceLocale || '') ? '5Cr' : '50M'}`,
-            },
-            {
-              id: 'ip2',
-              value: '5000000',
-              title: `${IndianFormat.includes(derivedValues?.sourceLocale || '') ? '50L' : '5M'}`,
-            },
-            {
-              id: 'ip3',
-              value: '500000',
-              title: `${IndianFormat.includes(derivedValues?.sourceLocale || '') ? '5L' : '500K'}`,
-            },
-            { id: 'ip4', value: '50000', title: '50K' },
-            { id: 'ip5', value: '5000', title: '5K' },
-            { id: 'ip6', value: '500', title: '500' },
-            { id: 'ip7', value: '50', title: '50' },
-          ]}
-          currencySymbol={derivedValues?.sourceCurrencySymbol || 'XYZ'}
-          locale={derivedValues?.sourceLocale || 'en-US'}
-        />
-        <DisplayCard
-          primaryAmount={parseFloat(parseFloat(derivedValues?.tgtAmt || '0').toFixed(2))}
-          primarySub={`${derivedValues?.primarySub || ''}`}
-          currencySymbol={derivedValues?.targetCurrencySymbol || 'XYZ'}
-          locale={derivedValues?.targetLocale || 'en-US'}
-          title={`Equivalent Purchasing Power in ${tgtCountry}`}
-        />
-        <DisplayCard
-          primaryAmount={parseFloat(tgtExAmt.toFixed(2))}
-          currencySymbol={derivedValues?.targetCurrencySymbol || 'XYZ'}
-          locale={derivedValues?.targetLocale || 'en-US'}
-          title={`${
-            tgtExAmt === 0
-              ? `No live exchange rate available for ${tgtCountry}`
-              : `Nominal Forex Conversion in ${tgtCountry}`
-          }`}
-        />
-        <div className={styles.promoCard}>
-          <div className={styles.promoContent}>
-            <span className={styles.promoText}>
-              Looking for pure real-time foreign exchange rates across 160+ world currencies?
-            </span>
-            <Link
-              to="/currency-converter"
-              className={styles.promoLink}
-            >
-              <span>Try Currency Converter &rarr;</span>
-            </Link>
+        <div className={styles.resultsCol}>
+          <DisplayCard
+            primaryAmount={parseFloat(parseFloat(derivedValues?.tgtAmt || '0').toFixed(2))}
+            primarySub={`${derivedValues?.primarySub || ''}`}
+            currencySymbol={derivedValues?.targetCurrencySymbol || 'XYZ'}
+            locale={derivedValues?.targetLocale || 'en-US'}
+            title={`Equivalent Purchasing Power in ${tgtCountry}`}
+          />
+          <DisplayCard
+            primaryAmount={parseFloat(tgtExAmt.toFixed(2))}
+            currencySymbol={derivedValues?.targetCurrencySymbol || 'XYZ'}
+            locale={derivedValues?.targetLocale || 'en-US'}
+            title={`${
+              tgtExAmt === 0
+                ? `No live exchange rate available for ${tgtCountry}`
+                : `Nominal Forex Conversion in ${tgtCountry}`
+            }`}
+          />
+          <div className={styles.promoCard}>
+            <div className={styles.promoContent}>
+              <span className={styles.promoText}>
+                Looking for pure real-time foreign exchange rates across 160+ world currencies?
+              </span>
+              <Link
+                to="/currency-converter"
+                className={styles.promoLink}
+              >
+                <span>Try Currency Converter &rarr;</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import DisplayCard from '../components/DisplayCard';
 import ValuePicker from '../components/ValuePicker';
 import { sanctnum } from '../utilities/numSanitity';
@@ -173,6 +173,27 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
     return sanctnum(fa);
   };
   const payoutAmount = Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi));
+  const { totalDeposited, totalInterestEarned } = useMemo(() => {
+    const tenureYears = rt.tenureFormat === 'y' ? sanctnum(rt.tenure) : sanctnum(rt.tenure) / 12;
+    const months = Math.round(tenureYears * 12);
+    if (invType === 'my') {
+      const monthly = sanctnum(pa);
+      const deposited = Math.round(monthly * months);
+      const interest = Math.max(0, payoutAmount - deposited);
+      return { totalDeposited: deposited, totalInterestEarned: interest };
+    } else {
+      const monthlyReq = payoutAmount;
+      const deposited = Math.round(monthlyReq * months);
+      const target = sanctnum(pa);
+      const interest = Math.max(0, target - deposited);
+      return { totalDeposited: deposited, totalInterestEarned: interest };
+    }
+  }, [pa, rt.tenure, rt.tenureFormat, invType, payoutAmount]);
+  const depositPercent = useMemo(() => {
+    const total = totalDeposited + totalInterestEarned;
+    if (total <= 0) return 50;
+    return Math.min(100, Math.max(0, Math.round((totalDeposited / total) * 100)));
+  }, [totalDeposited, totalInterestEarned]);
   return (
     <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
@@ -194,26 +215,66 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
           deposits.
         </p>
       </header>
-      <div className={styles.formStack}>
-        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <ValuePicker
-          className={styles.field}
-          value={pa}
-          onChange={setPa}
-          activeTab={invType}
-          onTabChange={setInvType}
-          stepData={stepData}
-          tabs={[
-            { id: 'my', title: 'Monthly amount' },
-            { id: 'tgt', title: 'Target amount' },
-          ]}
-        />
-        <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
-        <ValuePicker.Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
-        <DisplayCard
-          primaryAmount={payoutAmount}
-          title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}
-        />
+      <div className={styles.calculatorGrid}>
+        <div className={styles.inputsCol}>
+          <div className={styles.formStack}>
+            {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+            <ValuePicker
+              className={styles.field}
+              value={pa}
+              onChange={setPa}
+              activeTab={invType}
+              onTabChange={setInvType}
+              stepData={stepData}
+              tabs={[
+                { id: 'my', title: 'Monthly amount' },
+                { id: 'tgt', title: 'Target amount' },
+              ]}
+            />
+            <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
+            <ValuePicker.Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
+          </div>
+        </div>
+        <div className={styles.resultsCol}>
+          <DisplayCard
+            primaryAmount={payoutAmount}
+            title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}
+          />
+          <div className={styles.summaryCard}>
+            <div className={styles.summaryHeader}>
+              <span>RD Maturity Summary</span>
+              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                {rt.tenure} {rt.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt.roi}%
+              </span>
+            </div>
+            <div className={styles.statsGrid}>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Total Deposited</span>
+                <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+                  ₹{totalDeposited.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Total Interest</span>
+                <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                  +₹{totalInterestEarned.toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+            <div className={styles.ratioBar}>
+              <div className={styles.ratioFillInvested} style={{ width: `${depositPercent}%` }} />
+              <div className={styles.ratioFillReturns} style={{ width: `${100 - depositPercent}%` }} />
+            </div>
+            <div className={styles.ratioLegend}>
+              <span className={styles.ratioLegendItem}>
+                <span className={styles.ratioDotInvested} /> Deposited ({depositPercent}%)
+              </span>
+              <span className={styles.ratioLegendItem}>
+                <span className={styles.ratioDotReturns} /> Interest ({100 - depositPercent}%)
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
       <CalculatorContentSection
         title="How Recurring Deposit Compounding Works in India"

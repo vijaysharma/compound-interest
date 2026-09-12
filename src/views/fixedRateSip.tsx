@@ -204,6 +204,28 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
     () => Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi)),
     [pa, rt.tenure, rt.tenureFormat, invType, rt.roi]
   );
+  const { totalInvested, estimatedReturns } = useMemo(() => {
+    const tenureYears = rt.tenureFormat === 'y' ? sanctnum(rt.tenure) : sanctnum(rt.tenure) / 12;
+    const months = Math.round(tenureYears * 12);
+    if (invType === 'my') {
+      const monthly = sanctnum(pa);
+      const invested = Math.round(monthly * months);
+      const maturity = payoutAmount;
+      const returns = Math.max(0, maturity - invested);
+      return { totalInvested: invested, estimatedReturns: returns };
+    } else {
+      const monthlyReq = payoutAmount;
+      const invested = Math.round(monthlyReq * months);
+      const target = sanctnum(pa);
+      const returns = Math.max(0, target - invested);
+      return { totalInvested: invested, estimatedReturns: returns };
+    }
+  }, [pa, rt.tenure, rt.tenureFormat, invType, payoutAmount]);
+  const investedPercent = useMemo(() => {
+    const total = totalInvested + estimatedReturns;
+    if (total <= 0) return 50;
+    return Math.min(100, Math.max(0, Math.round((totalInvested / total) * 100)));
+  }, [totalInvested, estimatedReturns]);
   return (
     <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
@@ -224,26 +246,66 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
           Simulate compound growth, total maturity corpus, and required monthly investment targets.
         </p>
       </header>
-      <div className={styles.formStack}>
-        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <ValuePicker
-          className={styles.field}
-          value={pa}
-          onChange={setPa}
-          activeTab={invType}
-          onTabChange={setInvType}
-          stepData={stepData}
-          tabs={[
-            { id: 'my', title: 'Monthly amount' },
-            { id: 'tgt', title: 'Target amount' },
-          ]}
-        />
-        <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
-        <ValuePicker.Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
-        <DisplayCard
-          primaryAmount={payoutAmount}
-          title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}
-        />
+      <div className={styles.calculatorGrid}>
+        <div className={styles.inputsCol}>
+          <div className={styles.formStack}>
+            {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+            <ValuePicker
+              className={styles.field}
+              value={pa}
+              onChange={setPa}
+              activeTab={invType}
+              onTabChange={setInvType}
+              stepData={stepData}
+              tabs={[
+                { id: 'my', title: 'Monthly amount' },
+                { id: 'tgt', title: 'Target amount' },
+              ]}
+            />
+            <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
+            <ValuePicker.Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
+          </div>
+        </div>
+        <div className={styles.resultsCol}>
+          <DisplayCard
+            primaryAmount={payoutAmount}
+            title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}
+          />
+          <div className={styles.summaryCard}>
+            <div className={styles.summaryHeader}>
+              <span>Wealth Breakdown</span>
+              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                {rt.tenure} {rt.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt.roi}%
+              </span>
+            </div>
+            <div className={styles.statsGrid}>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Total Invested</span>
+                <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+                  ₹{totalInvested.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Est. Returns</span>
+                <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                  +₹{estimatedReturns.toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+            <div className={styles.ratioBar}>
+              <div className={styles.ratioFillInvested} style={{ width: `${investedPercent}%` }} />
+              <div className={styles.ratioFillReturns} style={{ width: `${100 - investedPercent}%` }} />
+            </div>
+            <div className={styles.ratioLegend}>
+              <span className={styles.ratioLegendItem}>
+                <span className={styles.ratioDotInvested} /> Invested ({investedPercent}%)
+              </span>
+              <span className={styles.ratioLegendItem}>
+                <span className={styles.ratioDotReturns} /> Returns ({100 - investedPercent}%)
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
       <CalculatorContentSection
         title="The Compounding Science of Systematic Investment Plans (SIP)"

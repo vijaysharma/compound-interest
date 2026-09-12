@@ -191,6 +191,12 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
     () => calculateRemainingAmount(pa, rt, irt, inflationFreq, t.tenure, t.tenureFormat, wa),
     [pa, rt, irt, inflationFreq, t.tenure, t.tenureFormat, wa]
   );
+  const initialInvested = parseInt(pa) || 0;
+  const finalCorpus = parseInt(remainingAmount) || 0;
+  const totalMonths = (t.tenureFormat === 'y' ? sanctnum(t.tenure) : sanctnum(t.tenure) / 12) * 12;
+  const approxWithdrawn = Math.round(
+    (((parseInt(wa) || 0) + (parseInt(lwa) || parseInt(wa) || 0)) / 2) * totalMonths
+  );
   return (
     <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
@@ -212,50 +218,90 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           longevity.
         </p>
       </header>
-      <div className={styles.formStack}>
-        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <ValuePicker
-          className={styles.field}
-          value={pa}
-          onChange={setPa}
-          title="Invested Amount"
-          stepData={invStepData}
-          tabs={[]}
-        />
-        <ValuePicker
-          className={styles.field}
-          value={wa}
-          onChange={setWa}
-          stepData={wdStepData}
-          title="Withdrawal amount per month"
-          tabs={[]}
-        />
-        <ValuePicker.ROI className={styles.field} value={rt} onChange={setRt} title="Expected return rate per annum (%)" />
-        <ValuePicker.ROI className={styles.field} value={irt} onChange={setIRt} title="Inflation rate (%)" />
-        <JoinedButtonGroup
-          title="Inflation calculated per"
-          className={styles.fieldTight}
-          selectedValue={inflationFreq}
-          updateSelectedValue={setInflationFreq}
-          sizePrefix="sm"
-          data={[
-            { id: 'ir1', title: '6M', value: '6' },
-            { id: 'ir2', title: '1Y', value: '12' },
-            { id: 'ir3', title: '2Y', value: '24' },
-            { id: 'ir4', title: '3Y', value: '36' },
-            { id: 'ir5', title: '4Y', value: '48' },
-            { id: 'ir6', title: '5Y', value: '60' },
-          ]}
-        />
-        <ValuePicker.Tenure className={styles.fieldLast} rt={t} setRt={setT} />
-        <DisplayCard
-          colorClass={parseInt(remainingAmount) < parseInt(pa) ? 'error' : 'primary'}
-          primaryAmount={parseInt(remainingAmount)}
-          secondaryInfo={{
-            title: 'Last monthly withdrawal',
-            amount: parseInt(lwa),
-          }}
-        />
+      <div className={styles.calculatorGrid}>
+        <div className={styles.inputsCol}>
+          <div className={styles.formStack}>
+            {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+            <ValuePicker
+              className={styles.field}
+              value={pa}
+              onChange={setPa}
+              title="Invested Amount"
+              stepData={invStepData}
+              tabs={[]}
+            />
+            <ValuePicker
+              className={styles.field}
+              value={wa}
+              onChange={setWa}
+              stepData={wdStepData}
+              title="Withdrawal amount per month"
+              tabs={[]}
+            />
+            <ValuePicker.ROI className={styles.field} value={rt} onChange={setRt} title="Expected return rate per annum (%)" />
+            <ValuePicker.ROI className={styles.field} value={irt} onChange={setIRt} title="Inflation rate (%)" />
+            <JoinedButtonGroup
+              title="Inflation calculated per"
+              className={styles.fieldTight}
+              selectedValue={inflationFreq}
+              updateSelectedValue={setInflationFreq}
+              sizePrefix="sm"
+              data={[
+                { id: 'ir1', title: '6M', value: '6' },
+                { id: 'ir2', title: '1Y', value: '12' },
+                { id: 'ir3', title: '2Y', value: '24' },
+                { id: 'ir4', title: '3Y', value: '36' },
+                { id: 'ir5', title: '4Y', value: '48' },
+                { id: 'ir6', title: '5Y', value: '60' },
+              ]}
+            />
+            <ValuePicker.Tenure className={styles.fieldLast} rt={t} setRt={setT} />
+          </div>
+        </div>
+        <div className={styles.resultsCol}>
+          <DisplayCard
+            colorClass={parseInt(remainingAmount) < parseInt(pa) ? 'error' : 'primary'}
+            primaryAmount={parseInt(remainingAmount)}
+            secondaryInfo={{
+              title: 'Last monthly withdrawal',
+              amount: parseInt(lwa),
+            }}
+          />
+          <div className={styles.summaryCard}>
+            <div className={styles.summaryHeader}>
+              <span>Portfolio Longevity Summary</span>
+              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                {t.tenure} {t.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt}% ROI
+              </span>
+            </div>
+            <div className={styles.statsGrid}>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Initial Investment</span>
+                <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+                  ₹{initialInvested.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Est. Total Withdrawn</span>
+                <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                  ₹{approxWithdrawn.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Remaining Balance</span>
+                <span className={styles.statValue}>
+                  ₹{finalCorpus.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Monthly Payout (Final)</span>
+                <span className={styles.statValue}>
+                  ₹{parseInt(lwa).toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <CalculatorContentSection
         title="Mastering Sustainable Retirement Cashflows with SWP"

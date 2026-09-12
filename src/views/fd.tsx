@@ -5,6 +5,7 @@ import ValuePicker from '../components/ValuePicker';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import { RT, StepAmountType } from '../types/types';
 import { calculateInterest, calculatePrincipal } from '../utilities/utility';
+import { sanctnum } from '../utilities/numSanitity';
 import {
   FREQUENCY_DATA,
   PA,
@@ -189,6 +190,23 @@ const FD: React.FC = () => {
     }
     return Math.round(finalAmount);
   }, [pa, rt, mode, invType, frequency]);
+  const { principalDeposit, totalInterestEarned } = useMemo(() => {
+    if (invType === 'inv') {
+      const principal = sanctnum(pa);
+      const interest = Math.max(0, payoutAmount - principal);
+      return { principalDeposit: principal, totalInterestEarned: interest };
+    } else {
+      const target = sanctnum(pa);
+      const principal = payoutAmount;
+      const interest = Math.max(0, target - principal);
+      return { principalDeposit: principal, totalInterestEarned: interest };
+    }
+  }, [pa, invType, payoutAmount]);
+  const principalPercent = useMemo(() => {
+    const total = principalDeposit + totalInterestEarned;
+    if (total <= 0) return 50;
+    return Math.min(100, Math.max(0, Math.round((principalDeposit / total) * 100)));
+  }, [principalDeposit, totalInterestEarned]);
   return (
     <main className={styles.container}>
       <SEOHead
@@ -210,43 +228,83 @@ const FD: React.FC = () => {
           institutional precision.
         </p>
       </header>
-      <div className={styles.formStack}>
-        <ValuePicker
-          className={styles.field}
-          value={pa}
-          onChange={setPa}
-          activeTab={invType}
-          onTabChange={setInvType}
-          stepData={stepData}
-          tabs={[
-            { id: 'inv', title: 'One time amount' },
-            { id: 'tgt', title: 'Target amount' },
-          ]}
-        />
-        <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
-        <ValuePicker.Tenure className={styles.field} rt={rt} setRt={setRt} />
-        <JoinedButtonGroup
-          className={styles.field}
-          data={FREQUENCY_DATA}
-          sizePrefix="sm"
-          selectedValue={frequency}
-          updateSelectedValue={setFrequency}
-          title="Compounded"
-        />
-        {invType === 'inv' && (
-          <JoinedButtonGroup
-            className={styles.fieldLast}
-            data={PAYOUT_MODE_DATA}
-            sizePrefix="sm"
-            selectedValue={mode}
-            updateSelectedValue={setMode}
-            title="Payout Mode"
+      <div className={styles.calculatorGrid}>
+        <div className={styles.inputsCol}>
+          <div className={styles.formStack}>
+            <ValuePicker
+              className={styles.field}
+              value={pa}
+              onChange={setPa}
+              activeTab={invType}
+              onTabChange={setInvType}
+              stepData={stepData}
+              tabs={[
+                { id: 'inv', title: 'One time amount' },
+                { id: 'tgt', title: 'Target amount' },
+              ]}
+            />
+            <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
+            <ValuePicker.Tenure className={styles.field} rt={rt} setRt={setRt} />
+            <JoinedButtonGroup
+              className={styles.field}
+              data={FREQUENCY_DATA}
+              sizePrefix="sm"
+              selectedValue={frequency}
+              updateSelectedValue={setFrequency}
+              title="Compounded"
+            />
+            {invType === 'inv' && (
+              <JoinedButtonGroup
+                className={styles.fieldLast}
+                data={PAYOUT_MODE_DATA}
+                sizePrefix="sm"
+                selectedValue={mode}
+                updateSelectedValue={setMode}
+                title="Payout Mode"
+              />
+            )}
+          </div>
+        </div>
+        <div className={styles.resultsCol}>
+          <DisplayCard
+            primaryAmount={payoutAmount}
+            title={invType === 'tgt' ? 'Lumpsum amount required' : ''}
           />
-        )}
-        <DisplayCard
-          primaryAmount={payoutAmount}
-          title={invType === 'tgt' ? 'Lumpsum amount required' : ''}
-        />
+          <div className={styles.summaryCard}>
+            <div className={styles.summaryHeader}>
+              <span>FD Maturity Summary</span>
+              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                {rt.tenure} {rt.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt.roi}%
+              </span>
+            </div>
+            <div className={styles.statsGrid}>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Principal Deposit</span>
+                <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+                  ₹{principalDeposit.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Total Interest</span>
+                <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                  +₹{totalInterestEarned.toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+            <div className={styles.ratioBar}>
+              <div className={styles.ratioFillInvested} style={{ width: `${principalPercent}%` }} />
+              <div className={styles.ratioFillReturns} style={{ width: `${100 - principalPercent}%` }} />
+            </div>
+            <div className={styles.ratioLegend}>
+              <span className={styles.ratioLegendItem}>
+                <span className={styles.ratioDotInvested} /> Principal ({principalPercent}%)
+              </span>
+              <span className={styles.ratioLegendItem}>
+                <span className={styles.ratioDotReturns} /> Interest ({100 - principalPercent}%)
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
       <CalculatorContentSection
         title="Understanding Fixed Deposit Compounding & Maturity Mathematics"

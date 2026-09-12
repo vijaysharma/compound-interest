@@ -215,69 +215,108 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           benchmarks since 1990.
         </p>
       </header>
-      <div className={styles.formStack}>
-        {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-        <ValuePicker
-          className={styles.fieldTight}
-          value={principal}
-          onChange={setPrincipal}
-          activeTab={place}
-          onTabChange={setPlace}
-          tabs={[
-            { id: 'India', title: 'India' },
-            { id: 'World', title: 'World' },
-            { id: 'USA', title: 'USA' },
-            { id: 'EU', title: 'EU' },
-          ]}
-          stepData={[
-            {
-              id: 'p1',
-              value: '50000000',
-              title: `${locale === 'en-US' || locale === 'en-EU' ? '50M' : '5Cr'}`,
-            },
-            {
-              id: 'p2',
-              value: '5000000',
-              title: `${locale === 'en-US' || locale === 'en-EU' ? '5M' : '50L'}`,
-            },
-            {
-              id: 'p3',
-              value: '500000',
-              title: `${locale === 'en-US' || locale === 'en-EU' ? '500K' : '5L'}`,
-            },
-            { id: 'p4', value: '50000', title: '50K' },
-            { id: 'p5', value: '5000', title: '5K' },
-            { id: 'p6', value: '500', title: '500' },
-            { id: 'p7', value: '50', title: '50' },
-          ]}
-          currencySymbol={currencySymbol}
-          locale={locale}
-        />
-        <ValuePicker.DateRange
-          dateMode="year"
-          startDate={startYear}
-          endDate={endYear}
-          setStartDate={setStartYear}
-          setEndDate={setEndYear}
-          startOptions={startYearOptions}
-          endOptions={endYearOptions}
-        />
-        <DisplayCard
-          currencySymbol={currencySymbol}
-          locale={locale}
-          primaryAmount={Math.round(inflatedAmount)}
-          title={`Cost of ${currencySymbol}${Number(principal).toLocaleString()} in ${endYear}`}
-          secondaryInfo={{
-            title: `Purchase power of ${currencySymbol}${Number(principal).toLocaleString()} in ${endYear}`,
-            amount: Math.round(deflatedAmount),
-          }}
-        />
-        {endYearIsEstimate && (
-          <p className={styles.footnote}>
-            * {endYear} figure for {place} is an IMF projection — the World Bank has not published a
-            confirmed final value for this year yet.
-          </p>
-        )}
+      <div className={styles.calculatorGrid}>
+        <div className={styles.inputsCol}>
+          <div className={styles.formStack}>
+            {title && <h5 className={styles.sectionTitle}>{title}</h5>}
+            <ValuePicker
+              className={styles.fieldTight}
+              value={principal}
+              onChange={setPrincipal}
+              activeTab={place}
+              onTabChange={setPlace}
+              tabs={[
+                { id: 'India', title: 'India' },
+                { id: 'World', title: 'World' },
+                { id: 'USA', title: 'USA' },
+                { id: 'EU', title: 'EU' },
+              ]}
+              stepData={[
+                {
+                  id: 'p1',
+                  value: '50000000',
+                  title: `${locale === 'en-US' || locale === 'en-EU' ? '50M' : '5Cr'}`,
+                },
+                {
+                  id: 'p2',
+                  value: '5000000',
+                  title: `${locale === 'en-US' || locale === 'en-EU' ? '5M' : '50L'}`,
+                },
+                {
+                  id: 'p3',
+                  value: '500000',
+                  title: `${locale === 'en-US' || locale === 'en-EU' ? '500K' : '5L'}`,
+                },
+                { id: 'p4', value: '50000', title: '50K' },
+                { id: 'p5', value: '5000', title: '5K' },
+                { id: 'p6', value: '500', title: '500' },
+                { id: 'p7', value: '50', title: '50' },
+              ]}
+              currencySymbol={currencySymbol}
+              locale={locale}
+            />
+            <ValuePicker.DateRange
+              dateMode="year"
+              startDate={startYear}
+              endDate={endYear}
+              setStartDate={setStartYear}
+              setEndDate={setEndYear}
+              startOptions={startYearOptions}
+              endOptions={endYearOptions}
+            />
+          </div>
+        </div>
+        <div className={styles.resultsCol}>
+          <DisplayCard
+            currencySymbol={currencySymbol}
+            locale={locale}
+            primaryAmount={Math.round(inflatedAmount)}
+            title={`Cost of ${currencySymbol}${Number(principal).toLocaleString()} in ${endYear}`}
+            secondaryInfo={{
+              title: `Purchase power of ${currencySymbol}${Number(principal).toLocaleString()} in ${endYear}`,
+              amount: Math.round(deflatedAmount),
+            }}
+          />
+          <div className={styles.summaryCard}>
+            <div className={styles.summaryHeader}>
+              <span>Inflation Impact ({place})</span>
+              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                {startYear} &rarr; {endYear} ({Math.abs(Number(endYear) - Number(startYear))} yrs)
+              </span>
+            </div>
+            <div className={styles.statsGrid}>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Original Value ({startYear})</span>
+                <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+                  {currencySymbol}{Number(principal).toLocaleString()}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Future Cost ({endYear})</span>
+                <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                  {currencySymbol}{Math.round(inflatedAmount).toLocaleString()}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Retained Power</span>
+                <span className={styles.statValue}>
+                  {currencySymbol}{Math.round(deflatedAmount).toLocaleString()}
+                </span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Value Erosion</span>
+                <span className={styles.statValue} style={{ color: 'var(--color-error, #ef4444)' }}>
+                  -{Math.max(0, Math.round(((Number(principal) - deflatedAmount) / (Number(principal) || 1)) * 100))}%
+                </span>
+              </div>
+            </div>
+            {endYearIsEstimate && (
+              <p className={styles.footnote} style={{ margin: 0 }}>
+                * {endYear} figure for {place} is an IMF projection.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
       <CalculatorContentSection
         title="The Hidden Wealth Destroyer: Compounding Inflation Explained"
