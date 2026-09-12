@@ -5,7 +5,7 @@ import {
   getUserFromToken,
   isPaidUser,
 } from '@/lib/db';
-import { deleteFromVercelBlob, fetchBlobContent, uploadToVercelBlob } from '@/lib/blob';
+import { deleteNoteBlobs, isBlobConfigured, putNoteBlob, readNoteBlob } from '@/lib/blob';
 interface NoteRow {
   id: string;
   user_id?: string | null;
@@ -25,6 +25,12 @@ export interface NoteItem {
   id: string;
   title: string;
   content: string;
+  /**
+   * True when the body lives in a blob that could not be read. Distinguishes
+   * "this note is empty" from "this note's body is temporarily unavailable",
+   * so the client never syncs an empty body back over a real one.
+   */
+  content_unavailable?: boolean;
   folder: string;
   is_pinned: boolean;
   is_locked: boolean;
@@ -146,14 +152,27 @@ export async function getNotesAction(
         `) as NoteRow[];
   const formatted: NoteItem[] = await Promise.all(
     rows.map(async (note) => {
-      let noteContent = note.content || '';
-      if (!noteContent && note.blob_url) {
-        noteContent = (await fetchBlobContent(note.blob_url)) || '';
+      // Blob holds the body; admin_notes holds the reference. The content
+      // column is only populated for rows whose blob write failed.
+      let noteContent = '';
+      let contentUnavailable = false;
+      if (note.blob_url) {
+        const fromBlob = await readNoteBlob(note.blob_url);
+        if (fromBlob !== null) {
+          noteContent = fromBlob;
+        } else if (note.content) {
+          noteContent = note.content;
+        } else {
+          contentUnavailable = true;
+        }
+      } else {
+        noteContent = note.content || '';
       }
       return {
         id: note.id,
         title: note.title || '',
         content: noteContent,
+        content_unavailable: contentUnavailable,
         folder: note.folder || 'Notes',
         is_pinned: Boolean(note.is_pinned),
         is_locked: Boolean(note.is_locked),
@@ -196,7 +215,10 @@ export async function createNoteAction(
   const lockHash = body.lock_password_hash || null;
   const isTrashed = Boolean(body.is_trashed);
   const tagsJson = JSON.stringify(parseTags(body.tags));
-  const blobUrl = await uploadToVercelBlob(user.id, id, content);
+  const blobUrl = await putNoteBlob(user.id, id, content);
+  // Blob is the source of truth for bodies. Only drop the database copy once
+  // the upload is confirmed, so a blob outage degrades to a database-backed
+  // row instead of losing the body.
   const dbContent = blobUrl ? '' : content;
   await sql`
     INSERT INTO admin_notes (
@@ -257,7 +279,8 @@ export async function updateNoteAction(
     const lockHash = body.lock_password_hash || null;
     const isTrashed = Boolean(body.is_trashed);
     const tagsJson = JSON.stringify(parseTags(body.tags));
-    const blobUrl = await uploadToVercelBlob(user.id, noteId, content);
+    const blobUrl = await putNoteBlob(user.id, noteId, content);
+    // See createNoteAction: the database copy is a fallback for failed uploads.
     const dbContent = blobUrl ? '' : content;
     await sql`
       INSERT INTO admin_notes (
@@ -292,13 +315,13 @@ export async function updateNoteAction(
       blob_url?: string | null;
     }[];
     if (typeof contentVal === 'string' && contentVal.length > 0) {
-      blobUrl = await uploadToVercelBlob(user.id, noteId, contentVal);
+      blobUrl = await putNoteBlob(user.id, noteId, contentVal);
       if (blobUrl && oldRow.length > 0 && oldRow[0].blob_url && oldRow[0].blob_url !== blobUrl) {
-        await deleteFromVercelBlob([oldRow[0].blob_url]);
+        await deleteNoteBlobs([oldRow[0].blob_url]);
       }
     } else if (typeof contentVal === 'string' && contentVal.length === 0) {
       if (oldRow.length > 0 && oldRow[0].blob_url) {
-        await deleteFromVercelBlob([oldRow[0].blob_url]);
+        await deleteNoteBlobs([oldRow[0].blob_url]);
         clearBlob = true;
       }
     }
@@ -364,7 +387,7 @@ export async function deleteNoteAction(
   const shouldPermanentlyDelete = permanent || Boolean(existing[0].is_trashed);
   if (shouldPermanentlyDelete) {
     if (existing[0].blob_url) {
-      await deleteFromVercelBlob([existing[0].blob_url]);
+      await deleteNoteBlobs([existing[0].blob_url]);
     }
     if (user.role === 'admin') {
       await sql`DELETE FROM admin_notes WHERE id = ${id} AND (user_id = ${user.id} OR user_id IS NULL)`;
@@ -396,7 +419,7 @@ export async function emptyTrashAction(
   }[];
   const blobUrls = trashedRows.map((r) => r.blob_url).filter(Boolean);
   if (blobUrls.length > 0) {
-    await deleteFromVercelBlob(blobUrls);
+    await deleteNoteBlobs(blobUrls);
   }
   if (user.role === 'admin') {
     await sql`DELETE FROM admin_notes WHERE is_trashed = TRUE AND (user_id = ${user.id} OR user_id IS NULL)`;
@@ -445,7 +468,7 @@ export async function restoreNotesBackupAction(
       .map((r) => r.blob_url)
       .filter((u): u is string => typeof u === 'string' && Boolean(u));
     if (oldBlobs.length > 0) {
-      await deleteFromVercelBlob(oldBlobs);
+      await deleteNoteBlobs(oldBlobs);
     }
     if (user.role === 'admin') {
       await sql`DELETE FROM admin_notes WHERE user_id = ${user.id} OR user_id IS NULL`;
@@ -464,16 +487,18 @@ export async function restoreNotesBackupAction(
     const lockHash = n.lock_password_hash || null;
     const isTrashed = Boolean(n.is_trashed);
     const tagsJson = JSON.stringify(parseTags(n.tags));
+    const blobUrl = await putNoteBlob(user.id, id, content);
     await sql`
       INSERT INTO admin_notes (
-        id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, created_at, updated_at
+        id, user_id, title, content, folder, is_pinned, is_locked, lock_password_hash, is_trashed, tags, blob_url, created_at, updated_at
       )
       VALUES (
-        ${id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, NOW(), NOW()
+        ${id}, ${user.id}, ${title}, ${content}, ${folder}, ${isPinned}, ${isLocked}, ${lockHash}, ${isTrashed}, ${tagsJson}, ${blobUrl}, NOW(), NOW()
       )
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         content = EXCLUDED.content,
+        blob_url = EXCLUDED.blob_url,
         folder = EXCLUDED.folder,
         is_pinned = EXCLUDED.is_pinned,
         is_locked = EXCLUDED.is_locked,
@@ -492,12 +517,12 @@ export async function getNotesStorageStatusAction(): Promise<{
   storage_provider: string;
   message: string;
 }> {
-  const isBlobActive = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  const isBlobActive = isBlobConfigured();
   return {
     vercel_blob_enabled: isBlobActive,
     storage_provider: isBlobActive ? 'vercel_blob' : 'database_fallback',
     message: isBlobActive
-      ? 'Vercel Blob storage is active. Notes are stored in Vercel Blob and offloaded from database.'
-      : 'BLOB_READ_WRITE_TOKEN is not configured in environment variables. Notes are temporarily saved in the PostgreSQL database.',
+      ? 'Vercel Blob storage is active. Note bodies are synced to Vercel Blob, with a copy retained in PostgreSQL so reads never depend on blob availability.'
+      : 'BLOB_READ_WRITE_TOKEN is not configured in environment variables. Notes are saved in the PostgreSQL database only.',
   };
 }
