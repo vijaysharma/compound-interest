@@ -81,6 +81,16 @@ body:has(.quick-notes-theme) {
   flex: 1;
   min-width: 0;
   outline: none;
+  min-height: 1.5em;
+  line-height: 1.5;
+  caret-color: var(--color-primary, #6e0b75);
+  word-break: break-word;
+}
+
+.qn-checklist-content:empty::before {
+  content: '\200B';
+  display: inline-block;
+  width: 0;
 }
 
 /* Multi-level Todo Indentation */
@@ -170,6 +180,7 @@ body:has(.quick-notes-theme) {
   touch-action: manipulation;
   caret-color: var(--color-primary, #6e0b75);
   cursor: text;
+  padding-bottom: clamp(10rem, 35vh, 25rem);
 }
 
 .qn-note-canvas * {
@@ -201,16 +212,27 @@ body:has(.quick-notes-theme) {
   font-size: inherit;
   margin: 0.35rem 0;
   line-height: 1.6;
+  min-height: 1.6em;
+  display: block;
+}
+
+.qn-note-canvas p:empty::before,
+.qn-note-canvas div:not(.qn-checklist-item):empty::before {
+  content: '\200B';
+  display: inline-block;
+  width: 0;
 }
 
 .qn-note-canvas div:not(.qn-checklist-item):not(.qn-table):not(.dropdown) {
   font-size: inherit;
   line-height: 1.6;
+  min-height: 1.6em;
 }
 
 .qn-note-canvas li {
   font-size: inherit;
   line-height: 1.6;
+  min-height: 1.6em;
 }
 
 .qn-note-canvas span:not([style*="font-size"]) {
@@ -220,6 +242,7 @@ body:has(.quick-notes-theme) {
 .qn-note-canvas .qn-checklist-content {
   font-size: inherit;
   line-height: 1.5;
+  min-height: 1.5em;
 }
 
 .qn-note-canvas font[size="1"] { font-size: 12px; }

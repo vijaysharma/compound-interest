@@ -81,7 +81,21 @@ function cleanNode(node: Node): void {
       if (name === 'style') {
         if (DANGEROUS_STYLE_PATTERNS.test(val)) {
           el.removeAttribute('style');
+        } else {
+          // Remove restrictive styling that breaks text editing, selection, or line breaks
+          const cleanedStyle = val
+            .replace(/(user-select|pointer-events|-webkit-user-select|-moz-user-select|position|overflow|max-height|height)\s*:\s*[^;]+;?/gi, '')
+            .trim();
+          if (cleanedStyle) {
+            el.setAttribute('style', cleanedStyle);
+          } else {
+            el.removeAttribute('style');
+          }
         }
+        continue;
+      }
+      if (name === 'contenteditable' && !el.classList.contains('qn-checkbox-circle')) {
+        el.removeAttribute('contenteditable');
         continue;
       }
       if (tagName === 'INPUT') {
@@ -126,6 +140,25 @@ export function sanitizeNoteHtml(html: string): string {
     for (const child of childNodes) {
       cleanNode(child);
     }
+    // Normalize corrupted nested checklist items or duplicated checkbox circles
+    const items = doc.body.querySelectorAll('.qn-checklist-item');
+    items.forEach((item) => {
+      const circles = item.querySelectorAll('.qn-checkbox-circle');
+      if (circles.length > 1) {
+        for (let i = 1; i < circles.length; i++) {
+          circles[i].remove();
+        }
+      }
+      const nestedItems = item.querySelectorAll('.qn-checklist-item');
+      nestedItems.forEach((nested) => {
+        const nestedContent = nested.querySelector('.qn-checklist-content');
+        if (nestedContent) {
+          nested.replaceWith(...Array.from(nestedContent.childNodes));
+        } else {
+          nested.remove();
+        }
+      });
+    });
     return doc.body.innerHTML;
   } catch {
     return '';

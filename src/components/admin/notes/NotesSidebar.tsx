@@ -29,6 +29,7 @@ interface NotesSidebarProps {
   onDeleteFolder: (name: string) => void;
   onMoveNoteToFolder?: (noteId: string, folder: string) => void;
   isOpen: boolean;
+  onClose?: () => void;
   onCloseMobile?: () => void;
   onOpenBackupModal?: () => void;
   onOpenSecurityModal?: () => void;
@@ -48,6 +49,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   onDeleteFolder,
   onMoveNoteToFolder,
   isOpen,
+  onClose,
   onCloseMobile,
   onOpenBackupModal,
   onOpenSecurityModal,
@@ -131,11 +133,12 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
               <BsCloudArrowUp size={16} />
             </button>
           )}
-          {onCloseMobile && !isMobileScreen && (
+          {(onClose || onCloseMobile) && (
             <button
-              onClick={onCloseMobile}
+              onClick={onClose || onCloseMobile}
               className={styles.closeBtn}
-              title="Close sidebar"
+              title={isMobileScreen ? 'Back to notes' : 'Close sidebar'}
+              aria-label={isMobileScreen ? 'Back to notes' : 'Close sidebar'}
             >
               <FiX size={16} />
             </button>

@@ -144,11 +144,11 @@ export function htmlToMarkdown(title: string, html: string): string {
   let text = html;
   // Handle checklist items
   text = text.replace(
-    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="true"[^>]*>[\s\S]*?<span[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/span><\/div>/gi,
+    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="true"[^>]*>[\s\S]*?<(?:span|div)[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/(?:span|div)><\/div>/gi,
     '- [x] $1\n'
   );
   text = text.replace(
-    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="false"[^>]*>[\s\S]*?<span[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/span><\/div>/gi,
+    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="false"[^>]*>[\s\S]*?<(?:span|div)[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/(?:span|div)><\/div>/gi,
     '- [ ] $1\n'
   );
   // Headings
@@ -197,11 +197,11 @@ export function htmlToPlainText(title: string, html: string): string {
   if (!html) return plain;
   let text = html;
   text = text.replace(
-    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="true"[^>]*>[\s\S]*?<span[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/span><\/div>/gi,
+    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="true"[^>]*>[\s\S]*?<(?:span|div)[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/(?:span|div)><\/div>/gi,
     '[✓] $1\n'
   );
   text = text.replace(
-    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="false"[^>]*>[\s\S]*?<span[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/span><\/div>/gi,
+    /<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*data-checked="false"[^>]*>[\s\S]*?<(?:span|div)[^>]*class="[^"]*qn-checklist-content[^"]*"[^>]*>([\s\S]*?)<\/(?:span|div)><\/div>/gi,
     '[ ] $1\n'
   );
   text = text.replace(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi, '\n$1\n');
@@ -218,4 +218,25 @@ export function htmlToPlainText(title: string, html: string): string {
     .replace(/&quot;/g, '"');
   plain += text.trim();
   return plain;
+}
+/**
+ * Automatically derives a title from the note's content HTML.
+ * Takes the first non-empty line of text, truncating up to 50 characters.
+ */
+export function deriveAutoTitleFromHtml(html: string): string {
+  if (!html) return '';
+  const text = htmlToPlainText('', html).trim();
+  if (!text) return '';
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return '';
+  let firstLine = lines[0];
+  firstLine = firstLine
+    .replace(/^\[[ ✓xX]\]\s*/, '')
+    .replace(/^[-*•]\s+/, '')
+    .replace(/^#+\s+/, '')
+    .trim();
+  if (firstLine.length > 50) {
+    firstLine = firstLine.substring(0, 50).trim() + '...';
+  }
+  return firstLine;
 }

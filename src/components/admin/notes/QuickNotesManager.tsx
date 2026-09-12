@@ -13,7 +13,7 @@ import {
   isEncrypted,
 } from './NotesCrypto';
 import { useAuth } from '../../../context/useAuth';
-import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS } from './NotesTypes';
+import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS, extractHashtags } from './NotesTypes';
 import {
   getNotesAction,
   createNoteAction,
@@ -253,7 +253,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const effectiveNoteId = selectedNoteId || notes.find((n) => !n.is_trashed)?.id || null;
   const selectedNote = notes.find((n) => n.id === effectiveNoteId) || null;
   const effectiveMobileScreen: 'folders' | 'list' | 'editor' =
-    mobileScreen === 'editor' && !selectedNote ? 'list' : mobileScreen;
+    isMobile && mobileScreen === 'editor' && !selectedNote ? 'list' : mobileScreen;
   const persistNoteToServer = useCallback(
     async (noteId: string, updates: Partial<Note>) => {
       if (!token) return;
@@ -399,7 +399,18 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         content: await decryptText(created.content || '', key),
       };
       setNotes((prev) => {
-        const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
+        const next = prev.map((n) =>
+          n.id === tempId
+            ? {
+                ...decryptedCreated,
+                title: n.title || decryptedCreated.title,
+                content: n.content || decryptedCreated.content,
+                is_pinned: n.is_pinned,
+                folder: n.folder,
+                tags: n.tags,
+              }
+            : n
+        );
         localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
@@ -449,7 +460,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         return next;
       });
       if (selectedNoteId === targetId) {
-        const remaining = notes.filter((n) => n.id !== targetId);
+        const remaining = notes.filter((n) => {
+          if (n.id === targetId) return false;
+          if (activeFolder === SYSTEM_FOLDERS.TRASH) return n.is_trashed;
+          return !n.is_trashed;
+        });
         setSelectedNoteId(remaining.length > 0 ? remaining[0].id : null);
         setMobileScreen('list');
       }
@@ -587,6 +602,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
       return next;
     });
+    setSelectedNoteId(null);
     if (!token) return;
     try {
       await emptyTrashAction(token);
@@ -601,7 +617,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     setFolders(next);
     localStorage.setItem(foldersKeyRef.current, JSON.stringify(next));
     setActiveFolder(cleanName);
-    setMobileScreen('list');
+    if (isMobile) {
+      setMobileScreen('list');
+    }
   };
   const handleRenameFolder = (oldName: string, newName: string) => {
     const cleanOld = oldName.trim();
@@ -691,6 +709,13 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     },
     [persistNoteToServer]
   );
+  const handleCloseSidebar = useCallback(() => {
+    if (isMobile) {
+      setMobileScreen('list');
+    } else {
+      setIsSidebarOpen(false);
+    }
+  }, [isMobile]);
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const isMeta = e.metaKey || e.ctrlKey;
@@ -700,6 +725,9 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           e.preventDefault();
           handleNewNote();
         }
+      } else if (isMeta && e.key === '\\') {
+        e.preventDefault();
+        setIsSidebarOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -728,8 +756,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       )}
       <div
         className={`${styles.sidebarPane} ${
-          effectiveMobileScreen === 'folders'
-            ? styles.mobileVisible
+          isMobile
+            ? effectiveMobileScreen === 'folders'
+              ? styles.mobileVisible
+              : styles.hidden
             : isSidebarOpen
               ? styles.desktopVisible
               : styles.hidden
@@ -743,17 +773,43 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           trashedCount={trashedCount}
           onSelectFolder={(f) => {
             setActiveFolder(f);
-            setMobileScreen('list');
+            setActiveTag(null);
+            if (isMobile) {
+              setMobileScreen('list');
+            } else {
+              const folderNotes = notes.filter((n) => {
+                if (f === SYSTEM_FOLDERS.ALL) return !n.is_trashed;
+                if (f === SYSTEM_FOLDERS.TRASH) return n.is_trashed;
+                if (f === SYSTEM_FOLDERS.PINNED) return n.is_pinned && !n.is_trashed;
+                return n.folder === f && !n.is_trashed;
+              });
+              if (!folderNotes.some((n) => n.id === selectedNoteId)) {
+                setSelectedNoteId(folderNotes[0]?.id || null);
+              }
+            }
           }}
           onSelectTag={(t) => {
             setActiveTag(t);
-            setMobileScreen('list');
+            if (isMobile) {
+              setMobileScreen('list');
+            } else if (t) {
+              const tagNotes = notes.filter((n) => {
+                if (n.is_trashed) return false;
+                const hashtags = extractHashtags(n.title + ' ' + n.content);
+                const combined = new Set([...(n.tags || []), ...hashtags].map((x) => x.toLowerCase()));
+                return combined.has(t.toLowerCase());
+              });
+              if (!tagNotes.some((n) => n.id === selectedNoteId)) {
+                setSelectedNoteId(tagNotes[0]?.id || null);
+              }
+            }
           }}
           onCreateFolder={handleCreateFolder}
           onRenameFolder={handleRenameFolder}
           onDeleteFolder={handleDeleteFolder}
           onMoveNoteToFolder={handleMoveNoteToFolder}
-          isOpen={isSidebarOpen || effectiveMobileScreen === 'folders'}
+          isOpen={isMobile ? effectiveMobileScreen === 'folders' : isSidebarOpen}
+          onClose={handleCloseSidebar}
           onCloseMobile={() => setMobileScreen('list')}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onOpenSecurityModal={handleOpenSecurityModal}
@@ -763,7 +819,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       </div>
       <div
         className={`${styles.listPane} ${
-          effectiveMobileScreen === 'list' ? styles.mobileVisible : ''
+          isMobile && effectiveMobileScreen === 'list' ? styles.mobileVisible : ''
         }`}
       >
         <NotesList
@@ -789,6 +845,8 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           onMoveNoteToFolder={handleMoveNoteToFolder}
           onCreateFolder={handleCreateFolder}
           onBackToFolders={() => setMobileScreen('folders')}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          isSidebarOpen={isSidebarOpen}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onOpenSecurityModal={handleOpenSecurityModal}
           isMobileScreen={isMobile && effectiveMobileScreen === 'list'}
@@ -796,7 +854,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       </div>
       <div
         className={`${styles.editorPane} ${
-          effectiveMobileScreen === 'editor' ? styles.mobileVisible : ''
+          isMobile && effectiveMobileScreen === 'editor' ? styles.mobileVisible : ''
         }`}
       >
         <NotesEditor

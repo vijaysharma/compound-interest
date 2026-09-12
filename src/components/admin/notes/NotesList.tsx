@@ -12,6 +12,7 @@ import {
   FiChevronLeft,
   FiFolder,
   FiShield,
+  FiMenu,
 } from 'react-icons/fi';
 import { BsPinFill, BsPin, BsLockFill, BsCloudArrowUp } from 'react-icons/bs';
 import {
@@ -22,9 +23,9 @@ import {
   formatNoteDate,
   extractSnippet,
   extractHashtags,
+  deriveAutoTitleFromHtml,
 } from './NotesTypes';
 import { MoveNoteModal } from './MoveNoteModal';
-import { AiFillFileAdd } from 'react-icons/ai';
 import styles from './NotesList.module.scss';
 import modalStyles from './NotesModal.module.scss';
 interface NotesListProps {
@@ -50,6 +51,8 @@ interface NotesListProps {
   onMoveNoteToFolder: (noteId: string, targetFolder: string) => void;
   onCreateFolder: (name: string) => void;
   onBackToFolders?: () => void;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
   onOpenBackupModal?: () => void;
   onOpenSecurityModal?: () => void;
   isMobileScreen?: boolean;
@@ -77,6 +80,8 @@ export const NotesList: React.FC<NotesListProps> = ({
   onMoveNoteToFolder,
   onCreateFolder,
   onBackToFolders,
+  onToggleSidebar,
+  isSidebarOpen,
   onOpenBackupModal,
   onOpenSecurityModal,
   isMobileScreen,
@@ -104,7 +109,8 @@ export const NotesList: React.FC<NotesListProps> = ({
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      const titleMatch = (note.title || '').toLowerCase().includes(q);
+      const displayTitle = (note.title?.trim() || deriveAutoTitleFromHtml(note.content)).toLowerCase();
+      const titleMatch = displayTitle.includes(q);
       const contentMatch = (note.content || '').toLowerCase().includes(q);
       const folderMatch = (note.folder || '').toLowerCase().includes(q);
       const tagMatch = (note.tags || []).some((t) => t.toLowerCase().includes(q));
@@ -124,7 +130,9 @@ export const NotesList: React.FC<NotesListProps> = ({
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }
     if (sortOption === 'title_asc') {
-      return (a.title || 'Untitled').localeCompare(b.title || 'Untitled');
+      const aTitle = a.title?.trim() || deriveAutoTitleFromHtml(a.content) || 'Untitled';
+      const bTitle = b.title?.trim() || deriveAutoTitleFromHtml(b.content) || 'Untitled';
+      return aTitle.localeCompare(bTitle);
     }
     return 0;
   });
@@ -154,7 +162,7 @@ export const NotesList: React.FC<NotesListProps> = ({
   };
   const renderNoteCard = (note: Note) => {
     const isSelected = note.id === selectedNoteId;
-    const title = note.title?.trim() || 'New Note';
+    const title = note.title?.trim() || deriveAutoTitleFromHtml(note.content) || 'New Note';
     const snippet = note.is_locked ? 'Locked Note' : extractSnippet(note.content);
     const dateFormatted = formatNoteDate(note.updated_at || note.created_at);
     const hashtags = extractHashtags(note.title + ' ' + note.content);
@@ -304,6 +312,17 @@ export const NotesList: React.FC<NotesListProps> = ({
                 <span>Folders</span>
               </button>
             )}
+            {!isMobileScreen && !isSidebarOpen && onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className={styles.backBtn}
+                title="Open Folders sidebar"
+                aria-label="Open Folders sidebar"
+              >
+                <FiMenu size={16} />
+                <span>Folders</span>
+              </button>
+            )}
             <h2 className={styles.headerTitle}>
               {getHeaderTitle()}
             </h2>
@@ -342,11 +361,15 @@ export const NotesList: React.FC<NotesListProps> = ({
               )}
             </button>
             {!isTrash && (
-              <AiFillFileAdd
+              <button
+                type="button"
                 onClick={onNewNote}
                 className={styles.addIconBtn}
-                title="Compose New Note"
-              />
+                title="Compose New Note (Cmd+N)"
+                aria-label="Compose New Note"
+              >
+                <FiEdit3 size={15} />
+              </button>
             )}
           </div>
         </div>
@@ -423,7 +446,7 @@ export const NotesList: React.FC<NotesListProps> = ({
           <div className={styles.galleryGrid}>
             {sortedNotes.map((note) => {
               const isSelected = note.id === selectedNoteId;
-              const title = note.title?.trim() || 'New Note';
+              const title = note.title?.trim() || deriveAutoTitleFromHtml(note.content) || 'New Note';
               const snippet = note.is_locked ? 'Locked Note' : extractSnippet(note.content);
               return (
                 <div
@@ -547,13 +570,13 @@ export const NotesList: React.FC<NotesListProps> = ({
               {isTrash ? (
                 <>
                   Are you sure you want to permanently delete{' '}
-                  <strong>"{noteToDelete.title || 'Untitled Note'}"</strong>? This will remove it
+                  <strong>"{noteToDelete.title || deriveAutoTitleFromHtml(noteToDelete.content) || 'Untitled Note'}"</strong>? This will remove it
                   completely from your database and cloud storage. This action cannot be undone.
                 </>
               ) : (
                 <>
                   Are you sure you want to move{' '}
-                  <strong>"{noteToDelete.title || 'Untitled Note'}"</strong> to Recently Deleted?
+                  <strong>"{noteToDelete.title || deriveAutoTitleFromHtml(noteToDelete.content) || 'Untitled Note'}"</strong> to Recently Deleted?
                 </>
               )}
             </p>

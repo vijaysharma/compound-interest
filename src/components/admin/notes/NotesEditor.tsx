@@ -53,6 +53,7 @@ import {
   htmlToPlainText,
   extractHashtags,
   hashPasscode,
+  deriveAutoTitleFromHtml,
 } from './NotesTypes';
 import { MoveNoteModal } from './MoveNoteModal';
 import { sanitizeNoteHtml, isSafeUrl, sanitizePlainInput } from './sanitizeHtml';
@@ -147,6 +148,11 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
+  const historyStackRef = useRef<string[]>([]);
+  const historyIndexRef = useRef<number>(-1);
+  const isUndoRedoRef = useRef<boolean>(false);
+  const lastSnapshotTimeRef = useRef<number>(0);
+  const hasManualTitleRef = useRef<boolean>(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
@@ -228,6 +234,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       const isBlank = !note.content || !note.content.trim() || initialHtml === '<p><br></p>';
       editorRef.current.setAttribute('data-empty', String(isBlank));
       lastLoadedNoteIdRef.current = note.id;
+      historyStackRef.current = [initialHtml];
+      historyIndexRef.current = 0;
+      lastSnapshotTimeRef.current = Date.now();
+      hasManualTitleRef.current = Boolean(note.title && note.title.trim());
       const initialSize =
         (note.id ? localStorage.getItem(`quick_notes_font_size_${note.id}`) : null) ||
         detectContentFontSize(note.content || '') ||
@@ -314,16 +324,56 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       vv.removeEventListener('scroll', handleViewportChange);
     };
   }, []);
-  const handleContentChange = () => {
+  const pushSnapshot = useCallback((forceNew = false) => {
+    if (!editorRef.current || isUndoRedoRef.current) return;
+    const currentHtml = editorRef.current.innerHTML;
+    const now = Date.now();
+    if (historyStackRef.current.length === 0) {
+      historyStackRef.current = [currentHtml];
+      historyIndexRef.current = 0;
+      lastSnapshotTimeRef.current = now;
+      return;
+    }
+    const lastHtml = historyStackRef.current[historyIndexRef.current];
+    if (lastHtml === currentHtml) return;
+    if (forceNew || now - lastSnapshotTimeRef.current > 800) {
+      const nextStack = historyStackRef.current.slice(0, historyIndexRef.current + 1);
+      nextStack.push(currentHtml);
+      if (nextStack.length > 50) {
+        nextStack.shift();
+      }
+      historyStackRef.current = nextStack;
+      historyIndexRef.current = nextStack.length - 1;
+      lastSnapshotTimeRef.current = now;
+    } else {
+      historyStackRef.current[historyIndexRef.current] = currentHtml;
+    }
+  }, []);
+  const handleContentChange = useCallback((forceNewHistory?: boolean | React.SyntheticEvent) => {
     if (!editorRef.current || !note) return;
     const html = editorRef.current.innerHTML;
     const isBlank = !html || html === '<p><br></p>' || html === '<br>' || html === '<div><br></div>';
     editorRef.current.setAttribute('data-empty', String(isBlank));
-    calculateStats((note.title || '') + ' ' + html);
-    const contentTags = extractHashtags((note.title || '') + ' ' + html);
+    const isForceNew = typeof forceNewHistory === 'boolean' ? forceNewHistory : false;
+    if (!isUndoRedoRef.current) {
+      pushSnapshot(isForceNew);
+    }
+    let effectiveTitle = note.title;
+    if (!hasManualTitleRef.current || !note.title || !note.title.trim()) {
+      const derived = deriveAutoTitleFromHtml(html);
+      if (derived) {
+        effectiveTitle = derived;
+      }
+    }
+    calculateStats((effectiveTitle || '') + ' ' + html);
+    const contentTags = extractHashtags((effectiveTitle || '') + ' ' + html);
     const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
-    onUpdateNote({ content: html, tags: combinedTags });
-  };
+    const updates: Partial<Note> = { content: html, tags: combinedTags };
+    if (effectiveTitle !== note.title) {
+      updates.title = effectiveTitle;
+    }
+    onUpdateNote(updates);
+  }, [note, onUpdateNote, pushSnapshot, calculateStats]);
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     const clipboardData = e.clipboardData;
@@ -333,13 +383,28 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       const cleanHtml = sanitizeNoteHtml(htmlData);
       document.execCommand('insertHTML', false, cleanHtml);
     } else if (textData) {
-      document.execCommand('insertText', false, textData);
+      if (textData.includes('\n')) {
+        const lines = textData.split(/\r?\n/);
+        const html = lines
+          .map((line) => {
+            const escaped = line
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;');
+            return `<p>${escaped || '<br>'}</p>`;
+          })
+          .join('');
+        document.execCommand('insertHTML', false, html);
+      } else {
+        document.execCommand('insertText', false, textData);
+      }
     }
-    handleContentChange();
+    handleContentChange(true);
   };
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!note) return;
     const newTitle = sanitizePlainInput(e.target.value, 250);
+    hasManualTitleRef.current = Boolean(newTitle.trim());
     calculateStats(newTitle + ' ' + (note.content || ''));
     const contentTags = extractHashtags(newTitle + ' ' + (note.content || ''));
     const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
@@ -368,21 +433,31 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     restoreSelection();
     document.execCommand(cmd, false, value);
     saveSelection();
-    handleContentChange();
+    handleContentChange(true);
   };
   const handleUndo = () => {
     if (!editorRef.current) return;
-    editorRef.current.focus();
-    document.execCommand('undo', false);
-    saveSelection();
-    handleContentChange();
+    if (historyIndexRef.current > 0) {
+      historyIndexRef.current--;
+      const targetHtml = historyStackRef.current[historyIndexRef.current];
+      isUndoRedoRef.current = true;
+      editorRef.current.innerHTML = targetHtml;
+      saveSelection();
+      handleContentChange();
+      isUndoRedoRef.current = false;
+    }
   };
   const handleRedo = () => {
     if (!editorRef.current) return;
-    editorRef.current.focus();
-    document.execCommand('redo', false);
-    saveSelection();
-    handleContentChange();
+    if (historyIndexRef.current < historyStackRef.current.length - 1) {
+      historyIndexRef.current++;
+      const targetHtml = historyStackRef.current[historyIndexRef.current];
+      isUndoRedoRef.current = true;
+      editorRef.current.innerHTML = targetHtml;
+      saveSelection();
+      handleContentChange();
+      isUndoRedoRef.current = false;
+    }
   };
   const applyFontSize = (sizePx: string, cmdVal: string) => {
     if (!editorRef.current) return;
@@ -554,6 +629,123 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
     const range = selection.getRangeAt(0);
+    // 1. Check if the selection/cursor is inside a .qn-checklist-item
+    let checklistItem: HTMLElement | null = null;
+    let n1: Node | null = range.startContainer;
+    while (n1 && n1 !== editorRef.current) {
+      if (n1 instanceof HTMLElement && n1.classList.contains('qn-checklist-item')) {
+        checklistItem = n1;
+        break;
+      }
+      n1 = n1.parentNode;
+    }
+    // 2. Check if the selection/cursor is inside a <li> (bullet or numbered list item)
+    let listItem: HTMLElement | null = null;
+    let n2: Node | null = range.startContainer;
+    while (n2 && n2 !== editorRef.current) {
+      if (n2 instanceof HTMLElement && n2.tagName === 'LI') {
+        listItem = n2;
+        break;
+      }
+      n2 = n2.parentNode;
+    }
+    // CASE A: Cursor is ALREADY inside a checklist item -> TOGGLE OFF to a paragraph!
+    if (checklistItem) {
+      const contentEl = checklistItem.querySelector('.qn-checklist-content') as HTMLElement | null;
+      let inner = contentEl ? contentEl.innerHTML : checklistItem.innerHTML;
+      inner = inner.replace(/<span[^>]*class="[^"]*qn-checkbox-circle[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '');
+      inner = inner.replace(/<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*>/gi, '');
+      inner = inner.replace(/<\/div>/gi, '');
+      inner = inner.trim();
+      if (!inner || inner === '<br>') {
+        inner = '<br>';
+      }
+      const p = document.createElement('p');
+      p.innerHTML = inner;
+      if (contentEl?.style.fontSize) {
+        p.style.fontSize = contentEl.style.fontSize;
+      }
+      checklistItem.parentNode?.replaceChild(p, checklistItem);
+      const r = document.createRange();
+      if (inner === '<br>') {
+        r.setStart(p, 0);
+        r.collapse(true);
+      } else {
+        r.selectNodeContents(p);
+        r.collapse(false);
+      }
+      selection.removeAllRanges();
+      selection.addRange(r);
+      handleContentChange(true);
+      return;
+    }
+    // CASE B: Cursor is inside a <li> (bulleted or numbered list item) -> CONVERT <li> TO CHECKLIST ITEM!
+    if (listItem) {
+      const listParent = listItem.parentElement; // <ul> or <ol>
+      let html = listItem.innerHTML.trim();
+      if (!html || html === '<br>') {
+        html = '<br>';
+      }
+      const checklistDiv = document.createElement('div');
+      checklistDiv.className = 'qn-checklist-item';
+      checklistDiv.setAttribute('data-checked', 'false');
+      const checkboxSpan = document.createElement('span');
+      checkboxSpan.className = 'qn-checkbox-circle';
+      checkboxSpan.setAttribute('contenteditable', 'false');
+      checkboxSpan.title = 'Mark as done';
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'qn-checklist-content';
+      contentDiv.innerHTML = html;
+      if (listItem.style.fontSize) {
+        contentDiv.style.fontSize = listItem.style.fontSize;
+      }
+      checklistDiv.appendChild(checkboxSpan);
+      checklistDiv.appendChild(contentDiv);
+      if (listParent && listParent.children.length === 1) {
+        listParent.parentNode?.replaceChild(checklistDiv, listParent);
+      } else if (listParent) {
+        const items = Array.from(listParent.children);
+        const index = items.indexOf(listItem);
+        if (index === 0) {
+          listParent.parentNode?.insertBefore(checklistDiv, listParent);
+          listItem.remove();
+        } else if (index === items.length - 1) {
+          listParent.after(checklistDiv);
+          listItem.remove();
+        } else {
+          const afterItems = items.slice(index + 1);
+          const secondList = document.createElement(listParent.tagName);
+          afterItems.forEach((child) => secondList.appendChild(child));
+          listItem.remove();
+          listParent.after(checklistDiv);
+          checklistDiv.after(secondList);
+        }
+      } else {
+        listItem.parentNode?.replaceChild(checklistDiv, listItem);
+      }
+      const newRange = document.createRange();
+      if (html !== '<br>') {
+        newRange.selectNodeContents(contentDiv);
+        newRange.collapse(false);
+      } else {
+        newRange.setStart(contentDiv, 0);
+        newRange.collapse(true);
+      }
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+      handleContentChange(true);
+      return;
+    }
+    // CASE C: Standard block (P, H1-H6, BLOCKQUOTE, DIV) -> CONVERT TO CHECKLIST ITEM!
+    let block: HTMLElement | null = null;
+    let curr: Node | null = range.startContainer;
+    while (curr && curr !== editorRef.current) {
+      if (curr instanceof HTMLElement && /^(P|DIV|H[1-6]|BLOCKQUOTE)$/i.test(curr.tagName)) {
+        block = curr;
+        break;
+      }
+      curr = curr.parentNode;
+    }
     const checklistDiv = document.createElement('div');
     checklistDiv.className = 'qn-checklist-item';
     checklistDiv.setAttribute('data-checked', 'false');
@@ -561,19 +753,110 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     checkboxSpan.className = 'qn-checkbox-circle';
     checkboxSpan.setAttribute('contenteditable', 'false');
     checkboxSpan.title = 'Mark as done';
-    const contentSpan = document.createElement('span');
-    contentSpan.className = 'qn-checklist-content';
-    contentSpan.innerHTML = range.toString() || '&nbsp;';
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'qn-checklist-content';
+    let initialHtml = '<br>';
+    if (!range.collapsed) {
+      initialHtml = range.toString() || '<br>';
+    } else if (block && block !== editorRef.current) {
+      const text = block.textContent?.trim();
+      if (text) {
+        initialHtml = block.innerHTML;
+      }
+    }
+    contentDiv.innerHTML = initialHtml;
+    if (block && (block as HTMLElement).style?.fontSize) {
+      contentDiv.style.fontSize = (block as HTMLElement).style.fontSize;
+    }
     checklistDiv.appendChild(checkboxSpan);
-    checklistDiv.appendChild(contentSpan);
-    range.deleteContents();
-    range.insertNode(checklistDiv);
+    checklistDiv.appendChild(contentDiv);
+    if (block && block !== editorRef.current && (block.tagName === 'P' || block.tagName === 'DIV')) {
+      block.parentNode?.replaceChild(checklistDiv, block);
+    } else {
+      range.deleteContents();
+      range.insertNode(checklistDiv);
+    }
     const newRange = document.createRange();
-    newRange.selectNodeContents(contentSpan);
-    newRange.collapse(false);
+    if (initialHtml !== '<br>') {
+      newRange.selectNodeContents(contentDiv);
+      newRange.collapse(false);
+    } else {
+      newRange.setStart(contentDiv, 0);
+      newRange.collapse(true);
+    }
     selection.removeAllRanges();
     selection.addRange(newRange);
-    handleContentChange();
+    handleContentChange(true);
+  };
+  const handleInsertList = (type: 'ul' | 'ol') => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    // Check if cursor is inside a .qn-checklist-item
+    let checklistItem: HTMLElement | null = null;
+    let n: Node | null = range.startContainer;
+    while (n && n !== editorRef.current) {
+      if (n instanceof HTMLElement && n.classList.contains('qn-checklist-item')) {
+        checklistItem = n;
+        break;
+      }
+      n = n.parentNode;
+    }
+    if (checklistItem) {
+      // CONVERT CHECKLIST ITEM TO <ul> / <ol> <li>...</li>
+      const contentEl = checklistItem.querySelector('.qn-checklist-content') as HTMLElement | null;
+      let html = contentEl ? contentEl.innerHTML : checklistItem.innerHTML;
+      html = html.replace(/<span[^>]*class="[^"]*qn-checkbox-circle[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '');
+      html = html.replace(/<div[^>]*class="[^"]*qn-checklist-item[^"]*"[^>]*>/gi, '');
+      html = html.replace(/<\/div>/gi, '');
+      html = html.trim();
+      if (!html || html === '<br>') {
+        html = '<br>';
+      }
+      const li = document.createElement('li');
+      li.innerHTML = html;
+      if (contentEl?.style.fontSize) {
+        li.style.fontSize = contentEl.style.fontSize;
+      }
+      const prev = checklistItem.previousElementSibling;
+      const next = checklistItem.nextElementSibling;
+      const tagName = type.toUpperCase();
+      let targetList: HTMLElement;
+      if (prev && prev.tagName === tagName) {
+        prev.appendChild(li);
+        targetList = prev as HTMLElement;
+        checklistItem.remove();
+        if (next && next.tagName === tagName) {
+          while (next.firstChild) {
+            targetList.appendChild(next.firstChild);
+          }
+          next.remove();
+        }
+      } else if (next && next.tagName === tagName) {
+        next.insertBefore(li, next.firstChild);
+        targetList = next as HTMLElement;
+        checklistItem.remove();
+      } else {
+        targetList = document.createElement(type);
+        targetList.appendChild(li);
+        checklistItem.parentNode?.replaceChild(targetList, checklistItem);
+      }
+      const newRange = document.createRange();
+      if (html !== '<br>') {
+        newRange.selectNodeContents(li);
+        newRange.collapse(false);
+      } else {
+        newRange.setStart(li, 0);
+        newRange.collapse(true);
+      }
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+      handleContentChange(true);
+      return;
+    }
+    execCmd(type === 'ul' ? 'insertUnorderedList' : 'insertOrderedList');
   };
   const insertTable = () => {
     if (!editorRef.current) return;
@@ -687,7 +970,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           checkbox.classList.remove('checked');
           checkbox.innerHTML = '';
         }
-        handleContentChange();
+        handleContentChange(true);
       }
       return;
     }
@@ -725,6 +1008,21 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       }
       return;
     }
+    if (e.key === ' ' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0 && sel.isCollapsed) {
+        const node = sel.anchorNode;
+        if (node && node.nodeType === Node.TEXT_NODE && node.textContent) {
+          const textBefore = node.textContent.substring(0, sel.anchorOffset).trim();
+          if (textBefore === '[]' || textBefore === '- [ ]' || textBefore === '[ ]') {
+            e.preventDefault();
+            node.textContent = node.textContent.substring(sel.anchorOffset);
+            insertChecklistItem();
+            return;
+          }
+        }
+      }
+    }
     if (e.key === 'Tab') {
       e.preventDefault();
       if (e.shiftKey) {
@@ -734,40 +1032,57 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       }
       return;
     }
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
-        const node = selection.anchorNode;
-        const currentItem = (
-          node instanceof HTMLElement ? node : node?.parentElement
-        )?.closest('.qn-checklist-item');
+        const range = selection.getRangeAt(0);
+        const node: Node | null = range.startContainer;
+        let currentItem: HTMLElement | null = null;
+        if (node instanceof HTMLElement) {
+          currentItem = node.closest('.qn-checklist-item');
+        } else if (node?.parentElement) {
+          currentItem = node.parentElement.closest('.qn-checklist-item');
+        }
         if (currentItem) {
           e.preventDefault();
-          const content = currentItem.querySelector('.qn-checklist-content');
+          e.stopPropagation();
+          const contentEl = currentItem.querySelector('.qn-checklist-content') as HTMLElement | null;
           const currentLevel = parseInt(currentItem.getAttribute('data-level') || '0', 10);
-          if (!content?.textContent?.trim()) {
+          const rawText = contentEl?.textContent?.replace(/\u200B/g, '').trim() || '';
+          // If current item is empty, pressing Enter exits checklist or outdents
+          if (!rawText && (!contentEl || !contentEl.querySelector('img, a, table'))) {
             if (currentLevel > 0) {
               if (currentLevel === 1) {
                 currentItem.removeAttribute('data-level');
               } else {
                 currentItem.setAttribute('data-level', String(currentLevel - 1));
               }
-              handleContentChange();
+              handleContentChange(true);
               return;
             }
             const p = document.createElement('p');
             p.innerHTML = '<br>';
-            if ((content as HTMLElement)?.style.fontSize) {
-              p.style.fontSize = (content as HTMLElement).style.fontSize;
+            if (contentEl?.style.fontSize) {
+              p.style.fontSize = contentEl.style.fontSize;
             }
             currentItem.parentNode?.replaceChild(p, currentItem);
             const r = document.createRange();
-            r.selectNodeContents(p);
-            r.collapse(false);
+            r.setStart(p, 0);
+            r.collapse(true);
             selection.removeAllRanges();
             selection.addRange(r);
-            handleContentChange();
+            handleContentChange(true);
             return;
+          }
+          // Split contents from cursor to end of contentEl
+          const afterRange = document.createRange();
+          if (contentEl && contentEl.contains(range.startContainer)) {
+            afterRange.setStart(range.startContainer, range.startOffset);
+            afterRange.setEndAfter(contentEl.lastChild || contentEl);
+          }
+          const afterFrag = afterRange.extractContents();
+          if (contentEl && (!contentEl.innerHTML || !contentEl.textContent?.trim())) {
+            contentEl.innerHTML = '<br>';
           }
           const newItem = document.createElement('div');
           newItem.className = 'qn-checklist-item';
@@ -779,21 +1094,26 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           circle.className = 'qn-checkbox-circle';
           circle.setAttribute('contenteditable', 'false');
           circle.title = 'Mark as done';
-          const span = document.createElement('span');
-          span.className = 'qn-checklist-content';
-          span.innerHTML = '<br>';
-          if ((content as HTMLElement)?.style.fontSize) {
-            span.style.fontSize = (content as HTMLElement).style.fontSize;
+          const newContent = document.createElement('div');
+          newContent.className = 'qn-checklist-content';
+          if (contentEl?.style.fontSize) {
+            newContent.style.fontSize = contentEl.style.fontSize;
+          }
+          if (afterFrag.textContent?.trim() || afterFrag.querySelector('img, a, span, strong, em')) {
+            newContent.appendChild(afterFrag);
+          } else {
+            newContent.innerHTML = '<br>';
           }
           newItem.appendChild(circle);
-          newItem.appendChild(span);
+          newItem.appendChild(newContent);
           currentItem.after(newItem);
           const r = document.createRange();
-          r.selectNodeContents(span);
-          r.collapse(false);
+          r.setStart(newContent, 0);
+          r.collapse(true);
           selection.removeAllRanges();
           selection.addRange(r);
-          handleContentChange();
+          handleContentChange(true);
+          return;
         }
       }
     }
@@ -910,6 +1230,25 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   if (!note) {
     return (
       <div className={styles.emptyContainer}>
+        {((onBackMobile && isMobileScreen) || (onToggleSidebar && !isMobileScreen)) && (
+          <div className={styles.emptyTopBar}>
+            {onBackMobile && isMobileScreen && (
+              <button onClick={onBackMobile} className={styles.backBtn}>
+                <FiChevronLeft size={20} />
+                <span>Notes</span>
+              </button>
+            )}
+            {onToggleSidebar && !isMobileScreen && (
+              <button
+                onClick={onToggleSidebar}
+                className={`${styles.iconBtn} ${isSidebarOpen ? styles.active : ''}`}
+                title={isSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+              >
+                <FiMenu size={16} />
+              </button>
+            )}
+          </div>
+        )}
         <div className={styles.emptyIconBox}>
           <FiShield size={32} />
         </div>
@@ -1033,7 +1372,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             <button
               onClick={onToggleSidebar}
               className={`${styles.iconBtn} ${isSidebarOpen ? styles.active : ''}`}
-              title="Toggle Sidebar"
+              title={isSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+              aria-label={isSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
             >
               <FiMenu size={16} />
             </button>
@@ -1302,16 +1642,6 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <FiTrash2 size={16} />
             </button>
           )}
-          {!isTrash && !isMobileScreen && (
-            <button
-              onClick={onNewNote}
-              className={styles.btnPrimary}
-              style={{ padding: '0.35rem 0.6rem', borderRadius: '8px', marginLeft: '0.25rem' }}
-              title="New Note (Cmd+N)"
-            >
-              <FiEdit3 size={14} />
-            </button>
-          )}
         </div>
       </div>
       {!isTrash && (
@@ -1574,7 +1904,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           <div className={styles.toolbarDivider} />
           <button
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => execCmd('insertUnorderedList')}
+            onClick={() => handleInsertList('ul')}
             className={styles.toolbarBtn}
             title="Bulleted List"
           >
@@ -1582,7 +1912,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => execCmd('insertOrderedList')}
+            onClick={() => handleInsertList('ol')}
             className={styles.toolbarBtn}
             title="Numbered List"
           >
@@ -1840,7 +2170,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             contentEditable={!isTrash}
             suppressContentEditableWarning
             onPaste={handlePaste}
-            onInput={handleContentChange}
+            onInput={() => handleContentChange()}
             onClick={handleEditorClick}
             onKeyDown={handleKeyDown}
             onKeyUp={saveSelection}
@@ -2079,7 +2409,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      execCmd('insertUnorderedList');
+                      handleInsertList('ul');
                       setActiveMobileMenu(null);
                     }}
                     className={styles.dropdownItem}
@@ -2091,7 +2421,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      execCmd('insertOrderedList');
+                      handleInsertList('ol');
                       setActiveMobileMenu(null);
                     }}
                     className={styles.dropdownItem}
