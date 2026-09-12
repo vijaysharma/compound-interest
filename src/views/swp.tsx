@@ -826,70 +826,136 @@ const SWP = ({
           longevity using live AMFI NAV histories.
         </p>
       </header>
-      <div className={styles.actionButtonGroup}>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={() => setIsFundSelectorOpen(true)}
-        >
-          Select mutual funds ({pinnedFunds.length}/8)
-        </button>
-        <button
-          type="button"
-          className={`${styles.chartIconButton} ${viewChart ? styles.chartIconActive : ''}`}
-          onClick={toggleViewChart}
-          title={viewChart ? 'Hide Chart' : 'Show Chart'}
-          aria-label={viewChart ? 'Hide Chart' : 'Show Chart'}
-        >
-          <FiBarChart2 />
-        </button>
-      </div>
-      <ValuePicker.DateRange
-        data={jsonNavData}
-        startTitle="Investment Date"
-        startDate={lumpsumStartDate}
-        setStartDate={setLumpsumStartDate}
-      />
-      <ValuePicker
-        value={lumpSumInvestmentAmount}
-        onChange={setLumpSumInvestmentAmount}
-        className={styles.fieldTight}
-        title="Lump Sum Investment"
-        tabs={[]}
-      />
-      {jsonNavData.length > 0 && (
-        <ValuePicker.DateRange
-          data={jsonNavData}
-          startDate={startSwpDate}
-          startTitle="Start SWP"
-          endDate={endSwpDate}
-          setStartDate={setStartSwpDate}
-          setEndDate={setEndSwpDate}
-          endTitle="End SWP"
-          startMinDate={lumpsumStartDate ?? undefined}
-        />
-      )}
-      {viewChart &&
-        (pinnedFunds.length > 0 ? (
-          <Suspense
-            fallback={
-              <div className={styles.chartLoadingWrapper}>
-                <span className={styles.loadingSpinner}></span>
-              </div>
-            }
-          >
-            <Chart
-              className={styles.chartContainer}
-              datasets={chartDatasets}
-              investmentAmount={parseFloat(monthlyWithdrawalAmount) || 0}
-              dataMode="value"
-            />
-          </Suspense>
-        ) : (
-          <div className={styles.chartPlaceholder}>
-            Select up to 8 funds to see comparison
+      <div className={styles.analyticsGrid}>
+        <div className={styles.controlsCol}>
+          <div className={styles.actionButtonGroup}>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => setIsFundSelectorOpen(true)}
+            >
+              Select mutual funds ({pinnedFunds.length}/8)
+            </button>
+            <button
+              type="button"
+              className={`${styles.chartIconButton} ${viewChart ? styles.chartIconActive : ''}`}
+              onClick={toggleViewChart}
+              title={viewChart ? 'Hide Chart' : 'Show Chart'}
+              aria-label={viewChart ? 'Hide Chart' : 'Show Chart'}
+            >
+              <FiBarChart2 />
+            </button>
           </div>
-        ))}
+          <ValuePicker.DateRange
+            data={jsonNavData}
+            startTitle="Investment Date"
+            startDate={lumpsumStartDate}
+            setStartDate={setLumpsumStartDate}
+          />
+          <ValuePicker
+            value={lumpSumInvestmentAmount}
+            onChange={setLumpSumInvestmentAmount}
+            className={styles.fieldTight}
+            title="Lump Sum Investment"
+            tabs={[]}
+          />
+          {jsonNavData.length > 0 && (
+            <ValuePicker.DateRange
+              data={jsonNavData}
+              startDate={startSwpDate}
+              startTitle="Start SWP"
+              endDate={endSwpDate}
+              setStartDate={setStartSwpDate}
+              setEndDate={setEndSwpDate}
+              endTitle="End SWP"
+              startMinDate={lumpsumStartDate ?? undefined}
+            />
+          )}
+          <ValuePicker
+            value={monthlyWithdrawalAmount}
+            onChange={setMonthlyWithdrawalAmount}
+            className={styles.fieldTight}
+            title="Monthly Withdrawals"
+            tabs={[]}
+          />
+          <div className={styles.joinRow}>
+            <span className={styles.joinLabel}>
+              Withdrawal on
+            </span>
+            <select
+              className={styles.joinSelect}
+              value={dayOfMonth}
+              onChange={(event) => setDayOfMonth(event.target.value)}
+            >
+              {Array.from({ length: 31 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Day {i + 1}
+                </option>
+              ))}
+            </select>
+            <span className={styles.joinLabel}>
+              Yearly increase
+            </span>
+            <select
+              className={styles.joinSelect}
+              value={investmentStepUp}
+              onChange={(event) => setInvestmentStepUp(event.target.value)}
+            >
+              {Array.from({ length: 21 }, (_, i) => (
+                <option key={i} value={i}>
+                  {i}%
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className={styles.outputCol}>
+          {viewChart &&
+            (pinnedFunds.length > 0 ? (
+              <Suspense
+                fallback={
+                  <div className={styles.chartLoadingWrapper}>
+                    <span className={styles.loadingSpinner}></span>
+                  </div>
+                }
+              >
+                <Chart
+                  className={styles.chartContainer}
+                  datasets={chartDatasets}
+                  investmentAmount={parseFloat(monthlyWithdrawalAmount) || 0}
+                  dataMode="value"
+                />
+              </Suspense>
+            ) : (
+              <div className={styles.chartPlaceholder}>
+                Select up to 8 funds to see comparison
+              </div>
+            ))}
+          {pinnedFunds.length > 0 && (
+            <div className={styles.mfDisplayGrid}>
+              {fundAnalyses.map((fund) => (
+                <div key={fund.schemeCode} className={styles.mfDisplayItem}>
+                  {renderStatsCard(
+                    fund.startNav,
+                    fund.endNav,
+                    fund.matureAmt,
+                    fund.installments,
+                    fund.invested,
+                    fund.units,
+                    fund.averageNav,
+                    fund.xirr,
+                    fund.totalWithdrawn,
+                    fund.lastWithdrawalAmount,
+                    fund.lastWithdrawalDate,
+                    fund.schemeName,
+                    fund.color
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
         onClose={() => setIsFundSelectorOpen(false)}
@@ -904,66 +970,6 @@ const SWP = ({
         togglePinFund={togglePinFund}
         loadingSchemeCodes={loadingSchemeCodes}
       />
-      <ValuePicker
-        value={monthlyWithdrawalAmount}
-        onChange={setMonthlyWithdrawalAmount}
-        className={styles.fieldTight}
-        title="Monthly Withdrawals"
-        tabs={[]}
-      />
-      <div className={styles.joinRow}>
-        <span className={styles.joinLabel}>
-          Withdrawal on
-        </span>
-        <select
-          className={styles.joinSelect}
-          value={dayOfMonth}
-          onChange={(event) => setDayOfMonth(event.target.value)}
-        >
-          {Array.from({ length: 31 }, (_, i) => (
-            <option key={i + 1} value={i + 1}>
-              Day {i + 1}
-            </option>
-          ))}
-        </select>
-        <span className={styles.joinLabel}>
-          Yearly increase
-        </span>
-        <select
-          className={styles.joinSelect}
-          value={investmentStepUp}
-          onChange={(event) => setInvestmentStepUp(event.target.value)}
-        >
-          {Array.from({ length: 21 }, (_, i) => (
-            <option key={i} value={i}>
-              {i}%
-            </option>
-          ))}
-        </select>
-      </div>
-      {pinnedFunds.length > 0 && (
-        <div className={styles.mfDisplayGrid}>
-          {fundAnalyses.map((fund) => (
-            <div key={fund.schemeCode} className={styles.mfDisplayItem}>
-              {renderStatsCard(
-                fund.startNav,
-                fund.endNav,
-                fund.matureAmt,
-                fund.installments,
-                fund.invested,
-                fund.units,
-                fund.averageNav,
-                fund.xirr,
-                fund.totalWithdrawn,
-                fund.lastWithdrawalAmount,
-                fund.lastWithdrawalDate,
-                fund.schemeName,
-                fund.color
-              )}
-            </div>
-          ))}
-        </div>
-      )}
       <CalculatorContentSection
         title="Testing Real-World Retirement Resilience with SWP Backtests"
         subtitle="Simulating Systematic Withdrawal Plans against real historical mutual fund data exposes your retirement portfolio to actual historical market drawdowns, inflation cycles, and recovery periods."

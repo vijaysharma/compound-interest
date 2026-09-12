@@ -11,9 +11,42 @@
   gap: 0.625rem;
 
   @include tablet-up {
+    max-width: 72rem;
     padding: 1rem 0.5rem;
     gap: 1rem;
   }
+
+  @include desktop-up {
+    max-width: 80rem;
+  }
+}
+
+.analyticsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+
+  @include tablet-up {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+}
+
+.controlsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.outputCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
 }
 
 .header {

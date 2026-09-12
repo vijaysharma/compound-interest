@@ -819,224 +819,270 @@ const Lumpsum = ({
           performance across 8 schemes.
         </p>
       </header>
-      <div className={styles.actionButtonGroup}>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={() => setIsFundSelectorOpen(true)}
-        >
-          Select mutual funds ({pinnedFunds.length}/8)
-        </button>
-        <button
-          type="button"
-          className={styles.outlineButton}
-          onClick={toggleShowDate}
-        >
-          {showDate ? 'Time Slots' : 'Date Picker'}
-        </button>
-        <button
-          type="button"
-          className={`${styles.chartIconButton} ${viewChart ? styles.chartIconActive : ''}`}
-          onClick={toggleViewChart}
-          title={viewChart ? 'Hide Chart' : 'Show Chart'}
-          aria-label={viewChart ? 'Hide Chart' : 'Show Chart'}
-        >
-          <FiBarChart2 />
-        </button>
-      </div>
-      {/*
-       * ======================================================
-       * TIME SLOTS
-       * ======================================================
-       */}
-      {!showDate && (
-        <div>
-          <JoinedButtonGroup
-            data={[
-              {
-                id: 'ty1',
-                title: '1D',
-                value: '1',
-              },
-              {
-                id: 'ty2',
-                title: '3D',
-                value: '3',
-              },
-              {
-                id: 'ty3',
-                title: '1W',
-                value: '5',
-              },
-              {
-                id: 'ty4',
-                title: '2W',
-                value: '10',
-              },
-              {
-                id: 'ty5',
-                title: '3W',
-                value: '15',
-              },
-              {
-                id: 'ty6',
-                title: '1M',
-                value: '20',
-              },
-              {
-                id: 'ty7',
-                title: '5W',
-                value: '26',
-              },
-              {
-                id: 'ty8',
-                title: '6W',
-                value: '30',
-              },
-            ]}
-            selectedValue={duration}
-            updateSelectedValue={handleDurationChange}
-            btnClass="rounded-bl-none rounded-br-none border-b-0"
-            sizePrefix="sm"
-          />
-          <JoinedButtonGroup
-            data={[
-              {
-                id: 'ty9',
-                title: '2M',
-                value: '39',
-              },
-              {
-                id: 'ty10',
-                title: '3M',
-                value: '63',
-              },
-              {
-                id: 'ty11',
-                title: '4M',
-                value: '84',
-              },
-              {
-                id: 'ty12',
-                title: '5M',
-                value: '105',
-              },
-              {
-                id: 'ty13',
-                title: '6M',
-                value: '126',
-              },
-              {
-                id: 'ty14',
-                title: '1Y',
-                value: '243',
-              },
-              {
-                id: 'ty15',
-                title: '1.5Y',
-                value: '366',
-              },
-              {
-                id: 'ty16',
-                title: '2Y',
-                value: '485',
-              },
-            ]}
-            selectedValue={duration}
-            updateSelectedValue={handleDurationChange}
-            btnClass="rounded-l-none rounded-r-none border-b-0"
-            sizePrefix="sm"
-          />
-          <JoinedButtonGroup
-            data={[
-              {
-                id: 'ty18',
-                title: '3Y',
-                value: '740',
-              },
-              {
-                id: 'ty19',
-                title: '4Y',
-                value: '985',
-              },
-              {
-                id: 'ty20',
-                title: '5Y',
-                value: '1235',
-              },
-              {
-                id: 'ty21',
-                title: '6Y',
-                value: '1476',
-              },
-              {
-                id: 'ty22',
-                title: '7Y',
-                value: '1725',
-              },
-              {
-                id: 'ty23',
-                title: '10Y',
-                value: '2464',
-              },
-              {
-                id: 'ty24',
-                title: '15Y',
-                value: '3695',
-              },
-              {
-                id: 'ty25',
-                title: '20Y',
-                value: '4928',
-              },
-            ]}
-            selectedValue={duration}
-            updateSelectedValue={handleDurationChange}
-            sizePrefix="sm"
+      <div className={styles.analyticsGrid}>
+        <div className={styles.controlsCol}>
+          <div className={styles.actionButtonGroup}>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => setIsFundSelectorOpen(true)}
+            >
+              Select mutual funds ({pinnedFunds.length}/8)
+            </button>
+            <button
+              type="button"
+              className={styles.outlineButton}
+              onClick={toggleShowDate}
+            >
+              {showDate ? 'Time Slots' : 'Date Picker'}
+            </button>
+            <button
+              type="button"
+              className={`${styles.chartIconButton} ${viewChart ? styles.chartIconActive : ''}`}
+              onClick={toggleViewChart}
+              title={viewChart ? 'Hide Chart' : 'Show Chart'}
+              aria-label={viewChart ? 'Hide Chart' : 'Show Chart'}
+            >
+              <FiBarChart2 />
+            </button>
+          </div>
+          {/*
+           * ======================================================
+           * TIME SLOTS
+           * ======================================================
+           */}
+          {!showDate && (
+            <div>
+              <JoinedButtonGroup
+                data={[
+                  {
+                    id: 'ty1',
+                    title: '1D',
+                    value: '1',
+                  },
+                  {
+                    id: 'ty2',
+                    title: '3D',
+                    value: '3',
+                  },
+                  {
+                    id: 'ty3',
+                    title: '1W',
+                    value: '5',
+                  },
+                  {
+                    id: 'ty4',
+                    title: '2W',
+                    value: '10',
+                  },
+                  {
+                    id: 'ty5',
+                    title: '3W',
+                    value: '15',
+                  },
+                  {
+                    id: 'ty6',
+                    title: '1M',
+                    value: '20',
+                  },
+                  {
+                    id: 'ty7',
+                    title: '5W',
+                    value: '26',
+                  },
+                  {
+                    id: 'ty8',
+                    title: '6W',
+                    value: '30',
+                  },
+                ]}
+                selectedValue={duration}
+                updateSelectedValue={handleDurationChange}
+                btnClass="rounded-bl-none rounded-br-none border-b-0"
+                sizePrefix="sm"
+              />
+              <JoinedButtonGroup
+                data={[
+                  {
+                    id: 'ty9',
+                    title: '2M',
+                    value: '39',
+                  },
+                  {
+                    id: 'ty10',
+                    title: '3M',
+                    value: '63',
+                  },
+                  {
+                    id: 'ty11',
+                    title: '4M',
+                    value: '84',
+                  },
+                  {
+                    id: 'ty12',
+                    title: '5M',
+                    value: '105',
+                  },
+                  {
+                    id: 'ty13',
+                    title: '6M',
+                    value: '126',
+                  },
+                  {
+                    id: 'ty14',
+                    title: '1Y',
+                    value: '243',
+                  },
+                  {
+                    id: 'ty15',
+                    title: '1.5Y',
+                    value: '366',
+                  },
+                  {
+                    id: 'ty16',
+                    title: '2Y',
+                    value: '485',
+                  },
+                ]}
+                selectedValue={duration}
+                updateSelectedValue={handleDurationChange}
+                btnClass="rounded-l-none rounded-r-none border-b-0"
+                sizePrefix="sm"
+              />
+              <JoinedButtonGroup
+                data={[
+                  {
+                    id: 'ty18',
+                    title: '3Y',
+                    value: '740',
+                  },
+                  {
+                    id: 'ty19',
+                    title: '4Y',
+                    value: '985',
+                  },
+                  {
+                    id: 'ty20',
+                    title: '5Y',
+                    value: '1235',
+                  },
+                  {
+                    id: 'ty21',
+                    title: '6Y',
+                    value: '1476',
+                  },
+                  {
+                    id: 'ty22',
+                    title: '7Y',
+                    value: '1725',
+                  },
+                  {
+                    id: 'ty23',
+                    title: '10Y',
+                    value: '2464',
+                  },
+                  {
+                    id: 'ty24',
+                    title: '15Y',
+                    value: '3695',
+                  },
+                  {
+                    id: 'ty25',
+                    title: '20Y',
+                    value: '4928',
+                  },
+                ]}
+                selectedValue={duration}
+                updateSelectedValue={handleDurationChange}
+                sizePrefix="sm"
+                className={styles.fieldTight}
+                btnClass="rounded-tl-none rounded-tr-none"
+              />
+            </div>
+          )}
+          {/*
+           * ======================================================
+           * CUSTOM DATE PICKER
+           * ======================================================
+           */}
+          {showDate && jsonNavData.length > 0 && (
+            <ValuePicker.DateRange
+              data={jsonNavData}
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+            />
+          )}
+          {/*
+           * ======================================================
+           * INVESTMENT AMOUNT
+           * ======================================================
+           */}
+          <ValuePicker
+            value={invAmt}
+            onChange={setInvAmt}
             className={styles.fieldTight}
-            btnClass="rounded-tl-none rounded-tr-none"
+            title="Invested"
+            tabs={[]}
           />
         </div>
-      )}
-      {/*
-       * ======================================================
-       * CUSTOM DATE PICKER
-       * ======================================================
-       */}
-      {showDate && jsonNavData.length > 0 && (
-        <ValuePicker.DateRange
-          data={jsonNavData}
-          startDate={startDate}
-          endDate={endDate}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-        />
-      )}
-      {/*
-       * ======================================================
-       * FUND LIST / CHART
-       * ======================================================
-       */}
-      {viewChart &&
-        (pinnedFunds.length > 0 ? (
-          <Suspense
-            fallback={
-              <div className={styles.chartLoadingWrapper}>
-                <span className={styles.loadingSpinner}></span>
+        <div className={styles.outputCol}>
+          {/*
+           * ======================================================
+           * FUND LIST / CHART
+           * ======================================================
+           */}
+          {viewChart &&
+            (pinnedFunds.length > 0 ? (
+              <Suspense
+                fallback={
+                  <div className={styles.chartLoadingWrapper}>
+                    <span className={styles.loadingSpinner}></span>
+                  </div>
+                }
+              >
+                <Chart
+                  className={styles.chartContainer}
+                  datasets={chartDatasets}
+                  investmentAmount={parseFloat(invAmt) || 0}
+                />
+              </Suspense>
+            ) : (
+              <div className={styles.chartPlaceholder}>
+                Select up to 8 funds to see comparison
               </div>
-            }
-          >
-            <Chart
-              className={styles.chartContainer}
-              datasets={chartDatasets}
-              investmentAmount={parseFloat(invAmt) || 0}
-            />
-          </Suspense>
-        ) : (
-          <div className={styles.chartPlaceholder}>
-            Select up to 8 funds to see comparison
-          </div>
-        ))}
+            ))}
+          {/*
+           * ======================================================
+           * STATS
+           *
+           * EXACTLY TWO CARDS PER ROW.
+           *
+           * 1  2
+           * 3  4
+           * ======================================================
+           */}
+          {pinnedFunds.length > 0 && (
+            <div className={styles.mfDisplayGrid}>
+              {fundAnalyses.map((fund) => (
+                <div key={fund.schemeCode} className={styles.mfDisplayItem}>
+                  {renderStatsCard(
+                    fund.startNav,
+                    fund.endNav,
+                    fund.matureAmt,
+                    fund.profitAmt,
+                    fund.profit,
+                    fund.absProfit,
+                    fund.schemeName,
+                    fund.color
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
         onClose={() => setIsFundSelectorOpen(false)}
@@ -1051,46 +1097,6 @@ const Lumpsum = ({
         togglePinFund={togglePinFund}
         loadingSchemeCodes={loadingSchemeCodes}
       />
-      {/*
-       * ======================================================
-       * INVESTMENT AMOUNT
-       * ======================================================
-       */}
-      <ValuePicker
-        value={invAmt}
-        onChange={setInvAmt}
-        className={styles.fieldTight}
-        title="Invested"
-        tabs={[]}
-      />
-      {/*
-       * ======================================================
-       * STATS
-       *
-       * EXACTLY TWO CARDS PER ROW.
-       *
-       * 1  2
-       * 3  4
-       * ======================================================
-       */}
-      {pinnedFunds.length > 0 && (
-        <div className={styles.mfDisplayGrid}>
-          {fundAnalyses.map((fund) => (
-            <div key={fund.schemeCode} className={styles.mfDisplayItem}>
-              {renderStatsCard(
-                fund.startNav,
-                fund.endNav,
-                fund.matureAmt,
-                fund.profitAmt,
-                fund.profit,
-                fund.absProfit,
-                fund.schemeName,
-                fund.color
-              )}
-            </div>
-          ))}
-        </div>
-      )}
       <CalculatorContentSection
         title="Mastering Mutual Fund Compounding & Historical NAV Analysis"
         subtitle="Lumpsum mutual fund investing deploys capital into equity, hybrid, or debt portfolios from Day 1, allowing 100% of your investment to compound over the full duration. Analyzing historical rolling returns and CAGR helps set realistic wealth expectations."
