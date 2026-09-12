@@ -367,149 +367,151 @@ const CurrencyConverter = () => {
         </p>
       </header>
       <div className={styles.converterSection}>
-        <ValuePicker.Paired
-          sourceBadgeText="Source"
-          targetBadgeText="Target"
-          sourceSlot={(
-            <CountrySelect
-              label="source"
-              value={srcCountry}
-              countries={availableCountries}
-              onChange={setSrcCountry}
-              getSecondaryText={(country) => countryData.get(country)?.code}
-            />
-          )}
-          targetSlot={(
-            <CountrySelect
-              label="target"
-              value={tgtCountry}
-              countries={availableCountries}
-              onChange={setTgtCountry}
-              getSecondaryText={(country) => countryData.get(country)?.code}
-            />
-          )}
-        />
-        {/* Swap link */}
-        <div className={styles.swapRow}>
-          <button
-            type="button"
-            onClick={handleSwapCountries}
-            className={styles.swapBtn}
-          >
-            <FiRepeat />
-            <span>Swap source &amp; target countries</span>
-          </button>
-        </div>
-        <ValuePicker
-          value={amount}
-          onChange={setAmount}
-          className={styles.amountField}
-          title="Amount"
-          tabs={[]}
-          stepData={[
-            {
-              id: 'ip1',
-              value: '50000000',
-              title: `${IndianFormat.includes(sourceCurrency.locale) ? '5Cr' : '50M'}`,
-            },
-            {
-              id: 'ip2',
-              value: '5000000',
-              title: `${IndianFormat.includes(sourceCurrency.locale) ? '50L' : '5M'}`,
-            },
-            {
-              id: 'ip3',
-              value: '500000',
-              title: `${IndianFormat.includes(sourceCurrency.locale) ? '5L' : '500K'}`,
-            },
-            { id: 'ip4', value: '50000', title: '50K' },
-            { id: 'ip5', value: '5000', title: '5K' },
-            { id: 'ip6', value: '500', title: '500' },
-            { id: 'ip7', value: '50', title: '50' },
-          ]}
-          currencySymbol={sourceCurrency.symbol}
-          locale={sourceCurrency.locale}
-        />
-        {/* Error notification */}
-        {error && (
-          <div className={styles.errorAlert}>
-            <span>{error}</span>
-            <button
-              type="button"
-              onClick={() => void handleRefresh()}
-              className={styles.retryBtn}
-            >
-              Retry
-            </button>
-          </div>
-        )}
-        {/* Converted Amount Display Card */}
-        <DisplayCard
-          primaryAmount={exchangeRate > 0 ? parseFloat(convertedAmount.toFixed(2)) : 0}
-          currencySymbol={targetCurrency.symbol}
-          locale={targetCurrency.locale}
-          title={
-            exchangeRate > 0
-              ? `${numericAmount.toLocaleString(sourceCurrency.locale)} ${sourceCurrency.code} (${srcCountry}) =`
-              : `No live exchange rate available for ${tgtCountry} (${targetCurrency.code})`
-          }
-        />
-        {/* Live exchange rate details bar */}
-        <div className={styles.rateBar}>
-          <div className={styles.rateLeft}>
-            <FiTrendingUp className={styles.rateTrendIcon} />
-            <span>
-              1 {sourceCurrency.code} ={' '}
-              <strong className={styles.rateStrong}>
-                {exchangeRate > 0 ? exchangeRate.toFixed(4) : 'N/A'} {targetCurrency.code}
-              </strong>
-            </span>
-            {inverseRate > 0 && (
-              <>
-                <span className={styles.rateDot}>&bull;</span>
-                <span className={styles.rateInverse}>
-                  1 {targetCurrency.code} = {inverseRate.toFixed(4)} {sourceCurrency.code}
-                </span>
-              </>
+        <div className={styles.inputsCol}>
+          <ValuePicker.Paired
+            sourceBadgeText="Source"
+            targetBadgeText="Target"
+            sourceSlot={(
+              <CountrySelect
+                label="source"
+                value={srcCountry}
+                countries={availableCountries}
+                onChange={setSrcCountry}
+                getSecondaryText={(country) => countryData.get(country)?.code}
+              />
             )}
-          </div>
-          <div className={styles.rateRight}>
-            <span>Updated: {lastRefreshed}</span>
+            targetSlot={(
+              <CountrySelect
+                label="target"
+                value={tgtCountry}
+                countries={availableCountries}
+                onChange={setTgtCountry}
+                getSecondaryText={(country) => countryData.get(country)?.code}
+              />
+            )}
+          />
+          {/* Swap link */}
+          <div className={styles.swapRow}>
             <button
               type="button"
-              onClick={() => void handleRefresh()}
-              disabled={loading}
-              className={styles.refreshBtn}
-              title="Refresh live exchange rates"
-              aria-label="Refresh live exchange rates"
+              onClick={handleSwapCountries}
+              className={styles.swapBtn}
             >
-              <FiRefreshCw className={loading ? styles.spinning : ''} />
+              <FiRepeat />
+              <span>Swap source &amp; target countries</span>
             </button>
           </div>
+          <ValuePicker
+            value={amount}
+            onChange={setAmount}
+            className={styles.amountField}
+            title="Amount"
+            tabs={[]}
+            stepData={[
+              {
+                id: 'ip1',
+                value: '50000000',
+                title: `${IndianFormat.includes(sourceCurrency.locale) ? '5Cr' : '50M'}`,
+              },
+              {
+                id: 'ip2',
+                value: '5000000',
+                title: `${IndianFormat.includes(sourceCurrency.locale) ? '50L' : '5M'}`,
+              },
+              {
+                id: 'ip3',
+                value: '500000',
+                title: `${IndianFormat.includes(sourceCurrency.locale) ? '5L' : '500K'}`,
+              },
+              { id: 'ip4', value: '50000', title: '50K' },
+              { id: 'ip5', value: '5000', title: '5K' },
+              { id: 'ip6', value: '500', title: '500' },
+              { id: 'ip7', value: '50', title: '50' },
+            ]}
+            currencySymbol={sourceCurrency.symbol}
+            locale={sourceCurrency.locale}
+          />
+          {/* Error notification */}
+          {error && (
+            <div className={styles.errorAlert}>
+              <span>{error}</span>
+              <button
+                type="button"
+                onClick={() => void handleRefresh()}
+                className={styles.retryBtn}
+              >
+                Retry
+              </button>
+            </div>
+          )}
         </div>
-      </div>
-      {/* Purchasing Power Parity (PPP) Promo Card */}
-      <div className={styles.promoCard}>
-        <div className={styles.promoInner}>
-          <div className={styles.promoIconBox}>
-            <FiInfo />
+        <div className={styles.resultsCol}>
+          {/* Converted Amount Display Card */}
+          <DisplayCard
+            primaryAmount={exchangeRate > 0 ? parseFloat(convertedAmount.toFixed(2)) : 0}
+            currencySymbol={targetCurrency.symbol}
+            locale={targetCurrency.locale}
+            title={
+              exchangeRate > 0
+                ? `${numericAmount.toLocaleString(sourceCurrency.locale)} ${sourceCurrency.code} (${srcCountry}) =`
+                : `No live exchange rate available for ${tgtCountry} (${targetCurrency.code})`
+            }
+          />
+          {/* Live exchange rate details bar */}
+          <div className={styles.rateBar}>
+            <div className={styles.rateLeft}>
+              <FiTrendingUp className={styles.rateTrendIcon} />
+              <span>
+                1 {sourceCurrency.code} ={' '}
+                <strong className={styles.rateStrong}>
+                  {exchangeRate > 0 ? exchangeRate.toFixed(4) : 'N/A'} {targetCurrency.code}
+                </strong>
+              </span>
+              {inverseRate > 0 && (
+                <>
+                  <span className={styles.rateDot}>&bull;</span>
+                  <span className={styles.rateInverse}>
+                    1 {targetCurrency.code} = {inverseRate.toFixed(4)} {sourceCurrency.code}
+                  </span>
+                </>
+              )}
+            </div>
+            <div className={styles.rateRight}>
+              <span>Updated: {lastRefreshed}</span>
+              <button
+                type="button"
+                onClick={() => void handleRefresh()}
+                disabled={loading}
+                className={styles.refreshBtn}
+                title="Refresh live exchange rates"
+                aria-label="Refresh live exchange rates"
+              >
+                <FiRefreshCw className={loading ? styles.spinning : ''} />
+              </button>
+            </div>
           </div>
-          <div>
-            <h3 className={styles.promoTitle}>
-              Need to compare purchasing power instead of exchange rates?
-            </h3>
-            <p className={styles.promoDesc}>
-              Nominal exchange rates don&apos;t account for local costs of living, rent, groceries,
-              and services. Use our Purchasing Power Parity (PPP) calculator to see the real
-              standard of living equivalent of your income abroad.
-            </p>
-            <Link
-              to="/ppp-calculator"
-              className={styles.promoLink}
-            >
-              <span>Compare salaries using PPP Calculator</span>
-              <FiArrowRight />
-            </Link>
+          {/* Purchasing Power Parity (PPP) Promo Card */}
+          <div className={styles.promoCard} style={{ margin: 0 }}>
+            <div className={styles.promoInner}>
+              <div className={styles.promoIconBox}>
+                <FiInfo />
+              </div>
+              <div>
+                <h3 className={styles.promoTitle}>
+                  Need to compare purchasing power instead of exchange rates?
+                </h3>
+                <p className={styles.promoDesc}>
+                  Nominal exchange rates don&apos;t account for local costs of living. Use our Purchasing Power Parity (PPP) calculator to see real living standard equivalents.
+                </p>
+                <Link
+                  to="/ppp-calculator"
+                  className={styles.promoLink}
+                >
+                  <span>Compare salaries using PPP Calculator</span>
+                  <FiArrowRight />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
