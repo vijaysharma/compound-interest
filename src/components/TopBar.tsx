@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fi';
 import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
+import { useSidebar } from '@/context/SidebarContext';
 import styles from './TopBar.module.scss';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
@@ -79,6 +80,7 @@ const TopBar = ({ className }: { className?: string }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout, setShowPaywall } = useAuth();
+  const { toggleSidebar } = useSidebar();
   const navTitle = getNavTitle(pathname);
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (pathname !== prevPathname) {
@@ -124,10 +126,16 @@ const TopBar = ({ className }: { className?: string }) => {
           <button
             type="button"
             className={styles.menuBtn}
-            aria-label="Open navigation menu"
+            aria-label="Toggle navigation menu"
             aria-expanded={isMenuOpen}
             aria-controls="navigation-drawer"
-            onClick={() => setIsMenuOpen(true)}
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+                toggleSidebar();
+              } else {
+                setIsMenuOpen(true);
+              }
+            }}
           >
             <FiMenu className={styles.menuIcon} aria-hidden="true" />
           </button>
