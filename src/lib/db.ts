@@ -156,16 +156,37 @@ export async function verifyPassword(
 }
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
+/**
+ * Bump this whenever a CREATE/ALTER is added to ensureTables.
+ *
+ * The previous guard probed for one specific column (admin_notes.blob_url) and
+ * treated its presence as "schema is current". Any database created before a
+ * later column was added therefore skipped the whole migration block forever:
+ * adding users.subscription_plan to getUserFromToken's SELECT then made every
+ * authenticated request fail with `column u.subscription_plan does not exist`.
+ * A recorded version cannot drift like that.
+ */
+const SCHEMA_VERSION = 2;
+async function readSchemaVersion(sql: Query): Promise<number> {
+  try {
+    const rows = (await sql`SELECT version FROM schema_meta WHERE id = 1`) as {
+      version?: number | string | null;
+    }[];
+    if (rows.length === 0) return 0;
+    const parsed = Number(rows[0].version);
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch {
+    // No schema_meta table: database predates versioning, so migrate.
+    return 0;
+  }
+}
 export async function ensureTables(sql: Query) {
   if (tablesInitialized) return;
   if (!tablesReady) {
     tablesReady = (async () => {
-      try {
-        await sql`SELECT blob_url FROM admin_notes LIMIT 1`;
+      if ((await readSchemaVersion(sql)) >= SCHEMA_VERSION) {
         tablesInitialized = true;
         return;
-      } catch {
-        // Tables not initialized yet, run migrations below
       }
       await sql`
         CREATE TABLE IF NOT EXISTS users (
@@ -331,6 +352,20 @@ export async function ensureTables(sql: Query) {
       await sql`
         CREATE INDEX IF NOT EXISTS admin_notes_user_id_idx
         ON admin_notes (user_id)
+      `;
+      // Recorded last, so a migration that fails part way through is retried on
+      // the next call rather than being marked complete.
+      await sql`
+        CREATE TABLE IF NOT EXISTS schema_meta (
+          id INT PRIMARY KEY,
+          version INT NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `;
+      await sql`
+        INSERT INTO schema_meta (id, version, updated_at)
+        VALUES (1, ${SCHEMA_VERSION}, NOW())
+        ON CONFLICT (id) DO UPDATE SET version = ${SCHEMA_VERSION}, updated_at = NOW()
       `;
       tablesInitialized = true;
     })();
