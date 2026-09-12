@@ -330,7 +330,10 @@ const IncomeTaxCalculator: React.FC = () => {
         </p>
       </header>
       {/* Hero Recommendation Banner */}
-      <section className={styles.winnerBanner}>
+      <div className={styles.taxMainGrid}>
+        {/* RIGHT COLUMN — results (sticky on web) */}
+        <div className={styles.taxResultsCol}>
+        <section className={styles.winnerBanner}>
         <div className={styles.winnerInfo}>
           <FiCheckCircle className={styles.winnerIcon} />
           <div>
@@ -675,6 +678,9 @@ const IncomeTaxCalculator: React.FC = () => {
           ))}
         </div>
       </section>
+        </div>{/* end taxResultsCol */}
+        {/* LEFT COLUMN — inputs */}
+        <div className={styles.taxInputsCol}>
       {/* Multi-Section Detailed Inputs */}
       <section className={styles.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -1333,6 +1339,8 @@ const IncomeTaxCalculator: React.FC = () => {
           </div>
         )}
       </section>
+        </div>{/* end taxInputsCol */}
+      </div>{/* end taxMainGrid */}
       {/* Educational Guide */}
       <CalculatorContentSection
         title="Old vs New Tax Regime: Key Differences &amp; Budget 2024 Changes"
