@@ -13,7 +13,8 @@ import {
   isEncrypted,
 } from './NotesCrypto';
 import { useAuth } from '../../../context/useAuth';
-import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS, extractHashtags } from './NotesTypes';
+import { Note, ViewMode, SortOption, SyncState, SYSTEM_FOLDERS, DEFAULT_CUSTOM_FOLDERS, extractHashtags } from './NotesTypes';
+import { mergeRemoteWithLocal, readLocalNotes, writeLocalNotes } from './notesLocalStore';
 import {
   getNotesAction,
   createNoteAction,
@@ -24,11 +25,14 @@ import {
 } from '@/actions/notes';
 import './quick-notes.css';
 import styles from './QuickNotesManager.module.scss';
+/** How often the in-memory notes are flushed to the localStorage buffer. */
+const LOCAL_PERSIST_MS = 1_000;
+/** How often unsynced notes are pushed to blob storage. */
+const REMOTE_SYNC_MS = 60_000;
 export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const { user } = useAuth();
   const userId = user?.id || 'default';
   const userEmail = user?.email || '';
-  const cacheKey = `quick_notes_cache_${userId}_v2`;
   const foldersKey = `quick_notes_custom_folders_${userId}_v2`;
   const [notes, setNotes] = useState<Note[]>(() => {
     try {
@@ -100,6 +104,30 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     }
   });
   const [loading, setLoading] = useState<boolean>(() => notes.length === 0);
+  // localStorage is a persistence layer only: it seeds the list for an instant
+  // first paint, but it must never be mistaken for server state. syncState
+  // tracks whether what is on screen actually came back from the server.
+  const [syncState, setSyncState] = useState<SyncState>('syncing');
+  const [syncError, setSyncError] = useState<string>('');
+  const [reloadKey, setReloadKey] = useState(0);
+  // Writes are applied optimistically to state and localStorage, so a failed
+  // server write is otherwise invisible: the note looks saved but only exists
+  // on this device. Surface it instead of logging to the console.
+  const [saveError, setSaveError] = useState<string>('');
+  // Mirror of `notes` for use inside timers and event handlers, which must not
+  // capture a stale render's array.
+  const notesRef = useRef<Note[]>(notes);
+  // Read the buffer's metadata exactly once. A useRef initialiser is evaluated
+  // on every render, so calling readLocalNotes there would re-parse the whole
+  // note set on each keystroke.
+  const [initialBuffer] = useState(() => readLocalNotes(userId));
+  // Ids whose edits have not reached blob storage yet. Persisted alongside the
+  // notes so a reload does not forget that work is outstanding.
+  const dirtyRef = useRef<Set<string>>(new Set(initialBuffer.dirty));
+  const syncedAtRef = useRef<string | null>(initialBuffer.syncedAt);
+  const localWriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncInFlightRef = useRef(false);
+  const [unsyncedCount, setUnsyncedCount] = useState<number>(initialBuffer.dirty.length);
   const [isSaving, setIsSaving] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
     try {
@@ -129,18 +157,117 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingUpdatesRef = useRef<{ id: string; updates: Partial<Note> } | null>(null);
-  const cacheKeyRef = useRef(cacheKey);
   const foldersKeyRef = useRef(foldersKey);
   useEffect(() => {
-    cacheKeyRef.current = cacheKey;
     foldersKeyRef.current = foldersKey;
-  }, [cacheKey, foldersKey]);
+  }, [foldersKey]);
+  const persistLocalNow = useCallback(() => {
+    if (localWriteTimerRef.current) {
+      clearTimeout(localWriteTimerRef.current);
+      localWriteTimerRef.current = null;
+    }
+    writeLocalNotes(userId, notesRef.current, dirtyRef.current, syncedAtRef.current);
+  }, [userId]);
+  /**
+   * Throttled buffer write. The first call opens a LOCAL_PERSIST_MS window and
+   * everything within it coalesces into a single write, so continuous typing
+   * costs one serialisation per second rather than one per keystroke.
+   */
+  const schedulePersistLocal = useCallback(() => {
+    if (localWriteTimerRef.current) return;
+    localWriteTimerRef.current = setTimeout(() => {
+      localWriteTimerRef.current = null;
+      writeLocalNotes(userId, notesRef.current, dirtyRef.current, syncedAtRef.current);
+    }, LOCAL_PERSIST_MS);
+  }, [userId]);
+  /**
+   * Marks a note as owing blob storage a write. The note's authoritative values
+   * are already in `notes`, so no payload is needed here — the periodic sync
+   * reads whatever the latest version is at the time it runs.
+   */
+  const queueNoteSync = useCallback(
+    (noteId: string) => {
+      dirtyRef.current.add(noteId);
+      setUnsyncedCount(dirtyRef.current.size);
+      schedulePersistLocal();
+    },
+    [schedulePersistLocal]
+  );
+  /**
+   * Pushes every dirty note to blob storage via the upsert in updateNoteAction.
+   * Ids are stable from creation, so this covers notes that were never created
+   * server-side as well as edits to existing ones.
+   */
+  const syncDirtyNotes = useCallback(async () => {
+    if (!token) {
+      if (dirtyRef.current.size > 0) {
+        setSaveError('Not signed in — changes are saved on this device only.');
+      }
+      return;
+    }
+    if (syncInFlightRef.current || dirtyRef.current.size === 0) return;
+    syncInFlightRef.current = true;
+    setIsSaving(true);
+    const pending = Array.from(dirtyRef.current);
+    try {
+      const key = await getUserEncryptionKey(userId, userEmail);
+      for (const noteId of pending) {
+        const note = notesRef.current.find((n) => n.id === noteId);
+        if (!note) {
+          dirtyRef.current.delete(noteId);
+          continue;
+        }
+        // Never push a body the server told us it could not load, or the empty
+        // placeholder would overwrite the real blob.
+        if (note.content_unavailable) continue;
+        await updateNoteAction(
+          {
+            id: note.id,
+            title: await encryptText(note.title || '', key),
+            content: await encryptText(note.content || '', key),
+            folder: note.folder,
+            is_pinned: note.is_pinned,
+            is_locked: note.is_locked,
+            lock_password_hash: note.lock_password_hash ?? null,
+            is_trashed: note.is_trashed,
+            tags: note.tags,
+          },
+          token
+        );
+        dirtyRef.current.delete(noteId);
+      }
+      syncedAtRef.current = new Date().toISOString();
+      if (dirtyRef.current.size === 0) setSaveError('');
+    } catch (err) {
+      console.error('Failed to sync notes:', err);
+      setSaveError(
+        'Could not sync to storage — recent changes exist only on this device. ' +
+          (err instanceof Error ? err.message : 'Unknown error')
+      );
+    } finally {
+      syncInFlightRef.current = false;
+      setIsSaving(false);
+      setUnsyncedCount(dirtyRef.current.size);
+      persistLocalNow();
+    }
+  }, [token, userId, userEmail, persistLocalNow]);
+  const flushPendingUpdates = syncDirtyNotes;
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
-      if (!token) return;
+      if (!token) {
+        // No session on this origin. Bail out loudly rather than leaving the
+        // overlay spinning forever with nothing logged.
+        if (isMounted) {
+          setLoading(false);
+          setSyncState('unauthenticated');
+        }
+        return;
+      }
+      if (isMounted) {
+        setSyncState('syncing');
+        setSyncError('');
+      }
       try {
         const key = await getUserEncryptionKey(userId, userEmail);
         const rawData = (await getNotesAction({ include_trashed: true }, token)) as unknown as Note[];
@@ -157,10 +284,24 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
             }))
           );
           if (!isMounted) return;
-          setNotes(decryptedNotes);
-          localStorage.setItem(cacheKeyRef.current, JSON.stringify(decryptedNotes));
-          if (Array.isArray(decryptedNotes)) {
-            const fetchedFolders = decryptedNotes.map((n) => n.folder).filter(Boolean);
+          // Blob storage is the durable copy; the local buffer may still hold
+          // newer edits that have not been pushed yet. Reconcile rather than
+          // overwrite, so an in-flight edit is not lost by a background fetch.
+          const { notes: reconciled, dirty: stillDirty } = mergeRemoteWithLocal(
+            decryptedNotes,
+            notesRef.current,
+            dirtyRef.current
+          );
+          dirtyRef.current = new Set(stillDirty);
+          setUnsyncedCount(dirtyRef.current.size);
+          syncedAtRef.current = new Date().toISOString();
+          setNotes(reconciled);
+          // Anything the merge kept as local-only or newer still owes the
+          // server a write, so push it straight away instead of waiting for
+          // the next interval.
+          if (stillDirty.length > 0) void syncDirtyNotes();
+          if (Array.isArray(reconciled)) {
+            const fetchedFolders = reconciled.map((n) => n.folder).filter(Boolean);
             setFolders((prev) => {
               const combined = Array.from(new Set([...prev, ...fetchedFolders]));
               localStorage.setItem(foldersKeyRef.current, JSON.stringify(combined));
@@ -169,10 +310,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
             setSelectedNoteId((curr) => {
               const savedNoteId = localStorage.getItem(userId !== 'default' ? `quick_notes_${userId}_last_note_id` : 'quick_notes_last_note_id');
               const target = curr || savedNoteId;
-              if (target && decryptedNotes.some((n) => n.id === target && !n.is_trashed)) {
+              if (target && reconciled.some((n) => n.id === target && !n.is_trashed)) {
                 return target;
               }
-              const firstActive = decryptedNotes.find((n) => !n.is_trashed);
+              const firstActive = reconciled.find((n) => !n.is_trashed);
               return firstActive ? firstActive.id : null;
             });
           }
@@ -199,9 +340,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
               })
             );
           }
+          if (isMounted) setSyncState('synced');
         }
       } catch (err) {
         console.error('Failed to load notes:', err);
+        if (isMounted) {
+          setSyncState('error');
+          setSyncError(err instanceof Error ? err.message : 'Unknown error');
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -210,7 +356,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     return () => {
       isMounted = false;
     };
-  }, [token, userId, userEmail]);
+  }, [token, userId, userEmail, reloadKey, syncDirtyNotes]);
   // Persist revisit states
   useEffect(() => {
     const key = user?.id ? `quick_notes_${user.id}_last_note_id` : 'quick_notes_last_note_id';
@@ -254,41 +400,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const selectedNote = notes.find((n) => n.id === effectiveNoteId) || null;
   const effectiveMobileScreen: 'folders' | 'list' | 'editor' =
     isMobile && mobileScreen === 'editor' && !selectedNote ? 'list' : mobileScreen;
-  const persistNoteToServer = useCallback(
-    async (noteId: string, updates: Partial<Note>) => {
-      if (!token) return;
-      setIsSaving(true);
-      try {
-        const key = await getUserEncryptionKey(userId, userEmail);
-        const serverPayload: Partial<Note> = { ...updates };
-        if (typeof updates.title === 'string') {
-          serverPayload.title = await encryptText(updates.title, key);
-        }
-        if (typeof updates.content === 'string') {
-          serverPayload.content = await encryptText(updates.content, key);
-        }
-        await updateNoteAction({ id: noteId, ...serverPayload }, token);
-      } catch (err) {
-        console.error('Failed to save note:', err);
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [token, userId, userEmail]
-  );
-  const flushPendingUpdates = useCallback(async () => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = null;
-    }
-    const pending = pendingUpdatesRef.current;
-    if (!pending) return;
-    pendingUpdatesRef.current = null;
-    await persistNoteToServer(pending.id, pending.updates);
-  }, [persistNoteToServer]);
+  /** Writes the buffer now, cancelling any pending throttled write. */
   const handleSelectNote = useCallback(
     (note: Note) => {
-      if (pendingUpdatesRef.current && pendingUpdatesRef.current.id !== note.id) {
+      if (dirtyRef.current.size > 0) {
         void flushPendingUpdates();
       }
       setSelectedNoteId(note.id);
@@ -296,27 +411,40 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     },
     [flushPendingUpdates]
   );
+  // Keep the ref and the localStorage buffer in step with every state change,
+  // whichever handler caused it.
   useEffect(() => {
-    const handleVisibilityOrUnload = () => {
-      if (pendingUpdatesRef.current) {
-        void flushPendingUpdates();
-      }
+    notesRef.current = notes;
+    schedulePersistLocal();
+  }, [notes, schedulePersistLocal]);
+  // Periodic push to blob storage.
+  useEffect(() => {
+    if (!token) return;
+    const id = setInterval(() => {
+      void syncDirtyNotes();
+    }, REMOTE_SYNC_MS);
+    return () => clearInterval(id);
+  }, [token, syncDirtyNotes]);
+  // The sync interval means up to REMOTE_SYNC_MS of work is only buffered, so
+  // force a flush whenever the tab is being backgrounded or torn down.
+  // `pagehide` is used rather than `beforeunload`, which does not fire
+  // reliably on mobile Safari.
+  useEffect(() => {
+    const flush = () => {
+      persistLocalNow();
+      void syncDirtyNotes();
     };
-    window.addEventListener('beforeunload', handleVisibilityOrUnload);
     const handleVisibility = () => {
-      if (document.visibilityState === 'hidden' && pendingUpdatesRef.current) {
-        void flushPendingUpdates();
-      }
+      if (document.visibilityState === 'hidden') flush();
     };
     document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pagehide', flush);
     return () => {
-      window.removeEventListener('beforeunload', handleVisibilityOrUnload);
       document.removeEventListener('visibilitychange', handleVisibility);
-      if (pendingUpdatesRef.current) {
-        void flushPendingUpdates();
-      }
+      window.removeEventListener('pagehide', flush);
+      flush();
     };
-  }, [flushPendingUpdates]);
+  }, [persistLocalNow, syncDirtyNotes]);
   const handleUpdateNote = useCallback(
     (updatedFields: Partial<Note>) => {
       if (!selectedNoteId) return;
@@ -327,29 +455,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       };
       setNotes((prevNotes) => {
         const next = prevNotes.map((n) => (n.id === selectedNoteId ? { ...n, ...payload } : n));
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
-      pendingUpdatesRef.current = {
-        id: selectedNoteId,
-        updates: { ...(pendingUpdatesRef.current?.updates || {}), ...payload },
-      };
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-      saveTimeoutRef.current = setTimeout(() => {
-        if (pendingUpdatesRef.current) {
-          const target = pendingUpdatesRef.current;
-          pendingUpdatesRef.current = null;
-          saveTimeoutRef.current = null;
-          persistNoteToServer(target.id, target.updates);
-        }
-      }, 500);
+      queueNoteSync(selectedNoteId);
     },
-    [selectedNoteId, persistNoteToServer]
+    [selectedNoteId, queueNoteSync]
   );
   const handleNewNote = useCallback(async () => {
-    if (pendingUpdatesRef.current) {
+    if (dirtyRef.current.size > 0) {
       await flushPendingUpdates();
     }
     let targetFolder = 'Quick Notes';
@@ -376,12 +489,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     };
     setNotes((prev) => {
       const next = [newNote, ...prev];
-      localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
       return next;
     });
     setSelectedNoteId(tempId);
     setMobileScreen('editor');
-    if (!token) return;
+    if (!token) {
+      setSaveError('Not signed in — this change was saved on this device only.');
+      return;
+    }
     try {
       const key = await getUserEncryptionKey(userId, userEmail);
       const encTitle = await encryptText('', key);
@@ -411,12 +526,15 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
               }
             : n
         );
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       setSelectedNoteId(decryptedCreated.id);
     } catch (err) {
       console.error('Failed to create note on server:', err);
+      setSaveError(
+        `Could not create note on server on the server — this change exists only on this device. ` +
+          (err instanceof Error ? err.message : 'Unknown error')
+      );
     }
   }, [activeFolder, activeTag, token, userId, userEmail, flushPendingUpdates]);
   const handleTogglePin = useCallback(
@@ -432,31 +550,25 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const next = prev.map((n) =>
           n.id === targetId ? { ...n, is_pinned: newPinState, updated_at: updatedTime } : n
         );
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
-      persistNoteToServer(targetId, { is_pinned: newPinState, updated_at: updatedTime });
+      queueNoteSync(targetId);
     },
-    [notes, selectedNoteId, persistNoteToServer]
+    [notes, selectedNoteId, queueNoteSync]
   );
   const handlePermanentDelete = useCallback(
     async (id?: string) => {
       const targetId = id || selectedNoteId;
       if (!targetId) return;
-      if (pendingUpdatesRef.current) {
-        if (pendingUpdatesRef.current.id === targetId) {
-          if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-            saveTimeoutRef.current = null;
-          }
-          pendingUpdatesRef.current = null;
-        } else {
-          await flushPendingUpdates();
-        }
+      // The row is about to be deleted, so drop any outstanding sync for it —
+      // an upsert would otherwise recreate it.
+      dirtyRef.current.delete(targetId);
+      setUnsyncedCount(dirtyRef.current.size);
+      if (dirtyRef.current.size > 0) {
+        await flushPendingUpdates();
       }
       setNotes((prev) => {
         const next = prev.filter((n) => n.id !== targetId);
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       if (selectedNoteId === targetId) {
@@ -468,11 +580,18 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         setSelectedNoteId(remaining.length > 0 ? remaining[0].id : null);
         setMobileScreen('list');
       }
-      if (!token) return;
+      if (!token) {
+        setSaveError('Not signed in — this change was saved on this device only.');
+        return;
+      }
       try {
         await deleteNoteAction({ id: targetId, permanent: true }, token);
       } catch (err) {
         console.error('Failed to permanently delete note:', err);
+        setSaveError(
+          `Could not permanently delete note on the server — this change exists only on this device. ` +
+            (err instanceof Error ? err.message : 'Unknown error')
+        );
       }
     },
     [notes, selectedNoteId, token, flushPendingUpdates]
@@ -488,23 +607,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         handlePermanentDelete(targetId);
         return;
       }
-      if (pendingUpdatesRef.current) {
-        if (pendingUpdatesRef.current.id === targetId) {
-          if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-            saveTimeoutRef.current = null;
-          }
-          pendingUpdatesRef.current = null;
-        } else {
-          void flushPendingUpdates();
-        }
+      if (dirtyRef.current.size > 0) {
+        void flushPendingUpdates();
       }
       const updatedTime = new Date().toISOString();
       setNotes((prev) => {
         const next = prev.map((n) =>
           n.id === targetId ? { ...n, is_trashed: true, updated_at: updatedTime } : n
         );
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       if (selectedNoteId === targetId) {
@@ -512,16 +622,16 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         setSelectedNoteId(remaining.length > 0 ? remaining[0].id : null);
         setMobileScreen('list');
       }
-      persistNoteToServer(targetId, { is_trashed: true, updated_at: updatedTime });
+      queueNoteSync(targetId);
     },
-    [notes, selectedNoteId, persistNoteToServer, handlePermanentDelete, flushPendingUpdates]
+    [notes, selectedNoteId, queueNoteSync, handlePermanentDelete, flushPendingUpdates]
   );
   const handleRestoreNote = useCallback(
     (id?: string, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
       const targetId = id || selectedNoteId;
       if (!targetId) return;
-      if (pendingUpdatesRef.current) {
+      if (dirtyRef.current.size > 0) {
         void flushPendingUpdates();
       }
       const updatedTime = new Date().toISOString();
@@ -529,17 +639,16 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const next = prev.map((n) =>
           n.id === targetId ? { ...n, is_trashed: false, updated_at: updatedTime } : n
         );
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
-      persistNoteToServer(targetId, { is_trashed: false, updated_at: updatedTime });
+      queueNoteSync(targetId);
     },
-    [selectedNoteId, persistNoteToServer, flushPendingUpdates]
+    [selectedNoteId, queueNoteSync, flushPendingUpdates]
   );
   const handleDuplicateNote = useCallback(
     async (noteToDupe?: Note, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
-      if (pendingUpdatesRef.current) {
+      if (dirtyRef.current.size > 0) {
         await flushPendingUpdates();
       }
       const baseNote = noteToDupe || selectedNote;
@@ -556,12 +665,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       };
       setNotes((prev) => {
         const next = [duplicated, ...prev];
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
       setSelectedNoteId(tempId);
       setMobileScreen('editor');
-      if (!token) return;
+      if (!token) {
+        setSaveError('Not signed in — this change was saved on this device only.');
+        return;
+      }
       try {
         const key = await getUserEncryptionKey(userId, userEmail);
         const encTitle = await encryptText(duplicated.title || '', key);
@@ -581,12 +692,15 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         };
         setNotes((prev) => {
           const next = prev.map((n) => (n.id === tempId ? decryptedCreated : n));
-          localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
           return next;
         });
         setSelectedNoteId(decryptedCreated.id);
       } catch (err) {
         console.error('Failed to duplicate note:', err);
+        setSaveError(
+          `Could not duplicate note on the server — this change exists only on this device. ` +
+            (err instanceof Error ? err.message : 'Unknown error')
+        );
       }
     },
     [selectedNote, token, userId, userEmail, flushPendingUpdates]
@@ -599,15 +713,21 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     }
     setNotes((prev) => {
       const next = prev.filter((n) => !n.is_trashed);
-      localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
       return next;
     });
     setSelectedNoteId(null);
-    if (!token) return;
+    if (!token) {
+      setSaveError('Not signed in — this change was saved on this device only.');
+      return;
+    }
     try {
       await emptyTrashAction(token);
     } catch (err) {
       console.error('Failed to empty trash on server:', err);
+      setSaveError(
+        `Could not empty trash on server on the server — this change exists only on this device. ` +
+          (err instanceof Error ? err.message : 'Unknown error')
+      );
     }
   }, [token]);
   const handleCreateFolder = (name: string) => {
@@ -633,12 +753,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     }
     setNotes((prev) => {
       const nextNotes = prev.map((n) => (n.folder === cleanOld ? { ...n, folder: cleanNew } : n));
-      localStorage.setItem(cacheKeyRef.current, JSON.stringify(nextNotes));
       return nextNotes;
     });
     notes
       .filter((n) => n.folder === cleanOld)
-      .forEach((n) => persistNoteToServer(n.id, { folder: cleanNew }));
+      .forEach((n) => queueNoteSync(n.id));
   };
   const handleDeleteFolder = (name: string) => {
     const nextFolders = folders.filter((f) => f !== name);
@@ -649,12 +768,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     }
     setNotes((prev) => {
       const nextNotes = prev.map((n) => (n.folder === name ? { ...n, folder: 'Quick Notes' } : n));
-      localStorage.setItem(cacheKeyRef.current, JSON.stringify(nextNotes));
       return nextNotes;
     });
     notes
       .filter((n) => n.folder === name)
-      .forEach((n) => persistNoteToServer(n.id, { folder: 'Quick Notes' }));
+      .forEach((n) => queueNoteSync(n.id));
   };
   const handleSetLockPassword = (hash: string) => {
     if (!selectedNoteId) return;
@@ -682,7 +800,6 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   };
   const handleRestoreSuccess = (restoredNotes: Note[], restoredFolders: string[]) => {
     setNotes(restoredNotes);
-    localStorage.setItem(cacheKeyRef.current, JSON.stringify(restoredNotes));
     if (restoredFolders && restoredFolders.length > 0) {
       setFolders((prev) => {
         const combined = Array.from(new Set([...prev, ...restoredFolders]));
@@ -702,12 +819,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         const next = prev.map((n) =>
           n.id === noteId ? { ...n, folder: targetFolder, updated_at: updatedTime } : n
         );
-        localStorage.setItem(cacheKeyRef.current, JSON.stringify(next));
         return next;
       });
-      persistNoteToServer(noteId, { folder: targetFolder, updated_at: updatedTime });
+      queueNoteSync(noteId);
     },
-    [persistNoteToServer]
+    [queueNoteSync]
   );
   const handleCloseSidebar = useCallback(() => {
     if (isMobile) {
@@ -754,6 +870,53 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
           <span className={styles.spinner}></span>
         </div>
       )}
+      <div className={styles.syncBannerStack}>
+        {syncState === 'unauthenticated' && (
+          <div className={styles.syncBanner}>
+            <span>
+              You are not signed in on this device, so your saved notes could not be
+              loaded. Sign in to sync them.
+            </span>
+          </div>
+        )}
+        {saveError && (
+          <div className={`${styles.syncBanner} ${styles.syncBannerError}`}>
+            <span>{saveError}</span>
+            <button type="button" className={styles.syncRetryBtn} onClick={() => setSaveError('')}>
+              Dismiss
+            </button>
+          </div>
+        )}
+        {unsyncedCount > 0 && (
+          <div className={`${styles.syncBanner} ${styles.syncBannerPending}`}>
+            <span>
+              {unsyncedCount} {unsyncedCount === 1 ? 'note' : 'notes'} not yet synced to
+              storage.
+            </span>
+            <button
+              type="button"
+              className={styles.syncRetryBtn}
+              onClick={() => void syncDirtyNotes()}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Syncing…' : 'Sync now'}
+            </button>
+          </div>
+        )}
+        {syncState === 'error' && (
+          <div className={styles.syncBanner}>
+            <span>
+              {notes.length > 0
+                ? 'Showing locally saved notes — could not reach the server, so recent changes from other devices are missing.'
+                : 'Could not load your notes from the server.'}
+              {syncError ? ` (${syncError})` : ''}
+            </span>
+            <button type="button" className={styles.syncRetryBtn} onClick={() => setReloadKey((n) => n + 1)}>
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
       <div
         className={`${styles.sidebarPane} ${
           isMobile

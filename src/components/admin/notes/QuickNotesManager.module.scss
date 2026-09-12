@@ -40,6 +40,83 @@
   }
 }
 
+/* Sits above the panes rather than in the flex row, so it never reflows the
+   three-pane layout. Surfaces a failed or skipped sync that would otherwise be
+   indistinguishable from "you have no notes". */
+.syncBannerStack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.syncBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: #7c2d12;
+  background-color: #fef3c7;
+  border-bottom: 1px solid #fcd34d;
+
+  @at-root [data-theme='dark'] & {
+    color: #fde68a;
+    background-color: #3f2d0a;
+    border-bottom-color: #78500a;
+  }
+}
+
+.syncBannerPending {
+  color: #1e3a8a;
+  background-color: #dbeafe;
+  border-bottom-color: #93c5fd;
+
+  @at-root [data-theme='dark'] & {
+    color: #bfdbfe;
+    background-color: #10243f;
+    border-bottom-color: #1e40af;
+  }
+}
+
+.syncBannerError {
+  color: #7f1d1d;
+  background-color: #fee2e2;
+  border-bottom-color: #fca5a5;
+
+  @at-root [data-theme='dark'] & {
+    color: #fecaca;
+    background-color: #431516;
+    border-bottom-color: #7f1d1d;
+  }
+}
+
+.syncRetryBtn {
+  flex-shrink: 0;
+  padding: 0.2rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: inherit;
+  background-color: transparent;
+  border: 1px solid currentColor;
+  border-radius: 9999px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+}
+
 .sidebarPane {
   height: 100%;
   display: none;
