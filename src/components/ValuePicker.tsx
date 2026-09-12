@@ -17,7 +17,14 @@ import {
   type ValuePickerTab,
   type GridItem,
 } from '../data/valuePickerData';
-export type ValuePickerVariant = 'amount' | 'roi' | 'tenure' | 'paired' | 'date-range' | 'grid';
+export type ValuePickerVariant =
+  | 'amount'
+  | 'roi'
+  | 'tenure'
+  | 'paired'
+  | 'stacked-paired'
+  | 'date-range'
+  | 'grid';
 export interface ValuePickerProps {
   /**
    * Component variant to render:
@@ -25,6 +32,8 @@ export interface ValuePickerProps {
    * - 'roi': Rate of interest stepper with + / - mode and customizable decimal steps
    * - 'tenure': Tenure duration stepper with decrement, increment, and M/Y units
    * - 'paired': Paired source-target selector bar with purple badges and slots
+   * - 'stacked-paired': As 'paired', but the two halves are full-width rows in
+   *   one joined box. For slots wider than a single input, such as a stepper.
    * - 'date-range': Start-end date range selector with purple badges and date inputs
    * - 'grid': Multi-row duration matrix grid with purple borders and selection highlight
    */
@@ -53,11 +62,6 @@ export interface ValuePickerProps {
    * since the paired badge already labels it.
    */
   embedded?: boolean;
-  /**
-   * Paired variant: stack the two halves into full-width rows inside the same
-   * joined box, instead of splitting the width between them.
-   */
-  stacked?: boolean;
   currencySymbol?: string;
   locale?: string;
   min?: number;
@@ -119,6 +123,7 @@ export interface ValuePickerComponent extends React.FC<ValuePickerProps> {
   ROI: React.FC<ValuePickerProps>;
   Tenure: React.FC<ValuePickerProps>;
   Paired: React.FC<ValuePickerProps>;
+  StackedPaired: React.FC<ValuePickerProps>;
   DateRange: React.FC<ValuePickerProps>;
   Grid: React.FC<ValuePickerProps>;
 }
@@ -151,7 +156,6 @@ export const ValuePicker: ValuePickerComponent = (({
   className = '',
   compact = false,
   embedded = false,
-  stacked = false,
   layout = 'auto',
   disabled = false,
   readOnly = false,
@@ -477,13 +481,13 @@ export const ValuePicker: ValuePickerComponent = (({
   // ===========================================================================
   // VARIANT 3: Paired / Dual Endpoint Selector (Screenshot 3)
   // ===========================================================================
-  if (variant === 'paired') {
+  if (variant === 'paired' || variant === 'stacked-paired') {
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
         <div
           className={`${styles.pairedStackedWrapper} ${
-            stacked ? styles.pairedStackedWrapperStack : ''
+            variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
           }`.trim()}
         >
           {/* Source column */}
@@ -1015,6 +1019,9 @@ ValuePicker.Amount = (props: ValuePickerProps) => <ValuePicker {...props} varian
 ValuePicker.ROI = (props: ValuePickerProps) => <ValuePicker {...props} variant="roi" />;
 ValuePicker.Tenure = (props: ValuePickerProps) => <ValuePicker {...props} variant="tenure" />;
 ValuePicker.Paired = (props: ValuePickerProps) => <ValuePicker {...props} variant="paired" />;
+ValuePicker.StackedPaired = (props: ValuePickerProps) => (
+  <ValuePicker {...props} variant="stacked-paired" />
+);
 ValuePicker.DateRange = (props: ValuePickerProps) => <ValuePicker {...props} variant="date-range" />;
 ValuePicker.Grid = (props: ValuePickerProps) => <ValuePicker {...props} variant="grid" />;
 export default ValuePicker;

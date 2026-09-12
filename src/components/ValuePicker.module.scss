@@ -766,12 +766,12 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 // =============================================================================
 
 // Outer wrapper: two equal columns side by side, sharing one rounded border
-// Stacks the two halves into full-width labelled rows inside the same joined
-// box. Used when a slot holds more than a single input: a stepper row has nine
-// controls and never fits half a column, at any breakpoint. Deliberately not
-// breakpoint-driven — ValuePicker's root sets container-type: inline-size, so a
-// responsive mixin here would resolve against the picker's own width and fire
-// unpredictably.
+// The 'stacked-paired' variant: the two halves become full-width labelled rows
+// inside the same joined box. Used when a slot holds more than a single input —
+// a stepper row has nine controls and never fits half a column, at any
+// breakpoint. Deliberately not breakpoint-driven: ValuePicker's root sets
+// container-type: inline-size, so a responsive mixin here would resolve against
+// the picker's own width rather than the viewport and fire unpredictably.
 .pairedStackedWrapperStack {
   flex-direction: column;
 

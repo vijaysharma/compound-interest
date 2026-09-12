@@ -131,7 +131,10 @@
   }
 }
 
-.disbursementWrapper {
+// Shared by both joined ValuePicker.Paired controls (Rate & Tenure,
+// Disbursement & Repayment) so their titles match. Was .disbursementWrapper,
+// which left the two adjacent controls with differently styled headings.
+.joinedControlWrapper {
   width: 100%;
   text-align: center;
 

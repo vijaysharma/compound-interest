@@ -574,17 +574,18 @@ const EmiCalculator: React.FC = () => {
               stepData={stepData}
               tabs={[]}
             />
-            {/* Joined Rate & Tenure — same control as Disbursement & Repayment */}
-            <ValuePicker.Paired
-              title="Rate & Tenure"
-              stacked
-              sourceBadgeText="Rate of Interest (%)"
-              targetBadgeText="Tenure"
-              sourceSlot={<ValuePicker.ROI embedded rt={rt} setRt={setRt} />}
-              targetSlot={<ValuePicker.Tenure embedded rt={rt} setRt={setRt} />}
-            />
+            {/* Joined Rate & Tenure — same control family as Disbursement & Repayment */}
+            <div className={styles.joinedControlWrapper}>
+              <ValuePicker.StackedPaired
+                title="Rate & Tenure"
+                sourceBadgeText="Rate of Interest (%)"
+                targetBadgeText="Tenure"
+                sourceSlot={<ValuePicker.ROI embedded rt={rt} setRt={setRt} />}
+                targetSlot={<ValuePicker.Tenure embedded rt={rt} setRt={setRt} />}
+              />
+            </div>
             {/* Joined Disbursement Date & EMI Deduction Date */}
-            <div className={styles.disbursementWrapper}>
+            <div className={styles.joinedControlWrapper}>
               <ValuePicker.Paired
                 title="Disbursement & Repayment"
                 sourceBadgeText="Disbursed"
