@@ -111,7 +111,7 @@ const Calculator: React.FC = () => {
         .replace(/\*/g, '×')
         .replace(/\//g, '÷')
         .replace(/-/g, '−')
-        .replace(/[^0-9+\-−×÷%^().eEπ√!sincostanloglnabs⁰¹²³⁴⁵⁶⁷⁸⁹]/gi, '');
+        .replace(/[^0-9+\-−×÷%^().eEπ√∛∜!sincostanloglnabs⁰¹²³⁴⁵⁶⁷⁸⁹]/gi, '');
       if (!sanitized) return;
       setLastOp(null);
       if (isEvaluated || isErrorState(expression)) {
@@ -266,6 +266,7 @@ const Calculator: React.FC = () => {
       'log(',
       'abs(',
       '1/(',
+      '∛(',
       '³√(',
       '²√(',
       '⁴√(',
@@ -884,11 +885,11 @@ const Calculator: React.FC = () => {
               { label: 'cos⁻¹', fn: () => insertAtCursor('acos(') },
               { label: 'tan⁻¹', fn: () => insertAtCursor('atan(') },
               { label: '√', fn: () => insertAtCursor('√(') },
+              { label: '∛', fn: () => insertAtCursor('∛(') },
               { label: 'ʸ√x', fn: insertYRoot },
               { label: 'xʸ', fn: () => insertAtCursor('^') },
               { label: '1/x', fn: () => insertAtCursor('1/(') },
               { label: 'π', fn: () => insertAtCursor('π') },
-              { label: '|x|', fn: () => insertAtCursor('abs(') },
               { label: 'x!', fn: () => insertAtCursor('!') },
             ].map((btn, idx) => (
               <button

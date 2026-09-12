@@ -185,7 +185,77 @@ export function nthRoot(x: number, y: number): number {
     }
     throw new Error('Undefined');
   }
+  if (y === 2) return Math.sqrt(x);
+  if (y === 3) return Math.cbrt(x);
   return Math.pow(x, 1 / y);
+}
+// Parse and replace nested roots, cube roots, and arbitrary y-th roots with balanced parentheses
+export function replaceAllRoots(expr: string): string {
+  let s = expr
+    .replace(/∛/g, '³√')
+    .replace(/∜/g, '⁴√')
+    .replace(/\bcbrt\s*\(/g, '³√(')
+    .replace(/\bsqrt\s*\(/g, '√(');
+  const supMap: Record<string, string> = {
+    '⁰': '0',
+    '¹': '1',
+    '²': '2',
+    '³': '3',
+    '⁴': '4',
+    '⁵': '5',
+    '⁶': '6',
+    '⁷': '7',
+    '⁸': '8',
+    '⁹': '9',
+  };
+  const supToNum = (txt: string) =>
+    txt
+      .split('')
+      .map((c) => supMap[c] || c)
+      .join('');
+  let safety = 0;
+  while (safety < 50) {
+    safety++;
+    const rootParenRegex = /([⁰¹²³⁴⁵⁶⁷⁸⁹]*)√\s*\(/;
+    const match = rootParenRegex.exec(s);
+    if (!match) break;
+    const sup = match[1];
+    const degree = sup ? supToNum(sup) : '2';
+    const matchIndex = match.index;
+    const openParenIndex = s.indexOf('(', matchIndex);
+    let depth = 0;
+    let closeParenIndex = -1;
+    for (let i = openParenIndex; i < s.length; i++) {
+      if (s[i] === '(') depth++;
+      else if (s[i] === ')') {
+        depth--;
+        if (depth === 0) {
+          closeParenIndex = i;
+          break;
+        }
+      }
+    }
+    if (closeParenIndex !== -1) {
+      const inner = s.slice(openParenIndex + 1, closeParenIndex);
+      const processedInner = replaceAllRoots(inner);
+      const replacement = `nthRoot((${processedInner.trim() || '0'}), ${degree})`;
+      s = s.slice(0, matchIndex) + replacement + s.slice(closeParenIndex + 1);
+    } else {
+      const inner = s.slice(openParenIndex + 1);
+      const processedInner = replaceAllRoots(inner);
+      const replacement = `nthRoot((${processedInner.trim() || '0'}), ${degree})`;
+      s = s.slice(0, matchIndex) + replacement;
+      break;
+    }
+  }
+  s = s.replace(
+    /([⁰¹²³⁴⁵⁶⁷⁸⁹]*)√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
+    (_, sup, num) => {
+      const degree = sup ? supToNum(sup) : '2';
+      return `nthRoot((${num}), ${degree})`;
+    }
+  );
+  return s;
 }
 // Extract last binary operation from expression for repeat on "="
 export function extractLastOperation(expr: string): LastOperation | null {
@@ -278,8 +348,8 @@ export function evaluateExpression(
       .replace(/−/g, '-')
       .replace(/\s+/g, '');
     // Trim trailing operators and incomplete capital E exponents for live preview
-    while (/[+\-*/^.(]$/.test(sanitized) || /E[+-]?$/.test(sanitized)) {
-      sanitized = sanitized.replace(/E[+-]?$/, '').replace(/[+\-*/^.(]$/, '');
+    while (/[+\-*/^.(√∛∜]$/.test(sanitized) || /E[+-]?$/.test(sanitized)) {
+      sanitized = sanitized.replace(/E[+-]?$/, '').replace(/[+\-*/^.(√∛∜]$/, '');
     }
     if (!sanitized) return { result: null, error: false };
     // Auto-close open parentheses for live preview
@@ -301,38 +371,9 @@ export function evaluateExpression(
     );
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\))%/g, '($1 / 100)');
     // ─────────────────────────────────────────────────────────────────
-    // 2. Superscript y-th root of x: ³√(27) => nthRoot(27, 3)
+    // 2. Roots: square roots, cube roots (∛ / ³√), nested roots √(√(16))
     // ─────────────────────────────────────────────────────────────────
-    const supMap: Record<string, string> = {
-      '⁰': '0',
-      '¹': '1',
-      '²': '2',
-      '³': '3',
-      '⁴': '4',
-      '⁵': '5',
-      '⁶': '6',
-      '⁷': '7',
-      '⁸': '8',
-      '⁹': '9',
-    };
-    const supToNum = (s: string) =>
-      s
-        .split('')
-        .map((c) => supMap[c] || c)
-        .join('');
-    sanitized = sanitized.replace(
-      /([⁰¹²³⁴⁵⁶⁷⁸⁹]+)\s*√\s*\(([^()]+)\)/g,
-      (_, sup, inner) => `nthRoot((${inner}), ${supToNum(sup)})`
-    );
-    sanitized = sanitized.replace(
-      /([⁰¹²³⁴⁵⁶⁷⁸⁹]+)\s*√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
-      (_, sup, num) => `nthRoot(${num}, ${supToNum(sup)})`
-    );
-    // ─────────────────────────────────────────────────────────────────
-    // 3. Regular square root without superscript index: √(25) => nthRoot(25, 2)
-    // ─────────────────────────────────────────────────────────────────
-    sanitized = sanitized.replace(/√\s*\(([^()]+)\)/g, 'nthRoot(($1), 2)');
-    sanitized = sanitized.replace(/√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, 'nthRoot($1, 2)');
+    sanitized = replaceAllRoots(sanitized);
     // ─────────────────────────────────────────────────────────────────
     // 4. Protect Scientific Notation numbers with capital E (e.g. 2E3, 1.5E-4, 5E+2)
     // ─────────────────────────────────────────────────────────────────

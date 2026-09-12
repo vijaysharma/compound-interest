@@ -246,20 +246,37 @@ const PpfCalculator: React.FC = () => {
               <label htmlFor="ppf-extensions" className={styles.fieldLabel}>Account Tenure &amp; 5-Year Extensions</label>
               <select
                 id="ppf-extensions"
-                value={extensionBlocks}
-                onChange={(e) => setExtensionBlocks(Number(e.target.value))}
+                value={`${extensionBlocks}_${extensionMode}`}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '0') {
+                    setExtensionBlocks(0);
+                  } else {
+                    const [blocksStr, modeStr] = val.split('_');
+                    setExtensionBlocks(Number(blocksStr));
+                    if (modeStr === 'without') {
+                      setExtensionMode('without_contribution');
+                    } else {
+                      setExtensionMode('with_contribution');
+                    }
+                  }
+                }}
                 className={styles.selectInput}
               >
-                <option value={0}>Standard 15 Years (Base Tenure)</option>
-                <option value={1}>20 Years (1 Extension Block of 5 Yrs)</option>
-                <option value={2}>25 Years (2 Extension Blocks of 5 Yrs)</option>
-                <option value={3}>30 Years (3 Extension Blocks of 5 Yrs)</option>
-                <option value={4}>35 Years (4 Extension Blocks of 5 Yrs)</option>
+                <option value="0">Standard 15 Years (Base Tenure)</option>
+                <option value="1_with">20 Years (1 Block of 5 Yrs — With Annual Deposits)</option>
+                <option value="1_without">20 Years (1 Block of 5 Yrs — Extend Without Investing More Money)</option>
+                <option value="2_with">25 Years (2 Blocks of 5 Yrs — With Annual Deposits)</option>
+                <option value="2_without">25 Years (2 Blocks of 5 Yrs — Extend Without Investing More Money)</option>
+                <option value="3_with">30 Years (3 Blocks of 5 Yrs — With Annual Deposits)</option>
+                <option value="3_without">30 Years (3 Blocks of 5 Yrs — Extend Without Investing More Money)</option>
+                <option value="4_with">35 Years (4 Blocks of 5 Yrs — With Annual Deposits)</option>
+                <option value="4_without">35 Years (4 Blocks of 5 Yrs — Extend Without Investing More Money)</option>
               </select>
             </div>
             {extensionBlocks > 0 && (
               <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Extension Mode</label>
+                <label className={styles.fieldLabel}>Extension Investment Mode</label>
                 <div className={styles.timingGrid}>
                   <button
                     type="button"
@@ -278,8 +295,8 @@ const PpfCalculator: React.FC = () => {
                     }`}
                     onClick={() => setExtensionMode('without_contribution')}
                   >
-                    <span>Without Deposits</span>
-                    <span>Earn interest on balance only</span>
+                    <span>Without Investing More</span>
+                    <span>Earn interest on accumulated balance only</span>
                   </button>
                 </div>
               </div>

@@ -47,6 +47,7 @@ const unitTypes = {
     'US pt': 0.473176,
     'US cup': 0.24,
     'US fl oz': 0.0295735,
+    barrel: 158.9873,
   },
   Speed: {
     'm/s': 1,

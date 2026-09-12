@@ -176,30 +176,42 @@ const NpsCalculator: React.FC = () => {
                 sourceBadgeText="Current Age"
                 targetBadgeText="Retire Age"
                 sourceSlot={(
-                  <input
+                  <select
                     id="nps-current-age"
-                    type="number"
-                    min="18"
-                    max="65"
                     value={currentAge}
-                    onChange={(e) => setCurrentAge(Math.min(65, Math.max(18, Number(e.target.value))))}
+                    onChange={(e) => {
+                      const newAge = Number(e.target.value);
+                      setCurrentAge(newAge);
+                      if (retirementAge <= newAge) {
+                        setRetirementAge(Math.min(75, newAge + 5));
+                      }
+                    }}
                     className={styles.numberInput}
                     aria-label="Current Age"
-                  />
+                  >
+                    {Array.from({ length: 48 }, (_, i) => i + 18).map((age) => (
+                      <option key={age} value={age}>
+                        {age} Years
+                      </option>
+                    ))}
+                  </select>
                 )}
                 targetSlot={(
-                  <input
+                  <select
                     id="nps-retirement-age"
-                    type="number"
-                    min={currentAge + 1}
-                    max="75"
                     value={retirementAge}
-                    onChange={(e) =>
-                      setRetirementAge(Math.min(75, Math.max(currentAge + 1, Number(e.target.value))))
-                    }
+                    onChange={(e) => setRetirementAge(Number(e.target.value))}
                     className={styles.numberInput}
                     aria-label="Retirement Age"
-                  />
+                  >
+                    {Array.from({ length: Math.max(1, 75 - currentAge) }, (_, i) => currentAge + 1 + i).map(
+                      (age) => (
+                        <option key={age} value={age}>
+                          {age} Years
+                        </option>
+                      )
+                    )}
+                  </select>
                 )}
               />
             </div>
