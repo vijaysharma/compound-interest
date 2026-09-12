@@ -543,10 +543,10 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   align-items: center;
   justify-content: center;
   align-self: stretch;
-  min-width: 38px;
+  min-width: 48px;
   height: 100%;
   box-sizing: border-box;
-  padding: 0 4px;
+  padding: 0 8px;
   background-color: #fbf7fb;
   color: $color-primary;
   border: none;
@@ -574,21 +574,21 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   @include vp-focus-ring(-2px);
 
   @container (max-width: 380px) {
-    min-width: 36px;
+    min-width: 42px;
     font-size: 12px;
-    padding: 0 3px;
+    padding: 0 4px;
   }
 
   @include tablet-up {
-    min-width: 48px;
+    min-width: 56px;
     font-size: $font-size-button-sm-web;
-    padding: 0 $space-sm;
+    padding: 0 $space-md;
   }
 }
 
 .joinedInputWrapper {
   flex: 1;
-  min-width: 44px;
+  min-width: 60px;
   height: 100%;
   align-self: stretch;
   box-sizing: border-box;
@@ -597,7 +597,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   justify-content: center;
   background-color: $color-neutral-bg;
   border-right: 1px solid $color-primary;
-  padding: 0 4px;
+  padding: 0 6px;
   transition: background-color $transition-fast;
 
   &:focus-within {
@@ -605,7 +605,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   @include tablet-up {
-    padding: 0 $space-sm;
+    padding: 0 $space-md;
+    min-width: 72px;
   }
 }
 
@@ -646,8 +647,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   align-items: center;
   justify-content: center;
   align-self: stretch;
-  width: 40px;
-  min-width: 40px;
+  width: 46px;
+  min-width: 46px;
   height: 100%;
   box-sizing: border-box;
   border: none;
@@ -656,7 +657,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background-color: #fbf7fb;
   color: $color-primary;
   font-family: $font-family;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1;
   font-weight: 600;
   cursor: pointer;
@@ -1176,11 +1177,11 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   .stepperBtn {
-    min-width: 38px;
+    min-width: 48px;
     font-size: $font-size-button-sm-mobile;
     line-height: 1;
     font-weight: 600;
-    padding: 0 6px;
+    padding: 0 8px;
   }
 
   .joinedInputField {
@@ -1189,9 +1190,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   .opBtn {
-    width: 40px;
-    min-width: 40px;
-    font-size: 15px;
+    width: 46px;
+    min-width: 46px;
+    font-size: 16px;
     line-height: 1;
     font-weight: 600;
   }
@@ -1313,11 +1314,11 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   .stepperBtn {
-    min-width: 44px;
+    min-width: 56px;
     font-size: $font-size-button-sm-web;
     line-height: 1;
     font-weight: 600;
-    padding: 0 10px;
+    padding: 0 12px;
   }
 
   .joinedInputField {
@@ -1326,9 +1327,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   .opBtn {
-    width: 46px;
-    min-width: 46px;
-    font-size: 16px;
+    width: 52px;
+    min-width: 52px;
+    font-size: 17px;
     line-height: 1;
     font-weight: 600;
   }

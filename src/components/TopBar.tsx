@@ -4,11 +4,9 @@ import { useLocation, useNavigate } from '@/navigation';
 import Link from './PrefetchLink';
 import {
   FiAward,
-  FiClock,
   FiFileText,
   FiGlobe,
   FiInfo,
-  FiLayers,
   FiLogOut,
   FiMenu,
   FiPercent,
@@ -256,28 +254,15 @@ const TopBar = ({ className }: { className?: string }) => {
                 )}
                 <div className={styles.navSection}>
                   <h3 className={styles.navCategoryTitle}>
-                    <FiPercent className={styles.navCategoryIcon} />
-                    <span>Loans</span>
-                  </h3>
-                  <Link
-                    to="/emi-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    EMI Calculator
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
                     <FiFileText className={styles.navCategoryIcon} />
-                    <span>Tax &amp; Planning</span>
+                    <span>Tax &amp; Retirement Planning</span>
                   </h3>
                   <Link
                     to="/income-tax-calculator"
                     className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Income Tax &amp; AI Optimizer
+                    Income Tax &amp; Strategy Optimizer
                   </Link>
                   <Link
                     to="/ppf-calculator"
@@ -296,62 +281,8 @@ const TopBar = ({ className }: { className?: string }) => {
                 </div>
                 <div className={styles.navSection}>
                   <h3 className={styles.navCategoryTitle}>
-                    <FiLayers className={styles.navCategoryIcon} />
-                    <span>Deposits</span>
-                  </h3>
-                  <Link
-                    to="/fd-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Fixed Deposits
-                  </Link>
-                  <Link
-                    to="/rd-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Recurring Deposits
-                  </Link>
-                  <Link
-                    to="/ppf-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    PPF Calculator
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiGlobe className={styles.navCategoryIcon} />
-                    <span>Economics</span>
-                  </h3>
-                  <Link
-                    to="/inflation-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Inflation Rates
-                  </Link>
-                  <Link
-                    to="/ppp-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    PPP Exchange Rate
-                  </Link>
-                  <Link
-                    to="/currency-converter"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Currency Converter
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiClock className={styles.navCategoryIcon} />
-                    <span>Fixed Plans</span>
+                    <FiTrendingUp className={styles.navCategoryIcon} />
+                    <span>Mutual Funds &amp; Investments</span>
                   </h3>
                   <Link
                     to="/sip-calculator"
@@ -368,38 +299,79 @@ const TopBar = ({ className }: { className?: string }) => {
                     SWP Calculator
                   </Link>
                   <Link
-                    to="/nps-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    NPS Calculator
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiTrendingUp className={styles.navCategoryIcon} />
-                    <span>Mutual Funds</span>
-                  </h3>
-                  <Link
                     to="/mutual-funds/lumpsum"
                     className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Lumpsum
+                    Lumpsum Returns
                   </Link>
                   <Link
                     to="/mutual-funds/sip"
                     className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    SIP
+                    MF SIP Explorer
                   </Link>
                   <Link
                     to="/mutual-funds/swp"
                     className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    SWP
+                    MF SWP Explorer
+                  </Link>
+                </div>
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiPercent className={styles.navCategoryIcon} />
+                    <span>Banking &amp; Loans</span>
+                  </h3>
+                  <Link
+                    to="/emi-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    EMI Calculator
+                  </Link>
+                  <Link
+                    to="/fd-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Fixed Deposits (FD)
+                  </Link>
+                  <Link
+                    to="/rd-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Recurring Deposits (RD)
+                  </Link>
+                </div>
+                <div className={styles.navSection}>
+                  <h3 className={styles.navCategoryTitle}>
+                    <FiGlobe className={styles.navCategoryIcon} />
+                    <span>Economics &amp; Currency</span>
+                  </h3>
+                  <Link
+                    to="/currency-converter"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Currency Converter
+                  </Link>
+                  <Link
+                    to="/ppp-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    PPP Exchange Rate
+                  </Link>
+                  <Link
+                    to="/inflation-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Inflation Rates
                   </Link>
                 </div>
                 <div className={styles.navSection}>
@@ -415,18 +387,18 @@ const TopBar = ({ className }: { className?: string }) => {
                     Calculator (Basic &amp; Scientific)
                   </Link>
                   <Link
-                    to="/date-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Date Calculator
-                  </Link>
-                  <Link
                     to="/utilities/unit-converter"
                     className={styles.navLink}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Unit Converter
+                  </Link>
+                  <Link
+                    to="/date-calculator"
+                    className={styles.navLink}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Date Calculator
                   </Link>
                   <Link
                     to="/utilities/quick-notes"
