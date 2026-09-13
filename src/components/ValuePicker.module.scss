@@ -9,7 +9,14 @@
 $primary: var(--color-primary, #6d0b74);
 
 // Typography Tokens
-$font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+$font-family:
+  Inter,
+  Roboto,
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  sans-serif;
 
 // Streamlined Responsive Typography Tokens
 $font-size-heading-mobile: 14.5px;
@@ -37,6 +44,10 @@ $font-line-height-feedback-mobile: 18px;
 $font-size-feedback-web: 14.5px;
 $font-line-height-feedback-web: 20px;
 
+// Merged title bar typography
+$font-size-title-bar-mobile: 11.5px;
+$font-size-title-bar-web: 12.5px;
+
 // Colors
 $color-primary: var(--color-primary, #6d0b74);
 $color-secondary: var(--color-secondary, #9c27b0);
@@ -47,11 +58,11 @@ $color-text-secondary: var(--color-text-secondary, #757575);
 $color-feedback: var(--color-feedback, #6d0b74);
 
 // Spacing Tokens
-$space-xs: 4px;   // icon padding
-$space-sm: 8px;   // button inner padding, gaps
-$space-md: 16px;  // between buttons, section padding on web
-$space-lg: 24px;  // section spacing
-$space-xl: 32px;  // top/bottom margins
+$space-xs: 4px; // icon padding
+$space-sm: 8px; // button inner padding, gaps
+$space-md: 16px; // between buttons, section padding on web
+$space-lg: 24px; // section spacing
+$space-xl: 32px; // top/bottom margins
 
 // Component Dimensions & Radius
 $btn-height-mobile: 42px;
@@ -149,7 +160,37 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   border: 1px solid $color-neutral-border;
   border-radius: $tab-radius $tab-radius $btn-radius $btn-radius;
   overflow: hidden;
-  transition: border-color $transition-normal, box-shadow $transition-normal;
+  transition:
+    border-color $transition-normal,
+    box-shadow $transition-normal;
+}
+
+// Card variant when the merged title bar takes over the top edge: the bar
+// itself sits flush with no border below it, so the card's own top border
+// (which would otherwise draw a thin default-colored line under the bar)
+// is dropped in favor of the bar's background running to the card's edges.
+.cardWithMergedTitle {
+  border-color: $color-primary;
+}
+
+// Merged title bar (titleStyle="merged"): a solid badge fused to the top of
+// the card — no gap, uppercase text. Rendered as the first child of `.card`,
+// so it inherits the card's rounded top corners via the card's own
+// `overflow: hidden` rather than needing its own radius.
+.titleBar {
+  display: flex;
+  align-items: center;
+  padding: 3px 10px 3px 10px;
+  background-color: $color-primary;
+  color: #ffffff;
+  font-family: $font-family;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  user-select: none;
+  border-radius: 0;
 }
 
 // Tabs header at the top
@@ -181,7 +222,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background-color: $color-neutral-bg;
   border-top-left-radius: $tab-radius;
   border-top-right-radius: $tab-radius;
-  transition: background-color $transition-fast, color $transition-fast;
+  transition:
+    background-color $transition-fast,
+    color $transition-fast;
   position: relative;
 
   &:hover:not(.tabActive):not(:disabled) {
@@ -263,7 +306,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   border: 1px solid $color-neutral-border;
   border-radius: $input-radius;
   box-shadow: $shadow-sm;
-  transition: border-color $transition-fast, outline $transition-fast;
+  transition:
+    border-color $transition-fast,
+    outline $transition-fast;
 
   &:focus-within {
     border-color: $color-primary;
@@ -574,7 +619,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
-  transition: background-color $transition-fast, color $transition-fast;
+  transition:
+    background-color $transition-fast,
+    color $transition-fast;
 
   &:hover:not(:disabled) {
     background-color: #f3e5f5;
@@ -678,7 +725,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
-  transition: background-color $transition-fast, color $transition-fast;
+  transition:
+    background-color $transition-fast,
+    color $transition-fast;
 
   &:last-child {
     border-right: none;
@@ -731,7 +780,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
-  transition: background-color $transition-fast, color $transition-fast;
+  transition:
+    background-color $transition-fast,
+    color $transition-fast;
 
   &:last-child {
     border-right: none;
@@ -1100,7 +1151,9 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   font-weight: 600;
   cursor: pointer;
   user-select: none;
-  transition: background-color $transition-fast, color $transition-fast;
+  transition:
+    background-color $transition-fast,
+    color $transition-fast;
 
   @container (max-width: 380px) {
     font-size: 12px;
@@ -1153,6 +1206,11 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   .title {
     font-size: $font-size-heading-mobile;
     line-height: $font-line-height-heading-mobile;
+  }
+
+  .titleBar {
+    padding: 8px $space-md;
+    font-size: $font-size-title-bar-mobile;
   }
 
   .tabBtn {
@@ -1290,6 +1348,11 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   .title {
     font-size: $font-size-heading-web;
     line-height: $font-line-height-heading-web;
+  }
+
+  .titleBar {
+    padding: 10px $space-md;
+    font-size: $font-size-title-bar-web;
   }
 
   .tabBtn {

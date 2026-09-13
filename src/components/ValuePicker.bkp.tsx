@@ -45,14 +45,6 @@ export interface ValuePickerProps {
   onTabChange?: (tabId: string) => void;
   setType?: React.Dispatch<React.SetStateAction<string>> | ((tabId: string) => void);
   title?: string;
-  /**
-   * Controls how the `title` is rendered for the 'amount' variant only:
-   * - 'default': plain heading text sitting above the card (existing look)
-   * - 'merged': title becomes a solid badge bar fused to the top of the card,
-   *   uppercase, with no gap between the title and the card below it
-   * Has no effect on any other variant.
-   */
-  titleStyle?: 'default' | 'merged';
   stepRows?: ValuePickerStep[][] | ValuePickerStep[];
   stepData?: Array<{ id?: string; value: string | number; title?: string; label?: string }>;
   stepSizePrefix?: string;
@@ -147,7 +139,6 @@ export const ValuePicker: ValuePickerComponent = (({
   onTabChange,
   setType,
   title,
-  titleStyle = 'default',
   stepRows,
   stepData,
   currencySymbol = '₹',
@@ -891,15 +882,12 @@ export const ValuePicker: ValuePickerComponent = (({
       : numericValue.toLocaleString(locale);
   // In-words string
   const wordsText = showWords && numericValue > 0 ? convertToWords(numericValue, locale) : '';
-  const isMergedTitle = titleStyle === 'merged' && !!title;
   return (
     <div className={rootContainerClass}>
-      {/* Title rendered above the card in the default style */}
-      {title && !isMergedTitle && <h5 className={styles.title}>{title}</h5>}
-      {/* Main card enclosing the optional merged title bar, tabs, input row, and step grid */}
-      <div className={`${styles.card} ${isMergedTitle ? styles.cardWithMergedTitle : ''}`.trim()}>
-        {/* Merged title bar: fused to the top of the card, no gap, uppercase */}
-        {isMergedTitle && <div className={styles.titleBar}>{title}</div>}
+      {/* Title rendered when title is provided */}
+      {title && <h5 className={styles.title}>{title}</h5>}
+      {/* Main card enclosing tabs, input row, and step grid */}
+      <div className={styles.card}>
         {/* Top segmented tabs */}
         {resolvedTabs && resolvedTabs.length > 0 && (
           <div className={styles.tabsHeader} role="tablist" aria-label="Amount type switcher">
