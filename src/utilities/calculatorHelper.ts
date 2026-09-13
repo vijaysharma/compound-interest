@@ -506,6 +506,18 @@ export function evaluateExpression(
           return { result: 'Undefined', error: false };
       }
     }
+    // Strict security whitelist: Ensure sanitized expression only contains numbers, safe arithmetic operators,
+    // and approved mathematical functions/constants before entering evaluator.
+    const strippedCheck = sanitized
+      .replace(
+        /\b(Math\.(?:E|PI|sinh|cosh|tanh|asinh|abs)|log10|ln|sinFn|cosFn|tanFn|asinFn|acosFn|atanFn|acoshFn|atanhFn|nthRoot|fact)\b/g,
+        ''
+      )
+      .replace(/\b[eE][+-]?\d+\b/g, '')
+      .replace(/[\d.+\-*/%^(),\s]/g, '');
+    if (strippedCheck.length > 0) {
+      return { result: null, error: true };
+    }
     // Standard high-level execution context with math helpers
     const evaluator = new Function(
       'log10',

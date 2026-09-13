@@ -135,10 +135,14 @@ Keep it structured with bullet points, bold key figures in ₹, and maintain a f
   `.trim();
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     model
-  )}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  )}:generateContent`;
   const geminiResponse = await fetch(geminiUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
+    signal: AbortSignal.timeout(25000),
     body: JSON.stringify({
       contents: [
         {

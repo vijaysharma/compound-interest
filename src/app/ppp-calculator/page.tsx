@@ -1,5 +1,7 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
 import PageComponent from '@/views/pppExchangeRate';
+import { SEO_PAGES } from '@/data/seoMetadata';
+export const metadata = SEO_PAGES.pppCalculator;
 export default function Page() {
   return (
     <ProtectedRoute requireApiQuota>

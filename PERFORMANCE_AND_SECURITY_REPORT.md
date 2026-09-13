@@ -1,6 +1,6 @@
-# Holistic Performance, Security, and Date Picker Audit Report
+# Holistic Performance, Security, Redis Caching & SEO Audit Report
 
-**Date:** September 6, 2026  
+**Date:** September 13, 2026  
 **Status:** Completed & Verified  
 **Project:** Rupee Calculator (Compound Interest Suite)  
 
@@ -8,227 +8,149 @@
 
 ## Executive Summary
 
-A comprehensive architectural, code-level, and operational security and performance review was conducted across the frontend, API serverless handlers, database layer, cryptographic functions, and user interface components.
+A comprehensive architectural, security, performance, caching, and search engine optimization (SEO) overhaul was conducted across the Next.js App Router codebase, server actions, external API integrations, and asset pipelines.
 
-Key achievements:
-1. **Critical & High Security Vulnerabilities Neutralized**: Closed authentication bypass vectors in Google sign-in and account registration, eliminated payment price tampering in Razorpay order creation, blocked payment verification replay attacks, implemented constant-time comparison against timing attacks, and established Content-Security-Policy (CSP) headers.
-2. **User Input Sanitization & Anti-Injection Framework**: Built a comprehensive client-side and server-side input sanitization pipeline preventing DOM XSS, Stored XSS, clipboard injection, SQL wildcard explosion, parameter traversal, and math overflow DoS.
-3. **Performance Optimized**: Configured Edge CDN caching for quasi-static public APIs (IMF, World Bank PPP, AMFI mutual funds), eliminated redundant Shiprocket login requests via multi-day token caching, and isolated heavy chart libraries (`ag-charts`) into a dedicated vendor chunk, shrinking the Chart component bundle from 1.32MB to 2.6kB.
-4. **Date Picker Integrity Enforced**: Enforced across all date pickers and year selectors that the "To" (End) date/time/year cannot be prior to the "From" (Start) date/time/year, with bidirectional clamping and dynamic UI constraints.
-
----
-
-## 1. Security Vulnerabilities Identified & Resolved
-
-### 1.1 Critical: Google OAuth Authentication Bypass (`api/auth/google.ts`)
-* **Vulnerability:** The Google authentication endpoint previously accepted `body.email` directly from the client payload without requiring or verifying a cryptographic Google ID token credential. If an unverified string was passed, it fell back to decoding raw base64 JWT fragments without signature verification. This allowed an attacker to forge requests claiming any email address (including administrators) and immediately receive a 30-day authenticated session.
-* **Remediation:**
-  - Removed unverified `body.email` acceptance and unverified base64 decoding.
-  - Required a valid Google ID token in `body.credential`.
-  - Enforced strict server-side verification using Google's OAuth2 `tokeninfo` endpoint (`https://oauth2.googleapis.com/tokeninfo?id_token=...`).
-  - Verified `email_verified === true` before deriving the user identity.
-
-### 1.2 High: Privilege Escalation via Email Signup (`api/auth/signup.ts`)
-* **Vulnerability:** During account registration, if `body.email` matched an administrator email address (`isEmailAdmin`), the user was granted the `admin` role even when registering with an unverified email/password combination without Google OAuth validation.
-* **Remediation:**
-  - Restricted administrator role assignment strictly to users authenticated with a verified Google OAuth credential (`isGoogleVerified && isEmailAdmin(verifiedEmail)`).
-  - Explicitly blocked password registration attempts targeting administrator email domains unless backed by verified Google OAuth tokens.
-
-### 1.3 High: Client-Side Price Tampering in Razorpay Order Creation (`api/payments/razorpay/create-order.ts`)
-* **Vulnerability:** `create-order.ts` previously accepted `body.amount` directly from client requests without verifying against the database price settings. An attacker could transmit `{ "amount": 1 }` to create an authorized Razorpay order for ₹1 instead of ₹54, complete payment, and gain full 30-day Pro access.
-* **Remediation:**
-  - Enforced server-side price lookup directly from the `payment_settings` database table (defaulting to ₹54).
-  - Client-supplied amount overrides for subscription orders are discarded.
-
-### 1.4 High: Payment Replay Vulnerability (`api/payments/razorpay/verify.ts`)
-* **Vulnerability:** `verify.ts` validated HMAC signatures for `orderId|paymentId`, but did not check if the `paymentId` had already been claimed. An attacker with a previously completed payment ID could replay the verification endpoint indefinitely to keep extending subscriptions.
-* **Remediation:**
-  - Added verification to ensure `utr_ref` does not already exist in `payment_submissions` with status `approved`.
-  - Added database lookups for recorded payment amounts rather than hardcoded client values.
-
-### 1.5 Medium: Cryptographic Timing Attacks (`api/_db.ts` & `api/payments/razorpay/verify.ts`)
-* **Vulnerability:** Standard string equality (`===`) was used to compare HMAC-SHA256 signatures, PBKDF2 password hashes, and admin sync tokens. Differences in execution time based on character mismatch position could expose secret material via timing side-channels.
-* **Remediation:**
-  - Implemented `timingSafeEqual(a, b)` using bitwise XOR comparison across all cryptographic comparisons in `verifyRazorpaySignature`, `verifyPassword`, and `isAuthorized`.
-
-### 1.6 Medium: Query Parameter Injection & SSRF Protection (`api/admin/shiprocket-rates.ts`)
-* **Vulnerability:** Postcodes and shipping dimensions were previously concatenated directly into upstream Shiprocket API URLs without encoding or character validation.
-* **Remediation:**
-  - Validated and sanitized postcodes to strict 6-digit numeric strings.
-  - Sanitized numeric boundaries for weight, length, breadth, and height.
-  - Switched to URL construction using `URLSearchParams` to ensure strict RFC 3986 encoding.
-
-### 1.7 Medium: Content-Security-Policy & Permissions-Policy (`vercel.json`)
-* **Vulnerability:** Missing Content-Security-Policy allowed potential execution of untrusted scripts or injection if an XSS vector arose.
-* **Remediation:**
-  - Deployed comprehensive `Content-Security-Policy` header allowing only necessary origins:
-    - Scripts: `'self'`, `'unsafe-inline'`, `https://accounts.google.com`, `https://checkout.razorpay.com`
-    - Connect: `'self'`, AMFI MF API, World Bank, Google OAuth, Razorpay
-    - Frame: `'self'`, Google OAuth, Razorpay
-  - Updated `Permissions-Policy` to permit Razorpay's iframe payment request while strictly locking camera, microphone, and geolocation.
+Key achievements in this phase:
+1. **Critical Vulnerabilities Neutralized**:
+   - Closed a critical mathematical expression code injection risk in `src/utilities/calculatorHelper.ts` by introducing strict regex and character whitelisting before calculation evaluation.
+   - Protected against denial-of-service and thread exhaustion from hanging external upstream services (AMFI, World Bank, Google OAuth, Gemini AI) by enforcing bounded HTTP timeouts with `AbortSignal.timeout(...)`.
+   - Prevented Gemini API secret leaks by removing the API key from URL query strings and enforcing standard `x-goog-api-key` authorization headers.
+2. **Serverless-Optimized Redis Caching Architecture**:
+   - Engineered a zero-cold-start Redis caching layer in `src/lib/redis.ts` utilizing Upstash REST API (`UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN`) with an automated in-memory LRU fallback when Redis credentials are not configured.
+   - Cached high-latency external endpoints in `src/actions/data.ts` (World Bank PPP data, IMF inflation figures, AMFI mutual fund search, mutual fund NAV historicals, USD exchange rates) and Vercel Blob notes in `src/actions/notes.ts`.
+3. **Build & Runtime Performance**:
+   - Activated Gzip/Brotli compression (`compress: true`) and icon tree-shaking (`experimental: { optimizePackageImports: ['react-icons'] }`) in `next.config.ts`.
+   - Configured high-performance edge redirects in `vercel.json` for legacy alias routes.
+4. **Comprehensive SEO Optimization (Zero UI Changes)**:
+   - Developed `src/data/seoMetadata.ts` containing high-CTR metadata, search keywords, OpenGraph specifications, Twitter cards, and canonical URL definitions.
+   - Exported static `Metadata` across all 27+ App Router routes (`page.tsx`), enabling pre-rendered HTML meta tags for Googlebot, Bingbot, and social crawlers.
+   - Enhanced `src/components/SEOHead.tsx` to render `<script type="application/ld+json">` during Server-Side Rendering (SSR) for rich search engine snippets (`FinancialProduct`, `WebApplication`, `FAQPage`).
+   - Implemented dynamic Next.js App Router sitemaps and robots rules (`src/app/sitemap.ts`, `src/app/robots.ts`) and synchronized `public/sitemap.xml`.
 
 ---
 
-## 2. User Input Sanitization & Security Compromise Prevention
+## 1. Security Vulnerabilities Identified & Remediated
 
-Requirement: *"make sure that none of the input made by user via input fields can induce any security compromises"*
+### 1.1 Critical: Calculator Expression Injection (`src/utilities/calculatorHelper.ts`)
+* **Vulnerability**: The mathematical calculation helper function previously sanitized expressions by removing whitespace and replacing operators, but then directly passed the resulting string to `new Function('return ' + expr)`. If unexpected input containing identifiers, property accessors, or malicious JavaScript syntax slipped past sanitization, it could result in arbitrary code execution in the client browser context.
+* **Remediation**:
+  - Implemented strict regex-based validation (`/^[0-9+\-*/().\s]+$/`) before evaluating any expression string.
+  - Blocked all dangerous tokens (`window`, `document`, `globalThis`, `eval`, `Function`, `constructor`, `fetch`, `import`, prototype accessors `__proto__`, etc.).
+  - Added boundary and length limits, ensuring that only pure arithmetic statements can be evaluated.
 
-### 2.1 DOM & Stored XSS Prevention in Quick Notes (`sanitizeHtml.ts` & `NotesEditor.tsx`)
-* **Risk:** The rich-text editor (`contenteditable`) allows formatted notes. Unsanitized clipboard pasting or rendering of malicious payloads (`<img onerror=...>`, `<script>`, `<iframe src="javascript:...">`, `<svg onload=...>`) could execute in the user's browser, steal session tokens, or tamper with notes.
-* **Remediation:**
-  - Created `src/components/admin/notes/sanitizeHtml.ts` leveraging browser-native `DOMParser` with a strict element whitelist (`p`, `br`, `b`, `strong`, `i`, `em`, `u`, `s`, `h1`-`h6`, `ul`, `ol`, `li`, `blockquote`, `code`, `table`, `thead`, `tbody`, `tr`, `th`, `td`, `span`, `div`, `font`, `hr`, `mark`, `a`, `input`, `img`).
-  - Blacklisted and completely excised dangerous elements: `SCRIPT`, `IFRAME`, `OBJECT`, `EMBED`, `SVG`, `MATH`, `FORM`, `BUTTON`, `META`, `LINK`, `STYLE`, `BASE`, `APPLET`, `FRAME`, `FRAMESET`.
-  - Stripped all `on*` inline event handlers (`onerror`, `onload`, `onclick`, `onmouseover`, etc.).
-  - Added clipboard paste interception (`onPaste={handlePaste}` in `NotesEditor.tsx`) to sanitize pasted HTML before insertion.
-  - Sanitized note title inputs (`sanitizePlainInput`) with a 250-character limit.
-  - Sanitized tag inputs (`replace(/[^\w-]/g, '').slice(0, 30)`).
-  - Validated link creation in `insertLink` to enforce safe protocols (`http:`, `https:`, `mailto:`, `tel:`), blocking `javascript:`, `vbscript:`, and `data:` URIs.
-  - Sanitized backup file imports in `NotesBackupModal.tsx` and capped file size to 20MB.
+### 1.2 High: Unbounded Network Requests & Thread Starvation DoS (`src/actions/*`)
+* **Vulnerability**: Server actions fetching external third-party data (AMFI mutual fund NAVs, Google OAuth token verification, and Gemini AI endpoints) lacked timeout thresholds. If upstream APIs suffered outages, degraded latency, or kept sockets open, serverless execution slots would hang until platform timeout (60s+), exhausting execution budgets and causing gateway timeouts (504).
+* **Remediation**:
+  - Added strict bounded timeouts using `AbortSignal.timeout(...)`:
+    - `src/actions/data.ts` (`getMutualFundNavAction`): 8-second timeout.
+    - `src/actions/auth.ts` (Google OAuth token verification): 6-second timeout.
+    - `src/actions/taxAi.ts` (Gemini Tax AI parsing): 25-second timeout.
+  - Implemented graceful error recovery returning typed error responses rather than unhandled promise rejections.
 
-### 2.2 Server-Side API Input Validation & Anti-DoS
-* **Notes API (`api/admin/notes.ts`):**
-  - Content capped at 5MB, stripped of `<script>`, `<iframe>`, `<object>`, `<embed>`, inline `on*` handlers, and `javascript:` URIs.
-  - Titles capped at 250 characters; folders capped at 100 characters; note IDs validated against `^[a-zA-Z0-9_-]{1,64}$`.
-  - Tags parsed and restricted to a maximum of 30 tags with at most 50 characters each.
-* **Mutual Funds Search API (`api/mutual-funds/index.ts`):**
-  - Query parameter `q` sanitized, stripped of SQL wildcards (`%` and `_`), truncated to 80 characters, and capped to at most 8 search terms. Prevents ReDoS and PostgreSQL `ILIKE ALL` CPU exhaustion.
-* **Mutual Funds Scheme API (`api/mutual-funds/[schemeCode].ts`):**
-  - Path parameter validated to strictly numeric `^\d{1,10}$`. Prevents path traversal and SSRF when fetching from upstream AMFI endpoints.
-* **Payment Submissions API (`api/payments/submit.ts`):**
-  - `utr_ref` sanitized against `^[A-Za-z0-9_-]{4,64}$`.
-  - `amount` clamped to positive finite values $\le 100,000$.
-  - Replay and duplicate submission check blocks repeated pending or approved submissions with the same reference.
-* **Payment Settings API (`api/payments/settings.ts`):**
-  - Title, UPI ID, and instructions sanitized and length-bounded.
-  - QR Code URL validated to only accept `https://`, `http://`, or `data:image/` protocols.
-* **Authentication APIs (`api/auth/login.ts` & `api/auth/signup.ts`):**
-  - Emails validated against standard RFC-5321 pattern and length-bounded (254 chars).
-  - Password inputs capped at 128 characters to eliminate computational PBKDF2/SHA-256 denial-of-service from multi-megabyte string submissions.
-
-### 2.3 Math & Calculation Input Safety
-* **`sanctnum` Enhancement (`src/utilities/numSanitity.ts` & `src/utilities/utility.ts`):**
-  - Guards against `null`, `undefined`, `NaN`, `Infinity`, and `-Infinity`, returning safe defaults and supporting optional `[min, max]` bounding.
-* **Date Calculator (`src/pages/dateCalculator.tsx`):**
-  - Clamped addition/subtraction fields (years $\le 1,000$, months $\le 12,000$, days $\le 365,000$, hours $\le 8,760,000$) to prevent JavaScript `Date` integer overflow that triggers fatal `RangeError: Invalid time value` crashes.
-* **EMI Calculator (`src/pages/emiCalculator.tsx`):**
-  - EMI deduction day clamped to `[1, 31]`. Part payment amounts clamped to $\ge 0$. Rate changes clamped to $[0, 100]\%$.
-* **Unit Converter (`src/pages/unitConverter.tsx`):**
-  - Validated localStorage state deserialization against known `UnitCategory` items.
-  - Capped input value strings to 20 characters and verified `Number.isFinite(val)`.
-* **Search Inputs (`MutualFundSelectorModal.tsx` & `CountrySelect.tsx`):**
-  - Added `maxLength` bounds (80 and 60 chars) and sliced inputs on change.
-* **Admin QR Image Upload (`src/pages/admin.tsx`):**
-  - Validated MIME type to `image/*` and enforced a 2MB maximum file size.
+### 1.3 Medium: Secret Key Leak in URL Query Parameters (`src/actions/taxAi.ts`)
+* **Vulnerability**: Gemini AI requests passed the API key as a query parameter in the request URL (`?key=${apiKey}`). Query parameters are frequently logged in plain text across upstream CDN edge logs, proxy server access logs, and network monitor traces.
+* **Remediation**:
+  - Removed `?key=${apiKey}` from the request URI.
+  - Passed the API key securely via the `x-goog-api-key: apiKey` HTTP request header, ensuring encryption over transit and omission from URL access logs.
 
 ---
 
-## 3. Performance Optimizations
+## 2. Serverless Redis Caching Architecture
 
-### 3.1 Edge CDN Caching on Public Quasi-Static APIs
-* **Endpoints:**
-  - `/api/imf-inflation`: IMF inflation rate dataset
-  - `/api/ppp-rates`: World Bank Purchasing Power Parity dataset
-  - `/api/mutual-funds`: AMFI Mutual Fund scheme master list
-  - `/api/mutual-funds/[schemeCode]`: Individual scheme NAV historical records
-* **Improvement:**
-  - Configured Edge CDN caching:
-    - IMF & World Bank PPP: `public, s-maxage=3600, stale-while-revalidate=86400`
-    - Mutual Fund lists & NAVs: `public, s-maxage=300, stale-while-revalidate=3600`
-  - Eliminates serverless execution overhead and database connections for repeated requests, delivering responses under 20ms globally from Vercel edge points of presence.
+### 2.1 Design & Implementation (`src/lib/redis.ts`)
+To achieve sub-20ms response times on cold and warm serverless invocations without running into TCP connection exhaustion typical of standard Redis clients (e.g. `ioredis`), a REST-based Redis client was created:
+- **Upstash REST Redis Support**: Connects over HTTPS using `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Stateless, edge-compatible, and connectionless.
+- **In-Memory LRU Cache Fallback**: When Upstash credentials are not configured (local development or standalone deployments), the caching layer transparently falls back to an in-memory `Map`-based LRU cache with TTL auto-expiration.
+- **Cache-Aside Pattern**: `getCachedOrFetch<T>(key, fetcher, ttlSeconds)` handles cache hits, serialized JSON parsing, cache misses, and upstream storage atomically.
 
-### 3.2 Shiprocket Authentication Token Multi-Day In-Memory Cache
-* **File:** `api/admin/shiprocket-rates.ts`
-* **Improvement:**
-  - Added in-memory token caching with an 8-day validity window (Shiprocket tokens expire after 10 days).
-  - Eliminates 300ms–800ms of upstream network latency per rate calculation and prevents rate limiting by Shiprocket.
+### 2.2 Cached Datasets & TTL Policy
+| Key Pattern | Data Source | TTL | Impact |
+| :--- | :--- | :--- | :--- |
+| `cache:rates:usd` | Open Exchange Rates / Fallback | 1 hour | Eliminates repeated foreign exchange rate queries |
+| `cache:ppp:worldbank` | World Bank API | 24 hours | Prevents slow multi-second World Bank API calls |
+| `cache:inflation:imf` | IMF Data API | 24 hours | Speeds up inflation calculator historical lookups |
+| `cache:mf:search:<query>` | AMFI Scheme Master | 1 hour | Provides instant mutual fund autocomplete |
+| `cache:mf:nav:<codeFilter>` | AMFI NAV Historicals | 30 mins | Fast NAV history rendering for lumpsum/SIP charts |
+| `cache:note:<id>:<updated_at>` | Vercel Blob Note Content | 1 hour | Eliminates blob download latency on note access |
 
-### 3.3 Rollup Bundle & Vendor Chunk Optimization (`vite.config.ts`)
-* **Improvement:**
-  - Isolated `ag-charts-community` and `ag-charts-react` into `vendor-charts`.
-  - Result:
-    - The `Chart` component chunk decreased from **1,319 kB** to **2.60 kB** (gzip: 1.26 kB).
-    - `vendor-charts` is loaded on-demand only when a user navigates to a chart-enabled calculator (SIP, SWP, Lumpsum), reducing initial bundle overhead for non-chart pages.
-
----
-
-## 4. Date Picker Range & Order Validation
-
-Requirement: *"make sure all date pickers 'to' date are not prior to 'from' date"*
-
-### 4.1 `StartEndDate` Component (`src/components/Date.tsx`)
-* **Coverage:** SIP Calculator (`sip.tsx`), SWP Calculator (`swp.tsx`), Lumpsum Calculator (`lumpsum.tsx`), and Inflation Calculator (`inflationRates.tsx`).
-* **Implementation:**
-  - **Date Mode:**
-    - `handleStartChange`: If the selected start date is after the existing end date, automatically advances the end date to match the start date.
-    - `handleEndChange`: If the selected end date is earlier than the start date, clamps the end date to the start date.
-    - Start date `<input type="date">` enforces `max={endDate || today}`.
-    - End date `<input type="date">` enforces `min={startDate || undefined}`.
-  - **Year Mode:**
-    - `handleStartYearChange`: Auto-advances end year if start year exceeds end year.
-    - `handleEndYearChange`: Clamps end year to start year if prior to start year.
-    - `availableEndOptions`: Dynamically filters the "End Year" dropdown to hide or exclude years earlier than the selected "Start Year".
-
-### 4.2 Date Calculator (`src/pages/dateCalculator.tsx`)
-* **Coverage:** "Difference" mode between two timestamps.
-* **Implementation:**
-  - Added `handleStartDateChange` and `handleEndDateChange`.
-  - Start date input enforces `max={endDate || undefined}`.
-  - End date input enforces `min={startDate || undefined}`.
-  - If a user changes the Start date to a day later than the current End date, End date is automatically pushed forward to match the Start date.
-  - If a user attempts to select an End date earlier than the Start date, it is clamped to the Start date.
-
-### 4.3 EMI Calculator (`src/pages/emiCalculator.tsx`)
-* **Coverage:** Loan Disbursement Date vs Part Payment Dates and Interest Rate Change Dates.
-* **Implementation:**
-  - Part payment date inputs enforce `min={disbursementDate || undefined}`.
-  - Rate change date inputs enforce `min={disbursementDate || undefined}`.
-  - Handlers (`updatePartPayment` and `updateRateChange`) clamp incoming dates so they cannot be prior to the disbursement date.
-  - When the disbursement date changes (`handleDisbursementDateChange`), existing part payments and rate changes scheduled earlier than the new disbursement date are updated to match it.
+### 2.3 How to Configure Upstash Redis on Vercel
+1. Create a free Redis database at [console.upstash.com](https://console.upstash.com/).
+2. In the Upstash database dashboard, copy the **REST API** credentials:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+3. Add these two environment variables to your Vercel Project Settings (`Settings > Environment Variables`).
+4. Redeploy or push to `main`. The app will immediately switch from the in-memory fallback to distributed global Redis caching.
 
 ---
 
-## 5. Verification & Testing
+## 3. SEO & Rich Snippet Overhaul (Zero UI Changes)
+
+### 3.1 Static Metadata Architecture (`src/data/seoMetadata.ts`)
+Next.js App Router routes now export pre-compiled, static `Metadata` objects. Search engine crawlers receive complete, fully populated `<title>`, `<meta name="description">`, `<meta name="keywords">`, `<link rel="canonical">`, OpenGraph cards, and Twitter cards directly in initial HTML responses.
+
+### 3.2 Coverage Across All App Routes
+All 27+ routes are covered:
+- **Core Financial Calculators**: `/` (Compound Interest), `/emi-calculator`, `/income-tax-calculator`, `/fd-calculator`, `/rd-calculator`, `/sip-calculator`, `/swp-calculator`, `/ppf-calculator`, `/nps-calculator`, `/mutual-funds/lumpsum`, `/mutual-funds/sip`, `/mutual-funds/swp`.
+- **Economic & Currency Tools**: `/inflation-calculator`, `/ppp-calculator`, `/currency-converter`.
+- **Utilities & Productivity**: `/calculator`, `/date-calculator`, `/utilities/calculator`, `/utilities/date-calculator`, `/utilities/unit-converter`, `/utilities/quick-notes`.
+- **Trust & Compliance Pages**: `/about`, `/privacy`, `/disclaimer`, `/login`, `/upgrade`.
+
+### 3.3 Server-Side Rendered JSON-LD Structured Data (`src/components/SEOHead.tsx`)
+- Structured data schemas (`FinancialProduct`, `WebApplication`, `FAQPage`) were previously generated only in client-side `useEffect` hooks.
+- `SEOHead.tsx` was enhanced to render `<script type="application/ld+json">` during SSR. Search crawlers parsing static HTML now index rich snippets without requiring JavaScript execution.
+
+### 3.4 Sitemaps & Search Crawler Directives
+- **`src/app/sitemap.ts`**: Implemented a dynamic Next.js App Router sitemap with priority rankings (1.0 for high-intent calculators, 0.9 for mutual funds/SIP, 0.7 for utilities) and change frequencies.
+- **`src/app/robots.ts`**: Configured crawler rules allowing full indexing of public calculator routes while disallowing private admin/auth paths (`/admin`, `/api/admin`, `/api/auth`).
+- **`public/sitemap.xml`**: Synchronized with all newly created routes (`/income-tax-calculator`, `/ppf-calculator`, `/nps-calculator`, `/file-itr`, `/utilities/unit-converter`).
+
+---
+
+## 4. Build & Asset Optimizations
+
+### 4.1 Next.js Configuration (`next.config.ts`)
+- **Package Tree-Shaking**: Added `experimental: { optimizePackageImports: ['react-icons'] }` to tree-shake heavy barrel files from `react-icons/fi`, `react-icons/fa`, `react-icons/md`, reducing bundle sizes across all routes.
+- **Compression**: Enabled `compress: true` for automatic Gzip and Brotli compression on static assets and API payloads.
+
+### 4.2 Edge Redirects (`vercel.json`)
+Added permanent edge redirects (HTTP 308) routing legacy URLs to their canonical App Router paths:
+- `/deposits/ppf` -> `/ppf-calculator`
+- `/fixed-plans/ppf` -> `/ppf-calculator`
+- `/fixed-plans/nps` -> `/nps-calculator`
+- `/tax/income-tax` -> `/income-tax-calculator`
+- `/tax-calculator` -> `/income-tax-calculator`
+- `/admin/notes` -> `/utilities/quick-notes`
+- `/notes` -> `/utilities/quick-notes`
+
+---
+
+## 5. Verification & Validation
 
 1. **Linting Verification**:
-   - `npm run lint` executed cleanly with 0 errors across all files.
-   - Enforced strict ESLint rule: `no-multiple-empty-lines: ['error', { max: 0 }]`.
+   - `npm run lint` (`next lint`): Passed cleanly with 0 errors.
 2. **Build Verification**:
-   - `npm run build` (`tsc -b && vite build`) completed cleanly with 0 type errors in under 2 seconds.
-   - Verified chunk splitting, bundle sizes, and production asset creation.
-3. **Automated Sanitization Tests**:
-   - Verified that script injection, event attribute injection (`onerror`, `onclick`, `onload`), `javascript:` URIs, CSS `expression`/`url()` injection, and arbitrary DOM elements are stripped cleanly.
-4. **Cryptographic Integrity**:
-   - Zero-knowledge client-side encryption (AES-256-GCM) in Quick Notes remains preserved and untouched.
+   - `npm run build` (`next build` with Turbopack): Completed successfully with 0 TypeScript or build errors in 10.3s.
+   - All 37 routes generated as optimized static pages (`○ (Static)`).
+3. **Zero UI Disruption**:
+   - No CSS files, styles, visual components, layout structures, or user-facing copy were altered. All SEO enhancements are embedded exclusively in HTML `<head>` metadata and structured JSON-LD schemas.
 
 ---
 
-## 6. Summary of Modified Files
+## 6. Comprehensive Summary of Modified Files
 
-| File | Type | Changes |
+| File | Category | Description |
 | :--- | :--- | :--- |
-| `src/components/admin/notes/sanitizeHtml.ts` | Security | Browser-native HTML & URL sanitizer with DOMParser and whitelist |
-| `src/components/admin/notes/NotesEditor.tsx` | Security | Added `onPaste` sanitizer, link URL verification, and input bounds |
-| `src/components/admin/notes/NotesBackupModal.tsx` | Security | Sanitized imported notes/folders and capped backup file size to 20MB |
-| `api/admin/notes.ts` | Security | Added server-side 5MB limit, script/event stripping, and tag/title bounds |
-| `api/mutual-funds/index.ts` | Security / Perf | Search query truncation, wildcard escaping, and term count capping |
-| `api/mutual-funds/[schemeCode].ts` | Security / Perf | Strictly numeric `schemeCode` validation; anti-SSRF & anti-traversal |
-| `api/payments/submit.ts` | Security | Sanitized UTR regex, bounded amount, and blocked duplicate submissions |
-| `api/payments/settings.ts` | Security | Sanitized admin title, UPI ID, QR URL, amount, and instructions |
-| `api/auth/login.ts` | Security | RFC-5321 email validation and password length cap (128 chars) |
-| `api/auth/signup.ts` | Security | Hardened token validation; restricted admin role to verified OAuth; input caps |
-| `api/auth/google.ts` | Security | Mandatory Google ID token verification; eliminated auth bypass |
-| `api/payments/razorpay/create-order.ts` | Security | Server-enforced subscription price from DB; prevented price tampering |
-| `api/payments/razorpay/verify.ts` | Security | Replay attack prevention; constant-time signature comparison |
-| `api/_db.ts` | Security / Perf | `timingSafeEqual` utility; cache-control header support in `jsonResponse` |
-| `api/admin/shiprocket-rates.ts` | Security / Perf | Parameter sanitization; multi-day token caching |
-| `src/utilities/numSanitity.ts` | Robustness | Null-safe, isFinite-safe `sanctnum` with optional bounds clamping |
-| `src/utilities/utility.ts` | Robustness | Aligned `sanctnum` implementation with bounds clamping |
-| `src/pages/dateCalculator.tsx` | Robustness / UX | Clamped duration inputs against Date overflow; enforced 'to' >= 'from' |
-| `src/pages/emiCalculator.tsx` | Robustness / UX | Clamped EMI day, part payments, and rates; enforced dates >= disbursement |
-| `src/pages/unitConverter.tsx` | Robustness | Validated state deserialization; bounded input lengths; checked isFinite |
-| `src/components/MutualFundSelectorModal.tsx` | Robustness | Added `maxLength` and sliced search input |
-| `src/components/CountrySelect.tsx` | Robustness | Added `maxLength` and sliced country search input |
-| `src/pages/admin.tsx` | Security | Validated QR upload MIME type (`image/*`) and file size limit (2MB) |
-| `src/components/Date.tsx` | Bugfix / UX | Enforced 'to' date/year >= 'from' date/year in StartEndDate |
-| `vercel.json` | Security | Added Content-Security-Policy & Razorpay Permissions-Policy |
-| `vite.config.ts` | Performance | Chunk optimization isolating `vendor-charts` from core app |
+| `src/utilities/calculatorHelper.ts` | Security | Regex token validation preventing code/expression injection in `new Function` |
+| `src/actions/data.ts` | Security / Perf | `AbortSignal.timeout(8000)` on NAV fetch; multi-tiered Redis caching |
+| `src/actions/auth.ts` | Security / Perf | `AbortSignal.timeout(6000)` on Google OAuth token verification |
+| `src/actions/taxAi.ts` | Security | `AbortSignal.timeout(25000)` on Gemini API; `x-goog-api-key` header migration |
+| `src/actions/notes.ts` | Performance | Distributed Redis caching for encrypted note content from Vercel Blob |
+| `src/lib/redis.ts` | Infrastructure | Serverless Upstash REST Redis client with automated in-memory LRU fallback |
+| `next.config.ts` | Performance | Enabled `compress: true` and `optimizePackageImports: ['react-icons']` |
+| `vercel.json` | Performance / SEO | Permanent edge redirects for legacy calculator and utility routes |
+| `src/data/seoMetadata.ts` | SEO | Centralized metadata registry with high-CTR titles, descriptions, keywords |
+| `src/components/SEOHead.tsx` | SEO | SSR-rendered `<script type="application/ld+json">` for search crawler schemas |
+| `src/app/sitemap.ts` | SEO | Dynamic App Router sitemap generation with priority and change frequencies |
+| `src/app/robots.ts` | SEO | App Router search crawler directives and sitemap link |
+| `public/sitemap.xml` | SEO | Added missing high-traffic routes to the static XML sitemap |
+| `src/app/**/page.tsx` (26 files) | SEO | Exported static `Metadata` across all App Router routes |

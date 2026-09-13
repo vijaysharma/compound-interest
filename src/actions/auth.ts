@@ -58,7 +58,8 @@ export async function signupWithGooglePasswordAction(data: {
   if (credential) {
     try {
       const verifyRes = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+        { signal: AbortSignal.timeout(6000) }
       );
       if (verifyRes.ok) {
         const info = (await verifyRes.json()) as GoogleTokenInfo;
@@ -194,7 +195,8 @@ export async function loginWithGoogleAction(authData: {
   let sub = '';
   try {
     const verifyRes = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+      { signal: AbortSignal.timeout(6000) }
     );
     if (!verifyRes.ok) {
       throw new Error('Google authentication failed: invalid or expired credential');

@@ -34,6 +34,31 @@
       "permanent": true
     },
     {
+      "source": "/deposits/ppf",
+      "destination": "/ppf-calculator",
+      "permanent": true
+    },
+    {
+      "source": "/fixed-plans/ppf",
+      "destination": "/ppf-calculator",
+      "permanent": true
+    },
+    {
+      "source": "/fixed-plans/nps",
+      "destination": "/nps-calculator",
+      "permanent": true
+    },
+    {
+      "source": "/tax/income-tax",
+      "destination": "/income-tax-calculator",
+      "permanent": true
+    },
+    {
+      "source": "/tax-calculator",
+      "destination": "/income-tax-calculator",
+      "permanent": true
+    },
+    {
       "source": "/economics/inflation-rates",
       "destination": "/inflation-calculator",
       "permanent": true
@@ -60,6 +85,16 @@
     },
     {
       "source": "/admin/quick-notes",
+      "destination": "/utilities/quick-notes",
+      "permanent": true
+    },
+    {
+      "source": "/admin/notes",
+      "destination": "/utilities/quick-notes",
+      "permanent": true
+    },
+    {
+      "source": "/notes",
       "destination": "/utilities/quick-notes",
       "permanent": true
     }

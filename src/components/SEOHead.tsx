@@ -103,11 +103,17 @@ export const SEOHead = ({
       script.text = JSON.stringify(schema, null, 0);
       document.head.appendChild(script);
     }
-    // ── Cleanup ───────────────────────────────────────────────────
     return () => {
       document.querySelectorAll('script[data-seo-schema]').forEach((s) => s.remove());
     };
   }, [title, description, keywords, canonicalPath, ogType, ogImage, ogImageAlt, ogImageWidth, ogImageHeight, schema, noIndex]);
-  return null;
+  if (!schema) return null;
+  return (
+    <script
+      type="application/ld+json"
+      data-seo-schema="true"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
 };
 export default SEOHead;

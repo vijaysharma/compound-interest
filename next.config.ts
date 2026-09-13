@@ -3,6 +3,10 @@ import path from 'node:path';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  compress: true,
+  experimental: {
+    optimizePackageImports: ['react-icons'],
+  },
   sassOptions: {
     includePaths: [path.join(process.cwd(), 'src/styles')],
   },

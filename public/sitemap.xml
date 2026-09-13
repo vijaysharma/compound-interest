@@ -100,10 +100,40 @@
     <priority>0.85</priority>
   </url>
 
+  <!-- ==================== INCOME TAX CALCULATOR & ITR ==================== -->
+  <url>
+    <loc>https://rupees.vercel.app/income-tax-calculator</loc>
+    <lastmod>2026-09-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <url>
+    <loc>https://rupees.vercel.app/file-itr</loc>
+    <lastmod>2026-09-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- ==================== PPF & NPS CALCULATORS ==================== -->
+  <url>
+    <loc>https://rupees.vercel.app/ppf-calculator</loc>
+    <lastmod>2026-09-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <url>
+    <loc>https://rupees.vercel.app/nps-calculator</loc>
+    <lastmod>2026-09-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
   <!-- ==================== EMI CALCULATOR ==================== -->
   <url>
     <loc>https://rupees.vercel.app/emi-calculator</loc>
-    <lastmod>2026-08-31</lastmod>
+    <lastmod>2026-09-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
@@ -118,7 +148,14 @@
 
   <url>
     <loc>https://rupees.vercel.app/date-calculator</loc>
-    <lastmod>2026-08-31</lastmod>
+    <lastmod>2026-09-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://rupees.vercel.app/utilities/unit-converter</loc>
+    <lastmod>2026-09-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>

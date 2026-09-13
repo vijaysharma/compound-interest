@@ -6,6 +6,7 @@ import {
   isPaidUser,
 } from '@/lib/db';
 import { deleteNoteBlobs, isBlobConfigured, putNoteBlob, readNoteBlob } from '@/lib/blob';
+import { redisGet, redisSet } from '@/lib/redis';
 interface NoteRow {
   id: string;
   user_id?: string | null;
@@ -157,13 +158,20 @@ export async function getNotesAction(
       let noteContent = '';
       let contentUnavailable = false;
       if (note.blob_url) {
-        const fromBlob = await readNoteBlob(note.blob_url);
-        if (fromBlob !== null) {
-          noteContent = fromBlob;
-        } else if (note.content) {
-          noteContent = note.content;
+        const cacheKey = `cache:note:${note.id}:${note.updated_at}`;
+        const cachedContent = await redisGet<string>(cacheKey);
+        if (cachedContent !== null) {
+          noteContent = cachedContent;
         } else {
-          contentUnavailable = true;
+          const fromBlob = await readNoteBlob(note.blob_url);
+          if (fromBlob !== null) {
+            noteContent = fromBlob;
+            redisSet(cacheKey, fromBlob, 86400 * 7).catch(() => {});
+          } else if (note.content) {
+            noteContent = note.content;
+          } else {
+            contentUnavailable = true;
+          }
         }
       } else {
         noteContent = note.content || '';

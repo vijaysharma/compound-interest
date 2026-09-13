@@ -2,6 +2,7 @@
 import { ensureTables, getDb, IMF_URL, MF_URL } from '@/lib/db';
 import { DEFAULT_EXCHANGE_RATES } from '@/data/default_exchange_rates';
 import { DEFAULT_PPP_RECORDS } from '@/data/default_ppp_data';
+import { redisGet, redisSet } from '@/lib/redis';
 const OPEN_EXCHANGE_API = 'https://open.er-api.com/v6/latest';
 const WORLD_BANK_PPP_API =
   'https://api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP?format=json&per_page=400&mrv=1&gapfill=y';
@@ -17,6 +18,14 @@ export async function getExchangeRatesAction(): Promise<{
   base_code: string;
   rates: Record<string, number>;
 }> {
+  const redisRates = await redisGet<Record<string, number>>('cache:rates:usd');
+  if (redisRates) {
+    return {
+      result: 'success',
+      base_code: 'USD',
+      rates: redisRates,
+    };
+  }
   if (memoryExchangeRates && Date.now() - memoryExchangeRates.timestamp < 10 * 60 * 1000) {
     return {
       result: 'success',
@@ -36,6 +45,7 @@ export async function getExchangeRatesAction(): Promise<{
       const isFresh = Date.now() - new Date(rows[0].updated_at).getTime() < DB_TTL_MS;
       if (isFresh) {
         memoryExchangeRates = { rates: rows[0].payload.rates, timestamp: Date.now() };
+        redisSet('cache:rates:usd', rows[0].payload.rates, 21600).catch(() => {});
         return {
           result: 'success',
           base_code: 'USD',
@@ -65,6 +75,7 @@ export async function getExchangeRatesAction(): Promise<{
           // DB persistence failure is non-fatal
         }
         memoryExchangeRates = { rates: payload.rates, timestamp: Date.now() };
+        redisSet('cache:rates:usd', payload.rates, 21600).catch(() => {});
         return {
           result: 'success',
           base_code: 'USD',
@@ -76,6 +87,7 @@ export async function getExchangeRatesAction(): Promise<{
     console.warn('Upstream exchange rates fetch failed:', fetchErr);
   }
   if (storedPayload && storedPayload.rates) {
+    redisSet('cache:rates:usd', storedPayload.rates, 21600).catch(() => {});
     return {
       result: 'success',
       base_code: 'USD',
@@ -89,6 +101,10 @@ export async function getExchangeRatesAction(): Promise<{
   };
 }
 export async function getPPPDataAction(): Promise<unknown> {
+  const redisPpp = await redisGet('cache:ppp:worldbank');
+  if (redisPpp) {
+    return redisPpp;
+  }
   if (memoryPppData && Date.now() - memoryPppData.timestamp < 30 * 60 * 1000) {
     return memoryPppData.data;
   }
@@ -106,6 +122,7 @@ export async function getPPPDataAction(): Promise<unknown> {
         : false;
       if (isFresh) {
         memoryPppData = { data: rows[0].payload, timestamp: Date.now() };
+        redisSet('cache:ppp:worldbank', rows[0].payload, 86400 * 7).catch(() => {});
         return rows[0].payload;
       }
     }
@@ -136,6 +153,7 @@ export async function getPPPDataAction(): Promise<unknown> {
           // DB persistence failure is non-fatal
         }
         memoryPppData = { data: payload, timestamp: Date.now() };
+        redisSet('cache:ppp:worldbank', payload, 86400 * 7).catch(() => {});
         return payload;
       }
     }
@@ -143,11 +161,16 @@ export async function getPPPDataAction(): Promise<unknown> {
     console.warn('Upstream World Bank PPP fetch failed, falling back to default:', fetchErr);
   }
   if (storedPayload) {
+    redisSet('cache:ppp:worldbank', storedPayload, 86400 * 7).catch(() => {});
     return storedPayload;
   }
   return DEFAULT_PPP_RECORDS;
 }
 export async function getIMFInflationAction(): Promise<unknown> {
+  const redisImf = await redisGet('cache:inflation:imf');
+  if (redisImf) {
+    return redisImf;
+  }
   if (memoryImfData && Date.now() - memoryImfData.timestamp < 30 * 60 * 1000) {
     return memoryImfData.data;
   }
@@ -159,6 +182,7 @@ export async function getIMFInflationAction(): Promise<unknown> {
     `) as Array<{ payload: unknown }>;
     if (rows.length > 0 && rows[0].payload) {
       memoryImfData = { data: rows[0].payload, timestamp: Date.now() };
+      redisSet('cache:inflation:imf', rows[0].payload, 86400 * 7).catch(() => {});
       return rows[0].payload;
     }
   } catch (dbErr) {
@@ -183,6 +207,7 @@ export async function getIMFInflationAction(): Promise<unknown> {
           // DB persistence failure is non-fatal
         }
         memoryImfData = { data: payload, timestamp: Date.now() };
+        redisSet('cache:inflation:imf', payload, 86400 * 7).catch(() => {});
         return payload;
       }
     }
@@ -197,6 +222,12 @@ export async function searchMutualFundsAction(
   const rawSearch = searchQuery.trim();
   const search = rawSearch.replace(/[%_\\]/g, ' ').trim().slice(0, 80);
   const cacheKey = search.toLowerCase();
+  const redisCached = await redisGet<Array<{ schemeCode: number; schemeName: string }>>(
+    'cache:mf:search:' + cacheKey
+  );
+  if (redisCached) {
+    return redisCached;
+  }
   const cached = mfSearchCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.data as Array<{ schemeCode: number; schemeName: string }>;
@@ -219,6 +250,7 @@ export async function searchMutualFundsAction(
     schemeName: row.scheme_name,
   }));
   mfSearchCache.set(cacheKey, { expiresAt: Date.now() + 60_000, data });
+  redisSet('cache:mf:search:' + cacheKey, data, 3600).catch(() => {});
   if (mfSearchCache.size > 100) {
     const oldest = mfSearchCache.keys().next().value;
     if (oldest) mfSearchCache.delete(oldest);
@@ -229,6 +261,10 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
   const schemeCode = String(schemeCodeRaw).trim();
   if (!/^\d{1,10}$/.test(schemeCode)) {
     throw new Error('Invalid scheme code. Must be numeric.');
+  }
+  const redisNav = await redisGet('cache:mf:nav:' + schemeCode);
+  if (redisNav) {
+    return redisNav;
   }
   const cached = mfNavCache.get(schemeCode);
   if (cached && cached.expiresAt > Date.now()) {
@@ -247,10 +283,14 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
       expiresAt: Date.now() + 5 * 60 * 1000,
       data: stored[0].payload,
     });
+    redisSet('cache:mf:nav:' + schemeCode, stored[0].payload, 21600).catch(() => {});
     return stored[0].payload;
   }
   try {
-    const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`);
+    const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(8000),
+    });
     if (upstream.ok) {
       const payload = await upstream.json();
       await sql`
@@ -262,6 +302,7 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
         expiresAt: Date.now() + 5 * 60 * 1000,
         data: payload,
       });
+      redisSet('cache:mf:nav:' + schemeCode, payload, 21600).catch(() => {});
       return payload;
     }
   } catch (fetchError) {
@@ -272,6 +313,7 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
       expiresAt: Date.now() + 5 * 60 * 1000,
       data: stored[0].payload,
     });
+    redisSet('cache:mf:nav:' + schemeCode, stored[0].payload, 21600).catch(() => {});
     return stored[0].payload;
   }
   throw new Error('Failed to fetch mutual fund NAV data');
