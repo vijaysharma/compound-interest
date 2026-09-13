@@ -254,13 +254,35 @@ const EmiCalculator: React.FC = () => {
     );
   }, [principalAmount, annualRate, tenureMonths]);
   // Full Amortization Schedule Calculation
-  const calculateSchedule = useCallback((): { rows: ScheduleRow[]; currentEmi: number } => {
-    if (!disbursementDate || principalAmount <= 0 || tenureMonths <= 0) return { rows: [], currentEmi: 0 };
+  const calculateSchedule = useCallback((): {
+    rows: ScheduleRow[];
+    currentEmi: number;
+    regularEmisCount: number;
+    partPaymentsCount: number;
+    roiChangesCount: number;
+    totalPaymentsCount: number;
+    hasEmiAdjustment: boolean;
+  } => {
+    if (!disbursementDate || principalAmount <= 0 || tenureMonths <= 0) {
+      return {
+        rows: [],
+        currentEmi: 0,
+        regularEmisCount: 0,
+        partPaymentsCount: 0,
+        roiChangesCount: 0,
+        totalPaymentsCount: 0,
+        hasEmiAdjustment: false,
+      };
+    }
     let principal: number = principalAmount;
     let currentAnnualRate: number = annualRate;
     let monthlyRate: number = currentAnnualRate / 12 / 100;
     let cumulativePrincipal = 0;
     let cumulativeInterest = 0;
+    let regularEmisCount = 0;
+    let partPaymentsCount = 0;
+    let roiChangesCount = 0;
+    let hasEmiAdjustment = false;
     // Sort part payments and rate changes by date
     const sortedPartPayments = [...partPayments]
       .filter((p) => p.enabled && p.amount > 0 && p.date)
@@ -285,12 +307,19 @@ const EmiCalculator: React.FC = () => {
         ? (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
           (Math.pow(1 + monthlyRate, tenureMonths) - 1)
         : principal / tenureMonths;
+    let currentEmiAmount: number = initialEmiAmount;
+    let remainingScheduledMonths: number = tenureMonths;
     if (includePrincipalInFirstEmi) {
-      const principalComponent = initialEmiAmount - principal * monthlyRate;
+      const principalComponent = Math.min(
+        principal,
+        Math.max(0, initialEmiAmount - principal * monthlyRate)
+      );
       const totalFirstEmi = proratedInterest + principalComponent;
       principal -= principalComponent;
       cumulativePrincipal += principalComponent;
       cumulativeInterest += proratedInterest;
+      regularEmisCount++;
+      remainingScheduledMonths = Math.max(1, remainingScheduledMonths - 1);
       rawRows.push({
         date: firstEmiDate.toDateString(),
         emi: totalFirstEmi.toFixed(2),
@@ -303,6 +332,7 @@ const EmiCalculator: React.FC = () => {
       });
     } else {
       cumulativeInterest += proratedInterest;
+      regularEmisCount++;
       rawRows.push({
         date: firstEmiDate.toDateString(),
         emi: proratedInterest.toFixed(2),
@@ -316,15 +346,7 @@ const EmiCalculator: React.FC = () => {
     }
     currentDate = firstEmiDate;
     let monthCounter = 1;
-    let remainingTenureMonths = tenureMonths;
-    let baseEmiAmount: number =
-      monthlyRate > 0
-        ? (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
-          (Math.pow(1 + monthlyRate, tenureMonths) - 1)
-        : principal / tenureMonths;
-    let latestMonthlyEmi: number = baseEmiAmount;
-    let currentMode: 'tenure' | 'emi' = 'tenure';
-    while (principal > 1 && monthCounter <= tenureMonths + 120) {
+    while (principal > 0.01 && monthCounter <= tenureMonths + 240) {
       const nextEmiDate = addMonths(currentDate, 1);
       // Check for rate changes in this period
       const rateChangesInPeriod = sortedRateChanges.filter((r) => {
@@ -332,11 +354,12 @@ const EmiCalculator: React.FC = () => {
         return changeDate > currentDate && changeDate <= nextEmiDate;
       });
       for (const rateChange of rateChangesInPeriod) {
-        if (principal <= 1) break;
+        if (principal <= 0.01) break;
         const changeDate = new Date(rateChange.date);
         const oldRate = currentAnnualRate;
         currentAnnualRate = rateChange.rate;
         monthlyRate = currentAnnualRate / 12 / 100;
+        roiChangesCount++;
         rawRows.push({
           date: changeDate.toDateString(),
           emi: '0.00',
@@ -348,27 +371,12 @@ const EmiCalculator: React.FC = () => {
           note: `ROI Change: ${oldRate}% → ${currentAnnualRate}% (${rateChange.mode === 'emi' ? 'Adjust EMI' : 'Adjust Tenure'})`,
         });
         if (rateChange.mode === 'emi') {
-          if (remainingTenureMonths > 0 && monthlyRate > 0) {
-            baseEmiAmount =
-              (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
-              (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
-            latestMonthlyEmi = baseEmiAmount;
+          hasEmiAdjustment = true;
+          if (remainingScheduledMonths > 0 && monthlyRate > 0) {
+            currentEmiAmount =
+              (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingScheduledMonths)) /
+              (Math.pow(1 + monthlyRate, remainingScheduledMonths) - 1);
           }
-          currentMode = 'emi';
-        } else {
-          currentMode = 'tenure';
-        }
-      }
-      let emiAmount: number;
-      if (currentMode === 'tenure') {
-        emiAmount = baseEmiAmount;
-      } else {
-        if (remainingTenureMonths > 0 && monthlyRate > 0) {
-          emiAmount =
-            (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
-            (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
-        } else {
-          emiAmount = principal;
         }
       }
       // Check for part payments in this period
@@ -377,11 +385,12 @@ const EmiCalculator: React.FC = () => {
         return paymentDate > currentDate && paymentDate <= nextEmiDate;
       });
       for (const payment of partPaymentsInPeriod) {
-        if (principal <= 1) break;
+        if (principal <= 0.01) break;
         const paymentDate = new Date(payment.date);
         const actualPaymentAmount = Math.min(payment.amount, principal);
         principal -= actualPaymentAmount;
         cumulativePrincipal += actualPaymentAmount;
+        partPaymentsCount++;
         rawRows.push({
           date: paymentDate.toDateString(),
           emi: actualPaymentAmount.toFixed(2),
@@ -392,31 +401,33 @@ const EmiCalculator: React.FC = () => {
           cumulativeInterest: cumulativeInterest.toFixed(2),
           note: `Part Payment (${payment.mode === 'emi' ? 'Reduce EMI' : 'Reduce Tenure'})`,
         });
-        currentMode = payment.mode;
-        if (currentMode === 'emi' && principal > 1) {
-          if (remainingTenureMonths > 0 && monthlyRate > 0) {
-            emiAmount =
-              (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
-              (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
-            baseEmiAmount = emiAmount;
-            latestMonthlyEmi = baseEmiAmount;
+        if (payment.mode === 'emi') {
+          hasEmiAdjustment = true;
+          if (remainingScheduledMonths > 0 && monthlyRate > 0 && principal > 0.01) {
+            currentEmiAmount =
+              (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingScheduledMonths)) /
+              (Math.pow(1 + monthlyRate, remainingScheduledMonths) - 1);
           }
         }
       }
-      if (principal <= 1) break;
+      if (principal <= 0.01) break;
       const interest = principal * monthlyRate;
-      let principalComponent = emiAmount - interest;
-      if (principalComponent > principal) {
+      let principalComponent = currentEmiAmount - interest;
+      let emiForThisMonth = currentEmiAmount;
+      if (principalComponent >= principal || principal + interest <= currentEmiAmount) {
         principalComponent = principal;
-        emiAmount = principalComponent + interest;
+        emiForThisMonth = principalComponent + interest;
+        principal = 0;
+      } else {
+        principal -= principalComponent;
       }
-      principal -= principalComponent;
       cumulativePrincipal += principalComponent;
       cumulativeInterest += interest;
-      remainingTenureMonths--;
+      remainingScheduledMonths = Math.max(1, remainingScheduledMonths - 1);
+      regularEmisCount++;
       rawRows.push({
         date: nextEmiDate.toDateString(),
-        emi: emiAmount.toFixed(2),
+        emi: emiForThisMonth.toFixed(2),
         principal: principalComponent.toFixed(2),
         interest: interest.toFixed(2),
         balance: Math.max(0, principal).toFixed(2),
@@ -435,7 +446,12 @@ const EmiCalculator: React.FC = () => {
           totalScheduleInterest - parseFloat(row.cumulativeInterest)
         ).toFixed(2),
       })),
-      currentEmi: latestMonthlyEmi,
+      currentEmi: principalAmount > 0 && regularEmisCount > 0 ? currentEmiAmount : 0,
+      regularEmisCount,
+      partPaymentsCount,
+      roiChangesCount,
+      totalPaymentsCount: regularEmisCount + partPaymentsCount,
+      hasEmiAdjustment,
     };
   }, [
     principalAmount,
@@ -447,7 +463,14 @@ const EmiCalculator: React.FC = () => {
     rateChanges,
     includePrincipalInFirstEmi,
   ]);
-  const { rows: schedule, currentEmi } = useMemo(() => calculateSchedule(), [calculateSchedule]);
+  const {
+    rows: schedule,
+    currentEmi,
+    regularEmisCount,
+    partPaymentsCount,
+    totalPaymentsCount,
+    hasEmiAdjustment,
+  } = useMemo(() => calculateSchedule(), [calculateSchedule]);
   const isAddPartPaymentDisabled = useMemo(() => {
     if (partPayments.length === 0) return false;
     const lastPayment = partPayments[partPayments.length - 1];
@@ -587,94 +610,7 @@ const EmiCalculator: React.FC = () => {
               stepData={stepData}
               tabs={[]}
             />
-            <ValuePicker
-              title="Rate"
-              titleStyle="merged"
-              value={rt.roi}
-              symbol="%"
-              symbolBg={false}
-              symbolPosition="right"
-              onChange={(newRate) => setRt({ ...rt, roi: newRate })}
-              stepData={[
-                { id: 'roi-0.01', value: 0.01, label: '0.01%' },
-                { id: 'roi-0.1', value: 0.1, label: '0.1%' },
-                { id: 'roi-0.25', value: 0.25, label: '0.25%' },
-                { id: 'roi-0.5', value: 0.5, label: '0.5%' },
-                { id: 'roi-1', value: 1, label: '1%' },
-                { id: 'roi-2', value: 2, label: '2%' },
-                { id: 'roi-5', value: 5, label: '5%' },
-                { id: 'roi-10', value: 10, label: '10%' },
-                { id: 'roi-12', value: 12, label: '12%' },
-              ]}
-              showWords={false}
-            />
-            <ValuePicker
-              title="Tenure"
-              titleStyle="merged"
-              value={rt.tenure}
-              symbol={null}
-              onChange={(newTenure) => setRt({ ...rt, tenure: newTenure })}
-              stepData={[
-                {
-                  id: 'tenure-1',
-                  value: 1,
-                  label: `1 ${rt.tenureFormat === 'y' ? 'year' : 'month'}`,
-                },
-                {
-                  id: 'tenure-2',
-                  value: 2,
-                  label: `2 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-                {
-                  id: 'tenure-5',
-                  value: 5,
-                  label: `5 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-                {
-                  id: 'tenure-7',
-                  value: 7,
-                  label: `7 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-                {
-                  id: 'tenure-10',
-                  value: 10,
-                  label: `10 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-                {
-                  id: 'tenure-15',
-                  value: 15,
-                  label: `15 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-                {
-                  id: 'tenure-20',
-                  value: 20,
-                  label: `20 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-                {
-                  id: 'tenure-25',
-                  value: 25,
-                  label: `25 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-                {
-                  id: 'tenure-30',
-                  value: 30,
-                  label: `30 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
-                },
-              ]}
-              endAdornment={
-                <select
-                  className={styles.tenureFormatSelect}
-                  value={rt.tenureFormat}
-                  onChange={(e) =>
-                    setRt({ ...rt, tenureFormat: e.target.value as typeof rt.tenureFormat })
-                  }
-                >
-                  <option value={'m' as typeof rt.tenureFormat}>Months</option>
-                  <option value={'y' as typeof rt.tenureFormat}>Years</option>
-                </select>
-              }
-              showWords={false}
-            />
+            <ValuePicker.RateTenure rt={rt} setRt={setRt} />
             <ValuePicker.Paired
               sourceBadgeText="Disbursed"
               targetBadgeText="EMI Day"
@@ -722,7 +658,9 @@ const EmiCalculator: React.FC = () => {
         <div className={styles.resultsCol}>
           {(() => {
             const isEmiRevised =
-              currentEmi > 0 && Math.round(currentEmi) !== Math.round(baseMonthlyEmi);
+              hasEmiAdjustment &&
+              currentEmi > 0 &&
+              Math.round(currentEmi) !== Math.round(baseMonthlyEmi);
             return (
               <DisplayCard
                 primaryAmount={Math.round(isEmiRevised ? currentEmi : baseMonthlyEmi)}
@@ -747,7 +685,12 @@ const EmiCalculator: React.FC = () => {
                   <h2 className={styles.cardHeading}>Loan Statistics &amp; Payment Proportion</h2>
                 </div>
                 {schedule.length > 0 && (
-                  <span className={styles.countBadge}>{schedule.length} Total Payments</span>
+                  <span className={styles.countBadge}>
+                    {totalPaymentsCount} Total Payments
+                    {partPaymentsCount > 0
+                      ? ` (${regularEmisCount} EMIs + ${partPaymentsCount} Prepayment${partPaymentsCount === 1 ? '' : 's'})`
+                      : ` (${regularEmisCount} EMIs)`}
+                  </span>
                 )}
               </div>
               <div className={styles.analyticsGrid}>
@@ -823,6 +766,24 @@ const EmiCalculator: React.FC = () => {
                       ₹{Math.round(totalPayable).toLocaleString('en-IN')}
                     </span>
                   </div>
+                  {/* Repayment Duration Pill */}
+                  <div className={`${styles.metricPill} ${styles.metricPillNeutral}`}>
+                    <div>
+                      <span className={styles.metricLabel}>Repayment Duration</span>
+                      <span className={styles.metricSub}>
+                        {regularEmisCount} EMIs
+                        {partPaymentsCount > 0 ? ` + ${partPaymentsCount} Prepayments` : ''}
+                        {regularEmisCount < tenureMonths
+                          ? ` (Saved ${tenureMonths - regularEmisCount} mos)`
+                          : regularEmisCount > tenureMonths
+                            ? ` (+${regularEmisCount - tenureMonths} mos)`
+                            : ''}
+                      </span>
+                    </div>
+                    <span className={styles.metricValue}>
+                      {(regularEmisCount / 12).toFixed(1)} yrs
+                    </span>
+                  </div>
                 </div>
               </div>
             </section>
@@ -838,11 +799,19 @@ const EmiCalculator: React.FC = () => {
               <p className={styles.cardEyebrow}>Prepayment Optimizer</p>
               <h2 className={styles.cardHeading}>Lump-Sum Part Payments</h2>
             </div>
+            <button
+              type="button"
+              onClick={addPartPayment}
+              disabled={isAddPartPaymentDisabled}
+              className={styles.primaryButton}
+            >
+              + Add Part Payment
+            </button>
           </div>
           <div className={styles.inputSection}>
             {partPayments.length === 0 && (
               <p className={styles.emptyStateText}>
-                No part payments added yet. Click &quot;Add Part Payment&quot; below to simulate
+                No part payments added yet. Click &quot;Add Part Payment&quot; above to simulate
                 prepayments.
               </p>
             )}
@@ -904,6 +873,7 @@ const EmiCalculator: React.FC = () => {
                   title="Apply the saving to"
                   className={styles.prepaymentModeGroup}
                   sizePrefix="xs"
+                  compact={true}
                   data={[
                     { id: `pp-${idx}-emi`, value: 'emi', title: 'Reduce EMI' },
                     { id: `pp-${idx}-tenure`, value: 'tenure', title: 'Reduce Tenure' },
@@ -913,21 +883,6 @@ const EmiCalculator: React.FC = () => {
                 />
               </div>
             ))}
-          </div>
-          <div className={styles.addRow}>
-            <button
-              type="button"
-              onClick={addPartPayment}
-              disabled={isAddPartPaymentDisabled}
-              className={styles.primaryButton}
-            >
-              + Add Part Payment
-            </button>
-            {isAddPartPaymentDisabled && (
-              <span className={styles.addHint}>
-                Fill in the amount and date above to add another.
-              </span>
-            )}
           </div>
         </section>
         {/* Interest Rate Changes Section */}
@@ -1018,6 +973,7 @@ const EmiCalculator: React.FC = () => {
                   title="Absorb the change by"
                   className={styles.prepaymentModeGroup}
                   sizePrefix="xs"
+                  compact={true}
                   data={[
                     { id: `rc-${idx}-emi`, value: 'emi', title: 'Adjust EMI' },
                     { id: `rc-${idx}-tenure`, value: 'tenure', title: 'Adjust Tenure' },

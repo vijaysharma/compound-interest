@@ -7,7 +7,6 @@ import {
   FiBriefcase,
   FiCheckCircle,
   FiCpu,
-  FiDollarSign,
   FiHome,
   FiPieChart,
   FiPlus,
@@ -757,7 +756,7 @@ const IncomeTaxCalculator: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
             <h2 className={styles.cardHeading}>
-              <FiDollarSign /> Enter Income Sources &amp; Deductions
+              Enter Income Sources &amp; Deductions
             </h2>
             <p className={styles.cardDesc} style={{ margin: 0 }}>
               Adjust details below to see live updates to both tax regimes.
@@ -950,6 +949,9 @@ const IncomeTaxCalculator: React.FC = () => {
                     />
                     <span>Override Standard Deduction (Default: ₹75,000 New / ₹50,000 Old)</span>
                   </label>
+                  <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', lineHeight: 1.4, color: 'var(--color-text-secondary, #6b7280)' }}>
+                    Under Section 16(ia), salaried individuals receive a flat standard deduction without submitting expense bills. Under Union Budget 2024, this is automatically set to ₹75,000 for the New Tax Regime (FY 2024-25 onwards) and ₹50,000 for the Old Tax Regime. Enable this checkbox only if your employer capped it to your actual salary or you have a specific prorated deduction amount.
+                  </p>
                   {useCustomStdDeduction && (
                     <div style={{ marginTop: '0.75rem', maxWidth: '300px' }}>
                       <input

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from '@/navigation';
 import Link from './PrefetchLink';
 import {
@@ -76,6 +76,8 @@ const getNavTitle = (pathname: string) => {
 };
 const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -87,6 +89,25 @@ const TopBar = ({ className }: { className?: string }) => {
     setPrevPathname(pathname);
     setIsMenuOpen(false);
   }
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isProfileOpen]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
@@ -158,7 +179,7 @@ const TopBar = ({ className }: { className?: string }) => {
         </div>
         <div className={styles.rightSection}>
           {mounted && isAuthenticated && user ? (
-            <div className={styles.userContainer}>
+            <div className={styles.userContainer} ref={profileRef}>
               {isAdmin ? (
                 <span className={styles.badgeAdmin}>
                   <FiShield className={styles.badgeIcon} />
@@ -183,17 +204,68 @@ const TopBar = ({ className }: { className?: string }) => {
                   <span className={styles.proPrice}>₹54 Pro</span>
                 </button>
               )}
-              <div className={styles.userEmailCol}>
-                <span className={styles.userNameText}>{user.name || user.email}</span>
-              </div>
-              {user.picture ? (
-                <img
-                  src={user.picture}
-                  alt={user.name || user.email}
-                  className={styles.userAvatar}
-                />
-              ) : (
-                <div className={styles.userInitial}>{(user.name || user.email).charAt(0)}</div>
+              <button
+                type="button"
+                className={styles.profileTriggerBtn}
+                onClick={() => setIsProfileOpen((prev) => !prev)}
+                aria-expanded={isProfileOpen}
+                aria-haspopup="true"
+                title="Account profile & options"
+              >
+                <div className={styles.userEmailCol}>
+                  <span className={styles.userNameText}>{user.name || user.email}</span>
+                </div>
+                {user.picture ? (
+                  <img
+                    src={user.picture}
+                    alt={user.name || user.email}
+                    className={styles.userAvatar}
+                  />
+                ) : (
+                  <div className={styles.userInitial}>{(user.name || user.email).charAt(0)}</div>
+                )}
+              </button>
+              {isProfileOpen && (
+                <div className={styles.profileDropdown} role="menu">
+                  <div className={styles.profileDropdownHeader}>
+                    <div className={styles.profileDropdownInfo}>
+                      <span className={styles.profileDropdownName}>{user.name || 'User'}</span>
+                      <span className={styles.profileDropdownEmail}>{user.email}</span>
+                    </div>
+                    {isAdmin ? (
+                      <span className={styles.badgeAdminInline}>Admin</span>
+                    ) : user.subscription_status === 'active' ? (
+                      <span className={styles.badgeProInline}>Pro Active</span>
+                    ) : (
+                      <span className={styles.badgeFreeInline}>Trial Account</span>
+                    )}
+                  </div>
+                  <div className={styles.profileDropdownDivider} />
+                  {user.subscription_status !== 'active' && !isAdmin && (
+                    <button
+                      type="button"
+                      className={styles.profileDropdownItem}
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        setShowPaywall(true);
+                      }}
+                    >
+                      <FiZap className={styles.profileDropdownIcon} />
+                      <span>Upgrade to Pro (₹54/mo)</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`${styles.profileDropdownItem} ${styles.profileDropdownLogout}`}
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      void handleLogout();
+                    }}
+                  >
+                    <FiLogOut className={styles.profileDropdownIcon} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               )}
             </div>
           ) : (

@@ -262,8 +262,13 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
                 { id: 'tgt', title: 'Target amount' },
               ]}
             />
-            <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
-            <ValuePicker.Tenure className={styles.fieldLast} rt={rt} setRt={setRt} />
+            <ValuePicker.RateTenure
+              className={styles.fieldLast}
+              rt={rt}
+              setRt={setRt}
+              rateTitle="Expected return rate (p.a)"
+              tenureTitle="Time period"
+            />
           </div>
         </div>
         <div className={styles.resultsCol}>

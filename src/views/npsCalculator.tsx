@@ -216,12 +216,26 @@ const NpsCalculator: React.FC = () => {
               />
             </div>
             <div className={styles.fieldGroup}>
-              <ValuePicker.ROI
-                title="Expected Investment Return (CAGR %)"
-                value={expectedRoi}
-                onChange={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
-                min={1}
-                max={25}
+              <ValuePicker.RateTenure
+                roi={expectedRoi}
+                onChangeRoi={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
+                rateTitle="Expected Return (CAGR %)"
+                tenure={retirementAge - currentAge}
+                onChangeTenure={(v) => {
+                  const years = parseInt(v, 10) || 1;
+                  setRetirementAge(Math.min(75, currentAge + years));
+                }}
+                tenureTitle="Accumulation Period"
+                showTenureSelect={false}
+                tenureStepData={[
+                  { id: 't-5', value: '5', title: '5 yrs' },
+                  { id: 't-10', value: '10', title: '10 yrs' },
+                  { id: 't-15', value: '15', title: '15 yrs' },
+                  { id: 't-20', value: '20', title: '20 yrs' },
+                  { id: 't-25', value: '25', title: '25 yrs' },
+                  { id: 't-30', value: '30', title: '30 yrs' },
+                  { id: 't-35', value: '35', title: '35 yrs' },
+                ]}
               />
             </div>
           </section>

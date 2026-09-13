@@ -243,8 +243,7 @@ const FD: React.FC = () => {
                 { id: 'tgt', title: 'Target amount' },
               ]}
             />
-            <ValuePicker.ROI className={styles.field} rt={rt} setRt={setRt} />
-            <ValuePicker.Tenure className={styles.field} rt={rt} setRt={setRt} />
+            <ValuePicker.RateTenure className={styles.field} rt={rt} setRt={setRt} />
             <JoinedButtonGroup
               className={styles.field}
               data={FREQUENCY_DATA}

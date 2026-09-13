@@ -238,11 +238,21 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               title="Withdrawal amount per month"
               tabs={[]}
             />
-            <ValuePicker.ROI className={styles.field} value={rt} onChange={setRt} title="Expected return rate per annum (%)" />
+            <ValuePicker.RateTenure
+              className={styles.field}
+              roi={rt}
+              onChangeRoi={setRt}
+              tenure={t.tenure}
+              onChangeTenure={(newT) => setT({ ...t, tenure: newT })}
+              tenureFormat={t.tenureFormat}
+              onChangeTenureFormat={(newF) => setT({ ...t, tenureFormat: newF })}
+              rateTitle="Expected return rate (p.a.)"
+              tenureTitle="Time period"
+            />
             <ValuePicker.ROI className={styles.field} value={irt} onChange={setIRt} title="Inflation rate (%)" />
             <JoinedButtonGroup
               title="Inflation calculated per"
-              className={styles.fieldTight}
+              className={styles.fieldLast}
               selectedValue={inflationFreq}
               updateSelectedValue={setInflationFreq}
               sizePrefix="sm"
@@ -255,7 +265,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
                 { id: 'ir6', title: '5Y', value: '60' },
               ]}
             />
-            <ValuePicker.Tenure className={styles.fieldLast} rt={t} setRt={setT} />
           </div>
         </div>
         <div className={styles.resultsCol}>

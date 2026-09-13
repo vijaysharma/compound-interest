@@ -13,6 +13,7 @@ import convertToWords from '../utilities/currency';
 import { sanctnum } from '../utilities/numSanitity';
 import { getDateAsISO } from '../utilities/utility';
 import type { RT, NavType } from '../types/types';
+import RateTenurePicker, { RateTenurePickerProps } from './RateTenurePicker';
 import {
   DEFAULT_VALUE_PICKER_ROWS,
   DEFAULT_VALUE_PICKER_TABS,
@@ -160,6 +161,7 @@ export interface ValuePickerComponent extends React.FC<ValuePickerProps> {
   StackedPaired: React.FC<ValuePickerProps>;
   DateRange: React.FC<ValuePickerProps>;
   Grid: React.FC<ValuePickerProps>;
+  RateTenure: React.FC<RateTenurePickerProps>;
 }
 // Maximum safe numeric limit for financial calculations (prevents overflow/DoS)
 const MAX_SAFE_FINANCIAL_VALUE = 1e12; // 1 Lakh Crore
@@ -1073,6 +1075,7 @@ const DateRangePicker: React.FC<ValuePickerProps> = React.memo(
     compact = false,
     embedded = false,
     layout = 'auto',
+    variant = 'stacked-paired',
   }) => {
     const today = useMemo(() => getDateAsISO(), []);
     const resolvedStartBadge = startBadgeText || startTitle;
@@ -1118,42 +1121,50 @@ const DateRangePicker: React.FC<ValuePickerProps> = React.memo(
       return (
         <div className={rootContainerClass}>
           {title && <h5 className={styles.title}>{title}</h5>}
-          <div className={styles.joinedRow}>
-            <div className={`${styles.pairedBadge} ${styles.leftBadge}`}>
-              {resolvedStartBadge} Year
+          <div
+            className={`${styles.pairedStackedWrapper} ${
+              variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
+            }`.trim()}
+          >
+            <div className={styles.pairedStackedColumn}>
+              <div className={styles.pairedStackedLabel}>
+                {resolvedStartBadge} Year
+              </div>
+              <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
+                <select
+                  className={styles.pairedSelect}
+                  value={startDate ?? ''}
+                  onChange={(e) => handleStartYearChange(e.target.value)}
+                  disabled={disabled}
+                  aria-label={`${resolvedStartBadge} Year`}
+                >
+                  {effectiveStartYearOptions.map((year) => (
+                    <option key={`s-${year}`} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className={`${styles.dateSlot} ${styles.slotLeft}`}>
-              <select
-                className={styles.dateSelect}
-                value={startDate ?? ''}
-                onChange={(e) => handleStartYearChange(e.target.value)}
-                disabled={disabled}
-                aria-label={`${resolvedStartBadge} Year`}
-              >
-                {effectiveStartYearOptions.map((year) => (
-                  <option key={`s-${year}`} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.dateSlot}>
-              <select
-                className={styles.dateSelect}
-                value={endDate ?? ''}
-                onChange={(e) => handleEndYearChange(e.target.value)}
-                disabled={disabled}
-                aria-label={`${resolvedEndBadge} Year`}
-              >
-                {availableEndOptions.map((year) => (
-                  <option key={`e-${year}`} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={`${styles.pairedBadge} ${styles.rightBadge}`}>
-              {resolvedEndBadge} Year
+            <div className={styles.pairedStackedColumn}>
+              <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
+                {resolvedEndBadge} Year
+              </div>
+              <div className={styles.pairedStackedSlot}>
+                <select
+                  className={styles.pairedSelect}
+                  value={endDate ?? ''}
+                  onChange={(e) => handleEndYearChange(e.target.value)}
+                  disabled={disabled}
+                  aria-label={`${resolvedEndBadge} Year`}
+                >
+                  {availableEndOptions.map((year) => (
+                    <option key={`e-${year}`} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -1162,43 +1173,45 @@ const DateRangePicker: React.FC<ValuePickerProps> = React.memo(
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
-        <div className={styles.joinedRow}>
-          {setStartDate && (
-            <>
-              <div className={`${styles.pairedBadge} ${styles.leftBadge}`}>
-                {resolvedStartBadge}
-              </div>
-              <div className={`${styles.dateSlot} ${styles.slotLeft}`}>
-                <input
-                  type="date"
-                  min={startMinDate || undefined}
-                  max={endDate || today}
-                  value={startDate ?? ''}
-                  className={styles.dateInput}
-                  onChange={(e) => handleStartDateChange(e.target.value)}
-                  disabled={disabled}
-                  aria-label={resolvedStartBadge}
-                />
-              </div>
-            </>
-          )}
-          {setEndDate && (
-            <>
-              <div className={styles.dateSlot}>
-                <input
-                  type="date"
-                  min={startDate || undefined}
-                  max={today}
-                  value={endDate ?? ''}
-                  className={styles.dateInput}
-                  onChange={(e) => handleEndDateChange(e.target.value)}
-                  disabled={disabled}
-                  aria-label={resolvedEndBadge}
-                />
-              </div>
-              <div className={`${styles.pairedBadge} ${styles.rightBadge}`}>{resolvedEndBadge}</div>
-            </>
-          )}
+        <div
+          className={`${styles.pairedStackedWrapper} ${
+            variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
+          }`.trim()}
+        >
+          <div className={styles.pairedStackedColumn}>
+            <div className={styles.pairedStackedLabel}>
+              {resolvedStartBadge}
+            </div>
+            <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
+              <input
+                type="date"
+                min={startMinDate || undefined}
+                max={endDate || today}
+                value={startDate ?? ''}
+                className={styles.pairedInput}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                disabled={disabled}
+                aria-label={resolvedStartBadge}
+              />
+            </div>
+          </div>
+          <div className={styles.pairedStackedColumn}>
+            <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
+              {resolvedEndBadge}
+            </div>
+            <div className={styles.pairedStackedSlot}>
+              <input
+                type="date"
+                min={startDate || undefined}
+                max={today}
+                value={endDate ?? ''}
+                className={styles.pairedInput}
+                onChange={(e) => handleEndDateChange(e.target.value)}
+                disabled={disabled}
+                aria-label={resolvedEndBadge}
+              />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1392,4 +1405,6 @@ ValuePicker.DateRange = React.memo((props: ValuePickerProps) => (
 ValuePicker.DateRange.displayName = 'ValuePicker.DateRange';
 ValuePicker.Grid = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="grid" />);
 ValuePicker.Grid.displayName = 'ValuePicker.Grid';
+ValuePicker.RateTenure = RateTenurePicker;
+export { RateTenurePicker };
 export default ValuePicker;

@@ -153,8 +153,8 @@ const getDefaultState = (): SavedState => ({
   selectedCode: '0',
   duration: '1',
   invAmt: '100000',
-  showDate: false,
-  viewChart: false,
+  showDate: true,
+  viewChart: true,
   pinnedFunds: [],
   startDate: null,
   endDate: null,
@@ -176,6 +176,8 @@ const loadSavedState = (): SavedState => {
     return {
       ...defaultState,
       ...parsed,
+      showDate: parsed.showDate !== undefined ? Boolean(parsed.showDate) : true,
+      viewChart: parsed.viewChart !== undefined ? Boolean(parsed.viewChart) : true,
       pinnedFunds: Array.from(
         new Map(pinnedFunds.map((fund: PinnedFund) => [fund.schemeCode, fund])).values()
       ).slice(0, 8),
@@ -1003,7 +1005,7 @@ const Lumpsum = ({
            * CUSTOM DATE PICKER
            * ======================================================
            */}
-          {showDate && jsonNavData.length > 0 && (
+          {showDate && (
             <ValuePicker.DateRange
               data={jsonNavData}
               startDate={startDate}

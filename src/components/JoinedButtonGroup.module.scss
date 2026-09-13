@@ -16,14 +16,14 @@ $btn-radius: 8px;
   margin-bottom: 0.5rem;
   box-sizing: border-box;
 
-  &.compact {
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
-  }
-
   @include tablet-up {
     margin-top: 0.75rem;
     margin-bottom: 0.75rem;
+  }
+
+  &.compact {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
   &:has(.attachedTop) {
@@ -173,15 +173,15 @@ $btn-radius: 8px;
 
   // Size variants
   &.sizeXs {
-    height: 36px;
-    min-height: 36px;
+    height: 30px;
+    min-height: 30px;
     font-size: 12px;
-    padding: 0 4px;
+    padding: 0 6px;
 
     @include tablet-up {
-      height: 40px;
-      min-height: 40px;
-      font-size: 13px;
+      height: 32px;
+      min-height: 32px;
+      font-size: 12.5px;
       padding: 0 8px;
     }
   }
