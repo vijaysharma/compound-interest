@@ -23,16 +23,14 @@ const DisplayCard = ({
               ? styles.textError
               : colorClass === 'primary' || colorClass === 'text-primary'
                 ? styles.textPrimary
-                : (colorClass || '')
+                : colorClass || ''
           }`.trim()}
         >
           <span className={styles.currency}>{currencySymbol}&nbsp;</span>
           {primaryAmount.toLocaleString(formatLocale)}{' '}
           {primarySub && <span className={styles.sub}> {primarySub}</span>}
         </div>
-        <div className={styles.words}>
-          {convertToWords(primaryAmount, formatLocale)}
-        </div>
+        <div className={styles.words}>{convertToWords(primaryAmount, formatLocale)}</div>
       </div>
       {secondaryInfo && (
         <div className={styles.statItem}>
@@ -41,9 +39,7 @@ const DisplayCard = ({
             <span className={styles.currency}>{currencySymbol}&nbsp;</span>
             {secondaryInfo.amount.toLocaleString(formatLocale)}
           </div>
-          <div className={styles.words}>
-            {convertToWords(secondaryInfo.amount, formatLocale)}
-          </div>
+          <div className={styles.words}>{convertToWords(secondaryInfo.amount, formatLocale)}</div>
         </div>
       )}
     </div>

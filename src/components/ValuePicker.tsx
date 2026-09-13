@@ -64,7 +64,22 @@ export interface ValuePickerProps {
    * since the paired badge already labels it.
    */
   embedded?: boolean;
-  currencySymbol?: string;
+  symbol?: string | null;
+  /**
+   * Which side of the input field the `symbol` badge sits on, for the
+   * 'amount' variant only. Defaults to 'left' (existing look).
+   */
+  symbolPosition?: 'left' | 'right';
+  /**
+   * Extra control rendered to the right of the input field, after the
+   * `symbol` badge if one is present there (i.e. always directly
+   * after the field + symbol cluster, before the C / + / - actions).
+   * Pass any element with its own state and handler already wired up —
+   * e.g. a dropdown or radio group to switch between months and years.
+   * 'amount' variant only.
+   */
+  symbolBg?: boolean;
+  endAdornment?: React.ReactNode;
   locale?: string;
   min?: number;
   max?: number;
@@ -150,7 +165,10 @@ export const ValuePicker: ValuePickerComponent = (({
   titleStyle = 'default',
   stepRows,
   stepData,
-  currencySymbol = '₹',
+  symbol = '₹',
+  symbolPosition = 'left',
+  symbolBg = true,
+  endAdornment,
   locale = 'en-IN',
   min = 0,
   max,
@@ -925,10 +943,15 @@ export const ValuePicker: ValuePickerComponent = (({
         )}
         {/* Value Input Row */}
         <div className={styles.inputRow}>
-          {/* Currency / Unit Badge */}
-          <div className={styles.currencyBadge} aria-hidden="true">
-            {currencySymbol}
-          </div>
+          {/* Currency / Unit Badge — left side (default) */}
+          {symbol !== null && symbolPosition === 'left' && (
+            <div
+              className={`${styles.symbolBadge} ${symbolBg === false ? styles.noBg : ''}`}
+              aria-hidden="true"
+            >
+              {symbol}
+            </div>
+          )}
           {/* Value input */}
           <div className={styles.inputWrapper}>
             <input
@@ -958,6 +981,18 @@ export const ValuePicker: ValuePickerComponent = (({
               }
             />
           </div>
+          {/* Currency / Unit Badge — right side */}
+          {symbol !== null && symbolPosition === 'right' && (
+            <div
+              className={`${styles.symbolBadge} ${symbolBg === false ? styles.noBg : ''}`}
+              aria-hidden="true"
+            >
+              {symbol}
+            </div>
+          )}
+          {/* Optional extra control (dropdown, radio, button, etc.), always
+              directly after the field + symbol cluster and before actions */}
+          {endAdornment && <div className={styles.endAdornment}>{endAdornment}</div>}
           {/* Action buttons: Clear ('C'), Plus ('+'), Minus ('-') */}
           <div className={styles.actionsCluster}>
             <button
@@ -1000,7 +1035,7 @@ export const ValuePicker: ValuePickerComponent = (({
                 {row.map((step, colIndex) => {
                   const isPrimaryRow = rowIndex === 0;
                   const stepSign = operation === '+' ? '+' : '-';
-                  const stepTitle = `${stepSign}${currencySymbol}${step.value.toLocaleString(locale)}`;
+                  const stepTitle = `${stepSign}${symbol}${step.value.toLocaleString(locale)}`;
                   return (
                     <button
                       key={step.id || `step-${rowIndex}-${colIndex}`}
@@ -1011,7 +1046,7 @@ export const ValuePicker: ValuePickerComponent = (({
                       onClick={() => handleStepClick(step.value)}
                       disabled={disabled || (operation === '-' && numericValue <= min)}
                       title={stepTitle}
-                      aria-label={`${operation === '+' ? 'Add' : 'Subtract'} ${step.label} (${currencySymbol}${step.value})`}
+                      aria-label={`${operation === '+' ? 'Add' : 'Subtract'} ${step.label} (${symbol}${step.value})`}
                     >
                       {stepSign}
                       {step.label}

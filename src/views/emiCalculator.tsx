@@ -575,6 +575,7 @@ const EmiCalculator: React.FC = () => {
             <ValuePicker
               className={styles.fieldTight}
               value={loanAmount}
+              symbolBg={false}
               onChange={setLoanAmount}
               title="Loan amount"
               titleStyle="merged"
@@ -587,6 +588,9 @@ const EmiCalculator: React.FC = () => {
                 title="Rate"
                 titleStyle="merged"
                 value={rt.roi}
+                symbol="%"
+                symbolBg={false}
+                symbolPosition="right"
                 onChange={(newRate) => setRt({ ...rt, roi: newRate })}
                 stepData={[
                   { id: 'roi-0.01', value: 0.01, label: '0.01%' },
@@ -604,6 +608,7 @@ const EmiCalculator: React.FC = () => {
                 title="Tenure"
                 titleStyle="merged"
                 value={rt.tenure}
+                symbol={null}
                 onChange={(newTenure) => setRt({ ...rt, tenure: newTenure })}
                 stepData={[
                   { id: 'tenure-6', value: 6, label: '6 months' },
@@ -611,6 +616,18 @@ const EmiCalculator: React.FC = () => {
                   { id: 'tenure-24', value: 24, label: '24 months' },
                   { id: 'tenure-36', value: 36, label: '36 months' },
                 ]}
+                endAdornment={
+                  <select
+                    className={styles.tenureFormatSelect}
+                    value={rt.tenureFormat}
+                    onChange={(e) =>
+                      setRt({ ...rt, tenureFormat: e.target.value as typeof rt.tenureFormat })
+                    }
+                  >
+                    <option value={'m' as typeof rt.tenureFormat}>Months</option>
+                    <option value={'y' as typeof rt.tenureFormat}>Years</option>
+                  </select>
+                }
               />
             </div>
             {/* Joined Disbursement Date & EMI Deduction Date */}

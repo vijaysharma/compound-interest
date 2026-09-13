@@ -267,7 +267,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 // Currency / Unit prefix badge
-.currencyBadge {
+.symbolBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -285,6 +285,10 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   font-weight: 600;
   user-select: none;
   flex-shrink: 0;
+  &.noBg {
+    background-color: transparent;
+    border: none;
+  }
 
   @include tablet-up {
     width: 44px;
@@ -292,6 +296,18 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     min-width: 44px;
     font-size: 18px;
   }
+}
+
+// Wrapper for an optional extra control (dropdown, radio group, button, etc.)
+// passed in via `endAdornment`. Sits to the right of the field — after the
+// currency badge when the badge is also on the right — and before the
+// C / + / - actions cluster. Sized to fit whatever the consumer renders
+// inside it rather than imposing a fixed width, since the control's own
+// markup already carries its intended appearance and behavior.
+.endAdornment {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 // Value input field container with Shadow-sm elevation
@@ -567,7 +583,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   color: $color-feedback;
   word-break: break-word;
   transition: color $transition-fast;
-
+  text-align: left;
   @include tablet-up {
     margin-top: 8px;
     font-size: $font-size-feedback-web;
@@ -1227,7 +1243,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     min-height: 52px;
   }
 
-  .currencyBadge {
+  .symbolBadge {
     width: 38px;
     height: 38px;
     min-width: 38px;
@@ -1369,7 +1385,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     min-height: 64px;
   }
 
-  .currencyBadge {
+  .symbolBadge {
     width: 44px;
     height: 44px;
     min-width: 44px;
