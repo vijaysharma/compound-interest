@@ -568,7 +568,6 @@ const EmiCalculator: React.FC = () => {
           rate adjustments.
         </p>
       </header>
-      {/* Top 2-Column Section: Inputs & Key Results/Visuals */}
       <div className={styles.calculatorGrid}>
         <div className={styles.inputsCol}>
           <div className={styles.inputSection}>
@@ -582,100 +581,136 @@ const EmiCalculator: React.FC = () => {
               stepData={stepData}
               tabs={[]}
             />
-            {/* Joined Rate & Tenure — same control family as Disbursement & Repayment */}
-            <div className={styles.joinedControlWrapper}>
-              <ValuePicker
-                title="Rate"
-                titleStyle="merged"
-                value={rt.roi}
-                symbol="%"
-                symbolBg={false}
-                symbolPosition="right"
-                onChange={(newRate) => setRt({ ...rt, roi: newRate })}
-                stepData={[
-                  { id: 'roi-0.01', value: 0.01, label: '0.01%' },
-                  { id: 'roi-0.1', value: 0.1, label: '0.1%' },
-                  { id: 'roi-0.25', value: 0.25, label: '0.25%' },
-                  { id: 'roi-0.5', value: 0.5, label: '0.5%' },
-                  { id: 'roi-1', value: 1, label: '1%' },
-                  { id: 'roi-2', value: 2, label: '2%' },
-                  { id: 'roi-5', value: 5, label: '5%' },
-                  { id: 'roi-10', value: 10, label: '10%' },
-                  { id: 'roi-12', value: 12, label: '12%' },
-                ]}
-              />
-              <ValuePicker
-                title="Tenure"
-                titleStyle="merged"
-                value={rt.tenure}
-                symbol={null}
-                onChange={(newTenure) => setRt({ ...rt, tenure: newTenure })}
-                stepData={[
-                  { id: 'tenure-6', value: 6, label: '6 months' },
-                  { id: 'tenure-12', value: 12, label: '12 months' },
-                  { id: 'tenure-24', value: 24, label: '24 months' },
-                  { id: 'tenure-36', value: 36, label: '36 months' },
-                ]}
-                endAdornment={
-                  <select
-                    className={styles.tenureFormatSelect}
-                    value={rt.tenureFormat}
-                    onChange={(e) =>
-                      setRt({ ...rt, tenureFormat: e.target.value as typeof rt.tenureFormat })
-                    }
-                  >
-                    <option value={'m' as typeof rt.tenureFormat}>Months</option>
-                    <option value={'y' as typeof rt.tenureFormat}>Years</option>
-                  </select>
-                }
-              />
-            </div>
-            {/* Joined Disbursement Date & EMI Deduction Date */}
-            <div className={styles.joinedControlWrapper}>
-              <ValuePicker.Paired
-                title="Disbursement & Repayment"
-                sourceBadgeText="Disbursed"
-                targetBadgeText="EMI Day"
-                sourceSlot={
-                  <input
-                    id="disbursement-date"
-                    className={styles.dateInput}
-                    title="Disbursement Date"
-                    type="date"
-                    value={disbursementDate}
-                    onChange={(e) => handleDisbursementDateChange(e.target.value)}
-                  />
-                }
-                targetSlot={
-                  <select
-                    id="emi-date"
-                    className={styles.dayInput}
-                    title="EMI Deduction Date (Day of Month)"
-                    value={emiDate}
-                    onChange={(e) => setEmiDate(Number(e.target.value))}
-                    aria-label="EMI Deduction Day"
-                  >
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                }
-              />
-              <label className={styles.advanceEmiLabel}>
+            <ValuePicker
+              title="Rate"
+              titleStyle="merged"
+              value={rt.roi}
+              symbol="%"
+              symbolBg={false}
+              symbolPosition="right"
+              onChange={(newRate) => setRt({ ...rt, roi: newRate })}
+              stepData={[
+                { id: 'roi-0.01', value: 0.01, label: '0.01%' },
+                { id: 'roi-0.1', value: 0.1, label: '0.1%' },
+                { id: 'roi-0.25', value: 0.25, label: '0.25%' },
+                { id: 'roi-0.5', value: 0.5, label: '0.5%' },
+                { id: 'roi-1', value: 1, label: '1%' },
+                { id: 'roi-2', value: 2, label: '2%' },
+                { id: 'roi-5', value: 5, label: '5%' },
+                { id: 'roi-10', value: 10, label: '10%' },
+                { id: 'roi-12', value: 12, label: '12%' },
+              ]}
+              showWords={false}
+            />
+            <ValuePicker
+              title="Tenure"
+              titleStyle="merged"
+              value={rt.tenure}
+              symbol={null}
+              onChange={(newTenure) => setRt({ ...rt, tenure: newTenure })}
+              stepData={[
+                {
+                  id: 'tenure-1',
+                  value: 1,
+                  label: `1 ${rt.tenureFormat === 'y' ? 'year' : 'month'}`,
+                },
+                {
+                  id: 'tenure-2',
+                  value: 2,
+                  label: `2 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+                {
+                  id: 'tenure-5',
+                  value: 5,
+                  label: `5 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+                {
+                  id: 'tenure-7',
+                  value: 7,
+                  label: `7 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+                {
+                  id: 'tenure-10',
+                  value: 10,
+                  label: `10 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+                {
+                  id: 'tenure-15',
+                  value: 15,
+                  label: `15 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+                {
+                  id: 'tenure-20',
+                  value: 20,
+                  label: `20 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+                {
+                  id: 'tenure-25',
+                  value: 25,
+                  label: `25 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+                {
+                  id: 'tenure-30',
+                  value: 30,
+                  label: `30 ${rt.tenureFormat === 'y' ? 'years' : 'months'}`,
+                },
+              ]}
+              endAdornment={
+                <select
+                  className={styles.tenureFormatSelect}
+                  value={rt.tenureFormat}
+                  onChange={(e) =>
+                    setRt({ ...rt, tenureFormat: e.target.value as typeof rt.tenureFormat })
+                  }
+                >
+                  <option value={'m' as typeof rt.tenureFormat}>Months</option>
+                  <option value={'y' as typeof rt.tenureFormat}>Years</option>
+                </select>
+              }
+              showWords={false}
+            />
+            <ValuePicker.Paired
+              sourceBadgeText="Disbursed"
+              targetBadgeText="EMI Day"
+              sourceSlot={
                 <input
-                  type="checkbox"
-                  title="Include Principal Payment in First EMI"
-                  className={styles.checkbox}
-                  checked={includePrincipalInFirstEmi}
-                  onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
+                  id="disbursement-date"
+                  className={styles.dateInput}
+                  title="Disbursement Date"
+                  type="date"
+                  value={disbursementDate}
+                  onChange={(e) => handleDisbursementDateChange(e.target.value)}
                 />
-                <span className={styles.checkboxText}>
-                  Include principal repayment in prorated first EMI
-                </span>
-              </label>
-            </div>
+              }
+              targetSlot={
+                <select
+                  id="emi-date"
+                  className={styles.dayInput}
+                  title="EMI Deduction Date (Day of Month)"
+                  value={emiDate}
+                  onChange={(e) => setEmiDate(Number(e.target.value))}
+                  aria-label="EMI Deduction Day"
+                >
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              }
+            />
+            <label className={styles.advanceEmiLabel}>
+              <input
+                type="checkbox"
+                title="Include Principal Payment in First EMI"
+                className={styles.checkbox}
+                checked={includePrincipalInFirstEmi}
+                onChange={(e) => setIncludePrincipalInFirstEmi(e.target.checked)}
+              />
+              <span className={styles.checkboxText}>
+                Include principal repayment in prorated first EMI
+              </span>
+            </label>
           </div>
         </div>
         <div className={styles.resultsCol}>
