@@ -5,7 +5,6 @@ import Link from './PrefetchLink';
 import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/useAuth';
 import {
-  FiActivity,
   FiAward,
   FiBarChart2,
   FiBox,
@@ -29,6 +28,7 @@ import {
   FiShield,
   FiTrendingUp,
   FiTruck,
+  FiUploadCloud,
   FiZap,
 } from 'react-icons/fi';
 import styles from './WebSidebar.module.scss';
@@ -57,7 +57,6 @@ const SECTIONS: SidebarSection[] = [
       { name: 'EMI Calculator', href: '/emi-calculator', icon: FiPercent, aliases: ['/emi'] },
       { name: 'Fixed Deposits (FD)', href: '/fd-calculator', icon: FiBriefcase, aliases: ['/deposits/fd'] },
       { name: 'Recurring Deposits (RD)', href: '/rd-calculator', icon: FiRepeat, aliases: ['/deposits/rd'] },
-      { name: 'Compound Interest', href: '/compound-interest-calculator', icon: FiActivity },
     ],
   },
   {
@@ -73,6 +72,7 @@ const SECTIONS: SidebarSection[] = [
     title: 'Taxes & Strategy',
     items: [
       { name: 'Income Tax Calculator', href: '/income-tax-calculator', icon: FiFileText, aliases: ['/tax-calculator', '/tax/income-tax'] },
+      { name: 'Upload Form 16 & File ITR', href: '/file-itr', icon: FiUploadCloud, aliases: ['/file-income-tax-return'] },
     ],
   },
   {

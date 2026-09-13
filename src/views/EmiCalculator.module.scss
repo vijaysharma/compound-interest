@@ -504,7 +504,25 @@
 }
 
 .prepaymentModeGroup {
-  margin: 0;
+  margin: 0.25rem 0 0 0;
+
+  h5 {
+    font-size: 0.75rem !important;
+    margin-bottom: 3px !important;
+    opacity: 0.8;
+  }
+
+  button {
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 0.8125rem !important;
+    padding: 0 0.75rem !important;
+
+    @media (min-width: 768px) {
+      height: 34px !important;
+      min-height: 34px !important;
+    }
+  }
 }
 
 // A bare red icon read as a warning rather than an action; give it a real hit

@@ -254,8 +254,8 @@ const EmiCalculator: React.FC = () => {
     );
   }, [principalAmount, annualRate, tenureMonths]);
   // Full Amortization Schedule Calculation
-  const calculateSchedule = useCallback((): ScheduleRow[] => {
-    if (!disbursementDate || principalAmount <= 0 || tenureMonths <= 0) return [];
+  const calculateSchedule = useCallback((): { rows: ScheduleRow[]; currentEmi: number } => {
+    if (!disbursementDate || principalAmount <= 0 || tenureMonths <= 0) return { rows: [], currentEmi: 0 };
     let principal: number = principalAmount;
     let currentAnnualRate: number = annualRate;
     let monthlyRate: number = currentAnnualRate / 12 / 100;
@@ -322,6 +322,7 @@ const EmiCalculator: React.FC = () => {
         ? (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
           (Math.pow(1 + monthlyRate, tenureMonths) - 1)
         : principal / tenureMonths;
+    let latestMonthlyEmi: number = baseEmiAmount;
     let currentMode: 'tenure' | 'emi' = 'tenure';
     while (principal > 1 && monthCounter <= tenureMonths + 120) {
       const nextEmiDate = addMonths(currentDate, 1);
@@ -351,6 +352,7 @@ const EmiCalculator: React.FC = () => {
             baseEmiAmount =
               (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
               (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
+            latestMonthlyEmi = baseEmiAmount;
           }
           currentMode = 'emi';
         } else {
@@ -397,6 +399,7 @@ const EmiCalculator: React.FC = () => {
               (principal * monthlyRate * Math.pow(1 + monthlyRate, remainingTenureMonths)) /
               (Math.pow(1 + monthlyRate, remainingTenureMonths) - 1);
             baseEmiAmount = emiAmount;
+            latestMonthlyEmi = baseEmiAmount;
           }
         }
       }
@@ -424,13 +427,16 @@ const EmiCalculator: React.FC = () => {
       monthCounter++;
     }
     const totalScheduleInterest = cumulativeInterest;
-    return rawRows.map((row) => ({
-      ...row,
-      remainingInterest: Math.max(
-        0,
-        totalScheduleInterest - parseFloat(row.cumulativeInterest)
-      ).toFixed(2),
-    }));
+    return {
+      rows: rawRows.map((row) => ({
+        ...row,
+        remainingInterest: Math.max(
+          0,
+          totalScheduleInterest - parseFloat(row.cumulativeInterest)
+        ).toFixed(2),
+      })),
+      currentEmi: latestMonthlyEmi,
+    };
   }, [
     principalAmount,
     annualRate,
@@ -441,7 +447,7 @@ const EmiCalculator: React.FC = () => {
     rateChanges,
     includePrincipalInFirstEmi,
   ]);
-  const schedule = useMemo(() => calculateSchedule(), [calculateSchedule]);
+  const { rows: schedule, currentEmi } = useMemo(() => calculateSchedule(), [calculateSchedule]);
   const isAddPartPaymentDisabled = useMemo(() => {
     if (partPayments.length === 0) return false;
     const lastPayment = partPayments[partPayments.length - 1];
@@ -714,7 +720,24 @@ const EmiCalculator: React.FC = () => {
           </div>
         </div>
         <div className={styles.resultsCol}>
-          <DisplayCard primaryAmount={Math.round(baseMonthlyEmi)} title="Monthly EMI Amount" />
+          {(() => {
+            const isEmiRevised =
+              currentEmi > 0 && Math.round(currentEmi) !== Math.round(baseMonthlyEmi);
+            return (
+              <DisplayCard
+                primaryAmount={Math.round(isEmiRevised ? currentEmi : baseMonthlyEmi)}
+                title={isEmiRevised ? 'Revised Monthly EMI' : 'Monthly EMI Amount'}
+                secondaryInfo={
+                  isEmiRevised
+                    ? {
+                        title: 'Original EMI',
+                        amount: Math.round(baseMonthlyEmi),
+                      }
+                    : undefined
+                }
+              />
+            );
+          })()}
           {/* Loan Statistics & Pie Chart Section */}
           {principalAmount > 0 && (
             <section className={styles.card}>
@@ -880,7 +903,7 @@ const EmiCalculator: React.FC = () => {
                 <JoinedButtonGroup<'emi' | 'tenure'>
                   title="Apply the saving to"
                   className={styles.prepaymentModeGroup}
-                  sizePrefix="sm"
+                  sizePrefix="xs"
                   data={[
                     { id: `pp-${idx}-emi`, value: 'emi', title: 'Reduce EMI' },
                     { id: `pp-${idx}-tenure`, value: 'tenure', title: 'Reduce Tenure' },
@@ -994,7 +1017,7 @@ const EmiCalculator: React.FC = () => {
                 <JoinedButtonGroup<'emi' | 'tenure'>
                   title="Absorb the change by"
                   className={styles.prepaymentModeGroup}
-                  sizePrefix="sm"
+                  sizePrefix="xs"
                   data={[
                     { id: `rc-${idx}-emi`, value: 'emi', title: 'Adjust EMI' },
                     { id: `rc-${idx}-tenure`, value: 'tenure', title: 'Adjust Tenure' },

@@ -243,35 +243,19 @@ const PpfCalculator: React.FC = () => {
               </select>
             </div>
             <div className={styles.fieldGroup}>
-              <label htmlFor="ppf-extensions" className={styles.fieldLabel}>Account Tenure &amp; 5-Year Extensions</label>
+              <label htmlFor="ppf-extensions" className={styles.fieldLabel}>Account Tenure &amp; Extensions</label>
               <select
                 id="ppf-extensions"
-                value={`${extensionBlocks}_${extensionMode}`}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '0') {
-                    setExtensionBlocks(0);
-                  } else {
-                    const [blocksStr, modeStr] = val.split('_');
-                    setExtensionBlocks(Number(blocksStr));
-                    if (modeStr === 'without') {
-                      setExtensionMode('without_contribution');
-                    } else {
-                      setExtensionMode('with_contribution');
-                    }
-                  }
-                }}
+                value={extensionBlocks}
+                onChange={(e) => setExtensionBlocks(Number(e.target.value))}
                 className={styles.selectInput}
               >
-                <option value="0">Standard 15 Years (Base Tenure)</option>
-                <option value="1_with">20 Years (1 Block of 5 Yrs — With Annual Deposits)</option>
-                <option value="1_without">20 Years (1 Block of 5 Yrs — Extend Without Investing More Money)</option>
-                <option value="2_with">25 Years (2 Blocks of 5 Yrs — With Annual Deposits)</option>
-                <option value="2_without">25 Years (2 Blocks of 5 Yrs — Extend Without Investing More Money)</option>
-                <option value="3_with">30 Years (3 Blocks of 5 Yrs — With Annual Deposits)</option>
-                <option value="3_without">30 Years (3 Blocks of 5 Yrs — Extend Without Investing More Money)</option>
-                <option value="4_with">35 Years (4 Blocks of 5 Yrs — With Annual Deposits)</option>
-                <option value="4_without">35 Years (4 Blocks of 5 Yrs — Extend Without Investing More Money)</option>
+                <option value={0}>15 Years (Base Tenure)</option>
+                <option value={1}>20 Years (1 Extension — 5 Yrs)</option>
+                <option value={2}>25 Years (2 Extensions — 10 Yrs)</option>
+                <option value={3}>30 Years (3 Extensions — 15 Yrs)</option>
+                <option value={4}>35 Years (4 Extensions — 20 Yrs)</option>
+                <option value={5}>40 Years (5 Extensions — 25 Yrs)</option>
               </select>
             </div>
             {extensionBlocks > 0 && (

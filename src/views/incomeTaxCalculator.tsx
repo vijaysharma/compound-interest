@@ -15,6 +15,7 @@ import {
   FiShield,
   FiTrash2,
   FiTrendingUp,
+  FiUploadCloud,
 } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
 import SEOHead from '../components/SEOHead';
@@ -120,6 +121,17 @@ const IncomeTaxCalculator: React.FC = () => {
   const [otherIncome, setOtherIncome] = useState<string>('0');
   // Deductions (Old Regime)
   const [section80C, setSection80C] = useState<string>('150000');
+  const [is80CItemized, setIs80CItemized] = useState<boolean>(false);
+  const [itemEpf, setItemEpf] = useState<string>('70000');
+  const [itemPpf, setItemPpf] = useState<string>('30000');
+  const [itemElss, setItemElss] = useState<string>('25000');
+  const [itemLifeInsurance, setItemLifeInsurance] = useState<string>('25000');
+  const [itemHomeLoanPrincipal, setItemHomeLoanPrincipal] = useState<string>('0');
+  const [itemSsy, setItemSsy] = useState<string>('0');
+  const [itemTaxSaverFd, setItemTaxSaverFd] = useState<string>('0');
+  const [itemTuitionFees, setItemTuitionFees] = useState<string>('0');
+  const [itemStampDuty, setItemStampDuty] = useState<string>('0');
+  const [itemOther80C, setItemOther80C] = useState<string>('0');
   const [section80Ccd1b, setSection80Ccd1b] = useState<string>('50000');
   const [section80Ccd2, setSection80Ccd2] = useState<string>('0');
   const [section80DSelf, setSection80DSelf] = useState<string>('25000');
@@ -133,6 +145,9 @@ const IncomeTaxCalculator: React.FC = () => {
   const [section80Ddb, setSection80Ddb] = useState<string>('0');
   const [section80U, setSection80U] = useState<string>('0');
   const [section80Eea, setSection80Eea] = useState<string>('0');
+  const [section80Eeb, setSection80Eeb] = useState<string>('0');
+  const [section80Dd, setSection80Dd] = useState<string>('0');
+  const [section80Ggc, setSection80Ggc] = useState<string>('0');
   const [customDeductionsList, setCustomDeductionsList] = useState<
     Array<{ id: string; name: string; amount: string }>
   >([]);
@@ -167,6 +182,35 @@ const IncomeTaxCalculator: React.FC = () => {
   const handleRemoveCustomDeduction = (id: string) => {
     setCustomDeductionsList((prev) => prev.filter((item) => item.id !== id));
   };
+  // Calculate itemized 80C sum
+  const itemized80CSum = useMemo(() => {
+    return (
+      sanitizeAmount(itemEpf) +
+      sanitizeAmount(itemPpf) +
+      sanitizeAmount(itemElss) +
+      sanitizeAmount(itemLifeInsurance) +
+      sanitizeAmount(itemHomeLoanPrincipal) +
+      sanitizeAmount(itemSsy) +
+      sanitizeAmount(itemTaxSaverFd) +
+      sanitizeAmount(itemTuitionFees) +
+      sanitizeAmount(itemStampDuty) +
+      sanitizeAmount(itemOther80C)
+    );
+  }, [
+    itemEpf,
+    itemPpf,
+    itemElss,
+    itemLifeInsurance,
+    itemHomeLoanPrincipal,
+    itemSsy,
+    itemTaxSaverFd,
+    itemTuitionFees,
+    itemStampDuty,
+    itemOther80C,
+  ]);
+  const effective80CAmount = is80CItemized
+    ? Math.min(150000, itemized80CSum)
+    : sanitizeAmount(section80C);
   // Compile inputs
   const inputs: TaxIncomeInputs = useMemo(() => {
     return {
@@ -193,7 +237,7 @@ const IncomeTaxCalculator: React.FC = () => {
       fdInterest: sanitizeAmount(fdInterest),
       ppfInterest: sanitizeAmount(ppfInterest),
       otherIncome: sanitizeAmount(otherIncome),
-      section80C: sanitizeAmount(section80C),
+      section80C: effective80CAmount,
       section80Ccd1b: sanitizeAmount(section80Ccd1b),
       section80Ccd2: sanitizeAmount(section80Ccd2),
       section80D_self: sanitizeAmount(section80DSelf),
@@ -207,6 +251,9 @@ const IncomeTaxCalculator: React.FC = () => {
       section80Ddb: sanitizeAmount(section80Ddb),
       section80U: sanitizeAmount(section80U),
       section80Eea: sanitizeAmount(section80Eea),
+      section80Eeb: sanitizeAmount(section80Eeb),
+      section80Dd: sanitizeAmount(section80Dd),
+      section80Ggc: sanitizeAmount(section80Ggc),
       customDeductions: customDeductionsList.map((item) => ({
         id: item.id,
         name: item.name,
@@ -239,7 +286,7 @@ const IncomeTaxCalculator: React.FC = () => {
     fdInterest,
     ppfInterest,
     otherIncome,
-    section80C,
+    effective80CAmount,
     section80Ccd1b,
     section80Ccd2,
     section80DSelf,
@@ -253,6 +300,9 @@ const IncomeTaxCalculator: React.FC = () => {
     section80Ddb,
     section80U,
     section80Eea,
+    section80Eeb,
+    section80Dd,
+    section80Ggc,
     customDeductionsList,
     otherDeductions,
   ]);
@@ -681,8 +731,29 @@ const IncomeTaxCalculator: React.FC = () => {
         </div>{/* end taxResultsCol */}
         {/* LEFT COLUMN — inputs */}
         <div className={styles.taxInputsCol}>
-      {/* Multi-Section Detailed Inputs */}
-      <section className={styles.card}>
+          {/* Form 16 Upload & Filing Banner */}
+          <div className={styles.form16Banner}>
+            <div className={styles.form16Content}>
+              <div className={styles.form16IconBox}>
+                <FiUploadCloud size={20} />
+              </div>
+              <div>
+                <h3 className={styles.form16Title}>Have Form 16? Auto-fill &amp; Prepare ITR Filing</h3>
+                <p className={styles.form16Desc}>
+                  Upload your Form 16 PDF or text to extract salary, TDS, exemptions, and deductions, compare regimes, and prepare your return.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className={styles.form16Btn}
+              onClick={() => navigate('/file-itr')}
+            >
+              <FiUploadCloud size={14} /> Upload Form 16 &rarr;
+            </button>
+          </div>
+          {/* Multi-Section Detailed Inputs */}
+          <section className={styles.card}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
             <h2 className={styles.cardHeading}>
@@ -1102,14 +1173,176 @@ const IncomeTaxCalculator: React.FC = () => {
               Chapter VI-A tax deductions apply primarily to the <strong>Old Tax Regime</strong> (with
               the exception of Section 80CCD(2) employer NPS which applies to both).
             </p>
-            <ValuePicker
-              title="Section 80C (PPF, EPF, ELSS, Life Insurance - Max ₹1.5L)"
-              value={section80C}
-              onChange={setSection80C}
-              stepData={DEDUCTION_80C_STEPS}
-              min={0}
-              max={150000}
-            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}>
+                Section 80C Deduction (Max ₹1.5 Lakh)
+              </span>
+              <label className={styles.checkboxToggle}>
+                <input
+                  type="checkbox"
+                  checked={is80CItemized}
+                  onChange={(e) => setIs80CItemized(e.target.checked)}
+                  style={{ accentColor: 'var(--color-primary)' }}
+                />
+                <span>Itemize 80C Investments</span>
+              </label>
+            </div>
+            {!is80CItemized ? (
+              <ValuePicker
+                title="Section 80C (PPF, EPF, ELSS, Life Insurance - Max ₹1.5L)"
+                value={section80C}
+                onChange={setSection80C}
+                stepData={DEDUCTION_80C_STEPS}
+                min={0}
+                max={150000}
+              />
+            ) : (
+              <div className={styles.itemized80CContainer}>
+                <div className={styles.itemized80CHeader}>
+                  <div>
+                    <h3 className={styles.itemized80CTitle}>Itemized Section 80C Investment Declaration</h3>
+                    <p className={styles.itemized80CSub}>
+                      Break down your eligible investments across provident funds, insurance, tuition, and principal repayments.
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>Eligible Deduction Claimed</span>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--color-primary)' }}>
+                      {currencySymbol}{effective80CAmount.toLocaleString('en-IN')} / ₹1.5L
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.itemized80CMeter}>
+                  <div className={styles.meterTop}>
+                    <span>Total Declared: <strong>{currencySymbol}{itemized80CSum.toLocaleString('en-IN')}</strong></span>
+                    <span>{Math.min(100, Math.round((itemized80CSum / 150000) * 100))}% of ₹1.5L ceiling</span>
+                  </div>
+                  <div className={styles.meterFillBar}>
+                    <div
+                      className={styles.meterFill}
+                      style={{ width: `${Math.min(100, (itemized80CSum / 150000) * 100)}%` }}
+                    />
+                  </div>
+                  {itemized80CSum > 150000 && (
+                    <div style={{ fontSize: '0.6875rem', color: '#10b981', fontWeight: 600, marginTop: '0.375rem' }}>
+                      Eligible deduction maxed out at statutory limit of ₹1,50,000 (Excess: {currencySymbol}{(itemized80CSum - 150000).toLocaleString('en-IN')}).
+                    </div>
+                  )}
+                </div>
+                <div className={styles.itemizedGrid}>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-epf" className={styles.label}>EPF / VPF (Employees&apos; Provident Fund)</label>
+                    <input
+                      id="tax-item-epf"
+                      type="text"
+                      value={itemEpf}
+                      onChange={(e) => setItemEpf(e.target.value)}
+                      placeholder="e.g. 70000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-ppf" className={styles.label}>PPF (Public Provident Fund)</label>
+                    <input
+                      id="tax-item-ppf"
+                      type="text"
+                      value={itemPpf}
+                      onChange={(e) => setItemPpf(e.target.value)}
+                      placeholder="e.g. 30000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-elss" className={styles.label}>ELSS Mutual Funds (Tax Saver 3-Yr Lock-in)</label>
+                    <input
+                      id="tax-item-elss"
+                      type="text"
+                      value={itemElss}
+                      onChange={(e) => setItemElss(e.target.value)}
+                      placeholder="e.g. 25000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-insurance" className={styles.label}>Life Insurance Premium (Term / Traditional)</label>
+                    <input
+                      id="tax-item-insurance"
+                      type="text"
+                      value={itemLifeInsurance}
+                      onChange={(e) => setItemLifeInsurance(e.target.value)}
+                      placeholder="e.g. 25000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-hl-principal" className={styles.label}>Home Loan Principal Repayment</label>
+                    <input
+                      id="tax-item-hl-principal"
+                      type="text"
+                      value={itemHomeLoanPrincipal}
+                      onChange={(e) => setItemHomeLoanPrincipal(e.target.value)}
+                      placeholder="e.g. 50000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-ssy" className={styles.label}>Sukanya Samriddhi Yojana (SSY)</label>
+                    <input
+                      id="tax-item-ssy"
+                      type="text"
+                      value={itemSsy}
+                      onChange={(e) => setItemSsy(e.target.value)}
+                      placeholder="e.g. 20000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-fd" className={styles.label}>5-Year Tax Saver Bank FD / NSC</label>
+                    <input
+                      id="tax-item-fd"
+                      type="text"
+                      value={itemTaxSaverFd}
+                      onChange={(e) => setItemTaxSaverFd(e.target.value)}
+                      placeholder="e.g. 10000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-tuition" className={styles.label}>Children Tuition Fees (Up to 2 children)</label>
+                    <input
+                      id="tax-item-tuition"
+                      type="text"
+                      value={itemTuitionFees}
+                      onChange={(e) => setItemTuitionFees(e.target.value)}
+                      placeholder="e.g. 40000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-stamp-duty" className={styles.label}>Stamp Duty &amp; Registration (House Purchase)</label>
+                    <input
+                      id="tax-item-stamp-duty"
+                      type="text"
+                      value={itemStampDuty}
+                      onChange={(e) => setItemStampDuty(e.target.value)}
+                      placeholder="e.g. 0"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-item-other-80c" className={styles.label}>Other Eligible Section 80C Investments</label>
+                    <input
+                      id="tax-item-other-80c"
+                      type="text"
+                      value={itemOther80C}
+                      onChange={(e) => setItemOther80C(e.target.value)}
+                      placeholder="e.g. 0"
+                      className={styles.input}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
             <div className={styles.formGrid2} style={{ marginTop: '1rem' }}>
               <div className={styles.formField}>
                 <label htmlFor="tax-deduction-80ccd1b" className={styles.label}>
@@ -1270,6 +1503,45 @@ const IncomeTaxCalculator: React.FC = () => {
                   value={section80Eea}
                   onChange={(e) => setSection80Eea(e.target.value)}
                   placeholder="Max ₹1,50,000"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label htmlFor="tax-deduction-80eeb" className={styles.label}>
+                  Section 80EEB — Electric Vehicle (EV) Loan Interest
+                </label>
+                <input
+                  id="tax-deduction-80eeb"
+                  type="text"
+                  value={section80Eeb}
+                  onChange={(e) => setSection80Eeb(e.target.value)}
+                  placeholder="Max ₹1,50,000 for EV purchase"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label htmlFor="tax-deduction-80dd" className={styles.label}>
+                  Section 80DD — Maintenance of Disabled Dependent
+                </label>
+                <input
+                  id="tax-deduction-80dd"
+                  type="text"
+                  value={section80Dd}
+                  onChange={(e) => setSection80Dd(e.target.value)}
+                  placeholder="₹75,000 (₹1,25,000 for severe disability)"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.formField}>
+                <label htmlFor="tax-deduction-80ggc" className={styles.label}>
+                  Section 80GGC — Donations to Political Parties
+                </label>
+                <input
+                  id="tax-deduction-80ggc"
+                  type="text"
+                  value={section80Ggc}
+                  onChange={(e) => setSection80Ggc(e.target.value)}
+                  placeholder="100% deduction for non-cash contributions"
                   className={styles.input}
                 />
               </div>

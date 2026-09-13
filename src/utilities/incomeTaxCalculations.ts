@@ -45,6 +45,9 @@ export interface TaxIncomeInputs {
   section80Ddb?: number;     // Medical treatment of specified disease (Sec 80DDB, max 40k/100k)
   section80U?: number;       // Person with disability (Sec 80U, 75k/125k)
   section80Eea?: number;     // Additional affordable housing interest (Sec 80EEA, max 1.5L)
+  section80Eeb?: number;     // Electric Vehicle loan interest (Sec 80EEB, max 1.5L)
+  section80Dd?: number;      // Maintenance of dependent with disability (Sec 80DD, 75k/125k)
+  section80Ggc?: number;     // Political party / electoral trust contribution (Sec 80GGC)
   customDeductions?: Array<{ id: string; name: string; amount: number }>;
   otherDeductions: number;   // Other eligible deductions
 }
@@ -273,6 +276,9 @@ export function computeTaxForRegime(
     section80Ddb = 0,
     section80U = 0,
     section80Eea = 0,
+    section80Eeb = 0,
+    section80Dd = 0,
+    section80Ggc = 0,
     customDeductions = [],
     otherDeductions,
     ageCategory,
@@ -341,6 +347,9 @@ export function computeTaxForRegime(
     const capped80DDB = Math.min(max80DDB, Math.max(0, section80Ddb));
     const capped80U = Math.min(125000, Math.max(0, section80U));
     const capped80EEA = Math.min(150000, Math.max(0, section80Eea));
+    const capped80EEB = Math.min(150000, Math.max(0, section80Eeb));
+    const capped80DD = Math.min(125000, Math.max(0, section80Dd));
+    const capped80GGC = Math.max(0, section80Ggc);
     const customSum = (customDeductions || []).reduce(
       (sum, item) => sum + Math.max(0, Number(item.amount) || 0),
       0
@@ -358,6 +367,9 @@ export function computeTaxForRegime(
       capped80DDB +
       capped80U +
       capped80EEA +
+      capped80EEB +
+      capped80DD +
+      capped80GGC +
       customSum +
       Math.max(0, otherDeductions);
   }

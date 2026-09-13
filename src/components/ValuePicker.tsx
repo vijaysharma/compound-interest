@@ -1,9 +1,17 @@
 'use client';
-import React, { useState, useId, useMemo, useEffect } from 'react';
+import React, {
+  useState,
+  useId,
+  useMemo,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from 'react';
 import styles from './ValuePicker.module.scss';
 import convertToWords from '../utilities/currency';
 import { sanctnum } from '../utilities/numSanitity';
-import { getDateAsISO, getNearest } from '../utilities/utility';
+import { getDateAsISO } from '../utilities/utility';
 import type { RT, NavType } from '../types/types';
 import {
   DEFAULT_VALUE_PICKER_ROWS,
@@ -18,7 +26,13 @@ import {
   type GridItem,
 } from '../data/valuePickerData';
 export type ValuePickerVariant =
-  'amount' | 'roi' | 'tenure' | 'paired' | 'stacked-paired' | 'date-range' | 'grid';
+  | 'amount'
+  | 'roi'
+  | 'tenure'
+  | 'paired'
+  | 'stacked-paired'
+  | 'date-range'
+  | 'grid';
 export interface ValuePickerProps {
   /**
    * Component variant to render:
@@ -65,6 +79,8 @@ export interface ValuePickerProps {
    */
   embedded?: boolean;
   symbol?: string | null;
+  /** Backwards compatibility alias for `symbol` */
+  currencySymbol?: string | null;
   /**
    * Which side of the input field the `symbol` badge sits on, for the
    * 'amount' variant only. Defaults to 'left' (existing look).
@@ -85,6 +101,7 @@ export interface ValuePickerProps {
   max?: number;
   defaultStep?: number;
   showWords?: boolean;
+  allowDecimals?: boolean;
   className?: string;
   disabled?: boolean;
   readOnly?: boolean;
@@ -144,199 +161,558 @@ export interface ValuePickerComponent extends React.FC<ValuePickerProps> {
   DateRange: React.FC<ValuePickerProps>;
   Grid: React.FC<ValuePickerProps>;
 }
+// Maximum safe numeric limit for financial calculations (prevents overflow/DoS)
+const MAX_SAFE_FINANCIAL_VALUE = 1e12; // 1 Lakh Crore
+const MAX_RAW_INPUT_LENGTH = 16;
 /**
- * Mobile-first generic ValuePicker component with modular SCSS.
- * Accurately reproduces the visual layout, touch targets, and responsive desktop behavior.
+ * Normalizes 1D or 2D step definitions into a standard 2D array
  */
-export const ValuePicker: ValuePickerComponent = (({
-  variant = 'amount',
-  value,
-  inputAmount,
-  onChange,
-  setInputAmount,
-  tabs,
-  typeData,
-  activeTab: controlledTab,
-  type,
-  defaultTab,
-  onTabChange,
-  setType,
-  title,
-  titleStyle = 'default',
-  stepRows,
-  stepData,
-  symbol = '₹',
-  symbolPosition = 'left',
-  symbolBg = true,
-  endAdornment,
-  locale = 'en-IN',
-  min = 0,
-  max,
-  defaultStep = 500,
-  showWords = true,
-  className = '',
-  compact = false,
-  embedded = false,
-  layout = 'auto',
-  disabled = false,
-  readOnly = false,
-  placeholder,
-  // ROI props
-  roiSteps = DEFAULT_ROI_STEPS,
-  rt,
-  setRt,
-  // Tenure props
-  tenureDecSteps = DEFAULT_TENURE_DECREMENT_STEPS,
-  tenureIncSteps = DEFAULT_TENURE_INCREMENT_STEPS,
-  unit,
-  onUnitChange,
-  units = DEFAULT_TENURE_UNITS,
-  // Paired props
-  sourceBadgeText = 'Source',
-  targetBadgeText = 'Target',
-  sourceSlot,
-  targetSlot,
-  sourceValue,
-  targetValue,
-  onSourceChange,
-  onTargetChange,
-  sourceOptions,
-  targetOptions,
-  sourcePlaceholder,
-  targetPlaceholder,
-  // Date props
-  startDate,
-  endDate,
-  setStartDate,
-  setEndDate,
-  startBadgeText,
-  endBadgeText,
-  startMinDate,
-  dateMode = 'date',
-  startOptions,
-  endOptions,
-  startYearOptions,
-  endYearOptions,
-  navData,
-  data,
-  startTitle = 'Start',
-  endTitle = 'End',
-  // Grid props
-  gridRows = DEFAULT_DURATION_MATRIX_ROWS,
-  selectedGridId,
-  onGridSelect,
-}: ValuePickerProps) => {
-  const componentId = useId();
-  // Resolve value and onChange from either prop
-  const effectiveValue =
-    value !== undefined ? value : inputAmount !== undefined ? inputAmount : '0';
-  const effectiveOnChange = onChange || setInputAmount || (() => {});
-  // Resolve tabs and active tab
-  const providedTabs = tabs !== undefined ? tabs : typeData;
-  const resolvedTabs =
-    providedTabs !== undefined ? providedTabs : title ? [] : DEFAULT_VALUE_PICKER_TABS;
-  const currentActiveTab = controlledTab !== undefined ? controlledTab : type;
-  const effectiveOnTabChange = onTabChange || setType;
-  // Internal tab state when uncontrolled
-  const [internalTab, setInternalTab] = useState<string>(
-    currentActiveTab ?? defaultTab ?? resolvedTabs?.[0]?.id ?? ''
-  );
-  const currentTab = currentActiveTab !== undefined ? currentActiveTab : internalTab;
-  // Active operation mode: '+' adds quick-steps, '-' subtracts quick-steps
-  const [operation, setOperation] = useState<'+' | '-'>('+');
-  // ROI operation mode
-  const [roiOp, setRoiOp] = useState<'+' | '-'>('+');
-  // Track if input is currently focused for natural numeric editing
-  const [isFocused, setIsFocused] = useState(false);
-  const [localInput, setLocalInput] = useState('');
-  // Normalize step rows: handles 2D stepRows, 1D stepRows, or 1D stepData
-  const resolvedStepRows = useMemo<ValuePickerStep[][]>(() => {
-    if (stepRows && stepRows.length > 0) {
-      if (Array.isArray(stepRows[0])) {
-        return stepRows as ValuePickerStep[][];
+function normalizeStepRows(
+  stepRows?: ValuePickerStep[][] | ValuePickerStep[],
+  stepData?: Array<{ id?: string; value: string | number; title?: string; label?: string }>
+): ValuePickerStep[][] {
+  if (stepRows && stepRows.length > 0) {
+    if (Array.isArray(stepRows[0])) {
+      return stepRows as ValuePickerStep[][];
+    }
+    const flat = stepRows as ValuePickerStep[];
+    const mid = Math.ceil(flat.length / 2);
+    return [flat.slice(0, mid), flat.slice(mid)];
+  }
+  if (stepData && stepData.length > 0) {
+    const formatted: ValuePickerStep[] = stepData.map((s, idx) => ({
+      id: s.id || `step-${idx}`,
+      label: s.label || s.title || `${s.value}`,
+      value: typeof s.value === 'string' ? parseFloat(s.value) || 0 : Number(s.value) || 0,
+    }));
+    const mid = Math.ceil(formatted.length / 2);
+    return [formatted.slice(0, mid), formatted.slice(mid)];
+  }
+  return DEFAULT_VALUE_PICKER_ROWS;
+}
+// =============================================================================
+// VARIANT: Amount (Default, highly responsive and decimal-safe)
+// =============================================================================
+const AmountPicker: React.FC<ValuePickerProps> = React.memo(
+  ({
+    value,
+    inputAmount,
+    onChange,
+    setInputAmount,
+    tabs,
+    typeData,
+    activeTab: controlledTab,
+    type,
+    defaultTab,
+    onTabChange,
+    setType,
+    title,
+    titleStyle = 'merged',
+    stepRows,
+    stepData,
+    symbol = '₹',
+    currencySymbol,
+    symbolPosition = 'left',
+    symbolBg = true,
+    endAdornment,
+    locale = 'en-IN',
+    min = 0,
+    max,
+    defaultStep = 500,
+    showWords = true,
+    allowDecimals,
+    className = '',
+    compact = false,
+    embedded = false,
+    layout = 'auto',
+    disabled = false,
+    readOnly = false,
+    placeholder,
+  }) => {
+    const componentId = useId();
+    const effectiveSymbol = symbol !== undefined ? symbol : currencySymbol !== undefined ? currencySymbol : '₹';
+    const effectiveValue =
+      value !== undefined ? value : inputAmount !== undefined ? inputAmount : '0';
+    const effectiveOnChange = useMemo(
+      () => onChange || setInputAmount || (() => {}),
+      [onChange, setInputAmount]
+    );
+    // Determine if decimals should be permitted (e.g. Rate/ROI, or explicit allowDecimals)
+    const supportsDecimals = Boolean(
+      allowDecimals ||
+        effectiveSymbol === '%' ||
+        title?.toLowerCase().includes('rate') ||
+        title?.toLowerCase().includes('roi') ||
+        (typeof effectiveValue === 'string' && effectiveValue.includes('.')) ||
+        (typeof effectiveValue === 'number' && !Number.isInteger(effectiveValue)) ||
+        (stepData && stepData.some((s) => Number(s.value) % 1 !== 0))
+    );
+    const safeMax = max !== undefined ? max : MAX_SAFE_FINANCIAL_VALUE;
+    // Resolve tabs
+    const providedTabs = tabs !== undefined ? tabs : typeData;
+    const resolvedTabs =
+      providedTabs !== undefined ? providedTabs : title ? [] : DEFAULT_VALUE_PICKER_TABS;
+    const currentActiveTab = controlledTab !== undefined ? controlledTab : type;
+    const effectiveOnTabChange = onTabChange || setType;
+    const [internalTab, setInternalTab] = useState<string>(
+      currentActiveTab ?? defaultTab ?? resolvedTabs?.[0]?.id ?? ''
+    );
+    const currentTab = currentActiveTab !== undefined ? currentActiveTab : internalTab;
+    const [operation, setOperation] = useState<'+' | '-'>('+');
+    const [isFocused, setIsFocused] = useState(false);
+    const [localInput, setLocalInput] = useState<string>('');
+    // DOM & Cursor synchronization ref
+    const inputRef = useRef<HTMLInputElement>(null);
+    const pendingCursorRef = useRef<number | null>(null);
+    // Debounce timer and stable callback ref for non-blocking updates
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const latestOnChangeRef = useRef(effectiveOnChange);
+    useEffect(() => {
+      latestOnChangeRef.current = effectiveOnChange;
+    }, [effectiveOnChange]);
+    const numericValue = useMemo(() => {
+      const parsed = sanctnum(effectiveValue, min, safeMax);
+      return Number.isFinite(parsed) ? parsed : min;
+    }, [effectiveValue, min, safeMax]);
+    // Words display memoized and protected with try-catch
+    const wordsText = useMemo(() => {
+      if (!showWords || numericValue <= 0 || numericValue > 999999999999) return '';
+      try {
+        return convertToWords(numericValue, locale);
+      } catch {
+        return '';
       }
-      const flat = stepRows as ValuePickerStep[];
-      const mid = Math.ceil(flat.length / 2);
-      return [flat.slice(0, mid), flat.slice(mid)];
-    }
-    if (stepData && stepData.length > 0) {
-      const formatted: ValuePickerStep[] = stepData.map((s, idx) => ({
-        id: s.id || `step-${idx}`,
-        label: s.label || s.title || `${s.value}`,
-        value: typeof s.value === 'string' ? parseInt(s.value, 10) || 0 : Number(s.value) || 0,
-      }));
-      const mid = Math.ceil(formatted.length / 2);
-      return [formatted.slice(0, mid), formatted.slice(mid)];
-    }
-    return DEFAULT_VALUE_PICKER_ROWS;
-  }, [stepRows, stepData]);
-  // Date nearest effect for historical nav data
-  const effectiveNavData = navData || data;
-  useEffect(() => {
-    if (
-      variant !== 'date-range' ||
-      dateMode !== 'date' ||
-      !effectiveNavData ||
-      effectiveNavData.length === 0
-    ) {
-      return;
-    }
-    if (startDate) getNearest(startDate, effectiveNavData);
-    if (endDate) getNearest(endDate, effectiveNavData);
-  }, [variant, dateMode, startDate, endDate, effectiveNavData]);
-  const layoutClass =
-    layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
-  const compactClass = compact ? styles.compact : '';
-  const embeddedClass = embedded ? styles.embedded : '';
-  const rootContainerClass =
-    `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
-  // ===========================================================================
-  // VARIANT 1: Rate of Interest (Screenshot 1)
-  // ===========================================================================
-  if (variant === 'roi') {
+    }, [showWords, numericValue, locale]);
+    // Normalize step rows
+    const resolvedStepRows = useMemo(
+      () => normalizeStepRows(stepRows, stepData),
+      [stepRows, stepData]
+    );
+    // Synchronous layout cursor positioning without flickering or jumps
+    useLayoutEffect(() => {
+      if (pendingCursorRef.current !== null && inputRef.current) {
+        const pos = Math.max(0, pendingCursorRef.current);
+        pendingCursorRef.current = null;
+        inputRef.current.setSelectionRange(pos, pos);
+      }
+    });
+    // Cleanup timer on unmount
+    useEffect(() => {
+      return () => {
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
+      };
+    }, []);
+    // Notify parent with React.startTransition so typing is never blocked by expensive parent trees
+    const dispatchChange = useCallback((valStr: string, immediate = false) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      if (immediate) {
+        React.startTransition(() => {
+          latestOnChangeRef.current(valStr);
+        });
+        return;
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        React.startTransition(() => {
+          latestOnChangeRef.current(valStr);
+        });
+      }, 100);
+    }, []);
+    const handleTabClick = (tabId: string) => {
+      if (disabled) return;
+      if (currentActiveTab === undefined) {
+        setInternalTab(tabId);
+      }
+      effectiveOnTabChange?.(tabId);
+    };
+    const applyNumericUpdate = (nextVal: number, immediate = true) => {
+      let clamped = nextVal;
+      if (min !== undefined && clamped < min) clamped = min;
+      if (safeMax !== undefined && clamped > safeMax) clamped = safeMax;
+      const formatted = clamped === 0 && !supportsDecimals ? '0' : clamped.toLocaleString(locale);
+      setLocalInput(formatted);
+      dispatchChange(clamped.toString(), immediate);
+    };
+    const handleStepClick = (stepAmount: number) => {
+      if (disabled) return;
+      const current = sanctnum(effectiveValue, min, safeMax);
+      let next: number;
+      if (operation === '+') {
+        next = current + stepAmount;
+      } else {
+        next = Math.max(min, current - stepAmount);
+      }
+      if (supportsDecimals) {
+        next = Math.round((next + Number.EPSILON) * 10000) / 10000;
+      }
+      applyNumericUpdate(next, true);
+    };
+    const handleClear = () => {
+      if (disabled) return;
+      setOperation('+');
+      setLocalInput('');
+      dispatchChange(min.toString(), true);
+    };
+    const handlePlusClick = () => {
+      if (disabled) return;
+      if (operation === '-') {
+        setOperation('+');
+      } else {
+        applyNumericUpdate(sanctnum(effectiveValue, min, safeMax) + defaultStep, true);
+      }
+    };
+    const handleMinusClick = () => {
+      if (disabled) return;
+      if (operation === '+') {
+        setOperation('-');
+      } else {
+        applyNumericUpdate(Math.max(min, sanctnum(effectiveValue, min, safeMax) - defaultStep), true);
+      }
+    };
+    // Direct input editing with instant local response and cursor preservation
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled || readOnly) return;
+      const input = e.target;
+      const rawValue = input.value;
+      // Safe length capping to prevent DoS
+      if (rawValue.length > MAX_RAW_INPUT_LENGTH + 5) return;
+      const cursor = input.selectionStart ?? rawValue.length;
+      if (supportsDecimals) {
+        // Allow numbers with decimal point
+        const sanitized = rawValue.replace(/[^0-9.]/g, '');
+        // Allow at most one decimal point
+        const parts = sanitized.split('.');
+        const cleanDecimalStr = parts.length > 1 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
+        if (cleanDecimalStr === '' || cleanDecimalStr === '.') {
+          setLocalInput(cleanDecimalStr);
+          dispatchChange(min.toString(), false);
+          return;
+        }
+        const parsed = parseFloat(cleanDecimalStr);
+        if (Number.isFinite(parsed) && parsed > safeMax) {
+          setLocalInput(String(safeMax));
+          dispatchChange(String(safeMax), false);
+          return;
+        }
+        setLocalInput(cleanDecimalStr);
+        dispatchChange(cleanDecimalStr, false);
+        return;
+      }
+      // Integer currency handling with Indian delimiters
+      const digitsBeforeCursor = rawValue.slice(0, cursor).replace(/[^0-9]/g, '').length;
+      const rawDigits = rawValue.replace(/[^0-9]/g, '').slice(0, MAX_RAW_INPUT_LENGTH);
+      if (rawDigits === '') {
+        setLocalInput('');
+        dispatchChange(min.toString(), false);
+        return;
+      }
+      const parsed = parseInt(rawDigits, 10);
+      const clampedVal = Number.isNaN(parsed) ? min : Math.min(safeMax, Math.max(min, parsed));
+      const formatted = clampedVal.toLocaleString(locale);
+      setLocalInput(formatted);
+      dispatchChange(clampedVal.toString(), false);
+      // Compute exact cursor offset in formatted string
+      if (digitsBeforeCursor === 0) {
+        pendingCursorRef.current = 0;
+      } else {
+        let count = 0;
+        let newPos = formatted.length;
+        for (let i = 0; i < formatted.length; i++) {
+          if (/[0-9]/.test(formatted[i])) {
+            count++;
+            if (count === digitsBeforeCursor) {
+              newPos = i + 1;
+              break;
+            }
+          }
+        }
+        pendingCursorRef.current = newPos;
+      }
+    };
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (disabled || readOnly) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // Immediately flush pending changes
+        const currentVal = sanctnum(localInput || effectiveValue, min, safeMax);
+        dispatchChange(currentVal.toString(), true);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        applyNumericUpdate(sanctnum(effectiveValue, min, safeMax) + defaultStep, true);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        applyNumericUpdate(Math.max(min, sanctnum(effectiveValue, min, safeMax) - defaultStep), true);
+      } else if (e.key.toLowerCase() === 'c' && e.altKey) {
+        e.preventDefault();
+        handleClear();
+      }
+    };
+    const handleFocus = () => {
+      setIsFocused(true);
+      if (supportsDecimals) {
+        setLocalInput(effectiveValue === '0' || effectiveValue === 0 ? '' : String(effectiveValue));
+      } else {
+        setLocalInput(numericValue === 0 ? '' : numericValue.toLocaleString(locale));
+      }
+    };
+    const handleBlur = () => {
+      setIsFocused(false);
+      // Immediately flush and sanitize on blur
+      if (localInput === '' || localInput === '.') {
+        dispatchChange(min.toString(), true);
+        setLocalInput(min === 0 ? '0' : min.toLocaleString(locale));
+        return;
+      }
+      const parsed = supportsDecimals ? parseFloat(localInput) : parseInt(localInput.replace(/[^0-9]/g, ''), 10);
+      const finalVal = Number.isFinite(parsed) ? Math.min(safeMax, Math.max(min, parsed)) : min;
+      dispatchChange(finalVal.toString(), true);
+      setLocalInput(supportsDecimals ? String(finalVal) : finalVal.toLocaleString(locale));
+    };
+    const displayValue = isFocused
+      ? localInput
+      : supportsDecimals
+        ? String(effectiveValue ?? '0')
+        : numericValue === 0
+          ? '0'
+          : numericValue.toLocaleString(locale);
+    const layoutClass =
+      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
+    const compactClass = compact ? styles.compact : '';
+    const embeddedClass = embedded ? styles.embedded : '';
+    const rootContainerClass =
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
+    const isMergedTitle = titleStyle === 'merged' && !!title;
+    return (
+      <div className={rootContainerClass}>
+        {title && !isMergedTitle && <h5 className={styles.title}>{title}</h5>}
+        <div className={`${styles.card} ${isMergedTitle ? styles.cardWithMergedTitle : ''}`.trim()}>
+          {isMergedTitle && <div className={styles.titleBar}>{title}</div>}
+          {resolvedTabs && resolvedTabs.length > 0 && (
+            <div className={styles.tabsHeader} role="tablist" aria-label="Amount type switcher">
+              {resolvedTabs.map((tab) => {
+                const tabIdentifier = tab.value !== undefined ? tab.value : tab.id;
+                const isActive = currentTab === tabIdentifier || currentTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    id={`${componentId}-tab-${tab.id}`}
+                    aria-selected={isActive}
+                    className={`${styles.tabBtn} ${isActive ? styles.tabActive : ''}`}
+                    onClick={() => handleTabClick(tabIdentifier)}
+                    disabled={disabled}
+                  >
+                    {tab.title}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <div className={styles.inputRow}>
+            {effectiveSymbol !== null && symbolPosition === 'left' && (
+              <div
+                className={`${styles.symbolBadge} ${symbolBg === false ? styles.noBg : ''}`}
+                aria-hidden="true"
+              >
+                {effectiveSymbol}
+              </div>
+            )}
+            <div className={styles.inputWrapper}>
+              <input
+                ref={inputRef}
+                id={`${componentId}-input`}
+                type="text"
+                inputMode={supportsDecimals ? 'decimal' : 'numeric'}
+                pattern={supportsDecimals ? '[0-9]*[.]?[0-9]*' : '[0-9]*'}
+                className={styles.inputField}
+                value={displayValue}
+                placeholder={placeholder}
+                disabled={disabled}
+                readOnly={readOnly}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                aria-label={
+                  title ||
+                  resolvedTabs?.find((t) => t.id === currentTab || t.value === currentTab)?.title ||
+                  'Amount'
+                }
+              />
+            </div>
+            {effectiveSymbol !== null && symbolPosition === 'right' && (
+              <div
+                className={`${styles.symbolBadge} ${symbolBg === false ? styles.noBg : ''}`}
+                aria-hidden="true"
+              >
+                {effectiveSymbol}
+              </div>
+            )}
+            {endAdornment && <div className={styles.endAdornment}>{endAdornment}</div>}
+            <div className={styles.actionsCluster}>
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.clearBtn}`}
+                onClick={handleClear}
+                disabled={disabled || numericValue === min}
+                title="Clear amount (C)"
+                aria-label="Clear amount"
+              >
+                C
+              </button>
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.plusBtn} ${operation === '+' ? styles.activeOp : ''}`}
+                onClick={handlePlusClick}
+                disabled={disabled}
+                title={operation === '+' ? `Add ${defaultStep}` : 'Switch to add mode (+)'}
+                aria-label="Add amount"
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.minusBtn} ${operation === '-' ? styles.activeOp : ''}`}
+                onClick={handleMinusClick}
+                disabled={disabled || numericValue <= 0}
+                title={operation === '-' ? `Subtract ${defaultStep}` : 'Switch to subtract mode (-)'}
+                aria-label="Subtract amount"
+              >
+                -
+              </button>
+            </div>
+          </div>
+          {resolvedStepRows && resolvedStepRows.length > 0 && (
+            <div className={styles.gridContainer}>
+              {resolvedStepRows.map((row, rowIndex) => (
+                <div key={`row-${rowIndex}`} className={styles.gridRow}>
+                  {row.map((step, colIndex) => {
+                    const isPrimaryRow = rowIndex === 0;
+                    const stepSign = operation === '+' ? '+' : '-';
+                    const stepTitle = `${stepSign}${effectiveSymbol || ''}${step.value.toLocaleString(locale)}`;
+                    return (
+                      <button
+                        key={step.id || `step-${rowIndex}-${colIndex}`}
+                        type="button"
+                        className={`${styles.gridCell} ${
+                          isPrimaryRow ? styles.rowPrimary : styles.rowSecondary
+                        }`}
+                        onClick={() => handleStepClick(step.value)}
+                        disabled={disabled || (operation === '-' && numericValue <= min)}
+                        title={stepTitle}
+                        aria-label={`${operation === '+' ? 'Add' : 'Subtract'} ${step.label} (${effectiveSymbol || ''}${step.value})`}
+                      >
+                        {stepSign}
+                        {step.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {showWords && wordsText && (
+          <div className={styles.wordsDisplay} aria-live="polite">
+            {wordsText}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+AmountPicker.displayName = 'AmountPicker';
+// =============================================================================
+// VARIANT: ROI (Rate of Interest Stepper)
+// =============================================================================
+const RoiPicker: React.FC<ValuePickerProps> = React.memo(
+  ({
+    rt,
+    setRt,
+    value,
+    onChange,
+    setInputAmount,
+    roiSteps = DEFAULT_ROI_STEPS,
+    title,
+    min = 0,
+    max = 100,
+    disabled = false,
+    readOnly = false,
+    placeholder = '0',
+    className = '',
+    compact = false,
+    embedded = false,
+    layout = 'auto',
+  }) => {
+    const [roiOp, setRoiOp] = useState<'+' | '-'>('+');
+    const effectiveValue = value !== undefined ? value : '0';
     const roiValStr = rt
-      ? rt.roi
-        ? rt.roi.toString().replace(/^0+/, '') || '0'
+      ? rt.roi !== undefined && rt.roi !== null
+        ? String(rt.roi)
         : '0'
-      : effectiveValue.toString();
+      : String(effectiveValue);
+    const updateRoi = useCallback(
+      (newRoi: string) => {
+        if (rt && setRt) {
+          setRt({ ...rt, roi: newRoi });
+        } else if (onChange) {
+          onChange(newRoi);
+        } else if (setInputAmount) {
+          setInputAmount(newRoi);
+        }
+      },
+      [rt, setRt, onChange, setInputAmount]
+    );
     const handleRoiStep = (stepAmt: number) => {
       if (disabled) return;
-      let curr = roiValStr ? parseFloat(roiValStr) : 0;
-      if (Number.isNaN(curr)) curr = 0;
+      let curr = parseFloat(roiValStr);
+      if (!Number.isFinite(curr)) curr = 0;
       if (roiOp === '+') {
         curr += stepAmt;
       } else {
         curr -= stepAmt;
-        if (curr <= (min !== undefined ? min : 0)) {
-          if (rt && setRt) {
-            setRt({ ...rt, roi: '0' });
-          } else {
-            effectiveOnChange('0');
-          }
+        if (curr <= min) {
+          updateRoi(min.toString());
           setRoiOp('+');
           return;
         }
       }
-      const rounded = Math.round((curr + Number.EPSILON) * 100) / 100;
-      if (rt && setRt) {
-        setRt({ ...rt, roi: `${rounded}` });
-      } else {
-        effectiveOnChange(`${rounded}`);
-      }
+      const clamped = Math.min(max, Math.max(min, curr));
+      const rounded = Math.round((clamped + Number.EPSILON) * 100) / 100;
+      updateRoi(`${rounded}`);
     };
     const handleRoiInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (disabled || readOnly) return;
       const iv = e.target.value;
-      if (sanctnum(iv) < 0) {
+      if (iv === '' || iv === '.') {
+        updateRoi(iv);
+        return;
+      }
+      const num = parseFloat(iv);
+      if (!Number.isFinite(num)) {
+        updateRoi('0');
+        return;
+      }
+      if (num < 0) {
         setRoiOp('+');
         return;
       }
-      if (rt && setRt) {
-        setRt({ ...rt, roi: iv });
-      } else {
-        effectiveOnChange(iv);
-      }
+      const clamped = Math.min(max, num);
+      updateRoi(iv.length > 5 ? `${clamped}` : iv);
     };
+    const layoutClass =
+      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
+    const compactClass = compact ? styles.compact : '';
+    const embeddedClass = embedded ? styles.embedded : '';
+    const rootContainerClass =
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
     return (
       <div className={rootContainerClass}>
         {!embedded && (
@@ -360,8 +736,8 @@ export const ValuePicker: ValuePickerComponent = (({
           <div className={styles.joinedInputWrapper}>
             <input
               type="number"
-              placeholder={placeholder || '0'}
-              min={min !== undefined ? min : 0}
+              placeholder={placeholder}
+              min={min}
               max={max}
               step="any"
               className={styles.joinedInputField}
@@ -396,41 +772,79 @@ export const ValuePicker: ValuePickerComponent = (({
       </div>
     );
   }
-  // ===========================================================================
-  // VARIANT 2: Tenure (Screenshot 2)
-  // ===========================================================================
-  if (variant === 'tenure') {
+);
+RoiPicker.displayName = 'RoiPicker';
+// =============================================================================
+// VARIANT: Tenure (Duration Stepper)
+// =============================================================================
+const TenurePicker: React.FC<ValuePickerProps> = React.memo(
+  ({
+    rt,
+    setRt,
+    value,
+    onChange,
+    setInputAmount,
+    tenureDecSteps = DEFAULT_TENURE_DECREMENT_STEPS,
+    tenureIncSteps = DEFAULT_TENURE_INCREMENT_STEPS,
+    unit,
+    onUnitChange,
+    units = DEFAULT_TENURE_UNITS,
+    title,
+    min = 0,
+    max = 100,
+    disabled = false,
+    readOnly = false,
+    placeholder = '0',
+    className = '',
+    compact = false,
+    embedded = false,
+    layout = 'auto',
+  }) => {
+    const effectiveValue = value !== undefined ? value : '0';
     const tenureValStr = rt
-      ? rt.tenure.toString().replace(/^0+/, '') || '0'
-      : effectiveValue.toString();
+      ? rt.tenure !== undefined && rt.tenure !== null
+        ? String(rt.tenure)
+        : '0'
+      : String(effectiveValue);
     const effectiveUnit = rt ? rt.tenureFormat : unit || 'y';
+    const updateTenure = useCallback(
+      (newTenure: string) => {
+        if (rt && setRt) {
+          setRt({ ...rt, tenure: newTenure });
+        } else if (onChange) {
+          onChange(newTenure);
+        } else if (setInputAmount) {
+          setInputAmount(newTenure);
+        }
+      },
+      [rt, setRt, onChange, setInputAmount]
+    );
     const handleTenureStep = (stepDelta: number) => {
       if (disabled) return;
       let curr = parseInt(tenureValStr, 10);
-      if (Number.isNaN(curr)) curr = 0;
+      if (!Number.isFinite(curr)) curr = 0;
       curr += stepDelta;
-      if (curr <= (min !== undefined ? min : 0)) {
-        if (rt && setRt) {
-          setRt({ ...rt, tenure: '0' });
-        } else {
-          effectiveOnChange('0');
-        }
+      if (curr <= min) {
+        updateTenure(min.toString());
         return;
       }
-      if (rt && setRt) {
-        setRt({ ...rt, tenure: `${curr}` });
-      } else {
-        effectiveOnChange(`${curr}`);
-      }
+      const clamped = Math.min(max, curr);
+      updateTenure(`${clamped}`);
     };
     const handleTenureInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (disabled || readOnly) return;
       const iv = e.target.value;
-      if (rt && setRt) {
-        setRt({ ...rt, tenure: iv });
-      } else {
-        effectiveOnChange(iv);
+      if (iv === '') {
+        updateTenure('');
+        return;
       }
+      const parsed = parseInt(iv, 10);
+      if (Number.isNaN(parsed)) {
+        updateTenure('0');
+        return;
+      }
+      const clamped = Math.min(max, Math.max(min, parsed));
+      updateTenure(`${clamped}`);
     };
     const handleUnitSwitch = (newUnit: 'm' | 'y') => {
       if (disabled || newUnit === effectiveUnit) return;
@@ -446,6 +860,12 @@ export const ValuePicker: ValuePickerComponent = (({
       }
       onUnitChange?.(newUnit);
     };
+    const layoutClass =
+      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
+    const compactClass = compact ? styles.compact : '';
+    const embeddedClass = embedded ? styles.embedded : '';
+    const rootContainerClass =
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
     return (
       <div className={rootContainerClass}>
         {!embedded && (
@@ -467,8 +887,8 @@ export const ValuePicker: ValuePickerComponent = (({
           <div className={styles.joinedInputWrapper}>
             <input
               type="number"
-              placeholder={placeholder || '0'}
-              min={min !== undefined ? min : 0}
+              placeholder={placeholder}
+              min={min}
               max={max}
               className={styles.joinedInputField}
               value={tenureValStr}
@@ -510,10 +930,40 @@ export const ValuePicker: ValuePickerComponent = (({
       </div>
     );
   }
-  // ===========================================================================
-  // VARIANT 3: Paired / Dual Endpoint Selector (Screenshot 3)
-  // ===========================================================================
-  if (variant === 'paired' || variant === 'stacked-paired') {
+);
+TenurePicker.displayName = 'TenurePicker';
+// =============================================================================
+// VARIANT: Paired & Stacked-Paired
+// =============================================================================
+const PairedPicker: React.FC<ValuePickerProps> = React.memo(
+  ({
+    variant = 'paired',
+    title,
+    sourceBadgeText = 'Source',
+    targetBadgeText = 'Target',
+    sourceSlot,
+    targetSlot,
+    sourceValue,
+    targetValue,
+    onSourceChange,
+    onTargetChange,
+    sourceOptions,
+    targetOptions,
+    sourcePlaceholder,
+    targetPlaceholder,
+    disabled = false,
+    readOnly = false,
+    className = '',
+    compact = false,
+    embedded = false,
+    layout = 'auto',
+  }) => {
+    const layoutClass =
+      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
+    const compactClass = compact ? styles.compact : '';
+    const embeddedClass = embedded ? styles.embedded : '';
+    const rootContainerClass =
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
@@ -596,11 +1046,35 @@ export const ValuePicker: ValuePickerComponent = (({
       </div>
     );
   }
-  // ===========================================================================
-  // VARIANT 4: Date Range Selector (Screenshot 4)
-  // ===========================================================================
-  if (variant === 'date-range') {
-    const today = getDateAsISO();
+);
+PairedPicker.displayName = 'PairedPicker';
+// =============================================================================
+// VARIANT: Date Range Selector
+// =============================================================================
+const DateRangePicker: React.FC<ValuePickerProps> = React.memo(
+  ({
+    title,
+    startDate,
+    endDate,
+    setStartDate,
+    setEndDate,
+    startBadgeText,
+    endBadgeText,
+    startMinDate,
+    dateMode = 'date',
+    startOptions,
+    endOptions,
+    startYearOptions,
+    endYearOptions,
+    startTitle = 'Start',
+    endTitle = 'End',
+    disabled = false,
+    className = '',
+    compact = false,
+    embedded = false,
+    layout = 'auto',
+  }) => {
+    const today = useMemo(() => getDateAsISO(), []);
     const resolvedStartBadge = startBadgeText || startTitle;
     const resolvedEndBadge = endBadgeText || endTitle;
     const effectiveStartYearOptions = startYearOptions || startOptions || [];
@@ -618,6 +1092,25 @@ export const ValuePicker: ValuePickerComponent = (({
       }
       setEndDate?.(val);
     };
+    const handleStartDateChange = (val: string) => {
+      setStartDate?.(val);
+      if (endDate && val && val > endDate) {
+        setEndDate?.(val);
+      }
+    };
+    const handleEndDateChange = (val: string) => {
+      if (startDate && val && val < startDate) {
+        setEndDate?.(startDate);
+        return;
+      }
+      setEndDate?.(val);
+    };
+    const layoutClass =
+      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
+    const compactClass = compact ? styles.compact : '';
+    const embeddedClass = embedded ? styles.embedded : '';
+    const rootContainerClass =
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
     if (dateMode === 'year') {
       const availableEndOptions = effectiveEndYearOptions.filter(
         (year) => !startDate || Number(year) >= Number(startDate)
@@ -666,19 +1159,6 @@ export const ValuePicker: ValuePickerComponent = (({
         </div>
       );
     }
-    const handleStartDateChange = (val: string) => {
-      setStartDate?.(val);
-      if (endDate && val && val > endDate) {
-        setEndDate?.(val);
-      }
-    };
-    const handleEndDateChange = (val: string) => {
-      if (startDate && val && val < startDate) {
-        setEndDate?.(startDate);
-        return;
-      }
-      setEndDate?.(val);
-    };
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
@@ -723,15 +1203,39 @@ export const ValuePicker: ValuePickerComponent = (({
       </div>
     );
   }
-  // ===========================================================================
-  // VARIANT 5: Multi-Row Duration Matrix Grid (Screenshot 5)
-  // ===========================================================================
-  if (variant === 'grid') {
+);
+DateRangePicker.displayName = 'DateRangePicker';
+// =============================================================================
+// VARIANT: Grid Matrix
+// =============================================================================
+const GridPicker: React.FC<ValuePickerProps> = React.memo(
+  ({
+    title,
+    gridRows = DEFAULT_DURATION_MATRIX_ROWS,
+    selectedGridId,
+    onGridSelect,
+    value,
+    onChange,
+    setInputAmount,
+    disabled = false,
+    className = '',
+    compact = false,
+    embedded = false,
+    layout = 'auto',
+  }) => {
+    const effectiveValue = value !== undefined ? value : '';
+    const effectiveOnChange = onChange || setInputAmount || (() => {});
     const handleGridItemClick = (item: GridItem) => {
       if (disabled) return;
       onGridSelect?.(item);
       effectiveOnChange(item.value.toString());
     };
+    const layoutClass =
+      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
+    const compactClass = compact ? styles.compact : '';
+    const embeddedClass = embedded ? styles.embedded : '';
+    const rootContainerClass =
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}
@@ -763,319 +1267,129 @@ export const ValuePicker: ValuePickerComponent = (({
       </div>
     );
   }
-  // Sanitize numeric representation
-  const numericValue = sanctnum(effectiveValue, min, max);
-  const handleTabClick = (tabId: string) => {
-    if (disabled) return;
-    if (currentActiveTab === undefined) {
-      setInternalTab(tabId);
+);
+GridPicker.displayName = 'GridPicker';
+// =============================================================================
+// Smart Memoization Comparator
+// =============================================================================
+function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean {
+  if (prev.variant !== next.variant) return false;
+  // Scalar value comparisons
+  if (
+    prev.value !== next.value ||
+    prev.inputAmount !== next.inputAmount ||
+    prev.activeTab !== next.activeTab ||
+    prev.type !== next.type ||
+    prev.defaultTab !== next.defaultTab ||
+    prev.title !== next.title ||
+    prev.titleStyle !== next.titleStyle ||
+    prev.symbol !== next.symbol ||
+    prev.currencySymbol !== next.currencySymbol ||
+    prev.symbolPosition !== next.symbolPosition ||
+    prev.symbolBg !== next.symbolBg ||
+    prev.locale !== next.locale ||
+    prev.min !== next.min ||
+    prev.max !== next.max ||
+    prev.defaultStep !== next.defaultStep ||
+    prev.showWords !== next.showWords ||
+    prev.allowDecimals !== next.allowDecimals ||
+    prev.className !== next.className ||
+    prev.compact !== next.compact ||
+    prev.embedded !== next.embedded ||
+    prev.layout !== next.layout ||
+    prev.disabled !== next.disabled ||
+    prev.readOnly !== next.readOnly ||
+    prev.placeholder !== next.placeholder ||
+    prev.unit !== next.unit ||
+    prev.sourceBadgeText !== next.sourceBadgeText ||
+    prev.targetBadgeText !== next.targetBadgeText ||
+    prev.sourceValue !== next.sourceValue ||
+    prev.targetValue !== next.targetValue ||
+    prev.startDate !== next.startDate ||
+    prev.endDate !== next.endDate ||
+    prev.startBadgeText !== next.startBadgeText ||
+    prev.endBadgeText !== next.endBadgeText ||
+    prev.selectedGridId !== next.selectedGridId
+  ) {
+    return false;
+  }
+  // Compare rt state
+  if (prev.rt !== next.rt) {
+    if (!prev.rt || !next.rt) return false;
+    if (
+      prev.rt.roi !== next.rt.roi ||
+      prev.rt.tenure !== next.rt.tenure ||
+      prev.rt.tenureFormat !== next.rt.tenureFormat
+    ) {
+      return false;
     }
-    effectiveOnTabChange?.(tabId);
-  };
-  const updateNumericValue = (nextVal: number) => {
-    let clamped = nextVal;
-    if (min !== undefined && clamped < min) clamped = min;
-    if (max !== undefined && clamped > max) clamped = max;
-    effectiveOnChange(clamped.toString());
-    setLocalInput(clamped === 0 ? '' : clamped.toLocaleString(locale));
-  };
-  // Quick addition / subtraction through step buttons
-  const handleStepClick = (stepAmount: number) => {
-    if (disabled) return;
-    const current = sanctnum(effectiveValue, min, max);
-    let next: number;
-    if (operation === '+') {
-      next = current + stepAmount;
-    } else {
-      next = Math.max(min, current - stepAmount);
-    }
-    updateNumericValue(next);
-  };
-  // Clear button ('C') resets to 0 (or min) and resets mode to '+'
-  const handleClear = () => {
-    if (disabled) return;
-    setOperation('+');
-    updateNumericValue(min);
-    setLocalInput('');
-  };
-  // Plus button: switches mode to '+' and increments by defaultStep if already '+'
-  const handlePlusClick = () => {
-    if (disabled) return;
-    if (operation === '-') {
-      setOperation('+');
-    } else {
-      updateNumericValue(sanctnum(effectiveValue, min, max) + defaultStep);
-    }
-  };
-  // Minus button: switches mode to '-' and decrements by defaultStep if already '-'
-  const handleMinusClick = () => {
-    if (disabled) return;
-    if (operation === '+') {
-      setOperation('-');
-    } else {
-      updateNumericValue(Math.max(min, sanctnum(effectiveValue, min, max) - defaultStep));
-    }
-  };
-  // Direct typing handler with persistent delimiters and smooth cursor preservation
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled || readOnly) return;
-    const input = e.target;
-    const cursor = input.selectionStart ?? input.value.length;
-    const digitsBeforeCursor = input.value.slice(0, cursor).replace(/[^0-9]/g, '').length;
-    const rawDigits = input.value.replace(/[^0-9]/g, '');
-    if (rawDigits === '') {
-      setLocalInput('');
-      updateNumericValue(min);
-      return;
-    }
-    const parsed = parseInt(rawDigits, 10);
-    const newVal = Number.isNaN(parsed) ? min : parsed;
-    const formatted = parsed.toLocaleString(locale);
-    setLocalInput(formatted);
-    updateNumericValue(newVal);
-    requestAnimationFrame(() => {
-      let count = 0;
-      let newCursor = formatted.length;
-      for (let i = 0; i < formatted.length; i++) {
-        if (/[0-9]/.test(formatted[i])) {
-          count++;
-          if (count === digitsBeforeCursor) {
-            newCursor = i + 1;
-            break;
-          }
-        }
-      }
-      input.setSelectionRange(newCursor, newCursor);
-    });
-  };
-  // Keyboard navigation & smart delimiter handling
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (disabled || readOnly) return;
-    if (e.key === 'Backspace') {
-      const input = e.currentTarget;
-      const { selectionStart, selectionEnd } = input;
-      if (selectionStart !== null && selectionStart === selectionEnd && selectionStart > 1) {
-        if (input.value[selectionStart - 1] === ',') {
-          e.preventDefault();
-          const before = input.value.slice(0, selectionStart - 2);
-          const after = input.value.slice(selectionStart);
-          const combined = before + after;
-          const rawDigits = combined.replace(/[^0-9]/g, '');
-          if (rawDigits === '') {
-            setLocalInput('');
-            updateNumericValue(min);
-            return;
-          }
-          const parsed = parseInt(rawDigits, 10);
-          const newVal = Number.isNaN(parsed) ? min : parsed;
-          const formatted = parsed.toLocaleString(locale);
-          setLocalInput(formatted);
-          updateNumericValue(newVal);
-          const targetDigits = before.replace(/[^0-9]/g, '').length;
-          requestAnimationFrame(() => {
-            let count = 0;
-            let newCursor = 0;
-            for (let i = 0; i < formatted.length; i++) {
-              if (/[0-9]/.test(formatted[i])) {
-                count++;
-                if (count === targetDigits) {
-                  newCursor = i + 1;
-                  break;
-                }
-              }
-            }
-            input.setSelectionRange(newCursor, newCursor);
-          });
-          return;
-        }
+  }
+  // Compare endAdornment
+  if (prev.endAdornment !== next.endAdornment) return false;
+  if (prev.sourceSlot !== next.sourceSlot || prev.targetSlot !== next.targetSlot) return false;
+  // Deep comparison of stepData items if reference changed
+  if (prev.stepData !== next.stepData) {
+    if (!prev.stepData || !next.stepData) return false;
+    if (prev.stepData.length !== next.stepData.length) return false;
+    for (let i = 0; i < prev.stepData.length; i++) {
+      const a = prev.stepData[i];
+      const b = next.stepData[i];
+      if (a.id !== b.id || a.value !== b.value || a.label !== b.label || a.title !== b.title) {
+        return false;
       }
     }
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      updateNumericValue(sanctnum(effectiveValue, min, max) + defaultStep);
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      updateNumericValue(Math.max(min, sanctnum(effectiveValue, min, max) - defaultStep));
-    } else if (e.key.toLowerCase() === 'c' && e.altKey) {
-      e.preventDefault();
-      handleClear();
+  }
+  // Deep comparison of tabs if reference changed
+  if (prev.tabs !== next.tabs) {
+    if (!prev.tabs || !next.tabs) return false;
+    if (prev.tabs.length !== next.tabs.length) return false;
+    for (let i = 0; i < prev.tabs.length; i++) {
+      const a = prev.tabs[i];
+      const b = next.tabs[i];
+      if (a.id !== b.id || a.title !== b.title || a.value !== b.value) return false;
     }
-  };
-  // Formatted display string: maintains Indian grouping always, preventing visual jump
-  const displayValue = isFocused
-    ? localInput
-    : numericValue === 0
-      ? '0'
-      : numericValue.toLocaleString(locale);
-  // In-words string
-  const wordsText = showWords && numericValue > 0 ? convertToWords(numericValue, locale) : '';
-  const isMergedTitle = titleStyle === 'merged' && !!title;
-  return (
-    <div className={rootContainerClass}>
-      {/* Title rendered above the card in the default style */}
-      {title && !isMergedTitle && <h5 className={styles.title}>{title}</h5>}
-      {/* Main card enclosing the optional merged title bar, tabs, input row, and step grid */}
-      <div className={`${styles.card} ${isMergedTitle ? styles.cardWithMergedTitle : ''}`.trim()}>
-        {/* Merged title bar: fused to the top of the card, no gap, uppercase */}
-        {isMergedTitle && <div className={styles.titleBar}>{title}</div>}
-        {/* Top segmented tabs */}
-        {resolvedTabs && resolvedTabs.length > 0 && (
-          <div className={styles.tabsHeader} role="tablist" aria-label="Amount type switcher">
-            {resolvedTabs.map((tab) => {
-              const tabIdentifier = tab.value !== undefined ? tab.value : tab.id;
-              const isActive = currentTab === tabIdentifier || currentTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  id={`${componentId}-tab-${tab.id}`}
-                  aria-selected={isActive}
-                  className={`${styles.tabBtn} ${isActive ? styles.tabActive : ''}`}
-                  onClick={() => handleTabClick(tabIdentifier)}
-                  disabled={disabled}
-                >
-                  {tab.title}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        {/* Value Input Row */}
-        <div className={styles.inputRow}>
-          {/* Currency / Unit Badge — left side (default) */}
-          {symbol !== null && symbolPosition === 'left' && (
-            <div
-              className={`${styles.symbolBadge} ${symbolBg === false ? styles.noBg : ''}`}
-              aria-hidden="true"
-            >
-              {symbol}
-            </div>
-          )}
-          {/* Value input */}
-          <div className={styles.inputWrapper}>
-            <input
-              id={`${componentId}-input`}
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              className={styles.inputField}
-              value={displayValue}
-              placeholder={placeholder}
-              disabled={disabled}
-              readOnly={readOnly}
-              onFocus={() => {
-                setIsFocused(true);
-                setLocalInput(numericValue === 0 ? '' : numericValue.toLocaleString(locale));
-              }}
-              onBlur={() => {
-                setIsFocused(false);
-                setLocalInput(numericValue === 0 ? '0' : numericValue.toLocaleString(locale));
-              }}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              aria-label={
-                title ||
-                resolvedTabs?.find((t) => t.id === currentTab || t.value === currentTab)?.title ||
-                'Amount'
-              }
-            />
-          </div>
-          {/* Currency / Unit Badge — right side */}
-          {symbol !== null && symbolPosition === 'right' && (
-            <div
-              className={`${styles.symbolBadge} ${symbolBg === false ? styles.noBg : ''}`}
-              aria-hidden="true"
-            >
-              {symbol}
-            </div>
-          )}
-          {/* Optional extra control (dropdown, radio, button, etc.), always
-              directly after the field + symbol cluster and before actions */}
-          {endAdornment && <div className={styles.endAdornment}>{endAdornment}</div>}
-          {/* Action buttons: Clear ('C'), Plus ('+'), Minus ('-') */}
-          <div className={styles.actionsCluster}>
-            <button
-              type="button"
-              className={`${styles.actionBtn} ${styles.clearBtn}`}
-              onClick={handleClear}
-              disabled={disabled || numericValue === min}
-              title="Clear amount (C)"
-              aria-label="Clear amount"
-            >
-              C
-            </button>
-            <button
-              type="button"
-              className={`${styles.actionBtn} ${styles.plusBtn} ${operation === '+' ? styles.activeOp : ''}`}
-              onClick={handlePlusClick}
-              disabled={disabled}
-              title={operation === '+' ? `Add ${defaultStep}` : 'Switch to add mode (+)'}
-              aria-label="Add amount"
-            >
-              +
-            </button>
-            <button
-              type="button"
-              className={`${styles.actionBtn} ${styles.minusBtn} ${operation === '-' ? styles.activeOp : ''}`}
-              onClick={handleMinusClick}
-              disabled={disabled || numericValue <= 0}
-              title={operation === '-' ? `Subtract ${defaultStep}` : 'Switch to subtract mode (-)'}
-              aria-label="Subtract amount"
-            >
-              -
-            </button>
-          </div>
-        </div>
-        {/* Quick steps grid */}
-        {resolvedStepRows && resolvedStepRows.length > 0 && (
-          <div className={styles.gridContainer}>
-            {resolvedStepRows.map((row, rowIndex) => (
-              <div key={`row-${rowIndex}`} className={styles.gridRow}>
-                {row.map((step, colIndex) => {
-                  const isPrimaryRow = rowIndex === 0;
-                  const stepSign = operation === '+' ? '+' : '-';
-                  const stepTitle = `${stepSign}${symbol}${step.value.toLocaleString(locale)}`;
-                  return (
-                    <button
-                      key={step.id || `step-${rowIndex}-${colIndex}`}
-                      type="button"
-                      className={`${styles.gridCell} ${
-                        isPrimaryRow ? styles.rowPrimary : styles.rowSecondary
-                      }`}
-                      onClick={() => handleStepClick(step.value)}
-                      disabled={disabled || (operation === '-' && numericValue <= min)}
-                      title={stepTitle}
-                      aria-label={`${operation === '+' ? 'Add' : 'Subtract'} ${step.label} (${symbol}${step.value})`}
-                    >
-                      {stepSign}
-                      {step.label}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      {/* Number in words display */}
-      {showWords && wordsText && (
-        <div className={styles.wordsDisplay} aria-live="polite">
-          {wordsText}
-        </div>
-      )}
-    </div>
-  );
-}) as ValuePickerComponent;
-ValuePicker.Amount = (props: ValuePickerProps) => <ValuePicker {...props} variant="amount" />;
-ValuePicker.ROI = (props: ValuePickerProps) => <ValuePicker {...props} variant="roi" />;
-ValuePicker.Tenure = (props: ValuePickerProps) => <ValuePicker {...props} variant="tenure" />;
-ValuePicker.Paired = (props: ValuePickerProps) => <ValuePicker {...props} variant="paired" />;
-ValuePicker.StackedPaired = (props: ValuePickerProps) => (
+  }
+  return true;
+}
+// =============================================================================
+// MAIN COMPONENT EXPORT
+// =============================================================================
+const BaseValuePicker: React.FC<ValuePickerProps> = (props) => {
+  const { variant = 'amount' } = props;
+  switch (variant) {
+    case 'roi':
+      return <RoiPicker {...props} />;
+    case 'tenure':
+      return <TenurePicker {...props} />;
+    case 'paired':
+    case 'stacked-paired':
+      return <PairedPicker {...props} />;
+    case 'date-range':
+      return <DateRangePicker {...props} />;
+    case 'grid':
+      return <GridPicker {...props} />;
+    case 'amount':
+    default:
+      return <AmountPicker {...props} />;
+  }
+};
+export const ValuePicker = React.memo(BaseValuePicker, arePropsEqual) as unknown as ValuePickerComponent;
+ValuePicker.Amount = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="amount" />);
+ValuePicker.Amount.displayName = 'ValuePicker.Amount';
+ValuePicker.ROI = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="roi" />);
+ValuePicker.ROI.displayName = 'ValuePicker.ROI';
+ValuePicker.Tenure = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="tenure" />);
+ValuePicker.Tenure.displayName = 'ValuePicker.Tenure';
+ValuePicker.Paired = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="paired" />);
+ValuePicker.Paired.displayName = 'ValuePicker.Paired';
+ValuePicker.StackedPaired = React.memo((props: ValuePickerProps) => (
   <ValuePicker {...props} variant="stacked-paired" />
-);
-ValuePicker.DateRange = (props: ValuePickerProps) => (
+));
+ValuePicker.StackedPaired.displayName = 'ValuePicker.StackedPaired';
+ValuePicker.DateRange = React.memo((props: ValuePickerProps) => (
   <ValuePicker {...props} variant="date-range" />
-);
-ValuePicker.Grid = (props: ValuePickerProps) => <ValuePicker {...props} variant="grid" />;
+));
+ValuePicker.DateRange.displayName = 'ValuePicker.DateRange';
+ValuePicker.Grid = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="grid" />);
+ValuePicker.Grid.displayName = 'ValuePicker.Grid';
 export default ValuePicker;
