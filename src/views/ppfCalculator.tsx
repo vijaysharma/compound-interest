@@ -7,7 +7,6 @@ import {
   FiChevronUp,
   FiClock,
   FiShield,
-  FiTrendingUp,
 } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
 import SEOHead from '../components/SEOHead';
@@ -138,9 +137,7 @@ const PpfCalculator: React.FC = () => {
     return Math.round((ppfResult.totalInvested / ppfResult.maturityAmount) * 100);
   }, [ppfResult]);
   const gainsPercent = 100 - investedPercent;
-  const wealthMultiplier = (
-    ppfResult.maturityAmount / (ppfResult.totalInvested || 1)
-  ).toFixed(1);
+  const wealthMultiplier = (ppfResult.maturityAmount / (ppfResult.totalInvested || 1)).toFixed(1);
   return (
     <main className={styles.container}>
       <SEOHead
@@ -164,16 +161,13 @@ const PpfCalculator: React.FC = () => {
       <div className={styles.formGrid}>
         {/* Left Column: Interactive Inputs */}
         <div className={styles.inputsCol}>
-          <section className={styles.card}>
-            <h2 className={styles.sectionHeading}>
-              <FiTrendingUp /> Deposit &amp; Frequency
-            </h2>
+          <section>
             <div className={styles.fieldGroup}>
               <ValuePicker
-                title={frequency === 'yearly' ? 'Annual Deposit Amount (Max ₹1.5L)' : 'Monthly Deposit Amount (Max ₹12.5K)'}
                 value={depositAmount}
                 onChange={setDepositAmount}
                 activeTab={frequency}
+                symbolBg={false}
                 onTabChange={(tabId) => {
                   const newFreq = tabId as PPFFrequency;
                   setFrequency(newFreq);
@@ -228,7 +222,9 @@ const PpfCalculator: React.FC = () => {
               <FiClock /> Start Year &amp; Extensions
             </h2>
             <div className={styles.fieldGroup}>
-              <label htmlFor="ppf-start-year" className={styles.fieldLabel}>Account Opening Financial Year</label>
+              <label htmlFor="ppf-start-year" className={styles.fieldLabel}>
+                Account Opening Financial Year
+              </label>
               <select
                 id="ppf-start-year"
                 value={startYear}
@@ -243,7 +239,9 @@ const PpfCalculator: React.FC = () => {
               </select>
             </div>
             <div className={styles.fieldGroup}>
-              <label htmlFor="ppf-extensions" className={styles.fieldLabel}>Account Tenure &amp; Extensions</label>
+              <label htmlFor="ppf-extensions" className={styles.fieldLabel}>
+                Account Tenure &amp; Extensions
+              </label>
               <select
                 id="ppf-extensions"
                 value={extensionBlocks}
@@ -383,13 +381,23 @@ const PpfCalculator: React.FC = () => {
       {/* Year-by-Year Schedule */}
       <section className={styles.scheduleSection}>
         <div className={styles.card}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}
+          >
             <div>
               <h2 className={styles.sectionHeading} style={{ margin: 0 }}>
                 Year-by-Year PPF Growth Schedule
               </h2>
               <p className={styles.subtitle} style={{ margin: '0.25rem 0 0' }}>
-                Shows actual historical rates declared by the Ministry of Finance vs forward projected rates.
+                Shows actual historical rates declared by the Ministry of Finance vs forward
+                projected rates.
               </p>
             </div>
           </div>
@@ -416,7 +424,13 @@ const PpfCalculator: React.FC = () => {
                         <td>
                           <strong>Yr {row.yearNumber}</strong>
                           {row.isExtensionYear && (
-                            <span style={{ marginLeft: '0.25rem', fontSize: '0.625rem', color: '#d97706' }}>
+                            <span
+                              style={{
+                                marginLeft: '0.25rem',
+                                fontSize: '0.625rem',
+                                color: '#d97706',
+                              }}
+                            >
                               (Ext)
                             </span>
                           )}
@@ -453,9 +467,7 @@ const PpfCalculator: React.FC = () => {
                           <button
                             type="button"
                             className={styles.expandBtn}
-                            onClick={() =>
-                              setExpandedYear(isExpanded ? null : row.yearNumber)
-                            }
+                            onClick={() => setExpandedYear(isExpanded ? null : row.yearNumber)}
                           >
                             {isExpanded ? (
                               <>
@@ -473,8 +485,15 @@ const PpfCalculator: React.FC = () => {
                         <tr>
                           <td colSpan={8} style={{ padding: 0 }}>
                             <div className={styles.monthTableWrapper}>
-                              <div style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                                Month-by-Month Interest Breakdown for FY {row.fyLabel} (Rate: {row.interestRate}%)
+                              <div
+                                style={{
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  marginBottom: '0.5rem',
+                                }}
+                              >
+                                Month-by-Month Interest Breakdown for FY {row.fyLabel} (Rate:{' '}
+                                {row.interestRate}%)
                               </div>
                               <table className={styles.monthTable}>
                                 <thead>
@@ -527,13 +546,43 @@ const PpfCalculator: React.FC = () => {
         title="Understanding the Public Provident Fund (PPF) Rules &amp; Compounding"
         subtitle="Launched in 1968 by the National Savings Institute of the Ministry of Finance, PPF is one of India's most secure and tax-efficient wealth accumulation instruments backed by sovereign guarantee."
         comparisonTable={{
-          headers: ['Feature', 'Public Provident Fund (PPF)', 'Bank Fixed Deposit (FD)', 'Equity Linked Savings Scheme (ELSS)'],
+          headers: [
+            'Feature',
+            'Public Provident Fund (PPF)',
+            'Bank Fixed Deposit (FD)',
+            'Equity Linked Savings Scheme (ELSS)',
+          ],
           rows: [
-            ['Sovereign Guarantee', '100% Government of India Backed', 'DICGC Insurance up to ₹5 Lakh', 'Market Linked (No Guarantee)'],
-            ['Tax Status', 'EEE (100% Tax Free)', 'Interest Taxed at Slab Rate', 'LTCG 12.5% above ₹1.25 Lakh'],
-            ['Lock-in Period', '15 Years (Extendable in 5-Yr Blocks)', '7 Days to 10 Years', '3 Years (Shortest 80C)'],
-            ['Annual Deposit Limits', 'Min ₹500, Max ₹1,50,000 per FY', 'No Upper Limit', 'No Upper Limit'],
-            ['Loan Facility', 'Available from 3rd to 6th Financial Year', 'Overdraft against FD up to 90%', 'Not Available'],
+            [
+              'Sovereign Guarantee',
+              '100% Government of India Backed',
+              'DICGC Insurance up to ₹5 Lakh',
+              'Market Linked (No Guarantee)',
+            ],
+            [
+              'Tax Status',
+              'EEE (100% Tax Free)',
+              'Interest Taxed at Slab Rate',
+              'LTCG 12.5% above ₹1.25 Lakh',
+            ],
+            [
+              'Lock-in Period',
+              '15 Years (Extendable in 5-Yr Blocks)',
+              '7 Days to 10 Years',
+              '3 Years (Shortest 80C)',
+            ],
+            [
+              'Annual Deposit Limits',
+              'Min ₹500, Max ₹1,50,000 per FY',
+              'No Upper Limit',
+              'No Upper Limit',
+            ],
+            [
+              'Loan Facility',
+              'Available from 3rd to 6th Financial Year',
+              'Overdraft against FD up to 90%',
+              'Not Available',
+            ],
           ],
         }}
         faqs={[

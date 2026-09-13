@@ -759,7 +759,9 @@ const Lumpsum = ({
               </div>
               <div
                 className={
-                  parseFloat(end.nav) >= parseFloat(start.nav) ? styles.textSuccess : styles.textError
+                  parseFloat(end.nav) >= parseFloat(start.nav)
+                    ? styles.textSuccess
+                    : styles.textError
                 }
               >
                 <div className={styles.statTitle}>{end.date}</div>
@@ -771,14 +773,18 @@ const Lumpsum = ({
             <span className={`${styles.statValueXl} ${styles.textPrimary}`}>
               ₹ {Math.round(matureAmount).toLocaleString('en-IN')}
             </span>
-            <div className={`${styles.statRow} ${profitAmount >= 0 ? styles.textSuccess : styles.textError}`}>
+            <div
+              className={`${styles.statRow} ${profitAmount >= 0 ? styles.textSuccess : styles.textError}`}
+            >
               {profitAmount < 0 ? '-' : '+'}
               &nbsp;₹
               {Math.round(profitAmount).toLocaleString('en-IN')}
             </div>
             <div className={styles.statRow}>
               <span>C:</span>{' '}
-              <span className={cagr >= 0 ? styles.textSuccess : styles.textError}>{cagr.toFixed(2)}%</span>
+              <span className={cagr >= 0 ? styles.textSuccess : styles.textError}>
+                {cagr.toFixed(2)}%
+              </span>
               &nbsp;|&nbsp;
               <span>A:</span>{' '}
               <span className={absoluteReturn >= 0 ? styles.textSuccess : styles.textError}>
@@ -808,12 +814,8 @@ const Lumpsum = ({
         schema={lumpsumSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          AMFI Live Sync &bull; Multi-Fund Backtesting
-        </div>
-        <h1 className={styles.title}>
-          Mutual Fund Lumpsum Return &amp; Historical NAV Engine
-        </h1>
+        <div className={styles.badge}>AMFI Live Sync &bull; Multi-Fund Backtesting</div>
+        <h1 className={styles.title}>Mutual Fund Lumpsum Return &amp; Historical NAV Engine</h1>
         <p className={styles.subtitle}>
           Backtest historical mutual fund CAGR, absolute capital gains, and comparative NAV
           performance across 8 schemes.
@@ -829,11 +831,7 @@ const Lumpsum = ({
             >
               Select mutual funds ({pinnedFunds.length}/8)
             </button>
-            <button
-              type="button"
-              className={styles.outlineButton}
-              onClick={toggleShowDate}
-            >
+            <button type="button" className={styles.outlineButton} onClick={toggleShowDate}>
               {showDate ? 'Time Slots' : 'Date Picker'}
             </button>
             <button
@@ -1049,39 +1047,39 @@ const Lumpsum = ({
                 />
               </Suspense>
             ) : (
-              <div className={styles.chartPlaceholder}>
-                Select up to 8 funds to see comparison
+              <div className={styles.chartPlaceholder}>Select up to 8 funds to see comparison</div>
+            ))}
+        </div>
+      </div>
+      <div className={styles.statsGrid}>
+        {/*
+         * ======================================================
+         * STATS
+         *
+         * EXACTLY TWO CARDS PER ROW.
+         *
+         * 1  2
+         * 3  4
+         * ======================================================
+         */}
+        {pinnedFunds.length > 0 && (
+          <div className={styles.mfDisplayGrid}>
+            {fundAnalyses.map((fund) => (
+              <div key={fund.schemeCode} className={styles.mfDisplayItem}>
+                {renderStatsCard(
+                  fund.startNav,
+                  fund.endNav,
+                  fund.matureAmt,
+                  fund.profitAmt,
+                  fund.profit,
+                  fund.absProfit,
+                  fund.schemeName,
+                  fund.color
+                )}
               </div>
             ))}
-          {/*
-           * ======================================================
-           * STATS
-           *
-           * EXACTLY TWO CARDS PER ROW.
-           *
-           * 1  2
-           * 3  4
-           * ======================================================
-           */}
-          {pinnedFunds.length > 0 && (
-            <div className={styles.mfDisplayGrid}>
-              {fundAnalyses.map((fund) => (
-                <div key={fund.schemeCode} className={styles.mfDisplayItem}>
-                  {renderStatsCard(
-                    fund.startNav,
-                    fund.endNav,
-                    fund.matureAmt,
-                    fund.profitAmt,
-                    fund.profit,
-                    fund.absProfit,
-                    fund.schemeName,
-                    fund.color
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
