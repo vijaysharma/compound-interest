@@ -656,26 +656,6 @@ const EmiCalculator: React.FC = () => {
           </div>
         </div>
         <div className={styles.resultsCol}>
-          {(() => {
-            const isEmiRevised =
-              hasEmiAdjustment &&
-              currentEmi > 0 &&
-              Math.round(currentEmi) !== Math.round(baseMonthlyEmi);
-            return (
-              <DisplayCard
-                primaryAmount={Math.round(isEmiRevised ? currentEmi : baseMonthlyEmi)}
-                title={isEmiRevised ? 'Revised Monthly EMI' : 'Monthly EMI Amount'}
-                secondaryInfo={
-                  isEmiRevised
-                    ? {
-                        title: 'Original EMI',
-                        amount: Math.round(baseMonthlyEmi),
-                      }
-                    : undefined
-                }
-              />
-            );
-          })()}
           {/* Loan Statistics & Pie Chart Section */}
           {principalAmount > 0 && (
             <section className={styles.card}>
@@ -684,14 +664,6 @@ const EmiCalculator: React.FC = () => {
                   <p className={styles.cardEyebrow}>Breakdown &amp; Analytics</p>
                   <h2 className={styles.cardHeading}>Loan Statistics &amp; Payment Proportion</h2>
                 </div>
-                {schedule.length > 0 && (
-                  <span className={styles.countBadge}>
-                    {totalPaymentsCount} Total Payments
-                    {partPaymentsCount > 0
-                      ? ` (${regularEmisCount} EMIs + ${partPaymentsCount} Prepayment${partPaymentsCount === 1 ? '' : 's'})`
-                      : ` (${regularEmisCount} EMIs)`}
-                  </span>
-                )}
               </div>
               <div className={styles.analyticsGrid}>
                 {/* Pie Chart Visual */}
@@ -786,8 +758,36 @@ const EmiCalculator: React.FC = () => {
                   </div>
                 </div>
               </div>
+              {schedule.length > 0 && (
+                <span className={styles.countBadge}>
+                  {totalPaymentsCount} Total Payments
+                  {partPaymentsCount > 0
+                    ? ` (${regularEmisCount} EMIs + ${partPaymentsCount} Prepayment${partPaymentsCount === 1 ? '' : 's'})`
+                    : ` (${regularEmisCount} EMIs)`}
+                </span>
+              )}
             </section>
           )}
+          {(() => {
+            const isEmiRevised =
+              hasEmiAdjustment &&
+              currentEmi > 0 &&
+              Math.round(currentEmi) !== Math.round(baseMonthlyEmi);
+            return (
+              <DisplayCard
+                primaryAmount={Math.round(isEmiRevised ? currentEmi : baseMonthlyEmi)}
+                title={isEmiRevised ? 'Revised Monthly EMI' : 'Monthly EMI Amount'}
+                secondaryInfo={
+                  isEmiRevised
+                    ? {
+                        title: 'Original EMI',
+                        amount: Math.round(baseMonthlyEmi),
+                      }
+                    : undefined
+                }
+              />
+            );
+          })()}
         </div>
       </div>
       {/* Middle 2-Column Section: Part Payments & Rate Changes */}
