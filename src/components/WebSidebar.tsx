@@ -10,8 +10,6 @@ import {
   FiBox,
   FiBriefcase,
   FiCalendar,
-  FiChevronLeft,
-  FiChevronRight,
   FiClock,
   FiCompass,
   FiCpu,
@@ -103,7 +101,7 @@ const ADMIN_SECTION: SidebarSection = {
   ],
 };
 const WebSidebar: React.FC = () => {
-  const { isCollapsed, toggleSidebar } = useSidebar();
+  const { isCollapsed } = useSidebar();
   const { pathname } = useLocation();
   const { isAdmin } = useAuth();
   // AuthContext seeds the user from localStorage, so isAdmin is false during
@@ -125,18 +123,6 @@ const WebSidebar: React.FC = () => {
       className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : styles.expanded}`}
       aria-label="Sidebar Navigation"
     >
-      <div className={`${styles.sidebarHeader} ${isCollapsed ? styles.sidebarHeaderCollapsed : ''}`}>
-        {!isCollapsed && <span className={styles.headerTitle}>Calculators</span>}
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className={styles.toggleBtn}
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {isCollapsed ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
-        </button>
-      </div>
       <nav className={styles.navBody}>
         {allSections.map((section, sIdx) => (
           <div key={section.title} className={styles.section}>
