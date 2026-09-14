@@ -4,21 +4,16 @@ import { useLocation, useNavigate } from '@/navigation';
 import Link from './PrefetchLink';
 import {
   FiAward,
-  FiFileText,
-  FiGlobe,
-  FiInfo,
   FiLogOut,
   FiMenu,
-  FiPercent,
   FiShield,
-  FiTool,
-  FiTrendingUp,
   FiX,
   FiZap,
 } from 'react-icons/fi';
 import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
+import { NAVIGATION_SECTIONS, ADMIN_SECTION } from '@/data/navigation';
 import styles from './TopBar.module.scss';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
@@ -71,6 +66,8 @@ const getNavTitle = (pathname: string) => {
     '/income-tax-calculator': 'Income Tax Calculator',
     '/tax-calculator': 'Income Tax Calculator',
     '/tax/income-tax': 'Income Tax Calculator',
+    '/file-itr': 'Upload Form 16 & File ITR',
+    '/file-income-tax-return': 'Upload Form 16 & File ITR',
   };
   return titles[pathname] ?? 'Rupee Calculator';
 };
@@ -89,6 +86,7 @@ const TopBar = ({ className }: { className?: string }) => {
     setPrevPathname(pathname);
     setIsMenuOpen(false);
   }
+  const allSections = mounted && isAdmin ? [...NAVIGATION_SECTIONS, ADMIN_SECTION] : NAVIGATION_SECTIONS;
   useEffect(() => {
     if (!isProfileOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -297,222 +295,33 @@ const TopBar = ({ className }: { className?: string }) => {
                 </button>
               </div>
               <nav aria-label="Calculator pages" className={styles.navGroup}>
-                {isAdmin && (
-                  <div className={styles.navSection}>
+                {allSections.map((section) => (
+                  <div
+                    key={section.title}
+                    className={`${styles.navSection} ${section.title === 'Info & Legal' ? styles.dividerTop : ''}`}
+                  >
                     <h3 className={styles.navCategoryTitle}>
-                      <FiShield className={styles.navCategoryIcon} />
-                      <span>Admin</span>
+                      <span>{section.title}</span>
                     </h3>
-                    <Link
-                      to="/admin"
-                      className={styles.navLink}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Data administration
-                    </Link>
-                    <Link
-                      to="/admin/shiprocket-rates"
-                      className={styles.navLink}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Shiprocket Rates
-                    </Link>
-                    <Link
-                      to="/admin/volumetric-weight"
-                      className={styles.navLink}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Volumetric Weight
-                    </Link>
-                    <Link
-                      to="/admin/wood-calculator"
-                      className={styles.navLink}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Wood Calculator
-                    </Link>
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          className={`${styles.navLink} ${item.isPro ? styles.between : ''}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <span className={styles.navLinkContent}>
+                            <Icon className={styles.navItemIcon} size={16} />
+                            <span>{item.name}</span>
+                          </span>
+                          {item.isPro && <span className={styles.proPill}>Pro</span>}
+                        </Link>
+                      );
+                    })}
                   </div>
-                )}
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiFileText className={styles.navCategoryIcon} />
-                    <span>Tax &amp; Retirement Planning</span>
-                  </h3>
-                  <Link
-                    to="/income-tax-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Income Tax &amp; Strategy Optimizer
-                  </Link>
-                  <Link
-                    to="/ppf-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    PPF Calculator
-                  </Link>
-                  <Link
-                    to="/nps-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    NPS Calculator
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiTrendingUp className={styles.navCategoryIcon} />
-                    <span>Mutual Funds &amp; Investments</span>
-                  </h3>
-                  <Link
-                    to="/sip-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    SIP Calculator
-                  </Link>
-                  <Link
-                    to="/swp-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    SWP Calculator
-                  </Link>
-                  <Link
-                    to="/mutual-funds/lumpsum"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Lumpsum Returns
-                  </Link>
-                  <Link
-                    to="/mutual-funds/sip"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    MF SIP Explorer
-                  </Link>
-                  <Link
-                    to="/mutual-funds/swp"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    MF SWP Explorer
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiPercent className={styles.navCategoryIcon} />
-                    <span>Banking &amp; Loans</span>
-                  </h3>
-                  <Link
-                    to="/emi-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    EMI Calculator
-                  </Link>
-                  <Link
-                    to="/fd-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Fixed Deposits (FD)
-                  </Link>
-                  <Link
-                    to="/rd-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Recurring Deposits (RD)
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiGlobe className={styles.navCategoryIcon} />
-                    <span>Economics &amp; Currency</span>
-                  </h3>
-                  <Link
-                    to="/currency-converter"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Currency Converter
-                  </Link>
-                  <Link
-                    to="/ppp-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    PPP Exchange Rate
-                  </Link>
-                  <Link
-                    to="/inflation-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Inflation Rates
-                  </Link>
-                </div>
-                <div className={styles.navSection}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiTool className={styles.navCategoryIcon} />
-                    <span>Utilities</span>
-                  </h3>
-                  <Link
-                    to="/calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Calculator (Basic &amp; Scientific)
-                  </Link>
-                  <Link
-                    to="/utilities/unit-converter"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Unit Converter
-                  </Link>
-                  <Link
-                    to="/date-calculator"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Date Calculator
-                  </Link>
-                  <Link
-                    to="/utilities/quick-notes"
-                    className={`${styles.navLink} ${styles.between}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span>Quick Notes</span>
-                    <span className={styles.proPill}>Pro</span>
-                  </Link>
-                </div>
-                <div className={`${styles.navSection} ${styles.dividerTop}`}>
-                  <h3 className={styles.navCategoryTitle}>
-                    <FiInfo className={styles.navCategoryIcon} />
-                    <span>Info &amp; Legal</span>
-                  </h3>
-                  <Link to="/about" className={styles.navLink} onClick={() => setIsMenuOpen(false)}>
-                    About Us
-                  </Link>
-                  <Link
-                    to="/privacy"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Privacy Policy
-                  </Link>
-                  <Link
-                    to="/disclaimer"
-                    className={styles.navLink}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Disclaimer
-                  </Link>
-                </div>
+                ))}
               </nav>
             </>
             {isAuthenticated && user && (
@@ -524,7 +333,7 @@ const TopBar = ({ className }: { className?: string }) => {
                     className={styles.unlockProBtn}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <FiZap style={{ width: '0.875rem', height: '0.875rem' }} />
+                    <FiZap className={styles.btnIcon} />
                     <span>Unlock Pro (₹54/mo)</span>
                   </Link>
                 )}
@@ -536,7 +345,7 @@ const TopBar = ({ className }: { className?: string }) => {
                   }}
                   className={styles.signOutBtn}
                 >
-                  <FiLogOut style={{ width: '0.875rem', height: '0.875rem' }} />
+                  <FiLogOut className={styles.btnIcon} />
                   <span>Sign Out</span>
                 </button>
               </div>

@@ -621,7 +621,7 @@ const Calculator: React.FC = () => {
           <div className={styles.historyDrawer}>
             <div className={styles.historyHeader}>
               <span className={styles.historyTitle}>
-                <FiClock style={{ width: '0.875rem', height: '0.875rem' }} /> History
+                <FiClock size={14} /> History
               </span>
               <div className={styles.historyControls}>
                 {history.length > 0 && (
@@ -631,7 +631,7 @@ const Calculator: React.FC = () => {
                     className={styles.clearHistoryBtn}
                     title="Clear history"
                   >
-                    <FiRotateCcw style={{ width: '0.75rem', height: '0.75rem' }} /> Clear
+                    <FiRotateCcw size={12} /> Clear
                   </button>
                 )}
                 <button
@@ -639,7 +639,7 @@ const Calculator: React.FC = () => {
                   onClick={() => setShowHistory(false)}
                   className={styles.closeHistoryBtn}
                 >
-                  <FiX style={{ width: '1rem', height: '1rem' }} />
+                  <FiX size={16} />
                 </button>
               </div>
             </div>
@@ -708,12 +708,7 @@ const Calculator: React.FC = () => {
                   })
                 )}
                 {/* Visible Blinking Cursor (only when content exists) */}
-                <span
-                  className={styles.cursorCaret}
-                  style={{
-                    animation: 'calcCaretBlink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                  }}
-                />
+                <span className={styles.cursorCaret} />
                 {/* Clickable characters after cursor */}
                 {textAfterCursor.split('').map((ch, idx) =>
                   renderChar(ch, `after-${idx}`, (e) => {
@@ -737,7 +732,7 @@ const Calculator: React.FC = () => {
               {liveResult}
             </span>
           ) : (
-            <span style={{ fontSize: '0.875rem', opacity: 0 }}>0</span>
+            <span className={styles.hiddenPlaceholder}>0</span>
           )}
         </div>
         {/* Utility Icon Bar: History, Scientific, Copy, Paste, Cursor Chevrons & Backspace */}
@@ -749,7 +744,7 @@ const Calculator: React.FC = () => {
               className={`${styles.circleBtn} ${showHistory ? styles.active : ''}`}
               title="Calculation History"
             >
-              <FiClock style={{ width: '1rem', height: '1rem' }} />
+              <FiClock size={16} />
             </button>
             <button
               type="button"
@@ -757,7 +752,7 @@ const Calculator: React.FC = () => {
               className={`${styles.scientificToggleBtn} ${showScientific ? styles.active : ''}`}
               title="Toggle Scientific Keypad (Trig, Hyperbolic, Roots, Exponents)"
             >
-              <TbMathFunction style={{ width: '1rem', height: '1rem' }} />
+              <TbMathFunction size={16} />
               <span>Scientific</span>
             </button>
             <button
@@ -767,7 +762,7 @@ const Calculator: React.FC = () => {
               className={styles.circleBtn}
               title="Copy expression or result (Ctrl+C / ⌘C)"
             >
-              <FiCopy style={{ width: '1rem', height: '1rem' }} />
+              <FiCopy size={16} />
             </button>
             <button
               type="button"
@@ -775,7 +770,7 @@ const Calculator: React.FC = () => {
               className={styles.circleBtn}
               title="Paste expression (Ctrl+V / ⌘V)"
             >
-              <FiClipboard style={{ width: '1rem', height: '1rem' }} />
+              <FiClipboard size={16} />
             </button>
           </div>
           {/* Cursor Stepper & Backspace */}
@@ -787,7 +782,7 @@ const Calculator: React.FC = () => {
               title="Move cursor left"
               disabled={cursorPosition === 0}
             >
-              <FiChevronLeft style={{ width: '1rem', height: '1rem' }} />
+              <FiChevronLeft size={16} />
             </button>
             <button
               type="button"
@@ -796,16 +791,15 @@ const Calculator: React.FC = () => {
               title="Move cursor right"
               disabled={cursorPosition >= expression.length}
             >
-              <FiChevronRight style={{ width: '1rem', height: '1rem' }} />
+              <FiChevronRight size={16} />
             </button>
             <button
               type="button"
               onClick={handleBackspace}
-              className={styles.circleBtn}
-              style={{ color: 'var(--color-primary)', marginLeft: '0.25rem' }}
+              className={`${styles.circleBtn} ${styles.toolBtnPrimary}`}
               title="Backspace"
             >
-              <FiDelete style={{ width: '1.25rem', height: '1.25rem' }} />
+              <FiDelete size={20} />
             </button>
           </div>
         </div>
@@ -1007,8 +1001,7 @@ const Calculator: React.FC = () => {
         <button
           type="button"
           onClick={() => insertAtCursor('.')}
-          className={`${styles.keypadBtn} ${styles.keypadBtnNumber}`}
-          style={{ fontWeight: 700 }}
+          className={`${styles.keypadBtn} ${styles.keypadBtnNumber} ${styles.fontBold}`}
         >
           .
         </button>

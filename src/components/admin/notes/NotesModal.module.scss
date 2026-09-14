@@ -440,3 +440,388 @@
     transform: rotate(360deg);
   }
 }
+
+.folderItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folderItemName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.createFolderForm {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.newFolderBtn {
+  width: 100%;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.primaryIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.secondaryIcon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.securityModalBox {
+  padding: 1.5rem;
+  position: relative;
+}
+
+.securityCloseBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.securityModalHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-right: 2.5rem;
+}
+
+.securityHeaderMeta {
+  min-width: 0;
+  flex: 1;
+}
+
+.securityTitleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.securityTitleLarge {
+  font-size: 1.125rem;
+}
+
+.securitySubtitleSpaced {
+  margin-top: 0.25rem;
+}
+
+.securityAlertSuccess {
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.alertIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.storageEngineBox {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  &.blob {
+    background: rgba(59, 130, 246, 0.08);
+  }
+
+  &.fallback {
+    background: rgba(245, 158, 11, 0.08);
+  }
+}
+
+.storageEngineLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.securityFooter {
+  margin-top: 1.25rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lockActionsBetween {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+}
+
+.lockActionsEnd {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.btnGroup {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.noSelect {
+  user-select: none;
+}
+
+.backupIconBox {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.titleWithBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.alertPadding {
+  padding: 0.75rem 1rem 0;
+}
+
+.flexShrink0 {
+  flex-shrink: 0;
+}
+
+.tabContent {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.backupStatusBanner {
+  padding: 0.75rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backupStatusTitle {
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.backupStatusSub {
+  font-size: 11px;
+  opacity: 0.6;
+  margin: 2px 0 0 0;
+}
+
+.sectionLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.5;
+  margin-bottom: 0.5rem;
+}
+
+.cloudBtnLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.driveIconBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+}
+
+.oneDriveIconBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(14, 165, 233, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0284c7;
+}
+
+.shareIconBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.downloadIconBox {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+}
+
+.cloudBtnTitle {
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.cloudBtnDesc {
+  font-size: 11px;
+  opacity: 0.6;
+  margin: 2px 0 0 0;
+}
+
+.linkIconDim {
+  opacity: 0.4;
+}
+
+.svgIcon20 {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.dropzoneIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.dropzoneTitle {
+  font-size: 0.875rem;
+  fontWeight: 600;
+  margin: 0;
+}
+
+.dropzoneDesc {
+  font-size: 11px;
+  opacity: 0.5;
+  margin: 4px 0 0 0;
+}
+
+.backupDetailsBox {
+  padding: 0.75rem;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.backupDetailsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.backupDetailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.detailsStat {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.primaryIcon {
+  color: var(--color-primary);
+}
+
+.restoreModeSection {
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.restoreModeLabel {
+  font-size: 11px;
+  font-weight: 700;
+  display: block;
+  opacity: 0.6;
+  margin-bottom: 0.35rem;
+}
+
+.restoreModeButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.flex1 {
+  flex: 1;
+}
+
+.replaceBtn {
+  flex: 1;
+  border: 1px solid var(--color-border);
+}
+
+.replaceBtnActive {
+  flex: 1;
+  border: 1px solid #ef4444;
+}
+
+.restoreModeDesc {
+  font-size: 10px;
+  opacity: 0.5;
+  font-style: italic;
+  margin: 4px 0 0 0;
+}
+
+.modalFooterBorder {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}

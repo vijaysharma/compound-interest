@@ -356,3 +356,17 @@
     text-decoration: underline;
   }
 }
+
+.summarySub {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-weight: normal;
+}
+
+.statValueError {
+  color: var(--color-error, #ef4444) !important;
+}
+
+.marginZero {
+  margin: 0 !important;
+}

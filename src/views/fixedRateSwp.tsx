@@ -271,7 +271,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Portfolio Longevity Summary</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+              <span className={styles.summarySub}>
                 {t.tenure} {t.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt}% ROI
               </span>
             </div>

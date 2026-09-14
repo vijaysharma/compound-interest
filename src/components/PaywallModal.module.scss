@@ -209,3 +209,58 @@
     opacity: 1;
   }
 }
+
+.planToggleContainer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.planToggleBtn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border, #ccc);
+  background-color: transparent;
+  color: inherit;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &Active {
+    background-color: var(--color-primary, #6e0b75);
+    color: #ffffff;
+    border-color: var(--color-primary, #6e0b75);
+  }
+}
+
+.taxProContainer {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.taxProLink {
+  background: none;
+  border: none;
+  color: var(--color-primary, #6e0b75);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.iconSmall {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.iconMedium {
+  width: 1rem;
+  height: 1rem;
+}
+
+.iconLarge {
+  width: 1.25rem;
+  height: 1.25rem;
+}

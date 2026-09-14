@@ -311,7 +311,7 @@ const UnitConverter: React.FC = () => {
                 <span className={styles.heroUnit}>{toUnit}</span>
               </div>
               {hasValue && outputValue && (
-                <div style={{ fontSize: '0.8125rem', opacity: 0.7 }}>
+                <div className={styles.heroEquation}>
                   {inputValue} {fromUnit} = {outputValue} {toUnit}
                 </div>
               )}

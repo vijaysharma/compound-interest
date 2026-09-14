@@ -185,14 +185,14 @@ export const NotesList: React.FC<NotesListProps> = ({
           >
             {title}
           </h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+          <div className={styles.cardHeaderIcons}>
             {note.is_locked && (
-              <span title="Locked Note" style={{ opacity: 0.6 }}>
+              <span title="Locked Note" className={styles.lockIcon}>
                 <BsLockFill size={14} />
               </span>
             )}
             {note.is_pinned && (
-              <span title="Pinned Note" style={{ color: 'var(--color-primary)' }}>
+              <span title="Pinned Note" className={styles.pinIcon}>
                 <BsPinFill size={14} />
               </span>
             )}
@@ -200,8 +200,7 @@ export const NotesList: React.FC<NotesListProps> = ({
         </div>
         <div className={styles.cardMeta}>
           <span
-            className={styles.cardDate}
-            style={{ color: isSelected ? 'var(--color-primary)' : undefined }}
+            className={`${styles.cardDate} ${isSelected ? styles.cardDateSelected : ''}`}
           >
             {dateFormatted}
           </span>
@@ -244,8 +243,7 @@ export const NotesList: React.FC<NotesListProps> = ({
               </button>
               <button
                 onClick={(e) => onTogglePin(note.id, e)}
-                className={styles.floatingBtn}
-                style={{ color: note.is_pinned ? 'var(--color-primary)' : undefined }}
+                className={`${styles.floatingBtn} ${note.is_pinned ? styles.pinnedFloatingBtn : ''}`}
                 title={note.is_pinned ? 'Unpin' : 'Pin to top'}
               >
                 {note.is_pinned ? <BsPinFill size={12} /> : <BsPin size={12} />}
@@ -260,7 +258,7 @@ export const NotesList: React.FC<NotesListProps> = ({
             </>
           )}
           {isTrash ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <div className={styles.trashActions}>
               <button
                 onClick={(e) => onRestoreNote(note.id, e)}
                 className={`${styles.floatingBtn} ${styles.success}`}
@@ -392,7 +390,7 @@ export const NotesList: React.FC<NotesListProps> = ({
           )}
         </div>
         <div className={styles.subBar}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+          <div className={styles.sortWrapper}>
             <span>Sort by:</span>
             <select
               value={sortOption}
@@ -407,7 +405,7 @@ export const NotesList: React.FC<NotesListProps> = ({
           {isTrash && filteredNotes.length > 0 && (
             <button
               onClick={onEmptyTrash}
-              style={{ color: '#ef4444', textDecoration: 'underline', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
+              className={styles.emptyTrashBtn}
             >
               Empty Trash
             </button>
@@ -416,7 +414,7 @@ export const NotesList: React.FC<NotesListProps> = ({
             <button
               type="button"
               onClick={onOpenSecurityModal}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '10.5px', color: '#16a34a', textDecoration: 'underline', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 500 }}
+              className={styles.securityBtn}
               title="End-to-End Encrypted with AES-256-GCM: Zero-Knowledge Privacy"
             >
               <FiShield size={12} />
@@ -428,8 +426,8 @@ export const NotesList: React.FC<NotesListProps> = ({
       <div className={`${styles.listContent} qn-scrollbar`}>
         {filteredNotes.length === 0 ? (
           <div className={styles.emptyState}>
-            <FiEdit3 size={32} style={{ opacity: 0.3 }} />
-            <p style={{ margin: 0, fontWeight: 500 }}>
+            <FiEdit3 size={32} className={styles.emptyStateIcon} />
+            <p className={styles.emptyStateText}>
               {searchQuery
                 ? 'No matching notes found'
                 : isTrash
@@ -460,17 +458,16 @@ export const NotesList: React.FC<NotesListProps> = ({
                   className={`${styles.galleryCard} ${isSelected ? styles.gallerySelected : ''}`}
                 >
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                    <div className={styles.galleryCardHeader}>
                       <h4
-                        className={`${styles.cardTitle} ${isSelected ? styles.cardTitleSelected : ''}`}
-                        style={{ fontSize: '0.75rem' }}
+                        className={`${styles.cardTitle} ${styles.galleryCardTitle} ${isSelected ? styles.cardTitleSelected : ''}`}
                       >
                         {title}
                       </h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
-                        {note.is_pinned && <BsPinFill size={12} style={{ color: 'var(--color-primary)' }} />}
+                      <div className={styles.galleryCardHeaderActions}>
+                        {note.is_pinned && <BsPinFill size={12} className={styles.pinIcon} />}
                         {isTrash ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <div className={styles.trashActions}>
                             <button
                               onClick={(e) => onRestoreNote(note.id, e)}
                               className={`${styles.floatingBtn} ${styles.success}`}
@@ -503,12 +500,12 @@ export const NotesList: React.FC<NotesListProps> = ({
                         )}
                       </div>
                     </div>
-                    <p style={{ fontSize: '11px', opacity: 0.5, margin: 0, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <p className={styles.gallerySnippet}>
                       {snippet}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem', paddingTop: '0.25rem', borderTop: '1px solid var(--color-border)' }}>
-                    <span style={{ fontSize: '10px', opacity: 0.5, fontWeight: 500 }}>
+                  <div className={styles.galleryFooter}>
+                    <span className={styles.galleryDate}>
                       {formatNoteDate(note.updated_at || note.created_at)}
                     </span>
                     {!isTrash && (
@@ -517,11 +514,11 @@ export const NotesList: React.FC<NotesListProps> = ({
                           e.stopPropagation();
                           setNoteToMove(note);
                         }}
-                        style={{ fontSize: '10px', color: 'var(--color-primary)', textDecoration: 'underline', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}
+                        className={styles.galleryFolderBtn}
                         title="Move to Folder"
                       >
                         <FiFolder size={10} />
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60px' }}>
+                        <span className={styles.galleryFolderText}>
                           {note.folder || 'Quick Notes'}
                         </span>
                       </button>
@@ -534,12 +531,12 @@ export const NotesList: React.FC<NotesListProps> = ({
         ) : (
           <>
             {pinnedNotes.length > 0 && (
-              <div style={{ marginBottom: '0.75rem' }}>
-                <div style={{ padding: '0.25rem 0.5rem', fontSize: '10px', fontWeight: 700, opacity: 0.4, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <BsPinFill size={10} style={{ color: 'var(--color-primary)' }} />
+              <div className={styles.pinnedSection}>
+                <div className={styles.sectionTitleHeader}>
+                  <BsPinFill size={10} className={styles.pinIcon} />
                   <span>Pinned</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div className={styles.notesColumn}>
                   {pinnedNotes.map(renderNoteCard)}
                 </div>
               </div>
@@ -547,11 +544,11 @@ export const NotesList: React.FC<NotesListProps> = ({
             {unpinnedNotes.length > 0 && (
               <div>
                 {pinnedNotes.length > 0 && (
-                  <div style={{ padding: '0.5rem 0.5rem 0.25rem', fontSize: '10px', fontWeight: 700, opacity: 0.4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div className={styles.notesSectionHeader}>
                     Notes
                   </div>
                 )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div className={styles.notesColumn}>
                   {unpinnedNotes.map(renderNoteCard)}
                 </div>
               </div>
@@ -561,12 +558,12 @@ export const NotesList: React.FC<NotesListProps> = ({
       </div>
       {noteToDelete && (
         <div className={modalStyles.modalOverlay}>
-          <div className={`${modalStyles.modalBox} ${modalStyles.modalBoxSm}`} style={{ padding: '1.25rem' }}>
-            <h3 className={modalStyles.modalTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444' }}>
+          <div className={`${modalStyles.modalBox} ${modalStyles.modalBoxSm} ${styles.deleteModalBox}`}>
+            <h3 className={`${modalStyles.modalTitle} ${styles.deleteModalTitle}`}>
               <FiTrash2 size={20} />
               {isTrash ? 'Permanently Delete Note' : 'Move to Trash'}
             </h3>
-            <p className={modalStyles.helperText} style={{ marginTop: '0.5rem' }}>
+            <p className={`${modalStyles.helperText} ${styles.deleteModalText}`}>
               {isTrash ? (
                 <>
                   Are you sure you want to permanently delete{' '}
@@ -580,7 +577,7 @@ export const NotesList: React.FC<NotesListProps> = ({
                 </>
               )}
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+            <div className={styles.modalActionsRow}>
               <button
                 onClick={() => setNoteToDelete(null)}
                 className={modalStyles.btnGhost}
@@ -589,8 +586,7 @@ export const NotesList: React.FC<NotesListProps> = ({
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className={modalStyles.btnPrimary}
-                style={{ background: '#ef4444' }}
+                className={`${modalStyles.btnPrimary} ${styles.deleteConfirmBtn}`}
               >
                 {isTrash ? 'Delete Permanently' : 'Move to Trash'}
               </button>

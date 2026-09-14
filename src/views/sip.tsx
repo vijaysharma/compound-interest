@@ -740,8 +740,8 @@ const SIP = ({
         <div className={styles.statTitle}>
           <span
             className={styles.fundColorDot}
-            style={{
-              backgroundColor: color,
+            ref={(el) => {
+              if (el) el.style.backgroundColor = color;
             }}
             aria-hidden="true"
           />

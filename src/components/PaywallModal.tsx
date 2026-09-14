@@ -135,17 +135,17 @@ const PaywallModal = () => {
           className={styles.closeBtn}
           aria-label="Close modal"
         >
-          <FiX style={{ width: '1.25rem', height: '1.25rem' }} />
+          <FiX className={styles.iconLarge} />
         </button>
         <div className={styles.header}>
           {isTrialActive ? (
             <div className={`${styles.badgeTrial} ${styles.active}`}>
-              <FiClock style={{ width: '0.875rem', height: '0.875rem' }} />
+              <FiClock className={styles.iconSmall} />
               <span>Trial Active</span>
             </div>
           ) : (
             <div className={`${styles.badgeTrial} ${styles.expired}`}>
-              <FiZap style={{ width: '0.875rem', height: '0.875rem' }} />
+              <FiZap className={styles.iconSmall} />
               <span>Trial Expired</span>
             </div>
           )}
@@ -154,54 +154,36 @@ const PaywallModal = () => {
           </h2>
           <p className={styles.subtitle}>
             {isTrialActive ? (
-              <>
-                You have{' '}
-                <span className={styles.highlightPrimary}>
-                  {remainingCalculations} of {user?.freeLimit || 15}
-                </span>{' '}
-                live Mutual Fund, Inflation &amp; PPP calculation runs remaining
-                {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other
-                tools in the Calculators Suite are 100% free. Unlock unlimited access today.
-              </>
-            ) : (
-              <>
-                Your free trial for live AMFI Mutual Funds, Inflation &amp; PPP analytics has ended for{' '}
-                <span className={styles.highlightSemibold}>{user?.email}</span>. Calculators Suite tools remain
-                free to use.
-              </>
-            )}
+               <>
+                 You have{' '}
+                 <span className={styles.highlightPrimary}>
+                   {remainingCalculations} of {user?.freeLimit || 15}
+                 </span>{' '}
+                 live Mutual Fund, Inflation &amp; PPP calculation runs remaining
+                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other
+                 tools in the Calculators Suite are 100% free. Unlock unlimited access today.
+               </>
+             ) : (
+               <>
+                 Your free trial for live AMFI Mutual Funds, Inflation &amp; PPP analytics has ended for{' '}
+                 <span className={styles.highlightSemibold}>{user?.email}</span>. Calculators Suite tools remain
+                 free to use.
+               </>
+             )}
           </p>
           {/* Monthly / Yearly Plan Toggle */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+          <div className={styles.planToggleContainer}>
             <button
               type="button"
               onClick={() => setBillingInterval('monthly')}
-              style={{
-                padding: '0.35rem 0.85rem',
-                borderRadius: '9999px',
-                border: '1px solid var(--color-border, #ccc)',
-                backgroundColor: billingInterval === 'monthly' ? 'var(--color-primary, #6e0b75)' : 'transparent',
-                color: billingInterval === 'monthly' ? '#fff' : 'inherit',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-              }}
+              className={`${styles.planToggleBtn} ${billingInterval === 'monthly' ? styles.planToggleBtnActive : ''}`}
             >
               ₹{proMonthlyAmount} / 30 Days
             </button>
             <button
               type="button"
               onClick={() => setBillingInterval('yearly')}
-              style={{
-                padding: '0.35rem 0.85rem',
-                borderRadius: '9999px',
-                border: '1px solid var(--color-border, #ccc)',
-                backgroundColor: billingInterval === 'yearly' ? 'var(--color-primary, #6e0b75)' : 'transparent',
-                color: billingInterval === 'yearly' ? '#fff' : 'inherit',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-              }}
+              className={`${styles.planToggleBtn} ${billingInterval === 'yearly' ? styles.planToggleBtnActive : ''}`}
             >
               ₹499 / Year (Save 23%)
             </button>
@@ -228,27 +210,19 @@ const PaywallModal = () => {
               </>
             ) : (
               <>
-                <FiLock style={{ width: '1rem', height: '1rem' }} />
+                <FiLock className={styles.iconMedium} />
                 <span>Pay ₹{planAmount} &amp; Unlock Pro Access</span>
               </>
             )}
           </button>
-          <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+          <div className={styles.taxProContainer}>
             <button
               type="button"
               onClick={() => {
                 setShowPaywall(false);
                 navigate('/upgrade');
               }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--color-primary, #6e0b75)',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              }}
+              className={styles.taxProLink}
             >
               Looking for Tax Advisory? View Tax Pro Plans (₹129/mo) &rarr;
             </button>

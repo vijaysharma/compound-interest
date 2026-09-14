@@ -1341,7 +1341,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
     return (
       <div className={styles.lockedContainer}>
         <div className={styles.lockedTopBar}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className={styles.lockedTopBarLeft}>
             {onBackMobile && (
               <button
                 onClick={onBackMobile}
@@ -1351,7 +1351,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 <span>{folderTitle || 'Notes'}</span>
               </button>
             )}
-            <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>Locked Note</span>
+            <span className={styles.lockedNoteTitle}>Locked Note</span>
           </div>
           <button
             onClick={() => setShowDeleteConfirm(true)}
@@ -1365,8 +1365,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           <div className={styles.lockedIconBox}>
             <BsLockFill size={32} />
           </div>
-          <h3 className={styles.emptyTitle} style={{ marginBottom: '0.25rem' }}>This note is locked</h3>
-          <p className={styles.emptyText} style={{ marginBottom: '1.5rem' }}>
+          <h3 className={`${styles.emptyTitle} ${styles.mb025}`}>This note is locked</h3>
+          <p className={`${styles.emptyText} ${styles.mb15}`}>
             Enter the password for this note to view its contents.
           </p>
           {unlockError && (
@@ -1374,7 +1374,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               <span>{unlockError}</span>
             </div>
           )}
-          <form onSubmit={handleUnlockNote} style={{ width: '100%' }}>
+          <form onSubmit={handleUnlockNote} className={styles.wFull}>
             <input
               type="password"
               autoFocus
@@ -1401,21 +1401,27 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   return (
     <div
       className={`${styles.container} qn-paper`}
-      style={
-        isMobileScreen && viewportState
-          ? {
-              position: 'fixed',
-              left: 0,
-              right: 0,
-              top: `${viewportState.offsetTop}px`,
-              height: `${viewportState.height}px`,
-              zIndex: 40,
-            }
-          : {
-              height: '100%',
-              maxHeight: '100%',
-            }
-      }
+      ref={(el) => {
+        if (el) {
+          if (isMobileScreen && viewportState) {
+            el.style.position = 'fixed';
+            el.style.left = '0';
+            el.style.right = '0';
+            el.style.top = `${viewportState.offsetTop}px`;
+            el.style.height = `${viewportState.height}px`;
+            el.style.zIndex = '40';
+            el.style.maxHeight = '';
+          } else {
+            el.style.position = '';
+            el.style.left = '';
+            el.style.right = '';
+            el.style.top = '';
+            el.style.zIndex = '';
+            el.style.height = '100%';
+            el.style.maxHeight = '100%';
+          }
+        }
+      }}
     >
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
@@ -1425,7 +1431,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               className={styles.backBtn}
             >
               <FiChevronLeft size={20} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }}>{folderTitle || 'Notes'}</span>
+              <span className={styles.truncateMax100}>{folderTitle || 'Notes'}</span>
             </button>
           )}
           {onToggleSidebar && !isMobileScreen && (
@@ -1449,8 +1455,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 className={`${styles.folderSelector} ${activeDropdown === 'folder' ? styles.active : ''}`}
                 title="Move to another folder"
               >
-                <FiFolder size={14} color="var(--color-primary)" style={{ flexShrink: 0 }} />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>{currentFolder}</span>
+                <FiFolder size={14} color="var(--color-primary)" className={styles.flexShrink0} />
+                <span className={styles.truncateMax140}>{currentFolder}</span>
               </button>
               {activeDropdown === 'folder' && (
                 <ul
@@ -1479,8 +1485,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         setShowMoveModal(true);
                         setActiveDropdown(null);
                       }}
-                      className={styles.dropdownItem}
-                      style={{ color: 'var(--color-primary)', fontWeight: 600 }}
+                      className={`${styles.dropdownItem} ${styles.dropdownItemPrimary}`}
                     >
                       <FiFolderPlus size={14} />
                       Manage Folders...
@@ -1536,8 +1541,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
             {activeDropdown === 'share' && (
               <ul
-                className={`${styles.dropdownMenu} ${styles.alignRight}`}
-                style={{ width: '13rem' }}
+                className={`${styles.dropdownMenu} ${styles.alignRight} ${styles.dropdownWidth13}`}
               >
                 {!isTrash && (
                   <li>
@@ -1576,7 +1580,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     }}
                     className={styles.dropdownItem}
                   >
-                    <svg style={{ width: 14, height: 14, fill: '#0284c7' }} viewBox="0 0 24 24">
+                    <svg className={styles.svgOneDrive} viewBox="0 0 24 24">
                       <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
                     </svg>
                     Save to OneDrive
@@ -1590,8 +1594,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         onOpenBackupModal();
                         setActiveDropdown(null);
                       }}
-                      className={styles.dropdownItem}
-                      style={{ color: 'var(--color-primary)', fontWeight: 600 }}
+                      className={`${styles.dropdownItem} ${styles.dropdownItemPrimary}`}
                     >
                       <BsCloudArrowUp size={14} />
                       Backup & Restore
@@ -1608,7 +1611,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     }}
                     className={styles.dropdownItem}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className={styles.flexGap05}>
                       <FiCopy size={14} />
                       Copy Content
                     </span>
@@ -1673,23 +1676,21 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             )}
           </div>
           {isTrash ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <div className={styles.flexGap025}>
               <button
                 onClick={onRestoreNote}
-                className={`${styles.btnGhost} ${styles.success}`}
-                style={{ minHeight: '38px' }}
+                className={`${styles.btnGhost} ${styles.success} ${styles.btnMinHeight38}`}
                 title="Restore Note"
               >
-                <FiRotateCcw size={16} style={{ marginRight: '0.25rem' }} />
+                <FiRotateCcw size={16} className={styles.iconMr025} />
                 Put Back
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className={styles.btnGhost}
-                style={{ color: '#ef4444', minHeight: '38px' }}
+                className={`${styles.btnGhost} ${styles.btnDangerMin38}`}
                 title="Delete Permanently"
               >
-                <FiTrash2 size={16} style={{ marginRight: '0.25rem' }} />
+                <FiTrash2 size={16} className={styles.iconMr025} />
                 Delete
               </button>
             </div>
@@ -1739,8 +1740,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
             {activeDropdown === 'format' && (
               <ul
-                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
-                style={{ width: '9rem' }}
+                className={`${styles.dropdownMenu} ${styles.alignLeft} ${styles.dropdownWidth9}`}
               >
                 <li>
                   <button
@@ -1750,8 +1750,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h1>');
                       setActiveDropdown(null);
                     }}
-                    className={styles.dropdownItem}
-                    style={{ fontWeight: 700 }}
+                    className={`${styles.dropdownItem} ${styles.fw700}`}
                   >
                     Title (H1)
                   </button>
@@ -1764,8 +1763,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h2>');
                       setActiveDropdown(null);
                     }}
-                    className={styles.dropdownItem}
-                    style={{ fontWeight: 600 }}
+                    className={`${styles.dropdownItem} ${styles.fw600}`}
                   >
                     Heading (H2)
                   </button>
@@ -1778,8 +1776,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h3>');
                       setActiveDropdown(null);
                     }}
-                    className={styles.dropdownItem}
-                    style={{ fontWeight: 500 }}
+                    className={`${styles.dropdownItem} ${styles.fw500}`}
                   >
                     Subheading (H3)
                   </button>
@@ -1805,8 +1802,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<pre>');
                       setActiveDropdown(null);
                     }}
-                    className={styles.dropdownItem}
-                    style={{ fontFamily: 'monospace' }}
+                    className={`${styles.dropdownItem} ${styles.fontMono}`}
                   >
                     Monospaced
                   </button>
@@ -1825,12 +1821,11 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
             >
               <span>{FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Size'}</span>
-              <span style={{ fontSize: '9px', opacity: 0.6 }}>▼</span>
+              <span className={styles.arrowDownSmall}>▼</span>
             </button>
             {activeDropdown === 'fontSize' && (
               <ul
-                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
-                style={{ width: '9rem' }}
+                className={`${styles.dropdownMenu} ${styles.alignLeft} ${styles.dropdownWidth9}`}
               >
                 {FONT_SIZES.map((fs) => {
                   const isActive = currentFontSize === fs.size;
@@ -1844,10 +1839,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                           setActiveDropdown(null);
                         }}
                         className={`${styles.dropdownItem} ${isActive ? styles.active : ''}`}
-                        style={{ fontSize: fs.size }}
+                        ref={(el) => {
+                          if (el) el.style.fontSize = fs.size;
+                        }}
                       >
                         <span>{fs.label}</span>
-                        {isActive && <span style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 700 }}>✓</span>}
+                        {isActive && <span className={styles.activeCheck}>✓</span>}
                       </button>
                     </li>
                   );
@@ -1869,11 +1866,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
             {activeDropdown === 'palette' && (
               <div
-                className={`${styles.dropdownMenu} ${styles.alignLeft}`}
-                style={{ width: '14rem', padding: '0.65rem' }}
+                className={`${styles.dropdownMenu} ${styles.alignLeft} ${styles.paletteDropdown}`}
               >
                 <div className={styles.dropdownTitle}>Text Color</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.375rem', marginBottom: '0.65rem' }}>
+                <div className={styles.colorGrid5}>
                   {TEXT_COLORS.map((c) => (
                     <button
                       key={c.value}
@@ -1884,14 +1880,16 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         setActiveDropdown(null);
                       }}
                       className={styles.colorSwatch}
-                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value }}
+                      ref={(el) => {
+                        if (el) el.style.backgroundColor = c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value;
+                      }}
                       title={c.label}
                     />
                   ))}
                 </div>
                 <div className={styles.dropdownDivider} />
                 <div className={styles.dropdownTitle}>Highlight Color</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem' }}>
+                <div className={styles.highlightGrid4}>
                   {HIGHLIGHT_COLORS.map((c) => (
                     <button
                       key={c.value}
@@ -1902,7 +1900,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         setActiveDropdown(null);
                       }}
                       className={styles.colorSwatch}
-                      style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
+                      ref={(el) => {
+                        if (el) el.style.backgroundColor = c.value === 'transparent' ? 'transparent' : c.value;
+                      }}
                       title={c.label}
                     >
                       {c.value === 'transparent' ? '✕' : ''}
@@ -2056,17 +2056,16 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           </span>
           <button
             onClick={onRestoreNote}
-            className={styles.btnPrimary}
-            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', borderRadius: '8px' }}
+            className={`${styles.btnPrimary} ${styles.restoreBtnSm}`}
           >
-            <FiRotateCcw size={12} style={{ marginRight: '0.25rem' }} />
+            <FiRotateCcw size={12} className={styles.iconMr025} />
             Restore Note
           </button>
         </div>
       )}
       {activeTable && !isTrash && (
         <div className={styles.tableToolsBar}>
-          <span style={{ fontWeight: 600, opacity: 0.6, fontSize: '11px', whiteSpace: 'nowrap' }}>
+          <span className={styles.tableToolsTitle}>
             Table Tools:
           </span>
           <button
@@ -2089,8 +2088,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           </button>
           <button
             onClick={() => setActiveTable(null)}
-            className={styles.toolbarBtn}
-            style={{ marginLeft: 'auto' }}
+            className={`${styles.toolbarBtn} ${styles.mlAuto}`}
           >
             <FiX size={14} />
           </button>
@@ -2138,21 +2136,14 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                   className={styles.encryptedBadge}
                   title="Zero-Knowledge AES-256-GCM End-to-End Encrypted: Click for details"
                 >
-                  <FiShield size={12} style={{ flexShrink: 0 }} />
+                  <FiShield size={12} className={styles.flexShrink0} />
                   <span>E2E Encrypted</span>
                 </button>
               )}
               <span>
                 {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} characters
               </span>
-              <span
-                style={{
-                  fontWeight: 500,
-                  fontSize: '11px',
-                  color: isSaving ? 'var(--color-primary)' : 'var(--color-text)',
-                  opacity: isSaving ? 1 : 0.5,
-                }}
-              >
+              <span className={`${styles.saveStatus} ${isSaving ? styles.saving : ''}`}>
                 {isSaving ? 'Saving...' : 'Saved'}
               </span>
             </div>
@@ -2169,7 +2160,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           />
           {/* Tags section placed under title to prevent obscuring editor canvas */}
           <div className={styles.tagsRow}>
-            <FiTag size={14} style={{ color: 'var(--color-text)', opacity: 0.4, marginRight: '0.25rem' }} />
+            <FiTag size={14} className={styles.tagRowIcon} />
             {(note.tags || []).map((tag) => (
               <span
                 key={tag}
@@ -2190,7 +2181,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             {!isTrash && (
               <>
                 {isAddingTag ? (
-                  <form onSubmit={handleAddTag} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <form onSubmit={handleAddTag} className={styles.tagAddForm}>
                     <input
                       type="text"
                       autoFocus
@@ -2201,14 +2192,13 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       className={styles.tagInput}
                       onKeyDown={(e) => e.key === 'Escape' && setIsAddingTag(false)}
                     />
-                    <button type="submit" className={styles.tagRemoveBtn} style={{ color: '#16a34a' }}>
+                    <button type="submit" className={`${styles.tagRemoveBtn} ${styles.tagSubmitBtn}`}>
                       <FiCheck size={12} />
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsAddingTag(false)}
-                      className={styles.tagRemoveBtn}
-                      style={{ color: '#ef4444' }}
+                      className={`${styles.tagRemoveBtn} ${styles.tagCancelBtn}`}
                     >
                       <FiX size={12} />
                     </button>
@@ -2267,12 +2257,11 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           >
             <BsArrowClockwise size={16} />
           </button>
-          <div style={{ position: 'relative' }}>
+          <div className={styles.relativeBox}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'format' ? null : 'format')}
-              className={`${styles.mobileBarBtn} ${activeMobileMenu === 'format' ? styles.active : ''}`}
-              style={{ fontWeight: 700, fontSize: '12px' }}
+              className={`${styles.mobileBarBtn} ${styles.mobileFormatBtn} ${activeMobileMenu === 'format' ? styles.active : ''}`}
               title="Format & Font Size"
             >
               Aa
@@ -2287,8 +2276,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h1>');
                       setActiveMobileMenu(null);
                     }}
-                    className={styles.dropdownItem}
-                    style={{ fontWeight: 700 }}
+                    className={`${styles.dropdownItem} ${styles.fw700}`}
                   >
                     Title (H1)
                   </button>
@@ -2300,8 +2288,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h2>');
                       setActiveMobileMenu(null);
                     }}
-                    className={styles.dropdownItem}
-                    style={{ fontWeight: 600 }}
+                    className={`${styles.dropdownItem} ${styles.fw600}`}
                   >
                     Heading (H2)
                   </button>
@@ -2313,8 +2300,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       execCmd('formatBlock', '<h3>');
                       setActiveMobileMenu(null);
                     }}
-                    className={styles.dropdownItem}
-                    style={{ fontWeight: 500 }}
+                    className={`${styles.dropdownItem} ${styles.fw500}`}
                   >
                     Subheading (H3)
                   </button>
@@ -2346,10 +2332,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                           setActiveMobileMenu(null);
                         }}
                         className={`${styles.dropdownItem} ${isActive ? styles.active : ''}`}
-                        style={{ fontSize: fs.size }}
+                        ref={(el) => {
+                          if (el) el.style.fontSize = fs.size;
+                        }}
                       >
                         <span>{fs.label}</span>
-                        {isActive && <span style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 700 }}>✓</span>}
+                        {isActive && <span className={styles.activeCheck}>✓</span>}
                       </button>
                     </li>
                   );
@@ -2357,7 +2345,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </ul>
             )}
           </div>
-          <div style={{ position: 'relative' }}>
+          <div className={styles.relativeBox}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'palette' ? null : 'palette')}
@@ -2368,9 +2356,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             </button>
             {activeMobileMenu === 'palette' && (
               <div className={`${styles.mobilePopup} ${styles.alignLeft} ${styles.wide}`}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '0.375rem', marginBottom: '0.375rem', borderBottom: '1px solid var(--color-border)' }}>
-                  <span className={styles.dropdownTitle} style={{ padding: 0 }}>Styles</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div className={styles.mobileStylesHeader}>
+                  <span className={`${styles.dropdownTitle} ${styles.dropdownTitleNoPad}`}>Styles</span>
+                  <div className={styles.flexGap025}>
                     <button
                       type="button"
                       onClick={() => execCmd('bold')}
@@ -2405,8 +2393,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     </button>
                   </div>
                 </div>
-                <div className={styles.dropdownTitle} style={{ padding: '0.2rem 0' }}>Text Color</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.375rem', marginBottom: '0.5rem' }}>
+                <div className={`${styles.dropdownTitle} ${styles.dropdownTitlePadY}`}>Text Color</div>
+                <div className={styles.mobileColorGrid5}>
                   {TEXT_COLORS.map((c) => (
                     <button
                       key={c.value}
@@ -2416,14 +2404,16 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         setActiveMobileMenu(null);
                       }}
                       className={styles.colorSwatch}
-                      style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value }}
+                      ref={(el) => {
+                        if (el) el.style.backgroundColor = c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value;
+                      }}
                       title={c.label}
                     />
                   ))}
                 </div>
                 <div className={styles.dropdownDivider} />
-                <div className={styles.dropdownTitle} style={{ padding: '0.2rem 0' }}>Highlight</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem' }}>
+                <div className={`${styles.dropdownTitle} ${styles.dropdownTitlePadY}`}>Highlight</div>
+                <div className={styles.highlightGrid4}>
                   {HIGHLIGHT_COLORS.map((c) => (
                     <button
                       key={c.value}
@@ -2433,7 +2423,9 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                         setActiveMobileMenu(null);
                       }}
                       className={styles.colorSwatch}
-                      style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
+                      ref={(el) => {
+                        if (el) el.style.backgroundColor = c.value === 'transparent' ? 'transparent' : c.value;
+                      }}
                       title={c.label}
                     >
                       {c.value === 'transparent' ? '✕' : ''}
@@ -2454,7 +2446,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
           >
             <BsCardChecklist size={16} />
           </button>
-          <div style={{ position: 'relative' }}>
+          <div className={styles.relativeBox}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'lists' ? null : 'lists')}
@@ -2517,7 +2509,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
               </ul>
             )}
           </div>
-          <div style={{ position: 'relative' }}>
+          <div className={styles.relativeBox}>
             <button
               type="button"
               onClick={() => setActiveMobileMenu(activeMobileMenu === 'more' ? null : 'more')}
@@ -2631,12 +2623,12 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
       )}
       {showDeleteConfirm && (
         <div className={modalStyles.modalOverlay}>
-          <div className={`${modalStyles.modalBox} ${modalStyles.modalBoxSm}`} style={{ padding: '1.25rem' }}>
-            <h3 className={modalStyles.modalTitle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444' }}>
+          <div className={`${modalStyles.modalBox} ${modalStyles.modalBoxSm} ${styles.deleteModalBox}`}>
+            <h3 className={`${modalStyles.modalTitle} ${styles.deleteModalTitle}`}>
               <FiTrash2 size={20} />
               {isTrash || note.is_trashed ? 'Permanently Delete Note' : 'Move to Trash'}
             </h3>
-            <p className={modalStyles.helperText} style={{ marginTop: '0.5rem' }}>
+            <p className={`${modalStyles.helperText} ${styles.deleteModalText}`}>
               {isTrash || note.is_trashed ? (
                 <>
                   Are you sure you want to permanently delete{' '}
@@ -2650,7 +2642,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                 </>
               )}
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
+            <div className={styles.modalActionsRow}>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className={modalStyles.btnGhost}
@@ -2666,8 +2658,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     onDeleteNote();
                   }
                 }}
-                className={modalStyles.btnPrimary}
-                style={{ background: '#ef4444' }}
+                className={`${modalStyles.btnPrimary} ${styles.deleteConfirmBtn}`}
               >
                 {isTrash || note.is_trashed ? 'Delete Permanently' : 'Move to Trash'}
               </button>

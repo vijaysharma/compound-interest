@@ -245,3 +245,14 @@
   overflow-x: auto;
   line-height: 1.6;
 }
+
+.variationResultText {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: #6d0b74;
+  font-weight: 600;
+}
+
+.cardFullWidth {
+  grid-column: 1 / -1;
+}

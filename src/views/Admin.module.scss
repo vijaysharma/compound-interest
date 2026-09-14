@@ -657,3 +657,100 @@
     transform: rotate(360deg);
   }
 }
+
+.cellUserEmail {
+  font-weight: 600;
+}
+
+.cellUtrRef {
+  font-family: monospace;
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.cellDate {
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+.processedSpan {
+  opacity: 0.5;
+  font-size: 11px;
+}
+
+.quotaWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.quotaText {
+  font-family: monospace;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+.quotaOverLimit {
+  color: #ef4444;
+}
+
+.syncContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cardLabel {
+  display: block;
+  margin: 0;
+}
+
+.syncTextareaImf {
+  min-height: 180px;
+  font-family: monospace;
+  margin-bottom: 1rem;
+}
+
+.syncTextareaPpp {
+  min-height: 140px;
+  font-family: monospace;
+}
+
+.mb1 {
+  margin-bottom: 1rem;
+}
+
+.detailsHelpText {
+  opacity: 0.7;
+  margin: 0;
+}
+
+.aiCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.aiCheckbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--color-primary);
+}
+
+.aiCheckboxText {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.configuredKeyBadge {
+  margin-left: 0.5rem;
+  color: #16a34a;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.modalUserEmail {
+  font-weight: 600;
+  color: var(--color-primary);
+}

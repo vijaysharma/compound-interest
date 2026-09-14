@@ -149,7 +149,7 @@ const PpfCalculator: React.FC = () => {
       />
       <header className={styles.header}>
         <div className={styles.badge}>
-          <FiShield style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} />
+          <FiShield className={styles.badgeIcon} />
           Government of India &bull; RBI Rules &bull; EEE Tax-Free
         </div>
         <h1 className={styles.title}>PPF Calculator (Public Provident Fund)</h1>
@@ -337,19 +337,19 @@ const PpfCalculator: React.FC = () => {
             </div>
             <div className={styles.eeeList}>
               <div className={styles.eeeItem}>
-                <FiCheckCircle style={{ color: '#16a34a' }} />
+                <FiCheckCircle className={styles.checkIcon} />
                 <span>
                   <strong>Investment:</strong> Eligible for Section 80C deduction up to ₹1.5L/year.
                 </span>
               </div>
               <div className={styles.eeeItem}>
-                <FiCheckCircle style={{ color: '#16a34a' }} />
+                <FiCheckCircle className={styles.checkIcon} />
                 <span>
                   <strong>Interest Earned:</strong> 100% Tax-Exempt under Section 10(11).
                 </span>
               </div>
               <div className={styles.eeeItem}>
-                <FiCheckCircle style={{ color: '#16a34a' }} />
+                <FiCheckCircle className={styles.checkIcon} />
                 <span>
                   <strong>Maturity Corpus:</strong> Completely tax-free upon withdrawal.
                 </span>
@@ -360,12 +360,16 @@ const PpfCalculator: React.FC = () => {
               <div className={styles.progressBar}>
                 <div
                   className={styles.progressInvested}
-                  style={{ width: `${investedPercent}%` }}
+                  ref={(el) => {
+                    if (el) el.style.width = `${investedPercent}%`;
+                  }}
                   title={`Invested: ${investedPercent}%`}
                 />
                 <div
                   className={styles.progressGains}
-                  style={{ width: `${gainsPercent}%` }}
+                  ref={(el) => {
+                    if (el) el.style.width = `${gainsPercent}%`;
+                  }}
                   title={`Interest: ${gainsPercent}%`}
                 />
               </div>
@@ -381,21 +385,12 @@ const PpfCalculator: React.FC = () => {
       {/* Year-by-Year Schedule */}
       <section className={styles.scheduleSection}>
         <div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1rem',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-            }}
-          >
+          <div className={styles.scheduleHeader}>
             <div>
-              <h2 className={styles.sectionHeading} style={{ margin: 0 }}>
+              <h2 className={`${styles.sectionHeading} ${styles.subheading}`}>
                 Year-by-Year PPF Growth Schedule
               </h2>
-              <p className={styles.subtitle} style={{ margin: '0.25rem 0 0' }}>
+              <p className={`${styles.subtitle} ${styles.subheadingDesc}`}>
                 Shows actual historical rates declared by the Ministry of Finance vs forward
                 projected rates.
               </p>
@@ -424,13 +419,7 @@ const PpfCalculator: React.FC = () => {
                         <td>
                           <strong>Yr {row.yearNumber}</strong>
                           {row.isExtensionYear && (
-                            <span
-                              style={{
-                                marginLeft: '0.25rem',
-                                fontSize: '0.625rem',
-                                color: '#d97706',
-                              }}
-                            >
+                            <span className={styles.extBadge}>
                               (Ext)
                             </span>
                           )}
@@ -455,11 +444,11 @@ const PpfCalculator: React.FC = () => {
                           {currencySymbol}
                           {row.annualDeposit.toLocaleString('en-IN')}
                         </td>
-                        <td style={{ color: '#16a34a', fontWeight: 600 }}>
+                        <td className={styles.interestCell}>
                           +{currencySymbol}
                           {row.totalInterest.toLocaleString('en-IN')}
                         </td>
-                        <td style={{ fontWeight: 700 }}>
+                        <td className={styles.balanceCell}>
                           {currencySymbol}
                           {row.closingBalance.toLocaleString('en-IN')}
                         </td>
@@ -483,15 +472,9 @@ const PpfCalculator: React.FC = () => {
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={8} style={{ padding: 0 }}>
+                          <td colSpan={8} className={styles.monthExpandCell}>
                             <div className={styles.monthTableWrapper}>
-                              <div
-                                style={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  marginBottom: '0.5rem',
-                                }}
-                              >
+                              <div className={styles.monthTableHeading}>
                                 Month-by-Month Interest Breakdown for FY {row.fyLabel} (Rate:{' '}
                                 {row.interestRate}%)
                               </div>
@@ -517,7 +500,7 @@ const PpfCalculator: React.FC = () => {
                                         {currencySymbol}
                                         {m.eligibleBalanceForInterest.toLocaleString('en-IN')}
                                       </td>
-                                      <td style={{ color: '#16a34a' }}>
+                                      <td className={styles.monthCellInterest}>
                                         +{currencySymbol}
                                         {m.monthlyInterest.toLocaleString('en-IN')}
                                       </td>

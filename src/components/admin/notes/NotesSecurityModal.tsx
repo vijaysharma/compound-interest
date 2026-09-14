@@ -15,37 +15,35 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
   return (
     <div className={styles.modalOverlay}>
       <div
-        className={`${styles.modalBox} ${styles.modalBoxLg}`}
-        style={{ padding: '1.5rem', position: 'relative' }}
+        className={`${styles.modalBox} ${styles.modalBoxLg} ${styles.securityModalBox}`}
         role="dialog"
         aria-labelledby="security-modal-title"
       >
         <button
           onClick={onClose}
-          className={styles.closeBtn}
-          style={{ position: 'absolute', top: '1rem', right: '1rem' }}
+          className={`${styles.closeBtn} ${styles.securityCloseBtn}`}
           aria-label="Close modal"
         >
           <FiX size={18} />
         </button>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1rem', paddingRight: '2.5rem' }}>
+        <div className={styles.securityModalHeader}>
           <div className={styles.modalIconSuccess}>
             <FiShield size={24} />
           </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
-              <h3 id="security-modal-title" className={styles.modalTitle} style={{ fontSize: '1.125rem' }}>
+          <div className={styles.securityHeaderMeta}>
+            <div className={styles.securityTitleRow}>
+              <h3 id="security-modal-title" className={`${styles.modalTitle} ${styles.securityTitleLarge}`}>
                 End-to-End Encrypted
               </h3>
               <span className={`${styles.badge} ${styles.badgeSuccess}`}>
                 AES-256-GCM
               </span>
             </div>
-            <p className={styles.modalSubtitle} style={{ marginTop: '0.25rem' }}>Zero-Knowledge Client-Side Protection</p>
+            <p className={`${styles.modalSubtitle} ${styles.securitySubtitleSpaced}`}>Zero-Knowledge Client-Side Protection</p>
           </div>
         </div>
-        <div className={styles.alertSuccess} style={{ marginBottom: '1rem', lineHeight: 1.4 }}>
-          <FiCheckCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+        <div className={`${styles.alertSuccess} ${styles.securityAlertSuccess}`}>
+          <FiCheckCircle size={16} className={styles.alertIcon} />
           <span>
             Your notes and titles are encrypted in your browser before they are synced to the cloud.
             Only your device holds the keys to decrypt and view them.
@@ -53,21 +51,10 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
         </div>
         {storageProvider && (
           <div
-            style={{
-              border: '1px solid var(--color-border)',
-              borderRadius: '10px',
-              padding: '0.65rem 0.85rem',
-              marginBottom: '1rem',
-              fontSize: '0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.5rem',
-              background: storageProvider === 'vercel_blob' ? 'rgba(59, 130, 246, 0.08)' : 'rgba(245, 158, 11, 0.08)'
-            }}
+            className={`${styles.storageEngineBox} ${storageProvider === 'vercel_blob' ? styles.blob : styles.fallback}`}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FiCloud size={16} style={{ flexShrink: 0 }} />
+            <div className={styles.storageEngineLeft}>
+              <FiCloud size={16} className={styles.alertIcon} />
               <span>
                 Storage Engine:{' '}
                 <strong>
@@ -146,7 +133,7 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
             </div>
           </div>
         </div>
-        <div style={{ marginTop: '1.25rem', paddingTop: '0.85rem', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className={styles.securityFooter}>
           <button onClick={onClose} className={styles.btnPrimary}>
             Got It
           </button>

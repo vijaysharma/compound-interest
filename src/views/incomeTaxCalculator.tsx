@@ -24,6 +24,9 @@ import {
   AgeCategory,
   CityCategory,
   compareTaxRegimes,
+  FinancialYear,
+  getAssessmentYear,
+  getLatestRunningFinancialYear,
   TaxIncomeInputs,
 } from '../utilities/incomeTaxCalculations';
 import { generateTaxAIAdviceAction } from '@/actions/taxAi';
@@ -33,9 +36,9 @@ const taxSchema = {
   '@graph': [
     {
       '@type': 'FinancialProduct',
-      name: 'Income Tax Calculator India FY 2024-25 & FY 2025-26',
+      name: 'Income Tax Calculator India — Old vs New Tax Regime',
       description:
-        'Dual-regime income tax calculator comparing Old vs New Tax Regime with Budget 2024 slab updates, Section 87A rebate, capital gains rules, deductions, and Tax Strategy Optimizer.',
+        'Dual-regime income tax calculator comparing Old vs New Tax Regime with latest slab updates, Section 87A rebate, capital gains rules, deductions, and Tax Strategy Optimizer.',
       category: 'TaxCalculator',
       provider: {
         '@type': 'Organization',
@@ -51,7 +54,7 @@ const taxSchema = {
           name: 'What is the zero-tax limit under the New Tax Regime for salaried employees?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Under the New Tax Regime (FY 2024-25 / FY 2025-26), salaried individuals enjoy an enhanced Standard Deduction of ₹75,000 and Section 87A rebate up to ₹25,000 on taxable income up to ₹7,00,000. Effectively, salaried individuals with a gross income of up to ₹7,75,000 pay zero income tax.',
+            text: 'Under the New Tax Regime, salaried individuals enjoy an enhanced Standard Deduction of ₹75,000 and Section 87A rebate up to ₹25,000 on taxable income up to ₹7,00,000. Effectively, salaried individuals with a gross income of up to ₹7,75,000 pay zero income tax.',
           },
         },
         {
@@ -59,7 +62,7 @@ const taxSchema = {
           name: 'How is income from PPF taxed in India?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'PPF enjoys Exempt-Exempt-Exempt (EEE) status. The annual interest credited to your PPF account is 100% tax-free under Section 10(11) of the Income Tax Act under both Old and New Tax Regimes, and the final maturity amount is completely exempt from tax.',
+            text: 'Interest earned on Public Provident Fund (PPF) is 100% tax-free under Section 10(11) of the Income Tax Act under both the Old and New Tax Regimes (EEE status).',
           },
         },
       ],
@@ -67,13 +70,12 @@ const taxSchema = {
   ],
 };
 const SALARY_STEPS = [
-  { id: 's1', value: '5000000', title: '₹50L' },
-  { id: 's2', value: '3000000', title: '₹30L' },
-  { id: 's3', value: '2000000', title: '₹20L' },
-  { id: 's4', value: '1500000', title: '₹15L' },
-  { id: 's5', value: '1000000', title: '₹10L' },
-  { id: 's6', value: '750000', title: '₹7.5L' },
-  { id: 's7', value: '500000', title: '₹5L' },
+  { id: 's1', value: '3000000', title: '₹30L' },
+  { id: 's2', value: '2000000', title: '₹20L' },
+  { id: 's3', value: '1500000', title: '₹15L' },
+  { id: 's4', value: '1000000', title: '₹10L' },
+  { id: 's5', value: '750000', title: '₹7.5L' },
+  { id: 's6', value: '500000', title: '₹5L' },
 ];
 const DEDUCTION_80C_STEPS = [
   { id: 'd1', value: '150000', title: '₹1.5L (Max)' },
@@ -85,7 +87,7 @@ const DEDUCTION_80C_STEPS = [
 const IncomeTaxCalculator: React.FC = () => {
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  const [financialYear, setFinancialYear] = useState<'2024-25' | '2025-26'>('2024-25');
+  const [financialYear, setFinancialYear] = useState<FinancialYear>(getLatestRunningFinancialYear());
   const [ageCategory, setAgeCategory] = useState<AgeCategory>('general');
   const [isSalaried, setIsSalaried] = useState<boolean>(true);
   // Active inputs tab
@@ -362,20 +364,20 @@ const IncomeTaxCalculator: React.FC = () => {
   return (
     <main className={styles.container}>
       <SEOHead
-        title="Income Tax Calculator FY 2024-25 & 2025-26 — Old vs New Tax Regime | Rupee Calculator"
-        description="Calculate & compare income tax under Old vs New Tax Regime with Budget 2024 slabs, capital gains rules, PPF exemption, breakeven deductions, and Tax Strategy Advisory."
-        keywords="income tax calculator, old vs new tax regime, tax calculator FY 2024-25, Section 87A rebate, standard deduction 75000, capital gains tax calculator, tax strategy advisory India, income tax slab 2025"
+        title={`Income Tax Calculator FY ${financialYear} (${getAssessmentYear(financialYear)}) — Old vs New Tax Regime | Rupee Calculator`}
+        description={`Calculate & compare income tax under Old vs New Tax Regime for FY ${financialYear} (${getAssessmentYear(financialYear)}) with latest slabs, capital gains rules, PPF exemption, breakeven deductions, and Tax Strategy Advisory.`}
+        keywords="income tax calculator, old vs new tax regime, tax calculator, Section 87A rebate, standard deduction, capital gains tax calculator, tax strategy advisory India, income tax slab"
         canonicalPath="/income-tax-calculator"
         schema={taxSchema}
       />
       <header className={styles.header}>
         <div className={styles.badge}>
-          <FiShield style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} />
-          Income Tax Department of India &bull; Budget 2024 Updates &bull; Strategy Engine
+          <FiShield className={styles.shieldIcon} />
+          Income Tax Department of India &bull; Budget Updates &bull; Strategy Engine
         </div>
         <h1 className={styles.title}>Income Tax Calculator &amp; Optimizer</h1>
         <p className={styles.subtitle}>
-          Compare Old vs New Tax Regime for FY {financialYear}, model multiple income sources
+          Compare Old vs New Tax Regime for FY {financialYear} ({getAssessmentYear(financialYear)}), model multiple income sources
           (Salary, Business, Rental, Capital Gains, PPF), and discover the best way to optimize your
           taxes.
         </p>
@@ -582,22 +584,12 @@ const IncomeTaxCalculator: React.FC = () => {
           </section>
           {/* Breakeven Deductions Indicator */}
           <section className={styles.breakevenCard}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '0.5rem',
-              }}
-            >
+            <div className={styles.section80CHeader}>
               <div>
-                <div
-                  style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}
-                >
+                <div className={styles.breakevenTitle}>
                   Breakeven Deductions Threshold
                 </div>
-                <div style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                <div className={styles.breakevenSubtitle}>
                   You need a minimum of{' '}
                   <strong>
                     {currencySymbol}
@@ -606,9 +598,9 @@ const IncomeTaxCalculator: React.FC = () => {
                   in total deductions for the Old Regime to be better than the New Regime.
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Currently Claimed</div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--color-primary)' }}>
+              <div className={styles.textRight}>
+                <div className={styles.claimedLabel}>Currently Claimed</div>
+                <div className={styles.claimedValue}>
                   {currencySymbol}
                   {comparison.currentDeductionsClaimed.toLocaleString('en-IN')}
                 </div>
@@ -617,26 +609,28 @@ const IncomeTaxCalculator: React.FC = () => {
             <div className={styles.breakevenBar}>
               <div
                 className={styles.breakevenFill}
-                style={{
-                  width: `${Math.min(
-                    100,
-                    Math.round(
-                      (comparison.currentDeductionsClaimed /
-                        (comparison.breakevenDeductions || 1)) *
-                        100
-                    )
-                  )}%`,
+                ref={(el) => {
+                  if (el) {
+                    el.style.width = `${Math.min(
+                      100,
+                      Math.round(
+                        (comparison.currentDeductionsClaimed /
+                          (comparison.breakevenDeductions || 1)) *
+                          100
+                      )
+                    )}%`;
+                  }
                 }}
               />
             </div>
             {comparison.additionalDeductionsNeeded > 0 ? (
-              <div style={{ fontSize: '0.6875rem', color: '#d97706', fontWeight: 600 }}>
+              <div className={styles.warningTextSmall}>
                 You need {currencySymbol}
                 {comparison.additionalDeductionsNeeded.toLocaleString('en-IN')} more in deductions
                 to break even with the New Regime.
               </div>
             ) : (
-              <div style={{ fontSize: '0.6875rem', color: '#16a34a', fontWeight: 600 }}>
+              <div className={styles.successTextSmall}>
                 Your deductions exceed the breakeven threshold, making the Old Regime more
                 beneficial!
               </div>
@@ -691,22 +685,16 @@ const IncomeTaxCalculator: React.FC = () => {
                   onClick={() => void handleGenerateStrategyAdvice(strategyQuestion)}
                   className={styles.aiAskBtn}
                 >
-                  <FiSend style={{ marginRight: '0.25rem' }} /> Consult Engine
+                  <FiSend className={styles.iconMrSmall} /> Consult Engine
                 </button>
               </div>
               {showUpgradeGate && !hasTaxPro && (
                 <div className={styles.taxProTeaser}>
                   <div>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: '0.9375rem',
-                        color: 'var(--color-heading)',
-                      }}
-                    >
+                    <div className={styles.proTeaserTitle}>
                       Unlock Personalized Tax Strategy Advisory
                     </div>
-                    <div style={{ fontSize: '0.8125rem', opacity: 0.85, marginTop: '0.25rem' }}>
+                    <div className={styles.proTeaserSub}>
                       Institutional-grade tax optimization with multi-source planning, custom
                       deduction modeling, and continuous savings recommendations is exclusive to{' '}
                       <strong>Tax Pro</strong> (₹129/mo or ₹999/yr).
@@ -723,37 +711,19 @@ const IncomeTaxCalculator: React.FC = () => {
               )}
               {strategyAdvice && (
                 <div className={styles.aiResponseBox}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      marginBottom: '0.75rem',
-                      color: 'var(--color-primary)',
-                      fontWeight: 700,
-                    }}
-                  >
+                  <div className={styles.advisoryHeader}>
                     <FiAward />
                     <span>Customized Tax Advisory Report</span>
                   </div>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{strategyAdvice}</div>
+                  <div className={styles.preWrap}>{strategyAdvice}</div>
                 </div>
               )}
             </div>
           </section>
           {/* Rule-Based Instant Optimization Recommendations */}
           <section className={styles.card}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontWeight: 700,
-                fontSize: '1rem',
-                color: 'var(--color-heading)',
-              }}
-            >
-              <FiTrendingUp style={{ color: '#16a34a' }} />
+            <div className={styles.strategiesHeader}>
+              <FiTrendingUp className={styles.trendingIcon} />
               <h2>Instant Tax Optimization Strategies</h2>
             </div>
             <p className={styles.cardDesc}>
@@ -776,14 +746,7 @@ const IncomeTaxCalculator: React.FC = () => {
                     <p className={styles.tipDesc}>{tip.description}</p>
                   </div>
                   {tip.codeSection && (
-                    <div
-                      style={{
-                        marginTop: '0.5rem',
-                        fontSize: '0.6875rem',
-                        opacity: 0.6,
-                        fontWeight: 600,
-                      }}
-                    >
+                    <div className={styles.tipRef}>
                       Ref: {tip.codeSection}
                     </div>
                   )}
@@ -824,25 +787,25 @@ const IncomeTaxCalculator: React.FC = () => {
             <div>
               <div>
                 <h2 className={styles.cardHeading}>Enter Income Sources &amp; Deductions</h2>
-                <p className={styles.cardDesc} style={{ margin: 0 }}>
+                <p className={`${styles.cardDesc} ${styles.marginZero}`}>
                   Adjust details below to see live updates to both tax regimes.
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div className={styles.headerControls}>
                 <select
                   value={financialYear}
-                  onChange={(e) => setFinancialYear(e.target.value as '2024-25' | '2025-26')}
-                  className={styles.select}
-                  style={{ width: '130px', height: '36px', fontSize: '0.75rem' }}
+                  onChange={(e) => setFinancialYear(e.target.value as FinancialYear)}
+                  className={`${styles.select} ${styles.yearSelect}`}
                 >
-                  <option value="2024-25">FY 2024-25</option>
-                  <option value="2025-26">FY 2025-26</option>
+                  <option value="2026-27">FY 2026-27 ({getAssessmentYear('2026-27')})</option>
+                  <option value="2025-26">FY 2025-26 ({getAssessmentYear('2025-26')})</option>
+                  <option value="2024-25">FY 2024-25 ({getAssessmentYear('2024-25')})</option>
+                  <option value="2023-24">FY 2023-24 ({getAssessmentYear('2023-24')})</option>
                 </select>
                 <select
                   value={ageCategory}
                   onChange={(e) => setAgeCategory(e.target.value as AgeCategory)}
-                  className={styles.select}
-                  style={{ width: '150px', height: '36px', fontSize: '0.75rem' }}
+                  className={`${styles.select} ${styles.ageSelect}`}
                 >
                   <option value="general">&lt;60 Yrs (General)</option>
                   <option value="senior">60-79 Yrs (Senior)</option>
@@ -904,21 +867,13 @@ const IncomeTaxCalculator: React.FC = () => {
             {/* Tab 1: Salary & HRA */}
             {activeTab === 'salary' && (
               <div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label
-                    className={styles.label}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      cursor: 'pointer',
-                    }}
-                  >
+                <div className={styles.marginBottom1}>
+                  <label className={`${styles.label} ${styles.checkboxLabel}`}>
                     <input
                       type="checkbox"
                       checked={isSalaried}
                       onChange={(e) => setIsSalaried(e.target.checked)}
-                      style={{ accentColor: 'var(--color-primary)' }}
+                      className={styles.primaryCheckbox}
                     />
                     <span>Are you a Salaried Employee? (Eligible for Standard Deduction)</span>
                   </label>
@@ -933,7 +888,7 @@ const IncomeTaxCalculator: React.FC = () => {
                       min={0}
                       max={100000000}
                     />
-                    <div className={styles.formGrid2} style={{ marginTop: '1rem' }}>
+                    <div className={`${styles.formGrid2} ${styles.marginTop1}`}>
                       <div className={styles.formField}>
                         <label htmlFor="tax-basic-salary" className={styles.label}>
                           Basic Salary (for HRA / NPS)
@@ -945,7 +900,7 @@ const IncomeTaxCalculator: React.FC = () => {
                           onChange={(e) => setBasicSalary(e.target.value)}
                           className={styles.input}
                         />
-                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                        <span className={styles.fieldHint}>
                           {convertToWords(sanitizeAmount(basicSalary), 'en-IN')}
                         </span>
                       </div>
@@ -1001,7 +956,7 @@ const IncomeTaxCalculator: React.FC = () => {
                           placeholder="e.g. 2400 (Deductible up to ₹2,500 in Old Regime)"
                           className={styles.input}
                         />
-                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                        <span className={styles.fieldHint}>
                           Deductible up to ₹2,500/year under Old Regime.
                         </span>
                       </div>
@@ -1017,49 +972,34 @@ const IncomeTaxCalculator: React.FC = () => {
                           placeholder="e.g. 50000"
                           className={styles.input}
                         />
-                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                        <span className={styles.fieldHint}>
                           Exempt from salary in Old Regime with valid receipts.
                         </span>
                       </div>
                     </div>
                     {/* Standard Deduction Custom Override */}
-                    <div
-                      style={{
-                        marginTop: '1rem',
-                        padding: '0.875rem',
-                        background: 'var(--color-bg-secondary)',
-                        borderRadius: 'var(--radius-sm, 6px)',
-                        border: '1px solid var(--color-border)',
-                      }}
-                    >
+                    <div className={styles.stdOverrideBox}>
                       <label className={styles.checkboxToggle}>
                         <input
                           type="checkbox"
                           checked={useCustomStdDeduction}
                           onChange={(e) => setUseCustomStdDeduction(e.target.checked)}
-                          style={{ accentColor: 'var(--color-primary)' }}
+                          className={styles.primaryCheckbox}
                         />
                         <span>
-                          Override Standard Deduction (Default: ₹75,000 New / ₹50,000 Old)
+                          Override Standard Deduction (Default: {financialYear === '2023-24' ? '₹50,000' : '₹75,000'} New / ₹50,000 Old)
                         </span>
                       </label>
-                      <p
-                        style={{
-                          margin: '0.375rem 0 0',
-                          fontSize: '0.75rem',
-                          lineHeight: 1.4,
-                          color: 'var(--color-text-secondary, #6b7280)',
-                        }}
-                      >
+                      <p className={styles.stdOverrideDesc}>
                         Under Section 16(ia), salaried individuals receive a flat standard deduction
-                        without submitting expense bills. Under Union Budget 2024, this is
-                        automatically set to ₹75,000 for the New Tax Regime (FY 2024-25 onwards) and
+                        without submitting expense bills. Under Union Budget rules, this is
+                        automatically set to {financialYear === '2023-24' ? '₹50,000' : '₹75,000'} for the New Tax Regime (FY {financialYear}) and
                         ₹50,000 for the Old Tax Regime. Enable this checkbox only if your employer
                         capped it to your actual salary or you have a specific prorated deduction
                         amount.
                       </p>
                       {useCustomStdDeduction && (
-                        <div style={{ marginTop: '0.75rem', maxWidth: '300px' }}>
+                        <div className={styles.stdOverrideInput}>
                           <input
                             type="text"
                             value={customStdDeduction}
@@ -1109,7 +1049,7 @@ const IncomeTaxCalculator: React.FC = () => {
                         name="hpStatus"
                         checked={isSelfOccupied}
                         onChange={() => setIsSelfOccupied(true)}
-                        style={{ accentColor: 'var(--color-primary)' }}
+                        className={styles.primaryCheckbox}
                       />
                       <span>Self-Occupied</span>
                     </label>
@@ -1119,7 +1059,7 @@ const IncomeTaxCalculator: React.FC = () => {
                         name="hpStatus"
                         checked={!isSelfOccupied}
                         onChange={() => setIsSelfOccupied(false)}
-                        style={{ accentColor: 'var(--color-primary)' }}
+                        className={styles.primaryCheckbox}
                       />
                       <span>Let-Out (Rented)</span>
                     </label>
@@ -1137,7 +1077,7 @@ const IncomeTaxCalculator: React.FC = () => {
                     placeholder="Max ₹2 Lakh deduction for self-occupied"
                     className={styles.input}
                   />
-                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                  <span className={styles.fieldHint}>
                     Deductible up to ₹2,00,000 in Old Regime.
                   </span>
                 </div>
@@ -1177,7 +1117,7 @@ const IncomeTaxCalculator: React.FC = () => {
                 <div className={styles.formField}>
                   <label htmlFor="tax-equity-stcg" className={styles.label}>
                     Equity Short-Term Capital Gains (STCG)
-                    <span style={{ marginLeft: '0.5rem', color: '#d97706', fontSize: '0.6875rem' }}>
+                    <span className={styles.fieldBadgeAmber}>
                       (Taxed at 20%)
                     </span>
                   </label>
@@ -1189,14 +1129,14 @@ const IncomeTaxCalculator: React.FC = () => {
                     placeholder="Shares / Equity MF held < 1 year"
                     className={styles.input}
                   />
-                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                  <span className={styles.fieldHint}>
                     Budget 2024 revised STCG rate to 20% under Section 111A.
                   </span>
                 </div>
                 <div className={styles.formField}>
                   <label htmlFor="tax-equity-ltcg" className={styles.label}>
                     Equity Long-Term Capital Gains (LTCG)
-                    <span style={{ marginLeft: '0.5rem', color: '#16a34a', fontSize: '0.6875rem' }}>
+                    <span className={styles.fieldBadgeGreen}>
                       (₹1.25L Exempt, 12.5% above)
                     </span>
                   </label>
@@ -1208,7 +1148,7 @@ const IncomeTaxCalculator: React.FC = () => {
                     placeholder="Shares / Equity MF held > 1 year"
                     className={styles.input}
                   />
-                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                  <span className={styles.fieldHint}>
                     First ₹1,25,000 is 100% tax-free under Section 112A.
                   </span>
                 </div>
@@ -1241,7 +1181,7 @@ const IncomeTaxCalculator: React.FC = () => {
                     onChange={(e) => setPpfInterest(e.target.value)}
                     className={styles.input}
                   />
-                  <span style={{ fontSize: '0.6875rem', color: '#16a34a', fontWeight: 600 }}>
+                  <span className={styles.fieldHintGreen}>
                     Completely exempt from tax under Section 10(11) in both Old and New Regimes.
                   </span>
                 </div>
@@ -1256,7 +1196,7 @@ const IncomeTaxCalculator: React.FC = () => {
                     onChange={(e) => setSavingsInterest(e.target.value)}
                     className={styles.input}
                   />
-                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                  <span className={styles.fieldHint}>
                     Deductible up to ₹10,000 under Section 80TTA (₹50,000 for seniors under 80TTB)
                     in Old Regime.
                   </span>
@@ -1272,7 +1212,7 @@ const IncomeTaxCalculator: React.FC = () => {
                     onChange={(e) => setFdInterest(e.target.value)}
                     className={styles.input}
                   />
-                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                  <span className={styles.fieldHint}>
                     FD interest is fully taxable at your applicable slab rate.
                   </span>
                 </div>
@@ -1297,19 +1237,8 @@ const IncomeTaxCalculator: React.FC = () => {
                   Chapter VI-A tax deductions apply primarily to the <strong>Old Tax Regime</strong>{' '}
                   (with the exception of Section 80CCD(2) employer NPS which applies to both).
                 </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.75rem',
-                    flexWrap: 'wrap',
-                    gap: '0.5rem',
-                  }}
-                >
-                  <span
-                    style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}
-                  >
+                <div className={styles.section80CHeader}>
+                  <span className={styles.section80CTitle}>
                     Section 80C Deduction (Max ₹1.5 Lakh)
                   </span>
                   <label className={styles.checkboxToggle}>
@@ -1317,7 +1246,7 @@ const IncomeTaxCalculator: React.FC = () => {
                       type="checkbox"
                       checked={is80CItemized}
                       onChange={(e) => setIs80CItemized(e.target.checked)}
-                      style={{ accentColor: 'var(--color-primary)' }}
+                      className={styles.primaryCheckbox}
                     />
                     <span>Itemize 80C Investments</span>
                   </label>
@@ -1343,17 +1272,11 @@ const IncomeTaxCalculator: React.FC = () => {
                           tuition, and principal repayments.
                         </p>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                      <div className={styles.textRight}>
+                        <span className={styles.fieldHint}>
                           Eligible Deduction Claimed
                         </span>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: '1rem',
-                            color: 'var(--color-primary)',
-                          }}
-                        >
+                        <div className={styles.claimed80CValue}>
                           {currencySymbol}
                           {effective80CAmount.toLocaleString('en-IN')} / ₹1.5L
                         </div>
@@ -1376,18 +1299,15 @@ const IncomeTaxCalculator: React.FC = () => {
                       <div className={styles.meterFillBar}>
                         <div
                           className={styles.meterFill}
-                          style={{ width: `${Math.min(100, (itemized80CSum / 150000) * 100)}%` }}
+                          ref={(el) => {
+                            if (el) {
+                              el.style.width = `${Math.min(100, (itemized80CSum / 150000) * 100)}%`;
+                            }
+                          }}
                         />
                       </div>
                       {itemized80CSum > 150000 && (
-                        <div
-                          style={{
-                            fontSize: '0.6875rem',
-                            color: '#10b981',
-                            fontWeight: 600,
-                            marginTop: '0.375rem',
-                          }}
-                        >
+                        <div className={styles.itemizedLimitExceeded}>
                           Eligible deduction maxed out at statutory limit of ₹1,50,000 (Excess:{' '}
                           {currencySymbol}
                           {(itemized80CSum - 150000).toLocaleString('en-IN')}).
@@ -1528,11 +1448,11 @@ const IncomeTaxCalculator: React.FC = () => {
                     </div>
                   </div>
                 )}
-                <div className={styles.formGrid2} style={{ marginTop: '1rem' }}>
+                <div className={`${styles.formGrid2} ${styles.marginTop1}`}>
                   <div className={styles.formField}>
                     <label htmlFor="tax-deduction-80ccd1b" className={styles.label}>
                       Section 80CCD(1B) — NPS Tier 1 Self Contribution
-                      <span style={{ color: '#16a34a', marginLeft: '0.5rem' }}>(Max ₹50,000)</span>
+                      <span className={styles.fieldBadgeGreen}>(Max ₹50,000)</span>
                     </label>
                     <input
                       id="tax-deduction-80ccd1b"
@@ -1546,7 +1466,7 @@ const IncomeTaxCalculator: React.FC = () => {
                   <div className={styles.formField}>
                     <label htmlFor="tax-deduction-80ccd2" className={styles.label}>
                       Section 80CCD(2) — Employer NPS Contribution
-                      <span style={{ color: '#6366f1', marginLeft: '0.5rem' }}>(Both Regimes)</span>
+                      <span className={styles.fieldBadgeIndigo}>(Both Regimes)</span>
                     </label>
                     <input
                       id="tax-deduction-80ccd2"
@@ -1558,22 +1478,16 @@ const IncomeTaxCalculator: React.FC = () => {
                     />
                   </div>
                   <div className={styles.formField}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
+                    <div className={styles.flexBetweenCenter}>
                       <label htmlFor="tax-deduction-80d-self" className={styles.label}>
                         Section 80D — Health Insurance (Self &amp; Family)
                       </label>
-                      <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
+                      <label className={`${styles.checkboxToggle} ${styles.smallToggle}`}>
                         <input
                           type="checkbox"
                           checked={seniorSelf80D}
                           onChange={(e) => setSeniorSelf80D(e.target.checked)}
-                          style={{ accentColor: 'var(--color-primary)' }}
+                          className={styles.primaryCheckbox}
                         />
                         <span>Senior (Limit ₹50k)</span>
                       </label>
@@ -1588,22 +1502,16 @@ const IncomeTaxCalculator: React.FC = () => {
                     />
                   </div>
                   <div className={styles.formField}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
+                    <div className={styles.flexBetweenCenter}>
                       <label htmlFor="tax-deduction-80d-parents" className={styles.label}>
                         Section 80D — Health Insurance (Parents)
                       </label>
-                      <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
+                      <label className={`${styles.checkboxToggle} ${styles.smallToggle}`}>
                         <input
                           type="checkbox"
                           checked={seniorParents80D}
                           onChange={(e) => setSeniorParents80D(e.target.checked)}
-                          style={{ accentColor: 'var(--color-primary)' }}
+                          className={styles.primaryCheckbox}
                         />
                         <span>Senior Parents (Limit ₹50k)</span>
                       </label>
@@ -1764,26 +1672,12 @@ const IncomeTaxCalculator: React.FC = () => {
                 </div>
                 {/* Custom Deductions List */}
                 <div className={styles.customDeductionsContainer}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '0.75rem',
-                    }}
-                  >
+                  <div className={styles.customDeductionsHeader}>
                     <div>
-                      <h4
-                        style={{
-                          margin: 0,
-                          fontSize: '0.875rem',
-                          fontWeight: 700,
-                          color: 'var(--color-heading)',
-                        }}
-                      >
+                      <h4 className={styles.customDeductionsTitle}>
                         Custom Tax Deductions
                       </h4>
-                      <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', opacity: 0.75 }}>
+                      <p className={styles.customDeductionsSub}>
                         Add any personalized deductions or state-specific exemptions not listed
                         above.
                       </p>
@@ -1805,8 +1699,7 @@ const IncomeTaxCalculator: React.FC = () => {
                           handleUpdateCustomDeduction(item.id, 'name', e.target.value)
                         }
                         placeholder="Deduction Name / Section"
-                        className={styles.input}
-                        style={{ flex: 2 }}
+                        className={`${styles.input} ${styles.inputFlex2}`}
                       />
                       <input
                         type="text"
@@ -1815,8 +1708,7 @@ const IncomeTaxCalculator: React.FC = () => {
                           handleUpdateCustomDeduction(item.id, 'amount', e.target.value)
                         }
                         placeholder="Amount (₹)"
-                        className={styles.input}
-                        style={{ flex: 1 }}
+                        className={`${styles.input} ${styles.inputFlex1}`}
                       />
                       <button
                         type="button"

@@ -491,7 +491,7 @@ const CurrencyConverter = () => {
             </div>
           </div>
           {/* Purchasing Power Parity (PPP) Promo Card */}
-          <div className={styles.promoCard} style={{ margin: 0 }}>
+          <div className={`${styles.promoCard} ${styles.marginZero}`}>
             <div className={styles.promoInner}>
               <div className={styles.promoIconBox}>
                 <FiInfo />

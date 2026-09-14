@@ -112,7 +112,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logoBox}>
-            📝
+            {isMobileScreen ? <FiFolder size={20} className={styles.primaryIcon} /> : '📝'}
           </div>
           <div>
             <span className={styles.title}>
@@ -155,7 +155,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             className={`${styles.navItem} ${activeFolder === SYSTEM_FOLDERS.ALL && !activeTag ? styles.navItemActive : ''}`}
           >
             <span className={styles.navLeft}>
-              <BsJournalBookmark size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+              <BsJournalBookmark size={16} className={styles.primaryIcon} />
               <span>All Notes</span>
             </span>
             <span className={styles.navCount}>{allCount}</span>
@@ -181,7 +181,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             }`}
           >
             <span className={styles.navLeft}>
-              <FiFolder size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+              <FiFolder size={16} className={styles.primaryIcon} />
               <span>Quick Notes</span>
             </span>
             <span className={styles.navCount}>{quickNotesCount}</span>
@@ -194,7 +194,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             className={`${styles.navItem} ${activeFolder === SYSTEM_FOLDERS.PINNED && !activeTag ? styles.navItemActive : ''}`}
           >
             <span className={styles.navLeft}>
-              <BsPinFill size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+              <BsPinFill size={16} className={styles.primaryIcon} />
               <span>Pinned</span>
             </span>
             <span className={styles.navCount}>{pinnedCount}</span>
@@ -222,7 +222,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             </button>
           </div>
           {!foldersCollapsed && (
-            <div className={styles.folderSection} style={{ marginTop: '0.25rem' }}>
+            <div className={`${styles.folderSection} ${styles.folderListContainer}`}>
               {isCreatingFolder && (
                 <form onSubmit={handleCreateFolder} className={styles.folderForm}>
                   <input
@@ -308,11 +308,11 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                     >
                       <FiFolder
                         size={16}
-                        style={{ flexShrink: 0, color: isCurrent ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
+                        className={isCurrent ? styles.primaryIcon : styles.secondaryIcon}
                       />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder}</span>
+                      <span className={styles.folderNameText}>{folder}</span>
                     </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div className={styles.folderRightCol}>
                       <span className={styles.navCount}>
                         {count}
                       </span>
@@ -368,21 +368,20 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
                 )}
                 <span>Tags</span>
               </button>
-              <span style={{ fontSize: '10px', opacity: 0.4 }}>{allTags.length}</span>
+              <span className={styles.tagCountBadge}>{allTags.length}</span>
             </div>
             {!tagsCollapsed && (
-              <div className={styles.folderSection} style={{ marginTop: '0.25rem' }}>
+              <div className={`${styles.folderSection} ${styles.folderListContainer}`}>
                 {allTags.map(([tag, count]) => {
                   const isCurrent = activeTag === tag;
                   return (
                     <button
                       key={tag}
                       onClick={() => onSelectTag(isCurrent ? null : tag)}
-                      className={`${styles.navItem} ${isCurrent ? styles.navItemActive : ''}`}
-                      style={{ fontSize: '0.75rem', minHeight: '36px' }}
+                      className={`${styles.navItem} ${styles.tagNavItem} ${isCurrent ? styles.navItemActive : ''}`}
                     >
                       <span className={styles.navLeft}>
-                        <FiTag size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                        <FiTag size={14} className={styles.primaryIcon} />
                         <span>#{tag}</span>
                       </span>
                       <span className={styles.navCount}>
@@ -395,7 +394,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             )}
           </div>
         )}
-        <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--color-border)' }}>
+        <div className={styles.dividerSection}>
           <button
             onClick={() => {
               onSelectFolder(SYSTEM_FOLDERS.TRASH);
@@ -404,7 +403,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             className={`${styles.navItem} ${styles.navItemDanger} ${activeFolder === SYSTEM_FOLDERS.TRASH && !activeTag ? styles.navItemActive : ''}`}
           >
             <span className={styles.navLeft}>
-              <FiTrash2 size={16} style={{ color: '#ef4444', flexShrink: 0 }} />
+              <FiTrash2 size={16} className={styles.dangerIcon} />
               <span>Recently Deleted</span>
             </span>
             {trashedCount > 0 && (
@@ -414,22 +413,22 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
             )}
           </button>
         </div>
-        <div style={{ paddingTop: '0.625rem', borderTop: '1px solid var(--color-border)', marginTop: '0.25rem' }}>
+        <div className={styles.securitySection}>
           <button
             onClick={onOpenSecurityModal}
             className={styles.securityBanner}
             title="End-to-End Encrypted (AES-256-GCM): Click to view details"
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontWeight: 700, fontSize: '12px', color: '#16a34a' }}>
-                <FiShield size={14} style={{ flexShrink: 0 }} />
+            <div className={styles.securityHeader}>
+              <span className={styles.securityTitle}>
+                <FiShield size={14} className={styles.successIcon} />
                 <span>End-to-End Encrypted</span>
               </span>
               <span className={`${styles.badge} ${styles.badgeSuccess}`}>
                 AES-256
               </span>
             </div>
-            <p style={{ fontSize: '11px', lineHeight: 1.25, opacity: 0.7, margin: 0 }}>
+            <p className={styles.securityDesc}>
               Notes are encrypted on your device before syncing. Only you hold the key.
             </p>
           </button>

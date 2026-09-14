@@ -12,7 +12,11 @@ import {
   FiLayers,
 } from 'react-icons/fi';
 import SEOHead from '../components/SEOHead';
-import { compareTaxRegimes } from '../utilities/incomeTaxCalculations';
+import {
+  compareTaxRegimes,
+  getAssessmentYear,
+  getLatestRunningFinancialYear,
+} from '../utilities/incomeTaxCalculations';
 import styles from './FileItr.module.scss';
 interface Form16ExtractedData {
   employerName: string;
@@ -37,26 +41,26 @@ interface Form16ExtractedData {
   tdsDeducted: number;
 }
 const DEFAULT_SAMPLE_FORM16: Form16ExtractedData = {
-  employerName: 'Infosys Limited',
-  employerTan: 'BLRI01234D',
+  employerName: 'Tata Consultancy Services Ltd.',
+  employerTan: 'MUMB12345E',
   employeePan: 'ABCDE1234F',
-  assessmentYear: '2025-26',
-  grossSalary: 1850000,
-  basicSalary: 925000,
-  hraReceived: 370000,
-  rentPaid: 280000,
-  exemptAllowances: 15000,
+  assessmentYear: getAssessmentYear(getLatestRunningFinancialYear()),
+  grossSalary: 1650000,
+  basicSalary: 825000,
+  hraReceived: 330000,
+  rentPaid: 240000,
+  exemptAllowances: 25000,
   standardDeduction: 75000,
   professionalTax: 2400,
   section80C: 150000,
   section80Ccd1b: 50000,
-  section80D: 45000,
+  section80D: 25000,
   section80E: 0,
   section80G: 10000,
   section80Tta: 8500,
   otherDeductions: 0,
   otherIncome: 25000,
-  tdsDeducted: 172000,
+  tdsDeducted: 145000,
 };
 const FileItr: React.FC = () => {
   const [formData, setFormData] = useState<Form16ExtractedData>(DEFAULT_SAMPLE_FORM16);
@@ -207,7 +211,7 @@ const FileItr: React.FC = () => {
   // Compare Tax Regimes
   const taxComparison = useMemo(() => {
     return compareTaxRegimes({
-      financialYear: '2024-25',
+      financialYear: getLatestRunningFinancialYear(),
       ageCategory: 'general',
       isSalaried: true,
       grossSalary: formData.grossSalary,
@@ -298,7 +302,7 @@ const FileItr: React.FC = () => {
   return (
     <main className={styles.container}>
       <SEOHead
-        title="Upload Form 16 & Prepare Income Tax Return (ITR) India — FY 2024-25 & FY 2025-26"
+        title={`Upload Form 16 & Prepare Income Tax Return (ITR) India — FY ${getLatestRunningFinancialYear()} (${getAssessmentYear(getLatestRunningFinancialYear())})`}
         description="Auto-extract salary from Form 16, verify TDS deducted, compare New vs Old Tax Regime, compute refund or balance tax payable, and prepare your ITR filing summary."
         keywords="Form 16 upload, prepare ITR 1, tax refund check, compare old new regime, Form 16 parser India, file income tax return"
         canonicalPath="/file-itr"
@@ -329,7 +333,7 @@ const FileItr: React.FC = () => {
             ref={fileInputRef}
             type="file"
             accept=".pdf,.txt,.json,.csv"
-            style={{ display: 'none' }}
+            className={styles.fileInputHidden}
             onChange={handleFileUpload}
           />
           <div className={styles.dropzoneIcon}>
@@ -407,7 +411,11 @@ const FileItr: React.FC = () => {
         }`}
       >
         <div className={styles.heroContent}>
-          <div className={styles.heroTag} style={{ color: isRefundDue ? '#16a34a' : isBalanceTaxPayable ? '#e11d48' : 'var(--color-primary)' }}>
+          <div
+            className={`${styles.heroTag} ${
+              isRefundDue ? styles.tagRefund : isBalanceTaxPayable ? styles.tagPayable : styles.tagPrimary
+            }`}
+          >
             {isRefundDue ? '🟢 Income Tax Refund Due' : isBalanceTaxPayable ? '🔴 Balance Tax Payable' : '⚪ Nil Return / Zero Balance'}
           </div>
           <h2 className={styles.heroTitle}>
@@ -440,19 +448,23 @@ const FileItr: React.FC = () => {
           </div>
           <div className={styles.heroMetricItem}>
             <span className={styles.heroMetricLabel}>Optimal Tax Liability</span>
-            <span className={styles.heroMetricValue} style={{ color: isRefundDue ? '#16a34a' : '#e11d48' }}>
+            <span
+              className={`${styles.heroMetricValue} ${
+                isRefundDue ? styles.metricRefund : styles.metricPayable
+              }`}
+            >
               ₹{Math.round(recommendedResult.totalTaxPayable).toLocaleString('en-IN')}
             </span>
           </div>
           <div className={styles.heroMetricItem}>
             <span className={styles.heroMetricLabel}>Recommended Regime</span>
-            <span className={styles.heroMetricValue} style={{ textTransform: 'capitalize' }}>
+            <span className={`${styles.heroMetricValue} ${styles.textCapitalize}`}>
               {taxComparison.recommendedRegime} Regime
             </span>
           </div>
           <div className={styles.heroMetricItem}>
             <span className={styles.heroMetricLabel}>Regime Tax Savings</span>
-            <span className={styles.heroMetricValue} style={{ color: '#16a34a' }}>
+            <span className={`${styles.heroMetricValue} ${styles.metricSuccess}`}>
               ₹{Math.round(taxComparison.taxSavings).toLocaleString('en-IN')}
             </span>
           </div>
@@ -472,10 +484,10 @@ const FileItr: React.FC = () => {
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className={styles.columnGap125}>
             {/* Employer & Employee Details */}
             <div>
-              <h4 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: '0 0 0.5rem 0', opacity: 0.8 }}>
+              <h4 className={styles.formSectionTitle}>
                 Employer &amp; Employee Identification
               </h4>
               <div className={styles.formGrid2}>
@@ -488,7 +500,7 @@ const FileItr: React.FC = () => {
                     onChange={(e) => updateField('employerName', e.target.value)}
                   />
                 </div>
-                <div className={styles.formGrid2} style={{ gap: '0.5rem' }}>
+                <div className={`${styles.formGrid2} ${styles.gridGapSmall}`}>
                   <div className={styles.formField}>
                     <label className={styles.label}>Employer TAN</label>
                     <input
@@ -512,7 +524,7 @@ const FileItr: React.FC = () => {
             </div>
             {/* Salary Breakdown */}
             <div>
-              <h4 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: '0 0 0.5rem 0', opacity: 0.8 }}>
+              <h4 className={styles.formSectionTitle}>
                 Salary &amp; Allowances (Section 17)
               </h4>
               <div className={styles.formGrid2}>
@@ -574,7 +586,7 @@ const FileItr: React.FC = () => {
             </div>
             {/* Chapter VI-A Deductions */}
             <div>
-              <h4 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: '0 0 0.5rem 0', opacity: 0.8 }}>
+              <h4 className={styles.formSectionTitle}>
                 Chapter VI-A Deductions &amp; Investments
               </h4>
               <div className={styles.formGrid2}>
@@ -618,15 +630,14 @@ const FileItr: React.FC = () => {
             </div>
             {/* TDS Already Deducted */}
             <div>
-              <h4 style={{ fontSize: '0.8125rem', fontWeight: 700, margin: '0 0 0.5rem 0', color: '#16a34a' }}>
+              <h4 className={styles.formSectionTitleGreen}>
                 Tax Deducted at Source (TDS Paid)
               </h4>
               <div className={styles.formField}>
                 <label className={styles.label}>Total TDS Deducted by Employer (₹)</label>
                 <input
                   type="text"
-                  className={styles.input}
-                  style={{ fontWeight: 700, borderColor: '#16a34a' }}
+                  className={`${styles.input} ${styles.highlightGreenInput}`}
                   value={formData.tdsDeducted ? formData.tdsDeducted.toLocaleString('en-IN') : ''}
                   onChange={(e) => updateField('tdsDeducted', e.target.value)}
                 />
@@ -635,7 +646,7 @@ const FileItr: React.FC = () => {
           </div>
         </div>
         {/* Right Column: Dual Regime Comparison & ITR Summary */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className={styles.columnGap15}>
           {/* Regime Comparison Card */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
@@ -685,7 +696,7 @@ const FileItr: React.FC = () => {
                 </div>
                 <div className={styles.regimeRow}>
                   <span className={styles.regimeRowLabel}>Rebate u/s 87A:</span>
-                  <span className={styles.regimeRowVal} style={{ color: '#16a34a' }}>
+                  <span className={`${styles.regimeRowVal} ${styles.rowValSuccess}`}>
                     -₹{Math.round(taxComparison.newRegime.rebate87A).toLocaleString('en-IN')}
                   </span>
                 </div>

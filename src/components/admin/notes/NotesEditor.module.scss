@@ -897,3 +897,241 @@
   cursor: pointer;
   min-height: 30px;
 }
+
+.lockedTopBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lockedNoteTitle {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.mb025 {
+  margin-bottom: 0.25rem !important;
+}
+
+.mb15 {
+  margin-bottom: 1.5rem !important;
+}
+
+.wFull {
+  width: 100%;
+}
+
+.truncateMax100 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+.truncateMax140 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.flexShrink0 {
+  flex-shrink: 0;
+}
+
+.dropdownItemPrimary {
+  color: var(--color-primary) !important;
+  font-weight: 600 !important;
+}
+
+.dropdownWidth13 {
+  width: 13rem !important;
+}
+
+.dropdownWidth9 {
+  width: 9rem !important;
+}
+
+.svgOneDrive {
+  width: 14px;
+  height: 14px;
+  fill: #0284c7;
+}
+
+.flexGap05 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flexGap025 {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btnMinHeight38 {
+  min-height: 38px !important;
+}
+
+.iconMr025 {
+  margin-right: 0.25rem;
+}
+
+.btnDangerMin38 {
+  color: #ef4444 !important;
+  min-height: 38px !important;
+}
+
+.fw700 {
+  font-weight: 700 !important;
+}
+
+.fw600 {
+  font-weight: 600 !important;
+}
+
+.fw500 {
+  font-weight: 500 !important;
+}
+
+.fontMono {
+  font-family: monospace !important;
+}
+
+.arrowDownSmall {
+  font-size: 9px;
+  opacity: 0.6;
+}
+
+.activeCheck {
+  font-size: 12px;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.paletteDropdown {
+  width: 14rem !important;
+  padding: 0.65rem !important;
+}
+
+.colorGrid5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.375rem;
+  margin-bottom: 0.65rem;
+}
+
+.highlightGrid4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.375rem;
+}
+
+.restoreBtnSm {
+  padding: 0.2rem 0.5rem !important;
+  font-size: 0.75rem !important;
+  border-radius: 8px !important;
+}
+
+.tableToolsTitle {
+  font-weight: 600;
+  opacity: 0.6;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.mlAuto {
+  margin-left: auto !important;
+}
+
+.saveStatus {
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-text);
+  opacity: 0.5;
+
+  &.saving {
+    color: var(--color-primary);
+    opacity: 1;
+  }
+}
+
+.tagRowIcon {
+  color: var(--color-text);
+  opacity: 0.4;
+  margin-right: 0.25rem;
+}
+
+.tagAddForm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tagSubmitBtn {
+  color: #16a34a !important;
+}
+
+.tagCancelBtn {
+  color: #ef4444 !important;
+}
+
+.relativeBox {
+  position: relative;
+}
+
+.mobileFormatBtn {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+}
+
+.mobileStylesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.375rem;
+  margin-bottom: 0.375rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dropdownTitleNoPad {
+  padding: 0 !important;
+}
+
+.dropdownTitlePadY {
+  padding: 0.2rem 0 !important;
+}
+
+.mobileColorGrid5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+
+.deleteModalBox {
+  padding: 1.25rem;
+}
+
+.deleteModalTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ef4444;
+}
+
+.deleteModalText {
+  margin-top: 0.5rem;
+}
+
+.modalActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.deleteConfirmBtn {
+  background: #ef4444 !important;
+}

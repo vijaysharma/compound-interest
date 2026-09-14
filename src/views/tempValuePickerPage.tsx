@@ -185,7 +185,7 @@ export const TempValuePickerPage: React.FC = () => {
                 value={demoRoi}
                 onChange={setDemoRoi}
               />
-              <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#6d0b74', fontWeight: 600 }}>
+              <div className={styles.variationResultText}>
                 Current ROI: {demoRoi}%
               </div>
             </div>
@@ -199,7 +199,7 @@ export const TempValuePickerPage: React.FC = () => {
                 unit={demoTenureUnit}
                 onUnitChange={setDemoTenureUnit}
               />
-              <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#6d0b74', fontWeight: 600 }}>
+              <div className={styles.variationResultText}>
                 Current Tenure: {demoTenure} {demoTenureUnit === 'y' ? 'Years' : 'Months'}
               </div>
             </div>
@@ -227,7 +227,7 @@ export const TempValuePickerPage: React.FC = () => {
                   { label: 'Japan', value: 'Japan' },
                 ]}
               />
-              <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#6d0b74', fontWeight: 600 }}>
+              <div className={styles.variationResultText}>
                 Selected Route: {demoSource} ➔ {demoTarget}
               </div>
             </div>
@@ -243,12 +243,12 @@ export const TempValuePickerPage: React.FC = () => {
                 endDate={demoEndDate}
                 setEndDate={setDemoEndDate}
               />
-              <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#6d0b74', fontWeight: 600 }}>
+              <div className={styles.variationResultText}>
                 Selected Range: {demoStartDate} to {demoEndDate}
               </div>
             </div>
             {/* Case 5: Duration Matrix Grid */}
-            <div className={styles.variationCard} style={{ gridColumn: '1 / -1' }}>
+            <div className={`${styles.variationCard} ${styles.cardFullWidth}`}>
               <h3>Case 5: Multi-Row Duration Matrix Grid (3x8)</h3>
               <p>Duration matrix grid with 24 duration presets (1D to 20Y) with purple border and selected cell fill.</p>
               <ValuePicker.Grid
@@ -257,7 +257,7 @@ export const TempValuePickerPage: React.FC = () => {
                 selectedGridId={demoGridItem}
                 onGridSelect={(item) => setDemoGridItem(item.id)}
               />
-              <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#6d0b74', fontWeight: 600 }}>
+              <div className={styles.variationResultText}>
                 Selected Duration: {DEFAULT_DURATION_MATRIX_ROWS.flat().find((i) => i.id === demoGridItem)?.title || demoGridItem}
               </div>
             </div>

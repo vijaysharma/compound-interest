@@ -159,18 +159,11 @@ export default function RootLayout({
         />
         <AppClientLayout>{children}</AppClientLayout>
         <noscript>
-          <div
-            style={{
-              fontFamily: 'system-ui, sans-serif',
-              maxWidth: 800,
-              margin: '40px auto',
-              padding: 20,
-            }}
-          >
-            <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#1d4ed8' }}>
+          <div className="noscriptContainer">
+            <h1 className="noscriptHeading">
               Free Online Financial Calculators India — SIP, EMI, FD &amp; More
             </h1>
-            <p style={{ color: '#374151', lineHeight: 1.6 }}>
+            <p className="noscriptBody">
               India&apos;s most precise, 100% free financial calculator suite. This application requires
               JavaScript to run the interactive calculators.
             </p>

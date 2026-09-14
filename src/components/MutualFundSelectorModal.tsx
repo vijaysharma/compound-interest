@@ -154,7 +154,9 @@ const MutualFundSelectorModal = ({
                     ) : pinnedFund ? (
                       <span
                         className={styles.colorDot}
-                        style={{ backgroundColor: pinnedFund.color }}
+                        ref={(el) => {
+                          if (el && pinnedFund.color) el.style.backgroundColor = pinnedFund.color;
+                        }}
                         aria-hidden="true"
                       />
                     ) : null}

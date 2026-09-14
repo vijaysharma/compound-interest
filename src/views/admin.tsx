@@ -573,12 +573,12 @@ const Admin = () => {
                 <tbody>
                   {submissions.map((sub) => (
                     <tr key={sub.id}>
-                      <td style={{ fontWeight: 600 }}>{sub.user_email}</td>
-                      <td style={{ fontFamily: 'monospace', color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                      <td className={styles.cellUserEmail}>{sub.user_email}</td>
+                      <td className={styles.cellUtrRef}>
                         {sub.utr_ref}
                       </td>
                       <td>₹{sub.amount}</td>
-                      <td style={{ opacity: 0.7, fontSize: '11px' }}>
+                      <td className={styles.cellDate}>
                         {new Date(sub.created_at).toLocaleString()}
                       </td>
                       <td>
@@ -617,7 +617,7 @@ const Admin = () => {
                             </button>
                           </div>
                         ) : (
-                          <span style={{ opacity: 0.5, fontSize: '11px' }}>Processed</span>
+                          <span className={styles.processedSpan}>Processed</span>
                         )}
                       </td>
                     </tr>
@@ -690,7 +690,7 @@ const Admin = () => {
                     }
                     return (
                       <tr key={u.id}>
-                        <td style={{ fontWeight: 600 }}>{u.email}</td>
+                        <td className={styles.cellUserEmail}>{u.email}</td>
                         <td>
                           <span
                             className={`${styles.badge} ${u.role === 'admin' ? styles.badgeAccent : styles.badgeGhost}`}
@@ -699,13 +699,9 @@ const Admin = () => {
                           </span>
                         </td>
                         <td>
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+                          <div className={styles.quotaWrapper}>
                             <span
-                              style={{
-                                fontFamily: 'monospace',
-                                fontWeight: 'bold',
-                                color: isOverLimit && u.role !== 'admin' ? '#ef4444' : 'var(--color-primary)'
-                              }}
+                              className={`${styles.quotaText} ${isOverLimit && u.role !== 'admin' ? styles.quotaOverLimit : ''}`}
                             >
                               {u.api_usage_count} / {limit}
                             </span>
@@ -736,7 +732,7 @@ const Admin = () => {
                             {u.subscription_status}
                           </span>
                         </td>
-                        <td style={{ opacity: 0.7, fontSize: '11px' }}>
+                        <td className={styles.cellDate}>
                           {u.subscription_expires_at
                             ? new Date(u.subscription_expires_at).toLocaleDateString()
                             : '—'}
@@ -788,8 +784,8 @@ const Admin = () => {
       )}
       {/* Tab 4: Dataset Sync */}
       {activeTab === 'sync' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <label className={styles.card} style={{ display: 'block', margin: 0 }}>
+        <div className={styles.syncContainer}>
+          <label className={`${styles.card} ${styles.cardLabel}`}>
             <span className={styles.label}>Admin Auth Token Override</span>
             <input
               className={`${styles.input} ${styles.inputMono}`}
@@ -819,8 +815,7 @@ const Admin = () => {
               Paste the JSON response from the IMF DataMapper API.
             </p>
             <textarea
-              className={styles.textarea}
-              style={{ minHeight: '180px', fontFamily: 'monospace', marginBottom: '1rem' }}
+              className={`${styles.textarea} ${styles.syncTextareaImf}`}
               value={imfJson}
               onChange={(event) => setImfJson(event.target.value)}
               placeholder='{"values":{"PCPIPCH":{...}}}'
@@ -849,7 +844,7 @@ const Admin = () => {
               Fetch and store global Purchasing Power Parity (PA.NUS.PPP) conversion factor datasets
               from the World Bank API directly into our database.
             </p>
-            <div style={{ marginBottom: '1rem' }}>
+            <div className={styles.mb1}>
               <button
                 className={styles.btnPrimarySm}
                 type="button"
@@ -866,13 +861,12 @@ const Admin = () => {
                 Or Paste World Bank PPP JSON Manually
               </summary>
               <div className={styles.detailsContent}>
-                <p style={{ opacity: 0.7, margin: 0 }}>
+                <p className={styles.detailsHelpText}>
                   Paste the JSON response array from
                   api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP.
                 </p>
                 <textarea
-                  className={styles.textarea}
-                  style={{ minHeight: '140px', fontFamily: 'monospace' }}
+                  className={`${styles.textarea} ${styles.syncTextareaPpp}`}
                   value={pppJson}
                   onChange={(event) => setPppJson(event.target.value)}
                   placeholder='[{"page":1,...},[{"indicator":{...},"country":{...},"date":"2024","value":23.85},...]]'
@@ -918,14 +912,14 @@ const Admin = () => {
             </div>
             <form onSubmit={handleSaveAiSettings} className={styles.cardBody}>
               <div className={styles.formGroup}>
-                <label className={styles.label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <label className={`${styles.label} ${styles.aiCheckboxLabel}`}>
                   <input
                     type="checkbox"
                     checked={aiEnabled}
                     onChange={(e) => setAiEnabled(e.target.checked)}
-                    style={{ width: '1.125rem', height: '1.125rem', accentColor: 'var(--color-primary)' }}
+                    className={styles.aiCheckbox}
                   />
-                  <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>
+                  <span className={styles.aiCheckboxText}>
                     Enable AI Tax Advisor for Users
                   </span>
                 </label>
@@ -961,7 +955,7 @@ const Admin = () => {
                 <label className={styles.label}>
                   Gemini API Key
                   {aiHasKey && (
-                    <span style={{ marginLeft: '0.5rem', color: '#16a34a', fontSize: '0.75rem', fontWeight: 600 }}>
+                    <span className={styles.configuredKeyBadge}>
                       (Key is configured)
                     </span>
                   )}
@@ -1018,12 +1012,12 @@ const Admin = () => {
               <FiSliders className={styles.modalIcon} />
               <h3>Adjust Calculation Quota</h3>
             </div>
-            <p className={styles.subtitle} style={{ marginBottom: '1rem' }}>
+            <p className={`${styles.subtitle} ${styles.mb1}`}>
               Set the maximum allowed free live calculation runs for{' '}
-              <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{limitModalUser.email}</span> (currently{' '}
+              <span className={styles.modalUserEmail}>{limitModalUser.email}</span> (currently{' '}
               {limitModalUser.api_usage_count} used).
             </p>
-            <div style={{ marginBottom: '1rem' }}>
+            <div className={styles.mb1}>
               <label className={styles.label}>Quota Limit (Runs)</label>
               <input
                 type="number"

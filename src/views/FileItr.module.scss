@@ -519,3 +519,74 @@
     background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
   }
 }
+
+.fileInputHidden {
+  display: none;
+}
+
+.tagRefund {
+  color: #16a34a !important;
+}
+
+.tagPayable {
+  color: #e11d48 !important;
+}
+
+.tagPrimary {
+  color: var(--color-primary) !important;
+}
+
+.metricRefund {
+  color: #16a34a !important;
+}
+
+.metricPayable {
+  color: #e11d48 !important;
+}
+
+.metricSuccess {
+  color: #16a34a !important;
+}
+
+.textCapitalize {
+  text-transform: capitalize;
+}
+
+.columnGap125 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.columnGap15 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formSectionTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  opacity: 0.8;
+}
+
+.formSectionTitleGreen {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #16a34a;
+}
+
+.gridGapSmall {
+  gap: 0.5rem !important;
+}
+
+.highlightGreenInput {
+  font-weight: 700;
+  border-color: #16a34a !important;
+}
+
+.rowValSuccess {
+  color: #16a34a !important;
+}

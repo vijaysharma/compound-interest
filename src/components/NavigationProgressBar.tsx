@@ -115,19 +115,21 @@ export function NavigationProgressBar() {
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     };
   }, [start, done]);
+  const barRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${progress}%`;
+    }
+  }, [progress]);
   if (!visible && progress === 0) return null;
   return (
     <div
-      className={styles.progressBarContainer}
-      style={{ opacity: visible ? 1 : 0 }}
+      className={`${styles.progressBarContainer} ${visible ? styles.visible : styles.hidden}`}
       aria-hidden="true"
     >
       <div
-        className={styles.progressBar}
-        style={{
-          width: `${progress}%`,
-          transition: progress === 100 ? 'width 150ms ease-out' : 'width 200ms cubic-bezier(0.1, 0.5, 0.5, 1)',
-        }}
+        ref={barRef}
+        className={`${styles.progressBar} ${progress === 100 ? styles.complete : ''}`}
       >
         <div className={styles.peg} />
       </div>

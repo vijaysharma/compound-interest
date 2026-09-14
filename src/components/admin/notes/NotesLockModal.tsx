@@ -117,7 +117,7 @@ export const NotesLockModal: React.FC<NotesLockModalProps> = ({
                   className={styles.input}
                 />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.5rem' }}>
+              <div className={styles.lockActionsBetween}>
                 <button
                   type="button"
                   onClick={async () => {
@@ -139,7 +139,7 @@ export const NotesLockModal: React.FC<NotesLockModalProps> = ({
                   <FiUnlock size={12} />
                   <span>Remove Lock</span>
                 </button>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className={styles.btnGroup}>
                   <button
                     type="button"
                     onClick={onClose}
@@ -187,7 +187,7 @@ export const NotesLockModal: React.FC<NotesLockModalProps> = ({
                   className={styles.input}
                 />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', paddingTop: '0.5rem' }}>
+              <div className={styles.lockActionsEnd}>
                 <button
                   type="button"
                   onClick={onClose}

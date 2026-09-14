@@ -249,7 +249,7 @@ const GoogleSignInButton = ({
               onClick={() => setIsModalOpen(false)}
               aria-label="Close dialog"
             >
-              <FiX style={{ width: '1rem', height: '1rem' }} />
+              <FiX size={16} />
             </button>
             <div className={styles.modalHeader}>
               <div className={styles.iconWrapper}>
@@ -290,7 +290,7 @@ const GoogleSignInButton = ({
                   />
                   {email.includes('@') && (
                     <span className={styles.checkIcon}>
-                      <FiCheck style={{ width: '1rem', height: '1rem' }} />
+                      <FiCheck size={16} />
                     </span>
                   )}
                 </div>

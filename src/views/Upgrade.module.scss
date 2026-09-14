@@ -466,3 +466,22 @@
   }
 }
 
+.savingsBadgeText {
+  font-size: 0.75rem;
+  color: #16a34a;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.gridCol1 {
+  grid-template-columns: 1fr !important;
+}
+
+.priceTaxColor {
+  color: #d97706 !important;
+}
+
+.taxFeatureCheckIcon {
+  color: #d97706 !important;
+}
+

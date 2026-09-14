@@ -666,7 +666,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         );
       }
     },
-    [notes, selectedNoteId, token, flushPendingUpdates]
+    [notes, selectedNoteId, token, flushPendingUpdates, activeFolder]
   );
   const handleDeleteNote = useCallback(
     (id?: string, e?: React.MouseEvent) => {

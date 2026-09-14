@@ -52,7 +52,7 @@ export const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> =
         className={styles.dismissBtn}
         aria-label="Dismiss reminder"
       >
-        <FiX style={{ width: '0.875rem', height: '0.875rem' }} />
+        <FiX className={styles.dismissIcon} />
       </button>
       <div className={styles.bodyRow}>
         <div className={styles.textCol}>
@@ -72,7 +72,7 @@ export const SubscriptionPromptBanner: React.FC<SubscriptionPromptBannerProps> =
             to="/upgrade"
             className={styles.ctaBtn}
           >
-            <FiLock style={{ width: '0.75rem', height: '0.75rem' }} />
+            <FiLock className={styles.lockIcon} />
             <span>Unlock Pro (₹54/mo)</span>
           </Link>
           <button

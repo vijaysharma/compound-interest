@@ -67,11 +67,14 @@ export const MoveNoteModal: React.FC<MoveNoteModalProps> = ({
                   onClick={() => handleSelectFolder(folder)}
                   className={`${styles.folderOption} ${isCurrent ? styles.folderCurrent : ''}`}
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <FiFolder size={16} style={{ flexShrink: 0, color: isCurrent ? 'var(--color-primary)' : 'var(--color-text-secondary)' }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder}</span>
+                  <span className={styles.folderItemLeft}>
+                    <FiFolder
+                      size={16}
+                      className={isCurrent ? styles.primaryIcon : styles.secondaryIcon}
+                    />
+                    <span className={styles.folderItemName}>{folder}</span>
                   </span>
-                  {isCurrent && <FiCheck size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />}
+                  {isCurrent && <FiCheck size={16} className={styles.primaryIcon} />}
                 </button>
               );
             })}
@@ -79,7 +82,7 @@ export const MoveNoteModal: React.FC<MoveNoteModalProps> = ({
         </div>
         <div className={styles.modalFooter}>
           {isCreating ? (
-            <form onSubmit={handleCreateAndMove} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', width: '100%' }}>
+            <form onSubmit={handleCreateAndMove} className={styles.createFolderForm}>
               <input
                 type="text"
                 autoFocus
@@ -106,8 +109,7 @@ export const MoveNoteModal: React.FC<MoveNoteModalProps> = ({
           ) : (
             <button
               onClick={() => setIsCreating(true)}
-              className={styles.btnGhost}
-              style={{ width: '100%', color: 'var(--color-primary)', fontWeight: 600 }}
+              className={`${styles.btnGhost} ${styles.newFolderBtn}`}
             >
               <FiFolderPlus size={16} />
               Create New Folder &amp; Move

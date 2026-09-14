@@ -272,7 +272,7 @@ const FD: React.FC = () => {
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>FD Maturity Summary</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+              <span className={styles.summarySub}>
                 {rt.tenure} {rt.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt.roi}%
               </span>
             </div>
@@ -291,8 +291,18 @@ const FD: React.FC = () => {
               </div>
             </div>
             <div className={styles.ratioBar}>
-              <div className={styles.ratioFillInvested} style={{ width: `${principalPercent}%` }} />
-              <div className={styles.ratioFillReturns} style={{ width: `${100 - principalPercent}%` }} />
+              <div
+                className={styles.ratioFillInvested}
+                ref={(el) => {
+                  if (el) el.style.width = `${principalPercent}%`;
+                }}
+              />
+              <div
+                className={styles.ratioFillReturns}
+                ref={(el) => {
+                  if (el) el.style.width = `${100 - principalPercent}%`;
+                }}
+              />
             </div>
             <div className={styles.ratioLegend}>
               <span className={styles.ratioLegendItem}>

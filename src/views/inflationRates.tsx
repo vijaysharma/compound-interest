@@ -280,7 +280,7 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Inflation Impact ({place})</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+              <span className={styles.summarySub}>
                 {startYear} &rarr; {endYear} ({Math.abs(Number(endYear) - Number(startYear))} yrs)
               </span>
             </div>
@@ -305,13 +305,13 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
               </div>
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Value Erosion</span>
-                <span className={styles.statValue} style={{ color: 'var(--color-error, #ef4444)' }}>
+                <span className={`${styles.statValue} ${styles.statValueError}`}>
                   -{Math.max(0, Math.round(((Number(principal) - deflatedAmount) / (Number(principal) || 1)) * 100))}%
                 </span>
               </div>
             </div>
             {endYearIsEstimate && (
-              <p className={styles.footnote} style={{ margin: 0 }}>
+              <p className={`${styles.footnote} ${styles.marginZero}`}>
                 * {endYear} figure for {place} is an IMF projection.
               </p>
             )}

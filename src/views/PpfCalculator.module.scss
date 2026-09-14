@@ -427,3 +427,58 @@
     border-bottom: none;
   }
 }
+
+.badgeIcon {
+  margin-right: 0.35rem;
+  vertical-align: middle;
+}
+
+.checkIcon {
+  color: #16a34a;
+}
+
+.scheduleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.subheading {
+  margin: 0;
+}
+
+.subheadingDesc {
+  margin: 0.25rem 0 0;
+}
+
+.extBadge {
+  margin-left: 0.25rem;
+  font-size: 0.625rem;
+  color: #d97706;
+}
+
+.interestCell {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.balanceCell {
+  font-weight: 700;
+}
+
+.monthExpandCell {
+  padding: 0;
+}
+
+.monthTableHeading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.monthCellInterest {
+  color: #16a34a;
+}

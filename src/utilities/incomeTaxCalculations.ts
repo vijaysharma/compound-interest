@@ -1,8 +1,35 @@
 export type TaxRegime = 'new' | 'old';
 export type AgeCategory = 'general' | 'senior' | 'super_senior'; // <60, 60-79, 80+
 export type CityCategory = 'metro' | 'non_metro';
+export type FinancialYear = '2026-27' | '2025-26' | '2024-25' | '2023-24';
+export function getAssessmentYear(fy: FinancialYear): string {
+  switch (fy) {
+    case '2026-27':
+      return 'AY 2027-28';
+    case '2025-26':
+      return 'AY 2026-27';
+    case '2024-25':
+      return 'AY 2025-26';
+    case '2023-24':
+      return 'AY 2024-25';
+    default:
+      return 'AY 2027-28';
+  }
+}
+export function getLatestRunningFinancialYear(): FinancialYear {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0 = Jan, 2 = Mar, 3 = Apr
+  const startYear = month >= 3 ? year : year - 1;
+  const endYearShort = (startYear + 1).toString().slice(2);
+  const fy = `${startYear}-${endYearShort}` as FinancialYear;
+  if (['2026-27', '2025-26', '2024-25', '2023-24'].includes(fy)) {
+    return fy;
+  }
+  return '2026-27';
+}
 export interface TaxIncomeInputs {
-  financialYear: '2024-25' | '2025-26';
+  financialYear: FinancialYear;
   ageCategory: AgeCategory;
   isSalaried: boolean;
   // Salary
@@ -146,19 +173,35 @@ export function calculateHousePropertyIncome(
   };
 }
 /**
- * Slabs for New Tax Regime (Section 115BAC, FY 2024-25 / FY 2025-26 Budget 2024 update)
+ * Slabs for New Tax Regime (Section 115BAC, FY 2023-24, FY 2024-25, FY 2025-26, FY 2026-27)
  */
-function calculateNewRegimeSlabTax(taxableIncome: number): { slabTax: number; slabs: TaxSlabBreakdown[] } {
+function calculateNewRegimeSlabTax(
+  taxableIncome: number,
+  financialYear: FinancialYear = '2026-27'
+): { slabTax: number; slabs: TaxSlabBreakdown[] } {
   const slabs: TaxSlabBreakdown[] = [];
   let tax = 0;
-  const thresholds = [
-    { limit: 300000, rate: 0, label: 'Up to ₹3,00,000' },
-    { limit: 700000, rate: 5, label: '₹3,00,001 to ₹7,00,000' },
-    { limit: 1000000, rate: 10, label: '₹7,00,001 to ₹10,00,000' },
-    { limit: 1200000, rate: 15, label: '₹10,00,001 to ₹12,00,000' },
-    { limit: 1500000, rate: 20, label: '₹12,00,001 to ₹15,00,000' },
-    { limit: Infinity, rate: 30, label: 'Above ₹15,00,000' },
-  ];
+  // Thresholds based on Indian Income Tax rules:
+  // In FY 2023-24 (AY 2024-25): Slabs were 3L-6L (5%), 6L-9L (10%), 9L-12L (15%), 12L-15L (20%), Above 15L (30%)
+  // In FY 2024-25 onwards: Slabs were revised to 3L-7L (5%), 7L-10L (10%), 10L-12L (15%), 12L-15L (20%), Above 15L (30%)
+  const thresholds =
+    financialYear === '2023-24'
+      ? [
+          { limit: 300000, rate: 0, label: 'Up to ₹3,00,000' },
+          { limit: 600000, rate: 5, label: '₹3,00,001 to ₹6,00,000' },
+          { limit: 900000, rate: 10, label: '₹6,00,001 to ₹9,00,000' },
+          { limit: 1200000, rate: 15, label: '₹9,00,001 to ₹12,00,000' },
+          { limit: 1500000, rate: 20, label: '₹12,00,001 to ₹15,00,000' },
+          { limit: Infinity, rate: 30, label: 'Above ₹15,00,000' },
+        ]
+      : [
+          { limit: 300000, rate: 0, label: 'Up to ₹3,00,000' },
+          { limit: 700000, rate: 5, label: '₹3,00,001 to ₹7,00,000' },
+          { limit: 1000000, rate: 10, label: '₹7,00,001 to ₹10,00,000' },
+          { limit: 1200000, rate: 15, label: '₹10,00,001 to ₹12,00,000' },
+          { limit: 1500000, rate: 20, label: '₹12,00,001 to ₹15,00,000' },
+          { limit: Infinity, rate: 30, label: 'Above ₹15,00,000' },
+        ];
   let prevLimit = 0;
   for (const item of thresholds) {
     if (taxableIncome > prevLimit) {
@@ -242,6 +285,7 @@ export function computeTaxForRegime(
   regime: TaxRegime
 ): RegimeTaxResult {
   const {
+    financialYear = '2026-27',
     isSalaried,
     grossSalary,
     basicSalary,
@@ -296,8 +340,9 @@ export function computeTaxForRegime(
     if (customStandardDeduction !== undefined && customStandardDeduction !== null) {
       standardDeduction = Math.min(grossSalary, Math.max(0, customStandardDeduction));
     } else if (regime === 'new') {
-      // Enhanced to ₹75,000 in Budget 2024 for FY 2024-25 / 2025-26
-      standardDeduction = Math.min(grossSalary, 75000);
+      // In FY 2023-24, New Regime standard deduction was ₹50,000; enhanced to ₹75,000 in Budget 2024 (FY 2024-25 onwards)
+      const defaultNewStd = financialYear === '2023-24' ? 50000 : 75000;
+      standardDeduction = Math.min(grossSalary, defaultNewStd);
     } else {
       standardDeduction = Math.min(grossSalary, 50000);
     }
@@ -379,14 +424,18 @@ export function computeTaxForRegime(
   // Calculate slab tax on normal taxable income
   const slabCalc =
     regime === 'new'
-      ? calculateNewRegimeSlabTax(normalTaxableIncome)
+      ? calculateNewRegimeSlabTax(normalTaxableIncome, financialYear)
       : calculateOldRegimeSlabTax(normalTaxableIncome, ageCategory);
   // Special Rate Taxes:
-  // 1. Equity STCG: 20% (Budget 2024)
-  const stcgTax = Math.max(0, equityStcg) * 0.20;
-  // 2. Equity LTCG: 12.5% on gains exceeding 1.25 Lakh (Budget 2024)
-  const taxableLtcg = Math.max(0, equityLtcg - 125000);
-  const ltcgTax = taxableLtcg * 0.125;
+  // In FY 2023-24: STCG was 15%, LTCG was 10% on gains exceeding ₹1,00,000
+  // In FY 2024-25 onwards (Budget 2024): STCG is 20%, LTCG is 12.5% on gains exceeding ₹1,25,000
+  const isPreJuly2024 = financialYear === '2023-24';
+  const stcgRate = isPreJuly2024 ? 0.15 : 0.20;
+  const ltcgRate = isPreJuly2024 ? 0.10 : 0.125;
+  const ltcgExemption = isPreJuly2024 ? 100000 : 125000;
+  const stcgTax = Math.max(0, equityStcg) * stcgRate;
+  const taxableLtcg = Math.max(0, equityLtcg - ltcgExemption);
+  const ltcgTax = taxableLtcg * ltcgRate;
   const totalTaxBeforeRebate = slabCalc.slabTax + stcgTax + ltcgTax;
   // Section 87A Rebate
   let rebate87A = 0;
@@ -473,13 +522,17 @@ export function generateTaxOptimizationTips(
   const tips: TaxOptimizationTip[] = [];
   const marginalRate =
     oldResult.taxableIncome > 1000000 ? 0.312 : oldResult.taxableIncome > 500000 ? 0.208 : 0.052;
+  const isPreJuly2024 = inputs.financialYear === '2023-24';
+  const newStdDeductionText = isPreJuly2024 ? '₹50,000' : '₹75,000';
+  const ltcgExemption = isPreJuly2024 ? 100000 : 125000;
+  const ltcgRate = isPreJuly2024 ? 0.10 : 0.125;
   if (newResult.totalTaxPayable < oldResult.totalTaxPayable) {
     const diff = oldResult.totalTaxPayable - newResult.totalTaxPayable;
     tips.push({
       category: 'Regime Switch',
       title: `Switch to New Tax Regime to instantly save ₹${diff.toLocaleString('en-IN')}`,
       description:
-        'The New Tax Regime provides lower slab rates and an enhanced ₹75,000 standard deduction, saving you money without locking capital into 80C investments.',
+        `The New Tax Regime for FY ${inputs.financialYear} provides lower slab rates and a ${newStdDeductionText} standard deduction, saving you money without locking capital into 80C investments.`,
       potentialTaxSavings: diff,
       actionable: true,
       codeSection: 'Section 115BAC',
@@ -539,14 +592,14 @@ export function generateTaxOptimizationTips(
     });
   }
   // 5. Equity LTCG Tax Harvesting
-  if (inputs.equityLtcg > 0 && inputs.equityLtcg < 125000) {
-    const remainingExemption = 125000 - inputs.equityLtcg;
+  if (inputs.equityLtcg > 0 && inputs.equityLtcg < ltcgExemption) {
+    const remainingExemption = ltcgExemption - inputs.equityLtcg;
     tips.push({
       category: 'Capital Gains',
       codeSection: 'Section 112A',
       title: `Harvest ₹${remainingExemption.toLocaleString('en-IN')} LTCG Tax-Free`,
-      description: `Under Budget 2024, equity LTCG up to ₹1,25,000 per financial year is 100% tax-free. You have ₹${remainingExemption.toLocaleString('en-IN')} of unused tax-free gains this year. Consider booking gains and reinvesting.`,
-      potentialTaxSavings: Math.round(remainingExemption * 0.125),
+      description: `For FY ${inputs.financialYear}, equity LTCG up to ₹${ltcgExemption.toLocaleString('en-IN')} is 100% tax-free. You have ₹${remainingExemption.toLocaleString('en-IN')} of unused tax-free gains this year. Consider booking gains and reinvesting.`,
+      potentialTaxSavings: Math.round(remainingExemption * ltcgRate),
       actionable: true,
     });
   }

@@ -421,3 +421,192 @@
   background: var(--color-bg-secondary);
   color: var(--color-text-secondary);
 }
+
+.cardHeaderIcons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.lockIcon {
+  opacity: 0.6;
+}
+
+.pinIcon {
+  color: var(--color-primary);
+}
+
+.cardDateSelected {
+  color: var(--color-primary);
+}
+
+.pinnedFloatingBtn {
+  color: var(--color-primary);
+}
+
+.trashActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sortWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.emptyTrashBtn {
+  color: #ef4444;
+  text-decoration: underline;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.securityBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 10.5px;
+  color: #16a34a;
+  text-decoration: underline;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.emptyStateIcon {
+  opacity: 0.3;
+}
+
+.emptyStateText {
+  margin: 0;
+  font-weight: 500;
+}
+
+.galleryCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.galleryCardTitle {
+  font-size: 0.75rem;
+}
+
+.galleryCardHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.gallerySnippet {
+  font-size: 11px;
+  opacity: 0.5;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.galleryFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.galleryDate {
+  font-size: 10px;
+  opacity: 0.5;
+  font-weight: 500;
+}
+
+.galleryFolderBtn {
+  font-size: 10px;
+  color: var(--color-primary);
+  text-decoration: underline;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.galleryFolderText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60px;
+}
+
+.pinnedSection {
+  margin-bottom: 0.75rem;
+}
+
+.sectionTitleHeader {
+  padding: 0.25rem 0.5rem;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.4;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.notesColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.notesSectionHeader {
+  padding: 0.5rem 0.5rem 0.25rem;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.4;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.deleteModalBox {
+  padding: 1.25rem;
+}
+
+.deleteModalTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ef4444;
+}
+
+.deleteModalText {
+  margin-top: 0.5rem;
+}
+
+.modalActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.deleteConfirmBtn {
+  background: #ef4444 !important;
+}

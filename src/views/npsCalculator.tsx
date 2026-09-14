@@ -103,7 +103,7 @@ const NpsCalculator: React.FC = () => {
       />
       <header className={styles.header}>
         <div className={styles.badge}>
-          <FiShield style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} />
+          <FiShield className={styles.badgeIcon} />
           PFRDA Regulated &bull; Section 80CCD &bull; Retirement Security
         </div>
         <h1 className={styles.title}>NPS Calculator (National Pension System)</h1>
@@ -131,19 +131,19 @@ const NpsCalculator: React.FC = () => {
             </div>
             {/* Employer Contribution (Section 80CCD(2)) */}
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} style={{ cursor: 'pointer' }}>
+              <label className={`${styles.fieldLabel} ${styles.checkboxLabel}`}>
                 <span>
                   <input
                     type="checkbox"
                     checked={hasEmployerContribution}
                     onChange={(e) => setHasEmployerContribution(e.target.checked)}
-                    style={{ marginRight: '0.5rem', accentColor: 'var(--color-primary)' }}
+                    className={styles.checkboxInput}
                   />
                   Add Employer Contribution (Section 80CCD(2))
                 </span>
               </label>
               {hasEmployerContribution && (
-                <div style={{ marginTop: '0.5rem' }}>
+                <div className={styles.employerWrapper}>
                   <ValuePicker
                     title="Employer Monthly Contribution"
                     value={employerMonthly}
@@ -152,7 +152,7 @@ const NpsCalculator: React.FC = () => {
                     min={500}
                     max={500000}
                   />
-                  <p style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: '0.35rem' }}>
+                  <p className={styles.noteText}>
                     Corporate employer contributions up to 10% of Basic + DA are tax-exempt under
                     both Old and New Tax Regimes.
                   </p>
@@ -252,7 +252,7 @@ const NpsCalculator: React.FC = () => {
                 max={100}
                 roiSteps={[5, 10, 20]}
               />
-              <p style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: '0.25rem' }}>
+              <p className={styles.annuitySplitNote}>
                 {annuityPercent}% Annuity / {100 - annuityPercent}% Lump Sum
               </p>
             </div>
@@ -274,7 +274,7 @@ const NpsCalculator: React.FC = () => {
             <div className={styles.heroPensionAmount}>
               {currencySymbol}
               {npsResult.monthlyPension.toLocaleString('en-IN')}
-              <span style={{ fontSize: '1rem', fontWeight: 500, opacity: 0.8 }}>/mo</span>
+              <span className={styles.perMonth}>/mo</span>
             </div>
             <div className={styles.heroPensionWords}>
               {convertToWords(npsResult.monthlyPension, 'en-IN')} per month for life
@@ -312,18 +312,22 @@ const NpsCalculator: React.FC = () => {
           </div>
           {/* Corpus Distribution (Lump Sum vs Annuity) */}
           <div className={styles.corpusSplitCard}>
-            <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-heading)' }}>
+            <div className={styles.corpusSplitTitle}>
               Corpus Utilization at Age {retirementAge}
             </div>
             <div className={styles.splitBar}>
               <div
                 className={styles.splitLumpSum}
-                style={{ width: `${npsResult.lumpSumPercent}%` }}
+                ref={(el) => {
+                  if (el) el.style.width = `${npsResult.lumpSumPercent}%`;
+                }}
                 title={`Lump Sum: ${npsResult.lumpSumPercent}%`}
               />
               <div
                 className={styles.splitAnnuity}
-                style={{ width: `${npsResult.annuityPercent}%` }}
+                ref={(el) => {
+                  if (el) el.style.width = `${npsResult.annuityPercent}%`;
+                }}
                 title={`Annuity: ${npsResult.annuityPercent}%`}
               />
             </div>
@@ -331,12 +335,12 @@ const NpsCalculator: React.FC = () => {
               <div className={styles.splitItem}>
                 <span className={styles.splitDotLumpSum} />
                 <div>
-                  <div style={{ fontWeight: 600 }}>Lump Sum ({npsResult.lumpSumPercent}%)</div>
-                  <div style={{ color: '#3b82f6', fontWeight: 700 }}>
+                  <div className={styles.splitTitle}>Lump Sum ({npsResult.lumpSumPercent}%)</div>
+                  <div className={styles.splitAmountLumpSum}>
                     {currencySymbol}
                     {npsResult.lumpSumAmount.toLocaleString('en-IN')}
                   </div>
-                  <div style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                  <div className={styles.splitDesc}>
                     100% Tax-Free (Sec 10(12A))
                   </div>
                 </div>
@@ -344,12 +348,12 @@ const NpsCalculator: React.FC = () => {
               <div className={styles.splitItem}>
                 <span className={styles.splitDotAnnuity} />
                 <div>
-                  <div style={{ fontWeight: 600 }}>Annuity ({npsResult.annuityPercent}%)</div>
-                  <div style={{ color: '#059669', fontWeight: 700 }}>
+                  <div className={styles.splitTitle}>Annuity ({npsResult.annuityPercent}%)</div>
+                  <div className={styles.splitAmountAnnuity}>
                     {currencySymbol}
                     {npsResult.annuityCorpus.toLocaleString('en-IN')}
                   </div>
-                  <div style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                  <div className={styles.splitDesc}>
                     Lifelong Monthly Pension
                   </div>
                 </div>
@@ -358,16 +362,8 @@ const NpsCalculator: React.FC = () => {
           </div>
           {/* Tax Advantages Card */}
           <section>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontWeight: 700,
-                fontSize: '0.875rem',
-              }}
-            >
-              <FiAward style={{ color: '#16a34a' }} />
+            <div className={styles.taxBenefitsHeader}>
+              <FiAward className={styles.taxBenefitsAwardIcon} />
               <span>NPS Exclusive Tax Advantages</span>
             </div>
             <div className={styles.taxBenefitsList}>
@@ -399,11 +395,11 @@ const NpsCalculator: React.FC = () => {
       {/* Year-by-Year Schedule */}
       <section className={styles.scheduleSection}>
         <div>
-          <div style={{ marginBottom: '1rem' }}>
-            <h2 className={styles.sectionHeading} style={{ margin: 0 }}>
+          <div className={styles.scheduleHeader}>
+            <h2 className={`${styles.sectionHeading} ${styles.subheading}`}>
               Retirement Wealth Accumulation Trajectory
             </h2>
-            <p className={styles.subtitle} style={{ margin: '0.25rem 0 0' }}>
+            <p className={`${styles.subtitle} ${styles.subheadingDesc}`}>
               Growth of your pension corpus year-by-year from age {currentAge} to {retirementAge} (
               {wealthMultiple}x Capital Multiplier).
             </p>
@@ -435,11 +431,11 @@ const NpsCalculator: React.FC = () => {
                       {currencySymbol}
                       {row.cumulativeInvested.toLocaleString('en-IN')}
                     </td>
-                    <td style={{ color: '#16a34a', fontWeight: 600 }}>
+                    <td className={styles.interestCell}>
                       +{currencySymbol}
                       {row.interestEarned.toLocaleString('en-IN')}
                     </td>
-                    <td style={{ fontWeight: 700 }}>
+                    <td className={styles.balanceCell}>
                       {currencySymbol}
                       {row.closingCorpus.toLocaleString('en-IN')}
                     </td>

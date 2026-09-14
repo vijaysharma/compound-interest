@@ -259,7 +259,7 @@ const Upgrade = () => {
                 <span className={styles.pricePeriod}>{proPlan.period}</span>
               </div>
               {proPlan.savings && (
-                <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, marginTop: '0.25rem' }}>
+                <div className={styles.savingsBadgeText}>
                   {proPlan.savings}
                 </div>
               )}
@@ -291,7 +291,7 @@ const Upgrade = () => {
               </p>
             </div>
           </div>
-          <div className={styles.featuresGrid} style={{ gridTemplateColumns: '1fr' }}>
+          <div className={`${styles.featuresGrid} ${styles.gridCol1}`}>
             <div className={styles.featureItem}>
               <FiCheck className={styles.featureCheckIcon} />
               <span>Unlimited Live AMFI Mutual Fund Sync</span>
@@ -322,11 +322,11 @@ const Upgrade = () => {
                 Tax Pro &amp; Advisory
               </span>
               <div className={styles.priceDisplay}>
-                <span className={styles.priceAmount} style={{ color: '#d97706' }}>₹{taxPlan.price}</span>
+                <span className={`${styles.priceAmount} ${styles.priceTaxColor}`}>₹{taxPlan.price}</span>
                 <span className={styles.pricePeriod}>{taxPlan.period}</span>
               </div>
               {taxPlan.savings && (
-                <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, marginTop: '0.25rem' }}>
+                <div className={styles.savingsBadgeText}>
                   {taxPlan.savings}
                 </div>
               )}
@@ -358,25 +358,25 @@ const Upgrade = () => {
               </p>
             </div>
           </div>
-          <div className={styles.featuresGrid} style={{ gridTemplateColumns: '1fr' }}>
+          <div className={`${styles.featuresGrid} ${styles.gridCol1}`}>
             <div className={styles.featureItem}>
-              <FiCheck className={styles.featureCheckIcon} style={{ color: '#d97706' }} />
+              <FiCheck className={`${styles.featureCheckIcon} ${styles.taxFeatureCheckIcon}`} />
               <strong>Includes Everything in Pro Access</strong>
             </div>
             <div className={styles.featureItem}>
-              <FiCheck className={styles.featureCheckIcon} style={{ color: '#d97706' }} />
+              <FiCheck className={`${styles.featureCheckIcon} ${styles.taxFeatureCheckIcon}`} />
               <span>Personalized Tax Strategy &amp; Optimization Engine</span>
             </div>
             <div className={styles.featureItem}>
-              <FiCheck className={styles.featureCheckIcon} style={{ color: '#d97706' }} />
+              <FiCheck className={`${styles.featureCheckIcon} ${styles.taxFeatureCheckIcon}`} />
               <span>Dual-Regime Breakeven &amp; Crossover Roadmap</span>
             </div>
             <div className={styles.featureItem}>
-              <FiCheck className={styles.featureCheckIcon} style={{ color: '#d97706' }} />
+              <FiCheck className={`${styles.featureCheckIcon} ${styles.taxFeatureCheckIcon}`} />
               <span>Capital Gains Harvesting &amp; Section 80C/80D Advice</span>
             </div>
             <div className={styles.featureItem}>
-              <FiCheck className={styles.featureCheckIcon} style={{ color: '#d97706' }} />
+              <FiCheck className={`${styles.featureCheckIcon} ${styles.taxFeatureCheckIcon}`} />
               <span>Year-Round Tax Strategy Consultations</span>
             </div>
           </div>

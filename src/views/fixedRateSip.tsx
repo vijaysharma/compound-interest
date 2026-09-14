@@ -279,7 +279,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Wealth Breakdown</span>
-              <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+              <span className={styles.summarySub}>
                 {rt.tenure} {rt.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt.roi}%
               </span>
             </div>
@@ -298,8 +298,18 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
               </div>
             </div>
             <div className={styles.ratioBar}>
-              <div className={styles.ratioFillInvested} style={{ width: `${investedPercent}%` }} />
-              <div className={styles.ratioFillReturns} style={{ width: `${100 - investedPercent}%` }} />
+              <div
+                className={styles.ratioFillInvested}
+                ref={(el) => {
+                  if (el) el.style.width = `${investedPercent}%`;
+                }}
+              />
+              <div
+                className={styles.ratioFillReturns}
+                ref={(el) => {
+                  if (el) el.style.width = `${100 - investedPercent}%`;
+                }}
+              />
             </div>
             <div className={styles.ratioLegend}>
               <span className={styles.ratioLegendItem}>
