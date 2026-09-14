@@ -348,7 +348,9 @@ const IncomeTaxCalculator: React.FC = () => {
       } else if (data.advice) {
         setStrategyAdvice(data.advice);
       } else {
-        setStrategyAdvice(data.message || 'Unable to generate optimization strategy at this moment.');
+        setStrategyAdvice(
+          data.message || 'Unable to generate optimization strategy at this moment.'
+        );
       }
     } catch (err) {
       setStrategyAdvice(`Unable to generate strategy report: ${String(err)}`);
@@ -382,352 +384,415 @@ const IncomeTaxCalculator: React.FC = () => {
       <div className={styles.taxMainGrid}>
         {/* RIGHT COLUMN — results (sticky on web) */}
         <div className={styles.taxResultsCol}>
-        <section className={styles.winnerBanner}>
-        <div className={styles.winnerInfo}>
-          <FiCheckCircle className={styles.winnerIcon} />
-          <div>
-            <h2 className={styles.winnerHeading}>
-              Recommended: {isNewWinner ? 'New Tax Regime' : 'Old Tax Regime'}
-            </h2>
-            <p className={styles.winnerSubtext}>
-              {comparison.taxSavings > 0 ? (
-                <>
-                  You save <strong>{currencySymbol}{comparison.taxSavings.toLocaleString('en-IN')}</strong> in taxes
-                  by opting for the <strong>{isNewWinner ? 'New Tax Regime' : 'Old Tax Regime'}</strong>.
-                </>
-              ) : (
-                'Both regimes yield identical tax payable for your financial figures.'
-              )}
-            </p>
-          </div>
-        </div>
-        <div className={styles.winnerBadge}>
-          <FiAward />
-          <span>Save {currencySymbol}{comparison.taxSavings.toLocaleString('en-IN')}</span>
-        </div>
-      </section>
-      {/* Side-by-Side Dual Regime Comparison Cards */}
-      <section className={styles.comparisonGrid}>
-        {/* New Regime Card */}
-        <div
-          className={`${styles.regimeCard} ${
-            isNewWinner ? styles.regimeCardRecommended : ''
-          }`}
-        >
-          <div className={styles.regimeHeader}>
-            <div>
-              <h3 className={styles.regimeTitle}>New Tax Regime</h3>
-              <div className={styles.regimeSub}>Section 115BAC (Default)</div>
-            </div>
-            {isNewWinner && <span className={styles.tagRecommended}>Recommended</span>}
-          </div>
-          <div className={styles.regimeHeroAmount}>
-            {currencySymbol}
-            {comparison.newRegime.totalTaxPayable.toLocaleString('en-IN')}
-          </div>
-          <div className={styles.regimeWords}>
-            Effective Tax Rate: {comparison.newRegime.effectiveTaxRate}%
-          </div>
-          <div className={styles.detailRows}>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Gross Total Income</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.newRegime.grossTotalIncome.toLocaleString('en-IN')}
-              </span>
-            </div>
-            {isSalaried && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Standard Deduction</span>
-                <span className={styles.detailValueNegative}>
-                  -{currencySymbol}
-                  {comparison.newRegime.standardDeduction.toLocaleString('en-IN')}
-                </span>
-              </div>
-            )}
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Total Taxable Income</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.newRegime.taxableIncome.toLocaleString('en-IN')}
-              </span>
-            </div>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Slab Tax</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.newRegime.slabTax.toLocaleString('en-IN')}
-              </span>
-            </div>
-            {(comparison.newRegime.stcgTax > 0 || comparison.newRegime.ltcgTax > 0) && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Capital Gains Tax (Equity)</span>
-                <span className={styles.detailValue}>
-                  {currencySymbol}
-                  {(comparison.newRegime.stcgTax + comparison.newRegime.ltcgTax).toLocaleString('en-IN')}
-                </span>
-              </div>
-            )}
-            {comparison.newRegime.rebate87A > 0 && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Section 87A Rebate</span>
-                <span className={styles.detailValueNegative}>
-                  -{currencySymbol}
-                  {comparison.newRegime.rebate87A.toLocaleString('en-IN')}
-                </span>
-              </div>
-            )}
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Health &amp; Education Cess (4%)</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.newRegime.cess.toLocaleString('en-IN')}
-              </span>
-            </div>
-          </div>
-        </div>
-        {/* Old Regime Card */}
-        <div
-          className={`${styles.regimeCard} ${
-            !isNewWinner ? styles.regimeCardRecommended : ''
-          }`}
-        >
-          <div className={styles.regimeHeader}>
-            <div>
-              <h3 className={styles.regimeTitle}>Old Tax Regime</h3>
-              <div className={styles.regimeSub}>With Chapter VI-A Deductions</div>
-            </div>
-            {!isNewWinner && <span className={styles.tagRecommended}>Recommended</span>}
-          </div>
-          <div className={styles.regimeHeroAmount}>
-            {currencySymbol}
-            {comparison.oldRegime.totalTaxPayable.toLocaleString('en-IN')}
-          </div>
-          <div className={styles.regimeWords}>
-            Effective Tax Rate: {comparison.oldRegime.effectiveTaxRate}%
-          </div>
-          <div className={styles.detailRows}>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Gross Total Income</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.oldRegime.grossTotalIncome.toLocaleString('en-IN')}
-              </span>
-            </div>
-            {isSalaried && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Standard Deduction</span>
-                <span className={styles.detailValueNegative}>
-                  -{currencySymbol}
-                  {comparison.oldRegime.standardDeduction.toLocaleString('en-IN')}
-                </span>
-              </div>
-            )}
-            {comparison.oldRegime.hraExemption > 0 && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>HRA Exemption (Sec 10(13A))</span>
-                <span className={styles.detailValueNegative}>
-                  -{currencySymbol}
-                  {comparison.oldRegime.hraExemption.toLocaleString('en-IN')}
-                </span>
-              </div>
-            )}
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Chapter VI-A Deductions</span>
-              <span className={styles.detailValueNegative}>
-                -{currencySymbol}
-                {comparison.oldRegime.totalDeductions.toLocaleString('en-IN')}
-              </span>
-            </div>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Total Taxable Income</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.oldRegime.taxableIncome.toLocaleString('en-IN')}
-              </span>
-            </div>
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Slab Tax</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.oldRegime.slabTax.toLocaleString('en-IN')}
-              </span>
-            </div>
-            {comparison.oldRegime.rebate87A > 0 && (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Section 87A Rebate</span>
-                <span className={styles.detailValueNegative}>
-                  -{currencySymbol}
-                  {comparison.oldRegime.rebate87A.toLocaleString('en-IN')}
-                </span>
-              </div>
-            )}
-            <div className={styles.detailRow}>
-              <span className={styles.detailLabel}>Health &amp; Education Cess (4%)</span>
-              <span className={styles.detailValue}>
-                {currencySymbol}
-                {comparison.oldRegime.cess.toLocaleString('en-IN')}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* Breakeven Deductions Indicator */}
-      <section className={styles.breakevenCard}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div>
-            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}>
-              Breakeven Deductions Threshold
-            </div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: '0.25rem' }}>
-              You need a minimum of <strong>{currencySymbol}{comparison.breakevenDeductions.toLocaleString('en-IN')}</strong> in total
-              deductions for the Old Regime to be better than the New Regime.
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Currently Claimed</div>
-            <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--color-primary)' }}>
-              {currencySymbol}{comparison.currentDeductionsClaimed.toLocaleString('en-IN')}
-            </div>
-          </div>
-        </div>
-        <div className={styles.breakevenBar}>
-          <div
-            className={styles.breakevenFill}
-            style={{
-              width: `${Math.min(
-                100,
-                Math.round(
-                  (comparison.currentDeductionsClaimed / (comparison.breakevenDeductions || 1)) * 100
-                )
-              )}%`,
-            }}
-          />
-        </div>
-        {comparison.additionalDeductionsNeeded > 0 ? (
-          <div style={{ fontSize: '0.6875rem', color: '#d97706', fontWeight: 600 }}>
-            You need {currencySymbol}{comparison.additionalDeductionsNeeded.toLocaleString('en-IN')} more in deductions to break even with the New Regime.
-          </div>
-        ) : (
-          <div style={{ fontSize: '0.6875rem', color: '#16a34a', fontWeight: 600 }}>
-            Your deductions exceed the breakeven threshold, making the Old Regime more beneficial!
-          </div>
-        )}
-      </section>
-      {/* Tax Strategy Advisory Section */}
-      <section className={styles.aiCard}>
-        <div className={styles.aiHeader}>
-          <div className={styles.aiTitleGroup}>
-            <FiCpu className={styles.aiIcon} />
-            <h2 className={styles.aiTitle}>Tax Strategy &amp; Optimization Advisory</h2>
-          </div>
-          <span className={styles.aiBadge}>
-            {hasTaxPro ? 'Tax Pro Active' : 'Tax Pro Feature'}
-          </span>
-        </div>
-        <p className={styles.aiDesc}>
-          Get institutional-grade tax planning tailored specifically to your financial figures.
-          Analyzes your salary, second business, PPF earnings, capital gains harvesting, and all
-          Section 80 deductions.
-        </p>
-        <div>
-          <button
-            type="button"
-            disabled={strategyLoading}
-            onClick={() => void handleGenerateStrategyAdvice()}
-            className={styles.aiActionBtn}
-          >
-            <FiCpu />
-            <span>
-              {strategyLoading ? 'Generating Optimization Strategy...' : 'Generate Tax Optimization Strategy'}
-            </span>
-          </button>
-          <div className={styles.aiQuestionRow}>
-            <input
-              type="text"
-              value={strategyQuestion}
-              onChange={(e) => setStrategyQuestion(e.target.value)}
-              placeholder="Ask specific tax questions (e.g., 'What if I invest ₹50k in NPS?', 'How should I treat freelance income?')"
-              className={styles.aiQuestionInput}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  void handleGenerateStrategyAdvice(strategyQuestion);
-                }
-              }}
-            />
-            <button
-              type="button"
-              disabled={strategyLoading || !strategyQuestion.trim()}
-              onClick={() => void handleGenerateStrategyAdvice(strategyQuestion)}
-              className={styles.aiAskBtn}
-            >
-              <FiSend style={{ marginRight: '0.25rem' }} /> Consult Engine
-            </button>
-          </div>
-          {showUpgradeGate && !hasTaxPro && (
-            <div className={styles.taxProTeaser}>
+          <section className={styles.winnerBanner}>
+            <div className={styles.winnerInfo}>
+              <FiCheckCircle className={styles.winnerIcon} />
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--color-heading)' }}>
-                  Unlock Personalized Tax Strategy Advisory
+                <h2 className={styles.winnerHeading}>
+                  Recommended: {isNewWinner ? 'New Tax Regime' : 'Old Tax Regime'}
+                </h2>
+                <p className={styles.winnerSubtext}>
+                  {comparison.taxSavings > 0 ? (
+                    <>
+                      You save{' '}
+                      <strong>
+                        {currencySymbol}
+                        {comparison.taxSavings.toLocaleString('en-IN')}
+                      </strong>{' '}
+                      in taxes by opting for the{' '}
+                      <strong>{isNewWinner ? 'New Tax Regime' : 'Old Tax Regime'}</strong>.
+                    </>
+                  ) : (
+                    'Both regimes yield identical tax payable for your financial figures.'
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className={styles.winnerBadge}>
+              <FiAward />
+              <span>
+                Save {currencySymbol}
+                {comparison.taxSavings.toLocaleString('en-IN')}
+              </span>
+            </div>
+          </section>
+          {/* Side-by-Side Dual Regime Comparison Cards */}
+          <section className={styles.comparisonGrid}>
+            {/* New Regime Card */}
+            <div
+              className={`${styles.regimeCard} ${isNewWinner ? styles.regimeCardRecommended : ''}`}
+            >
+              <div className={styles.regimeHeader}>
+                <div>
+                  <h3 className={styles.regimeTitle}>New Tax Regime</h3>
+                  <div className={styles.regimeSub}>Section 115BAC (Default)</div>
                 </div>
-                <div style={{ fontSize: '0.8125rem', opacity: 0.85, marginTop: '0.25rem' }}>
-                  Institutional-grade tax optimization with multi-source planning, custom deduction modeling, and continuous savings recommendations is exclusive to <strong>Tax Pro</strong> (₹129/mo or ₹999/yr).
+                {isNewWinner && <span className={styles.tagRecommended}>Recommended</span>}
+              </div>
+              <div className={styles.regimeHeroAmount}>
+                {currencySymbol}
+                {comparison.newRegime.totalTaxPayable.toLocaleString('en-IN')}
+              </div>
+              <div className={styles.regimeWords}>
+                Effective Tax Rate: {comparison.newRegime.effectiveTaxRate}%
+              </div>
+              <div className={styles.detailRows}>
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Gross Total Income</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.newRegime.grossTotalIncome.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                {isSalaried && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Standard Deduction</span>
+                    <span className={styles.detailValueNegative}>
+                      -{currencySymbol}
+                      {comparison.newRegime.standardDeduction.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Total Taxable Income</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.newRegime.taxableIncome.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Slab Tax</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.newRegime.slabTax.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                {(comparison.newRegime.stcgTax > 0 || comparison.newRegime.ltcgTax > 0) && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Capital Gains Tax (Equity)</span>
+                    <span className={styles.detailValue}>
+                      {currencySymbol}
+                      {(comparison.newRegime.stcgTax + comparison.newRegime.ltcgTax).toLocaleString(
+                        'en-IN'
+                      )}
+                    </span>
+                  </div>
+                )}
+                {comparison.newRegime.rebate87A > 0 && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Section 87A Rebate</span>
+                    <span className={styles.detailValueNegative}>
+                      -{currencySymbol}
+                      {comparison.newRegime.rebate87A.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Health &amp; Education Cess (4%)</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.newRegime.cess.toLocaleString('en-IN')}
+                  </span>
                 </div>
               </div>
+            </div>
+            {/* Old Regime Card */}
+            <div
+              className={`${styles.regimeCard} ${!isNewWinner ? styles.regimeCardRecommended : ''}`}
+            >
+              <div className={styles.regimeHeader}>
+                <div>
+                  <h3 className={styles.regimeTitle}>Old Tax Regime</h3>
+                  <div className={styles.regimeSub}>With Chapter VI-A Deductions</div>
+                </div>
+                {!isNewWinner && <span className={styles.tagRecommended}>Recommended</span>}
+              </div>
+              <div className={styles.regimeHeroAmount}>
+                {currencySymbol}
+                {comparison.oldRegime.totalTaxPayable.toLocaleString('en-IN')}
+              </div>
+              <div className={styles.regimeWords}>
+                Effective Tax Rate: {comparison.oldRegime.effectiveTaxRate}%
+              </div>
+              <div className={styles.detailRows}>
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Gross Total Income</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.oldRegime.grossTotalIncome.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                {isSalaried && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Standard Deduction</span>
+                    <span className={styles.detailValueNegative}>
+                      -{currencySymbol}
+                      {comparison.oldRegime.standardDeduction.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+                {comparison.oldRegime.hraExemption > 0 && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>HRA Exemption (Sec 10(13A))</span>
+                    <span className={styles.detailValueNegative}>
+                      -{currencySymbol}
+                      {comparison.oldRegime.hraExemption.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Chapter VI-A Deductions</span>
+                  <span className={styles.detailValueNegative}>
+                    -{currencySymbol}
+                    {comparison.oldRegime.totalDeductions.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Total Taxable Income</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.oldRegime.taxableIncome.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Slab Tax</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.oldRegime.slabTax.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                {comparison.oldRegime.rebate87A > 0 && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Section 87A Rebate</span>
+                    <span className={styles.detailValueNegative}>
+                      -{currencySymbol}
+                      {comparison.oldRegime.rebate87A.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Health &amp; Education Cess (4%)</span>
+                  <span className={styles.detailValue}>
+                    {currencySymbol}
+                    {comparison.oldRegime.cess.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+          {/* Breakeven Deductions Indicator */}
+          <section className={styles.breakevenCard}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+              }}
+            >
+              <div>
+                <div
+                  style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}
+                >
+                  Breakeven Deductions Threshold
+                </div>
+                <div style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                  You need a minimum of{' '}
+                  <strong>
+                    {currencySymbol}
+                    {comparison.breakevenDeductions.toLocaleString('en-IN')}
+                  </strong>{' '}
+                  in total deductions for the Old Regime to be better than the New Regime.
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Currently Claimed</div>
+                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--color-primary)' }}>
+                  {currencySymbol}
+                  {comparison.currentDeductionsClaimed.toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+            <div className={styles.breakevenBar}>
+              <div
+                className={styles.breakevenFill}
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.round(
+                      (comparison.currentDeductionsClaimed /
+                        (comparison.breakevenDeductions || 1)) *
+                        100
+                    )
+                  )}%`,
+                }}
+              />
+            </div>
+            {comparison.additionalDeductionsNeeded > 0 ? (
+              <div style={{ fontSize: '0.6875rem', color: '#d97706', fontWeight: 600 }}>
+                You need {currencySymbol}
+                {comparison.additionalDeductionsNeeded.toLocaleString('en-IN')} more in deductions
+                to break even with the New Regime.
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.6875rem', color: '#16a34a', fontWeight: 600 }}>
+                Your deductions exceed the breakeven threshold, making the Old Regime more
+                beneficial!
+              </div>
+            )}
+          </section>
+          {/* Tax Strategy Advisory Section */}
+          <section className={styles.aiCard}>
+            <div className={styles.aiHeader}>
+              <div className={styles.aiTitleGroup}>
+                <FiCpu className={styles.aiIcon} />
+                <h2 className={styles.aiTitle}>Tax Strategy &amp; Optimization Advisory</h2>
+              </div>
+              <span className={styles.aiBadge}>
+                {hasTaxPro ? 'Tax Pro Active' : 'Tax Pro Feature'}
+              </span>
+            </div>
+            <p className={styles.aiDesc}>
+              Get institutional-grade tax planning tailored specifically to your financial figures.
+              Analyzes your salary, second business, PPF earnings, capital gains harvesting, and all
+              Section 80 deductions.
+            </p>
+            <div>
               <button
                 type="button"
-                onClick={() => navigate('/upgrade?plan=tax_monthly')}
-                className={styles.taxProUpgradeBtn}
+                disabled={strategyLoading}
+                onClick={() => void handleGenerateStrategyAdvice()}
+                className={styles.aiActionBtn}
               >
-                Upgrade to Tax Pro &rarr;
+                <FiCpu />
+                <span>
+                  {strategyLoading
+                    ? 'Generating Optimization Strategy...'
+                    : 'Generate Tax Optimization Strategy'}
+                </span>
               </button>
-            </div>
-          )}
-          {strategyAdvice && (
-            <div className={styles.aiResponseBox}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.75rem', color: 'var(--color-primary)', fontWeight: 700 }}>
-                <FiAward />
-                <span>Customized Tax Advisory Report</span>
+              <div className={styles.aiQuestionRow}>
+                <input
+                  type="text"
+                  value={strategyQuestion}
+                  onChange={(e) => setStrategyQuestion(e.target.value)}
+                  placeholder="Ask specific tax questions (e.g., 'What if I invest ₹50k in NPS?', 'How should I treat freelance income?')"
+                  className={styles.aiQuestionInput}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      void handleGenerateStrategyAdvice(strategyQuestion);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={strategyLoading || !strategyQuestion.trim()}
+                  onClick={() => void handleGenerateStrategyAdvice(strategyQuestion)}
+                  className={styles.aiAskBtn}
+                >
+                  <FiSend style={{ marginRight: '0.25rem' }} /> Consult Engine
+                </button>
               </div>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{strategyAdvice}</div>
-            </div>
-          )}
-        </div>
-      </section>
-      {/* Rule-Based Instant Optimization Recommendations */}
-      <section className={styles.card}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1rem', color: 'var(--color-heading)' }}>
-          <FiTrendingUp style={{ color: '#16a34a' }} />
-          <h2>Instant Tax Optimization Strategies</h2>
-        </div>
-        <p className={styles.cardDesc}>
-          Actionable steps to legally minimize your tax liability under Indian tax laws:
-        </p>
-        <div className={styles.tipsGrid}>
-          {comparison.optimizationTips.map((tip, idx) => (
-            <div key={idx} className={styles.tipCard}>
-              <div>
-                <div className={styles.tipHeader}>
-                  <span className={styles.tipCategory}>{tip.category}</span>
-                  {tip.potentialTaxSavings > 0 && (
-                    <span className={styles.tipSavings}>
-                      Save up to {currencySymbol}{tip.potentialTaxSavings.toLocaleString('en-IN')}
-                    </span>
-                  )}
+              {showUpgradeGate && !hasTaxPro && (
+                <div className={styles.taxProTeaser}>
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: '0.9375rem',
+                        color: 'var(--color-heading)',
+                      }}
+                    >
+                      Unlock Personalized Tax Strategy Advisory
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', opacity: 0.85, marginTop: '0.25rem' }}>
+                      Institutional-grade tax optimization with multi-source planning, custom
+                      deduction modeling, and continuous savings recommendations is exclusive to{' '}
+                      <strong>Tax Pro</strong> (₹129/mo or ₹999/yr).
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/upgrade?plan=tax_monthly')}
+                    className={styles.taxProUpgradeBtn}
+                  >
+                    Upgrade to Tax Pro &rarr;
+                  </button>
                 </div>
-                <h4 className={styles.tipTitle}>{tip.title}</h4>
-                <p className={styles.tipDesc}>{tip.description}</p>
-              </div>
-              {tip.codeSection && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.6875rem', opacity: 0.6, fontWeight: 600 }}>
-                  Ref: {tip.codeSection}
+              )}
+              {strategyAdvice && (
+                <div className={styles.aiResponseBox}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      marginBottom: '0.75rem',
+                      color: 'var(--color-primary)',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <FiAward />
+                    <span>Customized Tax Advisory Report</span>
+                  </div>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{strategyAdvice}</div>
                 </div>
               )}
             </div>
-          ))}
+          </section>
+          {/* Rule-Based Instant Optimization Recommendations */}
+          <section className={styles.card}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontWeight: 700,
+                fontSize: '1rem',
+                color: 'var(--color-heading)',
+              }}
+            >
+              <FiTrendingUp style={{ color: '#16a34a' }} />
+              <h2>Instant Tax Optimization Strategies</h2>
+            </div>
+            <p className={styles.cardDesc}>
+              Actionable steps to legally minimize your tax liability under Indian tax laws:
+            </p>
+            <div className={styles.tipsGrid}>
+              {comparison.optimizationTips.map((tip, idx) => (
+                <div key={idx} className={styles.tipCard}>
+                  <div>
+                    <div className={styles.tipHeader}>
+                      <span className={styles.tipCategory}>{tip.category}</span>
+                      {tip.potentialTaxSavings > 0 && (
+                        <span className={styles.tipSavings}>
+                          Save up to {currencySymbol}
+                          {tip.potentialTaxSavings.toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    </div>
+                    <h4 className={styles.tipTitle}>{tip.title}</h4>
+                    <p className={styles.tipDesc}>{tip.description}</p>
+                  </div>
+                  {tip.codeSection && (
+                    <div
+                      style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.6875rem',
+                        opacity: 0.6,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Ref: {tip.codeSection}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
-        </div>{/* end taxResultsCol */}
+        {/* end taxResultsCol */}
         {/* LEFT COLUMN — inputs */}
         <div className={styles.taxInputsCol}>
           {/* Form 16 Upload & Filing Banner */}
@@ -737,9 +802,12 @@ const IncomeTaxCalculator: React.FC = () => {
                 <FiUploadCloud size={20} />
               </div>
               <div>
-                <h3 className={styles.form16Title}>Have Form 16? Auto-fill &amp; Prepare ITR Filing</h3>
+                <h3 className={styles.form16Title}>
+                  Have Form 16? Auto-fill &amp; Prepare ITR Filing
+                </h3>
                 <p className={styles.form16Desc}>
-                  Upload your Form 16 PDF or text to extract salary, TDS, exemptions, and deductions, compare regimes, and prepare your return.
+                  Upload your Form 16 PDF or text to extract salary, TDS, exemptions, and
+                  deductions, compare regimes, and prepare your return.
                 </p>
               </div>
             </div>
@@ -752,869 +820,1023 @@ const IncomeTaxCalculator: React.FC = () => {
             </button>
           </div>
           {/* Multi-Section Detailed Inputs */}
-          <section className={styles.card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div>
-            <h2 className={styles.cardHeading}>
-              Enter Income Sources &amp; Deductions
-            </h2>
-            <p className={styles.cardDesc} style={{ margin: 0 }}>
-              Adjust details below to see live updates to both tax regimes.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <select
-              value={financialYear}
-              onChange={(e) => setFinancialYear(e.target.value as '2024-25' | '2025-26')}
-              className={styles.select}
-              style={{ width: '130px', height: '36px', fontSize: '0.75rem' }}
-            >
-              <option value="2024-25">FY 2024-25</option>
-              <option value="2025-26">FY 2025-26</option>
-            </select>
-            <select
-              value={ageCategory}
-              onChange={(e) => setAgeCategory(e.target.value as AgeCategory)}
-              className={styles.select}
-              style={{ width: '150px', height: '36px', fontSize: '0.75rem' }}
-            >
-              <option value="general">&lt;60 Yrs (General)</option>
-              <option value="senior">60-79 Yrs (Senior)</option>
-              <option value="super_senior">80+ Yrs (Super Senior)</option>
-            </select>
-          </div>
-        </div>
-        {/* Input Navigation Tabs */}
-        <div className={styles.tabsNav}>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === 'salary' ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab('salary')}
-          >
-            <FiBriefcase size={14} />
-            <span>Salary &amp; HRA</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === 'business' ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab('business')}
-          >
-            <FiTrendingUp size={14} />
-            <span>2nd Business / Freelance</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === 'house' ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab('house')}
-          >
-            <FiHome size={14} />
-            <span>House Property &amp; Rent</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === 'capital_gains' ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab('capital_gains')}
-          >
-            <FiPieChart size={14} />
-            <span>Mutual Funds &amp; Stocks</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === 'interest' ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab('interest')}
-          >
-            <FiShield size={14} />
-            <span>PPF &amp; Interest</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${activeTab === 'deductions' ? styles.tabBtnActive : ''}`}
-            onClick={() => setActiveTab('deductions')}
-          >
-            <FiAward size={14} />
-            <span>Deductions (80C/80D/NPS)</span>
-          </button>
-        </div>
-        {/* Tab 1: Salary & HRA */}
-        {activeTab === 'salary' && (
-          <div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label className={styles.label} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={isSalaried}
-                  onChange={(e) => setIsSalaried(e.target.checked)}
-                  style={{ accentColor: 'var(--color-primary)' }}
-                />
-                <span>Are you a Salaried Employee? (Eligible for Standard Deduction)</span>
-              </label>
-            </div>
-            {isSalaried && (
+          <section>
+            <div>
               <div>
-                <ValuePicker
-                  title="Annual Gross Salary"
-                  value={grossSalary}
-                  onChange={setGrossSalary}
-                  stepData={SALARY_STEPS}
-                  min={0}
-                  max={100000000}
-                />
-                <div className={styles.formGrid2} style={{ marginTop: '1rem' }}>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-basic-salary" className={styles.label}>Basic Salary (for HRA / NPS)</label>
-                    <input
-                      id="tax-basic-salary"
-                      type="text"
-                      value={basicSalary}
-                      onChange={(e) => setBasicSalary(e.target.value)}
-                      className={styles.input}
-                    />
-                    <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                      {convertToWords(sanitizeAmount(basicSalary), 'en-IN')}
-                    </span>
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-city-type" className={styles.label}>City of Residence (HRA)</label>
-                    <select
-                      id="tax-city-type"
-                      value={cityCategory}
-                      onChange={(e) => setCityCategory(e.target.value as CityCategory)}
-                      className={styles.select}
-                    >
-                      <option value="metro">Metro (Delhi, Mumbai, Kolkata, Chennai - 50%)</option>
-                      <option value="non_metro">Non-Metro (40%)</option>
-                    </select>
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-hra-received" className={styles.label}>HRA Received from Employer</label>
-                    <input
-                      id="tax-hra-received"
-                      type="text"
-                      value={hraReceived}
-                      onChange={(e) => setHraReceived(e.target.value)}
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-rent-paid" className={styles.label}>Total Annual Rent Paid</label>
-                    <input
-                      id="tax-rent-paid"
-                      type="text"
-                      value={rentPaid}
-                      onChange={(e) => setRentPaid(e.target.value)}
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-prof-tax" className={styles.label}>
-                      Professional Tax (Sec 16(iii))
-                    </label>
-                    <input
-                      id="tax-prof-tax"
-                      type="text"
-                      value={professionalTax}
-                      onChange={(e) => setProfessionalTax(e.target.value)}
-                      placeholder="e.g. 2400 (Deductible up to ₹2,500 in Old Regime)"
-                      className={styles.input}
-                    />
-                    <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                      Deductible up to ₹2,500/year under Old Regime.
-                    </span>
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-exempt-allowances" className={styles.label}>
-                      Exempt Allowances (Sec 10 - LTA, Conveyance, Uniform)
-                    </label>
-                    <input
-                      id="tax-exempt-allowances"
-                      type="text"
-                      value={exemptAllowances}
-                      onChange={(e) => setExemptAllowances(e.target.value)}
-                      placeholder="e.g. 50000"
-                      className={styles.input}
-                    />
-                    <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                      Exempt from salary in Old Regime with valid receipts.
-                    </span>
-                  </div>
-                </div>
-                {/* Standard Deduction Custom Override */}
-                <div style={{ marginTop: '1rem', padding: '0.875rem', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm, 6px)', border: '1px solid var(--color-border)' }}>
-                  <label className={styles.checkboxToggle}>
+                <h2 className={styles.cardHeading}>Enter Income Sources &amp; Deductions</h2>
+                <p className={styles.cardDesc} style={{ margin: 0 }}>
+                  Adjust details below to see live updates to both tax regimes.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <select
+                  value={financialYear}
+                  onChange={(e) => setFinancialYear(e.target.value as '2024-25' | '2025-26')}
+                  className={styles.select}
+                  style={{ width: '130px', height: '36px', fontSize: '0.75rem' }}
+                >
+                  <option value="2024-25">FY 2024-25</option>
+                  <option value="2025-26">FY 2025-26</option>
+                </select>
+                <select
+                  value={ageCategory}
+                  onChange={(e) => setAgeCategory(e.target.value as AgeCategory)}
+                  className={styles.select}
+                  style={{ width: '150px', height: '36px', fontSize: '0.75rem' }}
+                >
+                  <option value="general">&lt;60 Yrs (General)</option>
+                  <option value="senior">60-79 Yrs (Senior)</option>
+                  <option value="super_senior">80+ Yrs (Super Senior)</option>
+                </select>
+              </div>
+            </div>
+            {/* Input Navigation Tabs */}
+            <div className={styles.tabsNav}>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'salary' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('salary')}
+              >
+                <FiBriefcase size={14} />
+                <span>Salary &amp; HRA</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'business' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('business')}
+              >
+                <FiTrendingUp size={14} />
+                <span>2nd Business / Freelance</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'house' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('house')}
+              >
+                <FiHome size={14} />
+                <span>House Property &amp; Rent</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'capital_gains' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('capital_gains')}
+              >
+                <FiPieChart size={14} />
+                <span>Mutual Funds &amp; Stocks</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'interest' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('interest')}
+              >
+                <FiShield size={14} />
+                <span>PPF &amp; Interest</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'deductions' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('deductions')}
+              >
+                <FiAward size={14} />
+                <span>Deductions (80C/80D/NPS)</span>
+              </button>
+            </div>
+            {/* Tab 1: Salary & HRA */}
+            {activeTab === 'salary' && (
+              <div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label
+                    className={styles.label}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      cursor: 'pointer',
+                    }}
+                  >
                     <input
                       type="checkbox"
-                      checked={useCustomStdDeduction}
-                      onChange={(e) => setUseCustomStdDeduction(e.target.checked)}
+                      checked={isSalaried}
+                      onChange={(e) => setIsSalaried(e.target.checked)}
                       style={{ accentColor: 'var(--color-primary)' }}
                     />
-                    <span>Override Standard Deduction (Default: ₹75,000 New / ₹50,000 Old)</span>
+                    <span>Are you a Salaried Employee? (Eligible for Standard Deduction)</span>
                   </label>
-                  <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', lineHeight: 1.4, color: 'var(--color-text-secondary, #6b7280)' }}>
-                    Under Section 16(ia), salaried individuals receive a flat standard deduction without submitting expense bills. Under Union Budget 2024, this is automatically set to ₹75,000 for the New Tax Regime (FY 2024-25 onwards) and ₹50,000 for the Old Tax Regime. Enable this checkbox only if your employer capped it to your actual salary or you have a specific prorated deduction amount.
-                  </p>
-                  {useCustomStdDeduction && (
-                    <div style={{ marginTop: '0.75rem', maxWidth: '300px' }}>
+                </div>
+                {isSalaried && (
+                  <div>
+                    <ValuePicker
+                      title="Annual Gross Salary"
+                      value={grossSalary}
+                      onChange={setGrossSalary}
+                      stepData={SALARY_STEPS}
+                      min={0}
+                      max={100000000}
+                    />
+                    <div className={styles.formGrid2} style={{ marginTop: '1rem' }}>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-basic-salary" className={styles.label}>
+                          Basic Salary (for HRA / NPS)
+                        </label>
+                        <input
+                          id="tax-basic-salary"
+                          type="text"
+                          value={basicSalary}
+                          onChange={(e) => setBasicSalary(e.target.value)}
+                          className={styles.input}
+                        />
+                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                          {convertToWords(sanitizeAmount(basicSalary), 'en-IN')}
+                        </span>
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-city-type" className={styles.label}>
+                          City of Residence (HRA)
+                        </label>
+                        <select
+                          id="tax-city-type"
+                          value={cityCategory}
+                          onChange={(e) => setCityCategory(e.target.value as CityCategory)}
+                          className={styles.select}
+                        >
+                          <option value="metro">
+                            Metro (Delhi, Mumbai, Kolkata, Chennai - 50%)
+                          </option>
+                          <option value="non_metro">Non-Metro (40%)</option>
+                        </select>
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-hra-received" className={styles.label}>
+                          HRA Received from Employer
+                        </label>
+                        <input
+                          id="tax-hra-received"
+                          type="text"
+                          value={hraReceived}
+                          onChange={(e) => setHraReceived(e.target.value)}
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-rent-paid" className={styles.label}>
+                          Total Annual Rent Paid
+                        </label>
+                        <input
+                          id="tax-rent-paid"
+                          type="text"
+                          value={rentPaid}
+                          onChange={(e) => setRentPaid(e.target.value)}
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-prof-tax" className={styles.label}>
+                          Professional Tax (Sec 16(iii))
+                        </label>
+                        <input
+                          id="tax-prof-tax"
+                          type="text"
+                          value={professionalTax}
+                          onChange={(e) => setProfessionalTax(e.target.value)}
+                          placeholder="e.g. 2400 (Deductible up to ₹2,500 in Old Regime)"
+                          className={styles.input}
+                        />
+                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                          Deductible up to ₹2,500/year under Old Regime.
+                        </span>
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-exempt-allowances" className={styles.label}>
+                          Exempt Allowances (Sec 10 - LTA, Conveyance, Uniform)
+                        </label>
+                        <input
+                          id="tax-exempt-allowances"
+                          type="text"
+                          value={exemptAllowances}
+                          onChange={(e) => setExemptAllowances(e.target.value)}
+                          placeholder="e.g. 50000"
+                          className={styles.input}
+                        />
+                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                          Exempt from salary in Old Regime with valid receipts.
+                        </span>
+                      </div>
+                    </div>
+                    {/* Standard Deduction Custom Override */}
+                    <div
+                      style={{
+                        marginTop: '1rem',
+                        padding: '0.875rem',
+                        background: 'var(--color-bg-secondary)',
+                        borderRadius: 'var(--radius-sm, 6px)',
+                        border: '1px solid var(--color-border)',
+                      }}
+                    >
+                      <label className={styles.checkboxToggle}>
+                        <input
+                          type="checkbox"
+                          checked={useCustomStdDeduction}
+                          onChange={(e) => setUseCustomStdDeduction(e.target.checked)}
+                          style={{ accentColor: 'var(--color-primary)' }}
+                        />
+                        <span>
+                          Override Standard Deduction (Default: ₹75,000 New / ₹50,000 Old)
+                        </span>
+                      </label>
+                      <p
+                        style={{
+                          margin: '0.375rem 0 0',
+                          fontSize: '0.75rem',
+                          lineHeight: 1.4,
+                          color: 'var(--color-text-secondary, #6b7280)',
+                        }}
+                      >
+                        Under Section 16(ia), salaried individuals receive a flat standard deduction
+                        without submitting expense bills. Under Union Budget 2024, this is
+                        automatically set to ₹75,000 for the New Tax Regime (FY 2024-25 onwards) and
+                        ₹50,000 for the Old Tax Regime. Enable this checkbox only if your employer
+                        capped it to your actual salary or you have a specific prorated deduction
+                        amount.
+                      </p>
+                      {useCustomStdDeduction && (
+                        <div style={{ marginTop: '0.75rem', maxWidth: '300px' }}>
+                          <input
+                            type="text"
+                            value={customStdDeduction}
+                            onChange={(e) => setCustomStdDeduction(e.target.value)}
+                            placeholder="Custom Standard Deduction Amount"
+                            className={styles.input}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Tab 2: 2nd Business / Freelancing */}
+            {activeTab === 'business' && (
+              <div>
+                <p className={styles.cardDesc}>
+                  Enter net profits from freelance work, consultation, digital creator income, or a
+                  second business (under Section 44AD / 44ADA or regular accounting).
+                </p>
+                <ValuePicker
+                  title="Net Profit from Business / Profession"
+                  value={businessIncome}
+                  onChange={setBusinessIncome}
+                  stepData={[
+                    { id: 'b1', value: '2000000', title: '₹20L' },
+                    { id: 'b2', value: '1000000', title: '₹10L' },
+                    { id: 'b3', value: '500000', title: '₹5L' },
+                    { id: 'b4', value: '200000', title: '₹2L' },
+                    { id: 'b5', value: '0', title: '₹0' },
+                  ]}
+                  min={0}
+                  max={50000000}
+                />
+              </div>
+            )}
+            {/* Tab 3: House Property */}
+            {activeTab === 'house' && (
+              <div className={styles.formGrid2}>
+                <div className={styles.formField}>
+                  <label className={styles.label}>Property Status</label>
+                  <div className={styles.radioGroup}>
+                    <label className={styles.radioLabel}>
                       <input
+                        type="radio"
+                        name="hpStatus"
+                        checked={isSelfOccupied}
+                        onChange={() => setIsSelfOccupied(true)}
+                        style={{ accentColor: 'var(--color-primary)' }}
+                      />
+                      <span>Self-Occupied</span>
+                    </label>
+                    <label className={styles.radioLabel}>
+                      <input
+                        type="radio"
+                        name="hpStatus"
+                        checked={!isSelfOccupied}
+                        onChange={() => setIsSelfOccupied(false)}
+                        style={{ accentColor: 'var(--color-primary)' }}
+                      />
+                      <span>Let-Out (Rented)</span>
+                    </label>
+                  </div>
+                </div>
+                <div className={styles.formField}>
+                  <label htmlFor="tax-home-loan-interest" className={styles.label}>
+                    Home Loan Interest (Section 24(b))
+                  </label>
+                  <input
+                    id="tax-home-loan-interest"
+                    type="text"
+                    value={homeLoanInterestProperty}
+                    onChange={(e) => setHomeLoanInterestProperty(e.target.value)}
+                    placeholder="Max ₹2 Lakh deduction for self-occupied"
+                    className={styles.input}
+                  />
+                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                    Deductible up to ₹2,00,000 in Old Regime.
+                  </span>
+                </div>
+                {!isSelfOccupied && (
+                  <>
+                    <div className={styles.formField}>
+                      <label htmlFor="tax-rental-income" className={styles.label}>
+                        Annual Rent Received
+                      </label>
+                      <input
+                        id="tax-rental-income"
                         type="text"
-                        value={customStdDeduction}
-                        onChange={(e) => setCustomStdDeduction(e.target.value)}
-                        placeholder="Custom Standard Deduction Amount"
+                        value={rentalIncome}
+                        onChange={(e) => setRentalIncome(e.target.value)}
                         className={styles.input}
                       />
                     </div>
-                  )}
-                </div>
+                    <div className={styles.formField}>
+                      <label htmlFor="tax-municipal-taxes" className={styles.label}>
+                        Municipal Taxes Paid
+                      </label>
+                      <input
+                        id="tax-municipal-taxes"
+                        type="text"
+                        value={municipalTaxes}
+                        onChange={(e) => setMunicipalTaxes(e.target.value)}
+                        className={styles.input}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             )}
-          </div>
-        )}
-        {/* Tab 2: 2nd Business / Freelancing */}
-        {activeTab === 'business' && (
-          <div>
-            <p className={styles.cardDesc}>
-              Enter net profits from freelance work, consultation, digital creator income, or a second business (under Section 44AD / 44ADA or regular accounting).
-            </p>
-            <ValuePicker
-              title="Net Profit from Business / Profession"
-              value={businessIncome}
-              onChange={setBusinessIncome}
-              stepData={[
-                { id: 'b1', value: '2000000', title: '₹20L' },
-                { id: 'b2', value: '1000000', title: '₹10L' },
-                { id: 'b3', value: '500000', title: '₹5L' },
-                { id: 'b4', value: '200000', title: '₹2L' },
-                { id: 'b5', value: '0', title: '₹0' },
-              ]}
-              min={0}
-              max={50000000}
-            />
-          </div>
-        )}
-        {/* Tab 3: House Property */}
-        {activeTab === 'house' && (
-          <div className={styles.formGrid2}>
-            <div className={styles.formField}>
-              <label className={styles.label}>Property Status</label>
-              <div className={styles.radioGroup}>
-                <label className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="hpStatus"
-                    checked={isSelfOccupied}
-                    onChange={() => setIsSelfOccupied(true)}
-                    style={{ accentColor: 'var(--color-primary)' }}
-                  />
-                  <span>Self-Occupied</span>
-                </label>
-                <label className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="hpStatus"
-                    checked={!isSelfOccupied}
-                    onChange={() => setIsSelfOccupied(false)}
-                    style={{ accentColor: 'var(--color-primary)' }}
-                  />
-                  <span>Let-Out (Rented)</span>
-                </label>
-              </div>
-            </div>
-            <div className={styles.formField}>
-              <label htmlFor="tax-home-loan-interest" className={styles.label}>Home Loan Interest (Section 24(b))</label>
-              <input
-                id="tax-home-loan-interest"
-                type="text"
-                value={homeLoanInterestProperty}
-                onChange={(e) => setHomeLoanInterestProperty(e.target.value)}
-                placeholder="Max ₹2 Lakh deduction for self-occupied"
-                className={styles.input}
-              />
-              <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                Deductible up to ₹2,00,000 in Old Regime.
-              </span>
-            </div>
-            {!isSelfOccupied && (
-              <>
+            {/* Tab 4: Capital Gains (Mutual Funds & Stocks) */}
+            {activeTab === 'capital_gains' && (
+              <div className={styles.formGrid2}>
                 <div className={styles.formField}>
-                  <label htmlFor="tax-rental-income" className={styles.label}>Annual Rent Received</label>
+                  <label htmlFor="tax-equity-stcg" className={styles.label}>
+                    Equity Short-Term Capital Gains (STCG)
+                    <span style={{ marginLeft: '0.5rem', color: '#d97706', fontSize: '0.6875rem' }}>
+                      (Taxed at 20%)
+                    </span>
+                  </label>
                   <input
-                    id="tax-rental-income"
+                    id="tax-equity-stcg"
                     type="text"
-                    value={rentalIncome}
-                    onChange={(e) => setRentalIncome(e.target.value)}
+                    value={equityStcg}
+                    onChange={(e) => setEquityStcg(e.target.value)}
+                    placeholder="Shares / Equity MF held < 1 year"
+                    className={styles.input}
+                  />
+                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                    Budget 2024 revised STCG rate to 20% under Section 111A.
+                  </span>
+                </div>
+                <div className={styles.formField}>
+                  <label htmlFor="tax-equity-ltcg" className={styles.label}>
+                    Equity Long-Term Capital Gains (LTCG)
+                    <span style={{ marginLeft: '0.5rem', color: '#16a34a', fontSize: '0.6875rem' }}>
+                      (₹1.25L Exempt, 12.5% above)
+                    </span>
+                  </label>
+                  <input
+                    id="tax-equity-ltcg"
+                    type="text"
+                    value={equityLtcg}
+                    onChange={(e) => setEquityLtcg(e.target.value)}
+                    placeholder="Shares / Equity MF held > 1 year"
+                    className={styles.input}
+                  />
+                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                    First ₹1,25,000 is 100% tax-free under Section 112A.
+                  </span>
+                </div>
+                <div className={styles.formField}>
+                  <label htmlFor="tax-other-capital-gains" className={styles.label}>
+                    Other Capital Gains (Debt Funds, Real Estate)
+                  </label>
+                  <input
+                    id="tax-other-capital-gains"
+                    type="text"
+                    value={otherCapitalGains}
+                    onChange={(e) => setOtherCapitalGains(e.target.value)}
                     className={styles.input}
                   />
                 </div>
+              </div>
+            )}
+            {/* Tab 5: Interest & PPF */}
+            {activeTab === 'interest' && (
+              <div className={styles.formGrid2}>
                 <div className={styles.formField}>
-                  <label htmlFor="tax-municipal-taxes" className={styles.label}>Municipal Taxes Paid</label>
+                  <label htmlFor="tax-ppf-interest" className={styles.label}>
+                    Annual PPF Interest Earned
+                    <span className={styles.exemptBadge}>100% Tax-Exempt (EEE)</span>
+                  </label>
                   <input
-                    id="tax-municipal-taxes"
+                    id="tax-ppf-interest"
                     type="text"
-                    value={municipalTaxes}
-                    onChange={(e) => setMunicipalTaxes(e.target.value)}
+                    value={ppfInterest}
+                    onChange={(e) => setPpfInterest(e.target.value)}
+                    className={styles.input}
+                  />
+                  <span style={{ fontSize: '0.6875rem', color: '#16a34a', fontWeight: 600 }}>
+                    Completely exempt from tax under Section 10(11) in both Old and New Regimes.
+                  </span>
+                </div>
+                <div className={styles.formField}>
+                  <label htmlFor="tax-savings-interest" className={styles.label}>
+                    Savings Bank Interest
+                  </label>
+                  <input
+                    id="tax-savings-interest"
+                    type="text"
+                    value={savingsInterest}
+                    onChange={(e) => setSavingsInterest(e.target.value)}
+                    className={styles.input}
+                  />
+                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                    Deductible up to ₹10,000 under Section 80TTA (₹50,000 for seniors under 80TTB)
+                    in Old Regime.
+                  </span>
+                </div>
+                <div className={styles.formField}>
+                  <label htmlFor="tax-fd-interest" className={styles.label}>
+                    Fixed Deposit (FD) &amp; Recurring Deposit Interest
+                  </label>
+                  <input
+                    id="tax-fd-interest"
+                    type="text"
+                    value={fdInterest}
+                    onChange={(e) => setFdInterest(e.target.value)}
+                    className={styles.input}
+                  />
+                  <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                    FD interest is fully taxable at your applicable slab rate.
+                  </span>
+                </div>
+                <div className={styles.formField}>
+                  <label htmlFor="tax-other-income" className={styles.label}>
+                    Other Sources (Dividends, etc.)
+                  </label>
+                  <input
+                    id="tax-other-income"
+                    type="text"
+                    value={otherIncome}
+                    onChange={(e) => setOtherIncome(e.target.value)}
                     className={styles.input}
                   />
                 </div>
-              </>
-            )}
-          </div>
-        )}
-        {/* Tab 4: Capital Gains (Mutual Funds & Stocks) */}
-        {activeTab === 'capital_gains' && (
-          <div className={styles.formGrid2}>
-            <div className={styles.formField}>
-              <label htmlFor="tax-equity-stcg" className={styles.label}>
-                Equity Short-Term Capital Gains (STCG)
-                <span style={{ marginLeft: '0.5rem', color: '#d97706', fontSize: '0.6875rem' }}>
-                  (Taxed at 20%)
-                </span>
-              </label>
-              <input
-                id="tax-equity-stcg"
-                type="text"
-                value={equityStcg}
-                onChange={(e) => setEquityStcg(e.target.value)}
-                placeholder="Shares / Equity MF held < 1 year"
-                className={styles.input}
-              />
-              <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                Budget 2024 revised STCG rate to 20% under Section 111A.
-              </span>
-            </div>
-            <div className={styles.formField}>
-              <label htmlFor="tax-equity-ltcg" className={styles.label}>
-                Equity Long-Term Capital Gains (LTCG)
-                <span style={{ marginLeft: '0.5rem', color: '#16a34a', fontSize: '0.6875rem' }}>
-                  (₹1.25L Exempt, 12.5% above)
-                </span>
-              </label>
-              <input
-                id="tax-equity-ltcg"
-                type="text"
-                value={equityLtcg}
-                onChange={(e) => setEquityLtcg(e.target.value)}
-                placeholder="Shares / Equity MF held > 1 year"
-                className={styles.input}
-              />
-              <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                First ₹1,25,000 is 100% tax-free under Section 112A.
-              </span>
-            </div>
-            <div className={styles.formField}>
-              <label htmlFor="tax-other-capital-gains" className={styles.label}>Other Capital Gains (Debt Funds, Real Estate)</label>
-              <input
-                id="tax-other-capital-gains"
-                type="text"
-                value={otherCapitalGains}
-                onChange={(e) => setOtherCapitalGains(e.target.value)}
-                className={styles.input}
-              />
-            </div>
-          </div>
-        )}
-        {/* Tab 5: Interest & PPF */}
-        {activeTab === 'interest' && (
-          <div className={styles.formGrid2}>
-            <div className={styles.formField}>
-              <label htmlFor="tax-ppf-interest" className={styles.label}>
-                Annual PPF Interest Earned
-                <span className={styles.exemptBadge}>100% Tax-Exempt (EEE)</span>
-              </label>
-              <input
-                id="tax-ppf-interest"
-                type="text"
-                value={ppfInterest}
-                onChange={(e) => setPpfInterest(e.target.value)}
-                className={styles.input}
-              />
-              <span style={{ fontSize: '0.6875rem', color: '#16a34a', fontWeight: 600 }}>
-                Completely exempt from tax under Section 10(11) in both Old and New Regimes.
-              </span>
-            </div>
-            <div className={styles.formField}>
-              <label htmlFor="tax-savings-interest" className={styles.label}>Savings Bank Interest</label>
-              <input
-                id="tax-savings-interest"
-                type="text"
-                value={savingsInterest}
-                onChange={(e) => setSavingsInterest(e.target.value)}
-                className={styles.input}
-              />
-              <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                Deductible up to ₹10,000 under Section 80TTA (₹50,000 for seniors under 80TTB) in Old Regime.
-              </span>
-            </div>
-            <div className={styles.formField}>
-              <label htmlFor="tax-fd-interest" className={styles.label}>Fixed Deposit (FD) &amp; Recurring Deposit Interest</label>
-              <input
-                id="tax-fd-interest"
-                type="text"
-                value={fdInterest}
-                onChange={(e) => setFdInterest(e.target.value)}
-                className={styles.input}
-              />
-              <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
-                FD interest is fully taxable at your applicable slab rate.
-              </span>
-            </div>
-            <div className={styles.formField}>
-              <label htmlFor="tax-other-income" className={styles.label}>Other Sources (Dividends, etc.)</label>
-              <input
-                id="tax-other-income"
-                type="text"
-                value={otherIncome}
-                onChange={(e) => setOtherIncome(e.target.value)}
-                className={styles.input}
-              />
-            </div>
-          </div>
-        )}
-        {/* Tab 6: Deductions (Old Regime) */}
-        {activeTab === 'deductions' && (
-          <div>
-            <p className={styles.cardDesc}>
-              Chapter VI-A tax deductions apply primarily to the <strong>Old Tax Regime</strong> (with
-              the exception of Section 80CCD(2) employer NPS which applies to both).
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}>
-                Section 80C Deduction (Max ₹1.5 Lakh)
-              </span>
-              <label className={styles.checkboxToggle}>
-                <input
-                  type="checkbox"
-                  checked={is80CItemized}
-                  onChange={(e) => setIs80CItemized(e.target.checked)}
-                  style={{ accentColor: 'var(--color-primary)' }}
-                />
-                <span>Itemize 80C Investments</span>
-              </label>
-            </div>
-            {!is80CItemized ? (
-              <ValuePicker
-                title="Section 80C (PPF, EPF, ELSS, Life Insurance - Max ₹1.5L)"
-                value={section80C}
-                onChange={setSection80C}
-                stepData={DEDUCTION_80C_STEPS}
-                min={0}
-                max={150000}
-              />
-            ) : (
-              <div className={styles.itemized80CContainer}>
-                <div className={styles.itemized80CHeader}>
-                  <div>
-                    <h3 className={styles.itemized80CTitle}>Itemized Section 80C Investment Declaration</h3>
-                    <p className={styles.itemized80CSub}>
-                      Break down your eligible investments across provident funds, insurance, tuition, and principal repayments.
-                    </p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>Eligible Deduction Claimed</span>
-                    <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--color-primary)' }}>
-                      {currencySymbol}{effective80CAmount.toLocaleString('en-IN')} / ₹1.5L
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.itemized80CMeter}>
-                  <div className={styles.meterTop}>
-                    <span>Total Declared: <strong>{currencySymbol}{itemized80CSum.toLocaleString('en-IN')}</strong></span>
-                    <span>{Math.min(100, Math.round((itemized80CSum / 150000) * 100))}% of ₹1.5L ceiling</span>
-                  </div>
-                  <div className={styles.meterFillBar}>
-                    <div
-                      className={styles.meterFill}
-                      style={{ width: `${Math.min(100, (itemized80CSum / 150000) * 100)}%` }}
-                    />
-                  </div>
-                  {itemized80CSum > 150000 && (
-                    <div style={{ fontSize: '0.6875rem', color: '#10b981', fontWeight: 600, marginTop: '0.375rem' }}>
-                      Eligible deduction maxed out at statutory limit of ₹1,50,000 (Excess: {currencySymbol}{(itemized80CSum - 150000).toLocaleString('en-IN')}).
-                    </div>
-                  )}
-                </div>
-                <div className={styles.itemizedGrid}>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-epf" className={styles.label}>EPF / VPF (Employees&apos; Provident Fund)</label>
-                    <input
-                      id="tax-item-epf"
-                      type="text"
-                      value={itemEpf}
-                      onChange={(e) => setItemEpf(e.target.value)}
-                      placeholder="e.g. 70000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-ppf" className={styles.label}>PPF (Public Provident Fund)</label>
-                    <input
-                      id="tax-item-ppf"
-                      type="text"
-                      value={itemPpf}
-                      onChange={(e) => setItemPpf(e.target.value)}
-                      placeholder="e.g. 30000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-elss" className={styles.label}>ELSS Mutual Funds (Tax Saver 3-Yr Lock-in)</label>
-                    <input
-                      id="tax-item-elss"
-                      type="text"
-                      value={itemElss}
-                      onChange={(e) => setItemElss(e.target.value)}
-                      placeholder="e.g. 25000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-insurance" className={styles.label}>Life Insurance Premium (Term / Traditional)</label>
-                    <input
-                      id="tax-item-insurance"
-                      type="text"
-                      value={itemLifeInsurance}
-                      onChange={(e) => setItemLifeInsurance(e.target.value)}
-                      placeholder="e.g. 25000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-hl-principal" className={styles.label}>Home Loan Principal Repayment</label>
-                    <input
-                      id="tax-item-hl-principal"
-                      type="text"
-                      value={itemHomeLoanPrincipal}
-                      onChange={(e) => setItemHomeLoanPrincipal(e.target.value)}
-                      placeholder="e.g. 50000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-ssy" className={styles.label}>Sukanya Samriddhi Yojana (SSY)</label>
-                    <input
-                      id="tax-item-ssy"
-                      type="text"
-                      value={itemSsy}
-                      onChange={(e) => setItemSsy(e.target.value)}
-                      placeholder="e.g. 20000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-fd" className={styles.label}>5-Year Tax Saver Bank FD / NSC</label>
-                    <input
-                      id="tax-item-fd"
-                      type="text"
-                      value={itemTaxSaverFd}
-                      onChange={(e) => setItemTaxSaverFd(e.target.value)}
-                      placeholder="e.g. 10000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-tuition" className={styles.label}>Children Tuition Fees (Up to 2 children)</label>
-                    <input
-                      id="tax-item-tuition"
-                      type="text"
-                      value={itemTuitionFees}
-                      onChange={(e) => setItemTuitionFees(e.target.value)}
-                      placeholder="e.g. 40000"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-stamp-duty" className={styles.label}>Stamp Duty &amp; Registration (House Purchase)</label>
-                    <input
-                      id="tax-item-stamp-duty"
-                      type="text"
-                      value={itemStampDuty}
-                      onChange={(e) => setItemStampDuty(e.target.value)}
-                      placeholder="e.g. 0"
-                      className={styles.input}
-                    />
-                  </div>
-                  <div className={styles.formField}>
-                    <label htmlFor="tax-item-other-80c" className={styles.label}>Other Eligible Section 80C Investments</label>
-                    <input
-                      id="tax-item-other-80c"
-                      type="text"
-                      value={itemOther80C}
-                      onChange={(e) => setItemOther80C(e.target.value)}
-                      placeholder="e.g. 0"
-                      className={styles.input}
-                    />
-                  </div>
-                </div>
               </div>
             )}
-            <div className={styles.formGrid2} style={{ marginTop: '1rem' }}>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80ccd1b" className={styles.label}>
-                  Section 80CCD(1B) — NPS Tier 1 Self Contribution
-                  <span style={{ color: '#16a34a', marginLeft: '0.5rem' }}>(Max ₹50,000)</span>
-                </label>
-                <input
-                  id="tax-deduction-80ccd1b"
-                  type="text"
-                  value={section80Ccd1b}
-                  onChange={(e) => setSection80Ccd1b(e.target.value)}
-                  placeholder="Up to ₹50,000 extra beyond 80C"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80ccd2" className={styles.label}>
-                  Section 80CCD(2) — Employer NPS Contribution
-                  <span style={{ color: '#6366f1', marginLeft: '0.5rem' }}>(Both Regimes)</span>
-                </label>
-                <input
-                  id="tax-deduction-80ccd2"
-                  type="text"
-                  value={section80Ccd2}
-                  onChange={(e) => setSection80Ccd2(e.target.value)}
-                  placeholder="Up to 10% of Basic salary"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label htmlFor="tax-deduction-80d-self" className={styles.label}>
-                    Section 80D — Health Insurance (Self &amp; Family)
-                  </label>
-                  <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={seniorSelf80D}
-                      onChange={(e) => setSeniorSelf80D(e.target.checked)}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span>Senior (Limit ₹50k)</span>
-                  </label>
-                </div>
-                <input
-                  id="tax-deduction-80d-self"
-                  type="text"
-                  value={section80DSelf}
-                  onChange={(e) => setSection80DSelf(e.target.value)}
-                  placeholder={seniorSelf80D ? 'Max ₹50,000 for Senior Citizen' : 'Max ₹25,000'}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label htmlFor="tax-deduction-80d-parents" className={styles.label}>
-                    Section 80D — Health Insurance (Parents)
-                  </label>
-                  <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={seniorParents80D}
-                      onChange={(e) => setSeniorParents80D(e.target.checked)}
-                      style={{ accentColor: 'var(--color-primary)' }}
-                    />
-                    <span>Senior Parents (Limit ₹50k)</span>
-                  </label>
-                </div>
-                <input
-                  id="tax-deduction-80d-parents"
-                  type="text"
-                  value={section80DParents}
-                  onChange={(e) => setSection80DParents(e.target.value)}
-                  placeholder={seniorParents80D ? 'Max ₹50,000 for Senior Parents' : 'Max ₹25,000'}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80e" className={styles.label}>Section 80E — Education Loan Interest</label>
-                <input
-                  id="tax-deduction-80e"
-                  type="text"
-                  value={section80E}
-                  onChange={(e) => setSection80E(e.target.value)}
-                  placeholder="Full interest deduction, no limit"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80g" className={styles.label}>Section 80G — Eligible Charitable Donations</label>
-                <input
-                  id="tax-deduction-80g"
-                  type="text"
-                  value={section80G}
-                  onChange={(e) => setSection80G(e.target.value)}
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80tta" className={styles.label}>
-                  Section 80TTA/80TTB — Savings Interest Deduction
-                </label>
-                <input
-                  id="tax-deduction-80tta"
-                  type="text"
-                  value={section80Tta}
-                  onChange={(e) => setSection80Tta(e.target.value)}
-                  placeholder="Max ₹10,000 (₹50,000 for Senior Citizens)"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80gg" className={styles.label}>
-                  Section 80GG — House Rent Paid (No HRA)
-                </label>
-                <input
-                  id="tax-deduction-80gg"
-                  type="text"
-                  value={section80Gg}
-                  onChange={(e) => setSection80Gg(e.target.value)}
-                  placeholder="Max ₹60,000/yr (when HRA is not provided)"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80ddb" className={styles.label}>
-                  Section 80DDB — Medical Treatment (Specified Diseases)
-                </label>
-                <input
-                  id="tax-deduction-80ddb"
-                  type="text"
-                  value={section80Ddb}
-                  onChange={(e) => setSection80Ddb(e.target.value)}
-                  placeholder="Max ₹40,000 (₹1,00,000 for Senior)"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80u" className={styles.label}>
-                  Section 80U — Person with Disability
-                </label>
-                <input
-                  id="tax-deduction-80u"
-                  type="text"
-                  value={section80U}
-                  onChange={(e) => setSection80U(e.target.value)}
-                  placeholder="₹75,000 (₹1,25,000 for severe disability)"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80eea" className={styles.label}>
-                  Section 80EEA — Additional Affordable Home Loan Interest
-                </label>
-                <input
-                  id="tax-deduction-80eea"
-                  type="text"
-                  value={section80Eea}
-                  onChange={(e) => setSection80Eea(e.target.value)}
-                  placeholder="Max ₹1,50,000"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80eeb" className={styles.label}>
-                  Section 80EEB — Electric Vehicle (EV) Loan Interest
-                </label>
-                <input
-                  id="tax-deduction-80eeb"
-                  type="text"
-                  value={section80Eeb}
-                  onChange={(e) => setSection80Eeb(e.target.value)}
-                  placeholder="Max ₹1,50,000 for EV purchase"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80dd" className={styles.label}>
-                  Section 80DD — Maintenance of Disabled Dependent
-                </label>
-                <input
-                  id="tax-deduction-80dd"
-                  type="text"
-                  value={section80Dd}
-                  onChange={(e) => setSection80Dd(e.target.value)}
-                  placeholder="₹75,000 (₹1,25,000 for severe disability)"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-deduction-80ggc" className={styles.label}>
-                  Section 80GGC — Donations to Political Parties
-                </label>
-                <input
-                  id="tax-deduction-80ggc"
-                  type="text"
-                  value={section80Ggc}
-                  onChange={(e) => setSection80Ggc(e.target.value)}
-                  placeholder="100% deduction for non-cash contributions"
-                  className={styles.input}
-                />
-              </div>
-              <div className={styles.formField}>
-                <label htmlFor="tax-other-deductions" className={styles.label}>
-                  Other Miscellaneous Deductions
-                </label>
-                <input
-                  id="tax-other-deductions"
-                  type="text"
-                  value={otherDeductions}
-                  onChange={(e) => setOtherDeductions(e.target.value)}
-                  placeholder="Other eligible tax deductions"
-                  className={styles.input}
-                />
-              </div>
-            </div>
-            {/* Custom Deductions List */}
-            <div className={styles.customDeductionsContainer}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}>
-                    Custom Tax Deductions
-                  </h4>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', opacity: 0.75 }}>
-                    Add any personalized deductions or state-specific exemptions not listed above.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddCustomDeduction}
-                  className={styles.addDeductionBtn}
+            {/* Tab 6: Deductions (Old Regime) */}
+            {activeTab === 'deductions' && (
+              <div>
+                <p className={styles.cardDesc}>
+                  Chapter VI-A tax deductions apply primarily to the <strong>Old Tax Regime</strong>{' '}
+                  (with the exception of Section 80CCD(2) employer NPS which applies to both).
+                </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '0.75rem',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem',
+                  }}
                 >
-                  <FiPlus size={14} /> Add Custom Deduction
-                </button>
-              </div>
-              {customDeductionsList.map((item) => (
-                <div key={item.id} className={styles.customDeductionRow}>
-                  <input
-                    type="text"
-                    value={item.name}
-                    onChange={(e) => handleUpdateCustomDeduction(item.id, 'name', e.target.value)}
-                    placeholder="Deduction Name / Section"
-                    className={styles.input}
-                    style={{ flex: 2 }}
-                  />
-                  <input
-                    type="text"
-                    value={item.amount}
-                    onChange={(e) => handleUpdateCustomDeduction(item.id, 'amount', e.target.value)}
-                    placeholder="Amount (₹)"
-                    className={styles.input}
-                    style={{ flex: 1 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveCustomDeduction(item.id)}
-                    className={styles.deleteDeductionBtn}
-                    title="Remove custom deduction"
-                    aria-label="Remove deduction"
+                  <span
+                    style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-heading)' }}
                   >
-                    <FiTrash2 size={16} />
-                  </button>
+                    Section 80C Deduction (Max ₹1.5 Lakh)
+                  </span>
+                  <label className={styles.checkboxToggle}>
+                    <input
+                      type="checkbox"
+                      checked={is80CItemized}
+                      onChange={(e) => setIs80CItemized(e.target.checked)}
+                      style={{ accentColor: 'var(--color-primary)' }}
+                    />
+                    <span>Itemize 80C Investments</span>
+                  </label>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-        </div>{/* end taxInputsCol */}
-      </div>{/* end taxMainGrid */}
+                {!is80CItemized ? (
+                  <ValuePicker
+                    title="Section 80C (PPF, EPF, ELSS, Life Insurance - Max ₹1.5L)"
+                    value={section80C}
+                    onChange={setSection80C}
+                    stepData={DEDUCTION_80C_STEPS}
+                    min={0}
+                    max={150000}
+                  />
+                ) : (
+                  <div className={styles.itemized80CContainer}>
+                    <div className={styles.itemized80CHeader}>
+                      <div>
+                        <h3 className={styles.itemized80CTitle}>
+                          Itemized Section 80C Investment Declaration
+                        </h3>
+                        <p className={styles.itemized80CSub}>
+                          Break down your eligible investments across provident funds, insurance,
+                          tuition, and principal repayments.
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                          Eligible Deduction Claimed
+                        </span>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: '1rem',
+                            color: 'var(--color-primary)',
+                          }}
+                        >
+                          {currencySymbol}
+                          {effective80CAmount.toLocaleString('en-IN')} / ₹1.5L
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.itemized80CMeter}>
+                      <div className={styles.meterTop}>
+                        <span>
+                          Total Declared:{' '}
+                          <strong>
+                            {currencySymbol}
+                            {itemized80CSum.toLocaleString('en-IN')}
+                          </strong>
+                        </span>
+                        <span>
+                          {Math.min(100, Math.round((itemized80CSum / 150000) * 100))}% of ₹1.5L
+                          ceiling
+                        </span>
+                      </div>
+                      <div className={styles.meterFillBar}>
+                        <div
+                          className={styles.meterFill}
+                          style={{ width: `${Math.min(100, (itemized80CSum / 150000) * 100)}%` }}
+                        />
+                      </div>
+                      {itemized80CSum > 150000 && (
+                        <div
+                          style={{
+                            fontSize: '0.6875rem',
+                            color: '#10b981',
+                            fontWeight: 600,
+                            marginTop: '0.375rem',
+                          }}
+                        >
+                          Eligible deduction maxed out at statutory limit of ₹1,50,000 (Excess:{' '}
+                          {currencySymbol}
+                          {(itemized80CSum - 150000).toLocaleString('en-IN')}).
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.itemizedGrid}>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-epf" className={styles.label}>
+                          EPF / VPF (Employees&apos; Provident Fund)
+                        </label>
+                        <input
+                          id="tax-item-epf"
+                          type="text"
+                          value={itemEpf}
+                          onChange={(e) => setItemEpf(e.target.value)}
+                          placeholder="e.g. 70000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-ppf" className={styles.label}>
+                          PPF (Public Provident Fund)
+                        </label>
+                        <input
+                          id="tax-item-ppf"
+                          type="text"
+                          value={itemPpf}
+                          onChange={(e) => setItemPpf(e.target.value)}
+                          placeholder="e.g. 30000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-elss" className={styles.label}>
+                          ELSS Mutual Funds (Tax Saver 3-Yr Lock-in)
+                        </label>
+                        <input
+                          id="tax-item-elss"
+                          type="text"
+                          value={itemElss}
+                          onChange={(e) => setItemElss(e.target.value)}
+                          placeholder="e.g. 25000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-insurance" className={styles.label}>
+                          Life Insurance Premium (Term / Traditional)
+                        </label>
+                        <input
+                          id="tax-item-insurance"
+                          type="text"
+                          value={itemLifeInsurance}
+                          onChange={(e) => setItemLifeInsurance(e.target.value)}
+                          placeholder="e.g. 25000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-hl-principal" className={styles.label}>
+                          Home Loan Principal Repayment
+                        </label>
+                        <input
+                          id="tax-item-hl-principal"
+                          type="text"
+                          value={itemHomeLoanPrincipal}
+                          onChange={(e) => setItemHomeLoanPrincipal(e.target.value)}
+                          placeholder="e.g. 50000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-ssy" className={styles.label}>
+                          Sukanya Samriddhi Yojana (SSY)
+                        </label>
+                        <input
+                          id="tax-item-ssy"
+                          type="text"
+                          value={itemSsy}
+                          onChange={(e) => setItemSsy(e.target.value)}
+                          placeholder="e.g. 20000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-fd" className={styles.label}>
+                          5-Year Tax Saver Bank FD / NSC
+                        </label>
+                        <input
+                          id="tax-item-fd"
+                          type="text"
+                          value={itemTaxSaverFd}
+                          onChange={(e) => setItemTaxSaverFd(e.target.value)}
+                          placeholder="e.g. 10000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-tuition" className={styles.label}>
+                          Children Tuition Fees (Up to 2 children)
+                        </label>
+                        <input
+                          id="tax-item-tuition"
+                          type="text"
+                          value={itemTuitionFees}
+                          onChange={(e) => setItemTuitionFees(e.target.value)}
+                          placeholder="e.g. 40000"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-stamp-duty" className={styles.label}>
+                          Stamp Duty &amp; Registration (House Purchase)
+                        </label>
+                        <input
+                          id="tax-item-stamp-duty"
+                          type="text"
+                          value={itemStampDuty}
+                          onChange={(e) => setItemStampDuty(e.target.value)}
+                          placeholder="e.g. 0"
+                          className={styles.input}
+                        />
+                      </div>
+                      <div className={styles.formField}>
+                        <label htmlFor="tax-item-other-80c" className={styles.label}>
+                          Other Eligible Section 80C Investments
+                        </label>
+                        <input
+                          id="tax-item-other-80c"
+                          type="text"
+                          value={itemOther80C}
+                          onChange={(e) => setItemOther80C(e.target.value)}
+                          placeholder="e.g. 0"
+                          className={styles.input}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className={styles.formGrid2} style={{ marginTop: '1rem' }}>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80ccd1b" className={styles.label}>
+                      Section 80CCD(1B) — NPS Tier 1 Self Contribution
+                      <span style={{ color: '#16a34a', marginLeft: '0.5rem' }}>(Max ₹50,000)</span>
+                    </label>
+                    <input
+                      id="tax-deduction-80ccd1b"
+                      type="text"
+                      value={section80Ccd1b}
+                      onChange={(e) => setSection80Ccd1b(e.target.value)}
+                      placeholder="Up to ₹50,000 extra beyond 80C"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80ccd2" className={styles.label}>
+                      Section 80CCD(2) — Employer NPS Contribution
+                      <span style={{ color: '#6366f1', marginLeft: '0.5rem' }}>(Both Regimes)</span>
+                    </label>
+                    <input
+                      id="tax-deduction-80ccd2"
+                      type="text"
+                      value={section80Ccd2}
+                      onChange={(e) => setSection80Ccd2(e.target.value)}
+                      placeholder="Up to 10% of Basic salary"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <label htmlFor="tax-deduction-80d-self" className={styles.label}>
+                        Section 80D — Health Insurance (Self &amp; Family)
+                      </label>
+                      <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={seniorSelf80D}
+                          onChange={(e) => setSeniorSelf80D(e.target.checked)}
+                          style={{ accentColor: 'var(--color-primary)' }}
+                        />
+                        <span>Senior (Limit ₹50k)</span>
+                      </label>
+                    </div>
+                    <input
+                      id="tax-deduction-80d-self"
+                      type="text"
+                      value={section80DSelf}
+                      onChange={(e) => setSection80DSelf(e.target.value)}
+                      placeholder={seniorSelf80D ? 'Max ₹50,000 for Senior Citizen' : 'Max ₹25,000'}
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <label htmlFor="tax-deduction-80d-parents" className={styles.label}>
+                        Section 80D — Health Insurance (Parents)
+                      </label>
+                      <label className={styles.checkboxToggle} style={{ fontSize: '0.6875rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={seniorParents80D}
+                          onChange={(e) => setSeniorParents80D(e.target.checked)}
+                          style={{ accentColor: 'var(--color-primary)' }}
+                        />
+                        <span>Senior Parents (Limit ₹50k)</span>
+                      </label>
+                    </div>
+                    <input
+                      id="tax-deduction-80d-parents"
+                      type="text"
+                      value={section80DParents}
+                      onChange={(e) => setSection80DParents(e.target.value)}
+                      placeholder={
+                        seniorParents80D ? 'Max ₹50,000 for Senior Parents' : 'Max ₹25,000'
+                      }
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80e" className={styles.label}>
+                      Section 80E — Education Loan Interest
+                    </label>
+                    <input
+                      id="tax-deduction-80e"
+                      type="text"
+                      value={section80E}
+                      onChange={(e) => setSection80E(e.target.value)}
+                      placeholder="Full interest deduction, no limit"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80g" className={styles.label}>
+                      Section 80G — Eligible Charitable Donations
+                    </label>
+                    <input
+                      id="tax-deduction-80g"
+                      type="text"
+                      value={section80G}
+                      onChange={(e) => setSection80G(e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80tta" className={styles.label}>
+                      Section 80TTA/80TTB — Savings Interest Deduction
+                    </label>
+                    <input
+                      id="tax-deduction-80tta"
+                      type="text"
+                      value={section80Tta}
+                      onChange={(e) => setSection80Tta(e.target.value)}
+                      placeholder="Max ₹10,000 (₹50,000 for Senior Citizens)"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80gg" className={styles.label}>
+                      Section 80GG — House Rent Paid (No HRA)
+                    </label>
+                    <input
+                      id="tax-deduction-80gg"
+                      type="text"
+                      value={section80Gg}
+                      onChange={(e) => setSection80Gg(e.target.value)}
+                      placeholder="Max ₹60,000/yr (when HRA is not provided)"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80ddb" className={styles.label}>
+                      Section 80DDB — Medical Treatment (Specified Diseases)
+                    </label>
+                    <input
+                      id="tax-deduction-80ddb"
+                      type="text"
+                      value={section80Ddb}
+                      onChange={(e) => setSection80Ddb(e.target.value)}
+                      placeholder="Max ₹40,000 (₹1,00,000 for Senior)"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80u" className={styles.label}>
+                      Section 80U — Person with Disability
+                    </label>
+                    <input
+                      id="tax-deduction-80u"
+                      type="text"
+                      value={section80U}
+                      onChange={(e) => setSection80U(e.target.value)}
+                      placeholder="₹75,000 (₹1,25,000 for severe disability)"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80eea" className={styles.label}>
+                      Section 80EEA — Additional Affordable Home Loan Interest
+                    </label>
+                    <input
+                      id="tax-deduction-80eea"
+                      type="text"
+                      value={section80Eea}
+                      onChange={(e) => setSection80Eea(e.target.value)}
+                      placeholder="Max ₹1,50,000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80eeb" className={styles.label}>
+                      Section 80EEB — Electric Vehicle (EV) Loan Interest
+                    </label>
+                    <input
+                      id="tax-deduction-80eeb"
+                      type="text"
+                      value={section80Eeb}
+                      onChange={(e) => setSection80Eeb(e.target.value)}
+                      placeholder="Max ₹1,50,000 for EV purchase"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80dd" className={styles.label}>
+                      Section 80DD — Maintenance of Disabled Dependent
+                    </label>
+                    <input
+                      id="tax-deduction-80dd"
+                      type="text"
+                      value={section80Dd}
+                      onChange={(e) => setSection80Dd(e.target.value)}
+                      placeholder="₹75,000 (₹1,25,000 for severe disability)"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-deduction-80ggc" className={styles.label}>
+                      Section 80GGC — Donations to Political Parties
+                    </label>
+                    <input
+                      id="tax-deduction-80ggc"
+                      type="text"
+                      value={section80Ggc}
+                      onChange={(e) => setSection80Ggc(e.target.value)}
+                      placeholder="100% deduction for non-cash contributions"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label htmlFor="tax-other-deductions" className={styles.label}>
+                      Other Miscellaneous Deductions
+                    </label>
+                    <input
+                      id="tax-other-deductions"
+                      type="text"
+                      value={otherDeductions}
+                      onChange={(e) => setOtherDeductions(e.target.value)}
+                      placeholder="Other eligible tax deductions"
+                      className={styles.input}
+                    />
+                  </div>
+                </div>
+                {/* Custom Deductions List */}
+                <div className={styles.customDeductionsContainer}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.75rem',
+                    }}
+                  >
+                    <div>
+                      <h4
+                        style={{
+                          margin: 0,
+                          fontSize: '0.875rem',
+                          fontWeight: 700,
+                          color: 'var(--color-heading)',
+                        }}
+                      >
+                        Custom Tax Deductions
+                      </h4>
+                      <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', opacity: 0.75 }}>
+                        Add any personalized deductions or state-specific exemptions not listed
+                        above.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddCustomDeduction}
+                      className={styles.addDeductionBtn}
+                    >
+                      <FiPlus size={14} /> Add Custom Deduction
+                    </button>
+                  </div>
+                  {customDeductionsList.map((item) => (
+                    <div key={item.id} className={styles.customDeductionRow}>
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) =>
+                          handleUpdateCustomDeduction(item.id, 'name', e.target.value)
+                        }
+                        placeholder="Deduction Name / Section"
+                        className={styles.input}
+                        style={{ flex: 2 }}
+                      />
+                      <input
+                        type="text"
+                        value={item.amount}
+                        onChange={(e) =>
+                          handleUpdateCustomDeduction(item.id, 'amount', e.target.value)
+                        }
+                        placeholder="Amount (₹)"
+                        className={styles.input}
+                        style={{ flex: 1 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCustomDeduction(item.id)}
+                        className={styles.deleteDeductionBtn}
+                        title="Remove custom deduction"
+                        aria-label="Remove deduction"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+        {/* end taxInputsCol */}
+      </div>
+      {/* end taxMainGrid */}
       {/* Educational Guide */}
       <CalculatorContentSection
         title="Old vs New Tax Regime: Key Differences &amp; Budget 2024 Changes"
@@ -1623,13 +1845,25 @@ const IncomeTaxCalculator: React.FC = () => {
           headers: ['Feature', 'New Tax Regime (FY 2024-25 / 2025-26)', 'Old Tax Regime'],
           rows: [
             ['Standard Deduction', '₹75,000 (Salaried & Pensioners)', '₹50,000'],
-            ['Zero Tax Income (Salaried)', 'Up to ₹7,75,000 (with Sec 87A rebate)', 'Up to ₹5,50,000 (with Sec 87A rebate)'],
+            [
+              'Zero Tax Income (Salaried)',
+              'Up to ₹7,75,000 (with Sec 87A rebate)',
+              'Up to ₹5,50,000 (with Sec 87A rebate)',
+            ],
             ['Section 80C Deductions', 'Not Allowed', 'Allowed up to ₹1,50,000 (PPF, ELSS, EPF)'],
             ['NPS Tier-1 Self (80CCD 1B)', 'Not Allowed', 'Allowed up to ₹50,000'],
-            ['Employer NPS (80CCD 2)', 'Allowed up to 10% of Basic+DA', 'Allowed up to 10% of Basic+DA'],
+            [
+              'Employer NPS (80CCD 2)',
+              'Allowed up to 10% of Basic+DA',
+              'Allowed up to 10% of Basic+DA',
+            ],
             ['HRA Exemption (10(13A))', 'Not Allowed', 'Allowed with rent receipts'],
             ['Home Loan Interest (24b)', 'Not Allowed on self-occupied', 'Allowed up to ₹2,00,000'],
-            ['PPF Interest Exemption', '100% Tax-Exempt (Sec 10(11))', '100% Tax-Exempt (Sec 10(11))'],
+            [
+              'PPF Interest Exemption',
+              '100% Tax-Exempt (Sec 10(11))',
+              '100% Tax-Exempt (Sec 10(11))',
+            ],
           ],
         }}
         faqs={[

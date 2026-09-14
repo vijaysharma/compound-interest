@@ -380,7 +380,7 @@ const PpfCalculator: React.FC = () => {
       </div>
       {/* Year-by-Year Schedule */}
       <section className={styles.scheduleSection}>
-        <div className={styles.card}>
+        <div>
           <div
             style={{
               display: 'flex',

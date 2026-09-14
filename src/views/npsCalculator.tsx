@@ -1,19 +1,13 @@
 'use client';
 import React, { useMemo, useState } from 'react';
-import {
-  FiAward,
-  FiCheckCircle,
-  FiDollarSign,
-  FiPieChart,
-  FiShield,
-  FiTrendingUp,
-} from 'react-icons/fi';
+import { FiAward, FiCheckCircle, FiPieChart, FiShield, FiTrendingUp } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import convertToWords, { getCurrencySymbol } from '../utilities/currency';
 import { calculateNPS } from '../utilities/npsCalculations';
 import styles from './NpsCalculator.module.scss';
+import { AiFillGold } from 'react-icons/ai';
 const npsSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -121,9 +115,9 @@ const NpsCalculator: React.FC = () => {
       <div className={styles.formGrid}>
         {/* Left Column: Interactive Inputs */}
         <div className={styles.inputsCol}>
-          <section className={styles.card}>
+          <section>
             <h2 className={styles.sectionHeading}>
-              <FiDollarSign /> Your Monthly Contribution
+              <AiFillGold /> Your Monthly Contribution
             </h2>
             <div className={styles.fieldGroup}>
               <ValuePicker
@@ -159,14 +153,15 @@ const NpsCalculator: React.FC = () => {
                     max={500000}
                   />
                   <p style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: '0.35rem' }}>
-                    Corporate employer contributions up to 10% of Basic + DA are tax-exempt under both
-                    Old and New Tax Regimes.
+                    Corporate employer contributions up to 10% of Basic + DA are tax-exempt under
+                    both Old and New Tax Regimes.
                   </p>
                 </div>
               )}
             </div>
           </section>
-          <section className={styles.card}>
+          <br />
+          <section>
             <h2 className={styles.sectionHeading}>
               <FiTrendingUp /> Age &amp; Expected Growth
             </h2>
@@ -175,7 +170,7 @@ const NpsCalculator: React.FC = () => {
                 title="Investment Period"
                 sourceBadgeText="Current Age"
                 targetBadgeText="Retire Age"
-                sourceSlot={(
+                sourceSlot={
                   <select
                     id="nps-current-age"
                     value={currentAge}
@@ -195,8 +190,8 @@ const NpsCalculator: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                )}
-                targetSlot={(
+                }
+                targetSlot={
                   <select
                     id="nps-retirement-age"
                     value={retirementAge}
@@ -204,15 +199,16 @@ const NpsCalculator: React.FC = () => {
                     className={styles.numberInput}
                     aria-label="Retirement Age"
                   >
-                    {Array.from({ length: Math.max(1, 75 - currentAge) }, (_, i) => currentAge + 1 + i).map(
-                      (age) => (
-                        <option key={age} value={age}>
-                          {age} Years
-                        </option>
-                      )
-                    )}
+                    {Array.from(
+                      { length: Math.max(1, 75 - currentAge) },
+                      (_, i) => currentAge + 1 + i
+                    ).map((age) => (
+                      <option key={age} value={age}>
+                        {age} Years
+                      </option>
+                    ))}
                   </select>
-                )}
+                }
               />
             </div>
             <div className={styles.fieldGroup}>
@@ -239,7 +235,8 @@ const NpsCalculator: React.FC = () => {
               />
             </div>
           </section>
-          <section className={styles.card}>
+          <br />
+          <section>
             <h2 className={styles.sectionHeading}>
               <FiPieChart /> Annuity &amp; Pension Allocation
             </h2>
@@ -339,7 +336,9 @@ const NpsCalculator: React.FC = () => {
                     {currencySymbol}
                     {npsResult.lumpSumAmount.toLocaleString('en-IN')}
                   </div>
-                  <div style={{ fontSize: '0.6875rem', opacity: 0.7 }}>100% Tax-Free (Sec 10(12A))</div>
+                  <div style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                    100% Tax-Free (Sec 10(12A))
+                  </div>
                 </div>
               </div>
               <div className={styles.splitItem}>
@@ -350,14 +349,24 @@ const NpsCalculator: React.FC = () => {
                     {currencySymbol}
                     {npsResult.annuityCorpus.toLocaleString('en-IN')}
                   </div>
-                  <div style={{ fontSize: '0.6875rem', opacity: 0.7 }}>Lifelong Monthly Pension</div>
+                  <div style={{ fontSize: '0.6875rem', opacity: 0.7 }}>
+                    Lifelong Monthly Pension
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           {/* Tax Advantages Card */}
-          <section className={styles.card}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.875rem' }}>
+          <section>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontWeight: 700,
+                fontSize: '0.875rem',
+              }}
+            >
               <FiAward style={{ color: '#16a34a' }} />
               <span>NPS Exclusive Tax Advantages</span>
             </div>
@@ -365,8 +374,8 @@ const NpsCalculator: React.FC = () => {
               <div className={styles.taxBenefitItem}>
                 <FiCheckCircle className={styles.taxBenefitIcon} />
                 <div>
-                  <strong>Section 80CCD(1B):</strong> Exclusive additional ₹50,000 deduction over and
-                  above Section 80C limit.
+                  <strong>Section 80CCD(1B):</strong> Exclusive additional ₹50,000 deduction over
+                  and above Section 80C limit.
                 </div>
               </div>
               <div className={styles.taxBenefitItem}>
@@ -389,13 +398,14 @@ const NpsCalculator: React.FC = () => {
       </div>
       {/* Year-by-Year Schedule */}
       <section className={styles.scheduleSection}>
-        <div className={styles.card}>
+        <div>
           <div style={{ marginBottom: '1rem' }}>
             <h2 className={styles.sectionHeading} style={{ margin: 0 }}>
               Retirement Wealth Accumulation Trajectory
             </h2>
             <p className={styles.subtitle} style={{ margin: '0.25rem 0 0' }}>
-              Growth of your pension corpus year-by-year from age {currentAge} to {retirementAge} ({wealthMultiple}x Capital Multiplier).
+              Growth of your pension corpus year-by-year from age {currentAge} to {retirementAge} (
+              {wealthMultiple}x Capital Multiplier).
             </p>
           </div>
           <div className={styles.tableWrapper}>
@@ -445,13 +455,38 @@ const NpsCalculator: React.FC = () => {
         title="Comprehensive National Pension System (NPS) Guide"
         subtitle="Instituted by the Pension Fund Regulatory and Development Authority (PFRDA), NPS is an ultra-low-cost, government-regulated defined-contribution pension scheme created to secure the post-retirement lives of Indian citizens."
         comparisonTable={{
-          headers: ['Feature', 'National Pension System (NPS)', 'Employees Provident Fund (EPF)', 'Public Provident Fund (PPF)'],
+          headers: [
+            'Feature',
+            'National Pension System (NPS)',
+            'Employees Provident Fund (EPF)',
+            'Public Provident Fund (PPF)',
+          ],
           rows: [
             ['Regulator', 'PFRDA', 'EPFO (Ministry of Labour)', 'Ministry of Finance / RBI'],
-            ['Equity Exposure', 'Up to 75% in Equity (Class E)', 'Up to 15% in Equity ETFs', '0% (Pure Sovereign Debt)'],
-            ['Exclusive Tax Deduction', '₹50,000 under 80CCD(1B) beyond 80C', 'Covered inside ₹1.5L 80C', 'Covered inside ₹1.5L 80C'],
-            ['Employer Tax Benefit', '10% of Basic+DA under 80CCD(2)', 'Exempt up to 12% of Basic', 'Not Applicable'],
-            ['Withdrawal at Age 60', '60% Tax-Free Lump Sum + 40% Annuity', '100% Tax-Free Lump Sum', '100% Tax-Free Lump Sum'],
+            [
+              'Equity Exposure',
+              'Up to 75% in Equity (Class E)',
+              'Up to 15% in Equity ETFs',
+              '0% (Pure Sovereign Debt)',
+            ],
+            [
+              'Exclusive Tax Deduction',
+              '₹50,000 under 80CCD(1B) beyond 80C',
+              'Covered inside ₹1.5L 80C',
+              'Covered inside ₹1.5L 80C',
+            ],
+            [
+              'Employer Tax Benefit',
+              '10% of Basic+DA under 80CCD(2)',
+              'Exempt up to 12% of Basic',
+              'Not Applicable',
+            ],
+            [
+              'Withdrawal at Age 60',
+              '60% Tax-Free Lump Sum + 40% Annuity',
+              '100% Tax-Free Lump Sum',
+              '100% Tax-Free Lump Sum',
+            ],
           ],
         }}
         faqs={[

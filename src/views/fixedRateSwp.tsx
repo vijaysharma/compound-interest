@@ -1,6 +1,5 @@
 'use client';
 import { useMemo, useState } from 'react';
-import DisplayCard from '../components/DisplayCard';
 import ValuePicker from '../components/ValuePicker';
 import { sanctnum } from '../utilities/numSanitity';
 import { RT } from '../types/types';
@@ -207,12 +206,8 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
         schema={swpSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          Retirement Income &bull; Capital Longevity
-        </div>
-        <h1 className={styles.title}>
-          Systematic Withdrawal Plan (SWP) Calculator for Retirement
-        </h1>
+        <div className={styles.badge}>Retirement Income &bull; Capital Longevity</div>
+        <h1 className={styles.title}>Systematic Withdrawal Plan (SWP) Calculator for Retirement</h1>
         <p className={styles.subtitle}>
           Simulate monthly retirement payouts, inflation adjustments, and residual portfolio
           longevity.
@@ -249,7 +244,12 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               rateTitle="Expected return rate (p.a.)"
               tenureTitle="Time period"
             />
-            <ValuePicker.ROI className={styles.field} value={irt} onChange={setIRt} title="Inflation rate (%)" />
+            <ValuePicker.ROI
+              className={styles.field}
+              value={irt}
+              onChange={setIRt}
+              title="Inflation rate (%)"
+            />
             <JoinedButtonGroup
               title="Inflation calculated per"
               className={styles.fieldLast}
@@ -268,14 +268,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
           </div>
         </div>
         <div className={styles.resultsCol}>
-          <DisplayCard
-            colorClass={parseInt(remainingAmount) < parseInt(pa) ? 'error' : 'primary'}
-            primaryAmount={parseInt(remainingAmount)}
-            secondaryInfo={{
-              title: 'Last monthly withdrawal',
-              amount: parseInt(lwa),
-            }}
-          />
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Portfolio Longevity Summary</span>
@@ -298,15 +290,11 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               </div>
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Remaining Balance</span>
-                <span className={styles.statValue}>
-                  ₹{finalCorpus.toLocaleString('en-IN')}
-                </span>
+                <span className={styles.statValue}>₹{finalCorpus.toLocaleString('en-IN')}</span>
               </div>
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Monthly Payout (Final)</span>
-                <span className={styles.statValue}>
-                  ₹{parseInt(lwa).toLocaleString('en-IN')}
-                </span>
+                <span className={styles.statValue}>₹{parseInt(lwa).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
