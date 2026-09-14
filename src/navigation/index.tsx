@@ -74,7 +74,7 @@ export interface LinkProps
   state?: unknown;
 }
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ to, href, replace, scroll, prefetch = true, state: _ = undefined, onClick, ...props }, ref) => {
+  ({ to, href, replace, scroll, prefetch = false, state: _ = undefined, onClick, ...props }, ref) => {
     const rawTarget = href ?? to ?? '/';
     let target = '/';
     if (typeof rawTarget === 'string') {
