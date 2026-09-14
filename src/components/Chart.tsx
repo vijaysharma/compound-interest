@@ -21,6 +21,9 @@ interface ChartProps {
   datasets: ChartDataset[];
   investmentAmount: number;
   dataMode?: 'nav' | 'value';
+  height?: number | 'auto';
+  autoHeight?: boolean;
+  minHeight?: number;
 }
 /*
  * NAV dates are DD-MM-YYYY.
@@ -59,7 +62,15 @@ const formatAxisCurrency = (value: number): string => {
   return `₹${Math.round(value)}`;
 };
 const emptySubscribe = () => () => {};
-const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: ChartProps) => {
+const Chart = ({
+  className,
+  datasets,
+  investmentAmount,
+  dataMode = 'nav',
+  height,
+  autoHeight = false,
+  minHeight = 0,
+}: ChartProps) => {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const initialInvestment =
     Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
@@ -146,12 +157,15 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
         },
       },
     }));
+    const isAutoHeight = autoHeight || height === 'auto';
     return {
       background: {
         visible: false,
       },
       data: chartData,
-      height: 240,
+      ...(isAutoHeight
+        ? { minHeight }
+        : { height: typeof height === 'number' ? height : 240 }),
       legend: {
         enabled: false,
         position: 'bottom',
@@ -182,7 +196,7 @@ const Chart = ({ className, datasets, investmentAmount, dataMode = 'nav' }: Char
         },
       },
     };
-  }, [datasets, initialInvestment, dataMode]);
+  }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight]);
   if (datasets.length === 0) {
     return (
       <div className={`${className} ${styles.emptyContainer}`}>

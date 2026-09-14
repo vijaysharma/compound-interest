@@ -58,7 +58,15 @@ export const fetchMFbySchemeCode = async (schemeCode: string, _signal?: AbortSig
   if (pending) return pending;
   const request = (async (): Promise<NavType[]> => {
     void recordApiUsage();
-    const data = (await getMutualFundNavAction(schemeCode)) as {
+    let rawData = await getMutualFundNavAction(schemeCode);
+    if (typeof rawData === 'string') {
+      try {
+        rawData = JSON.parse(rawData);
+      } catch {
+        // Ignore non-JSON string
+      }
+    }
+    const data = rawData as {
       data?: NavType[];
       error?: string;
     };

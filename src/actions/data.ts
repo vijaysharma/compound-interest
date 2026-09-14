@@ -262,13 +262,32 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
   if (!/^\d{1,10}$/.test(schemeCode)) {
     throw new Error('Invalid scheme code. Must be numeric.');
   }
-  const redisNav = await redisGet('cache:mf:nav:' + schemeCode);
+  const parseNavPayload = (val: unknown): { data: unknown[]; [k: string]: unknown } | null => {
+    if (!val) return null;
+    let parsed = val;
+    if (typeof parsed === 'string') {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch {
+        return null;
+      }
+    }
+    if (parsed && typeof parsed === 'object' && Array.isArray((parsed as { data?: unknown }).data)) {
+      return parsed as { data: unknown[]; [k: string]: unknown };
+    }
+    return null;
+  };
+  const redisNavRaw = await redisGet('cache:mf:nav:' + schemeCode);
+  const redisNav = parseNavPayload(redisNavRaw);
   if (redisNav) {
     return redisNav;
   }
   const cached = mfNavCache.get(schemeCode);
   if (cached && cached.expiresAt > Date.now()) {
-    return cached.data;
+    const cachedNav = parseNavPayload(cached.data);
+    if (cachedNav) {
+      return cachedNav;
+    }
   }
   const sql = getDb();
   await ensureTables(sql);
@@ -276,15 +295,18 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
     SELECT payload, updated_at FROM mutual_fund_nav WHERE scheme_code = ${schemeCode}
   `) as Array<{ payload: unknown; updated_at: string }>;
   const hasStored = stored.length > 0;
+  const storedPayload = hasStored ? parseNavPayload(stored[0].payload) : null;
   const isFresh =
-    hasStored && Date.now() - new Date(stored[0].updated_at).getTime() < DB_TTL_MS;
-  if (isFresh) {
+    Boolean(storedPayload) &&
+    hasStored &&
+    Date.now() - new Date(stored[0].updated_at).getTime() < DB_TTL_MS;
+  if (isFresh && storedPayload) {
     mfNavCache.set(schemeCode, {
       expiresAt: Date.now() + 5 * 60 * 1000,
-      data: stored[0].payload,
+      data: storedPayload,
     });
-    redisSet('cache:mf:nav:' + schemeCode, stored[0].payload, 21600).catch(() => {});
-    return stored[0].payload;
+    redisSet('cache:mf:nav:' + schemeCode, storedPayload, 21600).catch(() => {});
+    return storedPayload;
   }
   try {
     const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
@@ -292,29 +314,32 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
       signal: AbortSignal.timeout(8000),
     });
     if (upstream.ok) {
-      const payload = await upstream.json();
-      await sql`
-        INSERT INTO mutual_fund_nav (scheme_code, payload, updated_at)
-        VALUES (${schemeCode}, ${JSON.stringify(payload)}::jsonb, NOW())
-        ON CONFLICT (scheme_code) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
-      `;
-      mfNavCache.set(schemeCode, {
-        expiresAt: Date.now() + 5 * 60 * 1000,
-        data: payload,
-      });
-      redisSet('cache:mf:nav:' + schemeCode, payload, 21600).catch(() => {});
-      return payload;
+      const payloadRaw = await upstream.json();
+      const payload = parseNavPayload(payloadRaw);
+      if (payload) {
+        await sql`
+          INSERT INTO mutual_fund_nav (scheme_code, payload, updated_at)
+          VALUES (${schemeCode}, ${JSON.stringify(payload)}::jsonb, NOW())
+          ON CONFLICT (scheme_code) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
+        `;
+        mfNavCache.set(schemeCode, {
+          expiresAt: Date.now() + 5 * 60 * 1000,
+          data: payload,
+        });
+        redisSet('cache:mf:nav:' + schemeCode, payload, 21600).catch(() => {});
+        return payload;
+      }
     }
   } catch (fetchError) {
     console.warn('Upstream MF fetch failed, checking fallback:', fetchError);
   }
-  if (hasStored) {
+  if (storedPayload) {
     mfNavCache.set(schemeCode, {
       expiresAt: Date.now() + 5 * 60 * 1000,
-      data: stored[0].payload,
+      data: storedPayload,
     });
-    redisSet('cache:mf:nav:' + schemeCode, stored[0].payload, 21600).catch(() => {});
-    return stored[0].payload;
+    redisSet('cache:mf:nav:' + schemeCode, storedPayload, 21600).catch(() => {});
+    return storedPayload;
   }
   throw new Error('Failed to fetch mutual fund NAV data');
 }

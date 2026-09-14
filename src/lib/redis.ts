@@ -56,9 +56,17 @@ export async function redisGet<T>(key: string): Promise<T | null> {
       });
       if (res.ok) {
         const json = (await res.json()) as { result?: string | null };
-        if (json.result) {
+        if (json.result !== null && json.result !== undefined) {
           try {
-            return JSON.parse(json.result) as T;
+            let parsed = JSON.parse(json.result);
+            if (typeof parsed === 'string') {
+              try {
+                parsed = JSON.parse(parsed);
+              } catch {
+                // Keep as string if it wasn't JSON
+              }
+            }
+            return parsed as T;
           } catch {
             return json.result as unknown as T;
           }
@@ -73,7 +81,15 @@ export async function redisGet<T>(key: string): Promise<T | null> {
   const cached = inMemoryStore.get(key);
   if (cached) {
     if (cached.expiresAt > Date.now()) {
-      return cached.value as T;
+      let val = cached.value;
+      if (typeof val === 'string') {
+        try {
+          val = JSON.parse(val);
+        } catch {
+          // Ignore non-JSON string
+        }
+      }
+      return val as T;
     }
     inMemoryStore.delete(key);
   }
@@ -87,7 +103,6 @@ export async function redisSet(
   value: unknown,
   ttlSeconds = 3600
 ): Promise<boolean> {
-  const serialized = typeof value === 'string' ? value : JSON.stringify(value);
   const cfg = getUpstashConfig();
   if (cfg) {
     try {
@@ -100,7 +115,7 @@ export async function redisSet(
           Authorization: `Bearer ${cfg.token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(serialized),
+        body: JSON.stringify(value),
         signal: AbortSignal.timeout(2000),
       });
       if (res.ok) {

@@ -823,7 +823,7 @@ const Lumpsum = ({
           performance across 8 schemes.
         </p>
       </header>
-      <div className={styles.analyticsGrid}>
+      <div className={`${styles.analyticsGrid} ${styles.lumpsumAnalyticsGrid}`}>
         <div className={styles.controlsCol}>
           <div className={styles.actionButtonGroup}>
             <button
@@ -1027,7 +1027,7 @@ const Lumpsum = ({
             tabs={[]}
           />
         </div>
-        <div className={styles.outputCol}>
+        <div className={`${styles.outputCol} ${styles.lumpsumOutputCol}`}>
           {/*
            * ======================================================
            * FUND LIST / CHART
@@ -1037,19 +1037,22 @@ const Lumpsum = ({
             (pinnedFunds.length > 0 ? (
               <Suspense
                 fallback={
-                  <div className={styles.chartLoadingWrapper}>
+                  <div className={`${styles.chartLoadingWrapper} ${styles.lumpsumLoadingWrapper}`}>
                     <span className={styles.loadingSpinner}></span>
                   </div>
                 }
               >
                 <Chart
-                  className={styles.chartContainer}
+                  className={`${styles.chartContainer} ${styles.lumpsumChartContainer}`}
                   datasets={chartDatasets}
                   investmentAmount={parseFloat(invAmt) || 0}
+                  autoHeight
                 />
               </Suspense>
             ) : (
-              <div className={styles.chartPlaceholder}>Select up to 8 funds to see comparison</div>
+              <div className={`${styles.chartPlaceholder} ${styles.lumpsumPlaceholder}`}>
+                Select up to 8 funds to see comparison
+              </div>
             ))}
         </div>
       </div>
