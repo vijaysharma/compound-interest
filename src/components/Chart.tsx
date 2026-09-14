@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AgCharts } from 'ag-charts-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
@@ -24,6 +24,7 @@ interface ChartProps {
   height?: number | 'auto';
   autoHeight?: boolean;
   minHeight?: number;
+  enableZoom?: boolean;
 }
 /*
  * NAV dates are DD-MM-YYYY.
@@ -70,15 +71,119 @@ const Chart = ({
   height,
   autoHeight = false,
   minHeight = 0,
+  enableZoom = true,
 }: ChartProps) => {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [zoomRange, setZoomRange] = useState<{ start: string; end: string } | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>('All');
+  const [dragState, setDragState] = useState<{
+    isDragging: boolean;
+    startX: number;
+    currentX: number;
+  } | null>(null);
   const initialInvestment =
     Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
+  // Compute all unique dates sorted chronologically
+  const allSortedDates = useMemo(() => {
+    const uniqueDateTimes = new Map<string, number>();
+    for (const dataset of datasets) {
+      for (const point of dataset.data) {
+        if (Number.isFinite(point.nav) && point.nav > 0) {
+          const time = getDateTime(point.date);
+          if (Number.isFinite(time) && !uniqueDateTimes.has(point.date)) {
+            uniqueDateTimes.set(point.date, time);
+          }
+        }
+      }
+    }
+    return Array.from(uniqueDateTimes.entries())
+      .sort((a, b) => a[1] - b[1])
+      .map(([date]) => date);
+  }, [datasets]);
+  // Compute active dates based on zoom
+  const activeDates = useMemo(() => {
+    if (!zoomRange || allSortedDates.length === 0) return allSortedDates;
+    const startIdx = allSortedDates.indexOf(zoomRange.start);
+    const endIdx = allSortedDates.indexOf(zoomRange.end);
+    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) return allSortedDates;
+    return allSortedDates.slice(startIdx, endIdx + 1);
+  }, [allSortedDates, zoomRange]);
+  const handleApplyPreset = (preset: string) => {
+    setActivePreset(preset);
+    if (preset === 'All' || allSortedDates.length === 0) {
+      setZoomRange(null);
+      return;
+    }
+    const daysMap: Record<string, number> = {
+      '1M': 30,
+      '6M': 180,
+      '1Y': 365,
+      '3Y': 365 * 3,
+      '5Y': 365 * 5,
+    };
+    const days = daysMap[preset];
+    if (!days) return;
+    const latestDate = allSortedDates[allSortedDates.length - 1];
+    const latestTime = getDateTime(latestDate);
+    const targetStartTime = latestTime - days * 24 * 60 * 60 * 1000;
+    let targetIdx = 0;
+    for (let i = 0; i < allSortedDates.length; i++) {
+      if (getDateTime(allSortedDates[i]) >= targetStartTime) {
+        targetIdx = i;
+        break;
+      }
+    }
+    setZoomRange({
+      start: allSortedDates[targetIdx],
+      end: latestDate,
+    });
+  };
+  const handleResetZoom = () => {
+    setZoomRange(null);
+    setActivePreset('All');
+  };
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!enableZoom || !containerRef.current || allSortedDates.length < 5) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    setDragState({ isDragging: true, startX: x, currentX: x });
+  };
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragState?.isDragging || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    setDragState((prev) => (prev ? { ...prev, currentX: x } : null));
+  };
+  const handleMouseUp = () => {
+    if (!dragState?.isDragging || !containerRef.current) {
+      setDragState(null);
+      return;
+    }
+    const rect = containerRef.current.getBoundingClientRect();
+    const leftPx = Math.min(dragState.startX, dragState.currentX);
+    const rightPx = Math.max(dragState.startX, dragState.currentX);
+    const diff = rightPx - leftPx;
+    if (diff > 15 && activeDates.length > 5) {
+      const chartWidth = rect.width;
+      const startRatio = Math.max(0, Math.min(leftPx / chartWidth, 1));
+      const endRatio = Math.max(0, Math.min(rightPx / chartWidth, 1));
+      const startIdx = Math.floor(startRatio * activeDates.length);
+      const endIdx = Math.min(activeDates.length - 1, Math.ceil(endRatio * activeDates.length));
+      if (endIdx - startIdx >= 2) {
+        setZoomRange({
+          start: activeDates[startIdx],
+          end: activeDates[endIdx],
+        });
+        setActivePreset(null);
+      }
+    }
+    setDragState(null);
+  };
   const chartOptions = useMemo<AgCartesianChartOptions | null>(() => {
-    if (datasets.length === 0 || initialInvestment <= 0) {
+    if (datasets.length === 0 || initialInvestment <= 0 || activeDates.length === 0) {
       return null;
     }
-    const uniqueDateTimes = new Map<string, number>();
     const normalizedDatasets = datasets.map((dataset) => {
       const validPoints: { date: string; time: number; nav: number }[] = [];
       for (const point of dataset.data) {
@@ -86,9 +191,6 @@ const Chart = ({
           const time = getDateTime(point.date);
           if (Number.isFinite(time)) {
             validPoints.push({ date: point.date, time, nav: point.nav });
-            if (!uniqueDateTimes.has(point.date)) {
-              uniqueDateTimes.set(point.date, time);
-            }
           }
         }
       }
@@ -118,10 +220,7 @@ const Chart = ({
         valueMap,
       };
     });
-    const sortedDates = Array.from(uniqueDateTimes.entries())
-      .sort((a, b) => a[1] - b[1])
-      .map(([date]) => date);
-    const chartData = sortedDates.map((date) => {
+    const chartData = activeDates.map((date) => {
       const row: Record<string, string | number> = { date };
       for (let i = 0; i < normalizedDatasets.length; i++) {
         row[`fund_${i}`] = normalizedDatasets[i].valueMap.get(date) ?? NaN;
@@ -196,7 +295,7 @@ const Chart = ({
         },
       },
     };
-  }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight]);
+  }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates]);
   if (datasets.length === 0) {
     return (
       <div className={`${className} ${styles.emptyContainer}`}>
@@ -219,8 +318,61 @@ const Chart = ({
     );
   }
   return (
-    <div className={className}>
-      <AgCharts className={styles.chart} options={chartOptions} />
+    <div className={`${className} ${styles.chartWrapper}`}>
+      {enableZoom && allSortedDates.length > 5 && (
+        <div className={styles.zoomToolbar}>
+          <div className={styles.zoomPresets}>
+            {['1M', '6M', '1Y', '3Y', '5Y', 'All'].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className={`${styles.zoomPresetBtn} ${activePreset === preset ? styles.activePreset : ''}`}
+                onClick={() => handleApplyPreset(preset)}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+          <div className={styles.zoomInfo}>
+            {zoomRange ? (
+              <>
+                <span className={styles.zoomBadge}>
+                  {zoomRange.start} → {zoomRange.end}
+                </span>
+                <button
+                  type="button"
+                  className={styles.resetZoomBtn}
+                  onClick={handleResetZoom}
+                  title="Reset Zoom"
+                >
+                  ↩ Reset
+                </button>
+              </>
+            ) : (
+              <span className={styles.zoomHint}>Drag horizontally to zoom into a section</span>
+            )}
+          </div>
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className={styles.chartContainer}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        {dragState?.isDragging && (
+          <div
+            className={styles.zoomSelectionOverlay}
+            style={{
+              left: Math.min(dragState.startX, dragState.currentX),
+              width: Math.abs(dragState.currentX - dragState.startX),
+            }}
+          />
+        )}
+        <AgCharts className={styles.chart} options={chartOptions} />
+      </div>
     </div>
   );
 };

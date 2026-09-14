@@ -1,5 +1,14 @@
+'use client';
+import { useEffect } from 'react';
 import Link from '@/navigation';
-export default function NotFound() {
+interface ErrorProps {
+  error: Error & { digest?: string };
+  reset: () => void;
+}
+export default function ErrorPage({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    console.error('Unhandled runtime error captured in error boundary:', error);
+  }, [error]);
   return (
     <div
       style={{
@@ -38,14 +47,14 @@ export default function NotFound() {
         >
           <span style={{ color: '#ffffff', fontSize: '28px', fontWeight: 800 }}>₹</span>
         </div>
-        {/* 404 Badge */}
+        {/* Error Badge */}
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#eff6ff',
-            color: '#2563eb',
+            backgroundColor: '#fee2e2',
+            color: '#dc2626',
             padding: '4px 12px',
             borderRadius: '9999px',
             fontSize: '0.75rem',
@@ -55,8 +64,17 @@ export default function NotFound() {
             marginBottom: '16px',
           }}
         >
-          404 Not Found
+          <span
+            style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              backgroundColor: '#dc2626',
+            }}
+          />
+          Application Error
         </div>
+        {/* Heading */}
         <h1
           style={{
             fontSize: '1.75rem',
@@ -66,8 +84,9 @@ export default function NotFound() {
             lineHeight: 1.25,
           }}
         >
-          Page Not Found
+          Something Went Wrong
         </h1>
+        {/* Message */}
         <p
           style={{
             fontSize: '0.925rem',
@@ -76,8 +95,26 @@ export default function NotFound() {
             margin: '0 0 24px',
           }}
         >
-          The page or calculator you are looking for might have been moved, renamed, or is temporarily unavailable.
+          We encountered an unexpected issue while processing your calculation. Your data is safe.
+          Please try refreshing the section or return to the calculator suite.
         </p>
+        {/* Digest / Debug if present */}
+        {error.digest && (
+          <div
+            style={{
+              backgroundColor: 'var(--bg-hover, #f8fafc)',
+              border: '1px solid var(--border-color, #e2e8f0)',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              fontSize: '0.75rem',
+              color: '#64748b',
+              fontFamily: 'monospace',
+              marginBottom: '24px',
+            }}
+          >
+            Error Reference ID: {error.digest}
+          </div>
+        )}
         {/* Actions */}
         <div
           style={{
@@ -88,8 +125,9 @@ export default function NotFound() {
             marginBottom: '28px',
           }}
         >
-          <Link
-            href="/"
+          <button
+            type="button"
+            onClick={reset}
             style={{
               backgroundColor: '#2563eb',
               color: '#ffffff',
@@ -98,16 +136,32 @@ export default function NotFound() {
               padding: '10px 22px',
               fontSize: '0.875rem',
               fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
+              transition: 'background-color 0.15s ease',
+            }}
+          >
+            Try Again
+          </button>
+          <Link
+            href="/"
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--text-primary, #0f172a)',
+              border: '1px solid var(--border-color, #cbd5e1)',
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
-              boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
             }}
           >
             Return to Home
           </Link>
         </div>
-        {/* Quick Nav */}
+        {/* Quick Nav Section */}
         <div
           style={{
             borderTop: '1px solid var(--border-color, #e2e8f0)',
@@ -126,7 +180,7 @@ export default function NotFound() {
               marginBottom: '10px',
             }}
           >
-            Explore Financial Calculators
+            Popular Calculators
           </span>
           <div
             style={{

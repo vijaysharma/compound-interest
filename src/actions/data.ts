@@ -222,36 +222,39 @@ export async function searchMutualFundsAction(
   const rawSearch = searchQuery.trim();
   const search = rawSearch.replace(/[%_\\]/g, ' ').trim().slice(0, 80);
   const cacheKey = search.toLowerCase();
-  const redisCached = await redisGet<Array<{ schemeCode: number; schemeName: string }>>(
-    'cache:mf:search:' + cacheKey
-  );
-  if (redisCached) {
-    return redisCached;
-  }
+  // 1. In-memory check first (0ms latency)
   const cached = mfSearchCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.data as Array<{ schemeCode: number; schemeName: string }>;
   }
+  // 2. Redis cache check
+  const redisCached = await redisGet<Array<{ schemeCode: number; schemeName: string }>>(
+    'cache:mf:search:' + cacheKey
+  );
+  if (redisCached && Array.isArray(redisCached) && redisCached.length > 0) {
+    mfSearchCache.set(cacheKey, { expiresAt: Date.now() + 10 * 60_000, data: redisCached });
+    return redisCached;
+  }
+  // 3. Database query using pg_trgm GIN index (fast < 400ms)
   const sql = getDb();
-  await ensureTables(sql);
   const searchPatterns = search
     .split(/\s+/)
     .filter(Boolean)
-    .slice(0, 8)
+    .slice(0, 6)
     .map((term) => `%${term}%`);
   const rows = (await sql`
     SELECT scheme_code, scheme_name FROM mutual_fund_schemes
     WHERE ${searchPatterns.length === 0} OR scheme_name ILIKE ALL(${searchPatterns})
     ORDER BY scheme_name ASC
-    LIMIT 1000
+    LIMIT 200
   `) as Array<{ scheme_code: string; scheme_name: string }>;
   const data = rows.map((row) => ({
     schemeCode: Number(row.scheme_code),
     schemeName: row.scheme_name,
   }));
-  mfSearchCache.set(cacheKey, { expiresAt: Date.now() + 60_000, data });
-  redisSet('cache:mf:search:' + cacheKey, data, 3600).catch(() => {});
-  if (mfSearchCache.size > 100) {
+  mfSearchCache.set(cacheKey, { expiresAt: Date.now() + 10 * 60_000, data });
+  redisSet('cache:mf:search:' + cacheKey, data, 7200).catch(() => {});
+  if (mfSearchCache.size > 200) {
     const oldest = mfSearchCache.keys().next().value;
     if (oldest) mfSearchCache.delete(oldest);
   }
@@ -277,11 +280,7 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
     }
     return null;
   };
-  const redisNavRaw = await redisGet('cache:mf:nav:' + schemeCode);
-  const redisNav = parseNavPayload(redisNavRaw);
-  if (redisNav) {
-    return redisNav;
-  }
+  // 1. In-memory check first (0ms latency)
   const cached = mfNavCache.get(schemeCode);
   if (cached && cached.expiresAt > Date.now()) {
     const cachedNav = parseNavPayload(cached.data);
@@ -289,25 +288,44 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
       return cachedNav;
     }
   }
+  // 2. Redis cache check (20-40ms)
+  const redisNavRaw = await redisGet('cache:mf:nav:' + schemeCode);
+  const redisNav = parseNavPayload(redisNavRaw);
+  if (redisNav) {
+    mfNavCache.set(schemeCode, {
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      data: redisNav,
+    });
+    return redisNav;
+  }
+  // 3. Check DB storage with strict freshness (2 hours TTL to avoid stale NAVs)
   const sql = getDb();
-  await ensureTables(sql);
-  const stored = (await sql`
-    SELECT payload, updated_at FROM mutual_fund_nav WHERE scheme_code = ${schemeCode}
-  `) as Array<{ payload: unknown; updated_at: string }>;
-  const hasStored = stored.length > 0;
-  const storedPayload = hasStored ? parseNavPayload(stored[0].payload) : null;
-  const isFresh =
-    Boolean(storedPayload) &&
-    hasStored &&
-    Date.now() - new Date(stored[0].updated_at).getTime() < DB_TTL_MS;
+  let storedPayload: { data: unknown[]; [k: string]: unknown } | null = null;
+  let isFresh = false;
+  try {
+    const stored = (await sql`
+      SELECT payload, updated_at FROM mutual_fund_nav WHERE scheme_code = ${schemeCode}
+    `) as Array<{ payload: unknown; updated_at: string }>;
+    if (stored.length > 0) {
+      storedPayload = parseNavPayload(stored[0].payload);
+      // NAV TTL: 2 hours freshness to prevent stale NAV data
+      const NAV_FRESH_TTL_MS = 2 * 60 * 60 * 1000;
+      isFresh =
+        Boolean(storedPayload) &&
+        Date.now() - new Date(stored[0].updated_at).getTime() < NAV_FRESH_TTL_MS;
+    }
+  } catch (err) {
+    console.warn('DB query in getMutualFundNavAction failed:', err);
+  }
   if (isFresh && storedPayload) {
     mfNavCache.set(schemeCode, {
       expiresAt: Date.now() + 5 * 60 * 1000,
       data: storedPayload,
     });
-    redisSet('cache:mf:nav:' + schemeCode, storedPayload, 21600).catch(() => {});
+    redisSet('cache:mf:nav:' + schemeCode, storedPayload, 7200).catch(() => {});
     return storedPayload;
   }
+  // 4. Fetch upstream from api.mfapi.in (typically 200-350ms)
   try {
     const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
       headers: { Accept: 'application/json' },
@@ -317,28 +335,32 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
       const payloadRaw = await upstream.json();
       const payload = parseNavPayload(payloadRaw);
       if (payload) {
-        await sql`
-          INSERT INTO mutual_fund_nav (scheme_code, payload, updated_at)
-          VALUES (${schemeCode}, ${JSON.stringify(payload)}::jsonb, NOW())
-          ON CONFLICT (scheme_code) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
-        `;
+        // Cache in memory immediately for fast subsequent access
         mfNavCache.set(schemeCode, {
           expiresAt: Date.now() + 5 * 60 * 1000,
           data: payload,
         });
-        redisSet('cache:mf:nav:' + schemeCode, payload, 21600).catch(() => {});
+        // Non-blocking asynchronous persistence to DB & Redis (doesn't delay user response!)
+        sql`
+          INSERT INTO mutual_fund_nav (scheme_code, payload, updated_at)
+          VALUES (${schemeCode}, ${JSON.stringify(payload)}::jsonb, NOW())
+          ON CONFLICT (scheme_code) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()
+        `.catch((persistErr) => {
+          console.warn('Non-blocking NAV DB save failed:', persistErr);
+        });
+        redisSet('cache:mf:nav:' + schemeCode, payload, 7200).catch(() => {});
         return payload;
       }
     }
   } catch (fetchError) {
-    console.warn('Upstream MF fetch failed, checking fallback:', fetchError);
+    console.warn('Upstream MF fetch failed, falling back to stored payload:', fetchError);
   }
+  // 5. Fallback to stored payload if upstream is down
   if (storedPayload) {
     mfNavCache.set(schemeCode, {
       expiresAt: Date.now() + 5 * 60 * 1000,
       data: storedPayload,
     });
-    redisSet('cache:mf:nav:' + schemeCode, storedPayload, 21600).catch(() => {});
     return storedPayload;
   }
   throw new Error('Failed to fetch mutual fund NAV data');

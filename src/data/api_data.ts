@@ -51,7 +51,58 @@ export const fetchAllMfs = async (search = '', _signal?: AbortSignal): Promise<M
   })();
   return request;
 };
+export interface MFMetaType {
+  fund_house?: string;
+  scheme_type?: string;
+  scheme_category?: string;
+  scheme_code?: number | string;
+  scheme_name?: string;
+  isin_growth?: string;
+  isin_div_reinvestment?: string | null;
+}
+export interface MFDetailsResult {
+  data: NavType[];
+  meta?: MFMetaType;
+}
+const mfDetailsCache = new Map<string, { expiresAt: number; data: MFDetailsResult }>();
+export const fetchMFWithMeta = async (schemeCode: string): Promise<MFDetailsResult> => {
+  const cached = mfDetailsCache.get(schemeCode);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+  void recordApiUsage();
+  let rawData = await getMutualFundNavAction(schemeCode);
+  if (typeof rawData === 'string') {
+    try {
+      rawData = JSON.parse(rawData);
+    } catch {
+      // Ignore non-JSON string
+    }
+  }
+  const parsed = rawData as {
+    data?: NavType[];
+    meta?: MFMetaType;
+    error?: string;
+  };
+  if (!parsed || !Array.isArray(parsed.data)) {
+    throw new Error(parsed?.error ?? 'Mutual fund response did not contain NAV data');
+  }
+  const result: MFDetailsResult = {
+    data: parsed.data,
+    meta: parsed.meta,
+  };
+  mfDetailsCache.set(schemeCode, {
+    expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
+    data: result,
+  });
+  // Also sync with nav cache
+  mfNavCache.set(schemeCode, {
+    expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
+    data: parsed.data,
+  });
+  return result;
+};
 export const fetchMFbySchemeCode = async (schemeCode: string, _signal?: AbortSignal): Promise<NavType[]> => {
+  const details = mfDetailsCache.get(schemeCode);
+  if (details && details.expiresAt > Date.now()) return details.data.data;
   const cached = mfNavCache.get(schemeCode);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
   const pending = mfNavRequests.get(schemeCode);
@@ -68,10 +119,17 @@ export const fetchMFbySchemeCode = async (schemeCode: string, _signal?: AbortSig
     }
     const data = rawData as {
       data?: NavType[];
+      meta?: MFMetaType;
       error?: string;
     };
     if (!data || !Array.isArray(data.data)) {
       throw new Error(data?.error ?? 'Mutual fund response did not contain NAV data');
+    }
+    if (data.meta) {
+      mfDetailsCache.set(schemeCode, {
+        expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
+        data: { data: data.data, meta: data.meta },
+      });
     }
     mfNavCache.set(schemeCode, {
       expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,

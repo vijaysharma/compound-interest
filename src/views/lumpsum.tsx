@@ -6,6 +6,7 @@ import ValuePicker from '../components/ValuePicker';
 import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
 import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
+import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFundDetailModal';
 import { CHART_COLORS } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
@@ -231,6 +232,7 @@ const Lumpsum = ({
   const [invAmt, setInvAmt] = useState<string>(savedState.invAmt);
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
+  const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const [loadingSchemeCodes, setLoadingSchemeCodes] = useState<Set<string>>(new Set());
   const [error, setError] = useState<{
     status: string;
@@ -239,6 +241,17 @@ const Lumpsum = ({
     status: '',
     message: '',
   });
+  // Preload top mutual funds when selector opens if data is empty
+  useEffect(() => {
+    if (isFundSelectorOpen && jsonAllData.length === 0) {
+      const initialQuery = searchKey.trim() || 'HDFC';
+      fetchAllMfs(initialQuery)
+        .then((data) => {
+          setJsonAllData(data);
+        })
+        .catch(() => {});
+    }
+  }, [isFundSelectorOpen, jsonAllData.length, searchKey]);
   useEffect(() => {
     onSelectionChange?.({
       funds: pinnedFunds,
@@ -288,6 +301,7 @@ const Lumpsum = ({
       return;
     }
     let cancelled = false;
+    // Fast 120ms debounce for lightning fast search feedback
     const timeout = window.setTimeout(() => {
       fetchAllMfs(search)
         .then((data) => {
@@ -301,7 +315,7 @@ const Lumpsum = ({
             message: err instanceof Error ? err.message : 'Failed to fetch mutual funds',
           });
         });
-    }, 250);
+    }, 120);
     return () => {
       cancelled = true;
       window.clearTimeout(timeout);
@@ -353,10 +367,17 @@ const Lumpsum = ({
     if (pinnedFunds.length === 0) {
       return;
     }
+    // Only restore funds that don't already have NAV data in memory
+    const missingFunds = pinnedFunds.filter(
+      (fund) => !pinnedNavDataRef.current[fund.schemeCode] || pinnedNavDataRef.current[fund.schemeCode].length === 0
+    );
+    if (missingFunds.length === 0) {
+      return;
+    }
     let cancelled = false;
     const restorePinnedFunds = async () => {
       const results = await Promise.all(
-        pinnedFunds.map(async (fund) => {
+        missingFunds.map(async (fund) => {
           try {
             const data = await fetchMFbySchemeCode(fund.schemeCode);
             return {
@@ -394,23 +415,18 @@ const Lumpsum = ({
     if (!selectedCode || selectedCode === '0') {
       return;
     }
-    let cancelled = false;
     const cached = pinnedNavDataRef.current[selectedCode];
-    if (cached) {
+    if (cached && cached.length > 0) {
       setJsonNavData(cached);
+      return;
     }
-    /*
-     * Fetch latest data from API (respecting server TTL).
-     */
+    let cancelled = false;
     fetchMFbySchemeCode(selectedCode)
       .then((data) => {
         if (cancelled) {
           return;
         }
         setJsonNavData(data);
-        /*
-         * Update ONLY this fund's cache.
-         */
         if (pinnedFundsRef.current.some((fund) => fund.schemeCode === selectedCode)) {
           setPinnedNavData((previous) => ({
             ...previous,
@@ -480,16 +496,11 @@ const Lumpsum = ({
     const schemeCode = String(mf.value);
     const existing = pinnedFunds.find((fund) => fund.schemeCode === schemeCode);
     /*
-     * ======================================================
      * UNPIN
-     * ======================================================
      */
     if (existing) {
       const remaining = pinnedFunds.filter((fund) => fund.schemeCode !== schemeCode);
       setPinnedFunds(remaining);
-      /*
-       * Remove ONLY this fund's cache.
-       */
       setPinnedNavData((previous) => {
         const next = {
           ...previous,
@@ -497,9 +508,6 @@ const Lumpsum = ({
         delete next[schemeCode];
         return next;
       });
-      /*
-       * If active, move to another pinned fund.
-       */
       if (selectedCode === schemeCode) {
         const replacement = remaining[0];
         if (replacement) {
@@ -520,9 +528,15 @@ const Lumpsum = ({
       schemeName: mf.name,
       color,
     };
-    // Instantly pin the fund for 0ms feedback
+    // Instantly pin the fund for 0ms visual feedback
     setPinnedFunds((previous) => [...previous, newPinnedFund]);
     setSelectedCode(schemeCode);
+    // If NAV data is already available in memory, apply immediately with 0ms delay
+    const existingNav = pinnedNavDataRef.current[schemeCode];
+    if (existingNav && existingNav.length > 0) {
+      setJsonNavData(existingNav);
+      return;
+    }
     setLoadingSchemeCodes((previous) => new Set([...previous, schemeCode]));
     try {
       const navData = await fetchMFbySchemeCode(schemeCode);
@@ -1070,7 +1084,30 @@ const Lumpsum = ({
         {pinnedFunds.length > 0 && (
           <div className={styles.mfDisplayGrid}>
             {fundAnalyses.map((fund) => (
-              <div key={fund.schemeCode} className={styles.mfDisplayItem}>
+              <div
+                key={fund.schemeCode}
+                className={styles.mfDisplayItem}
+                onClick={() => {
+                  setDetailModalFund({
+                    ...fund,
+                    invAmt: parseFloat(invAmt) || 0,
+                    navData: pinnedNavData[fund.schemeCode] || [],
+                  });
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`View detailed tax and performance analysis for ${fund.schemeName}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setDetailModalFund({
+                      ...fund,
+                      invAmt: parseFloat(invAmt) || 0,
+                      navData: pinnedNavData[fund.schemeCode] || [],
+                    });
+                  }
+                }}
+              >
                 {renderStatsCard(
                   fund.startNav,
                   fund.endNav,
@@ -1086,6 +1123,10 @@ const Lumpsum = ({
           </div>
         )}
       </div>
+      <MutualFundDetailModal
+        fund={detailModalFund}
+        onClose={() => setDetailModalFund(null)}
+      />
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
         onClose={() => setIsFundSelectorOpen(false)}
