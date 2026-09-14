@@ -26,3 +26,7 @@ yarn-debug.log*
 yarn-error.log*
 .env
 *.tsbuildinfo
+
+# Private credentials & secrets documentation (DO NOT COMMIT)
+README_SECRETS.md
+README_PRIVATE.md
