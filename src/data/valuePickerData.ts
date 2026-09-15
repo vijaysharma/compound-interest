@@ -77,22 +77,18 @@ export const DEFAULT_DURATION_MATRIX_ROWS: GridItem[][] = [
 ];
 // Reusable standard quick-step presets for Rate and Tenure ValuePickers
 export const DEFAULT_RATE_STEPS = [
-  { id: 'roi-0.01', value: '0.01', title: '0.01%' },
-  { id: 'roi-0.1', value: '0.1', title: '0.1%' },
-  { id: 'roi-0.25', value: '0.25', title: '0.25%' },
-  { id: 'roi-0.5', value: '0.5', title: '0.5%' },
+  { id: 'roi-11', value: '11', title: '11%' },
+  { id: 'roi-9', value: '9', title: '9%' },
   { id: 'roi-1', value: '1', title: '1%' },
-  { id: 'roi-2', value: '2', title: '2%' },
-  { id: 'roi-5', value: '5', title: '5%' },
-  { id: 'roi-10', value: '10', title: '10%' },
-  { id: 'roi-12', value: '12', title: '12%' },
+  { id: 'roi-0.1', value: '0.1', title: '0.1%' },
+  { id: 'roi-0.01', value: '0.01', title: '0.01%' },
 ];
-export const DEFAULT_TENURE_STEP_VALUES = [1, 2, 5, 7, 10, 15, 20, 25, 30];
+export const DEFAULT_TENURE_STEP_VALUES = [25, 10, 5, 3, 1];
 export function getTenureStepData(format: 'y' | 'm' = 'y') {
   const isYears = format === 'y';
   return DEFAULT_TENURE_STEP_VALUES.map((val) => ({
     id: `tenure-${val}`,
     value: String(val),
-    title: `${val} ${isYears ? (val === 1 ? 'yr' : 'yrs') : (val === 1 ? 'mo' : 'mos')}`,
+    title: `${val} ${isYears ? (val === 1 ? 'yr' : 'yrs') : val === 1 ? 'mo' : 'mos'}`,
   }));
 }

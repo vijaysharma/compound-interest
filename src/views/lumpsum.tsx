@@ -1,5 +1,6 @@
 'use client';
-import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import ValuePicker from '../components/ValuePicker';
@@ -10,7 +11,7 @@ import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFun
 import { CHART_COLORS } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
-import { FiBarChart2 } from 'react-icons/fi';
+import { FiBarChart2, FiPlus, FiTrendingUp } from 'react-icons/fi';
 import styles from './MutualFundAnalytics.module.scss';
 const lumpsumSchema = {
   '@context': 'https://schema.org',
@@ -110,7 +111,14 @@ const lumpsumFaqs = [
       'Absolute Return measures the raw percentage gain from start to finish without accounting for time. CAGR normalizes this growth over multiple years to show the smooth annual compounding pace, making it the industry standard for multi-year comparisons.',
   },
 ];
-const Chart = lazy(() => import('../components/Chart'));
+const Chart = dynamic(() => import('../components/Chart'), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.chartLoadingWrapper}>
+      <span className={styles.loadingSpinner}></span>
+    </div>
+  ),
+});
 const STORAGE_KEY = 'mutual_fund_lumpsum_state';
 interface PinnedFund {
   schemeCode: string;
@@ -296,6 +304,9 @@ const Lumpsum = ({
     endDate,
   ]);
   useEffect(() => {
+    if (!isFundSelectorOpen) {
+      return;
+    }
     const search = deferredSearchKey.trim();
     if (!search) {
       return;
@@ -320,7 +331,7 @@ const Lumpsum = ({
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [deferredSearchKey]);
+  }, [deferredSearchKey, isFundSelectorOpen]);
   const filterMfs = (funds: MFType[], filterKey: string): MFType[] => {
     let expression = filterKey;
     if (expression === 'Growth') {
@@ -764,7 +775,21 @@ const Lumpsum = ({
           </span>
         </div>
         {!start || !end ? (
-          <div className={styles.statLoading}>Loading NAV data...</div>
+          <div className={styles.statCardSkeleton}>
+            <div className={styles.statLoading}>Loading NAV data...</div>
+            <div className={styles.skeletonRow}>
+              <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+              <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+            </div>
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
+            <div className={styles.skeletonValue} />
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
+            <div className={`${styles.skeletonValue} ${styles.skeletonValueLarge}`} />
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
+            <div className={styles.skeletonValue} />
+            <div className={styles.skeletonLine} />
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+          </div>
         ) : (
           <>
             <div className={styles.navDatesRow}>
@@ -1082,7 +1107,7 @@ const Lumpsum = ({
          * 3  4
          * ======================================================
          */}
-        {pinnedFunds.length > 0 && (
+        {pinnedFunds.length > 0 ? (
           <div className={styles.mfDisplayGrid}>
             {fundAnalyses.map((fund) => (
               <div
@@ -1121,6 +1146,24 @@ const Lumpsum = ({
                 )}
               </div>
             ))}
+          </div>
+        ) : (
+          <div className={styles.emptyStateCard}>
+            <div className={styles.emptyStateIcon}>
+              <FiTrendingUp />
+            </div>
+            <h3 className={styles.emptyStateTitle}>Select Mutual Funds to Backtest Lumpsum</h3>
+            <p className={styles.emptyStateDescription}>
+              Compare historical lumpsum CAGR returns, absolute growth, and tax-efficiency across direct and regular funds.
+            </p>
+            <button
+              type="button"
+              className={styles.emptyStateBtn}
+              onClick={() => setIsFundSelectorOpen(true)}
+            >
+              <FiPlus />
+              <span>Add Mutual Fund</span>
+            </button>
           </div>
         )}
       </div>

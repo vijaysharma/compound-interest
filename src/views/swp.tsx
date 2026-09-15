@@ -1,5 +1,6 @@
 'use client';
-import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import ValuePicker from '../components/ValuePicker';
 import { getNearest } from '../utilities/utility';
@@ -9,7 +10,7 @@ import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalcula
 import { CHART_COLORS } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
-import { FiBarChart2 } from 'react-icons/fi';
+import { FiBarChart2, FiPlus, FiTrendingUp } from 'react-icons/fi';
 import styles from './MutualFundAnalytics.module.scss';
 const liveSwpSchema = {
   '@context': 'https://schema.org',
@@ -96,7 +97,14 @@ const liveSwpFaqs = [
       'Each monthly SWP installment redeems a fraction of mutual fund units. Only the capital appreciation portion of the redeemed units is taxed (First-In, First-Out basis), making SWP vastly more tax-efficient than interest-bearing deposits.',
   },
 ];
-const Chart = lazy(() => import('../components/Chart'));
+const Chart = dynamic(() => import('../components/Chart'), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.chartLoadingWrapper}>
+      <span className={styles.loadingSpinner}></span>
+    </div>
+  ),
+});
 const STORAGE_KEY = 'mutual_fund_swp_state';
 interface PinnedFund {
   schemeCode: string;
@@ -329,6 +337,9 @@ const SWP = ({
     investmentStepUp,
   ]);
   useEffect(() => {
+    if (!isFundSelectorOpen) {
+      return;
+    }
     const search = deferredSearchKey.trim();
     if (!search) {
       return;
@@ -354,7 +365,7 @@ const SWP = ({
       controller.abort();
       window.clearTimeout(timeout);
     };
-  }, [deferredSearchKey]);
+  }, [deferredSearchKey, isFundSelectorOpen]);
   const filterMfs = (funds: MFType[], filterKey: string): MFType[] => {
     let expression = filterKey;
     if (expression === 'Growth') {
@@ -743,7 +754,21 @@ const SWP = ({
           </span>
         </div>
         {!start || !end ? (
-          <div className={styles.statLoading}>Loading NAV data...</div>
+          <div className={styles.statCardSkeleton}>
+            <div className={styles.statLoading}>Loading NAV data...</div>
+            <div className={styles.skeletonRow}>
+              <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+              <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+            </div>
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
+            <div className={styles.skeletonValue} />
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
+            <div className={`${styles.skeletonValue} ${styles.skeletonValueLarge}`} />
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
+            <div className={styles.skeletonValue} />
+            <div className={styles.skeletonLine} />
+            <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+          </div>
         ) : (
           <>
             <div className={`${styles.navDatesRow} ${styles.navDatesRowSpaced}`}>
@@ -933,7 +958,7 @@ const SWP = ({
                 Select up to 8 funds to see comparison
               </div>
             ))}
-          {pinnedFunds.length > 0 && (
+          {pinnedFunds.length > 0 ? (
             <div className={styles.mfDisplayGrid}>
               {fundAnalyses.map((fund) => (
                 <div key={fund.schemeCode} className={styles.mfDisplayItem}>
@@ -954,6 +979,24 @@ const SWP = ({
                   )}
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className={styles.emptyStateCard}>
+              <div className={styles.emptyStateIcon}>
+                <FiTrendingUp />
+              </div>
+              <h3 className={styles.emptyStateTitle}>Select Mutual Funds to Backtest SWP</h3>
+              <p className={styles.emptyStateDescription}>
+                Compare historical monthly SWP cashflows, remaining portfolio values, and returns on live AMFI data.
+              </p>
+              <button
+                type="button"
+                className={styles.emptyStateBtn}
+                onClick={() => setIsFundSelectorOpen(true)}
+              >
+                <FiPlus />
+                <span>Add Mutual Fund</span>
+              </button>
             </div>
           )}
         </div>

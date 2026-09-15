@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import Script from 'next/script';
 import '@/index.scss';
 import AppClientLayout from '@/components/AppClientLayout';
 export const metadata: Metadata = {
@@ -143,20 +142,12 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" data-theme="fantasy" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://api.mfapi.in" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://api.mfapi.in" />
-        <link rel="preconnect" href="https://api.worldbank.org" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://api.worldbank.org" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
         />
       </head>
       <body suppressHydrationWarning>
-        <Script
-          src="https://accounts.google.com/gsi/client"
-          strategy="lazyOnload"
-        />
         <AppClientLayout>{children}</AppClientLayout>
         <noscript>
           <div className="noscriptContainer">

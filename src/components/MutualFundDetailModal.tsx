@@ -1,9 +1,17 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import Chart from './Chart';
+import dynamic from 'next/dynamic';
 import { NavType } from '../types/types';
 import { fetchMFWithMeta, MFMetaType } from '../data/api_data';
 import styles from './MutualFundDetailModal.module.scss';
+const Chart = dynamic(() => import('./Chart'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ width: '2rem', height: '2rem', borderRadius: '9999px', border: '3px solid rgba(110, 11, 117, 0.2)', borderTopColor: '#6e0b75', animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  ),
+});
 export interface DetailedFundItem {
   schemeCode: string;
   schemeName: string;

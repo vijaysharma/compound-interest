@@ -161,6 +161,9 @@ const getTodayDateString = () => new Date().toISOString().split('T')[0];
 const EmiCalculator: React.FC = () => {
   // Helper for localStorage
   const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
+    if (typeof window === 'undefined') {
+      return defaultValue;
+    }
     try {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;

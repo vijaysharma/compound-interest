@@ -126,6 +126,9 @@ const VALID_CATEGORIES: Set<string> = new Set([
   'Length', 'Weight', 'Temperature', 'Area', 'Volume', 'Speed', 'Data',
 ]);
 const getSavedState = (): SavedState => {
+  if (typeof window === 'undefined') {
+    return { category: 'Length', fromUnit: 'm', toUnit: 'ft', inputValue: '1' };
+  }
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {

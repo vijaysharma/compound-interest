@@ -33,8 +33,27 @@ interface SavedDateState {
   addOrSub: 'add' | 'subtract';
   isAddSubInclusive: boolean;
 }
+const getDefaultDateState = (today: string): SavedDateState => ({
+  mode: 'difference',
+  startDate: today,
+  startTime: '00:00',
+  endDate: today,
+  endTime: '00:00',
+  isInclusive: false,
+  baseDate: today,
+  baseTime: '00:00',
+  years: 0,
+  months: 0,
+  days: 0,
+  hours: 0,
+  addOrSub: 'add',
+  isAddSubInclusive: false,
+});
 const getSavedDateState = (): SavedDateState => {
   const today = getTodayISO();
+  if (typeof window === 'undefined') {
+    return getDefaultDateState(today);
+  }
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -61,22 +80,7 @@ const getSavedDateState = (): SavedDateState => {
   } catch (err) {
     console.warn('Failed to load date calculator state:', err);
   }
-  return {
-    mode: 'difference',
-    startDate: today,
-    startTime: '00:00',
-    endDate: today,
-    endTime: '00:00',
-    isInclusive: false,
-    baseDate: today,
-    baseTime: '00:00',
-    years: 0,
-    months: 0,
-    days: 0,
-    hours: 0,
-    addOrSub: 'add',
-    isAddSubInclusive: false,
-  };
+  return getDefaultDateState(today);
 };
 const DateCalculator: React.FC = () => {
   const [saved] = useState<SavedDateState>(getSavedDateState);

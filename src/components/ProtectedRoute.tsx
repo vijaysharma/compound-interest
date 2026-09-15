@@ -34,8 +34,13 @@ const ProtectedRoute = ({
       void trackUsage(true);
     }
   }, [mounted, isAuthenticated, user?.first_used_at, isAdmin, trackUsage]);
-  if (!mounted || loading) {
-    return <LoadingFallback />;
+  if (requireAdmin || requirePaid) {
+    if (!mounted || loading) {
+      return <LoadingFallback />;
+    }
+  }
+  if (!mounted) {
+    return <>{children}</>;
   }
   // 1. Admin-only Route Check
   if (requireAdmin) {

@@ -47,6 +47,7 @@
   flex-direction: column;
   gap: 0.625rem;
   min-width: 0;
+  min-height: 480px;
 }
 
 .header {
@@ -314,11 +315,15 @@
   width: 100%;
   gap: 0.5rem;
   padding-bottom: 0.75rem;
+  min-height: 480px;
 }
 
 .mfDisplayItem {
   padding: 0.375rem;
   min-width: 0;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
   background-color: var(--color-base-100);
   border: 1px solid var(--color-base-300);
   border-radius: var(--radius-card, 0.5rem);
@@ -343,6 +348,8 @@
   align-items: center;
   text-align: center;
   width: 100%;
+  min-height: 460px;
+  flex: 1;
   font-size: 0.75rem;
 
   &LeadingNone {
@@ -442,4 +449,132 @@
 
 .textError {
   color: var(--color-error);
+}
+
+.statCardSkeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.5rem;
+  flex: 1;
+
+  .skeletonRow {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .skeletonLine {
+    height: 0.75rem;
+    width: 60%;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-base-content) 8%, transparent) 25%,
+      color-mix(in srgb, var(--color-base-content) 16%, transparent) 37%,
+      color-mix(in srgb, var(--color-base-content) 8%, transparent) 63%
+    );
+    background-size: 400% 100%;
+    animation: mfSkeletonShimmer 1.4s ease infinite;
+  }
+
+  .skeletonLineShort {
+    width: 40%;
+  }
+
+  .skeletonLineTiny {
+    width: 25%;
+    height: 0.625rem;
+  }
+
+  .skeletonValue {
+    height: 1.5rem;
+    width: 70%;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-base-content) 8%, transparent) 25%,
+      color-mix(in srgb, var(--color-base-content) 16%, transparent) 37%,
+      color-mix(in srgb, var(--color-base-content) 8%, transparent) 63%
+    );
+    background-size: 400% 100%;
+    animation: mfSkeletonShimmer 1.4s ease infinite;
+  }
+
+  .skeletonValueLarge {
+    height: 1.75rem;
+    width: 80%;
+  }
+}
+
+@keyframes mfSkeletonShimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.emptyStateCard {
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background-color: var(--color-base-100);
+  border: 1px dashed var(--color-base-300);
+  border-radius: var(--radius-card, 0.75rem);
+}
+
+.emptyStateIcon {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.emptyStateTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--color-base-content);
+}
+
+.emptyStateDescription {
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--color-base-content) 70%, transparent);
+  max-width: 24rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.emptyStateBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-field, 0.375rem);
+  border: 1px solid var(--color-primary);
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
 }
