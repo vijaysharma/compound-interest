@@ -28,12 +28,12 @@ export default function NotFound() {
             width: '64px',
             height: '64px',
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+            background: 'linear-gradient(135deg, var(--color-primary, #6d0b74) 0%, var(--color-secondary, #9c27b0) 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 20px',
-            boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.25)',
+            boxShadow: '0 10px 15px -3px rgba(109, 11, 116, 0.25)',
           }}
         >
           <span style={{ color: '#ffffff', fontSize: '28px', fontWeight: 800 }}>₹</span>
@@ -44,8 +44,8 @@ export default function NotFound() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#eff6ff',
-            color: '#2563eb',
+            backgroundColor: 'var(--color-primary-light, #f6edf7)',
+            color: 'var(--color-primary, #6d0b74)',
             padding: '4px 12px',
             borderRadius: '9999px',
             fontSize: '0.75rem',
@@ -61,7 +61,7 @@ export default function NotFound() {
           style={{
             fontSize: '1.75rem',
             fontWeight: 800,
-            color: 'var(--text-primary, #0f172a)',
+            color: 'var(--color-text-primary, #212121)',
             margin: '0 0 12px',
             lineHeight: 1.25,
           }}
@@ -71,7 +71,7 @@ export default function NotFound() {
         <p
           style={{
             fontSize: '0.925rem',
-            color: 'var(--text-muted, #64748b)',
+            color: 'var(--color-text-muted, #757575)',
             lineHeight: 1.6,
             margin: '0 0 24px',
           }}
@@ -91,17 +91,17 @@ export default function NotFound() {
           <Link
             href="/"
             style={{
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
+              backgroundColor: 'var(--color-primary, #6d0b74)',
+              color: 'var(--color-primary-content, #ffffff)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-btn, 8px)',
               padding: '10px 22px',
               fontSize: '0.875rem',
               fontWeight: 600,
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
-              boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
+              boxShadow: '0 4px 6px -1px rgba(109, 11, 116, 0.25)',
             }}
           >
             Return to Home
@@ -110,7 +110,7 @@ export default function NotFound() {
         {/* Quick Nav */}
         <div
           style={{
-            borderTop: '1px solid var(--border-color, #e2e8f0)',
+            borderTop: '1px solid var(--color-border, #e2e8f0)',
             paddingTop: '20px',
             textAlign: 'left',
           }}
@@ -120,7 +120,7 @@ export default function NotFound() {
               display: 'block',
               fontSize: '0.75rem',
               fontWeight: 700,
-              color: 'var(--text-muted, #64748b)',
+              color: 'var(--color-text-muted, #757575)',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               marginBottom: '10px',
@@ -139,9 +139,9 @@ export default function NotFound() {
               href="/mutual-funds/lumpsum"
               style={{
                 fontSize: '0.825rem',
-                color: '#2563eb',
+                color: 'var(--color-primary, #6d0b74)',
                 textDecoration: 'none',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
               • Mutual Fund Lumpsum
@@ -150,9 +150,9 @@ export default function NotFound() {
               href="/sip-calculator"
               style={{
                 fontSize: '0.825rem',
-                color: '#2563eb',
+                color: 'var(--color-primary, #6d0b74)',
                 textDecoration: 'none',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
               • SIP Calculator
@@ -161,9 +161,9 @@ export default function NotFound() {
               href="/emi-calculator"
               style={{
                 fontSize: '0.825rem',
-                color: '#2563eb',
+                color: 'var(--color-primary, #6d0b74)',
                 textDecoration: 'none',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
               • EMI Calculator
@@ -172,9 +172,9 @@ export default function NotFound() {
               href="/income-tax-calculator"
               style={{
                 fontSize: '0.825rem',
-                color: '#2563eb',
+                color: 'var(--color-primary, #6d0b74)',
                 textDecoration: 'none',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
               • Income Tax Calculator

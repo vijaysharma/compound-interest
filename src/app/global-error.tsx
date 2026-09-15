@@ -42,11 +42,12 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               width: '64px',
               height: '64px',
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+              background: 'linear-gradient(135deg, #6d0b74 0%, #9c27b0 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 20px',
+              boxShadow: '0 10px 15px -3px rgba(109, 11, 116, 0.25)',
             }}
           >
             <span style={{ color: '#ffffff', fontSize: '28px', fontWeight: 800 }}>₹</span>
@@ -55,7 +56,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             style={{
               fontSize: '1.75rem',
               fontWeight: 800,
-              color: '#0f172a',
+              color: '#212121',
               margin: '0 0 12px',
             }}
           >
@@ -64,7 +65,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
           <p
             style={{
               fontSize: '0.925rem',
-              color: '#64748b',
+              color: '#757575',
               lineHeight: 1.6,
               margin: '0 0 24px',
             }}
@@ -76,7 +77,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               type="button"
               onClick={reset}
               style={{
-                backgroundColor: '#2563eb',
+                backgroundColor: '#6d0b74',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
@@ -84,6 +85,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 fontSize: '0.875rem',
                 fontWeight: 600,
                 cursor: 'pointer',
+                boxShadow: '0 4px 6px -1px rgba(109, 11, 116, 0.2)',
               }}
             >
               Reload Page
