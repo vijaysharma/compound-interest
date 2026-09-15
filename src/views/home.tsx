@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import Link from '../components/PrefetchLink';
 import ValuePicker from '../components/ValuePicker';
+import { DEFAULT_RATE_STEPS } from '../data/valuePickerData';
 import {
   FiBarChart2,
   FiCalendar,
@@ -238,9 +239,15 @@ const Home = () => {
                 ]}
               />
               <ValuePicker
-                variant="roi"
-                title="Expected Annual Return (CAGR %)"
+                title="Expected Annual Return"
+                symbol="%"
                 value={expectedRoi}
+                min={1}
+                max={30}
+                defaultStep={1}
+                stepData={DEFAULT_RATE_STEPS}
+                singleRow={true}
+                showWords={false}
                 onChange={(v) => {
                   const num = Math.max(0, parseFloat(v) || 0);
                   setExpectedRoi(num);
@@ -251,13 +258,25 @@ const Home = () => {
                     num
                   );
                 }}
-                min={1}
-                max={30}
               />
               <ValuePicker
-                variant="tenure"
                 title="Investment Horizon"
-                value={tenureYears.toString()}
+                symbol="Yr"
+                symbolPosition="right"
+                value={tenureYears}
+                min={1}
+                max={40}
+                defaultStep={1}
+                stepData={[
+                  { id: 't5', label: '5Y', value: 5 },
+                  { id: 't10', label: '10Y', value: 10 },
+                  { id: 't15', label: '15Y', value: 15 },
+                  { id: 't20', label: '20Y', value: 20 },
+                  { id: 't25', label: '25Y', value: 25 },
+                  { id: 't30', label: '30Y', value: 30 },
+                ]}
+                singleRow={true}
+                showWords={false}
                 onChange={(v) => {
                   const num = Math.max(1, parseInt(v, 10) || 1);
                   setTenureYears(num);
@@ -268,12 +287,6 @@ const Home = () => {
                     num
                   );
                 }}
-                unit="y"
-                units={[{ id: 'y', label: 'Y', title: 'Years' }]}
-                min={1}
-                max={40}
-                tenureDecSteps={[-5, -1]}
-                tenureIncSteps={[1, 5]}
               />
             </div>
             {/* Live Result Card */}

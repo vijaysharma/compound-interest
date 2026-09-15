@@ -270,11 +270,15 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               showWords={false}
             />
             <ValuePicker
-              variant="roi"
               className={styles.field}
+              title="Inflation rate"
+              symbol="%"
               value={irt}
+              stepData={DEFAULT_RATE_STEPS}
+              singleRow={true}
+              defaultStep={0.5}
+              showWords={false}
               onChange={setIRt}
-              title="Inflation rate (%)"
             />
             <JoinedButtonGroup
               title="Inflation calculated per"

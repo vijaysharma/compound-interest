@@ -258,16 +258,25 @@ const NpsCalculator: React.FC = () => {
             </h2>
             <div className={styles.fieldGroup}>
               <ValuePicker
-                variant="roi"
                 title="Annuity Allocation Share (PFRDA Min 40%)"
+                symbol="%"
                 value={annuityPercent}
+                min={40}
+                max={100}
+                defaultStep={5}
+                stepData={[
+                  { id: 'a40', label: '40%', value: 40 },
+                  { id: 'a50', label: '50%', value: 50 },
+                  { id: 'a60', label: '60%', value: 60 },
+                  { id: 'a80', label: '80%', value: 80 },
+                  { id: 'a100', label: '100%', value: 100 },
+                ]}
+                singleRow={true}
+                showWords={false}
                 onChange={(v) => {
                   const num = parseInt(v, 10) || 40;
                   setAnnuityPercent(Math.min(100, Math.max(40, num)));
                 }}
-                min={40}
-                max={100}
-                roiSteps={[5, 10, 20]}
               />
               <p className={styles.annuitySplitNote}>
                 {annuityPercent}% Annuity / {100 - annuityPercent}% Lump Sum
@@ -275,12 +284,16 @@ const NpsCalculator: React.FC = () => {
             </div>
             <div className={styles.fieldGroup}>
               <ValuePicker
-                variant="roi"
                 title="Expected Annuity Return Rate (Pension Yield %)"
+                symbol="%"
                 value={annuityRate}
-                onChange={(v) => setAnnuityRate(parseFloat(v) || 6.0)}
                 min={1}
                 max={15}
+                defaultStep={0.5}
+                stepData={DEFAULT_RATE_STEPS}
+                singleRow={true}
+                showWords={false}
+                onChange={(v) => setAnnuityRate(parseFloat(v) || 6.0)}
               />
             </div>
           </section>

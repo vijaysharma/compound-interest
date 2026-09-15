@@ -11,42 +11,26 @@ import React, {
 import styles from './ValuePicker.module.scss';
 import convertToWords from '../utilities/currency';
 import { sanctnum } from '../utilities/numSanitity';
-import { getDateAsISO } from '../utilities/utility';
-import type { RT, NavType } from '../types/types';
 import {
   DEFAULT_VALUE_PICKER_ROWS,
   DEFAULT_VALUE_PICKER_TABS,
-  DEFAULT_ROI_STEPS,
-  DEFAULT_TENURE_DECREMENT_STEPS,
-  DEFAULT_TENURE_INCREMENT_STEPS,
-  DEFAULT_TENURE_UNITS,
-  DEFAULT_DURATION_MATRIX_ROWS,
   type ValuePickerStep,
   type ValuePickerTab,
-  type GridItem,
 } from '../data/valuePickerData';
-export type ValuePickerVariant =
-  | 'amount'
-  | 'roi'
-  | 'tenure'
-  | 'paired'
-  | 'stacked-paired'
-  | 'date-range'
-  | 'grid';
-export interface ValuePickerProps {
+import { PairedPicker, type PairedPickerProps } from './PairedPicker';
+import { DateRangePicker, type DateRangePickerProps } from './DateRangePicker';
+export type ValuePickerVariant = 'amount' | 'value' | 'paired' | 'stacked-paired' | 'date-range';
+export interface ValuePickerProps
+  extends Omit<PairedPickerProps, 'variant'>,
+    Omit<DateRangePickerProps, 'variant'> {
   /**
    * Component variant to render:
-   * - 'amount': Classic currency amount with tabs, badge, and quick step buttons
-   * - 'roi': Rate of interest stepper with + / - mode and customizable decimal steps
-   * - 'tenure': Tenure duration stepper with decrement, increment, and M/Y units
-   * - 'paired': Paired source-target selector bar with purple badges and slots
-   * - 'stacked-paired': As 'paired', but the two halves are full-width rows in
-   *   one joined box. For slots wider than a single input, such as a stepper.
-   * - 'date-range': Start-end date range selector with purple badges and date inputs
-   * - 'grid': Multi-row duration matrix grid with purple borders and selection highlight
+   * - 'amount' | 'value' (default): Generic numeric value picker with quick steps, steppers, and formatters
+   * - 'paired' | 'stacked-paired': Dual slot selector for source/target pairs
+   * - 'date-range': Start and end date range selector
    */
   variant?: ValuePickerVariant;
-  // --- Common / Amount Props ---
+  // --- Common / Value Props ---
   value?: string | number;
   inputAmount?: string | number;
   onChange?: (val: string) => void;
@@ -60,11 +44,9 @@ export interface ValuePickerProps {
   setType?: React.Dispatch<React.SetStateAction<string>> | ((tabId: string) => void);
   title?: string;
   /**
-   * Controls how the `title` is rendered for the 'amount' variant only:
-   * - 'default': plain heading text sitting above the card (existing look)
-   * - 'merged': title becomes a solid badge bar fused to the top of the card,
-   *   uppercase, with no gap between the title and the card below it
-   * Has no effect on any other variant.
+   * Controls how the `title` is rendered:
+   * - 'default': plain heading text sitting above the card
+   * - 'merged': title becomes a solid badge bar fused to the top of the card
    */
   titleStyle?: 'default' | 'merged';
   stepRows?: ValuePickerStep[][] | ValuePickerStep[];
@@ -73,28 +55,11 @@ export interface ValuePickerProps {
   stepSizePrefix?: string;
   typeSizePrefix?: string;
   compact?: boolean;
-  /**
-   * Render the control for placement inside a ValuePicker.Paired slot: drops
-   * the outer margins, the joined row's own border and radius, and the title,
-   * since the paired badge already labels it.
-   */
   embedded?: boolean;
   symbol?: string | null;
   /** Backwards compatibility alias for `symbol` */
   currencySymbol?: string | null;
-  /**
-   * Which side of the input field the `symbol` badge sits on, for the
-   * 'amount' variant only. Defaults to 'left' (existing look).
-   */
   symbolPosition?: 'left' | 'right';
-  /**
-   * Extra control rendered to the right of the input field, after the
-   * `symbol` badge if one is present there (i.e. always directly
-   * after the field + symbol cluster, before the C / + / - actions).
-   * Pass any element with its own state and handler already wired up —
-   * e.g. a dropdown or radio group to switch between months and years.
-   * 'amount' variant only.
-   */
   symbolBg?: boolean;
   endAdornment?: React.ReactNode;
   locale?: string;
@@ -108,50 +73,6 @@ export interface ValuePickerProps {
   readOnly?: boolean;
   layout?: 'auto' | 'mobile' | 'desktop';
   placeholder?: string;
-  // --- Rate of Interest (ROI) Props ---
-  roiSteps?: number[];
-  rt?: RT;
-  setRt?: React.Dispatch<React.SetStateAction<RT>> | ((rt: RT) => void);
-  // --- Tenure Props ---
-  tenureDecSteps?: number[];
-  tenureIncSteps?: number[];
-  unit?: 'm' | 'y';
-  onUnitChange?: (unit: 'm' | 'y') => void;
-  units?: Array<{ id: string; label: string; title?: string }>;
-  // --- Paired / Dual Endpoint Props ---
-  sourceBadgeText?: string;
-  targetBadgeText?: string;
-  sourceSlot?: React.ReactNode;
-  targetSlot?: React.ReactNode;
-  sourceValue?: string;
-  targetValue?: string;
-  onSourceChange?: (val: string) => void;
-  onTargetChange?: (val: string) => void;
-  sourceOptions?: Array<{ label: string; value: string }>;
-  targetOptions?: Array<{ label: string; value: string }>;
-  sourcePlaceholder?: string;
-  targetPlaceholder?: string;
-  // --- Date Range Props ---
-  startDate?: string | null;
-  endDate?: string | null;
-  setStartDate?: (date: string) => void;
-  setEndDate?: (date: string) => void;
-  startBadgeText?: string;
-  endBadgeText?: string;
-  startMinDate?: string;
-  dateMode?: 'date' | 'year';
-  startOptions?: string[];
-  endOptions?: string[];
-  startYearOptions?: string[];
-  endYearOptions?: string[];
-  navData?: NavType[];
-  data?: NavType[];
-  startTitle?: string;
-  endTitle?: string;
-  // --- Duration Grid Props ---
-  gridRows?: GridItem[][];
-  selectedGridId?: string;
-  onGridSelect?: (item: GridItem) => void;
 }
 // Maximum safe numeric limit for financial calculations (prevents overflow/DoS)
 const MAX_SAFE_FINANCIAL_VALUE = 1e12; // 1 Lakh Crore
@@ -197,9 +118,9 @@ function normalizeStepRows(
   return DEFAULT_VALUE_PICKER_ROWS;
 }
 // =============================================================================
-// VARIANT: Amount (Default, highly responsive and decimal-safe)
+// GENERIC VALUE PICKER (Handles amount, rate, tenure, count, currency, % etc.)
 // =============================================================================
-const AmountPicker: React.FC<ValuePickerProps> = React.memo(
+const GenericValuePicker: React.FC<ValuePickerProps> = React.memo(
   ({
     value,
     inputAmount,
@@ -225,7 +146,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
     locale = 'en-IN',
     min = 0,
     max,
-    defaultStep = 500,
+    defaultStep,
     showWords = true,
     allowDecimals,
     className = '',
@@ -237,7 +158,8 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
     placeholder,
   }) => {
     const componentId = useId();
-    const effectiveSymbol = symbol !== undefined ? symbol : currencySymbol !== undefined ? currencySymbol : '₹';
+    const effectiveSymbol =
+      symbol !== undefined ? symbol : currencySymbol !== undefined ? currencySymbol : '₹';
     const effectiveValue =
       value !== undefined ? value : inputAmount !== undefined ? inputAmount : '0';
     const effectiveOnChange = useMemo(
@@ -247,13 +169,15 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
     // Determine if decimals should be permitted (e.g. Rate/ROI, or explicit allowDecimals)
     const supportsDecimals = Boolean(
       allowDecimals ||
-        effectiveSymbol === '%' ||
-        title?.toLowerCase().includes('rate') ||
-        title?.toLowerCase().includes('roi') ||
-        (typeof effectiveValue === 'string' && effectiveValue.includes('.')) ||
-        (typeof effectiveValue === 'number' && !Number.isInteger(effectiveValue)) ||
-        (stepData && stepData.some((s) => Number(s.value) % 1 !== 0))
+      effectiveSymbol === '%' ||
+      title?.toLowerCase().includes('rate') ||
+      title?.toLowerCase().includes('roi') ||
+      (typeof effectiveValue === 'string' && effectiveValue.includes('.')) ||
+      (typeof effectiveValue === 'number' && !Number.isInteger(effectiveValue)) ||
+      (stepData && stepData.some((s) => Number(s.value) % 1 !== 0))
     );
+    const effectiveDefaultStep =
+      defaultStep !== undefined ? defaultStep : supportsDecimals ? 0.5 : 500;
     const safeMax = max !== undefined ? max : MAX_SAFE_FINANCIAL_VALUE;
     // Resolve tabs
     const providedTabs = tabs !== undefined ? tabs : typeData;
@@ -281,15 +205,22 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
       const parsed = sanctnum(effectiveValue, min, safeMax);
       return Number.isFinite(parsed) ? parsed : min;
     }, [effectiveValue, min, safeMax]);
-    // Words display memoized and protected with try-catch
+    // Words display: only show words for Indian Rupee amounts (not for % or tenure)
     const wordsText = useMemo(() => {
-      if (!showWords || numericValue <= 0 || numericValue > 999999999999) return '';
+      const shouldShowWords =
+        showWords &&
+        effectiveSymbol === '₹' &&
+        !supportsDecimals &&
+        !title?.toLowerCase().includes('rate') &&
+        !title?.toLowerCase().includes('roi') &&
+        !title?.toLowerCase().includes('tenure');
+      if (!shouldShowWords || numericValue <= 0 || numericValue > 999999999999) return '';
       try {
         return convertToWords(numericValue, locale);
       } catch {
         return '';
       }
-    }, [showWords, numericValue, locale]);
+    }, [showWords, effectiveSymbol, supportsDecimals, title, numericValue, locale]);
     // Normalize step rows
     const resolvedStepRows = useMemo(
       () => normalizeStepRows(stepRows, stepData, singleRow),
@@ -311,7 +242,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
         }
       };
     }, []);
-    // Notify parent with React.startTransition so typing is never blocked by expensive parent trees
+    // Notify parent with React.startTransition so typing is never blocked
     const dispatchChange = useCallback((valStr: string, immediate = false) => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -369,7 +300,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
       if (operation === '-') {
         setOperation('+');
       } else {
-        applyNumericUpdate(sanctnum(effectiveValue, min, safeMax) + defaultStep, true);
+        applyNumericUpdate(sanctnum(effectiveValue, min, safeMax) + effectiveDefaultStep, true);
       }
     };
     const handleMinusClick = () => {
@@ -377,7 +308,10 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
       if (operation === '+') {
         setOperation('-');
       } else {
-        applyNumericUpdate(Math.max(min, sanctnum(effectiveValue, min, safeMax) - defaultStep), true);
+        applyNumericUpdate(
+          Math.max(min, sanctnum(effectiveValue, min, safeMax) - effectiveDefaultStep),
+          true
+        );
       }
     };
     // Direct input editing with instant local response and cursor preservation
@@ -389,11 +323,10 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
       if (rawValue.length > MAX_RAW_INPUT_LENGTH + 5) return;
       const cursor = input.selectionStart ?? rawValue.length;
       if (supportsDecimals) {
-        // Allow numbers with decimal point
         const sanitized = rawValue.replace(/[^0-9.]/g, '');
-        // Allow at most one decimal point
         const parts = sanitized.split('.');
-        const cleanDecimalStr = parts.length > 1 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
+        const cleanDecimalStr =
+          parts.length > 1 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
         if (cleanDecimalStr === '' || cleanDecimalStr === '.') {
           setLocalInput(cleanDecimalStr);
           dispatchChange(min.toString(), false);
@@ -444,17 +377,19 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
       if (disabled || readOnly) return;
       if (e.key === 'Enter') {
         e.preventDefault();
-        // Immediately flush pending changes
         const currentVal = sanctnum(localInput || effectiveValue, min, safeMax);
         dispatchChange(currentVal.toString(), true);
         return;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        applyNumericUpdate(sanctnum(effectiveValue, min, safeMax) + defaultStep, true);
+        applyNumericUpdate(sanctnum(effectiveValue, min, safeMax) + effectiveDefaultStep, true);
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        applyNumericUpdate(Math.max(min, sanctnum(effectiveValue, min, safeMax) - defaultStep), true);
+        applyNumericUpdate(
+          Math.max(min, sanctnum(effectiveValue, min, safeMax) - effectiveDefaultStep),
+          true
+        );
       } else if (e.key.toLowerCase() === 'c' && e.altKey) {
         e.preventDefault();
         handleClear();
@@ -470,13 +405,14 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
     };
     const handleBlur = () => {
       setIsFocused(false);
-      // Immediately flush and sanitize on blur
       if (localInput === '' || localInput === '.') {
         dispatchChange(min.toString(), true);
         setLocalInput(min === 0 ? '0' : min.toLocaleString(locale));
         return;
       }
-      const parsed = supportsDecimals ? parseFloat(localInput) : parseInt(localInput.replace(/[^0-9]/g, ''), 10);
+      const parsed = supportsDecimals
+        ? parseFloat(localInput)
+        : parseInt(localInput.replace(/[^0-9]/g, ''), 10);
       const finalVal = Number.isFinite(parsed) ? Math.min(safeMax, Math.max(min, parsed)) : min;
       dispatchChange(finalVal.toString(), true);
       setLocalInput(supportsDecimals ? String(finalVal) : finalVal.toLocaleString(locale));
@@ -501,7 +437,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
         <div className={`${styles.card} ${isMergedTitle ? styles.cardWithMergedTitle : ''}`.trim()}>
           {isMergedTitle && <div className={styles.titleBar}>{title}</div>}
           {resolvedTabs && resolvedTabs.length > 0 && (
-            <div className={styles.tabsHeader} role="tablist" aria-label="Amount type switcher">
+            <div className={styles.tabsHeader} role="tablist" aria-label="Value type switcher">
               {resolvedTabs.map((tab) => {
                 const tabIdentifier = tab.value !== undefined ? tab.value : tab.id;
                 const isActive = currentTab === tabIdentifier || currentTab === tab.id;
@@ -550,7 +486,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
                 aria-label={
                   title ||
                   resolvedTabs?.find((t) => t.id === currentTab || t.value === currentTab)?.title ||
-                  'Amount'
+                  'Value'
                 }
               />
             </div>
@@ -569,8 +505,8 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
                 className={`${styles.actionBtn} ${styles.clearBtn}`}
                 onClick={handleClear}
                 disabled={disabled || numericValue === min}
-                title="Clear amount (C)"
-                aria-label="Clear amount"
+                title="Clear value (C)"
+                aria-label="Clear value"
               >
                 C
               </button>
@@ -579,8 +515,8 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
                 className={`${styles.actionBtn} ${styles.plusBtn} ${operation === '+' ? styles.activeOp : ''}`}
                 onClick={handlePlusClick}
                 disabled={disabled}
-                title={operation === '+' ? `Add ${defaultStep}` : 'Switch to add mode (+)'}
-                aria-label="Add amount"
+                title={operation === '+' ? `Add ${effectiveDefaultStep}` : 'Switch to add mode (+)'}
+                aria-label="Add value"
               >
                 +
               </button>
@@ -589,8 +525,12 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
                 className={`${styles.actionBtn} ${styles.minusBtn} ${operation === '-' ? styles.activeOp : ''}`}
                 onClick={handleMinusClick}
                 disabled={disabled || numericValue <= 0}
-                title={operation === '-' ? `Subtract ${defaultStep}` : 'Switch to subtract mode (-)'}
-                aria-label="Subtract amount"
+                title={
+                  operation === '-'
+                    ? `Subtract ${effectiveDefaultStep}`
+                    : 'Switch to subtract mode (-)'
+                }
+                aria-label="Subtract value"
               >
                 -
               </button>
@@ -628,7 +568,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
             </div>
           )}
         </div>
-        {showWords && wordsText && (
+        {wordsText && (
           <div className={styles.wordsDisplay} aria-live="polite">
             {wordsText}
           </div>
@@ -637,658 +577,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
     );
   }
 );
-AmountPicker.displayName = 'AmountPicker';
-// =============================================================================
-// VARIANT: ROI (Rate of Interest Stepper)
-// =============================================================================
-const RoiPicker: React.FC<ValuePickerProps> = React.memo(
-  ({
-    rt,
-    setRt,
-    value,
-    onChange,
-    setInputAmount,
-    roiSteps = DEFAULT_ROI_STEPS,
-    title,
-    min = 0,
-    max = 100,
-    disabled = false,
-    readOnly = false,
-    placeholder = '0',
-    className = '',
-    compact = false,
-    embedded = false,
-    layout = 'auto',
-  }) => {
-    const [roiOp, setRoiOp] = useState<'+' | '-'>('+');
-    const effectiveValue = value !== undefined ? value : '0';
-    const roiValStr = rt
-      ? rt.roi !== undefined && rt.roi !== null
-        ? String(rt.roi)
-        : '0'
-      : String(effectiveValue);
-    const updateRoi = useCallback(
-      (newRoi: string) => {
-        if (rt && setRt) {
-          setRt({ ...rt, roi: newRoi });
-        } else if (onChange) {
-          onChange(newRoi);
-        } else if (setInputAmount) {
-          setInputAmount(newRoi);
-        }
-      },
-      [rt, setRt, onChange, setInputAmount]
-    );
-    const handleRoiStep = (stepAmt: number) => {
-      if (disabled) return;
-      let curr = parseFloat(roiValStr);
-      if (!Number.isFinite(curr)) curr = 0;
-      if (roiOp === '+') {
-        curr += stepAmt;
-      } else {
-        curr -= stepAmt;
-        if (curr <= min) {
-          updateRoi(min.toString());
-          setRoiOp('+');
-          return;
-        }
-      }
-      const clamped = Math.min(max, Math.max(min, curr));
-      const rounded = Math.round((clamped + Number.EPSILON) * 100) / 100;
-      updateRoi(`${rounded}`);
-    };
-    const handleRoiInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (disabled || readOnly) return;
-      const iv = e.target.value;
-      if (iv === '' || iv === '.') {
-        updateRoi(iv);
-        return;
-      }
-      const num = parseFloat(iv);
-      if (!Number.isFinite(num)) {
-        updateRoi('0');
-        return;
-      }
-      if (num < 0) {
-        setRoiOp('+');
-        return;
-      }
-      const clamped = Math.min(max, num);
-      updateRoi(iv.length > 5 ? `${clamped}` : iv);
-    };
-    const layoutClass =
-      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
-    const compactClass = compact ? styles.compact : '';
-    const embeddedClass = embedded ? styles.embedded : '';
-    const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
-    return (
-      <div className={rootContainerClass}>
-        {!embedded && (
-          <h5 className={`${styles.title} ${styles.titleCenter}`}>
-            {title || 'Rate of Interest (%)'}
-          </h5>
-        )}
-        <div className={styles.joinedRow}>
-          {roiSteps.map((step) => (
-            <button
-              key={`roi-step-${step}`}
-              type="button"
-              className={styles.stepperBtn}
-              onClick={() => handleRoiStep(step)}
-              disabled={disabled}
-              aria-label={`Change ROI by ${step}%`}
-            >
-              {step}
-            </button>
-          ))}
-          <div className={styles.joinedInputWrapper}>
-            <input
-              type="number"
-              placeholder={placeholder}
-              min={min}
-              max={max}
-              step="any"
-              className={styles.joinedInputField}
-              value={roiValStr}
-              disabled={disabled}
-              readOnly={readOnly}
-              onChange={handleRoiInputChange}
-              aria-label={title || 'Rate of Interest'}
-            />
-          </div>
-          <button
-            type="button"
-            className={`${styles.opBtn} ${roiOp === '+' ? styles.activeOp : ''}`}
-            onClick={() => setRoiOp('+')}
-            disabled={disabled}
-            title="Add mode (+)"
-            aria-label="Add mode"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className={`${styles.opBtn} ${roiOp === '-' ? styles.activeOp : ''}`}
-            onClick={() => setRoiOp('-')}
-            disabled={disabled || roiValStr === '0' || parseFloat(roiValStr) <= 0}
-            title="Subtract mode (-)"
-            aria-label="Subtract mode"
-          >
-            -
-          </button>
-        </div>
-      </div>
-    );
-  }
-);
-RoiPicker.displayName = 'RoiPicker';
-// =============================================================================
-// VARIANT: Tenure (Duration Stepper)
-// =============================================================================
-const TenurePicker: React.FC<ValuePickerProps> = React.memo(
-  ({
-    rt,
-    setRt,
-    value,
-    onChange,
-    setInputAmount,
-    tenureDecSteps = DEFAULT_TENURE_DECREMENT_STEPS,
-    tenureIncSteps = DEFAULT_TENURE_INCREMENT_STEPS,
-    unit,
-    onUnitChange,
-    units = DEFAULT_TENURE_UNITS,
-    title,
-    min = 0,
-    max = 100,
-    disabled = false,
-    readOnly = false,
-    placeholder = '0',
-    className = '',
-    compact = false,
-    embedded = false,
-    layout = 'auto',
-  }) => {
-    const effectiveValue = value !== undefined ? value : '0';
-    const tenureValStr = rt
-      ? rt.tenure !== undefined && rt.tenure !== null
-        ? String(rt.tenure)
-        : '0'
-      : String(effectiveValue);
-    const effectiveUnit = rt ? rt.tenureFormat : unit || 'y';
-    const updateTenure = useCallback(
-      (newTenure: string) => {
-        if (rt && setRt) {
-          setRt({ ...rt, tenure: newTenure });
-        } else if (onChange) {
-          onChange(newTenure);
-        } else if (setInputAmount) {
-          setInputAmount(newTenure);
-        }
-      },
-      [rt, setRt, onChange, setInputAmount]
-    );
-    const handleTenureStep = (stepDelta: number) => {
-      if (disabled) return;
-      let curr = parseInt(tenureValStr, 10);
-      if (!Number.isFinite(curr)) curr = 0;
-      curr += stepDelta;
-      if (curr <= min) {
-        updateTenure(min.toString());
-        return;
-      }
-      const clamped = Math.min(max, curr);
-      updateTenure(`${clamped}`);
-    };
-    const handleTenureInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (disabled || readOnly) return;
-      const iv = e.target.value;
-      if (iv === '') {
-        updateTenure('');
-        return;
-      }
-      const parsed = parseInt(iv, 10);
-      if (Number.isNaN(parsed)) {
-        updateTenure('0');
-        return;
-      }
-      const clamped = Math.min(max, Math.max(min, parsed));
-      updateTenure(`${clamped}`);
-    };
-    const handleUnitSwitch = (newUnit: 'm' | 'y') => {
-      if (disabled || newUnit === effectiveUnit) return;
-      if (rt && setRt) {
-        const rawNum = parseInt(rt.tenure, 10) || 0;
-        const converted =
-          newUnit === 'm' ? `${Math.round(rawNum * 12)}` : `${Math.round(rawNum / 12)}`;
-        setRt({
-          ...rt,
-          tenure: converted,
-          tenureFormat: newUnit,
-        });
-      }
-      onUnitChange?.(newUnit);
-    };
-    const layoutClass =
-      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
-    const compactClass = compact ? styles.compact : '';
-    const embeddedClass = embedded ? styles.embedded : '';
-    const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
-    return (
-      <div className={rootContainerClass}>
-        {!embedded && (
-          <h5 className={`${styles.title} ${styles.titleCenter}`}>{title || 'Tenure'}</h5>
-        )}
-        <div className={styles.joinedRow}>
-          {tenureDecSteps.map((step) => (
-            <button
-              key={`tenure-dec-${step}`}
-              type="button"
-              className={styles.stepperBtn}
-              onClick={() => handleTenureStep(step)}
-              disabled={disabled}
-              aria-label={`Decrease tenure by ${Math.abs(step)}`}
-            >
-              {step > 0 ? `-${step}` : `${step}`}
-            </button>
-          ))}
-          <div className={styles.joinedInputWrapper}>
-            <input
-              type="number"
-              placeholder={placeholder}
-              min={min}
-              max={max}
-              className={styles.joinedInputField}
-              value={tenureValStr}
-              disabled={disabled}
-              readOnly={readOnly}
-              onChange={handleTenureInputChange}
-              aria-label={title || 'Tenure'}
-            />
-          </div>
-          {tenureIncSteps.map((step) => (
-            <button
-              key={`tenure-inc-${step}`}
-              type="button"
-              className={styles.stepperBtn}
-              onClick={() => handleTenureStep(step)}
-              disabled={disabled}
-              aria-label={`Increase tenure by ${step}`}
-            >
-              {step > 0 ? `+${step}` : `${step}`}
-            </button>
-          ))}
-          {units.map((u) => {
-            const isActive = effectiveUnit === u.id;
-            return (
-              <button
-                key={`unit-${u.id}`}
-                type="button"
-                className={`${styles.unitBtn} ${isActive ? styles.activeUnit : ''}`}
-                onClick={() => handleUnitSwitch(u.id as 'm' | 'y')}
-                disabled={disabled}
-                title={u.title || u.label}
-                aria-label={u.title || u.label}
-              >
-                {u.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-);
-TenurePicker.displayName = 'TenurePicker';
-// =============================================================================
-// VARIANT: Paired & Stacked-Paired
-// =============================================================================
-const PairedPicker: React.FC<ValuePickerProps> = React.memo(
-  ({
-    variant = 'paired',
-    title,
-    sourceBadgeText = 'Source',
-    targetBadgeText = 'Target',
-    sourceSlot,
-    targetSlot,
-    sourceValue,
-    targetValue,
-    onSourceChange,
-    onTargetChange,
-    sourceOptions,
-    targetOptions,
-    sourcePlaceholder,
-    targetPlaceholder,
-    disabled = false,
-    readOnly = false,
-    className = '',
-    compact = false,
-    embedded = false,
-    layout = 'auto',
-  }) => {
-    const layoutClass =
-      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
-    const compactClass = compact ? styles.compact : '';
-    const embeddedClass = embedded ? styles.embedded : '';
-    const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
-    return (
-      <div className={rootContainerClass}>
-        {title && <h5 className={styles.title}>{title}</h5>}
-        <div
-          className={`${styles.pairedStackedWrapper} ${
-            variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
-          }`.trim()}
-        >
-          {/* Source column */}
-          <div className={styles.pairedStackedColumn}>
-            <div className={styles.pairedStackedLabel}>{sourceBadgeText}</div>
-            <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
-              {sourceSlot ? (
-                sourceSlot
-              ) : sourceOptions && sourceOptions.length > 0 ? (
-                <select
-                  className={styles.pairedInput}
-                  value={sourceValue ?? ''}
-                  onChange={(e) => onSourceChange?.(e.target.value)}
-                  disabled={disabled}
-                  aria-label={sourceBadgeText}
-                >
-                  {sourceOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  className={styles.pairedInput}
-                  value={sourceValue ?? ''}
-                  placeholder={sourcePlaceholder || 'Select source'}
-                  onChange={(e) => onSourceChange?.(e.target.value)}
-                  disabled={disabled}
-                  readOnly={readOnly}
-                  aria-label={sourceBadgeText}
-                />
-              )}
-            </div>
-          </div>
-          {/* Target column */}
-          <div className={styles.pairedStackedColumn}>
-            <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
-              {targetBadgeText}
-            </div>
-            <div className={styles.pairedStackedSlot}>
-              {targetSlot ? (
-                targetSlot
-              ) : targetOptions && targetOptions.length > 0 ? (
-                <select
-                  className={styles.pairedInput}
-                  value={targetValue ?? ''}
-                  onChange={(e) => onTargetChange?.(e.target.value)}
-                  disabled={disabled}
-                  aria-label={targetBadgeText}
-                >
-                  {targetOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  className={styles.pairedInput}
-                  value={targetValue ?? ''}
-                  placeholder={targetPlaceholder || 'Select target'}
-                  onChange={(e) => onTargetChange?.(e.target.value)}
-                  disabled={disabled}
-                  readOnly={readOnly}
-                  aria-label={targetBadgeText}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-);
-PairedPicker.displayName = 'PairedPicker';
-// =============================================================================
-// VARIANT: Date Range Selector
-// =============================================================================
-const DateRangePicker: React.FC<ValuePickerProps> = React.memo(
-  ({
-    title,
-    startDate,
-    endDate,
-    setStartDate,
-    setEndDate,
-    startBadgeText,
-    endBadgeText,
-    startMinDate,
-    dateMode = 'date',
-    startOptions,
-    endOptions,
-    startYearOptions,
-    endYearOptions,
-    startTitle = 'Start',
-    endTitle = 'End',
-    disabled = false,
-    className = '',
-    compact = false,
-    embedded = false,
-    layout = 'auto',
-    variant = 'stacked-paired',
-  }) => {
-    const today = useMemo(() => getDateAsISO(), []);
-    const resolvedStartBadge = startBadgeText || startTitle;
-    const resolvedEndBadge = endBadgeText || endTitle;
-    const effectiveStartYearOptions = startYearOptions || startOptions || [];
-    const effectiveEndYearOptions = endYearOptions || endOptions || [];
-    const handleStartYearChange = (val: string) => {
-      setStartDate?.(val);
-      if (endDate && Number(val) > Number(endDate)) {
-        setEndDate?.(val);
-      }
-    };
-    const handleEndYearChange = (val: string) => {
-      if (startDate && Number(val) < Number(startDate)) {
-        setEndDate?.(startDate);
-        return;
-      }
-      setEndDate?.(val);
-    };
-    const handleStartDateChange = (val: string) => {
-      setStartDate?.(val);
-      if (endDate && val && val > endDate) {
-        setEndDate?.(val);
-      }
-    };
-    const handleEndDateChange = (val: string) => {
-      if (startDate && val && val < startDate) {
-        setEndDate?.(startDate);
-        return;
-      }
-      setEndDate?.(val);
-    };
-    const layoutClass =
-      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
-    const compactClass = compact ? styles.compact : '';
-    const embeddedClass = embedded ? styles.embedded : '';
-    const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
-    if (dateMode === 'year') {
-      const availableEndOptions = effectiveEndYearOptions.filter(
-        (year) => !startDate || Number(year) >= Number(startDate)
-      );
-      return (
-        <div className={rootContainerClass}>
-          {title && <h5 className={styles.title}>{title}</h5>}
-          <div
-            className={`${styles.pairedStackedWrapper} ${
-              variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
-            }`.trim()}
-          >
-            <div className={styles.pairedStackedColumn}>
-              <div className={styles.pairedStackedLabel}>
-                {resolvedStartBadge} Year
-              </div>
-              <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
-                <select
-                  className={styles.pairedSelect}
-                  value={startDate ?? ''}
-                  onChange={(e) => handleStartYearChange(e.target.value)}
-                  disabled={disabled}
-                  aria-label={`${resolvedStartBadge} Year`}
-                >
-                  {effectiveStartYearOptions.map((year) => (
-                    <option key={`s-${year}`} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className={styles.pairedStackedColumn}>
-              <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
-                {resolvedEndBadge} Year
-              </div>
-              <div className={styles.pairedStackedSlot}>
-                <select
-                  className={styles.pairedSelect}
-                  value={endDate ?? ''}
-                  onChange={(e) => handleEndYearChange(e.target.value)}
-                  disabled={disabled}
-                  aria-label={`${resolvedEndBadge} Year`}
-                >
-                  {availableEndOptions.map((year) => (
-                    <option key={`e-${year}`} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className={rootContainerClass}>
-        {title && <h5 className={styles.title}>{title}</h5>}
-        <div
-          className={`${styles.pairedStackedWrapper} ${
-            variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
-          }`.trim()}
-        >
-          <div className={styles.pairedStackedColumn}>
-            <div className={styles.pairedStackedLabel}>
-              {resolvedStartBadge}
-            </div>
-            <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
-              <input
-                type="date"
-                min={startMinDate || undefined}
-                max={endDate || today}
-                value={startDate ?? ''}
-                className={styles.pairedInput}
-                onChange={(e) => handleStartDateChange(e.target.value)}
-                disabled={disabled}
-                aria-label={resolvedStartBadge}
-              />
-            </div>
-          </div>
-          <div className={styles.pairedStackedColumn}>
-            <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
-              {resolvedEndBadge}
-            </div>
-            <div className={styles.pairedStackedSlot}>
-              <input
-                type="date"
-                min={startDate || undefined}
-                max={today}
-                value={endDate ?? ''}
-                className={styles.pairedInput}
-                onChange={(e) => handleEndDateChange(e.target.value)}
-                disabled={disabled}
-                aria-label={resolvedEndBadge}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-);
-DateRangePicker.displayName = 'DateRangePicker';
-// =============================================================================
-// VARIANT: Grid Matrix
-// =============================================================================
-const GridPicker: React.FC<ValuePickerProps> = React.memo(
-  ({
-    title,
-    gridRows = DEFAULT_DURATION_MATRIX_ROWS,
-    selectedGridId,
-    onGridSelect,
-    value,
-    onChange,
-    setInputAmount,
-    disabled = false,
-    className = '',
-    compact = false,
-    embedded = false,
-    layout = 'auto',
-  }) => {
-    const effectiveValue = value !== undefined ? value : '';
-    const effectiveOnChange = onChange || setInputAmount || (() => {});
-    const handleGridItemClick = (item: GridItem) => {
-      if (disabled) return;
-      onGridSelect?.(item);
-      effectiveOnChange(item.value.toString());
-    };
-    const layoutClass =
-      layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
-    const compactClass = compact ? styles.compact : '';
-    const embeddedClass = embedded ? styles.embedded : '';
-    const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
-    return (
-      <div className={rootContainerClass}>
-        {title && <h5 className={styles.title}>{title}</h5>}
-        <div className={styles.matrixContainer} role="grid" aria-label={title || 'Duration Grid'}>
-          {gridRows.map((row, rowIdx) => (
-            <div key={`matrix-row-${rowIdx}`} className={styles.matrixRow} role="row">
-              {row.map((cell) => {
-                const isSelected = selectedGridId
-                  ? cell.id === selectedGridId
-                  : cell.value.toString() === effectiveValue.toString();
-                return (
-                  <button
-                    key={cell.id}
-                    type="button"
-                    role="gridcell"
-                    className={`${styles.matrixCell} ${isSelected ? styles.matrixCellActive : ''}`}
-                    onClick={() => handleGridItemClick(cell)}
-                    disabled={disabled}
-                    aria-selected={isSelected}
-                    title={`${cell.title} (${cell.value})`}
-                  >
-                    {cell.title}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-);
-GridPicker.displayName = 'GridPicker';
+GenericValuePicker.displayName = 'GenericValuePicker';
 // =============================================================================
 // Smart Memoization Comparator
 // =============================================================================
@@ -1321,7 +610,6 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
     prev.readOnly !== next.readOnly ||
     prev.placeholder !== next.placeholder ||
     prev.singleRow !== next.singleRow ||
-    prev.unit !== next.unit ||
     prev.sourceBadgeText !== next.sourceBadgeText ||
     prev.targetBadgeText !== next.targetBadgeText ||
     prev.sourceValue !== next.sourceValue ||
@@ -1329,8 +617,7 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
     prev.startDate !== next.startDate ||
     prev.endDate !== next.endDate ||
     prev.startBadgeText !== next.startBadgeText ||
-    prev.endBadgeText !== next.endBadgeText ||
-    prev.selectedGridId !== next.selectedGridId
+    prev.endBadgeText !== next.endBadgeText
   ) {
     return false;
   }
@@ -1338,17 +625,6 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
   if (prev.stepRows !== next.stepRows) {
     if (!prev.stepRows || !next.stepRows) return false;
     if (prev.stepRows.length !== next.stepRows.length) return false;
-  }
-  // Compare rt state
-  if (prev.rt !== next.rt) {
-    if (!prev.rt || !next.rt) return false;
-    if (
-      prev.rt.roi !== next.rt.roi ||
-      prev.rt.tenure !== next.rt.tenure ||
-      prev.rt.tenureFormat !== next.rt.tenureFormat
-    ) {
-      return false;
-    }
   }
   // Compare endAdornment
   if (prev.endAdornment !== next.endAdornment) return false;
@@ -1381,23 +657,14 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
 // MAIN COMPONENT EXPORT
 // =============================================================================
 const BaseValuePicker: React.FC<ValuePickerProps> = (props) => {
-  const { variant = 'amount' } = props;
-  switch (variant) {
-    case 'roi':
-      return <RoiPicker {...props} />;
-    case 'tenure':
-      return <TenurePicker {...props} />;
-    case 'paired':
-    case 'stacked-paired':
-      return <PairedPicker {...props} />;
-    case 'date-range':
-      return <DateRangePicker {...props} />;
-    case 'grid':
-      return <GridPicker {...props} />;
-    case 'amount':
-    default:
-      return <AmountPicker {...props} />;
+  const { variant } = props;
+  if (variant === 'date-range') {
+    return <DateRangePicker {...(props as unknown as DateRangePickerProps)} />;
   }
+  if (variant === 'paired' || variant === 'stacked-paired') {
+    return <PairedPicker {...(props as unknown as PairedPickerProps)} />;
+  }
+  return <GenericValuePicker {...props} />;
 };
 export const ValuePicker = React.memo(BaseValuePicker, arePropsEqual);
 export default ValuePicker;

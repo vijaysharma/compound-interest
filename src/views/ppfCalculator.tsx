@@ -9,6 +9,7 @@ import {
   FiShield,
 } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
+import { DEFAULT_RATE_STEPS } from '../data/valuePickerData';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import convertToWords, { getCurrencySymbol } from '../utilities/currency';
@@ -285,12 +286,16 @@ const PpfCalculator: React.FC = () => {
             )}
             <div className={styles.fieldGroup}>
               <ValuePicker
-                variant="roi"
-                title={`Projected Future Rate (%) — Current: ${CURRENT_PPF_RATE}%`}
+                title={`Projected Future Rate (Current: ${CURRENT_PPF_RATE}%)`}
+                symbol="%"
                 value={projectedRate}
-                onChange={(v) => setProjectedRate(parseFloat(v) || 7.1)}
                 min={1}
                 max={15}
+                defaultStep={0.1}
+                stepData={DEFAULT_RATE_STEPS}
+                singleRow={true}
+                showWords={false}
+                onChange={(v) => setProjectedRate(parseFloat(v) || 7.1)}
               />
             </div>
           </section>

@@ -1,10 +1,13 @@
 'use client';
 import React, { useState } from 'react';
 import ValuePicker from '../components/ValuePicker';
+import PairedPicker from '../components/PairedPicker';
+import DateRangePicker from '../components/DateRangePicker';
 import {
   DEFAULT_VALUE_PICKER_ROWS,
   DEFAULT_VALUE_PICKER_TABS,
-  DEFAULT_DURATION_MATRIX_ROWS,
+  DEFAULT_RATE_STEPS,
+  getTenureStepData,
 } from '../data/valuePickerData';
 import styles from './tempValuePickerPage.module.scss';
 import { sanctnum } from '../utilities/numSanitity';
@@ -31,8 +34,6 @@ export const TempValuePickerPage: React.FC = () => {
   // Case 4: Date Range (starts at 2026-06-10 to 2026-09-08 from Screenshot 4)
   const [demoStartDate, setDemoStartDate] = useState<string>('2026-06-10');
   const [demoEndDate, setDemoEndDate] = useState<string>('2026-09-08');
-  // Case 5: Duration Grid (starts at 1D from Screenshot 5)
-  const [demoGridItem, setDemoGridItem] = useState<string>('d-1d');
   const usdSteps = [
     [
       { label: '$1M', value: 1_000_000 },
@@ -180,10 +181,18 @@ export const TempValuePickerPage: React.FC = () => {
             {/* Case 1: Rate of Interest (%) */}
             <div className={styles.variationCard}>
               <h3>Case 1: Rate of Interest (%)</h3>
-              <p>Inline control bar with quick decimal steps [0.01] [0.1] [1], value input, and [+] / [-] operation mode.</p>
+              <p>Generic ValuePicker with % symbol, merged title, and quick rate steps.</p>
               <ValuePicker
-                variant="roi"
+                title="Rate of Interest"
+                titleStyle="merged"
+                symbol="%"
                 value={demoRoi}
+                min={0}
+                max={30}
+                defaultStep={0.1}
+                stepData={DEFAULT_RATE_STEPS}
+                singleRow={true}
+                showWords={false}
                 onChange={setDemoRoi}
               />
               <div className={styles.variationResultText}>
@@ -192,14 +201,36 @@ export const TempValuePickerPage: React.FC = () => {
             </div>
             {/* Case 2: Tenure Stepper */}
             <div className={styles.variationCard}>
-              <h3>Case 2: Tenure Stepper</h3>
-              <p>Inline control bar with decrement steps [-10] [-1], value input, increment steps [+1] [+10], and [M] / [Y] unit switcher.</p>
+              <h3>Case 2: Tenure Picker</h3>
+              <p>Generic ValuePicker with format unit selector in endAdornment and quick tenure steps.</p>
               <ValuePicker
-                variant="tenure"
+                title="Tenure"
+                titleStyle="merged"
                 value={demoTenure}
+                min={1}
+                max={100}
+                defaultStep={1}
+                stepData={getTenureStepData(demoTenureUnit)}
+                singleRow={true}
+                showWords={false}
+                endAdornment={
+                  <select
+                    value={demoTenureUnit}
+                    onChange={(e) => setDemoTenureUnit(e.target.value as 'y' | 'm')}
+                    style={{
+                      height: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '0 8px',
+                    }}
+                  >
+                    <option value="y">Years</option>
+                    <option value="m">Months</option>
+                  </select>
+                }
                 onChange={setDemoTenure}
-                unit={demoTenureUnit}
-                onUnitChange={setDemoTenureUnit}
               />
               <div className={styles.variationResultText}>
                 Current Tenure: {demoTenure} {demoTenureUnit === 'y' ? 'Years' : 'Months'}
@@ -208,9 +239,8 @@ export const TempValuePickerPage: React.FC = () => {
             {/* Case 3: Paired / Dual Endpoint */}
             <div className={styles.variationCard}>
               <h3>Case 3: Paired / Dual Endpoint Selector</h3>
-              <p>Joined selector bar with [Source] and [Target] purple badges and thin central divider.</p>
-              <ValuePicker
-                variant="paired"
+              <p>Dedicated PairedPicker component with [Source] and [Target] purple badges.</p>
+              <PairedPicker
                 sourceBadgeText="Source"
                 targetBadgeText="Target"
                 sourceValue={demoSource}
@@ -237,9 +267,8 @@ export const TempValuePickerPage: React.FC = () => {
             {/* Case 4: Dual Date Range */}
             <div className={styles.variationCard}>
               <h3>Case 4: Dual Date Range Picker</h3>
-              <p>Joined selector bar with [Start] and [End] purple badges and native HTML5 date pickers.</p>
-              <ValuePicker
-                variant="date-range"
+              <p>Dedicated DateRangePicker component with [Start] and [End] badges.</p>
+              <DateRangePicker
                 startBadgeText="Start"
                 endBadgeText="End"
                 startDate={demoStartDate}
@@ -251,60 +280,33 @@ export const TempValuePickerPage: React.FC = () => {
                 Selected Range: {demoStartDate} to {demoEndDate}
               </div>
             </div>
-            {/* Case 5: Duration Matrix Grid */}
-            <div className={`${styles.variationCard} ${styles.cardFullWidth}`}>
-              <h3>Case 5: Multi-Row Duration Matrix Grid (3x8)</h3>
-              <p>Duration matrix grid with 24 duration presets (1D to 20Y) with purple border and selected cell fill.</p>
-              <ValuePicker
-                variant="grid"
-                title="Duration Matrix"
-                gridRows={DEFAULT_DURATION_MATRIX_ROWS}
-                selectedGridId={demoGridItem}
-                onGridSelect={(item) => setDemoGridItem(item.id)}
-              />
-              <div className={styles.variationResultText}>
-                Selected Duration: {DEFAULT_DURATION_MATRIX_ROWS.flat().find((i) => i.id === demoGridItem)?.title || demoGridItem}
-              </div>
-            </div>
           </div>
         </section>
         {/* Code Snippet for Easy Integration */}
         <section>
-          <h2 className={styles.sectionTitle}>How to Integrate All Variants</h2>
+          <h2 className={styles.sectionTitle}>How to Integrate Generic ValuePicker</h2>
           <pre className={styles.codeSnippet}>
 {`// 1. Amount Picker (Classic currency with tabs & quick steps):
 <ValuePicker value={amount} onChange={setAmount} tabs={tabs} currencySymbol="₹" />
 
-// 2. Rate of Interest (%) (Screenshot 1):
-<ValuePicker variant="roi" value={roi} onChange={setRoi} />
-// or using rt state: <ValuePicker variant="roi" rt={rt} setRt={setRt} />
+// 2. Rate of Interest (%):
+<ValuePicker title="Rate" symbol="%" value={roi} onChange={setRoi} stepData={DEFAULT_RATE_STEPS} singleRow />
 
-// 3. Tenure Stepper (Screenshot 2):
-<ValuePicker variant="tenure" value={tenure} onChange={setTenure} unit={unit} onUnitChange={setUnit} />
-// or using rt state: <ValuePicker variant="tenure" rt={rt} setRt={setRt} />
+// 3. Tenure:
+<ValuePicker title="Tenure" value={tenure} onChange={setTenure} stepData={getTenureStepData('y')} singleRow endAdornment={<select ... />} />
 
-// 4. Paired Endpoint (Screenshot 3):
-<ValuePicker
-  variant="paired"
+// 4. Paired Endpoint:
+<PairedPicker
   sourceBadgeText="Source" targetBadgeText="Target"
   sourceValue={source} onSourceChange={setSource}
   targetValue={target} onTargetChange={setTarget}
 />
 
-// 6. Date Range (Screenshot 4):
-<ValuePicker
-  variant="date-range"
+// 5. Date Range:
+<DateRangePicker
   startBadgeText="Start" endBadgeText="End"
   startDate={startDate} setStartDate={setStartDate}
   endDate={endDate} setEndDate={setEndDate}
-/>
-
-// 7. Duration Matrix Grid (Screenshot 5):
-<ValuePicker
-  variant="grid"
-  gridRows={DEFAULT_DURATION_MATRIX_ROWS}
-  selectedGridId={gridId}
-  onGridSelect={(item) => setGridId(item.id)}
 />`}
           </pre>
         </section>
