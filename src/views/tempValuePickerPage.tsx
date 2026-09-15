@@ -283,10 +283,7 @@ export const TempValuePickerPage: React.FC = () => {
 <ValuePicker variant="tenure" value={tenure} onChange={setTenure} unit={unit} onUnitChange={setUnit} />
 // or using rt state: <ValuePicker variant="tenure" rt={rt} setRt={setRt} />
 
-// 4. Rate & Tenure Combined:
-<ValuePicker variant="rate-tenure" rt={rt} setRt={setRt} />
-
-// 5. Paired Endpoint (Screenshot 3):
+// 4. Paired Endpoint (Screenshot 3):
 <ValuePicker
   variant="paired"
   sourceBadgeText="Source" targetBadgeText="Target"

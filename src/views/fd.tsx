@@ -4,6 +4,7 @@ import DisplayCard from '../components/DisplayCard';
 import ValuePicker from '../components/ValuePicker';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import { RT, StepAmountType } from '../types/types';
+import { DEFAULT_RATE_STEPS, getTenureStepData } from '../data/valuePickerData';
 import { calculateInterest, calculatePrincipal } from '../utilities/utility';
 import { sanctnum } from '../utilities/numSanitity';
 import {
@@ -244,10 +245,39 @@ const FD: React.FC = () => {
               ]}
             />
             <ValuePicker
-              variant="rate-tenure"
               className={styles.field}
-              rt={rt}
-              setRt={setRt}
+              value={rt.roi}
+              symbol="%"
+              symbolBg={false}
+              symbolPosition="right"
+              onChange={(newRoi) => setRt((prev) => ({ ...prev, roi: newRoi }))}
+              title="Interest rate"
+              titleStyle="merged"
+              stepData={DEFAULT_RATE_STEPS}
+              tabs={[]}
+              showWords={false}
+            />
+            <ValuePicker
+              className={styles.field}
+              value={rt.tenure}
+              symbol={null}
+              onChange={(newTenure) => setRt((prev) => ({ ...prev, tenure: newTenure }))}
+              title="Tenure"
+              titleStyle="merged"
+              stepData={getTenureStepData(rt.tenureFormat)}
+              tabs={[]}
+              endAdornment={
+                <select
+                  className={styles.tenureFormatSelect}
+                  value={rt.tenureFormat}
+                  onChange={(e) => setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  aria-label="Tenure Unit"
+                >
+                  <option value="m">Months</option>
+                  <option value="y">Years</option>
+                </select>
+              }
+              showWords={false}
             />
             <JoinedButtonGroup
               className={styles.field}

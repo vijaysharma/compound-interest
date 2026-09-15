@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DisplayCard from '../components/DisplayCard';
 import ValuePicker from '../components/ValuePicker';
 import { RT, StepAmountType } from '../types/types';
+import { DEFAULT_RATE_STEPS, getTenureStepData } from '../data/valuePickerData';
 import { sanctnum } from '../utilities/numSanitity';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
@@ -618,7 +619,43 @@ const EmiCalculator: React.FC = () => {
               tabs={[]}
               singleRow={true}
             />
-            <ValuePicker variant="rate-tenure" rt={rt} setRt={setRt} />
+            <ValuePicker
+              className={styles.fieldTight}
+              value={rt.roi}
+              symbol="%"
+              symbolBg={false}
+              symbolPosition="right"
+              onChange={(newRoi) => setRt((prev) => ({ ...prev, roi: newRoi }))}
+              title="Interest rate"
+              titleStyle="merged"
+              stepData={DEFAULT_RATE_STEPS}
+              tabs={[]}
+              showWords={false}
+              singleRow={true}
+            />
+            <ValuePicker
+              className={styles.fieldTight}
+              value={rt.tenure}
+              symbol={null}
+              onChange={(newTenure) => setRt((prev) => ({ ...prev, tenure: newTenure }))}
+              title="Loan tenure"
+              titleStyle="merged"
+              stepData={getTenureStepData(rt.tenureFormat)}
+              tabs={[]}
+              endAdornment={
+                <select
+                  className={styles.tenureFormatSelect}
+                  value={rt.tenureFormat}
+                  onChange={(e) => setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  aria-label="Tenure Unit"
+                >
+                  <option value="y">Years</option>
+                  <option value="m">Months</option>
+                </select>
+              }
+              showWords={false}
+              singleRow={true}
+            />
             <ValuePicker
               variant="paired"
               sourceBadgeText="Disbursed"

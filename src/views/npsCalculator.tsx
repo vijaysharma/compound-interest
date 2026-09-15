@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { FiAward, FiCheckCircle, FiPieChart, FiShield, FiTrendingUp } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
+import { DEFAULT_RATE_STEPS } from '../data/valuePickerData';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import convertToWords, { getCurrencySymbol } from '../utilities/currency';
@@ -214,18 +215,29 @@ const NpsCalculator: React.FC = () => {
             </div>
             <div className={styles.fieldGroup}>
               <ValuePicker
-                variant="rate-tenure"
-                roi={expectedRoi}
-                onChangeRoi={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
-                rateTitle="Expected Return (CAGR %)"
-                tenure={retirementAge - currentAge}
-                onChangeTenure={(v) => {
+                value={expectedRoi}
+                symbol="%"
+                symbolBg={false}
+                symbolPosition="right"
+                onChange={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
+                title="Expected Return (CAGR %)"
+                titleStyle="merged"
+                stepData={DEFAULT_RATE_STEPS}
+                tabs={[]}
+                showWords={false}
+              />
+            </div>
+            <div className={styles.fieldGroup}>
+              <ValuePicker
+                value={retirementAge - currentAge}
+                symbol={null}
+                onChange={(v) => {
                   const years = parseInt(v, 10) || 1;
                   setRetirementAge(Math.min(75, currentAge + years));
                 }}
-                tenureTitle="Accumulation Period"
-                showTenureSelect={false}
-                tenureStepData={[
+                title="Accumulation Period"
+                titleStyle="merged"
+                stepData={[
                   { id: 't-5', value: '5', title: '5 yrs' },
                   { id: 't-10', value: '10', title: '10 yrs' },
                   { id: 't-15', value: '15', title: '15 yrs' },
@@ -234,6 +246,8 @@ const NpsCalculator: React.FC = () => {
                   { id: 't-30', value: '30', title: '30 yrs' },
                   { id: 't-35', value: '35', title: '35 yrs' },
                 ]}
+                tabs={[]}
+                showWords={false}
               />
             </div>
           </section>

@@ -4,6 +4,7 @@ import DisplayCard from '../components/DisplayCard';
 import ValuePicker from '../components/ValuePicker';
 import { sanctnum } from '../utilities/numSanitity';
 import { RT } from '../types/types';
+import { DEFAULT_RATE_STEPS, getTenureStepData } from '../data/valuePickerData';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import styles from './CalculatorPage.module.scss';
@@ -232,10 +233,39 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
               ]}
             />
             <ValuePicker
-              variant="rate-tenure"
+              className={styles.field}
+              value={rt.roi}
+              symbol="%"
+              symbolBg={false}
+              symbolPosition="right"
+              onChange={(newRoi) => setRt((prev) => ({ ...prev, roi: newRoi }))}
+              title="Interest rate"
+              titleStyle="merged"
+              stepData={DEFAULT_RATE_STEPS}
+              tabs={[]}
+              showWords={false}
+            />
+            <ValuePicker
               className={styles.fieldLast}
-              rt={rt}
-              setRt={setRt}
+              value={rt.tenure}
+              symbol={null}
+              onChange={(newTenure) => setRt((prev) => ({ ...prev, tenure: newTenure }))}
+              title="Tenure"
+              titleStyle="merged"
+              stepData={getTenureStepData(rt.tenureFormat)}
+              tabs={[]}
+              endAdornment={
+                <select
+                  className={styles.tenureFormatSelect}
+                  value={rt.tenureFormat}
+                  onChange={(e) => setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  aria-label="Tenure Unit"
+                >
+                  <option value="m">Months</option>
+                  <option value="y">Years</option>
+                </select>
+              }
+              showWords={false}
             />
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import ValuePicker from '../components/ValuePicker';
 import { sanctnum } from '../utilities/numSanitity';
 import { RT } from '../types/types';
+import { DEFAULT_RATE_STEPS, getTenureStepData } from '../data/valuePickerData';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
@@ -234,16 +235,39 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               tabs={[]}
             />
             <ValuePicker
-              variant="rate-tenure"
               className={styles.field}
-              roi={rt}
-              onChangeRoi={setRt}
-              tenure={t.tenure}
-              onChangeTenure={(newT) => setT({ ...t, tenure: newT })}
-              tenureFormat={t.tenureFormat}
-              onChangeTenureFormat={(newF) => setT({ ...t, tenureFormat: newF })}
-              rateTitle="Expected return rate (p.a.)"
-              tenureTitle="Time period"
+              value={rt}
+              symbol="%"
+              symbolBg={false}
+              symbolPosition="right"
+              onChange={setRt}
+              title="Expected return rate (p.a.)"
+              titleStyle="merged"
+              stepData={DEFAULT_RATE_STEPS}
+              tabs={[]}
+              showWords={false}
+            />
+            <ValuePicker
+              className={styles.field}
+              value={t.tenure}
+              symbol={null}
+              onChange={(newT) => setT((prev) => ({ ...prev, tenure: newT }))}
+              title="Time period"
+              titleStyle="merged"
+              stepData={getTenureStepData(t.tenureFormat)}
+              tabs={[]}
+              endAdornment={
+                <select
+                  className={styles.tenureFormatSelect}
+                  value={t.tenureFormat}
+                  onChange={(e) => setT((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  aria-label="Tenure Unit"
+                >
+                  <option value="y">Years</option>
+                  <option value="m">Months</option>
+                </select>
+              }
+              showWords={false}
             />
             <ValuePicker
               variant="roi"
