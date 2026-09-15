@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DisplayCard from '../components/DisplayCard';
 import ValuePicker from '../components/ValuePicker';
 import { RT, StepAmountType } from '../types/types';
-import { STEP_AMOUNT } from '../data/default_data';
 import { sanctnum } from '../utilities/numSanitity';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
@@ -201,7 +200,15 @@ const EmiCalculator: React.FC = () => {
   const [includePrincipalInFirstEmi, setIncludePrincipalInFirstEmi] = useState<boolean>(() =>
     loadFromLocalStorage('includePrincipalInFirstEmi', false)
   );
-  const stepData: StepAmountType[] = STEP_AMOUNT;
+  const stepData: StepAmountType[] = [
+    { id: 'p1', value: '10000000', title: '1Cr' },
+    { id: 'p2', value: '1000000', title: '10L' },
+    { id: 'p3', value: '100000', title: '1L' },
+    { id: 'p4', value: '10000', title: '10K' },
+    { id: 'p5', value: '1000', title: '1K' },
+    { id: 'p6', value: '100', title: '100' },
+    { id: 'p7', value: '10', title: '10' },
+  ];
   // Save state to localStorage
   useEffect(() => {
     window.localStorage.setItem('loanAmount', JSON.stringify(loanAmount));
