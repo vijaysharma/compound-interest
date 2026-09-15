@@ -70,6 +70,7 @@ export interface ValuePickerProps {
   titleStyle?: 'default' | 'merged';
   stepRows?: ValuePickerStep[][] | ValuePickerStep[];
   stepData?: Array<{ id?: string; value: string | number; title?: string; label?: string }>;
+  singleRow?: boolean;
   stepSizePrefix?: string;
   typeSizePrefix?: string;
   compact?: boolean;
@@ -171,13 +172,21 @@ const MAX_RAW_INPUT_LENGTH = 16;
  */
 function normalizeStepRows(
   stepRows?: ValuePickerStep[][] | ValuePickerStep[],
-  stepData?: Array<{ id?: string; value: string | number; title?: string; label?: string }>
+  stepData?: Array<{ id?: string; value: string | number; title?: string; label?: string }>,
+  singleRow?: boolean
 ): ValuePickerStep[][] {
   if (stepRows && stepRows.length > 0) {
     if (Array.isArray(stepRows[0])) {
-      return stepRows as ValuePickerStep[][];
+      const rows = stepRows as ValuePickerStep[][];
+      if (singleRow) {
+        return [rows.flat()];
+      }
+      return rows;
     }
     const flat = stepRows as ValuePickerStep[];
+    if (singleRow) {
+      return [flat];
+    }
     const mid = Math.ceil(flat.length / 2);
     return [flat.slice(0, mid), flat.slice(mid)];
   }
@@ -187,8 +196,14 @@ function normalizeStepRows(
       label: s.label || s.title || `${s.value}`,
       value: typeof s.value === 'string' ? parseFloat(s.value) || 0 : Number(s.value) || 0,
     }));
+    if (singleRow) {
+      return [formatted];
+    }
     const mid = Math.ceil(formatted.length / 2);
     return [formatted.slice(0, mid), formatted.slice(mid)];
+  }
+  if (singleRow) {
+    return [DEFAULT_VALUE_PICKER_ROWS.flat()];
   }
   return DEFAULT_VALUE_PICKER_ROWS;
 }
@@ -212,6 +227,7 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
     titleStyle = 'merged',
     stepRows,
     stepData,
+    singleRow = false,
     symbol = '₹',
     currencySymbol,
     symbolPosition = 'left',
@@ -287,8 +303,8 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
     }, [showWords, numericValue, locale]);
     // Normalize step rows
     const resolvedStepRows = useMemo(
-      () => normalizeStepRows(stepRows, stepData),
-      [stepRows, stepData]
+      () => normalizeStepRows(stepRows, stepData, singleRow),
+      [stepRows, stepData, singleRow]
     );
     // Synchronous layout cursor positioning without flickering or jumps
     useLayoutEffect(() => {
@@ -592,7 +608,9 @@ const AmountPicker: React.FC<ValuePickerProps> = React.memo(
             </div>
           </div>
           {resolvedStepRows && resolvedStepRows.length > 0 && (
-            <div className={styles.gridContainer}>
+            <div
+              className={`${styles.gridContainer} ${singleRow ? styles.singleRowGrid : ''}`.trim()}
+            >
               {resolvedStepRows.map((row, rowIndex) => (
                 <div key={`row-${rowIndex}`} className={styles.gridRow}>
                   {row.map((step, colIndex) => {
@@ -1313,6 +1331,7 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
     prev.disabled !== next.disabled ||
     prev.readOnly !== next.readOnly ||
     prev.placeholder !== next.placeholder ||
+    prev.singleRow !== next.singleRow ||
     prev.unit !== next.unit ||
     prev.sourceBadgeText !== next.sourceBadgeText ||
     prev.targetBadgeText !== next.targetBadgeText ||
@@ -1325,6 +1344,11 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
     prev.selectedGridId !== next.selectedGridId
   ) {
     return false;
+  }
+  // Compare stepRows if reference changed
+  if (prev.stepRows !== next.stepRows) {
+    if (!prev.stepRows || !next.stepRows) return false;
+    if (prev.stepRows.length !== next.stepRows.length) return false;
   }
   // Compare rt state
   if (prev.rt !== next.rt) {
