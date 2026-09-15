@@ -1087,6 +1087,8 @@ const Lumpsum = ({
                   datasets={chartDatasets}
                   investmentAmount={parseFloat(invAmt) || 0}
                   autoHeight
+                  startDate={startDate}
+                  endDate={endDate}
                 />
               </Suspense>
             ) : (
@@ -1117,6 +1119,8 @@ const Lumpsum = ({
                   setDetailModalFund({
                     ...fund,
                     invAmt: parseFloat(invAmt) || 0,
+                    startDate,
+                    endDate,
                     navData: pinnedNavData[fund.schemeCode] || [],
                   });
                 }}
@@ -1129,6 +1133,8 @@ const Lumpsum = ({
                     setDetailModalFund({
                       ...fund,
                       invAmt: parseFloat(invAmt) || 0,
+                      startDate,
+                      endDate,
                       navData: pinnedNavData[fund.schemeCode] || [],
                     });
                   }

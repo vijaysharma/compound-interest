@@ -274,6 +274,8 @@ export default function MutualFundDetailModal({
                 dataMode="value"
                 autoHeight={true}
                 enableZoom={true}
+                startDate={fund.startDate}
+                endDate={fund.endDate}
               />
             </div>
           </div>

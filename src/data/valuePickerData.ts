@@ -92,3 +92,13 @@ export function getTenureStepData(format: 'y' | 'm' = 'y') {
     title: `${val} ${isYears ? (val === 1 ? 'yr' : 'yrs') : val === 1 ? 'mo' : 'mos'}`,
   }));
 }
+// Standard amount quick-step presets matching EMI calculator
+export const DEFAULT_AMOUNT_STEPS = [
+  { id: 'p1', value: '10000000', title: '1Cr' },
+  { id: 'p2', value: '1000000', title: '10L' },
+  { id: 'p3', value: '100000', title: '1L' },
+  { id: 'p4', value: '10000', title: '10K' },
+  { id: 'p5', value: '1000', title: '1K' },
+  { id: 'p6', value: '100', title: '100' },
+  { id: 'p7', value: '10', title: '10' },
+];

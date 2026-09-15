@@ -25,6 +25,7 @@ export interface DateRangePickerProps {
   className?: string;
   compact?: boolean;
   embedded?: boolean;
+  singleDate?: boolean;
   layout?: 'auto' | 'mobile' | 'desktop';
   variant?: 'paired' | 'stacked-paired';
 }
@@ -49,6 +50,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo(
     className = '',
     compact = false,
     embedded = false,
+    singleDate = false,
     layout = 'auto',
     variant = 'stacked-paired',
   }) => {
@@ -139,6 +141,33 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo(
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    const isSingle = singleDate || (!setEndDate && endDate === undefined);
+    if (isSingle) {
+      return (
+        <div className={rootContainerClass}>
+          {title && <h5 className={styles.title}>{title}</h5>}
+          <div className={styles.pairedStackedWrapper}>
+            <div className={styles.pairedStackedColumn} style={{ width: '100%' }}>
+              <div className={styles.pairedStackedLabel}>
+                {resolvedStartBadge}
+              </div>
+              <div className={styles.pairedStackedSlot}>
+                <input
+                  type="date"
+                  min={startMinDate || undefined}
+                  max={today}
+                  value={startDate ?? ''}
+                  className={styles.pairedInput}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
+                  disabled={disabled}
+                  aria-label={resolvedStartBadge}
+                />
               </div>
             </div>
           </div>

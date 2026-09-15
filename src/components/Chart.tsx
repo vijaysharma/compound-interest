@@ -25,6 +25,8 @@ interface ChartProps {
   autoHeight?: boolean;
   minHeight?: number;
   enableZoom?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 /*
  * NAV dates are DD-MM-YYYY.
@@ -39,6 +41,14 @@ const getDateTime = (date: string): number => {
   const parts = date.split('-');
   if (parts.length !== 3) {
     return Number.NaN;
+  }
+  if (parts[0].length === 4) {
+    const year = Number(parts[0]);
+    const month = Number(parts[1]) - 1;
+    const day = Number(parts[2]);
+    return Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)
+      ? new Date(year, month, day).getTime()
+      : Number.NaN;
   }
   const day = Number(parts[0]);
   const month = Number(parts[1]) - 1;
@@ -72,11 +82,20 @@ const Chart = ({
   autoHeight = false,
   minHeight = 0,
   enableZoom = true,
+  startDate,
+  endDate,
 }: ChartProps) => {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [zoomRange, setZoomRange] = useState<{ start: string; end: string } | null>(null);
-  const [activePreset, setActivePreset] = useState<string | null>('All');
+  const [userZoom, setUserZoom] = useState<{ start: string; end: string } | 'all' | null>(null);
+  const [userPreset, setUserPreset] = useState<string | null>(null);
+  const matchedKey = `${startDate || ''}:${endDate || ''}`;
+  const [prevMatchedKey, setPrevMatchedKey] = useState(matchedKey);
+  if (prevMatchedKey !== matchedKey) {
+    setPrevMatchedKey(matchedKey);
+    setUserZoom(null);
+    setUserPreset(null);
+  }
   const [dragState, setDragState] = useState<{
     isDragging: boolean;
     startX: number;
@@ -101,6 +120,45 @@ const Chart = ({
       .sort((a, b) => a[1] - b[1])
       .map(([date]) => date);
   }, [datasets]);
+  // Compute initial matched range based on provided startDate and endDate
+  const matchedRange = useMemo(() => {
+    if (allSortedDates.length === 0) return null;
+    let startIdx = 0;
+    let endIdx = allSortedDates.length - 1;
+    if (startDate) {
+      const targetStartTime = getDateTime(startDate);
+      if (Number.isFinite(targetStartTime)) {
+        for (let i = 0; i < allSortedDates.length; i++) {
+          if (getDateTime(allSortedDates[i]) >= targetStartTime) {
+            startIdx = i;
+            break;
+          }
+        }
+      }
+    }
+    if (endDate) {
+      const targetEndTime = getDateTime(endDate);
+      if (Number.isFinite(targetEndTime)) {
+        for (let i = allSortedDates.length - 1; i >= 0; i--) {
+          if (getDateTime(allSortedDates[i]) <= targetEndTime) {
+            endIdx = i;
+            break;
+          }
+        }
+      }
+    }
+    if (startIdx <= endIdx && (startDate || endDate)) {
+      return {
+        start: allSortedDates[startIdx],
+        end: allSortedDates[endIdx],
+      };
+    }
+    return null;
+  }, [allSortedDates, startDate, endDate]);
+  // Derived zoom range: if user hasn't zoomed, default to matchedRange
+  const zoomRange = userZoom === 'all' ? null : (userZoom ?? matchedRange);
+  const activePreset =
+    userZoom === 'all' ? 'All' : userZoom === null && !matchedRange ? 'All' : userPreset;
   // Compute active dates based on zoom
   const activeDates = useMemo(() => {
     if (!zoomRange || allSortedDates.length === 0) return allSortedDates;
@@ -110,9 +168,9 @@ const Chart = ({
     return allSortedDates.slice(startIdx, endIdx + 1);
   }, [allSortedDates, zoomRange]);
   const handleApplyPreset = (preset: string) => {
-    setActivePreset(preset);
+    setUserPreset(preset);
     if (preset === 'All' || allSortedDates.length === 0) {
-      setZoomRange(null);
+      setUserZoom('all');
       return;
     }
     const daysMap: Record<string, number> = {
@@ -124,9 +182,9 @@ const Chart = ({
     };
     const days = daysMap[preset];
     if (!days) return;
-    const latestDate = allSortedDates[allSortedDates.length - 1];
-    const latestTime = getDateTime(latestDate);
-    const targetStartTime = latestTime - days * 24 * 60 * 60 * 1000;
+    const baseEnd = matchedRange?.end || allSortedDates[allSortedDates.length - 1];
+    const baseEndTime = getDateTime(baseEnd);
+    const targetStartTime = baseEndTime - days * 24 * 60 * 60 * 1000;
     let targetIdx = 0;
     for (let i = 0; i < allSortedDates.length; i++) {
       if (getDateTime(allSortedDates[i]) >= targetStartTime) {
@@ -134,14 +192,17 @@ const Chart = ({
         break;
       }
     }
-    setZoomRange({
-      start: allSortedDates[targetIdx],
-      end: latestDate,
-    });
+    const endIdx = allSortedDates.indexOf(baseEnd);
+    if (targetIdx <= endIdx && endIdx !== -1) {
+      setUserZoom({
+        start: allSortedDates[targetIdx],
+        end: baseEnd,
+      });
+    }
   };
   const handleResetZoom = () => {
-    setZoomRange(null);
-    setActivePreset('All');
+    setUserZoom(null);
+    setUserPreset(null);
   };
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!enableZoom || !containerRef.current || allSortedDates.length < 5) return;
@@ -171,11 +232,11 @@ const Chart = ({
       const startIdx = Math.floor(startRatio * activeDates.length);
       const endIdx = Math.min(activeDates.length - 1, Math.ceil(endRatio * activeDates.length));
       if (endIdx - startIdx >= 2) {
-        setZoomRange({
+        setUserZoom({
           start: activeDates[startIdx],
           end: activeDates[endIdx],
         });
-        setActivePreset(null);
+        setUserPreset(null);
       }
     }
     setDragState(null);

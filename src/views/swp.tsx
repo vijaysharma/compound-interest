@@ -8,6 +8,8 @@ import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
+import { DEFAULT_AMOUNT_STEPS } from '../data/valuePickerData';
+import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFundDetailModal';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import { FiBarChart2, FiPlus, FiTrendingUp } from 'react-icons/fi';
@@ -163,7 +165,7 @@ const getDefaultState = (): SavedState => ({
   selectedCode: '0',
   monthlyWithdrawalAmount: '100000',
   lumpSumInvestmentAmount: '30000000',
-  viewChart: false,
+  viewChart: true,
   pinnedFunds: [],
   startSwpDate: null,
   endSwpDate: null,
@@ -278,6 +280,7 @@ const SWP = ({
   const [dayOfMonth, setDayOfMonth] = useState<string>(savedState.dayOfMonth);
   const [investmentStepUp, setInvestmentStepUp] = useState(savedState.investmentStepUp);
   const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
+  const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [loadingSchemeCodes, setLoadingSchemeCodes] = useState<Set<string>>(new Set());
   const [error, setError] = useState<{
@@ -851,7 +854,7 @@ const SWP = ({
           longevity using live AMFI NAV histories.
         </p>
       </header>
-      <div className={styles.analyticsGrid}>
+      <div className={`${styles.analyticsGrid} ${styles.lumpsumAnalyticsGrid}`}>
         <div className={styles.controlsCol}>
           <div className={styles.actionButtonGroup}>
             <button
@@ -873,6 +876,7 @@ const SWP = ({
           </div>
           <ValuePicker
             variant="date-range"
+            singleDate={true}
             data={jsonNavData}
             startTitle="Investment Date"
             startDate={lumpsumStartDate}
@@ -883,6 +887,8 @@ const SWP = ({
             onChange={setLumpSumInvestmentAmount}
             className={styles.fieldTight}
             title="Lump Sum Investment"
+            singleRow={true}
+            stepData={DEFAULT_AMOUNT_STEPS}
             tabs={[]}
           />
           {jsonNavData.length > 0 && (
@@ -903,6 +909,8 @@ const SWP = ({
             onChange={setMonthlyWithdrawalAmount}
             className={styles.fieldTight}
             title="Monthly Withdrawals"
+            singleRow={true}
+            stepData={DEFAULT_AMOUNT_STEPS}
             tabs={[]}
           />
           <div className={styles.joinRow}>
@@ -936,71 +944,107 @@ const SWP = ({
             </select>
           </div>
         </div>
-        <div className={styles.outputCol}>
+        <div className={`${styles.outputCol} ${styles.lumpsumOutputCol}`}>
           {viewChart &&
             (pinnedFunds.length > 0 ? (
               <Suspense
                 fallback={
-                  <div className={styles.chartLoadingWrapper}>
+                  <div className={`${styles.chartLoadingWrapper} ${styles.lumpsumLoadingWrapper}`}>
                     <span className={styles.loadingSpinner}></span>
                   </div>
                 }
               >
                 <Chart
-                  className={styles.chartContainer}
+                  className={`${styles.chartContainer} ${styles.lumpsumChartContainer}`}
                   datasets={chartDatasets}
                   investmentAmount={parseFloat(monthlyWithdrawalAmount) || 0}
                   dataMode="value"
+                  autoHeight
+                  startDate={lumpsumStartDate || startSwpDate}
+                  endDate={endSwpDate}
                 />
               </Suspense>
             ) : (
-              <div className={styles.chartPlaceholder}>
+              <div className={`${styles.chartPlaceholder} ${styles.lumpsumPlaceholder}`}>
                 Select up to 8 funds to see comparison
               </div>
             ))}
-          {pinnedFunds.length > 0 ? (
-            <div className={styles.mfDisplayGrid}>
-              {fundAnalyses.map((fund) => (
-                <div key={fund.schemeCode} className={styles.mfDisplayItem}>
-                  {renderStatsCard(
-                    fund.startNav,
-                    fund.endNav,
-                    fund.matureAmt,
-                    fund.installments,
-                    fund.invested,
-                    fund.units,
-                    fund.averageNav,
-                    fund.xirr,
-                    fund.totalWithdrawn,
-                    fund.lastWithdrawalAmount,
-                    fund.lastWithdrawalDate,
-                    fund.schemeName,
-                    fund.color
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className={styles.emptyStateCard}>
-              <div className={styles.emptyStateIcon}>
-                <FiTrendingUp />
-              </div>
-              <h3 className={styles.emptyStateTitle}>Select Mutual Funds to Backtest SWP</h3>
-              <p className={styles.emptyStateDescription}>
-                Compare historical monthly SWP cashflows, remaining portfolio values, and returns on live AMFI data.
-              </p>
-              <button
-                type="button"
-                className={styles.emptyStateBtn}
-                onClick={() => setIsFundSelectorOpen(true)}
-              >
-                <FiPlus />
-                <span>Add Mutual Fund</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
+      <div className={styles.statsGrid}>
+        {pinnedFunds.length > 0 ? (
+          <div className={styles.mfDisplayGrid}>
+            {fundAnalyses.map((fund) => (
+              <div
+                key={fund.schemeCode}
+                className={styles.mfDisplayItem}
+                onClick={() => {
+                  setDetailModalFund({
+                    ...fund,
+                    invAmt: parseFloat(lumpSumInvestmentAmount) || 0,
+                    startDate: lumpsumStartDate || startSwpDate,
+                    endDate: endSwpDate,
+                    navData: pinnedNavData[fund.schemeCode] || [],
+                  });
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`View detailed tax and performance analysis for ${fund.schemeName}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setDetailModalFund({
+                      ...fund,
+                      invAmt: parseFloat(lumpSumInvestmentAmount) || 0,
+                      startDate: lumpsumStartDate || startSwpDate,
+                      endDate: endSwpDate,
+                      navData: pinnedNavData[fund.schemeCode] || [],
+                    });
+                  }
+                }}
+              >
+                {renderStatsCard(
+                  fund.startNav,
+                  fund.endNav,
+                  fund.matureAmt,
+                  fund.installments,
+                  fund.invested,
+                  fund.units,
+                  fund.averageNav,
+                  fund.xirr,
+                  fund.totalWithdrawn,
+                  fund.lastWithdrawalAmount,
+                  fund.lastWithdrawalDate,
+                  fund.schemeName,
+                  fund.color
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyStateCard}>
+            <div className={styles.emptyStateIcon}>
+              <FiTrendingUp />
+            </div>
+            <h3 className={styles.emptyStateTitle}>Select Mutual Funds to Backtest SWP</h3>
+            <p className={styles.emptyStateDescription}>
+              Compare historical monthly SWP cashflows, remaining portfolio values, and returns on live AMFI data.
+            </p>
+            <button
+              type="button"
+              className={styles.emptyStateBtn}
+              onClick={() => setIsFundSelectorOpen(true)}
+            >
+              <FiPlus />
+              <span>Add Mutual Fund</span>
+            </button>
+          </div>
+        )}
+      </div>
+      <MutualFundDetailModal
+        fund={detailModalFund}
+        onClose={() => setDetailModalFund(null)}
+      />
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
         onClose={() => setIsFundSelectorOpen(false)}
