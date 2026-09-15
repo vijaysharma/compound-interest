@@ -181,7 +181,8 @@ export const TempValuePickerPage: React.FC = () => {
             <div className={styles.variationCard}>
               <h3>Case 1: Rate of Interest (%)</h3>
               <p>Inline control bar with quick decimal steps [0.01] [0.1] [1], value input, and [+] / [-] operation mode.</p>
-              <ValuePicker.ROI
+              <ValuePicker
+                variant="roi"
                 value={demoRoi}
                 onChange={setDemoRoi}
               />
@@ -193,7 +194,8 @@ export const TempValuePickerPage: React.FC = () => {
             <div className={styles.variationCard}>
               <h3>Case 2: Tenure Stepper</h3>
               <p>Inline control bar with decrement steps [-10] [-1], value input, increment steps [+1] [+10], and [M] / [Y] unit switcher.</p>
-              <ValuePicker.Tenure
+              <ValuePicker
+                variant="tenure"
                 value={demoTenure}
                 onChange={setDemoTenure}
                 unit={demoTenureUnit}
@@ -207,7 +209,8 @@ export const TempValuePickerPage: React.FC = () => {
             <div className={styles.variationCard}>
               <h3>Case 3: Paired / Dual Endpoint Selector</h3>
               <p>Joined selector bar with [Source] and [Target] purple badges and thin central divider.</p>
-              <ValuePicker.Paired
+              <ValuePicker
+                variant="paired"
                 sourceBadgeText="Source"
                 targetBadgeText="Target"
                 sourceValue={demoSource}
@@ -235,7 +238,8 @@ export const TempValuePickerPage: React.FC = () => {
             <div className={styles.variationCard}>
               <h3>Case 4: Dual Date Range Picker</h3>
               <p>Joined selector bar with [Start] and [End] purple badges and native HTML5 date pickers.</p>
-              <ValuePicker.DateRange
+              <ValuePicker
+                variant="date-range"
                 startBadgeText="Start"
                 endBadgeText="End"
                 startDate={demoStartDate}
@@ -251,7 +255,8 @@ export const TempValuePickerPage: React.FC = () => {
             <div className={`${styles.variationCard} ${styles.cardFullWidth}`}>
               <h3>Case 5: Multi-Row Duration Matrix Grid (3x8)</h3>
               <p>Duration matrix grid with 24 duration presets (1D to 20Y) with purple border and selected cell fill.</p>
-              <ValuePicker.Grid
+              <ValuePicker
+                variant="grid"
                 title="Duration Matrix"
                 gridRows={DEFAULT_DURATION_MATRIX_ROWS}
                 selectedGridId={demoGridItem}
@@ -265,35 +270,41 @@ export const TempValuePickerPage: React.FC = () => {
         </section>
         {/* Code Snippet for Easy Integration */}
         <section>
-          <h2 className={styles.sectionTitle}>How to Integrate All 5 Variants</h2>
+          <h2 className={styles.sectionTitle}>How to Integrate All Variants</h2>
           <pre className={styles.codeSnippet}>
 {`// 1. Amount Picker (Classic currency with tabs & quick steps):
 <ValuePicker value={amount} onChange={setAmount} tabs={tabs} currencySymbol="₹" />
 
 // 2. Rate of Interest (%) (Screenshot 1):
-<ValuePicker.ROI value={roi} onChange={setRoi} />
-// or using rt state: <ValuePicker.ROI rt={rt} setRt={setRt} />
+<ValuePicker variant="roi" value={roi} onChange={setRoi} />
+// or using rt state: <ValuePicker variant="roi" rt={rt} setRt={setRt} />
 
 // 3. Tenure Stepper (Screenshot 2):
-<ValuePicker.Tenure value={tenure} onChange={setTenure} unit={unit} onUnitChange={setUnit} />
-// or using rt state: <ValuePicker.Tenure rt={rt} setRt={setRt} />
+<ValuePicker variant="tenure" value={tenure} onChange={setTenure} unit={unit} onUnitChange={setUnit} />
+// or using rt state: <ValuePicker variant="tenure" rt={rt} setRt={setRt} />
 
-// 4. Paired Endpoint (Screenshot 3):
-<ValuePicker.Paired
+// 4. Rate & Tenure Combined:
+<ValuePicker variant="rate-tenure" rt={rt} setRt={setRt} />
+
+// 5. Paired Endpoint (Screenshot 3):
+<ValuePicker
+  variant="paired"
   sourceBadgeText="Source" targetBadgeText="Target"
   sourceValue={source} onSourceChange={setSource}
   targetValue={target} onTargetChange={setTarget}
 />
 
-// 5. Date Range (Screenshot 4):
-<ValuePicker.DateRange
+// 6. Date Range (Screenshot 4):
+<ValuePicker
+  variant="date-range"
   startBadgeText="Start" endBadgeText="End"
   startDate={startDate} setStartDate={setStartDate}
   endDate={endDate} setEndDate={setEndDate}
 />
 
-// 6. Duration Matrix Grid (Screenshot 5):
-<ValuePicker.Grid
+// 7. Duration Matrix Grid (Screenshot 5):
+<ValuePicker
+  variant="grid"
   gridRows={DEFAULT_DURATION_MATRIX_ROWS}
   selectedGridId={gridId}
   onGridSelect={(item) => setGridId(item.id)}

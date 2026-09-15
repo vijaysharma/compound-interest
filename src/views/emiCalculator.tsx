@@ -616,9 +616,11 @@ const EmiCalculator: React.FC = () => {
               titleStyle="merged"
               stepData={stepData}
               tabs={[]}
+              singleRow={true}
             />
-            <ValuePicker.RateTenure rt={rt} setRt={setRt} />
-            <ValuePicker.Paired
+            <ValuePicker variant="rate-tenure" rt={rt} setRt={setRt} />
+            <ValuePicker
+              variant="paired"
               sourceBadgeText="Disbursed"
               targetBadgeText="EMI Day"
               sourceSlot={

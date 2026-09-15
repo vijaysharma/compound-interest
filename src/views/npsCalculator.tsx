@@ -166,7 +166,8 @@ const NpsCalculator: React.FC = () => {
               <FiTrendingUp /> Age &amp; Expected Growth
             </h2>
             <div className={styles.fieldGroup}>
-              <ValuePicker.Paired
+              <ValuePicker
+                variant="paired"
                 title="Investment Period"
                 sourceBadgeText="Current Age"
                 targetBadgeText="Retire Age"
@@ -212,7 +213,8 @@ const NpsCalculator: React.FC = () => {
               />
             </div>
             <div className={styles.fieldGroup}>
-              <ValuePicker.RateTenure
+              <ValuePicker
+                variant="rate-tenure"
                 roi={expectedRoi}
                 onChangeRoi={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
                 rateTitle="Expected Return (CAGR %)"
@@ -241,7 +243,8 @@ const NpsCalculator: React.FC = () => {
               <FiPieChart /> Annuity &amp; Pension Allocation
             </h2>
             <div className={styles.fieldGroup}>
-              <ValuePicker.ROI
+              <ValuePicker
+                variant="roi"
                 title="Annuity Allocation Share (PFRDA Min 40%)"
                 value={annuityPercent}
                 onChange={(v) => {
@@ -257,7 +260,8 @@ const NpsCalculator: React.FC = () => {
               </p>
             </div>
             <div className={styles.fieldGroup}>
-              <ValuePicker.ROI
+              <ValuePicker
+                variant="roi"
                 title="Expected Annuity Return Rate (Pension Yield %)"
                 value={annuityRate}
                 onChange={(v) => setAnnuityRate(parseFloat(v) || 6.0)}

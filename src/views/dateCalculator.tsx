@@ -281,7 +281,8 @@ const DateCalculator: React.FC = () => {
           <div className={styles.inputsCol}>
             <div className={styles.inputsRow}>
               <div className={styles.inputCol}>
-                <ValuePicker.Paired
+                <ValuePicker
+                  variant="paired"
                   sourceBadgeText="From"
                   targetBadgeText="Time"
                   sourceSlot={(
@@ -312,7 +313,8 @@ const DateCalculator: React.FC = () => {
                 )}
               </div>
               <div className={styles.inputCol}>
-                <ValuePicker.Paired
+                <ValuePicker
+                  variant="paired"
                   sourceBadgeText="To"
                   targetBadgeText="Time"
                   sourceSlot={(
@@ -415,7 +417,8 @@ const DateCalculator: React.FC = () => {
       ) : (
         <div className={styles.calculatorGrid}>
           <div className={styles.inputsCol}>
-            <ValuePicker.Paired
+            <ValuePicker
+              variant="paired"
               title="Starting Date & Time"
               sourceBadgeText="Date"
               targetBadgeText="Time"

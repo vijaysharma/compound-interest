@@ -262,7 +262,8 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
                 { id: 'tgt', title: 'Target amount' },
               ]}
             />
-            <ValuePicker.RateTenure
+            <ValuePicker
+              variant="rate-tenure"
               className={styles.fieldLast}
               rt={rt}
               setRt={setRt}

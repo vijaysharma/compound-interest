@@ -26,7 +26,8 @@ const StartEndDate = ({
   endTitle = 'End',
   startMinDate,
 }: StartEndDateProps) => (
-  <ValuePicker.DateRange
+  <ValuePicker
+    variant="date-range"
     data={data}
     startDate={startDate}
     endDate={endDate}

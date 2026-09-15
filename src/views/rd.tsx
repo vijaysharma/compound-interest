@@ -231,7 +231,12 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
                 { id: 'tgt', title: 'Target amount' },
               ]}
             />
-            <ValuePicker.RateTenure className={styles.fieldLast} rt={rt} setRt={setRt} />
+            <ValuePicker
+              variant="rate-tenure"
+              className={styles.fieldLast}
+              rt={rt}
+              setRt={setRt}
+            />
           </div>
         </div>
         <div className={styles.resultsCol}>

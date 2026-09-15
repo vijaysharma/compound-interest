@@ -208,7 +208,7 @@ const Home = () => {
           <div className={styles.simulatorGrid}>
             {/* Interactive Inputs */}
             <div className={styles.inputsCard}>
-              <ValuePicker.Amount
+              <ValuePicker
                 title="Monthly Investment"
                 value={monthlySip.toString()}
                 onChange={(v) => {
@@ -237,7 +237,8 @@ const Home = () => {
                   ],
                 ]}
               />
-              <ValuePicker.ROI
+              <ValuePicker
+                variant="roi"
                 title="Expected Annual Return (CAGR %)"
                 value={expectedRoi}
                 onChange={(v) => {
@@ -253,7 +254,8 @@ const Home = () => {
                 min={1}
                 max={30}
               />
-              <ValuePicker.Tenure
+              <ValuePicker
+                variant="tenure"
                 title="Investment Horizon"
                 value={tenureYears.toString()}
                 onChange={(v) => {

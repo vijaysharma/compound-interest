@@ -368,7 +368,8 @@ const CurrencyConverter = () => {
       </header>
       <div className={styles.converterSection}>
         <div className={styles.inputsCol}>
-          <ValuePicker.Paired
+          <ValuePicker
+            variant="paired"
             sourceBadgeText="Source"
             targetBadgeText="Target"
             sourceSlot={(

@@ -1020,7 +1020,8 @@ const Lumpsum = ({
            * ======================================================
            */}
           {showDate && (
-            <ValuePicker.DateRange
+            <ValuePicker
+              variant="date-range"
               data={jsonNavData}
               startDate={startDate}
               endDate={endDate}

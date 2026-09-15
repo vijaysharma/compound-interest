@@ -310,7 +310,8 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
         <div className={styles.inputsCol}>
           <div className={styles.formStack}>
             {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-            <ValuePicker.Paired
+            <ValuePicker
+              variant="paired"
               sourceBadgeText="Source"
               targetBadgeText="Target"
               sourceSlot={(

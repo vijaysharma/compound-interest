@@ -233,7 +233,8 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               title="Withdrawal amount per month"
               tabs={[]}
             />
-            <ValuePicker.RateTenure
+            <ValuePicker
+              variant="rate-tenure"
               className={styles.field}
               roi={rt}
               onChangeRoi={setRt}
@@ -244,7 +245,8 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               rateTitle="Expected return rate (p.a.)"
               tenureTitle="Time period"
             />
-            <ValuePicker.ROI
+            <ValuePicker
+              variant="roi"
               className={styles.field}
               value={irt}
               onChange={setIRt}

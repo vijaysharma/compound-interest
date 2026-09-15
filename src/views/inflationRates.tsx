@@ -255,7 +255,8 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
               currencySymbol={currencySymbol}
               locale={locale}
             />
-            <ValuePicker.DateRange
+            <ValuePicker
+              variant="date-range"
               dateMode="year"
               startDate={startYear}
               endDate={endYear}

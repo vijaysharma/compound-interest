@@ -284,7 +284,8 @@ const PpfCalculator: React.FC = () => {
               </div>
             )}
             <div className={styles.fieldGroup}>
-              <ValuePicker.ROI
+              <ValuePicker
+                variant="roi"
                 title={`Projected Future Rate (%) — Current: ${CURRENT_PPF_RATE}%`}
                 value={projectedRate}
                 onChange={(v) => setProjectedRate(parseFloat(v) || 7.1)}

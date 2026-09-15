@@ -846,7 +846,8 @@ const SWP = ({
               <FiBarChart2 />
             </button>
           </div>
-          <ValuePicker.DateRange
+          <ValuePicker
+            variant="date-range"
             data={jsonNavData}
             startTitle="Investment Date"
             startDate={lumpsumStartDate}
@@ -860,7 +861,8 @@ const SWP = ({
             tabs={[]}
           />
           {jsonNavData.length > 0 && (
-            <ValuePicker.DateRange
+            <ValuePicker
+              variant="date-range"
               data={jsonNavData}
               startDate={startSwpDate}
               startTitle="Start SWP"

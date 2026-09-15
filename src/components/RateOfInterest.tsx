@@ -6,7 +6,8 @@ const RateOfInterest = ({
   title,
   className = '',
 }: RateOfInterestType) => (
-  <ValuePicker.ROI
+  <ValuePicker
+    variant="roi"
     rt={rt}
     setRt={setRt}
     title={title}

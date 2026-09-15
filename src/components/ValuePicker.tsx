@@ -12,8 +12,8 @@ import styles from './ValuePicker.module.scss';
 import convertToWords from '../utilities/currency';
 import { sanctnum } from '../utilities/numSanitity';
 import { getDateAsISO } from '../utilities/utility';
-import type { RT, NavType } from '../types/types';
-import RateTenurePicker, { RateTenurePickerProps } from './RateTenurePicker';
+import type { RT, NavType, StepAmountType } from '../types/types';
+import RateTenurePicker from './RateTenurePicker';
 import {
   DEFAULT_VALUE_PICKER_ROWS,
   DEFAULT_VALUE_PICKER_TABS,
@@ -30,6 +30,7 @@ export type ValuePickerVariant =
   | 'amount'
   | 'roi'
   | 'tenure'
+  | 'rate-tenure'
   | 'paired'
   | 'stacked-paired'
   | 'date-range'
@@ -153,16 +154,20 @@ export interface ValuePickerProps {
   gridRows?: GridItem[][];
   selectedGridId?: string;
   onGridSelect?: (item: GridItem) => void;
-}
-export interface ValuePickerComponent extends React.FC<ValuePickerProps> {
-  Amount: React.FC<ValuePickerProps>;
-  ROI: React.FC<ValuePickerProps>;
-  Tenure: React.FC<ValuePickerProps>;
-  Paired: React.FC<ValuePickerProps>;
-  StackedPaired: React.FC<ValuePickerProps>;
-  DateRange: React.FC<ValuePickerProps>;
-  Grid: React.FC<ValuePickerProps>;
-  RateTenure: React.FC<RateTenurePickerProps>;
+  // --- RateTenure Combined Variant Props ---
+  roi?: string | number;
+  onChangeRoi?: (newRoi: string) => void;
+  tenure?: string | number;
+  onChangeTenure?: (newTenure: string) => void;
+  tenureFormat?: 'y' | 'm';
+  onChangeTenureFormat?: (newFormat: 'y' | 'm') => void;
+  rateTitle?: string;
+  tenureTitle?: string;
+  rateStepData?: StepAmountType[];
+  tenureStepData?: StepAmountType[];
+  rateClassName?: string;
+  tenureClassName?: string;
+  showTenureSelect?: boolean;
 }
 // Maximum safe numeric limit for financial calculations (prevents overflow/DoS)
 const MAX_SAFE_FINANCIAL_VALUE = 1e12; // 1 Lakh Crore
@@ -1341,7 +1346,18 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
     prev.endDate !== next.endDate ||
     prev.startBadgeText !== next.startBadgeText ||
     prev.endBadgeText !== next.endBadgeText ||
-    prev.selectedGridId !== next.selectedGridId
+    prev.selectedGridId !== next.selectedGridId ||
+    prev.roi !== next.roi ||
+    prev.tenure !== next.tenure ||
+    prev.tenureFormat !== next.tenureFormat ||
+    prev.rateTitle !== next.rateTitle ||
+    prev.tenureTitle !== next.tenureTitle ||
+    prev.rateClassName !== next.rateClassName ||
+    prev.tenureClassName !== next.tenureClassName ||
+    prev.showTenureSelect !== next.showTenureSelect ||
+    prev.onChangeRoi !== next.onChangeRoi ||
+    prev.onChangeTenure !== next.onChangeTenure ||
+    prev.onChangeTenureFormat !== next.onChangeTenureFormat
   ) {
     return false;
   }
@@ -1349,6 +1365,15 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
   if (prev.stepRows !== next.stepRows) {
     if (!prev.stepRows || !next.stepRows) return false;
     if (prev.stepRows.length !== next.stepRows.length) return false;
+  }
+  // Compare rateStepData and tenureStepData
+  if (prev.rateStepData !== next.rateStepData) {
+    if (!prev.rateStepData || !next.rateStepData) return false;
+    if (prev.rateStepData.length !== next.rateStepData.length) return false;
+  }
+  if (prev.tenureStepData !== next.tenureStepData) {
+    if (!prev.tenureStepData || !next.tenureStepData) return false;
+    if (prev.tenureStepData.length !== next.tenureStepData.length) return false;
   }
   // Compare rt state
   if (prev.rt !== next.rt) {
@@ -1398,6 +1423,8 @@ const BaseValuePicker: React.FC<ValuePickerProps> = (props) => {
       return <RoiPicker {...props} />;
     case 'tenure':
       return <TenurePicker {...props} />;
+    case 'rate-tenure':
+      return <RateTenurePicker {...props} />;
     case 'paired':
     case 'stacked-paired':
       return <PairedPicker {...props} />;
@@ -1410,25 +1437,6 @@ const BaseValuePicker: React.FC<ValuePickerProps> = (props) => {
       return <AmountPicker {...props} />;
   }
 };
-export const ValuePicker = React.memo(BaseValuePicker, arePropsEqual) as unknown as ValuePickerComponent;
-ValuePicker.Amount = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="amount" />);
-ValuePicker.Amount.displayName = 'ValuePicker.Amount';
-ValuePicker.ROI = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="roi" />);
-ValuePicker.ROI.displayName = 'ValuePicker.ROI';
-ValuePicker.Tenure = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="tenure" />);
-ValuePicker.Tenure.displayName = 'ValuePicker.Tenure';
-ValuePicker.Paired = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="paired" />);
-ValuePicker.Paired.displayName = 'ValuePicker.Paired';
-ValuePicker.StackedPaired = React.memo((props: ValuePickerProps) => (
-  <ValuePicker {...props} variant="stacked-paired" />
-));
-ValuePicker.StackedPaired.displayName = 'ValuePicker.StackedPaired';
-ValuePicker.DateRange = React.memo((props: ValuePickerProps) => (
-  <ValuePicker {...props} variant="date-range" />
-));
-ValuePicker.DateRange.displayName = 'ValuePicker.DateRange';
-ValuePicker.Grid = React.memo((props: ValuePickerProps) => <ValuePicker {...props} variant="grid" />);
-ValuePicker.Grid.displayName = 'ValuePicker.Grid';
-ValuePicker.RateTenure = RateTenurePicker;
+export const ValuePicker = React.memo(BaseValuePicker, arePropsEqual);
 export { RateTenurePicker };
 export default ValuePicker;

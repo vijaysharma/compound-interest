@@ -1,7 +1,8 @@
 import { ROIType } from "../types/types";
 import ValuePicker from "./ValuePicker";
 const ROI = ({ rt, setRt, title, className = "" }: ROIType) => (
-  <ValuePicker.ROI
+  <ValuePicker
+    variant="roi"
     value={rt}
     onChange={setRt}
     title={title}

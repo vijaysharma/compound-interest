@@ -1021,7 +1021,8 @@ const SIP = ({
             </div>
           )}
           {showDate && jsonNavData.length > 0 && (
-            <ValuePicker.DateRange
+            <ValuePicker
+              variant="date-range"
               data={jsonNavData}
               startDate={startDate}
               endDate={endDate}
