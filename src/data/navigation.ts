@@ -14,6 +14,7 @@ import {
   FiFileText,
   FiGlobe,
   FiGrid,
+  FiHome,
   FiInfo,
   FiLayers,
   FiPercent,
@@ -66,6 +67,7 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
     title: 'Taxes & Strategy',
     items: [
       { name: 'Income Tax Calculator', href: '/income-tax-calculator', icon: FiFileText, aliases: ['/tax-calculator', '/tax/income-tax'] },
+      { name: 'Property Tax (Indexation)', href: '/property-tax-calculator', icon: FiHome, aliases: ['/property-tax', '/tax/property-tax', '/capital-gains-property'] },
       { name: 'Upload Form 16 & File ITR', href: '/file-itr', icon: FiUploadCloud, aliases: ['/file-income-tax-return'] },
     ],
   },

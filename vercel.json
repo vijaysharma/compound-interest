@@ -64,6 +64,16 @@
       "permanent": true
     },
     {
+      "source": "/property-tax",
+      "destination": "/property-tax-calculator",
+      "permanent": true
+    },
+    {
+      "source": "/tax/property-tax",
+      "destination": "/property-tax-calculator",
+      "permanent": true
+    },
+    {
       "source": "/economics/inflation-rates",
       "destination": "/inflation-calculator",
       "permanent": true

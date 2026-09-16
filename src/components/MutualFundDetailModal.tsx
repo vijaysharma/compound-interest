@@ -3,12 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { NavType } from '../types/types';
 import { fetchMFWithMeta, MFMetaType } from '../data/api_data';
+import Spinner from './Spinner';
+import { getNearest, isoDateToNavDate, navDateToISO } from '../utilities/utility';
 import styles from './MutualFundDetailModal.module.scss';
 const Chart = dynamic(() => import('./Chart'), {
   ssr: false,
   loading: () => (
-    <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ width: '2rem', height: '2rem', borderRadius: '9999px', border: '3px solid rgba(110, 11, 117, 0.2)', borderTopColor: '#6e0b75', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Spinner size="lg" label="Loading interactive chart..." />
     </div>
   ),
 });
@@ -33,12 +35,55 @@ interface MutualFundDetailModalProps {
 }
 const formatINR = (val: number): string =>
   `₹${Math.round(val).toLocaleString('en-IN')}`;
+const parseDateParts = (dStr: string) => {
+  const p = dStr.split('-');
+  if (p.length === 3) {
+    if (p[0].length === 4) {
+      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getTime();
+    }
+    return new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0])).getTime();
+  }
+  return 0;
+};
 export default function MutualFundDetailModal({
   fund,
   onClose,
 }: MutualFundDetailModalProps) {
   const [meta, setMeta] = useState<MFMetaType | null>(null);
-  const [taxMode, setTaxMode] = useState<'auto' | 'ltcg' | 'stcg' | 'slab30' | 'none'>('auto');
+  const [investmentType, setInvestmentType] = useState<'lumpsum' | 'sip'>('lumpsum');
+  const [taxMode, setTaxMode] = useState<'auto' | 'ltcg' | 'stcg' | 'slab30' | 'slab20' | 'none'>('auto');
+  const navData = fund?.navData;
+  // Sorted date limits from navData
+  const { minNavDateISO, maxNavDateISO } = useMemo(() => {
+    if (!navData || navData.length === 0) {
+      return { minNavDateISO: '', maxNavDateISO: '' };
+    }
+    const sorted = [...navData].sort(
+      (a, b) => parseDateParts(a.date) - parseDateParts(b.date)
+    );
+    return {
+      minNavDateISO: navDateToISO(sorted[0].date),
+      maxNavDateISO: navDateToISO(sorted[sorted.length - 1].date),
+    };
+  }, [navData]);
+  // Track fund changes to reset inputs cleanly without setState in effect
+  const [prevFund, setPrevFund] = useState(fund);
+  const [customStartDateISO, setCustomStartDateISO] = useState<string | null>(null);
+  const [customEndDateISO, setCustomEndDateISO] = useState<string | null>(null);
+  const [customInvestmentValue, setCustomInvestmentValue] = useState<string | null>(null);
+  if (fund !== prevFund) {
+    setPrevFund(fund);
+    setCustomStartDateISO(null);
+    setCustomEndDateISO(null);
+    setCustomInvestmentValue(null);
+  }
+  const startDateISO = customStartDateISO ?? (fund?.startDate ? navDateToISO(fund.startDate) : minNavDateISO);
+  const endDateISO = customEndDateISO ?? (fund?.endDate ? navDateToISO(fund.endDate) : maxNavDateISO);
+  const investmentValue = customInvestmentValue ?? String(fund && fund.invAmt > 0 ? fund.invAmt : 100000);
+  const setStartDateISO = (val: string) => setCustomStartDateISO(val);
+  const setEndDateISO = (val: string) => setCustomEndDateISO(val);
+  const setInvestmentValue = (val: string) => setCustomInvestmentValue(val);
+  // Fetch MF metadata
   useEffect(() => {
     if (!fund?.schemeCode) return;
     let active = true;
@@ -55,55 +100,216 @@ export default function MutualFundDetailModal({
       active = false;
     };
   }, [fund?.schemeCode]);
-  // Calculate holding period in days
+  // Convert current ISO dates back to DD-MM-YYYY for calculation
+  const currentNavStartDate = useMemo(
+    () => (startDateISO ? isoDateToNavDate(startDateISO) : fund?.startDate || ''),
+    [startDateISO, fund?.startDate]
+  );
+  const currentNavEndDate = useMemo(
+    () => (endDateISO ? isoDateToNavDate(endDateISO) : fund?.endDate || ''),
+    [endDateISO, fund?.endDate]
+  );
+  // Holding Period calculation
   const holdingDays = useMemo(() => {
-    if (!fund?.navData || fund.navData.length < 2) return 365;
-    const startPoint = fund.navData[fund.navData.length - 1];
-    const endPoint = fund.navData[0];
-    if (!startPoint || !endPoint) return 365;
-    const parseDate = (dStr: string) => {
-      const p = dStr.split('-');
-      if (p.length === 3) {
-        return new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0])).getTime();
-      }
-      return 0;
-    };
-    const sTime = parseDate(startPoint.date);
-    const eTime = parseDate(endPoint.date);
+    if (!startDateISO || !endDateISO) return 365;
+    const sTime = new Date(startDateISO).getTime();
+    const eTime = new Date(endDateISO).getTime();
     return Math.max(1, Math.round(Math.abs(eTime - sTime) / (1000 * 60 * 60 * 24)));
-  }, [fund?.navData]);
-  const holdingYears = (holdingDays / 365.25).toFixed(2);
+  }, [startDateISO, endDateISO]);
+  const holdingYears = Math.max(0.08, Number((holdingDays / 365.25).toFixed(2)));
   const isLongTerm = holdingDays > 365;
-  // Compute post-tax returns based on Indian Finance Act 2024 / Sec 112A
+  // Asset category determination for smart taxation
+  const fundCategory = useMemo(() => {
+    const text = `${meta?.scheme_category || ''} ${fund?.schemeName || ''}`.toLowerCase();
+    if (
+      text.includes('debt') ||
+      text.includes('liquid') ||
+      text.includes('money market') ||
+      text.includes('overnight') ||
+      text.includes('gilt') ||
+      text.includes('corporate bond') ||
+      text.includes('banking and psu') ||
+      text.includes('floater')
+    ) {
+      return 'debt';
+    }
+    if (text.includes('conservative hybrid') || text.includes('equity savings')) {
+      return 'hybrid_conservative';
+    }
+    return 'equity';
+  }, [meta?.scheme_category, fund?.schemeName]);
+  // Live Performance & Investment Calculation
+  const performance = useMemo(() => {
+    if (!fund?.navData || fund.navData.length === 0) {
+      return {
+        invested: fund?.invAmt || 0,
+        maturity: fund?.matureAmt || 0,
+        gain: fund?.profitAmt || 0,
+        absReturn: fund?.absProfit || 0,
+        cagr: fund?.profit || 0,
+        startNavVal: 0,
+        endNavVal: 0,
+        datasets: [],
+      };
+    }
+    const startNavObj = getNearest(currentNavStartDate, fund.navData);
+    const endNavObj = getNearest(currentNavEndDate, fund.navData);
+    const sNav = startNavObj ? parseFloat(startNavObj.nav) : 10;
+    const eNav = endNavObj ? parseFloat(endNavObj.nav) : sNav;
+    const amountInput = Math.max(100, parseFloat(investmentValue) || 100000);
+    if (investmentType === 'lumpsum') {
+      const units = amountInput / sNav;
+      const maturity = units * eNav;
+      const gain = maturity - amountInput;
+      const absReturn = (gain / amountInput) * 100;
+      const cagr =
+        amountInput > 0 && maturity > 0
+          ? (Math.pow(maturity / amountInput, 1 / holdingYears) - 1) * 100
+          : 0;
+      const lowerT = Math.min(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
+      const upperT = Math.max(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
+      const points = fund.navData
+        .map((p) => ({
+          date: p.date,
+          nav: Number((units * parseFloat(p.nav)).toFixed(2)),
+          time: parseDateParts(p.date),
+        }))
+        .filter((p) => p.time >= lowerT && p.time <= upperT)
+        .sort((a, b) => a.time - b.time)
+        .map(({ date, nav }) => ({ date, nav }));
+      return {
+        invested: amountInput,
+        maturity,
+        gain,
+        absReturn,
+        cagr,
+        startNavVal: sNav,
+        endNavVal: eNav,
+        datasets: [
+          {
+            label: `${fund.schemeName} (Lumpsum)`,
+            color: fund.color || '#2563eb',
+            data: points,
+          },
+        ],
+      };
+    }
+    // Monthly SIP Simulation
+    const monthlySip = amountInput;
+    const sDate = new Date(startDateISO || minNavDateISO || '2020-01-01');
+    const eDate = new Date(endDateISO || maxNavDateISO || '2024-01-01');
+    const dayOfMonth = sDate.getDate();
+    let totalUnits = 0;
+    let installments = 0;
+    const cur = new Date(sDate);
+    while (cur <= eDate) {
+      const year = cur.getFullYear();
+      const month = String(cur.getMonth() + 1).padStart(2, '0');
+      const day = String(Math.min(dayOfMonth, 28)).padStart(2, '0');
+      const targetNavDate = `${day}-${month}-${year}`;
+      const navItem = getNearest(targetNavDate, fund.navData);
+      const navVal = navItem ? parseFloat(navItem.nav) : 10;
+      if (navVal > 0) {
+        totalUnits += monthlySip / navVal;
+        installments++;
+      }
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    const totalInvested = Math.max(monthlySip, installments * monthlySip);
+    const maturity = totalUnits * eNav;
+    const gain = maturity - totalInvested;
+    const absReturn = (gain / totalInvested) * 100;
+    // Approximated Annualized Return for SIP
+    const avgDurationYears = Math.max(0.1, holdingYears / 2);
+    const cagr =
+      totalInvested > 0 && maturity > 0
+        ? (Math.pow(maturity / totalInvested, 1 / avgDurationYears) - 1) * 100
+        : 0;
+    const lowerT = Math.min(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
+    const upperT = Math.max(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
+    const points = fund.navData
+      .map((p) => ({
+        date: p.date,
+        nav: Number((totalUnits * parseFloat(p.nav)).toFixed(2)),
+        time: parseDateParts(p.date),
+      }))
+      .filter((p) => p.time >= lowerT && p.time <= upperT)
+      .sort((a, b) => a.time - b.time)
+      .map(({ date, nav }) => ({ date, nav }));
+    return {
+      invested: totalInvested,
+      maturity,
+      gain,
+      absReturn,
+      cagr,
+      startNavVal: sNav,
+      endNavVal: eNav,
+      datasets: [
+        {
+          label: `${fund.schemeName} (SIP)`,
+          color: fund.color || '#2563eb',
+          data: points,
+        },
+      ],
+    };
+  }, [
+    fund,
+    currentNavStartDate,
+    currentNavEndDate,
+    startDateISO,
+    endDateISO,
+    investmentType,
+    investmentValue,
+    holdingYears,
+    minNavDateISO,
+    maxNavDateISO,
+  ]);
+  // Compute live tax calculations based on Indian Finance Act 2024 / Sec 112A
   const taxCalculations = useMemo(() => {
-    if (!fund) return { taxAmount: 0, postTaxMaturity: 0, postTaxProfit: 0, postTaxCagr: 0, rateLabel: '' };
-    const gains = Math.max(0, fund.profitAmt);
+    const gains = Math.max(0, performance.gain);
     let effectiveTax = 0;
     let rateLabel = '';
-    const effectiveMode = taxMode === 'auto' ? (isLongTerm ? 'ltcg' : 'stcg') : taxMode;
+    let categoryBadge = '';
+    let effectiveMode = taxMode;
+    if (taxMode === 'auto') {
+      if (fundCategory === 'debt') {
+        effectiveMode = 'slab30';
+      } else if (fundCategory === 'hybrid_conservative') {
+        effectiveMode = holdingDays > 1095 ? 'ltcg' : 'slab30';
+      } else {
+        effectiveMode = isLongTerm ? 'ltcg' : 'stcg';
+      }
+    }
     if (effectiveMode === 'none') {
       effectiveTax = 0;
-      rateLabel = '0% (Exempt)';
+      rateLabel = '0% (Tax-Exempt)';
+      categoryBadge = 'Exempt';
     } else if (effectiveMode === 'ltcg') {
-      // Equity LTCG (Budget 2024): ₹1.25L exemption, 12.5% + 4% cess = 13.0%
+      // Equity LTCG (Budget 2024): ₹1.25L annual exemption, 12.5% + 4% cess = 13.0%
       const taxableGains = Math.max(0, gains - 125000);
       effectiveTax = taxableGains * 0.13;
-      rateLabel = '12.5% LTCG (>₹1.25L exemption + 4% cess)';
+      rateLabel = '12.5% LTCG (>₹1.25L Exemption + 4% Cess)';
+      categoryBadge = 'Equity LTCG (12.5%)';
     } else if (effectiveMode === 'stcg') {
       // Equity STCG (Budget 2024): 20% + 4% cess = 20.8%
       effectiveTax = gains * 0.208;
-      rateLabel = '20% STCG (+ 4% cess)';
+      rateLabel = '20% STCG (+ 4% Cess)';
+      categoryBadge = 'Equity STCG (20%)';
     } else if (effectiveMode === 'slab30') {
-      // Debt / Non-equity slab rate (30% + 4% cess = 31.2%)
+      // Debt / Slab 30% (+ 4% cess = 31.2%)
       effectiveTax = gains * 0.312;
-      rateLabel = '30% Income Slab (+ 4% cess)';
+      rateLabel = '30% Slab (+ 4% Cess)';
+      categoryBadge = 'Income Tax Slab (30%)';
+    } else if (effectiveMode === 'slab20') {
+      effectiveTax = gains * 0.208;
+      rateLabel = '20% Slab (+ 4% Cess)';
+      categoryBadge = 'Income Tax Slab (20%)';
     }
-    const postTaxMaturity = fund.matureAmt - effectiveTax;
-    const postTaxProfit = fund.profitAmt - effectiveTax;
-    const yearsNum = Math.max(0.1, Number(holdingYears));
+    const postTaxMaturity = performance.maturity - effectiveTax;
+    const postTaxProfit = performance.gain - effectiveTax;
     const postTaxCagr =
-      fund.invAmt > 0 && postTaxMaturity > 0
-        ? (Math.pow(postTaxMaturity / fund.invAmt, 1 / yearsNum) - 1) * 100
+      performance.invested > 0 && postTaxMaturity > 0
+        ? (Math.pow(postTaxMaturity / performance.invested, 1 / holdingYears) - 1) * 100
         : 0;
     return {
       taxAmount: effectiveTax,
@@ -111,22 +317,9 @@ export default function MutualFundDetailModal({
       postTaxProfit,
       postTaxCagr,
       rateLabel,
+      categoryBadge,
     };
-  }, [fund, taxMode, isLongTerm, holdingYears]);
-  // Dedicated single-fund chart dataset
-  const chartDatasets = useMemo(() => {
-    if (!fund?.navData || fund.navData.length === 0) return [];
-    return [
-      {
-        label: fund.schemeName,
-        color: fund.color || '#2563eb',
-        data: fund.navData.map((d) => ({
-          date: d.date,
-          nav: Number(d.nav),
-        })),
-      },
-    ];
-  }, [fund]);
+  }, [performance, taxMode, fundCategory, isLongTerm, holdingDays, holdingYears]);
   // Sectoral and constituent profile based on scheme category
   const constituentProfile = useMemo(() => {
     const cat = (meta?.scheme_category || fund?.schemeName || '').toLowerCase();
@@ -221,61 +414,127 @@ export default function MutualFundDetailModal({
         </div>
         {/* Scrollable Body */}
         <div className={styles.modalBody}>
+          {/* Interactive Date & Investment Controls Toolbar */}
+          <div className={styles.controlBar}>
+            <div className={styles.controlGroup}>
+              <span className={styles.controlLabel}>Date Range:</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={startDateISO}
+                min={minNavDateISO}
+                max={endDateISO || maxNavDateISO}
+                onChange={(e) => setStartDateISO(e.target.value)}
+                aria-label="Modal Start Date"
+              />
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>to</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={endDateISO}
+                min={startDateISO || minNavDateISO}
+                max={maxNavDateISO}
+                onChange={(e) => setEndDateISO(e.target.value)}
+                aria-label="Modal End Date"
+              />
+            </div>
+            <div className={styles.controlGroup}>
+              <span className={styles.controlLabel}>Type:</span>
+              <div className={styles.typeToggleGroup}>
+                <button
+                  type="button"
+                  className={`${styles.typeToggleBtn} ${investmentType === 'lumpsum' ? styles.activeType : ''}`}
+                  onClick={() => {
+                    setInvestmentType('lumpsum');
+                    setInvestmentValue('100000');
+                  }}
+                >
+                  Lumpsum
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.typeToggleBtn} ${investmentType === 'sip' ? styles.activeType : ''}`}
+                  onClick={() => {
+                    setInvestmentType('sip');
+                    setInvestmentValue('5000');
+                  }}
+                >
+                  Monthly SIP
+                </button>
+              </div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>₹</span>
+                <input
+                  type="number"
+                  className={styles.inputField}
+                  value={investmentValue}
+                  step={investmentType === 'sip' ? '500' : '5000'}
+                  min="100"
+                  onChange={(e) => setInvestmentValue(e.target.value)}
+                  placeholder={investmentType === 'sip' ? 'SIP Amt' : 'Lumpsum Amt'}
+                  aria-label="Investment Amount"
+                />
+              </div>
+            </div>
+          </div>
           {/* Key Return Stats Grid */}
           <div className={styles.statsGrid}>
             <div className={styles.statCard}>
-              <span className={styles.statLabel}>Invested Capital</span>
-              <span className={styles.statValue}>{formatINR(fund.invAmt)}</span>
+              <span className={styles.statLabel}>
+                {investmentType === 'sip' ? 'Total Invested (SIP)' : 'Invested Capital'}
+              </span>
+              <span className={styles.statValue}>{formatINR(performance.invested)}</span>
               <span className={styles.statSubtext}>
-                NAV: ₹
-                {typeof fund.startNav === 'object' && fund.startNav
-                  ? parseFloat(fund.startNav.nav).toFixed(2)
-                  : (Number(fund.startNav) || 0).toFixed(2)}
+                Start NAV: ₹{performance.startNavVal.toFixed(2)}
               </span>
             </div>
             <div className={styles.statCard}>
               <span className={styles.statLabel}>Pre-Tax Maturity</span>
-              <span className={styles.statValue}>{formatINR(fund.matureAmt)}</span>
+              <span className={styles.statValue}>{formatINR(performance.maturity)}</span>
               <span className={styles.statSubtext}>
-                NAV: ₹
-                {typeof fund.endNav === 'object' && fund.endNav
-                  ? parseFloat(fund.endNav.nav).toFixed(2)
-                  : (Number(fund.endNav) || 0).toFixed(2)}
+                End NAV: ₹{performance.endNavVal.toFixed(2)}
               </span>
             </div>
             <div className={styles.statCard}>
               <span className={styles.statLabel}>Gross Capital Gain</span>
-              <span className={`${styles.statValue} ${fund.profitAmt >= 0 ? styles.statGain : styles.statLoss}`}>
-                {fund.profitAmt >= 0 ? '+' : ''}{formatINR(fund.profitAmt)}
+              <span
+                className={`${styles.statValue} ${performance.gain >= 0 ? styles.statGain : styles.statLoss}`}
+              >
+                {performance.gain >= 0 ? '+' : ''}{formatINR(performance.gain)}
               </span>
-              <span className={styles.statSubtext}>{fund.absProfit.toFixed(1)}% Absolute</span>
+              <span className={styles.statSubtext}>{performance.absReturn.toFixed(1)}% Absolute</span>
             </div>
             <div className={styles.statCard}>
-              <span className={styles.statLabel}>Annualized CAGR</span>
-              <span className={`${styles.statValue} ${fund.profit >= 0 ? styles.statGain : styles.statLoss}`}>
-                {fund.profit.toFixed(2)}%
+              <span className={styles.statLabel}>Annualized Return</span>
+              <span
+                className={`${styles.statValue} ${performance.cagr >= 0 ? styles.statGain : styles.statLoss}`}
+              >
+                {performance.cagr.toFixed(2)}%
               </span>
-              <span className={styles.statSubtext}>{holdingDays} Days (~{holdingYears} Yrs)</span>
+              <span className={styles.statSubtext}>
+                {holdingDays} Days (~{holdingYears} Yrs)
+              </span>
             </div>
           </div>
-          {/* Dedicated Interactive Chart */}
+          {/* Dedicated Interactive Chart with Zoom Presets */}
           <div className={styles.chartSection}>
             <div className={styles.chartTitle}>
               <span>Historical NAV & Portfolio Trajectory</span>
               <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#64748b' }}>
-                Drag horizontally to zoom section
+                Use presets or drag horizontally to zoom
               </span>
             </div>
             <div className={styles.chartWrapper}>
               <Chart
                 className={styles.chart}
-                datasets={chartDatasets}
-                investmentAmount={fund.invAmt}
+                datasets={performance.datasets}
+                investmentAmount={performance.invested}
                 dataMode="value"
                 autoHeight={true}
                 enableZoom={true}
-                startDate={fund.startDate}
-                endDate={fund.endDate}
+                showPresets={true}
+                startDate={currentNavStartDate}
+                endDate={currentNavEndDate}
               />
             </div>
           </div>
@@ -290,9 +549,9 @@ export default function MutualFundDetailModal({
                   type="button"
                   className={`${styles.taxToggleBtn} ${taxMode === 'auto' ? styles.activeToggle : ''}`}
                   onClick={() => setTaxMode('auto')}
-                  title="Auto-detect based on holding period"
+                  title="Auto-detect based on fund category and holding period"
                 >
-                  Auto ({isLongTerm ? 'LTCG 12.5%' : 'STCG 20%'})
+                  Auto ({taxCalculations.categoryBadge})
                 </button>
                 <button
                   type="button"
@@ -319,12 +578,12 @@ export default function MutualFundDetailModal({
             </div>
             <div className={styles.taxCardsGrid}>
               <div className={styles.taxCard}>
-                <span className={styles.taxCardLabel}>Holding Period</span>
+                <span className={styles.taxCardLabel}>Holding & Tax Classification</span>
                 <span className={styles.taxCardValue} style={{ fontSize: '1rem', color: '#0f172a' }}>
-                  {holdingDays} Days ({holdingYears} Years)
+                  {holdingDays} Days ({holdingYears} Yrs)
                 </span>
                 <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                  Classification: <strong>{isLongTerm ? 'Long Term (>1 Yr)' : 'Short Term (≤1 Yr)'}</strong>
+                  Asset: <strong>{fundCategory.toUpperCase()}</strong> ({isLongTerm ? 'Long Term' : 'Short Term'})
                 </span>
               </div>
               <div className={styles.taxCard}>
@@ -346,17 +605,17 @@ export default function MutualFundDetailModal({
                 </span>
               </div>
               <div className={styles.taxCard} style={{ background: '#f0fdf4', borderColor: '#86efac' }}>
-                <span className={styles.taxCardLabel}>Post-Tax Net CAGR</span>
+                <span className={styles.taxCardLabel}>Post-Tax Net Return</span>
                 <span className={styles.taxCardValue} style={{ color: '#15803d' }}>
                   {taxCalculations.postTaxCagr.toFixed(2)}%
                 </span>
                 <span style={{ fontSize: '0.72rem', color: '#166534' }}>
-                  Gross CAGR: {fund.profit.toFixed(2)}%
+                  Gross Return: {performance.cagr.toFixed(2)}%
                 </span>
               </div>
             </div>
             <p className={styles.taxDisclaimer}>
-              * Tax calculation follows Indian Budget 2024 provisions (Sections 112A & 111A). Long-Term Capital Gains on Equity are exempt up to ₹1,25,000 per financial year across all equity holdings, with the remainder taxed at 12.5% + 4% Health & Education Cess (effective 13.0%). Short-Term Capital Gains are taxed at 20% + 4% cess (effective 20.8%).
+              * Tax calculation follows Indian Budget 2024 provisions (Sections 112A & 111A). Long-Term Capital Gains on Equity are exempt up to ₹1,25,000 per financial year across all equity holdings, with the remainder taxed at 12.5% + 4% Health & Education Cess (effective 13.0%). Short-Term Capital Gains are taxed at 20% + 4% cess (effective 20.8%). Pure Debt funds are taxed at the investor&apos;s applicable slab rate.
             </p>
           </div>
           {/* Scheme Overview, Category Benchmark & Constituents */}

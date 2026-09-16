@@ -11,6 +11,7 @@ import {
   NumberAxisModule,
 } from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
+import Spinner from './Spinner';
 import styles from './Chart.module.scss';
 if (typeof window !== 'undefined') {
   ModuleRegistry.registerModules([
@@ -40,6 +41,10 @@ interface ChartProps {
   autoHeight?: boolean;
   minHeight?: number;
   enableZoom?: boolean;
+  showPresets?: boolean;
+  isLoading?: boolean;
+  loadingLabel?: string;
+  emptyMessage?: string;
   startDate?: string | null;
   endDate?: string | null;
 }
@@ -97,6 +102,10 @@ const Chart = ({
   autoHeight = false,
   minHeight = 0,
   enableZoom = true,
+  showPresets = false,
+  isLoading = false,
+  loadingLabel,
+  emptyMessage,
   startDate,
   endDate,
 }: ChartProps) => {
@@ -372,43 +381,67 @@ const Chart = ({
       },
     };
   }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates]);
-  if (datasets.length === 0) {
+  const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
+  if (isLoading || (datasets.length > 0 && !hasAnyData)) {
     return (
       <div className={`${className} ${styles.emptyContainer}`}>
-        <span className={styles.emptyText}>No chart data available</span>
+        <Spinner size="md" label={loadingLabel || 'Loading historical NAV data...'} />
       </div>
     );
   }
-  if (initialInvestment <= 0 || !chartOptions) {
+  if (datasets.length === 0) {
+    return (
+      <div className={`${className} ${styles.emptyContainer}`}>
+        <span className={styles.emptyText}>{emptyMessage || 'Select a mutual fund to view trajectory'}</span>
+      </div>
+    );
+  }
+  if (allSortedDates.length === 0) {
+    return (
+      <div className={`${className} ${styles.emptyContainer}`}>
+        <span className={styles.emptyText}>No NAV history found for the selected dates</span>
+      </div>
+    );
+  }
+  if (initialInvestment <= 0) {
     return (
       <div className={`${className} ${styles.emptyContainer}`}>
         <span className={styles.emptyText}>Enter an investment amount to view growth</span>
       </div>
     );
   }
+  if (!chartOptions) {
+    return (
+      <div className={`${className} ${styles.emptyContainer}`}>
+        <Spinner size="sm" label="Preparing chart..." />
+      </div>
+    );
+  }
   if (!mounted) {
     return (
       <div className={`${className} ${styles.emptyContainer}`}>
-        <span className={styles.emptyText}>Loading chart...</span>
+        <Spinner size="sm" label="Loading chart..." />
       </div>
     );
   }
   return (
     <div className={`${className} ${styles.chartWrapper}`}>
-      {enableZoom && allSortedDates.length > 5 && (
+      {enableZoom && allSortedDates.length > 5 && (showPresets || zoomRange) && (
         <div className={styles.zoomToolbar}>
-          <div className={styles.zoomPresets}>
-            {['1M', '6M', '1Y', '3Y', '5Y', 'All'].map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                className={`${styles.zoomPresetBtn} ${activePreset === preset ? styles.activePreset : ''}`}
-                onClick={() => handleApplyPreset(preset)}
-              >
-                {preset}
-              </button>
-            ))}
-          </div>
+          {showPresets && (
+            <div className={styles.zoomPresets}>
+              {['1M', '6M', '1Y', '3Y', '5Y', 'All'].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  className={`${styles.zoomPresetBtn} ${activePreset === preset ? styles.activePreset : ''}`}
+                  onClick={() => handleApplyPreset(preset)}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+          )}
           <div className={styles.zoomInfo}>
             {zoomRange ? (
               <>

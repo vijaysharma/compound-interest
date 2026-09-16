@@ -123,6 +123,24 @@ export const SEO_PAGES = {
     ],
     canonicalPath: '/income-tax-calculator',
   }),
+  propertyTaxCalculator: createPageMetadata({
+    title: 'Property Capital Gains Tax Calculator 2026 — Indexation vs 12.5% New Rule | Rupee Calculator',
+    description:
+      'Calculate & compare real estate capital gains tax under Budget 2024 grandfathering clause. Compare 20% with CII indexation against 12.5% flat tax with Section 54 & 54EC exemptions.',
+    keywords: [
+      'property capital gains tax calculator',
+      'property tax indexation calculator',
+      'real estate LTCG calculator India',
+      'budget 2024 property tax rule',
+      'grandfathering clause real estate',
+      'cost inflation index calculator',
+      'CII property calculator',
+      'section 54 exemption calculator',
+      'section 54EC bonds calculator',
+      'long term capital gains property',
+    ],
+    canonicalPath: '/property-tax-calculator',
+  }),
   fileItr: createPageMetadata({
     title: 'Upload Form 16 & Prepare Income Tax Return (ITR) India FY 2024-25 & FY 2025-26',
     description:

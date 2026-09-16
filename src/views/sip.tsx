@@ -14,6 +14,7 @@ import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFun
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import { FiBarChart2, FiPlus, FiTrendingUp } from 'react-icons/fi';
+import Spinner from '../components/Spinner';
 import styles from './MutualFundAnalytics.module.scss';
 const liveSipSchema = {
   '@context': 'https://schema.org',
@@ -104,7 +105,7 @@ const Chart = dynamic(() => import('../components/Chart'), {
   ssr: false,
   loading: () => (
     <div className={styles.chartLoadingWrapper}>
-      <span className={styles.loadingSpinner}></span>
+      <Spinner size="lg" label="Loading chart..." />
     </div>
   ),
 });
@@ -257,6 +258,7 @@ const SIP = ({
   const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [loadingSchemeCodes, setLoadingSchemeCodes] = useState<Set<string>>(new Set());
+  const [isNavLoading, setIsNavLoading] = useState(false);
   const [error, setError] = useState<{
     status: string;
     message: string;
@@ -428,6 +430,7 @@ const SIP = ({
     }
     let cancelled = false;
     const restorePinnedFunds = async () => {
+      setIsNavLoading(true);
       try {
         const codes = missingFunds.map((f) => f.schemeCode);
         const batchResults = await fetchBatchMFbySchemeCodes(codes);
@@ -438,6 +441,10 @@ const SIP = ({
         }));
       } catch (err) {
         console.error('Failed to restore batch NAV data:', err);
+      } finally {
+        if (!cancelled) {
+          setIsNavLoading(false);
+        }
       }
     };
     void restorePinnedFunds();
@@ -779,20 +786,8 @@ const SIP = ({
           </span>
         </div>
         {!start || !end ? (
-          <div className={styles.statCardSkeleton}>
-            <div className={styles.statLoading}>Loading NAV data...</div>
-            <div className={styles.skeletonRow}>
-              <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
-              <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
-            </div>
-            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
-            <div className={styles.skeletonValue} />
-            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
-            <div className={`${styles.skeletonValue} ${styles.skeletonValueLarge}`} />
-            <div className={`${styles.skeletonLine} ${styles.skeletonLineTiny}`} />
-            <div className={styles.skeletonValue} />
-            <div className={styles.skeletonLine} />
-            <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
+          <div style={{ padding: '1.25rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Spinner size="sm" label="Loading NAV data..." />
           </div>
         ) : (
           <>
@@ -1119,7 +1114,7 @@ const SIP = ({
               <Suspense
                 fallback={
                   <div className={`${styles.chartLoadingWrapper} ${styles.lumpsumLoadingWrapper}`}>
-                    <span className={styles.loadingSpinner}></span>
+                    <Spinner size="lg" label="Loading chart..." />
                   </div>
                 }
               >
@@ -1131,6 +1126,10 @@ const SIP = ({
                   autoHeight
                   startDate={startDate}
                   endDate={endDate}
+                  showPresets={false}
+                  isLoading={isNavLoading}
+                  loadingLabel="Loading historical NAV data..."
+                  emptyMessage="Select up to 8 funds to see comparison"
                 />
               </Suspense>
             ) : (
