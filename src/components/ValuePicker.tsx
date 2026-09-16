@@ -476,6 +476,7 @@ const GenericValuePicker: React.FC<ValuePickerProps> = React.memo(
                 pattern={supportsDecimals ? '[0-9]*[.]?[0-9]*' : '[0-9]*'}
                 className={styles.inputField}
                 value={displayValue}
+                suppressHydrationWarning
                 placeholder={placeholder}
                 disabled={disabled}
                 readOnly={readOnly}
@@ -569,7 +570,7 @@ const GenericValuePicker: React.FC<ValuePickerProps> = React.memo(
           )}
         </div>
         {wordsText && (
-          <div className={styles.wordsDisplay} aria-live="polite">
+          <div className={styles.wordsDisplay} aria-live="polite" suppressHydrationWarning>
             {wordsText}
           </div>
         )}

@@ -217,15 +217,16 @@ const Lumpsum = ({
   showDate?: boolean;
   onSelectionChange?: (selection: MutualFundSelection) => void;
 }) => {
-  const savedState = useMemo(() => loadSavedState(), []);
+  const isLoadedRef = useRef(false);
+  const defaultState = useMemo(() => getDefaultState(), []);
   const [jsonAllData, setJsonAllData] = useState<MFJSONType[]>([]);
-  const [searchKey, setSearchKey] = useState<string>(savedState.searchKey);
+  const [searchKey, setSearchKey] = useState<string>(defaultState.searchKey);
   const deferredSearchKey = useDeferredValue(searchKey);
-  const [selectedType, setSelectedType] = useState<string>(savedState.selectedType);
-  const [selectedGrowth, setSelectedGrowth] = useState<string>(savedState.selectedGrowth);
-  const [selectedCode, setSelectedCode] = useState<string>(savedState.selectedCode);
+  const [selectedType, setSelectedType] = useState<string>(defaultState.selectedType);
+  const [selectedGrowth, setSelectedGrowth] = useState<string>(defaultState.selectedGrowth);
+  const [selectedCode, setSelectedCode] = useState<string>(defaultState.selectedCode);
   const [jsonNavData, setJsonNavData] = useState<NavType[]>([]);
-  const [pinnedFunds, setPinnedFunds] = useState<PinnedFund[]>(savedState.pinnedFunds);
+  const [pinnedFunds, setPinnedFunds] = useState<PinnedFund[]>(defaultState.pinnedFunds);
   const [pinnedNavData, setPinnedNavData] = useState<Record<string, NavType[]>>({});
   const pinnedFundsRef = useRef(pinnedFunds);
   const pinnedNavDataRef = useRef(pinnedNavData);
@@ -233,12 +234,12 @@ const Lumpsum = ({
     pinnedFundsRef.current = pinnedFunds;
     pinnedNavDataRef.current = pinnedNavData;
   }, [pinnedFunds, pinnedNavData]);
-  const [startDate, setStartDate] = useState<string | null>(savedState.startDate);
-  const [endDate, setEndDate] = useState<string | null>(savedState.endDate);
-  const [duration, setDuration] = useState<string>(savedState.duration);
-  const [showDate, setShowDate] = useState<boolean>(savedState.showDate);
-  const [invAmt, setInvAmt] = useState<string>(savedState.invAmt);
-  const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
+  const [startDate, setStartDate] = useState<string | null>(defaultState.startDate);
+  const [endDate, setEndDate] = useState<string | null>(defaultState.endDate);
+  const [duration, setDuration] = useState<string>(defaultState.duration);
+  const [showDate, setShowDate] = useState<boolean>(defaultState.showDate);
+  const [invAmt, setInvAmt] = useState<string>(defaultState.invAmt);
+  const [viewChart, setViewChart] = useState<boolean>(defaultState.viewChart);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const [loadingSchemeCodes, setLoadingSchemeCodes] = useState<Set<string>>(new Set());
@@ -249,6 +250,40 @@ const Lumpsum = ({
     status: '',
     message: '',
   });
+  // Restore saved state from localStorage after mount to prevent hydration mismatch
+  useEffect(() => {
+    const handleRestore = () => {
+      try {
+        const saved = loadSavedState();
+        if (saved) {
+          setSearchKey(saved.searchKey);
+          setSelectedType(saved.selectedType);
+          setSelectedGrowth(saved.selectedGrowth);
+          setSelectedCode(saved.selectedCode);
+          setDuration(saved.duration);
+          setShowDate(saved.showDate);
+          setInvAmt(saved.invAmt);
+          setViewChart(saved.viewChart);
+          if (saved.pinnedFunds && saved.pinnedFunds.length > 0) {
+            setPinnedFunds(
+              saved.pinnedFunds.map((fund, index) => ({
+                ...fund,
+                color: CHART_COLORS[index % CHART_COLORS.length],
+              }))
+            );
+          }
+          if (saved.startDate) setStartDate(saved.startDate);
+          if (saved.endDate) setEndDate(saved.endDate);
+        }
+      } catch (err) {
+        console.warn('Failed to restore mutual fund state:', err);
+      } finally {
+        isLoadedRef.current = true;
+      }
+    };
+    const id = requestAnimationFrame(handleRestore);
+    return () => cancelAnimationFrame(id);
+  }, []);
   // Preload top mutual funds when selector opens if data is empty
   useEffect(() => {
     if (isFundSelectorOpen && jsonAllData.length === 0) {
@@ -269,7 +304,7 @@ const Lumpsum = ({
     });
   }, [onSelectionChange, pinnedFunds, pinnedNavData, startDate, endDate]);
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!isLoadedRef.current || typeof window === 'undefined') {
       return;
     }
     const state: SavedState = {

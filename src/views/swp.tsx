@@ -231,20 +231,16 @@ const SWP = ({
 }: {
   onSelectionChange?: (selection: MutualFundSelection) => void;
 }) => {
-  const savedState = useMemo(() => loadSavedState(), []);
+  const isLoadedRef = useRef(false);
+  const defaultState = useMemo(() => getDefaultState(), []);
   const [jsonAllData, setJsonAllData] = useState<MFJSONType[]>([]);
-  const [searchKey, setSearchKey] = useState<string>(savedState.searchKey);
+  const [searchKey, setSearchKey] = useState<string>(defaultState.searchKey);
   const deferredSearchKey = useDeferredValue(searchKey);
-  const [selectedType, setSelectedType] = useState<string>(savedState.selectedType);
-  const [selectedGrowth, setSelectedGrowth] = useState<string>(savedState.selectedGrowth);
-  const [selectedCode, setSelectedCode] = useState<string>(savedState.selectedCode);
+  const [selectedType, setSelectedType] = useState<string>(defaultState.selectedType);
+  const [selectedGrowth, setSelectedGrowth] = useState<string>(defaultState.selectedGrowth);
+  const [selectedCode, setSelectedCode] = useState<string>(defaultState.selectedCode);
   const [jsonNavData, setJsonNavData] = useState<NavType[]>([]);
-  const [pinnedFunds, setPinnedFunds] = useState<PinnedFund[]>(
-    savedState.pinnedFunds.map((fund, index) => ({
-      ...fund,
-      color: CHART_COLORS[index % CHART_COLORS.length],
-    }))
-  );
+  const [pinnedFunds, setPinnedFunds] = useState<PinnedFund[]>([]);
   const [pinnedNavData, setPinnedNavData] = useState<Record<string, NavType[]>>({});
   const pinnedFundsRef = useRef(pinnedFunds);
   const pinnedNavDataRef = useRef(pinnedNavData);
@@ -263,23 +259,23 @@ const SWP = ({
     return new Date().toISOString().split('T')[0];
   };
   const [startSwpDate, setStartSwpDate] = useState<string | null>(
-    savedState.startSwpDate || getDateMinusYears(3)
+    defaultState.startSwpDate || getDateMinusYears(3)
   );
   const [endSwpDate, setEndSwpDate] = useState<string | null>(
-    savedState.endSwpDate || getTodayDate()
+    defaultState.endSwpDate || getTodayDate()
   );
   const [monthlyWithdrawalAmount, setMonthlyWithdrawalAmount] = useState<string>(
-    savedState.monthlyWithdrawalAmount
+    defaultState.monthlyWithdrawalAmount
   );
   const [lumpSumInvestmentAmount, setLumpSumInvestmentAmount] = useState<string>(
-    savedState.lumpSumInvestmentAmount
+    defaultState.lumpSumInvestmentAmount
   );
   const [lumpsumStartDate, setLumpsumStartDate] = useState<string | null>(
-    savedState.lumpsumStartDate || getDateMinusYears(5)
+    defaultState.lumpsumStartDate || getDateMinusYears(5)
   );
-  const [dayOfMonth, setDayOfMonth] = useState<string>(savedState.dayOfMonth);
-  const [investmentStepUp, setInvestmentStepUp] = useState(savedState.investmentStepUp);
-  const [viewChart, setViewChart] = useState<boolean>(savedState.viewChart);
+  const [dayOfMonth, setDayOfMonth] = useState<string>(defaultState.dayOfMonth);
+  const [investmentStepUp, setInvestmentStepUp] = useState(defaultState.investmentStepUp);
+  const [viewChart, setViewChart] = useState<boolean>(defaultState.viewChart);
   const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [loadingSchemeCodes, setLoadingSchemeCodes] = useState<Set<string>>(new Set());
@@ -290,6 +286,42 @@ const SWP = ({
     status: '',
     message: '',
   });
+  // Restore saved state from localStorage after mount to prevent hydration mismatch
+  useEffect(() => {
+    const handleRestore = () => {
+      try {
+        const saved = loadSavedState();
+        if (saved) {
+          setSearchKey(saved.searchKey);
+          setSelectedType(saved.selectedType);
+          setSelectedGrowth(saved.selectedGrowth);
+          setSelectedCode(saved.selectedCode);
+          setMonthlyWithdrawalAmount(saved.monthlyWithdrawalAmount);
+          setLumpSumInvestmentAmount(saved.lumpSumInvestmentAmount);
+          setDayOfMonth(saved.dayOfMonth);
+          setInvestmentStepUp(saved.investmentStepUp);
+          setViewChart(saved.viewChart);
+          if (saved.pinnedFunds && saved.pinnedFunds.length > 0) {
+            setPinnedFunds(
+              saved.pinnedFunds.map((fund, index) => ({
+                ...fund,
+                color: CHART_COLORS[index % CHART_COLORS.length],
+              }))
+            );
+          }
+          if (saved.startSwpDate) setStartSwpDate(saved.startSwpDate);
+          if (saved.endSwpDate) setEndSwpDate(saved.endSwpDate);
+          if (saved.lumpsumStartDate) setLumpsumStartDate(saved.lumpsumStartDate);
+        }
+      } catch (err) {
+        console.warn('Failed to restore mutual fund state:', err);
+      } finally {
+        isLoadedRef.current = true;
+      }
+    };
+    const id = requestAnimationFrame(handleRestore);
+    return () => cancelAnimationFrame(id);
+  }, []);
   useEffect(() => {
     onSelectionChange?.({
       funds: pinnedFunds,
@@ -299,7 +331,7 @@ const SWP = ({
     });
   }, [onSelectionChange, pinnedFunds, pinnedNavData, startSwpDate, endSwpDate]);
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!isLoadedRef.current || typeof window === 'undefined') {
       return;
     }
     const state: SavedState = {

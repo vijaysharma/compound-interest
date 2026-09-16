@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import DisplayCard from '../components/DisplayCard';
 import ValuePicker from '../components/ValuePicker';
 import { RT, StepAmountType } from '../types/types';
@@ -159,51 +159,18 @@ const emiFaqs = [
 ];
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
 const EmiCalculator: React.FC = () => {
-  // Helper for localStorage
-  const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
-    if (typeof window === 'undefined') {
-      return defaultValue;
-    }
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch (error) {
-      console.error(`Error loading ${key} from localStorage:`, error);
-      return defaultValue;
-    }
-  };
-  const [loanAmount, setLoanAmount] = useState<string>(() => {
-    const saved = loadFromLocalStorage<number | string>('loanAmount', '3000000');
-    return typeof saved === 'number' ? saved.toString() : saved || '3000000';
+  const isLoadedRef = useRef(false);
+  const [loanAmount, setLoanAmount] = useState<string>('3000000');
+  const [rt, setRt] = useState<RT>({
+    roi: '8.5',
+    tenure: '20',
+    tenureFormat: 'y',
   });
-  const [rt, setRt] = useState<RT>(() => {
-    const saved = loadFromLocalStorage<RT | null>('emiRateTenure', null);
-    if (saved && saved.tenure) return saved;
-    const oldRate = loadFromLocalStorage<number | null>('annualRate', null);
-    const oldTenure = loadFromLocalStorage<number | null>('tenureMonths', null);
-    return {
-      roi: oldRate ? oldRate.toString() : '8.5',
-      tenure: oldTenure
-        ? oldTenure >= 12 && oldTenure % 12 === 0
-          ? (oldTenure / 12).toString()
-          : oldTenure.toString()
-        : '20',
-      tenureFormat: oldTenure && oldTenure % 12 !== 0 ? 'm' : 'y',
-    };
-  });
-  const [disbursementDate, setDisbursementDate] = useState<string>(() =>
-    loadFromLocalStorage('disbursementDate', getTodayDateString())
-  );
-  const [emiDate, setEmiDate] = useState<number>(() => loadFromLocalStorage('emiDate', 10));
-  const [partPayments, setPartPayments] = useState<PartPayment[]>(() =>
-    loadFromLocalStorage('partPayments', [])
-  );
-  const [rateChanges, setRateChanges] = useState<RateChange[]>(() =>
-    loadFromLocalStorage('rateChanges', [])
-  );
-  const [includePrincipalInFirstEmi, setIncludePrincipalInFirstEmi] = useState<boolean>(() =>
-    loadFromLocalStorage('includePrincipalInFirstEmi', false)
-  );
+  const [disbursementDate, setDisbursementDate] = useState<string>(getTodayDateString);
+  const [emiDate, setEmiDate] = useState<number>(10);
+  const [partPayments, setPartPayments] = useState<PartPayment[]>([]);
+  const [rateChanges, setRateChanges] = useState<RateChange[]>([]);
+  const [includePrincipalInFirstEmi, setIncludePrincipalInFirstEmi] = useState<boolean>(false);
   const stepData: StepAmountType[] = [
     { id: 'p1', value: '10000000', title: '1Cr' },
     { id: 'p2', value: '1000000', title: '10L' },
@@ -213,26 +180,96 @@ const EmiCalculator: React.FC = () => {
     { id: 'p6', value: '100', title: '100' },
     { id: 'p7', value: '10', title: '10' },
   ];
-  // Save state to localStorage
+  // Restore state from localStorage after initial render to avoid hydration mismatch
   useEffect(() => {
+    const handleRestore = () => {
+      try {
+        const savedAmount = window.localStorage.getItem('loanAmount');
+        if (savedAmount) {
+          const parsed = JSON.parse(savedAmount);
+          if (parsed) setLoanAmount(typeof parsed === 'number' ? parsed.toString() : parsed);
+        }
+        const savedRt = window.localStorage.getItem('emiRateTenure');
+        if (savedRt) {
+          const parsed = JSON.parse(savedRt);
+          if (parsed && parsed.tenure) setRt(parsed);
+        } else {
+          const oldRate = window.localStorage.getItem('annualRate');
+          const oldTenure = window.localStorage.getItem('tenureMonths');
+          if (oldRate || oldTenure) {
+            const parsedRate = oldRate ? JSON.parse(oldRate) : null;
+            const parsedTenure = oldTenure ? JSON.parse(oldTenure) : null;
+            setRt({
+              roi: parsedRate ? parsedRate.toString() : '8.5',
+              tenure: parsedTenure
+                ? parsedTenure >= 12 && parsedTenure % 12 === 0
+                  ? (parsedTenure / 12).toString()
+                  : parsedTenure.toString()
+                : '20',
+              tenureFormat: parsedTenure && parsedTenure % 12 !== 0 ? 'm' : 'y',
+            });
+          }
+        }
+        const savedDate = window.localStorage.getItem('disbursementDate');
+        if (savedDate) {
+          const parsed = JSON.parse(savedDate);
+          if (parsed) setDisbursementDate(parsed);
+        }
+        const savedEmiDate = window.localStorage.getItem('emiDate');
+        if (savedEmiDate) {
+          const parsed = JSON.parse(savedEmiDate);
+          if (typeof parsed === 'number') setEmiDate(parsed);
+        }
+        const savedParts = window.localStorage.getItem('partPayments');
+        if (savedParts) {
+          const parsed = JSON.parse(savedParts);
+          if (Array.isArray(parsed)) setPartPayments(parsed);
+        }
+        const savedRates = window.localStorage.getItem('rateChanges');
+        if (savedRates) {
+          const parsed = JSON.parse(savedRates);
+          if (Array.isArray(parsed)) setRateChanges(parsed);
+        }
+        const savedInc = window.localStorage.getItem('includePrincipalInFirstEmi');
+        if (savedInc !== null) {
+          setIncludePrincipalInFirstEmi(JSON.parse(savedInc));
+        }
+      } catch (error) {
+        console.error('Error loading EMI calculator state from localStorage:', error);
+      } finally {
+        isLoadedRef.current = true;
+      }
+    };
+    const id = requestAnimationFrame(handleRestore);
+    return () => cancelAnimationFrame(id);
+  }, []);
+  // Save state to localStorage only after initial restoration to avoid overwriting saved data
+  useEffect(() => {
+    if (!isLoadedRef.current) return;
     window.localStorage.setItem('loanAmount', JSON.stringify(loanAmount));
   }, [loanAmount]);
   useEffect(() => {
+    if (!isLoadedRef.current) return;
     window.localStorage.setItem('emiRateTenure', JSON.stringify(rt));
   }, [rt]);
   useEffect(() => {
+    if (!isLoadedRef.current) return;
     window.localStorage.setItem('disbursementDate', JSON.stringify(disbursementDate));
   }, [disbursementDate]);
   useEffect(() => {
+    if (!isLoadedRef.current) return;
     window.localStorage.setItem('emiDate', JSON.stringify(emiDate));
   }, [emiDate]);
   useEffect(() => {
+    if (!isLoadedRef.current) return;
     window.localStorage.setItem('partPayments', JSON.stringify(partPayments));
   }, [partPayments]);
   useEffect(() => {
+    if (!isLoadedRef.current) return;
     window.localStorage.setItem('rateChanges', JSON.stringify(rateChanges));
   }, [rateChanges]);
   useEffect(() => {
+    if (!isLoadedRef.current) return;
     window.localStorage.setItem(
       'includePrincipalInFirstEmi',
       JSON.stringify(includePrincipalInFirstEmi)
