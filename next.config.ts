@@ -4,8 +4,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  productionBrowserSourceMaps: true,
   experimental: {
-    optimizePackageImports: ['react-icons'],
+    optimizePackageImports: ['react-icons', 'ag-charts-community', 'ag-charts-react'],
   },
   sassOptions: {
     includePaths: [path.join(process.cwd(), 'src/styles')],

@@ -1161,7 +1161,7 @@ const Lumpsum = ({
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label={`View detailed tax and performance analysis for ${fund.schemeName}`}
+                aria-label={`${fund.schemeName} — view detailed tax and performance analysis`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();

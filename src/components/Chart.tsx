@@ -1,11 +1,26 @@
 'use client';
 import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AgCharts } from 'ag-charts-react';
-import { AllCommunityModule, ModuleRegistry } from 'ag-charts-community';
+import {
+  CartesianChartModule,
+  CategoryAxisModule,
+  LegendModule,
+  LineSeriesModule,
+  LocaleModule,
+  ModuleRegistry,
+  NumberAxisModule,
+} from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
 import styles from './Chart.module.scss';
 if (typeof window !== 'undefined') {
-  ModuleRegistry.registerModules([AllCommunityModule]);
+  ModuleRegistry.registerModules([
+    CartesianChartModule,
+    LineSeriesModule,
+    CategoryAxisModule,
+    NumberAxisModule,
+    LegendModule,
+    LocaleModule,
+  ]);
 }
 interface ChartPoint {
   date: string;
