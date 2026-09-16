@@ -47,6 +47,7 @@ interface ChartProps {
   emptyMessage?: string;
   startDate?: string | null;
   endDate?: string | null;
+  onPresetChange?: (preset: string) => void;
 }
 /*
  * NAV dates are DD-MM-YYYY.
@@ -108,6 +109,7 @@ const Chart = ({
   emptyMessage,
   startDate,
   endDate,
+  onPresetChange,
 }: ChartProps) => {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -193,6 +195,7 @@ const Chart = ({
   }, [allSortedDates, zoomRange]);
   const handleApplyPreset = (preset: string) => {
     setUserPreset(preset);
+    onPresetChange?.(preset);
     if (preset === 'All' || allSortedDates.length === 0) {
       setUserZoom('all');
       return;

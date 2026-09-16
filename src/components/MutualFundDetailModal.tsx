@@ -52,7 +52,8 @@ export default function MutualFundDetailModal({
   const [meta, setMeta] = useState<MFMetaType | null>(null);
   const [investmentType, setInvestmentType] = useState<'lumpsum' | 'sip'>('lumpsum');
   const [taxMode, setTaxMode] = useState<'auto' | 'ltcg' | 'stcg' | 'slab30' | 'slab20' | 'none'>('auto');
-  const navData = fund?.navData;
+  const [fetchedNavData, setFetchedNavData] = useState<NavType[]>([]);
+  const navData = fund?.navData && fund.navData.length > 0 ? fund.navData : fetchedNavData;
   // Sorted date limits from navData
   const { minNavDateISO, maxNavDateISO } = useMemo(() => {
     if (!navData || navData.length === 0) {
@@ -71,18 +72,64 @@ export default function MutualFundDetailModal({
   const [customStartDateISO, setCustomStartDateISO] = useState<string | null>(null);
   const [customEndDateISO, setCustomEndDateISO] = useState<string | null>(null);
   const [customInvestmentValue, setCustomInvestmentValue] = useState<string | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
   if (fund !== prevFund) {
     setPrevFund(fund);
     setCustomStartDateISO(null);
     setCustomEndDateISO(null);
     setCustomInvestmentValue(null);
+    setActivePreset(null);
+    setFetchedNavData([]);
   }
   const startDateISO = customStartDateISO ?? (fund?.startDate ? navDateToISO(fund.startDate) : minNavDateISO);
   const endDateISO = customEndDateISO ?? (fund?.endDate ? navDateToISO(fund.endDate) : maxNavDateISO);
   const investmentValue = customInvestmentValue ?? String(fund && fund.invAmt > 0 ? fund.invAmt : 100000);
-  const setStartDateISO = (val: string) => setCustomStartDateISO(val);
-  const setEndDateISO = (val: string) => setCustomEndDateISO(val);
+  const setStartDateISO = (val: string) => {
+    setCustomStartDateISO(val);
+    setActivePreset(null);
+  };
+  const setEndDateISO = (val: string) => {
+    setCustomEndDateISO(val);
+    setActivePreset(null);
+  };
   const setInvestmentValue = (val: string) => setCustomInvestmentValue(val);
+  const getPresetStartDateISO = (preset: string, maxDateISO: string, minDateISO: string): string => {
+    if (preset === 'All' || !maxDateISO) return minDateISO;
+    const end = new Date(maxDateISO);
+    if (Number.isNaN(end.getTime())) return minDateISO;
+    const target = new Date(end);
+    switch (preset) {
+      case '1M':
+        target.setMonth(target.getMonth() - 1);
+        break;
+      case '6M':
+        target.setMonth(target.getMonth() - 6);
+        break;
+      case '1Y':
+        target.setFullYear(target.getFullYear() - 1);
+        break;
+      case '3Y':
+        target.setFullYear(target.getFullYear() - 3);
+        break;
+      case '5Y':
+        target.setFullYear(target.getFullYear() - 5);
+        break;
+      default:
+        return minDateISO;
+    }
+    const year = target.getFullYear();
+    const month = String(target.getMonth() + 1).padStart(2, '0');
+    const day = String(target.getDate()).padStart(2, '0');
+    const computedISO = `${year}-${month}-${day}`;
+    return computedISO < minDateISO ? minDateISO : computedISO;
+  };
+  const handleSelectPreset = (preset: string) => {
+    if (!maxNavDateISO || !minNavDateISO) return;
+    const newStart = getPresetStartDateISO(preset, maxNavDateISO, minNavDateISO);
+    setCustomStartDateISO(newStart);
+    setCustomEndDateISO(maxNavDateISO);
+    setActivePreset(preset);
+  };
   // Fetch MF metadata
   useEffect(() => {
     if (!fund?.schemeCode) return;
@@ -91,6 +138,9 @@ export default function MutualFundDetailModal({
       .then((res) => {
         if (active && res.meta) {
           setMeta(res.meta);
+        }
+        if (active && res.data && res.data.length > 0) {
+          setFetchedNavData(res.data);
         }
       })
       .catch((err) => {
@@ -140,7 +190,7 @@ export default function MutualFundDetailModal({
   }, [meta?.scheme_category, fund?.schemeName]);
   // Live Performance & Investment Calculation
   const performance = useMemo(() => {
-    if (!fund?.navData || fund.navData.length === 0) {
+    if (!navData || navData.length === 0) {
       return {
         invested: fund?.invAmt || 0,
         maturity: fund?.matureAmt || 0,
@@ -152,8 +202,8 @@ export default function MutualFundDetailModal({
         datasets: [],
       };
     }
-    const startNavObj = getNearest(currentNavStartDate, fund.navData);
-    const endNavObj = getNearest(currentNavEndDate, fund.navData);
+    const startNavObj = getNearest(currentNavStartDate, navData);
+    const endNavObj = getNearest(currentNavEndDate, navData);
     const sNav = startNavObj ? parseFloat(startNavObj.nav) : 10;
     const eNav = endNavObj ? parseFloat(endNavObj.nav) : sNav;
     const amountInput = Math.max(100, parseFloat(investmentValue) || 100000);
@@ -168,7 +218,7 @@ export default function MutualFundDetailModal({
           : 0;
       const lowerT = Math.min(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
       const upperT = Math.max(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
-      const points = fund.navData
+      const points = navData
         .map((p) => ({
           date: p.date,
           nav: Number((units * parseFloat(p.nav)).toFixed(2)),
@@ -187,8 +237,8 @@ export default function MutualFundDetailModal({
         endNavVal: eNav,
         datasets: [
           {
-            label: `${fund.schemeName} (Lumpsum)`,
-            color: fund.color || '#2563eb',
+            label: `${fund?.schemeName || 'Fund'} (Lumpsum)`,
+            color: fund?.color || '#2563eb',
             data: points,
           },
         ],
@@ -207,7 +257,7 @@ export default function MutualFundDetailModal({
       const month = String(cur.getMonth() + 1).padStart(2, '0');
       const day = String(Math.min(dayOfMonth, 28)).padStart(2, '0');
       const targetNavDate = `${day}-${month}-${year}`;
-      const navItem = getNearest(targetNavDate, fund.navData);
+      const navItem = getNearest(targetNavDate, navData);
       const navVal = navItem ? parseFloat(navItem.nav) : 10;
       if (navVal > 0) {
         totalUnits += monthlySip / navVal;
@@ -227,7 +277,7 @@ export default function MutualFundDetailModal({
         : 0;
     const lowerT = Math.min(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
     const upperT = Math.max(parseDateParts(currentNavStartDate), parseDateParts(currentNavEndDate));
-    const points = fund.navData
+    const points = navData
       .map((p) => ({
         date: p.date,
         nav: Number((totalUnits * parseFloat(p.nav)).toFixed(2)),
@@ -246,14 +296,15 @@ export default function MutualFundDetailModal({
       endNavVal: eNav,
       datasets: [
         {
-          label: `${fund.schemeName} (SIP)`,
-          color: fund.color || '#2563eb',
+          label: `${fund?.schemeName || 'Fund'} (SIP)`,
+          color: fund?.color || '#2563eb',
           data: points,
         },
       ],
     };
   }, [
     fund,
+    navData,
     currentNavStartDate,
     currentNavEndDate,
     startDateISO,
@@ -417,6 +468,21 @@ export default function MutualFundDetailModal({
           {/* Interactive Date & Investment Controls Toolbar */}
           <div className={styles.controlBar}>
             <div className={styles.controlGroup}>
+              <span className={styles.controlLabel}>Presets:</span>
+              <div className={styles.presetGroup}>
+                {['1M', '6M', '1Y', '3Y', '5Y', 'All'].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`${styles.presetBtn} ${activePreset === p ? styles.activePreset : ''}`}
+                    onClick={() => handleSelectPreset(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className={styles.controlGroup}>
               <span className={styles.controlLabel}>Date Range:</span>
               <input
                 type="date"
@@ -535,6 +601,7 @@ export default function MutualFundDetailModal({
                 showPresets={true}
                 startDate={currentNavStartDate}
                 endDate={currentNavEndDate}
+                onPresetChange={handleSelectPreset}
               />
             </div>
           </div>
