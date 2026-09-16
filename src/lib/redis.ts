@@ -30,10 +30,14 @@ function pruneMemoryStore() {
   }
 }
 function getUpstashConfig() {
-  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-  if (url && token) {
-    return { url: url.replace(/\/$/, ''), token };
+  const rawUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const rawToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  if (rawUrl && rawToken) {
+    const url = rawUrl.trim().replace(/^["']|["']$/g, '').replace(/\/$/, '');
+    const token = rawToken.trim().replace(/^["']|["']$/g, '');
+    if (url && token) {
+      return { url, token };
+    }
   }
   return null;
 }
@@ -51,7 +55,7 @@ export async function redisGet<T>(key: string): Promise<T | null> {
         headers: {
           Authorization: `Bearer ${cfg.token}`,
         },
-        signal: AbortSignal.timeout(2000),
+        signal: AbortSignal.timeout(4000),
         cache: 'no-store',
       });
       if (res.ok) {
@@ -111,7 +115,7 @@ export async function redisMGet<T>(keys: string[]): Promise<Record<string, T | n
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(keys.map((k) => ['get', k])),
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(4000),
       });
       if (res.ok) {
         const jsonList = (await res.json()) as Array<{ result?: string | null }>;
@@ -181,7 +185,7 @@ export async function redisSet(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(value),
-        signal: AbortSignal.timeout(2000),
+        signal: AbortSignal.timeout(4000),
       });
       if (res.ok) {
         return true;

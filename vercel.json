@@ -1,6 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "functions": {
+    "src/app/**/*": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/_rzp-proxy/:path*",
