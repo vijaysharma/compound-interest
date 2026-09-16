@@ -252,6 +252,21 @@ export const fetchBatchMFbySchemeCodes = async (
         }
       }
     }
+    const stillUnresolved = missingCodes.filter((c) => !result[c] || result[c].length === 0);
+    if (stillUnresolved.length > 0) {
+      await Promise.all(
+        stillUnresolved.map(async (code) => {
+          try {
+            const navData = await fetchMFbySchemeCode(code);
+            if (Array.isArray(navData) && navData.length > 0) {
+              result[code] = navData;
+            }
+          } catch {
+            // Ignore individual fetch failure
+          }
+        })
+      );
+    }
   } catch (err) {
     console.warn('Batch mutual fund NAV fetch failed, falling back to individual:', err);
     await Promise.all(

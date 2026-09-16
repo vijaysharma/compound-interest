@@ -161,7 +161,7 @@ const getDefaultState = (): SavedState => ({
   selectedType: 'Direct',
   selectedGrowth: 'Growth',
   selectedCode: '0',
-  duration: '1',
+  duration: '740',
   monthlyAmount: '100000',
   showDate: false,
   viewChart: true,
@@ -190,14 +190,29 @@ const loadSavedState = (): SavedState => {
             schemeName: fund.schemeName,
           }))
       : [];
+    let duration = typeof parsed.duration === 'string' && parsed.duration ? parsed.duration : defaultState.duration;
+    if (parseInt(duration, 10) < 20) {
+      duration = '740';
+    }
+    const parsedStart = typeof parsed.startDate === 'string' ? parsed.startDate : null;
+    const parsedEnd = typeof parsed.endDate === 'string' ? parsed.endDate : null;
+    let validDateRange = false;
+    if (parsedStart && parsedEnd) {
+      const startTime = new Date(parsedStart).getTime();
+      const endTime = new Date(parsedEnd).getTime();
+      if (endTime - startTime >= 25 * 86400000) {
+        validDateRange = true;
+      }
+    }
     return {
       ...defaultState,
       ...parsed,
+      duration,
       pinnedFunds: Array.from(
         new Map(pinnedFunds.map((fund: PinnedFund) => [fund.schemeCode, fund])).values()
       ).slice(0, 8),
-      startDate: typeof parsed.startDate === 'string' ? parsed.startDate : null,
-      endDate: typeof parsed.endDate === 'string' ? parsed.endDate : null,
+      startDate: validDateRange ? parsedStart : null,
+      endDate: validDateRange ? parsedEnd : null,
     };
   } catch (error) {
     console.warn('Failed to restore mutual fund state:', error);
@@ -243,10 +258,13 @@ const SIP = ({
   const [pinnedNavData, setPinnedNavData] = useState<Record<string, NavType[]>>({});
   const pinnedFundsRef = useRef(pinnedFunds);
   const pinnedNavDataRef = useRef(pinnedNavData);
+  const selectedCodeRef = useRef(selectedCode);
+  const attemptedFundsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     pinnedFundsRef.current = pinnedFunds;
     pinnedNavDataRef.current = pinnedNavData;
-  }, [pinnedFunds, pinnedNavData]);
+    selectedCodeRef.current = selectedCode;
+  }, [pinnedFunds, pinnedNavData, selectedCode]);
   const [startDate, setStartDate] = useState<string | null>(defaultState.startDate);
   const [endDate, setEndDate] = useState<string | null>(defaultState.endDate);
   const [duration, setDuration] = useState<string>(defaultState.duration);
@@ -424,13 +442,21 @@ const SIP = ({
     return searched;
   }, [allFunds, deferredSearchKey, selectedType, selectedGrowth]);
   useEffect(() => {
-    const missingFunds = pinnedFunds.filter((fund) => !pinnedNavData[fund.schemeCode]);
+    if (pinnedFunds.length === 0) {
+      return;
+    }
+    const missingFunds = pinnedFunds.filter(
+      (fund) =>
+        (!pinnedNavDataRef.current[fund.schemeCode] || pinnedNavDataRef.current[fund.schemeCode].length === 0) &&
+        !attemptedFundsRef.current.has(fund.schemeCode)
+    );
     if (missingFunds.length === 0) {
       return;
     }
     let cancelled = false;
     const restorePinnedFunds = async () => {
       setIsNavLoading(true);
+      missingFunds.forEach((f) => attemptedFundsRef.current.add(f.schemeCode));
       try {
         const codes = missingFunds.map((f) => f.schemeCode);
         const batchResults = await fetchBatchMFbySchemeCodes(codes);
@@ -439,6 +465,13 @@ const SIP = ({
           ...previous,
           ...batchResults,
         }));
+        const activeCode = selectedCodeRef.current && selectedCodeRef.current !== '0' ? selectedCodeRef.current : pinnedFunds[0]?.schemeCode;
+        if (activeCode && batchResults[activeCode] && batchResults[activeCode].length > 0) {
+          setJsonNavData(batchResults[activeCode]);
+          if (!selectedCodeRef.current || selectedCodeRef.current === '0') {
+            setSelectedCode(activeCode);
+          }
+        }
       } catch (err) {
         console.error('Failed to restore batch NAV data:', err);
       } finally {
@@ -451,16 +484,17 @@ const SIP = ({
     return () => {
       cancelled = true;
     };
-  }, [pinnedFunds, pinnedNavData]);
+  }, [pinnedFunds]);
   useEffect(() => {
     if (!selectedCode || selectedCode === '0') {
       return;
     }
-    let cancelled = false;
     const cached = pinnedNavDataRef.current[selectedCode];
-    if (cached) {
+    if (cached && cached.length > 0) {
       setJsonNavData(cached);
+      return;
     }
+    let cancelled = false;
     fetchMFbySchemeCode(selectedCode)
       .then((data) => {
         if (cancelled) {
@@ -485,31 +519,42 @@ const SIP = ({
     };
   }, [selectedCode]);
   useEffect(() => {
-    if (jsonNavData.length === 0 || startDate || endDate) {
+    if (startDate && endDate) {
       return;
     }
-    const durationIndex = Math.max(parseInt(duration, 10) || 1, 0);
-    const index = Math.min(durationIndex, jsonNavData.length - 1);
-    const start = jsonNavData[index];
-    const end = jsonNavData[0];
-    Promise.resolve().then(() => {
-      if (start) {
+    const navSource =
+      jsonNavData.length > 0
+        ? jsonNavData
+        : Object.values(pinnedNavData).find((d) => Array.isArray(d) && d.length > 0);
+    if (!navSource || navSource.length === 0) {
+      return;
+    }
+    const durationDays = parseInt(duration, 10);
+    const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
+    const index = Math.min(durationIndex, navSource.length - 1);
+    const start = navSource[index];
+    const end = navSource[0];
+    if (start && end) {
+      Promise.resolve().then(() => {
         setStartDate(navDateToISO(start.date));
-      }
-      if (end) {
         setEndDate(navDateToISO(end.date));
-      }
-    });
-  }, [jsonNavData, startDate, endDate, duration]);
+      });
+    }
+  }, [jsonNavData, pinnedNavData, startDate, endDate, duration]);
   const handleDurationChange = (value: string) => {
     setDuration(value);
-    if (jsonNavData.length === 0) {
+    const navSource =
+      jsonNavData.length > 0
+        ? jsonNavData
+        : Object.values(pinnedNavData).find((d) => Array.isArray(d) && d.length > 0);
+    if (!navSource || navSource.length === 0) {
       return;
     }
-    const durationIndex = Math.max(parseInt(value, 10) || 1, 0);
-    const index = Math.min(durationIndex, jsonNavData.length - 1);
-    const start = jsonNavData[index];
-    const end = jsonNavData[0];
+    const durationDays = parseInt(value, 10);
+    const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
+    const index = Math.min(durationIndex, navSource.length - 1);
+    const start = navSource[index];
+    const end = navSource[0];
     if (start) {
       setStartDate(navDateToISO(start.date));
     }
@@ -548,6 +593,20 @@ const SIP = ({
     const newPinnedFund: PinnedFund = { schemeCode, schemeName: mf.name, color };
     setPinnedFunds((previous) => [...previous, newPinnedFund]);
     setSelectedCode(schemeCode);
+    const existingNav = pinnedNavDataRef.current[schemeCode];
+    if (existingNav && existingNav.length > 0) {
+      setJsonNavData(existingNav);
+      if (!startDate || !endDate) {
+        const durationDays = parseInt(duration, 10);
+        const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
+        const index = Math.min(durationIndex, existingNav.length - 1);
+        const start = existingNav[index];
+        const end = existingNav[0];
+        if (start) setStartDate(navDateToISO(start.date));
+        if (end) setEndDate(navDateToISO(end.date));
+      }
+      return;
+    }
     setLoadingSchemeCodes((previous) => new Set([...previous, schemeCode]));
     try {
       const navData = await fetchMFbySchemeCode(schemeCode);
@@ -557,7 +616,8 @@ const SIP = ({
       }));
       setJsonNavData(navData);
       if (!startDate || !endDate) {
-        const durationIndex = Math.max(parseInt(duration, 10) || 1, 0);
+        const durationDays = parseInt(duration, 10);
+        const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
         const index = Math.min(durationIndex, navData.length - 1);
         const start = navData[index];
         const end = navData[0];

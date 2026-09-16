@@ -385,10 +385,17 @@ const Chart = ({
   }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates]);
   const targetHeight = typeof height === 'number' ? height : (minHeight > 0 ? minHeight : 280);
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
-  if (isLoading || (datasets.length > 0 && !hasAnyData)) {
+  if (isLoading) {
     return (
       <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
         <Spinner size="md" label={loadingLabel || 'Loading historical NAV data...'} />
+      </div>
+    );
+  }
+  if (datasets.length > 0 && !hasAnyData) {
+    return (
+      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
+        <span className={styles.emptyText}>No NAV data available for the selected dates</span>
       </div>
     );
   }

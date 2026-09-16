@@ -308,7 +308,7 @@ export async function getMutualFundNavAction(schemeCodeRaw: string | number): Pr
   try {
     const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(15000),
     });
     if (upstream.ok) {
       const payloadRaw = await upstream.json();
@@ -404,7 +404,7 @@ export async function getBatchMutualFundNavAction(
       try {
         const upstream = await fetch(`${MF_URL}/${encodeURIComponent(code)}`, {
           headers: { Accept: 'application/json' },
-          signal: AbortSignal.timeout(6000),
+          signal: AbortSignal.timeout(15000),
         });
         if (upstream.ok) {
           const payloadRaw = await upstream.json();
@@ -423,5 +423,28 @@ export async function getBatchMutualFundNavAction(
       }
     })
   );
+  // 4. PostgreSQL fallback for any schemes still missing
+  const stillMissing = missingFromRedis.filter((code) => !result[code]);
+  if (stillMissing.length > 0) {
+    try {
+      const sql = getDb();
+      const stored = (await sql`
+        SELECT scheme_code, payload FROM mutual_fund_nav WHERE scheme_code = ANY(${stillMissing})
+      `) as Array<{ scheme_code: string; payload: unknown }>;
+      for (const row of stored) {
+        const storedPayload = parseNavPayload(row.payload);
+        if (storedPayload) {
+          result[row.scheme_code] = storedPayload;
+          mfNavCache.set(row.scheme_code, {
+            expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+            data: storedPayload,
+          });
+          redisSet('cache:mf:nav:' + row.scheme_code, storedPayload, NAV_CACHE_TTL_SECONDS).catch(() => {});
+        }
+      }
+    } catch (dbErr) {
+      console.warn('Fallback DB read in getBatchMutualFundNavAction failed:', dbErr);
+    }
+  }
   return result;
 }

@@ -245,10 +245,13 @@ const SWP = ({
   const [pinnedNavData, setPinnedNavData] = useState<Record<string, NavType[]>>({});
   const pinnedFundsRef = useRef(pinnedFunds);
   const pinnedNavDataRef = useRef(pinnedNavData);
+  const selectedCodeRef = useRef(selectedCode);
+  const attemptedFundsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     pinnedFundsRef.current = pinnedFunds;
     pinnedNavDataRef.current = pinnedNavData;
-  }, [pinnedFunds, pinnedNavData]);
+    selectedCodeRef.current = selectedCode;
+  }, [pinnedFunds, pinnedNavData, selectedCode]);
   // Helper function to get date minus N years in YYYY-MM-DD format
   const getDateMinusYears = (years: number): string => {
     const date = new Date();
@@ -446,13 +449,21 @@ const SWP = ({
     return searched;
   }, [allFunds, deferredSearchKey, selectedType, selectedGrowth]);
   useEffect(() => {
-    const missingFunds = pinnedFunds.filter((fund) => !pinnedNavData[fund.schemeCode]);
+    if (pinnedFunds.length === 0) {
+      return;
+    }
+    const missingFunds = pinnedFunds.filter(
+      (fund) =>
+        (!pinnedNavDataRef.current[fund.schemeCode] || pinnedNavDataRef.current[fund.schemeCode].length === 0) &&
+        !attemptedFundsRef.current.has(fund.schemeCode)
+    );
     if (missingFunds.length === 0) {
       return;
     }
     let cancelled = false;
     const restorePinnedFunds = async () => {
       setIsNavLoading(true);
+      missingFunds.forEach((f) => attemptedFundsRef.current.add(f.schemeCode));
       try {
         const codes = missingFunds.map((f) => f.schemeCode);
         const batchResults = await fetchBatchMFbySchemeCodes(codes);
@@ -461,6 +472,13 @@ const SWP = ({
           ...previous,
           ...batchResults,
         }));
+        const activeCode = selectedCodeRef.current && selectedCodeRef.current !== '0' ? selectedCodeRef.current : pinnedFunds[0]?.schemeCode;
+        if (activeCode && batchResults[activeCode] && batchResults[activeCode].length > 0) {
+          setJsonNavData(batchResults[activeCode]);
+          if (!selectedCodeRef.current || selectedCodeRef.current === '0') {
+            setSelectedCode(activeCode);
+          }
+        }
       } catch (err) {
         console.error('Failed to restore batch NAV data:', err);
       } finally {
@@ -473,7 +491,7 @@ const SWP = ({
     return () => {
       cancelled = true;
     };
-  }, [pinnedFunds, pinnedNavData]);
+  }, [pinnedFunds]);
   useEffect(() => {
     if (!selectedCode || selectedCode === '0') {
       return;
