@@ -96,6 +96,71 @@ export async function redisGet<T>(key: string): Promise<T | null> {
   return null;
 }
 /**
+ * Retrieve multiple JSON-parsed values by keys in a single pipeline round-trip.
+ */
+export async function redisMGet<T>(keys: string[]): Promise<Record<string, T | null>> {
+  const result: Record<string, T | null> = {};
+  if (!keys || keys.length === 0) return result;
+  const cfg = getUpstashConfig();
+  if (cfg) {
+    try {
+      const res = await fetch(`${cfg.url}/pipeline`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cfg.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(keys.map((k) => ['get', k])),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (res.ok) {
+        const jsonList = (await res.json()) as Array<{ result?: string | null }>;
+        for (let i = 0; i < keys.length; i++) {
+          const raw = jsonList[i]?.result;
+          if (raw !== null && raw !== undefined) {
+            try {
+              let parsed = JSON.parse(raw);
+              if (typeof parsed === 'string') {
+                try {
+                  parsed = JSON.parse(parsed);
+                } catch {
+                  // Keep as string if it wasn't double-serialized JSON
+                }
+              }
+              result[keys[i]] = parsed as T;
+            } catch {
+              result[keys[i]] = raw as unknown as T;
+            }
+          } else {
+            result[keys[i]] = null;
+          }
+        }
+        return result;
+      }
+    } catch (err) {
+      console.warn('[Redis] MGET failed, falling back to memory store:', err);
+    }
+  }
+  // Fallback to inMemoryStore
+  for (const k of keys) {
+    const cached = inMemoryStore.get(k);
+    if (cached && cached.expiresAt > Date.now()) {
+      let val = cached.value;
+      if (typeof val === 'string') {
+        try {
+          val = JSON.parse(val);
+        } catch {
+          // Keep string if not valid JSON
+        }
+      }
+      result[k] = val as T;
+    } else {
+      result[k] = null;
+    }
+  }
+  return result;
+}
+/**
  * Store a JSON-serializable value in cache with optional TTL in seconds.
  */
 export async function redisSet(

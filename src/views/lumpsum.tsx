@@ -5,7 +5,7 @@ import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import ValuePicker from '../components/ValuePicker';
 import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
-import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
+import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFundDetailModal';
 import { CHART_COLORS } from '../data/chartColors';
@@ -422,35 +422,17 @@ const Lumpsum = ({
     }
     let cancelled = false;
     const restorePinnedFunds = async () => {
-      const results = await Promise.all(
-        missingFunds.map(async (fund) => {
-          try {
-            const data = await fetchMFbySchemeCode(fund.schemeCode);
-            return {
-              schemeCode: fund.schemeCode,
-              data,
-            };
-          } catch (err) {
-            console.error(`Failed to restore NAV data for ${fund.schemeName}:`, err);
-            return null;
-          }
-        })
-      );
-      if (cancelled) {
-        return;
-      }
-      setPinnedNavData((previous) => {
-        const next = {
+      try {
+        const codes = missingFunds.map((f) => f.schemeCode);
+        const batchResults = await fetchBatchMFbySchemeCodes(codes);
+        if (cancelled) return;
+        setPinnedNavData((previous) => ({
           ...previous,
-        };
-        for (const result of results) {
-          if (!result) {
-            continue;
-          }
-          next[result.schemeCode] = result.data;
-        }
-        return next;
-      });
+          ...batchResults,
+        }));
+      } catch (err) {
+        console.error('Failed to restore batch NAV data:', err);
+      }
     };
     void restorePinnedFunds();
     return () => {

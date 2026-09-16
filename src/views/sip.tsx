@@ -5,7 +5,7 @@ import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import ValuePicker from '../components/ValuePicker';
 import { getNearest, navDateToISO } from '../utilities/utility';
-import { fetchAllMfs, fetchMFbySchemeCode } from '../data/api_data';
+import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSip, calculateSipGrowth } from '../utilities/mutualFundCalculations';
 import { CHART_COLORS } from '../data/chartColors';
@@ -422,46 +422,29 @@ const SIP = ({
     return searched;
   }, [allFunds, deferredSearchKey, selectedType, selectedGrowth]);
   useEffect(() => {
-    if (pinnedFunds.length === 0) {
+    const missingFunds = pinnedFunds.filter((fund) => !pinnedNavData[fund.schemeCode]);
+    if (missingFunds.length === 0) {
       return;
     }
     let cancelled = false;
     const restorePinnedFunds = async () => {
-      const results = await Promise.all(
-        pinnedFunds.map(async (fund) => {
-          try {
-            const data = await fetchMFbySchemeCode(fund.schemeCode);
-            return {
-              schemeCode: fund.schemeCode,
-              data,
-            };
-          } catch (err) {
-            console.error(`Failed to restore NAV data for ${fund.schemeName}:`, err);
-            return null;
-          }
-        })
-      );
-      if (cancelled) {
-        return;
-      }
-      setPinnedNavData((previous) => {
-        const next = {
+      try {
+        const codes = missingFunds.map((f) => f.schemeCode);
+        const batchResults = await fetchBatchMFbySchemeCodes(codes);
+        if (cancelled) return;
+        setPinnedNavData((previous) => ({
           ...previous,
-        };
-        for (const result of results) {
-          if (!result) {
-            continue;
-          }
-          next[result.schemeCode] = result.data;
-        }
-        return next;
-      });
+          ...batchResults,
+        }));
+      } catch (err) {
+        console.error('Failed to restore batch NAV data:', err);
+      }
     };
     void restorePinnedFunds();
     return () => {
       cancelled = true;
     };
-  }, [pinnedFunds]);
+  }, [pinnedFunds, pinnedNavData]);
   useEffect(() => {
     if (!selectedCode || selectedCode === '0') {
       return;

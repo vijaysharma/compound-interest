@@ -166,7 +166,7 @@ let tablesInitialized = false;
  * authenticated request fail with `column u.subscription_plan does not exist`.
  * A recorded version cannot drift like that.
  */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 async function readSchemaVersion(sql: Query): Promise<number> {
   try {
     const rows = (await sql`SELECT version FROM schema_meta WHERE id = 1`) as {
@@ -292,6 +292,14 @@ export async function ensureTables(sql: Query) {
       await sql`
         CREATE INDEX IF NOT EXISTS payment_submissions_user_id_idx
         ON payment_submissions (user_id)
+      `;
+      await sql`
+        CREATE INDEX IF NOT EXISTS mutual_fund_schemes_name_idx
+        ON mutual_fund_schemes (scheme_name)
+      `;
+      await sql`
+        CREATE INDEX IF NOT EXISTS mutual_fund_nav_updated_at_idx
+        ON mutual_fund_nav (updated_at)
       `;
       await sql`
         CREATE TABLE IF NOT EXISTS admin_notes (
