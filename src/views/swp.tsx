@@ -970,6 +970,7 @@ const SWP = ({
                   investmentAmount={parseFloat(monthlyWithdrawalAmount) || 0}
                   dataMode="value"
                   autoHeight
+                  minHeight={280}
                   startDate={lumpsumStartDate || startSwpDate}
                   endDate={endSwpDate}
                   showPresets={false}

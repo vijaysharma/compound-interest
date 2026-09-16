@@ -100,7 +100,7 @@ const Chart = ({
   dataMode = 'nav',
   height,
   autoHeight = false,
-  minHeight = 0,
+  minHeight = 280,
   enableZoom = true,
   showPresets = false,
   isLoading = false,
@@ -342,14 +342,16 @@ const Chart = ({
       },
     }));
     const isAutoHeight = autoHeight || height === 'auto';
+    const resolvedMinHeight = minHeight > 0 ? minHeight : 280;
+    const resolvedHeight = typeof height === 'number' ? height : resolvedMinHeight;
     return {
       background: {
         visible: false,
       },
       data: chartData,
       ...(isAutoHeight
-        ? { minHeight }
-        : { height: typeof height === 'number' ? height : 240 }),
+        ? { minHeight: resolvedMinHeight }
+        : { height: resolvedHeight }),
       legend: {
         enabled: false,
         position: 'bottom',
@@ -381,52 +383,54 @@ const Chart = ({
       },
     };
   }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates]);
+  const targetHeight = typeof height === 'number' ? height : (minHeight > 0 ? minHeight : 280);
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
   if (isLoading || (datasets.length > 0 && !hasAnyData)) {
     return (
-      <div className={`${className} ${styles.emptyContainer}`}>
+      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
         <Spinner size="md" label={loadingLabel || 'Loading historical NAV data...'} />
       </div>
     );
   }
   if (datasets.length === 0) {
     return (
-      <div className={`${className} ${styles.emptyContainer}`}>
+      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
         <span className={styles.emptyText}>{emptyMessage || 'Select a mutual fund to view trajectory'}</span>
       </div>
     );
   }
   if (allSortedDates.length === 0) {
     return (
-      <div className={`${className} ${styles.emptyContainer}`}>
+      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
         <span className={styles.emptyText}>No NAV history found for the selected dates</span>
       </div>
     );
   }
   if (initialInvestment <= 0) {
     return (
-      <div className={`${className} ${styles.emptyContainer}`}>
+      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
         <span className={styles.emptyText}>Enter an investment amount to view growth</span>
       </div>
     );
   }
   if (!chartOptions) {
     return (
-      <div className={`${className} ${styles.emptyContainer}`}>
+      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
         <Spinner size="sm" label="Preparing chart..." />
       </div>
     );
   }
   if (!mounted) {
     return (
-      <div className={`${className} ${styles.emptyContainer}`}>
+      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
         <Spinner size="sm" label="Loading chart..." />
       </div>
     );
   }
+  const hasZoomToolbar = enableZoom && allSortedDates.length > 5 && (showPresets || zoomRange);
   return (
-    <div className={`${className} ${styles.chartWrapper}`}>
-      {enableZoom && allSortedDates.length > 5 && (showPresets || zoomRange) && (
+    <div className={`${className || ''} ${styles.chartWrapper}`} style={{ minHeight: `${targetHeight}px` }}>
+      {hasZoomToolbar && (
         <div className={styles.zoomToolbar}>
           {showPresets && (
             <div className={styles.zoomPresets}>
@@ -466,6 +470,7 @@ const Chart = ({
       <div
         ref={containerRef}
         className={styles.chartContainer}
+        style={{ minHeight: `${targetHeight - (hasZoomToolbar ? 34 : 0)}px` }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

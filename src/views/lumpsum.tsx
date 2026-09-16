@@ -1099,6 +1099,7 @@ const Lumpsum = ({
                   datasets={chartDatasets}
                   investmentAmount={parseFloat(invAmt) || 0}
                   autoHeight
+                  minHeight={280}
                   startDate={startDate}
                   endDate={endDate}
                   showPresets={false}
