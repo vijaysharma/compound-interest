@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import JoinedButtonGroup from './JoinedButtonGroup';
 import { MFType } from '../types/types';
+import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './MutualFundSelectorModal.module.scss';
 interface PinnedFund {
   schemeCode: string;
@@ -36,6 +37,7 @@ const MutualFundSelectorModal = ({
   togglePinFund,
   loadingSchemeCodes,
 }: MutualFundSelectorModalProps) => {
+  useScrollLock(open);
   const pinnedFundMap = useMemo(
     () => new Map(pinnedFunds.map((f) => [f.schemeCode, f])),
     [pinnedFunds]

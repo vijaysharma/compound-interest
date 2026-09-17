@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate } from '@/navigation';
 import { FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../context/useAuth';
+import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './GoogleSignInButton.module.scss';
 declare global {
   interface Window {
@@ -74,6 +75,7 @@ const GoogleSignInButton = ({
   const { signupWithGooglePassword, loading } = useAuth();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  useScrollLock(isModalOpen);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');

@@ -5,7 +5,8 @@ import { NavType } from '../types/types';
 import { fetchMFWithMeta, MFMetaType } from '../data/api_data';
 import Spinner from './Spinner';
 import { getNearest, isoDateToNavDate, navDateToISO } from '../utilities/utility';
-import { getTodayISO } from '../utilities/dateGuards';
+import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
+import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './MutualFundDetailModal.module.scss';
 const Chart = dynamic(() => import('./Chart'), {
   ssr: false,
@@ -51,6 +52,7 @@ export default function MutualFundDetailModal({
   onClose,
 }: MutualFundDetailModalProps) {
   const [meta, setMeta] = useState<MFMetaType | null>(null);
+  useScrollLock(!!fund);
   const [investmentType, setInvestmentType] = useState<'lumpsum' | 'sip'>('lumpsum');
   const [taxMode, setTaxMode] = useState<'auto' | 'ltcg' | 'stcg' | 'slab30' | 'slab20' | 'none'>('auto');
   const [fetchedNavData, setFetchedNavData] = useState<NavType[]>([]);
@@ -119,8 +121,13 @@ export default function MutualFundDetailModal({
       // Ignore write errors
     }
   }, [fund?.schemeCode, investmentType, customInvestmentValue, taxMode, customStartDateISO, customEndDateISO, activePreset]);
-  const startDateISO = customStartDateISO ?? (fund?.startDate ? navDateToISO(fund.startDate) : minNavDateISO);
-  const endDateISO = customEndDateISO ?? (fund?.endDate ? navDateToISO(fund.endDate) : maxNavDateISO);
+  const defaultDates = useMemo(() => resolveDateRange(null, null), []);
+  const rawStart = customStartDateISO ?? fund?.startDate ?? minNavDateISO ?? defaultDates.startDate;
+  const rawEnd = customEndDateISO ?? fund?.endDate ?? maxNavDateISO ?? defaultDates.endDate;
+  const { startDate: startDateISO, endDate: endDateISO } = useMemo(
+    () => resolveDateRange(rawStart, rawEnd),
+    [rawStart, rawEnd]
+  );
   const investmentValue = customInvestmentValue ?? String(fund && fund.invAmt > 0 ? fund.invAmt : 100000);
   const setStartDateISO = (val: string) => {
     const nextStart = val;
@@ -202,14 +209,8 @@ export default function MutualFundDetailModal({
     };
   }, [fund?.schemeCode]);
   // Convert current ISO dates back to DD-MM-YYYY for calculation
-  const currentNavStartDate = useMemo(
-    () => (startDateISO ? isoDateToNavDate(startDateISO) : fund?.startDate || ''),
-    [startDateISO, fund?.startDate]
-  );
-  const currentNavEndDate = useMemo(
-    () => (endDateISO ? isoDateToNavDate(endDateISO) : fund?.endDate || ''),
-    [endDateISO, fund?.endDate]
-  );
+  const currentNavStartDate = useMemo(() => isoDateToNavDate(startDateISO), [startDateISO]);
+  const currentNavEndDate = useMemo(() => isoDateToNavDate(endDateISO), [endDateISO]);
   // Holding Period calculation
   const holdingDays = useMemo(() => {
     if (!startDateISO || !endDateISO) return 365;

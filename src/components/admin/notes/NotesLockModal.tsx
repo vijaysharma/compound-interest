@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { FiLock, FiUnlock, FiX, FiCheck } from 'react-icons/fi';
 import { hashPasscode } from './NotesTypes';
+import { useScrollLock } from '../../../utilities/useScrollLock';
 import styles from './NotesModal.module.scss';
 interface NotesLockModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const NotesLockModal: React.FC<NotesLockModalProps> = ({
   onRemoveLock,
   onUnlockSuccess,
 }) => {
+  useScrollLock(isOpen);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);

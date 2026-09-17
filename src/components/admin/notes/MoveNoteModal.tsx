@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { FiFolder, FiFolderPlus, FiCheck, FiX } from 'react-icons/fi';
 import { Note } from './NotesTypes';
+import { useScrollLock } from '../../../utilities/useScrollLock';
 import styles from './NotesModal.module.scss';
 interface MoveNoteModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const MoveNoteModal: React.FC<MoveNoteModalProps> = ({
   onMove,
   onCreateFolder,
 }) => {
+  useScrollLock(isOpen && !!note);
   const [newFolderName, setNewFolderName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   if (!isOpen || !note) return null;

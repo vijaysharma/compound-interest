@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiShield, FiLock, FiCheckCircle, FiX, FiKey, FiServer, FiSmartphone, FiCloud } from 'react-icons/fi';
+import { useScrollLock } from '../../../utilities/useScrollLock';
 import styles from './NotesModal.module.scss';
 interface NotesSecurityModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
   onClose,
   storageProvider,
 }) => {
+  useScrollLock(isOpen);
   if (!isOpen) return null;
   return (
     <div className={styles.modalOverlay}>

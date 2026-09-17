@@ -18,6 +18,7 @@ import { Note } from './NotesTypes';
 import { getUserEncryptionKey, encryptText } from './NotesCrypto';
 import { sanitizeNoteHtml, sanitizePlainInput } from './sanitizeHtml';
 import { restoreNotesBackupAction } from '@/actions/notes';
+import { useScrollLock } from '../../../utilities/useScrollLock';
 import styles from './NotesModal.module.scss';
 interface NotesBackupModalProps {
   isOpen: boolean;
@@ -47,6 +48,7 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
   onClose,
   onRestoreSuccess,
 }) => {
+  useScrollLock(isOpen);
   const [activeTab, setActiveTab] = useState<'backup' | 'restore'>('backup');
   const [restoreMode, setRestoreMode] = useState<'merge' | 'replace'>('merge');
   const [parsedBackup, setParsedBackup] = useState<BackupPayload | null>(null);

@@ -14,6 +14,7 @@ import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAVIGATION_SECTIONS, ADMIN_SECTION } from '@/data/navigation';
+import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './TopBar.module.scss';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
@@ -73,6 +74,7 @@ const getNavTitle = (pathname: string) => {
 };
 const TopBar = ({ className }: { className?: string }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  useScrollLock(isMenuOpen);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);

@@ -10,9 +10,11 @@ import {
   getPaymentSettingsAction,
   verifyRazorpayPaymentAction,
 } from '@/actions/payments';
+import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './PaywallModal.module.scss';
 const PaywallModal = () => {
   const { user, showPaywall, setShowPaywall, refreshUser } = useAuth();
+  useScrollLock(showPaywall);
   const navigate = useNavigate();
   const [settings, setSettings] = useState<PaymentSettings | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
