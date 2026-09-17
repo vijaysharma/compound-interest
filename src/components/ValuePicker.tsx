@@ -73,6 +73,7 @@ export interface ValuePickerProps
   readOnly?: boolean;
   layout?: 'auto' | 'mobile' | 'desktop';
   placeholder?: string;
+  tabSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 // Maximum safe numeric limit for financial calculations (prevents overflow/DoS)
 const MAX_SAFE_FINANCIAL_VALUE = 1e12; // 1 Lakh Crore
@@ -156,6 +157,7 @@ const GenericValuePicker: React.FC<ValuePickerProps> = React.memo(
     disabled = false,
     readOnly = false,
     placeholder,
+    tabSize = 'md',
   }) => {
     const componentId = useId();
     const effectiveSymbol =
@@ -428,8 +430,9 @@ const GenericValuePicker: React.FC<ValuePickerProps> = React.memo(
       layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
     const compactClass = compact ? styles.compact : '';
     const embeddedClass = embedded ? styles.embedded : '';
+    const tabSizeClass = styles[`tabSize-${tabSize}`] || '';
     const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${tabSizeClass} ${className}`.trim();
     const isMergedTitle = titleStyle === 'merged' && !!title;
     return (
       <div className={rootContainerClass}>
@@ -610,6 +613,7 @@ function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean 
     prev.disabled !== next.disabled ||
     prev.readOnly !== next.readOnly ||
     prev.placeholder !== next.placeholder ||
+    prev.tabSize !== next.tabSize ||
     prev.singleRow !== next.singleRow ||
     prev.sourceBadgeText !== next.sourceBadgeText ||
     prev.targetBadgeText !== next.targetBadgeText ||

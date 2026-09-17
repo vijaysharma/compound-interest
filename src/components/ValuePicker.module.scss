@@ -243,6 +243,54 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 }
 
+// Dynamic Tab Sizing Overrides
+.tabSize-xs .tabBtn {
+  height: 24px;
+  min-height: 24px;
+  font-size: 11px;
+}
+.tabSize-sm .tabBtn {
+  height: 32px;
+  min-height: 32px;
+  font-size: 12px;
+}
+.tabSize-md .tabBtn {
+  // Default is handled by base .tabBtn styles
+}
+.tabSize-lg .tabBtn {
+  height: 52px;
+  min-height: 52px;
+  font-size: 15px;
+}
+.tabSize-xl .tabBtn {
+  height: 60px;
+  min-height: 60px;
+  font-size: 16px;
+}
+
+// @include tablet-up {
+//   .tabSize-xs .tabBtn {
+//     height: 36px;
+//     min-height: 36px;
+//     font-size: 13px;
+//   }
+//   .tabSize-sm .tabBtn {
+//     height: 42px;
+//     min-height: 42px;
+//     font-size: 14px;
+//   }
+//   .tabSize-lg .tabBtn {
+//     height: 56px;
+//     min-height: 56px;
+//     font-size: 16px;
+//   }
+//   .tabSize-xl .tabBtn {
+//     height: 64px;
+//     min-height: 64px;
+//     font-size: 17px;
+//   }
+// }
+
 // Input row section
 .inputRow {
   display: flex;
