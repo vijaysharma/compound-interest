@@ -5,6 +5,7 @@ import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import ValuePicker from '../components/ValuePicker';
 import { getDuration, getNearest, navDateToISO } from '../utilities/utility';
+import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
 import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFundDetailModal';
@@ -183,6 +184,13 @@ const loadSavedState = (): SavedState => {
     const pinnedFunds = Array.isArray(parsed.pinnedFunds)
       ? parsed.pinnedFunds.filter((fund: PinnedFund) => Boolean(fund?.schemeCode))
       : [];
+    let validStartDate = typeof parsed.startDate === 'string' ? parsed.startDate : null;
+    let validEndDate = typeof parsed.endDate === 'string' ? parsed.endDate : null;
+    if (validStartDate && validEndDate) {
+      const resolved = resolveDateRange(validStartDate, validEndDate);
+      validStartDate = resolved.startDate;
+      validEndDate = resolved.endDate;
+    }
     return {
       ...defaultState,
       ...parsed,
@@ -191,8 +199,8 @@ const loadSavedState = (): SavedState => {
       pinnedFunds: Array.from(
         new Map(pinnedFunds.map((fund: PinnedFund) => [fund.schemeCode, fund])).values()
       ).slice(0, 8),
-      startDate: typeof parsed.startDate === 'string' ? parsed.startDate : null,
-      endDate: typeof parsed.endDate === 'string' ? parsed.endDate : null,
+      startDate: validStartDate,
+      endDate: validEndDate,
     };
   } catch (error) {
     console.warn('Failed to restore mutual fund state:', error);
@@ -286,17 +294,6 @@ const Lumpsum = ({
     const id = requestAnimationFrame(handleRestore);
     return () => cancelAnimationFrame(id);
   }, []);
-  // Preload top mutual funds when selector opens if data is empty
-  useEffect(() => {
-    if (isFundSelectorOpen && jsonAllData.length === 0) {
-      const initialQuery = searchKey.trim() || 'HDFC';
-      fetchAllMfs(initialQuery)
-        .then((data) => {
-          setJsonAllData(data);
-        })
-        .catch(() => {});
-    }
-  }, [isFundSelectorOpen, jsonAllData.length, searchKey]);
   useEffect(() => {
     onSelectionChange?.({
       funds: pinnedFunds,
@@ -348,10 +345,11 @@ const Lumpsum = ({
     if (!search) {
       return;
     }
+    const controller = new AbortController();
     let cancelled = false;
-    // Fast 120ms debounce for lightning fast search feedback
+    // Robust 350ms debounce prevents unnecessary upstream search requests while typing
     const timeout = window.setTimeout(() => {
-      fetchAllMfs(search)
+      fetchAllMfs(search, controller.signal)
         .then((data) => {
           if (cancelled) return;
           setJsonAllData(data);
@@ -363,9 +361,10 @@ const Lumpsum = ({
             message: err instanceof Error ? err.message : 'Failed to fetch mutual funds',
           });
         });
-    }, 120);
+    }, 350);
     return () => {
       cancelled = true;
+      controller.abort();
       window.clearTimeout(timeout);
     };
   }, [deferredSearchKey, isFundSelectorOpen]);
@@ -520,6 +519,28 @@ const Lumpsum = ({
     }
     if (end) {
       setEndDate(navDateToISO(end.date));
+    }
+  };
+  const handleStartDateChange = (val: string | null) => {
+    if (!val) {
+      setStartDate(null);
+      return;
+    }
+    setStartDate(val);
+    if (endDate && val > endDate) {
+      setEndDate(val);
+    }
+  };
+  const handleEndDateChange = (val: string | null) => {
+    if (!val) {
+      setEndDate(null);
+      return;
+    }
+    const today = getTodayISO();
+    const safeVal = val > today ? today : val;
+    setEndDate(safeVal);
+    if (startDate && startDate > safeVal) {
+      setStartDate(safeVal);
     }
   };
   /*
@@ -1062,8 +1083,8 @@ const Lumpsum = ({
               data={jsonNavData}
               startDate={startDate}
               endDate={endDate}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
+              setStartDate={handleStartDateChange}
+              setEndDate={handleEndDateChange}
             />
           )}
           {/*

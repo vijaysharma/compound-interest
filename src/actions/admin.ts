@@ -7,6 +7,7 @@ import {
   isAuthorizedUser,
   MF_URL,
 } from '@/lib/db';
+import { redisSet } from '@/lib/redis';
 let cachedShiprocketToken: { token: string; expiresAt: number } | null = null;
 export async function getAdminUsersAction(token?: string | null): Promise<{ users: DbUser[] }> {
   const sql = getDb();
@@ -341,6 +342,13 @@ export async function syncMutualFundsAction(token?: string | null): Promise<{ sy
     ON CONFLICT (scheme_code) DO UPDATE SET
       scheme_name = EXCLUDED.scheme_name, payload = EXCLUDED.payload, updated_at = NOW()
   `;
+  const compactSchemes = payload
+    .filter((item: { schemeCode?: unknown; schemeName?: unknown }) => item?.schemeCode && item?.schemeName)
+    .map((item: { schemeCode: number | string; schemeName: string }) => ({
+      schemeCode: Number(item.schemeCode),
+      schemeName: String(item.schemeName),
+    }));
+  await redisSet('cache:mf:all_schemes', compactSchemes, 86400 * 30).catch(() => {});
   return { synced: payload.length };
 }
 export async function syncIMFAction(

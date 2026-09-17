@@ -18,6 +18,11 @@ const WebSidebar: React.FC = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPendingPath(null);
+  }, [pathname]);
   const isItemActive = (item: NavigationItem) => {
     if (pathname === item.href) return true;
     if (item.aliases?.includes(pathname)) return true;
@@ -39,14 +44,20 @@ const WebSidebar: React.FC = () => {
             )}
             {section.items.map((item) => {
               const active = isItemActive(item);
+              const isPending = pendingPath === item.href;
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   to={item.href}
                   className={`${styles.navItem} ${active ? styles.active : ''} ${
+                    isPending ? styles.pending : ''
+                  } ${
                     isCollapsed ? styles.navItemCollapsed : styles.navItemExpanded
                   }`}
+                  onClick={() => {
+                    if (pathname !== item.href) setPendingPath(item.href);
+                  }}
                   title={item.name}
                   aria-label={item.name}
                 >

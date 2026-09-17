@@ -5,6 +5,7 @@ import { NavType } from '../types/types';
 import { fetchMFWithMeta, MFMetaType } from '../data/api_data';
 import Spinner from './Spinner';
 import { getNearest, isoDateToNavDate, navDateToISO } from '../utilities/utility';
+import { getTodayISO } from '../utilities/dateGuards';
 import styles from './MutualFundDetailModal.module.scss';
 const Chart = dynamic(() => import('./Chart'), {
   ssr: false,
@@ -67,29 +68,79 @@ export default function MutualFundDetailModal({
       maxNavDateISO: navDateToISO(sorted[sorted.length - 1].date),
     };
   }, [navData]);
-  // Track fund changes to reset inputs cleanly without setState in effect
-  const [prevFund, setPrevFund] = useState(fund);
+  // Track schemeCode changes to avoid wiping state on parent re-renders
+  const [prevSchemeCode, setPrevSchemeCode] = useState<string | undefined>(fund?.schemeCode);
   const [customStartDateISO, setCustomStartDateISO] = useState<string | null>(null);
   const [customEndDateISO, setCustomEndDateISO] = useState<string | null>(null);
   const [customInvestmentValue, setCustomInvestmentValue] = useState<string | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
-  if (fund !== prevFund) {
-    setPrevFund(fund);
+  if (fund?.schemeCode !== prevSchemeCode) {
+    setPrevSchemeCode(fund?.schemeCode);
     setCustomStartDateISO(null);
     setCustomEndDateISO(null);
     setCustomInvestmentValue(null);
     setActivePreset(null);
     setFetchedNavData([]);
   }
+  useEffect(() => {
+    if (!fund?.schemeCode || typeof window === 'undefined') return;
+    const handleRestore = () => {
+      try {
+        const raw = window.localStorage.getItem('mf_modal_state_' + fund.schemeCode);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.investmentType) setInvestmentType(parsed.investmentType);
+          if (parsed.customInvestmentValue) setCustomInvestmentValue(parsed.customInvestmentValue);
+          if (parsed.taxMode) setTaxMode(parsed.taxMode);
+          if (parsed.customStartDateISO) setCustomStartDateISO(parsed.customStartDateISO);
+          if (parsed.customEndDateISO) setCustomEndDateISO(parsed.customEndDateISO);
+          if (parsed.activePreset) setActivePreset(parsed.activePreset);
+        }
+      } catch {
+        // Ignore read errors
+      }
+    };
+    const id = requestAnimationFrame(handleRestore);
+    return () => cancelAnimationFrame(id);
+  }, [fund?.schemeCode]);
+  useEffect(() => {
+    if (!fund?.schemeCode || typeof window === 'undefined') return;
+    try {
+      const state = {
+        investmentType,
+        customInvestmentValue,
+        taxMode,
+        customStartDateISO,
+        customEndDateISO,
+        activePreset,
+      };
+      window.localStorage.setItem('mf_modal_state_' + fund.schemeCode, JSON.stringify(state));
+    } catch {
+      // Ignore write errors
+    }
+  }, [fund?.schemeCode, investmentType, customInvestmentValue, taxMode, customStartDateISO, customEndDateISO, activePreset]);
   const startDateISO = customStartDateISO ?? (fund?.startDate ? navDateToISO(fund.startDate) : minNavDateISO);
   const endDateISO = customEndDateISO ?? (fund?.endDate ? navDateToISO(fund.endDate) : maxNavDateISO);
   const investmentValue = customInvestmentValue ?? String(fund && fund.invAmt > 0 ? fund.invAmt : 100000);
   const setStartDateISO = (val: string) => {
-    setCustomStartDateISO(val);
+    const nextStart = val;
+    let nextEnd = endDateISO;
+    if (nextEnd && nextStart > nextEnd) {
+      nextEnd = nextStart;
+      setCustomEndDateISO(nextEnd);
+    }
+    setCustomStartDateISO(nextStart);
     setActivePreset(null);
   };
   const setEndDateISO = (val: string) => {
-    setCustomEndDateISO(val);
+    const today = getTodayISO();
+    const nextEnd = val > today ? today : val;
+    let nextStart = startDateISO;
+    if (nextStart && nextEnd < nextStart) {
+      nextStart = nextEnd;
+      setCustomStartDateISO(nextStart);
+    }
+    setCustomEndDateISO(nextEnd);
     setActivePreset(null);
   };
   const setInvestmentValue = (val: string) => setCustomInvestmentValue(val);

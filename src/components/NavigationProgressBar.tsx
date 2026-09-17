@@ -51,12 +51,12 @@ export function NavigationProgressBar() {
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     stateRef.current = 'loading';
     setVisible(true);
-    setProgress((prev) => (prev > 0 && prev < 90 ? prev : 18));
+    setProgress((prev) => (prev > 0 && prev < 90 ? prev : 28));
     timerRef.current = setInterval(() => {
       setProgress((prev) => {
-        if (prev < 40) return prev + 12;
-        if (prev < 65) return prev + 6;
-        if (prev < 80) return prev + 3;
+        if (prev < 40) return prev + 14;
+        if (prev < 65) return prev + 8;
+        if (prev < 80) return prev + 4;
         if (prev < 92) return prev + 0.8;
         return prev;
       });
@@ -123,17 +123,25 @@ export function NavigationProgressBar() {
   }, [progress]);
   if (!visible && progress === 0) return null;
   return (
-    <div
-      className={`${styles.progressBarContainer} ${visible ? styles.visible : styles.hidden}`}
-      aria-hidden="true"
-    >
+    <>
       <div
-        ref={barRef}
-        className={`${styles.progressBar} ${progress === 100 ? styles.complete : ''}`}
+        className={`${styles.progressBarContainer} ${visible ? styles.visible : styles.hidden}`}
+        aria-hidden="true"
       >
-        <div className={styles.peg} />
+        <div
+          ref={barRef}
+          className={`${styles.progressBar} ${progress === 100 ? styles.complete : ''}`}
+          style={{ width: `${progress}%` }}
+        >
+          <div className={styles.peg} />
+        </div>
       </div>
-    </div>
+      {visible && (
+        <div className={styles.spinnerWrapper} aria-hidden="true">
+          <div className={styles.spinner} />
+        </div>
+      )}
+    </>
   );
 }
 export default NavigationProgressBar;

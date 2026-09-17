@@ -3,16 +3,17 @@ import { ensureTables, getDb, IMF_URL, MF_URL } from '@/lib/db';
 import { DEFAULT_EXCHANGE_RATES } from '@/data/default_exchange_rates';
 import { DEFAULT_PPP_RECORDS } from '@/data/default_ppp_data';
 import { redisGet, redisMGet, redisSet } from '@/lib/redis';
+import { getTodayISO, resolveDateRange } from '@/utilities/dateGuards';
 const OPEN_EXCHANGE_API = 'https://open.er-api.com/v6/latest';
 const WORLD_BANK_PPP_API =
   'https://api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP?format=json&per_page=400&mrv=1&gapfill=y';
-const DB_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const DB_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours (for forex rates)
 const PPP_DB_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days for PPP data
-// Long-lived TTL constants for instant retrieval
+// Long-lived TTL constants for instant retrieval (historical data is immutable)
 const NAV_CACHE_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days in Redis
-const NAV_IN_MEMORY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours in server instance memory
+const NAV_IN_MEMORY_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days in server instance memory
 const SEARCH_CACHE_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days in Redis
-const SEARCH_IN_MEMORY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours in memory
+const SEARCH_IN_MEMORY_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days in memory
 // In-memory caches for fast warm responses
 let memoryExchangeRates: { rates: Record<string, number>; timestamp: number } | null = null;
 let memoryPppData: { data: unknown; timestamp: number } | null = null;
@@ -33,6 +34,38 @@ function parseNavPayload(val: unknown): { data: unknown[]; [k: string]: unknown 
     return parsed as { data: unknown[]; [k: string]: unknown };
   }
   return null;
+}
+function getLatestNavDateISO(payload: unknown): string | null {
+  const parsed = parseNavPayload(payload);
+  if (!parsed || !Array.isArray(parsed.data) || parsed.data.length === 0) {
+    return null;
+  }
+  let maxTime = -Infinity;
+  let latestIso = '';
+  for (const item of parsed.data as Array<{ date?: string; nav?: string }>) {
+    if (!item || !item.date) continue;
+    const parts = item.date.split('-');
+    if (parts.length === 3) {
+      let y: number, m: number, d: number;
+      if (parts[0].length === 4) {
+        y = Number(parts[0]);
+        m = Number(parts[1]);
+        d = Number(parts[2]);
+      } else {
+        d = Number(parts[0]);
+        m = Number(parts[1]);
+        y = Number(parts[2]);
+      }
+      if (Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d)) {
+        const time = new Date(y, m - 1, d).getTime();
+        if (time > maxTime) {
+          maxTime = time;
+          latestIso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+      }
+    }
+  }
+  return latestIso || null;
 }
 export async function getExchangeRatesAction(): Promise<{
   result: string;
@@ -243,7 +276,7 @@ export async function searchMutualFundsAction(
   const rawSearch = searchQuery.trim();
   const search = rawSearch.replace(/[%_\\]/g, ' ').trim().slice(0, 80);
   const cacheKey = search.toLowerCase();
-  // 1. In-memory check first (0ms latency)
+  // 1. In-memory check (0ms latency)
   const cached = mfSearchCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.data as Array<{ schemeCode: number; schemeName: string }>;
@@ -256,7 +289,18 @@ export async function searchMutualFundsAction(
     mfSearchCache.set(cacheKey, { expiresAt: Date.now() + SEARCH_IN_MEMORY_TTL_MS, data: redisCached });
     return redisCached;
   }
-  // 3. Database query using index
+  // 3. Fast Redis all-schemes check
+  const allSchemesRedis = await redisGet<Array<{ schemeCode: number; schemeName: string }>>('cache:mf:all_schemes');
+  if (allSchemesRedis && Array.isArray(allSchemesRedis) && allSchemesRedis.length > 0) {
+    const terms = search.toLowerCase().split(/\s+/).filter(Boolean);
+    const filtered = allSchemesRedis
+      .filter((s) => terms.every((t) => s.schemeName.toLowerCase().includes(t)))
+      .slice(0, 200);
+    mfSearchCache.set(cacheKey, { expiresAt: Date.now() + SEARCH_IN_MEMORY_TTL_MS, data: filtered });
+    redisSet('cache:mf:search:' + cacheKey, filtered, SEARCH_CACHE_TTL_SECONDS).catch(() => {});
+    return filtered;
+  }
+  // 4. Database query (NEVER trigger live external updates on user query)
   const sql = getDb();
   const searchPatterns = search
     .split(/\s+/)
@@ -281,74 +325,120 @@ export async function searchMutualFundsAction(
   }
   return data;
 }
-export async function getMutualFundNavAction(schemeCodeRaw: string | number): Promise<unknown> {
+export async function getMutualFundNavAction(
+  schemeCodeRaw: string | number,
+  requestedEndDate?: string | null
+): Promise<unknown> {
   const schemeCode = String(schemeCodeRaw).trim();
   if (!/^\d{1,10}$/.test(schemeCode)) {
     throw new Error('Invalid scheme code. Must be numeric.');
   }
+  const { endDate } = resolveDateRange(undefined, requestedEndDate);
+  const today = getTodayISO();
   // 1. In-memory check first (0ms latency)
   const cached = mfNavCache.get(schemeCode);
-  if (cached && cached.expiresAt > Date.now()) {
+  if (cached) {
     const cachedNav = parseNavPayload(cached.data);
     if (cachedNav) {
-      return cachedNav;
+      const latestDate = getLatestNavDateISO(cachedNav);
+      if (latestDate && latestDate >= endDate) {
+        return cachedNav;
+      }
     }
   }
-  // 2. Redis cache check (10-30ms) - cached for 30 days
+  // 2. Redis cache check (10-30ms) - cached indefinitely
   const redisNavRaw = await redisGet('cache:mf:nav:' + schemeCode);
   const redisNav = parseNavPayload(redisNavRaw);
   if (redisNav) {
-    mfNavCache.set(schemeCode, {
-      expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-      data: redisNav,
-    });
-    return redisNav;
-  }
-  // 3. Fast upstream fetch from AMFI official CDN (300-500ms)
-  try {
-    const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (upstream.ok) {
-      const payloadRaw = await upstream.json();
-      const payload = parseNavPayload(payloadRaw);
-      if (payload) {
-        mfNavCache.set(schemeCode, {
-          expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-          data: payload,
-        });
-        await redisSet('cache:mf:nav:' + schemeCode, payload, NAV_CACHE_TTL_SECONDS);
-        return payload;
-      }
+    const latestDate = getLatestNavDateISO(redisNav);
+    if (latestDate && latestDate >= endDate) {
+      mfNavCache.set(schemeCode, {
+        expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+        data: redisNav,
+      });
+      return redisNav;
     }
-  } catch (fetchError) {
-    console.warn('Upstream MF fetch failed:', fetchError);
   }
-  // 4. Fallback: check PostgreSQL mutual_fund_nav if upstream was temporarily unreachable
+  // 3. PostgreSQL mutual_fund_nav check
+  let storedPayload: { data: unknown[]; [k: string]: unknown } | null = null;
   try {
     const sql = getDb();
     const stored = (await sql`
       SELECT payload FROM mutual_fund_nav WHERE scheme_code = ${schemeCode}
     `) as Array<{ payload: unknown }>;
     if (stored.length > 0) {
-      const storedPayload = parseNavPayload(stored[0].payload);
+      storedPayload = parseNavPayload(stored[0].payload);
       if (storedPayload) {
-        mfNavCache.set(schemeCode, {
-          expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-          data: storedPayload,
-        });
-        redisSet('cache:mf:nav:' + schemeCode, storedPayload, NAV_CACHE_TTL_SECONDS).catch(() => {});
-        return storedPayload;
+        const latestDate = getLatestNavDateISO(storedPayload);
+        // If DB has the requested date range, serve directly from cache!
+        if (latestDate && latestDate >= endDate) {
+          mfNavCache.set(schemeCode, {
+            expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+            data: storedPayload,
+          });
+          redisSet('cache:mf:nav:' + schemeCode, storedPayload, NAV_CACHE_TTL_SECONDS).catch(() => {});
+          return storedPayload;
+        }
       }
     }
   } catch (dbErr) {
-    console.warn('Fallback DB read failed in getMutualFundNavAction:', dbErr);
+    console.warn('DB check in getMutualFundNavAction failed:', dbErr);
+  }
+  // 4. Sync Condition: Fetch missing data from AMFI and sync to DB if and only if:
+  //    - Requested endDate is not present in our DB (latestDate < endDate or no data in DB)
+  //    - endDate <= today (never request dates strictly in the future)
+  if (endDate <= today) {
+    try {
+      const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (upstream.ok) {
+        const payloadRaw = await upstream.json();
+        const payload = parseNavPayload(payloadRaw);
+        if (payload && Array.isArray(payload.data) && payload.data.length > 0) {
+          // Sync to DB
+          try {
+            const sql = getDb();
+            await sql`
+              INSERT INTO mutual_fund_nav (scheme_code, payload, updated_at)
+              VALUES (${schemeCode}, ${JSON.stringify(payload)}::jsonb, NOW())
+              ON CONFLICT (scheme_code) DO UPDATE SET
+                payload = EXCLUDED.payload, updated_at = NOW()
+            `;
+          } catch (syncErr) {
+            console.warn('DB sync in getMutualFundNavAction failed:', syncErr);
+          }
+          // Populate Redis and in-memory cache
+          mfNavCache.set(schemeCode, {
+            expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+            data: payload,
+          });
+          await redisSet('cache:mf:nav:' + schemeCode, payload, NAV_CACHE_TTL_SECONDS);
+          return payload;
+        }
+      }
+    } catch (fetchError) {
+      console.warn('Upstream AMFI fetch failed:', fetchError);
+    }
+  }
+  // Fallback: If AMFI fetch was unreachable or failed, return stored payload if available
+  if (storedPayload) {
+    mfNavCache.set(schemeCode, {
+      expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+      data: storedPayload,
+    });
+    redisSet('cache:mf:nav:' + schemeCode, storedPayload, NAV_CACHE_TTL_SECONDS).catch(() => {});
+    return storedPayload;
+  }
+  if (redisNav) {
+    return redisNav;
   }
   throw new Error('Failed to fetch mutual fund NAV data');
 }
 export async function getBatchMutualFundNavAction(
-  schemeCodesRaw: (string | number)[]
+  schemeCodesRaw: (string | number)[],
+  requestedEndDate?: string | null
 ): Promise<Record<string, unknown>> {
   const result: Record<string, unknown> = {};
   if (!Array.isArray(schemeCodesRaw) || schemeCodesRaw.length === 0) {
@@ -362,15 +452,20 @@ export async function getBatchMutualFundNavAction(
     )
   );
   if (validCodes.length === 0) return result;
+  const { endDate } = resolveDateRange(undefined, requestedEndDate);
+  const today = getTodayISO();
   // 1. In-memory check (0ms)
   const missingFromMemory: string[] = [];
   for (const code of validCodes) {
     const cached = mfNavCache.get(code);
-    if (cached && cached.expiresAt > Date.now()) {
+    if (cached) {
       const parsed = parseNavPayload(cached.data);
       if (parsed) {
-        result[code] = parsed;
-        continue;
+        const latestDate = getLatestNavDateISO(parsed);
+        if (latestDate && latestDate >= endDate) {
+          result[code] = parsed;
+          continue;
+        }
       }
     }
     missingFromMemory.push(code);
@@ -386,65 +481,95 @@ export async function getBatchMutualFundNavAction(
     const raw = redisResults['cache:mf:nav:' + code];
     const parsed = parseNavPayload(raw);
     if (parsed) {
-      result[code] = parsed;
-      mfNavCache.set(code, {
-        expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-        data: parsed,
-      });
-    } else {
-      missingFromRedis.push(code);
+      const latestDate = getLatestNavDateISO(parsed);
+      if (latestDate && latestDate >= endDate) {
+        result[code] = parsed;
+        mfNavCache.set(code, {
+          expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+          data: parsed,
+        });
+        continue;
+      }
     }
+    missingFromRedis.push(code);
   }
   if (missingFromRedis.length === 0) {
     return result;
   }
-  // 3. Parallel upstream fetch for schemes missing from Redis
-  await Promise.all(
-    missingFromRedis.map(async (code) => {
-      try {
-        const upstream = await fetch(`${MF_URL}/${encodeURIComponent(code)}`, {
-          headers: { Accept: 'application/json' },
-          signal: AbortSignal.timeout(15000),
-        });
-        if (upstream.ok) {
-          const payloadRaw = await upstream.json();
-          const payload = parseNavPayload(payloadRaw);
-          if (payload) {
-            result[code] = payload;
-            mfNavCache.set(code, {
-              expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-              data: payload,
-            });
-            await redisSet('cache:mf:nav:' + code, payload, NAV_CACHE_TTL_SECONDS);
-          }
-        }
-      } catch (err) {
-        console.warn(`Upstream fetch for scheme ${code} failed:`, err);
-      }
-    })
-  );
-  // 4. PostgreSQL fallback for any schemes still missing
-  const stillMissing = missingFromRedis.filter((code) => !result[code]);
-  if (stillMissing.length > 0) {
-    try {
-      const sql = getDb();
-      const stored = (await sql`
-        SELECT scheme_code, payload FROM mutual_fund_nav WHERE scheme_code = ANY(${stillMissing})
-      `) as Array<{ scheme_code: string; payload: unknown }>;
-      for (const row of stored) {
-        const storedPayload = parseNavPayload(row.payload);
-        if (storedPayload) {
-          result[row.scheme_code] = storedPayload;
-          mfNavCache.set(row.scheme_code, {
+  // 3. PostgreSQL DB batch check for missing from Redis
+  const missingFromDb: string[] = [];
+  try {
+    const sql = getDb();
+    const stored = (await sql`
+      SELECT scheme_code, payload FROM mutual_fund_nav WHERE scheme_code = ANY(${missingFromRedis})
+    `) as Array<{ scheme_code: string; payload: unknown }>;
+    const storedMap = new Map<string, { data: unknown[]; [k: string]: unknown }>();
+    for (const row of stored) {
+      const parsed = parseNavPayload(row.payload);
+      if (parsed) storedMap.set(row.scheme_code, parsed);
+    }
+    for (const code of missingFromRedis) {
+      const storedPayload = storedMap.get(code);
+      if (storedPayload) {
+        const latestDate = getLatestNavDateISO(storedPayload);
+        if (latestDate && latestDate >= endDate) {
+          result[code] = storedPayload;
+          mfNavCache.set(code, {
             expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
             data: storedPayload,
           });
-          redisSet('cache:mf:nav:' + row.scheme_code, storedPayload, NAV_CACHE_TTL_SECONDS).catch(() => {});
+          redisSet('cache:mf:nav:' + code, storedPayload, NAV_CACHE_TTL_SECONDS).catch(() => {});
+          continue;
         }
       }
-    } catch (dbErr) {
-      console.warn('Fallback DB read in getBatchMutualFundNavAction failed:', dbErr);
+      missingFromDb.push(code);
     }
+  } catch (dbErr) {
+    console.warn('DB check in getBatchMutualFundNavAction failed:', dbErr);
+    missingFromDb.push(...missingFromRedis);
+  }
+  if (missingFromDb.length === 0) {
+    return result;
+  }
+  // 4. Sync condition: Fetch missing data from AMFI and sync to DB if and only if
+  //    requested endDate is not in DB AND endDate <= today
+  if (endDate <= today) {
+    await Promise.all(
+      missingFromDb.map(async (code) => {
+        try {
+          const upstream = await fetch(`${MF_URL}/${encodeURIComponent(code)}`, {
+            headers: { Accept: 'application/json' },
+            signal: AbortSignal.timeout(15000),
+          });
+          if (upstream.ok) {
+            const payloadRaw = await upstream.json();
+            const payload = parseNavPayload(payloadRaw);
+            if (payload && Array.isArray(payload.data) && payload.data.length > 0) {
+              result[code] = payload;
+              mfNavCache.set(code, {
+                expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+                data: payload,
+              });
+              await redisSet('cache:mf:nav:' + code, payload, NAV_CACHE_TTL_SECONDS);
+              // Sync to DB
+              try {
+                const sql = getDb();
+                await sql`
+                  INSERT INTO mutual_fund_nav (scheme_code, payload, updated_at)
+                  VALUES (${code}, ${JSON.stringify(payload)}::jsonb, NOW())
+                  ON CONFLICT (scheme_code) DO UPDATE SET
+                    payload = EXCLUDED.payload, updated_at = NOW()
+                `;
+              } catch (dbSyncErr) {
+                console.warn(`DB sync for scheme ${code} failed:`, dbSyncErr);
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`AMFI sync for scheme ${code} failed:`, err);
+        }
+      })
+    );
   }
   return result;
 }

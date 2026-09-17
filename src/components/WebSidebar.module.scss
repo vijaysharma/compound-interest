@@ -133,3 +133,31 @@
     color: #ffffff;
   }
 }
+
+.pending {
+  background-color: color-mix(in srgb, var(--color-primary-content) 18%, transparent);
+  color: #ffffff;
+  animation: pendingPulse 1s ease-in-out infinite;
+
+  .itemIcon {
+    animation: iconSpin 1s linear infinite;
+  }
+}
+
+@keyframes pendingPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes iconSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

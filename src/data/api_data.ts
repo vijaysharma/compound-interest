@@ -13,9 +13,10 @@ import { trackUsageAction } from '@/actions/auth';
 const mfSearchCache = new Map<string, MFJSONType[]>();
 const mfNavCache = new Map<string, { expiresAt: number; data: NavType[] }>();
 const mfNavRequests = new Map<string, Promise<NavType[]>>();
+const mfSearchRequests = new Map<string, Promise<MFJSONType[]>>();
 const MAX_SEARCH_CACHE_ENTRIES = 200;
-const CLIENT_NAV_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours client cache
-function getSessionItem<T>(key: string, maxAgeMs = 24 * 60 * 60 * 1000): T | null {
+const CLIENT_NAV_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // Indefinite / 30-day client cache
+function getSessionItem<T>(key: string, maxAgeMs = 30 * 24 * 60 * 60 * 1000): T | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.sessionStorage.getItem(key);
@@ -61,6 +62,8 @@ export const fetchAllMfs = async (search = '', _signal?: AbortSignal): Promise<M
     mfSearchCache.set(normalizedSearch, sessionCached);
     return sessionCached;
   }
+  const pending = mfSearchRequests.get(normalizedSearch);
+  if (pending) return pending;
   const request = (async () => {
     try {
       recordApiUsage();
@@ -82,8 +85,11 @@ export const fetchAllMfs = async (search = '', _signal?: AbortSignal): Promise<M
       return sortedData;
     } catch {
       throw new Error(`Failed to fetch mutual funds`);
+    } finally {
+      mfSearchRequests.delete(normalizedSearch);
     }
   })();
+  mfSearchRequests.set(normalizedSearch, request);
   return request;
 };
 export interface MFMetaType {

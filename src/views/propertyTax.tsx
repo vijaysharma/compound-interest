@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FiAward,
   FiCheckCircle,
@@ -13,6 +13,7 @@ import {
   FiTrendingUp,
 } from 'react-icons/fi';
 import convertToWords, { getCurrencySymbol } from '../utilities/currency';
+import { getTodayISO } from '../utilities/dateGuards';
 import {
   calculatePropertyCapitalGains,
   CII_YEARS,
@@ -90,6 +91,7 @@ const SALE_PRESETS = [
   { label: '₹2.5 Cr', value: 25000000 },
   { label: '₹5 Cr', value: 50000000 },
 ];
+const PROPERTY_TAX_STORAGE_KEY = 'property_tax_calculator_state';
 export default function PropertyTaxCalculatorView() {
   // Input states
   const [purchaseDate, setPurchaseDate] = useState<string>('2016-06-15');
@@ -107,6 +109,86 @@ export default function PropertyTaxCalculatorView() {
   const [sec54ecExemption, setSec54ecExemption] = useState<string>('0');
   // STCG slab rate
   const [stcgSlabRate, setStcgSlabRate] = useState<number>(30);
+  const isLoadedRef = useRef(false);
+  useEffect(() => {
+    const handleRestore = () => {
+      try {
+        const saved = window.localStorage.getItem(PROPERTY_TAX_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.purchaseDate) setPurchaseDate(parsed.purchaseDate);
+          if (parsed.purchasePrice) setPurchasePrice(parsed.purchasePrice);
+          if (parsed.saleDate) setSaleDate(parsed.saleDate);
+          if (parsed.salePrice) setSalePrice(parsed.salePrice);
+          if (parsed.transferExpenses) setTransferExpenses(parsed.transferExpenses);
+          if (parsed.hasImprovement !== undefined) setHasImprovement(Boolean(parsed.hasImprovement));
+          if (parsed.improvementCost) setImprovementCost(parsed.improvementCost);
+          if (parsed.improvementYear) setImprovementYear(parsed.improvementYear);
+          if (parsed.hasExemptions !== undefined) setHasExemptions(Boolean(parsed.hasExemptions));
+          if (parsed.sec54Exemption) setSec54Exemption(parsed.sec54Exemption);
+          if (parsed.sec54ecExemption) setSec54ecExemption(parsed.sec54ecExemption);
+          if (parsed.stcgSlabRate) setStcgSlabRate(Number(parsed.stcgSlabRate));
+        }
+      } catch (err) {
+        console.warn('Failed to restore property tax state:', err);
+      } finally {
+        isLoadedRef.current = true;
+      }
+    };
+    const id = requestAnimationFrame(handleRestore);
+    return () => cancelAnimationFrame(id);
+  }, []);
+  useEffect(() => {
+    if (!isLoadedRef.current || typeof window === 'undefined') {
+      return;
+    }
+    const state = {
+      purchaseDate,
+      purchasePrice,
+      saleDate,
+      salePrice,
+      transferExpenses,
+      hasImprovement,
+      improvementCost,
+      improvementYear,
+      hasExemptions,
+      sec54Exemption,
+      sec54ecExemption,
+      stcgSlabRate,
+    };
+    try {
+      window.localStorage.setItem(PROPERTY_TAX_STORAGE_KEY, JSON.stringify(state));
+    } catch (err) {
+      console.warn('Failed to persist property tax state:', err);
+    }
+  }, [
+    purchaseDate,
+    purchasePrice,
+    saleDate,
+    salePrice,
+    transferExpenses,
+    hasImprovement,
+    improvementCost,
+    improvementYear,
+    hasExemptions,
+    sec54Exemption,
+    sec54ecExemption,
+    stcgSlabRate,
+  ]);
+  const handlePurchaseDateChange = (val: string) => {
+    setPurchaseDate(val);
+    if (saleDate && val > saleDate) {
+      setSaleDate(val);
+    }
+  };
+  const handleSaleDateChange = (val: string) => {
+    const today = getTodayISO();
+    const safeVal = val > today ? today : val;
+    setSaleDate(safeVal);
+    if (purchaseDate && purchaseDate > safeVal) {
+      setPurchaseDate(safeVal);
+    }
+  };
   // Compute results
   const comparison = useMemo(() => {
     const inputs: PropertyTaxInputs = {
@@ -173,7 +255,8 @@ export default function PropertyTaxCalculatorView() {
                 type="date"
                 className={styles.inputDate}
                 value={purchaseDate}
-                onChange={(e) => setPurchaseDate(e.target.value)}
+                max={saleDate || getTodayISO()}
+                onChange={(e) => handlePurchaseDateChange(e.target.value)}
               />
             </div>
             <div className={styles.fieldGroup}>
@@ -224,7 +307,9 @@ export default function PropertyTaxCalculatorView() {
                 type="date"
                 className={styles.inputDate}
                 value={saleDate}
-                onChange={(e) => setSaleDate(e.target.value)}
+                min={purchaseDate}
+                max={getTodayISO()}
+                onChange={(e) => handleSaleDateChange(e.target.value)}
               />
             </div>
             <div className={styles.fieldGroup}>

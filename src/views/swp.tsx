@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import ValuePicker from '../components/ValuePicker';
 import { getNearest } from '../utilities/utility';
+import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
 import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSwp, calculateSwpGrowth } from '../utilities/mutualFundCalculations';
@@ -193,14 +194,21 @@ const loadSavedState = (): SavedState => {
             schemeName: fund.schemeName,
           }))
       : [];
+    let validStartDate = typeof parsed.startSwpDate === 'string' ? parsed.startSwpDate : null;
+    let validEndDate = typeof parsed.endSwpDate === 'string' ? parsed.endSwpDate : null;
+    if (validStartDate && validEndDate) {
+      const resolved = resolveDateRange(validStartDate, validEndDate);
+      validStartDate = resolved.startDate;
+      validEndDate = resolved.endDate;
+    }
     return {
       ...defaultState,
       ...parsed,
       pinnedFunds: Array.from(
         new Map(pinnedFunds.map((fund: PinnedFund) => [fund.schemeCode, fund])).values()
       ).slice(0, 8),
-      startSwpDate: typeof parsed.startSwpDate === 'string' ? parsed.startSwpDate : null,
-      endSwpDate: typeof parsed.endSwpDate === 'string' ? parsed.endSwpDate : null,
+      startSwpDate: validStartDate,
+      endSwpDate: validEndDate,
     };
   } catch (error) {
     console.warn('Failed to restore mutual fund state:', error);
@@ -399,7 +407,7 @@ const SWP = ({
             message: err instanceof Error ? err.message : 'Failed to fetch mutual funds',
           });
         });
-    }, 250);
+    }, 350);
     return () => {
       cancelled = true;
       controller.abort();
@@ -524,6 +532,28 @@ const SWP = ({
       cancelled = true;
     };
   }, [selectedCode]);
+  const handleStartSwpDateChange = (val: string | null) => {
+    if (!val) {
+      setStartSwpDate(null);
+      return;
+    }
+    setStartSwpDate(val);
+    if (endSwpDate && val > endSwpDate) {
+      setEndSwpDate(val);
+    }
+  };
+  const handleEndSwpDateChange = (val: string | null) => {
+    if (!val) {
+      setEndSwpDate(null);
+      return;
+    }
+    const today = getTodayISO();
+    const safeVal = val > today ? today : val;
+    setEndSwpDate(safeVal);
+    if (startSwpDate && startSwpDate > safeVal) {
+      setStartSwpDate(safeVal);
+    }
+  };
   const togglePinFund = async (mf: MFType) => {
     const schemeCode = String(mf.value);
     const existing = pinnedFunds.find((fund) => fund.schemeCode === schemeCode);
@@ -926,8 +956,8 @@ const SWP = ({
               startDate={startSwpDate}
               startTitle="Start SWP"
               endDate={endSwpDate}
-              setStartDate={setStartSwpDate}
-              setEndDate={setEndSwpDate}
+              setStartDate={handleStartSwpDateChange}
+              setEndDate={handleEndSwpDateChange}
               endTitle="End SWP"
               startMinDate={lumpsumStartDate ?? undefined}
             />

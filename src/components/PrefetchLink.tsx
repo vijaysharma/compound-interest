@@ -58,8 +58,12 @@ export const PrefetchLink: React.FC<PrefetchLinkProps> = ({
         }
         onMouseLeave?.(e);
       }}
+      onMouseDown={(e) => {
+        handlePrefetch();
+        props.onMouseDown?.(e);
+      }}
       onTouchStart={(e) => {
-        // Prevent aggressive router prefetch during mobile touch scrolls
+        handlePrefetch();
         onTouchStart?.(e);
       }}
       {...props}
