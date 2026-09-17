@@ -1,9 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SEOHead from '../components/SEOHead';
 import { FiNavigation, FiRepeat } from 'react-icons/fi';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import styles from './UnitConverter.module.scss';
+import ValuePicker from '@/components/ValuePicker';
 const unitTypes = {
   Length: {
     mm: 0.001,
@@ -77,7 +78,6 @@ interface UnitInputRowProps {
   className?: string;
 }
 const UnitInputRow: React.FC<UnitInputRowProps> = ({
-  label,
   value,
   onChange,
   unit,
@@ -88,11 +88,7 @@ const UnitInputRow: React.FC<UnitInputRowProps> = ({
   className,
 }) => (
   <div className={`${styles.rowJoin} ${className ?? ''}`}>
-    {label && (
-      <span className={styles.rowLabel}>
-        {label}
-      </span>
-    )}
+    {/* {label && <span className={styles.rowLabel}>{label}</span>} */}
     <input
       type={readOnly ? 'text' : 'number'}
       className={`${styles.rowInput} ${isResult ? styles.resultInput : ''}`}
@@ -123,36 +119,51 @@ interface SavedState {
   inputValue: string;
 }
 const VALID_CATEGORIES: Set<string> = new Set([
-  'Length', 'Weight', 'Temperature', 'Area', 'Volume', 'Speed', 'Data',
+  'Length',
+  'Weight',
+  'Temperature',
+  'Area',
+  'Volume',
+  'Speed',
+  'Data',
 ]);
+const DEFAULT_STATE: SavedState = {
+  category: 'Length',
+  fromUnit: 'm',
+  toUnit: 'ft',
+  inputValue: '1',
+};
 const getSavedState = (): SavedState => {
   if (typeof window === 'undefined') {
-    return { category: 'Length', fromUnit: 'm', toUnit: 'ft', inputValue: '1' };
+    return DEFAULT_STATE;
   }
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed && typeof parsed === 'object') {
-        const cat: UnitCategory = VALID_CATEGORIES.has(parsed.category) ? parsed.category : 'Length';
+        const cat: UnitCategory = VALID_CATEGORIES.has(parsed.category)
+          ? parsed.category
+          : 'Length';
         const validUnits = cat === 'Temperature' ? ['C', 'F', 'K'] : Object.keys(unitTypes[cat]);
         const fUnit = validUnits.includes(parsed.fromUnit) ? parsed.fromUnit : validUnits[0] || 'm';
         const tUnit = validUnits.includes(parsed.toUnit) ? parsed.toUnit : validUnits[1] || 'ft';
-        const rawInput = typeof parsed.inputValue === 'string' ? parsed.inputValue.slice(0, 20) : '1';
+        const rawInput =
+          typeof parsed.inputValue === 'string' ? parsed.inputValue.slice(0, 20) : '1';
         return { category: cat, fromUnit: fUnit, toUnit: tUnit, inputValue: rawInput };
       }
     }
   } catch (err) {
     console.warn('Failed to load unit converter state:', err);
   }
-  return { category: 'Length', fromUnit: 'm', toUnit: 'ft', inputValue: '1' };
+  return DEFAULT_STATE;
 };
 /** Convert a value in `from` to `to` within the same category. Returns null on failure. */
 const convertValue = (
   val: number,
   from: string,
   to: string,
-  category: UnitCategory,
+  category: UnitCategory
 ): number | null => {
   if (category === 'Temperature') {
     let c = 0;
@@ -170,16 +181,36 @@ const convertValue = (
   if (!fromFactor || !toFactor) return null;
   return (val * fromFactor) / toFactor;
 };
-const fmt = (n: number): string =>
-  n.toLocaleString(undefined, { maximumFractionDigits: 6 });
+const fmt = (n: number): string => n.toLocaleString(undefined, { maximumFractionDigits: 6 });
 const UnitConverter: React.FC = () => {
-  const [saved] = useState<SavedState>(getSavedState);
-  const [category, setCategory] = useState<UnitCategory>(saved.category);
-  const [fromUnit, setFromUnit] = useState<string>(saved.fromUnit);
-  const [toUnit, setToUnit] = useState<string>(saved.toUnit);
-  const [inputValue, setInputValue] = useState<string>(saved.inputValue);
+  const [category, setCategory] = useState<UnitCategory>(DEFAULT_STATE.category);
+  const [fromUnit, setFromUnit] = useState<string>(DEFAULT_STATE.fromUnit);
+  const [toUnit, setToUnit] = useState<string>(DEFAULT_STATE.toUnit);
+  const [inputValue, setInputValue] = useState<string>(DEFAULT_STATE.inputValue);
+  const isLoadedRef = useRef(false);
+  // Restore saved state from localStorage after mount
+  useEffect(() => {
+    const handleRestore = () => {
+      try {
+        const saved = getSavedState();
+        setCategory(saved.category);
+        setFromUnit(saved.fromUnit);
+        setToUnit(saved.toUnit);
+        setInputValue(saved.inputValue);
+      } catch (err) {
+        console.warn('Failed to restore unit converter state:', err);
+      } finally {
+        isLoadedRef.current = true;
+      }
+    };
+    const id = requestAnimationFrame(handleRestore);
+    return () => cancelAnimationFrame(id);
+  }, []);
   // Persist state to localStorage on changes
   useEffect(() => {
+    if (!isLoadedRef.current || typeof window === 'undefined') {
+      return;
+    }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ category, fromUnit, toUnit, inputValue }));
     } catch (err) {
@@ -237,68 +268,70 @@ const UnitConverter: React.FC = () => {
           temperature, and speed.
         </p>
         {/* Category Selector — full width above the two-column grid */}
-        <div className={styles.categoryGroup}>
-          <JoinedButtonGroup
-            data={[
-              { id: 'uc1', title: 'Length', value: 'Length' },
-              { id: 'uc2', title: 'Area', value: 'Area' },
-              { id: 'uc3', title: 'Weight', value: 'Weight' },
-              { id: 'uc4', title: 'Volume', value: 'Volume' },
-            ]}
-            selectedValue={category}
-            updateSelectedValue={handleCategoryChange}
-            btnClass={styles.btnTopRow}
-            sizePrefix="md"
-          />
-          <JoinedButtonGroup
-            data={[
-              { id: 'uc5', title: 'Temperature', value: 'Temperature' },
-              { id: 'uc6', title: 'Speed', value: 'Speed' },
-              { id: 'uc7', title: 'Data', value: 'Data' },
-            ]}
-            selectedValue={category}
-            updateSelectedValue={handleCategoryChange}
-            btnClass={styles.btnBottomRow}
-            sizePrefix="md"
-          />
-        </div>
         {/* Two-column grid on tablet+: inputs left, results right */}
         <div className={styles.converterGrid}>
           {/* LEFT COLUMN — input rows + swap */}
           <div className={styles.inputsCol}>
-            <div className={styles.converterRows}>
-              <UnitInputRow
-                label="From"
-                value={inputValue}
-                onChange={setInputValue}
-                unit={fromUnit}
-                onUnitChange={setFromUnit}
-                availableUnits={allUnits}
+            <div className={styles.joinedButtonGroupContainer}>
+              <JoinedButtonGroup
+                data={[
+                  { id: 'uc1', title: 'Length', value: 'Length' },
+                  { id: 'uc2', title: 'Area', value: 'Area' },
+                  { id: 'uc3', title: 'Weight', value: 'Weight' },
+                  { id: 'uc4', title: 'Volume', value: 'Volume' },
+                ]}
+                selectedValue={category}
+                updateSelectedValue={handleCategoryChange}
+                sizePrefix="sm"
               />
-              <div className={styles.swapWrapper}>
-                <button
-                  type="button"
-                  onClick={handleSwap}
-                  className={styles.swapCircleBtn}
-                  title="Swap units"
-                  aria-label="Swap units"
-                >
-                  <FiRepeat />
-                </button>
-              </div>
-              <UnitInputRow
-                label="To"
-                value={outputValue}
-                unit={toUnit}
-                onUnitChange={setToUnit}
-                availableUnits={allUnits}
-                readOnly
-                isResult
+              <JoinedButtonGroup
+                data={[
+                  { id: 'uc5', title: 'Temperature', value: 'Temperature' },
+                  { id: 'uc6', title: 'Speed', value: 'Speed' },
+                  { id: 'uc7', title: 'Data', value: 'Data' },
+                ]}
+                selectedValue={category}
+                updateSelectedValue={handleCategoryChange}
+                sizePrefix="sm"
               />
             </div>
-          </div>
-          {/* RIGHT COLUMN — hero result + equivalents (sticky on web) */}
-          <div className={styles.resultsCol}>
+            <ValuePicker
+              variant="paired"
+              sourceBadgeText="From"
+              targetBadgeText="To"
+              sourceSlot={
+                <UnitInputRow
+                  label="From"
+                  value={inputValue}
+                  onChange={setInputValue}
+                  unit={fromUnit}
+                  onUnitChange={setFromUnit}
+                  availableUnits={allUnits}
+                />
+              }
+              targetSlot={
+                <UnitInputRow
+                  label="To"
+                  value={outputValue}
+                  unit={toUnit}
+                  onUnitChange={setToUnit}
+                  availableUnits={allUnits}
+                  readOnly
+                  isResult
+                />
+              }
+            />
+            <div className={styles.swapWrapper}>
+              <button
+                type="button"
+                onClick={handleSwap}
+                className={styles.swapCircleBtn}
+                title="Swap units"
+                aria-label="Swap units"
+              >
+                <FiRepeat />
+              </button>
+            </div>
             {/* Hero result card */}
             <div className={`${styles.card} ${styles.heroCard}`}>
               <div className={styles.cardHeader}>
@@ -319,6 +352,9 @@ const UnitConverter: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+          {/* RIGHT COLUMN — hero result + equivalents (sticky on web) */}
+          <div className={styles.resultsCol}>
             {/* All-units equivalents panel */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>

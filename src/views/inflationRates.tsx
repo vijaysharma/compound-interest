@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ValuePicker from '../components/ValuePicker';
-import DisplayCard from '../components/DisplayCard';
 import {
   calculateInflatedPrice,
   checkNAYear,
@@ -249,11 +248,11 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
                 },
                 { id: 'p4', value: '50000', title: '50K' },
                 { id: 'p5', value: '5000', title: '5K' },
-                { id: 'p6', value: '500', title: '500' },
-                { id: 'p7', value: '50', title: '50' },
+                { id: 'p6', value: '500', title: '100' },
               ]}
               currencySymbol={currencySymbol}
               locale={locale}
+              singleRow={true}
             />
             <ValuePicker
               variant="date-range"
@@ -268,16 +267,6 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
           </div>
         </div>
         <div className={styles.resultsCol}>
-          <DisplayCard
-            currencySymbol={currencySymbol}
-            locale={locale}
-            primaryAmount={Math.round(inflatedAmount)}
-            title={`Cost of ${currencySymbol}${Number(principal).toLocaleString()} in ${endYear}`}
-            secondaryInfo={{
-              title: `Purchase power of ${currencySymbol}${Number(principal).toLocaleString()} in ${endYear}`,
-              amount: Math.round(deflatedAmount),
-            }}
-          />
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <span>Inflation Impact ({place})</span>
@@ -289,25 +278,35 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Original Value ({startYear})</span>
                 <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
-                  {currencySymbol}{Number(principal).toLocaleString()}
+                  {currencySymbol}
+                  {Number(principal).toLocaleString()}
                 </span>
               </div>
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Future Cost ({endYear})</span>
                 <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
-                  {currencySymbol}{Math.round(inflatedAmount).toLocaleString()}
+                  {currencySymbol}
+                  {Math.round(inflatedAmount).toLocaleString()}
                 </span>
               </div>
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Retained Power</span>
                 <span className={styles.statValue}>
-                  {currencySymbol}{Math.round(deflatedAmount).toLocaleString()}
+                  {currencySymbol}
+                  {Math.round(deflatedAmount).toLocaleString()}
                 </span>
               </div>
               <div className={styles.statBox}>
                 <span className={styles.statLabel}>Value Erosion</span>
                 <span className={`${styles.statValue} ${styles.statValueError}`}>
-                  -{Math.max(0, Math.round(((Number(principal) - deflatedAmount) / (Number(principal) || 1)) * 100))}%
+                  -
+                  {Math.max(
+                    0,
+                    Math.round(
+                      ((Number(principal) - deflatedAmount) / (Number(principal) || 1)) * 100
+                    )
+                  )}
+                  %
                 </span>
               </div>
             </div>

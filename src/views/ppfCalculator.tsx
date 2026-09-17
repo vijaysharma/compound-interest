@@ -1,13 +1,6 @@
 'use client';
 import React, { useMemo, useState } from 'react';
-import {
-  FiAward,
-  FiCheckCircle,
-  FiChevronDown,
-  FiChevronUp,
-  FiClock,
-  FiShield,
-} from 'react-icons/fi';
+import { FiAward, FiCheckCircle, FiChevronDown, FiChevronUp, FiShield } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
 import { DEFAULT_RATE_STEPS } from '../data/valuePickerData';
 import SEOHead from '../components/SEOHead';
@@ -74,21 +67,18 @@ const ppfSchema = {
   ],
 };
 const PPF_STEPS_ANNUAL = [
-  { id: 'p1', value: '150000', title: '₹1.5L (Max)' },
-  { id: 'p2', value: '100000', title: '₹1L' },
-  { id: 'p3', value: '50000', title: '₹50K' },
-  { id: 'p4', value: '25000', title: '₹25K' },
-  { id: 'p5', value: '10000', title: '₹10K' },
-  { id: 'p6', value: '5000', title: '₹5K' },
-  { id: 'p7', value: '500', title: '₹500 (Min)' },
+  { id: 'p1', value: '150000', title: '₹1.5L' },
+  { id: 'p2', value: '50000', title: '₹50K' },
+  { id: 'p3', value: '25000', title: '₹25K' },
+  { id: 'p4', value: '5000', title: '₹5K' },
+  { id: 'p5', value: '500', title: '₹500' },
 ];
 const PPF_STEPS_MONTHLY = [
-  { id: 'm1', value: '12500', title: '₹12.5K (₹1.5L/yr)' },
+  { id: 'm1', value: '12500', title: '₹12.5K' },
   { id: 'm2', value: '10000', title: '₹10K' },
   { id: 'm3', value: '5000', title: '₹5K' },
-  { id: 'm4', value: '2500', title: '₹2.5K' },
-  { id: 'm5', value: '1000', title: '₹1K' },
-  { id: 'm6', value: '500', title: '₹500' },
+  { id: 'm4', value: '1000', title: '₹1K' },
+  { id: 'm5', value: '500', title: '₹500' },
 ];
 const PPF_START_YEAR_OPTIONS = [
   ...HISTORICAL_PPF_RATES.map((r) => ({ year: r.startYear, label: `FY ${r.fyLabel}` })),
@@ -162,75 +152,72 @@ const PpfCalculator: React.FC = () => {
       <div className={styles.formGrid}>
         {/* Left Column: Interactive Inputs */}
         <div className={styles.inputsCol}>
-          <section>
-            <div className={styles.fieldGroup}>
-              <ValuePicker
-                value={depositAmount}
-                onChange={setDepositAmount}
-                activeTab={frequency}
-                symbolBg={false}
-                onTabChange={(tabId) => {
-                  const newFreq = tabId as PPFFrequency;
-                  setFrequency(newFreq);
-                  if (newFreq === 'monthly') {
-                    setDepositAmount('12500');
-                  } else {
-                    setDepositAmount('150000');
-                  }
-                }}
-                stepData={frequency === 'yearly' ? PPF_STEPS_ANNUAL : PPF_STEPS_MONTHLY}
-                tabs={[
-                  { id: 'yearly', title: 'Annual deposit' },
-                  { id: 'monthly', title: 'Monthly deposit' },
-                ]}
-                min={frequency === 'yearly' ? MIN_PPF_ANNUAL_DEPOSIT : 100}
-                max={frequency === 'yearly' ? MAX_PPF_ANNUAL_DEPOSIT : 12500}
-              />
+          <div className={styles.fieldGroup}>
+            <ValuePicker
+              value={depositAmount}
+              onChange={setDepositAmount}
+              activeTab={frequency}
+              symbolBg={false}
+              onTabChange={(tabId) => {
+                const newFreq = tabId as PPFFrequency;
+                setFrequency(newFreq);
+                if (newFreq === 'monthly') {
+                  setDepositAmount('12500');
+                } else {
+                  setDepositAmount('150000');
+                }
+              }}
+              stepData={frequency === 'yearly' ? PPF_STEPS_ANNUAL : PPF_STEPS_MONTHLY}
+              tabs={[
+                { id: 'yearly', title: 'Annual deposit' },
+                { id: 'monthly', title: 'Monthly deposit' },
+              ]}
+              min={frequency === 'yearly' ? MIN_PPF_ANNUAL_DEPOSIT : 100}
+              max={frequency === 'yearly' ? MAX_PPF_ANNUAL_DEPOSIT : 12500}
+              singleRow={true}
+            />
+          </div>
+          {/* Deposit Timing: 5th of the month rule */}
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>Deposit Timing (RBI Rule)</label>
+            <div className={styles.timingGrid}>
+              <button
+                type="button"
+                className={`${styles.timingBtn} ${
+                  depositTiming === 'before_5th' ? styles.timingBtnActive : ''
+                }`}
+                onClick={() => setDepositTiming('before_5th')}
+              >
+                <span>On or before 5th</span>
+                <span>Earns interest for same month</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.timingBtn} ${
+                  depositTiming === 'after_5th' ? styles.timingBtnActive : ''
+                }`}
+                onClick={() => setDepositTiming('after_5th')}
+              >
+                <span>After 5th of month</span>
+                <span>Earns interest from next month</span>
+              </button>
             </div>
-            {/* Deposit Timing: 5th of the month rule */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Deposit Timing (RBI Rule)</label>
-              <div className={styles.timingGrid}>
-                <button
-                  type="button"
-                  className={`${styles.timingBtn} ${
-                    depositTiming === 'before_5th' ? styles.timingBtnActive : ''
-                  }`}
-                  onClick={() => setDepositTiming('before_5th')}
-                >
-                  <span>On or before 5th</span>
-                  <span>Earns interest for same month</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.timingBtn} ${
-                    depositTiming === 'after_5th' ? styles.timingBtnActive : ''
-                  }`}
-                  onClick={() => setDepositTiming('after_5th')}
-                >
-                  <span>After 5th of month</span>
-                  <span>Earns interest from next month</span>
-                </button>
-              </div>
-              <div className={styles.ruleNote}>
-                <strong>RBI Rule:</strong> Interest is calculated on the lowest balance between the
-                close of the 5th day and the end of each month.
-              </div>
-            </div>
-          </section>
-          <section className={styles.card}>
-            <h2 className={styles.sectionHeading}>
-              <FiClock /> Start Year &amp; Extensions
-            </h2>
-            <div className={styles.fieldGroup}>
-              <label htmlFor="ppf-start-year" className={styles.fieldLabel}>
-                Account Opening Financial Year
-              </label>
+          </div>
+          <div className={styles.ruleNote}>
+            <strong>RBI Rule:</strong> Interest is calculated on the lowest balance between the
+            close of the 5th day and the end of each month.
+          </div>
+          <ValuePicker
+            variant="paired"
+            sourceBadgeText="Account Opening Financial Year"
+            targetBadgeText="Account Tenure &amp; Extensions"
+            sourceSlot={
               <select
                 id="ppf-start-year"
                 value={startYear}
                 onChange={(e) => setStartYear(Number(e.target.value))}
-                className={styles.selectInput}
+                className={styles.numberInput}
+                aria-label="PPF Start Year"
               >
                 {PPF_START_YEAR_OPTIONS.map((opt) => (
                   <option key={opt.year} value={opt.year}>
@@ -238,16 +225,14 @@ const PpfCalculator: React.FC = () => {
                   </option>
                 ))}
               </select>
-            </div>
-            <div className={styles.fieldGroup}>
-              <label htmlFor="ppf-extensions" className={styles.fieldLabel}>
-                Account Tenure &amp; Extensions
-              </label>
+            }
+            targetSlot={
               <select
                 id="ppf-extensions"
                 value={extensionBlocks}
                 onChange={(e) => setExtensionBlocks(Number(e.target.value))}
-                className={styles.selectInput}
+                className={styles.numberInput}
+                aria-label="PPF Extension Blocks"
               >
                 <option value={0}>15 Years (Base Tenure)</option>
                 <option value={1}>20 Years (1 Extension — 5 Yrs)</option>
@@ -256,49 +241,49 @@ const PpfCalculator: React.FC = () => {
                 <option value={4}>35 Years (4 Extensions — 20 Yrs)</option>
                 <option value={5}>40 Years (5 Extensions — 25 Yrs)</option>
               </select>
-            </div>
-            {extensionBlocks > 0 && (
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Extension Investment Mode</label>
-                <div className={styles.timingGrid}>
-                  <button
-                    type="button"
-                    className={`${styles.timingBtn} ${
-                      extensionMode === 'with_contribution' ? styles.timingBtnActive : ''
-                    }`}
-                    onClick={() => setExtensionMode('with_contribution')}
-                  >
-                    <span>With Ongoing Deposits</span>
-                    <span>Continue contributing annually</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.timingBtn} ${
-                      extensionMode === 'without_contribution' ? styles.timingBtnActive : ''
-                    }`}
-                    onClick={() => setExtensionMode('without_contribution')}
-                  >
-                    <span>Without Investing More</span>
-                    <span>Earn interest on accumulated balance only</span>
-                  </button>
-                </div>
-              </div>
-            )}
+            }
+          />
+          {extensionBlocks > 0 && (
             <div className={styles.fieldGroup}>
-              <ValuePicker
-                title={`Projected Future Rate (Current: ${CURRENT_PPF_RATE}%)`}
-                symbol="%"
-                value={projectedRate}
-                min={1}
-                max={15}
-                defaultStep={0.1}
-                stepData={DEFAULT_RATE_STEPS}
-                singleRow={true}
-                showWords={false}
-                onChange={(v) => setProjectedRate(parseFloat(v) || 7.1)}
-              />
+              <label className={styles.fieldLabel}>Extension Investment Mode</label>
+              <div className={styles.timingGrid}>
+                <button
+                  type="button"
+                  className={`${styles.timingBtn} ${
+                    extensionMode === 'with_contribution' ? styles.timingBtnActive : ''
+                  }`}
+                  onClick={() => setExtensionMode('with_contribution')}
+                >
+                  <span>With Ongoing Deposits</span>
+                  <span>Continue contributing annually</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.timingBtn} ${
+                    extensionMode === 'without_contribution' ? styles.timingBtnActive : ''
+                  }`}
+                  onClick={() => setExtensionMode('without_contribution')}
+                >
+                  <span>Without Investing More</span>
+                  <span>Earn interest on accumulated balance only</span>
+                </button>
+              </div>
             </div>
-          </section>
+          )}
+          <div className={styles.fieldGroup}>
+            <ValuePicker
+              title={`Projected Future Rate (Current: ${CURRENT_PPF_RATE}%)`}
+              symbol="%"
+              value={projectedRate}
+              min={1}
+              max={15}
+              defaultStep={0.1}
+              stepData={DEFAULT_RATE_STEPS}
+              singleRow={true}
+              showWords={false}
+              onChange={(v) => setProjectedRate(parseFloat(v) || 7.1)}
+            />
+          </div>
         </div>
         {/* Right Column: Key Results & Summary */}
         <div className={styles.summaryCol}>
@@ -424,11 +409,7 @@ const PpfCalculator: React.FC = () => {
                       <tr>
                         <td>
                           <strong>Yr {row.yearNumber}</strong>
-                          {row.isExtensionYear && (
-                            <span className={styles.extBadge}>
-                              (Ext)
-                            </span>
-                          )}
+                          {row.isExtensionYear && <span className={styles.extBadge}>(Ext)</span>}
                         </td>
                         <td>FY {row.fyLabel}</td>
                         <td>

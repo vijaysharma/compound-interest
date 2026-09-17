@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ValuePicker from '../components/ValuePicker';
 import SEOHead from '../components/SEOHead';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
@@ -83,14 +83,14 @@ const getSavedDateState = (): SavedDateState => {
   return getDefaultDateState(today);
 };
 const DateCalculator: React.FC = () => {
-  const [saved] = useState<SavedDateState>(getSavedDateState);
-  const [mode, setMode] = useState<DateMode>(saved.mode);
+  const defaultState = useMemo(() => getDefaultDateState(getTodayISO()), []);
+  const [mode, setMode] = useState<DateMode>(defaultState.mode);
   // Difference mode state
-  const [startDate, setStartDate] = useState(saved.startDate);
-  const [startTime, setStartTime] = useState(saved.startTime);
-  const [endDate, setEndDate] = useState(saved.endDate);
-  const [endTime, setEndTime] = useState(saved.endTime);
-  const [isInclusive, setIsInclusive] = useState(saved.isInclusive);
+  const [startDate, setStartDate] = useState(defaultState.startDate);
+  const [startTime, setStartTime] = useState(defaultState.startTime);
+  const [endDate, setEndDate] = useState(defaultState.endDate);
+  const [endTime, setEndTime] = useState(defaultState.endTime);
+  const [isInclusive, setIsInclusive] = useState(defaultState.isInclusive);
   const handleStartDateChange = (newStart: string) => {
     setStartDate(newStart);
     if (newStart && endDate && newStart > endDate) {
@@ -105,15 +105,48 @@ const DateCalculator: React.FC = () => {
     setEndDate(newEnd);
   };
   // Add/Subtract mode state
-  const [baseDate, setBaseDate] = useState(saved.baseDate);
-  const [baseTime, setBaseTime] = useState(saved.baseTime);
-  const [years, setYears] = useState(saved.years);
-  const [months, setMonths] = useState(saved.months);
-  const [days, setDays] = useState(saved.days);
-  const [hours, setHours] = useState(saved.hours);
-  const [addOrSub, setAddOrSub] = useState<'add' | 'subtract'>(saved.addOrSub);
-  const [isAddSubInclusive, setIsAddSubInclusive] = useState(saved.isAddSubInclusive);
+  const [baseDate, setBaseDate] = useState(defaultState.baseDate);
+  const [baseTime, setBaseTime] = useState(defaultState.baseTime);
+  const [years, setYears] = useState(defaultState.years);
+  const [months, setMonths] = useState(defaultState.months);
+  const [days, setDays] = useState(defaultState.days);
+  const [hours, setHours] = useState(defaultState.hours);
+  const [addOrSub, setAddOrSub] = useState<'add' | 'subtract'>(defaultState.addOrSub);
+  const [isAddSubInclusive, setIsAddSubInclusive] = useState(defaultState.isAddSubInclusive);
+  const isLoadedRef = useRef(false);
+  // Restore saved state from localStorage after mount
   useEffect(() => {
+    const handleRestore = () => {
+      try {
+        const saved = getSavedDateState();
+        setMode(saved.mode);
+        setStartDate(saved.startDate);
+        setStartTime(saved.startTime);
+        setEndDate(saved.endDate);
+        setEndTime(saved.endTime);
+        setIsInclusive(saved.isInclusive);
+        setBaseDate(saved.baseDate);
+        setBaseTime(saved.baseTime);
+        setYears(saved.years);
+        setMonths(saved.months);
+        setDays(saved.days);
+        setHours(saved.hours);
+        setAddOrSub(saved.addOrSub);
+        setIsAddSubInclusive(saved.isAddSubInclusive);
+      } catch (err) {
+        console.warn('Failed to restore date calculator state:', err);
+      } finally {
+        isLoadedRef.current = true;
+      }
+    };
+    const id = requestAnimationFrame(handleRestore);
+    return () => cancelAnimationFrame(id);
+  }, []);
+  // Persist state to localStorage on changes
+  useEffect(() => {
+    if (!isLoadedRef.current || typeof window === 'undefined') {
+      return;
+    }
     try {
       localStorage.setItem(
         STORAGE_KEY,

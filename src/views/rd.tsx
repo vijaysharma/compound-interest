@@ -205,12 +205,8 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
         schema={rdSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          Disciplined Savings &bull; Guaranteed Returns
-        </div>
-        <h1 className={styles.title}>
-          Recurring Deposit (RD) Calculator India
-        </h1>
+        <div className={styles.badge}>Disciplined Savings &bull; Guaranteed Returns</div>
+        <h1 className={styles.title}>Recurring Deposit (RD) Calculator India</h1>
         <p className={styles.subtitle}>
           Calculate maturity values, total interest yield, and compound returns on monthly recurring
           deposits.
@@ -231,6 +227,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
                 { id: 'my', title: 'Monthly amount' },
                 { id: 'tgt', title: 'Target amount' },
               ]}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}
@@ -244,6 +241,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
               stepData={DEFAULT_RATE_STEPS}
               tabs={[]}
               showWords={false}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.fieldLast}
@@ -258,7 +256,9 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
                 <select
                   className={styles.tenureFormatSelect}
                   value={rt.tenureFormat}
-                  onChange={(e) => setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  onChange={(e) =>
+                    setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))
+                  }
                   aria-label="Tenure Unit"
                 >
                   <option value="m">Months</option>
@@ -266,6 +266,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
                 </select>
               }
               showWords={false}
+              singleRow={true}
             />
           </div>
         </div>

@@ -225,6 +225,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               title="Invested Amount"
               stepData={invStepData}
               tabs={[]}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}
@@ -233,6 +234,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               stepData={wdStepData}
               title="Withdrawal amount per month"
               tabs={[]}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}
@@ -246,6 +248,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               stepData={DEFAULT_RATE_STEPS}
               tabs={[]}
               showWords={false}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}
@@ -260,7 +263,9 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
                 <select
                   className={styles.tenureFormatSelect}
                   value={t.tenureFormat}
-                  onChange={(e) => setT((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  onChange={(e) =>
+                    setT((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))
+                  }
                   aria-label="Tenure Unit"
                 >
                   <option value="y">Years</option>
@@ -268,6 +273,7 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
                 </select>
               }
               showWords={false}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}

@@ -81,6 +81,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.25rem;
+  @include tablet-up {
+    grid-template-columns: 1fr;
+  }
 }
 
 .statBox {

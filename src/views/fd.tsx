@@ -218,9 +218,7 @@ const FD: React.FC = () => {
         schema={fdSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          Fixed Income &bull; Guaranteed Returns
-        </div>
+        <div className={styles.badge}>Fixed Income &bull; Guaranteed Returns</div>
         <h1 className={styles.title}>
           Compound Interest Calculator &amp; Fixed Deposit (FD) Calculator India
         </h1>
@@ -243,6 +241,7 @@ const FD: React.FC = () => {
                 { id: 'inv', title: 'One time amount' },
                 { id: 'tgt', title: 'Target amount' },
               ]}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}
@@ -256,6 +255,7 @@ const FD: React.FC = () => {
               stepData={DEFAULT_RATE_STEPS}
               tabs={[]}
               showWords={false}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}
@@ -270,7 +270,9 @@ const FD: React.FC = () => {
                 <select
                   className={styles.tenureFormatSelect}
                   value={rt.tenureFormat}
-                  onChange={(e) => setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  onChange={(e) =>
+                    setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))
+                  }
                   aria-label="Tenure Unit"
                 >
                   <option value="m">Months</option>
@@ -278,31 +280,36 @@ const FD: React.FC = () => {
                 </select>
               }
               showWords={false}
+              singleRow={true}
             />
-            <JoinedButtonGroup
-              className={styles.field}
-              data={FREQUENCY_DATA}
-              sizePrefix="sm"
-              selectedValue={frequency}
-              updateSelectedValue={setFrequency}
-              title="Compounded"
-            />
-            {invType === 'inv' && (
-              <JoinedButtonGroup
-                className={styles.fieldLast}
-                data={PAYOUT_MODE_DATA}
-                sizePrefix="sm"
-                selectedValue={mode}
-                updateSelectedValue={setMode}
-                title="Payout Mode"
-              />
-            )}
           </div>
         </div>
         <div className={styles.resultsCol}>
+          <JoinedButtonGroup
+            className={styles.field}
+            data={FREQUENCY_DATA}
+            sizePrefix="sm"
+            selectedValue={frequency}
+            updateSelectedValue={setFrequency}
+            title="Compounded"
+          />
+          {invType === 'inv' && (
+            <JoinedButtonGroup
+              className={styles.fieldLast}
+              data={PAYOUT_MODE_DATA}
+              sizePrefix="sm"
+              selectedValue={mode}
+              updateSelectedValue={setMode}
+              title="Payout Mode"
+            />
+          )}
           <DisplayCard
             primaryAmount={payoutAmount}
-            title={invType === 'tgt' ? 'Lumpsum amount required' : ''}
+            title={
+              invType === 'tgt'
+                ? 'Lumpsum amount required'
+                : PAYOUT_MODE_DATA.find((el) => el.value === mode)?.title + ' Payout'
+            }
           />
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>

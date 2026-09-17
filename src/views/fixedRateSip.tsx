@@ -237,9 +237,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
         schema={sipSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          Compounding Engine &bull; Wealth Accumulation
-        </div>
+        <div className={styles.badge}>Compounding Engine &bull; Wealth Accumulation</div>
         <h1 className={styles.title}>
           Mutual Fund SIP Calculator India (Systematic Investment Plan)
         </h1>
@@ -262,6 +260,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
                 { id: 'my', title: 'Monthly amount' },
                 { id: 'tgt', title: 'Target amount' },
               ]}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.field}
@@ -275,6 +274,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
               stepData={DEFAULT_RATE_STEPS}
               tabs={[]}
               showWords={false}
+              singleRow={true}
             />
             <ValuePicker
               className={styles.fieldLast}
@@ -289,7 +289,9 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
                 <select
                   className={styles.tenureFormatSelect}
                   value={rt.tenureFormat}
-                  onChange={(e) => setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  onChange={(e) =>
+                    setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))
+                  }
                   aria-label="Tenure Unit"
                 >
                   <option value="y">Years</option>
@@ -297,6 +299,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
                 </select>
               }
               showWords={false}
+              singleRow={true}
             />
           </div>
         </div>

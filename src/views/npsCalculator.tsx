@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useState } from 'react';
-import { FiAward, FiCheckCircle, FiPieChart, FiShield, FiTrendingUp } from 'react-icons/fi';
+import { FiAward, FiCheckCircle, FiShield } from 'react-icons/fi';
 import ValuePicker from '../components/ValuePicker';
 import { DEFAULT_RATE_STEPS } from '../data/valuePickerData';
 import SEOHead from '../components/SEOHead';
@@ -8,7 +8,6 @@ import CalculatorContentSection from '../components/CalculatorContentSection';
 import convertToWords, { getCurrencySymbol } from '../utilities/currency';
 import { calculateNPS } from '../utilities/npsCalculations';
 import styles from './NpsCalculator.module.scss';
-import { AiFillGold } from 'react-icons/ai';
 const npsSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -51,10 +50,8 @@ const NPS_MONTHLY_STEPS = [
   { id: 'n1', value: '50000', title: '₹50K' },
   { id: 'n2', value: '25000', title: '₹25K' },
   { id: 'n3', value: '10000', title: '₹10K' },
-  { id: 'n4', value: '5000', title: '₹5K' },
-  { id: 'n5', value: '2500', title: '₹2.5K' },
-  { id: 'n6', value: '1000', title: '₹1K' },
-  { id: 'n7', value: '500', title: '₹500 (Min)' },
+  { id: 'n4', value: '1000', title: '₹1K' },
+  { id: 'n5', value: '500', title: '₹500 (Min)' },
 ];
 const NpsCalculator: React.FC = () => {
   const [currentAge, setCurrentAge] = useState<number>(28);
@@ -116,187 +113,152 @@ const NpsCalculator: React.FC = () => {
       <div className={styles.formGrid}>
         {/* Left Column: Interactive Inputs */}
         <div className={styles.inputsCol}>
-          <section>
-            <h2 className={styles.sectionHeading}>
-              <AiFillGold /> Your Monthly Contribution
-            </h2>
-            <div className={styles.fieldGroup}>
-              <ValuePicker
-                title="Your Monthly Investment in NPS Tier-1"
-                value={monthlyContribution}
-                onChange={setMonthlyContribution}
-                stepData={NPS_MONTHLY_STEPS}
-                min={500}
-                max={500000}
-              />
-            </div>
-            {/* Employer Contribution (Section 80CCD(2)) */}
-            <div className={styles.fieldGroup}>
-              <label className={`${styles.fieldLabel} ${styles.checkboxLabel}`}>
-                <span>
-                  <input
-                    type="checkbox"
-                    checked={hasEmployerContribution}
-                    onChange={(e) => setHasEmployerContribution(e.target.checked)}
-                    className={styles.checkboxInput}
-                  />
-                  Add Employer Contribution (Section 80CCD(2))
-                </span>
-              </label>
-              {hasEmployerContribution && (
-                <div className={styles.employerWrapper}>
-                  <ValuePicker
-                    title="Employer Monthly Contribution"
-                    value={employerMonthly}
-                    onChange={setEmployerMonthly}
-                    stepData={NPS_MONTHLY_STEPS}
-                    min={500}
-                    max={500000}
-                  />
-                  <p className={styles.noteText}>
-                    Corporate employer contributions up to 10% of Basic + DA are tax-exempt under
-                    both Old and New Tax Regimes.
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
-          <br />
-          <section>
-            <h2 className={styles.sectionHeading}>
-              <FiTrendingUp /> Age &amp; Expected Growth
-            </h2>
-            <div className={styles.fieldGroup}>
-              <ValuePicker
-                variant="paired"
-                title="Investment Period"
-                sourceBadgeText="Current Age"
-                targetBadgeText="Retire Age"
-                sourceSlot={
-                  <select
-                    id="nps-current-age"
-                    value={currentAge}
-                    onChange={(e) => {
-                      const newAge = Number(e.target.value);
-                      setCurrentAge(newAge);
-                      if (retirementAge <= newAge) {
-                        setRetirementAge(Math.min(75, newAge + 5));
-                      }
-                    }}
-                    className={styles.numberInput}
-                    aria-label="Current Age"
-                  >
-                    {Array.from({ length: 48 }, (_, i) => i + 18).map((age) => (
-                      <option key={age} value={age}>
-                        {age} Years
-                      </option>
-                    ))}
-                  </select>
-                }
-                targetSlot={
-                  <select
-                    id="nps-retirement-age"
-                    value={retirementAge}
-                    onChange={(e) => setRetirementAge(Number(e.target.value))}
-                    className={styles.numberInput}
-                    aria-label="Retirement Age"
-                  >
-                    {Array.from(
-                      { length: Math.max(1, 75 - currentAge) },
-                      (_, i) => currentAge + 1 + i
-                    ).map((age) => (
-                      <option key={age} value={age}>
-                        {age} Years
-                      </option>
-                    ))}
-                  </select>
-                }
-              />
-            </div>
-            <div className={styles.fieldGroup}>
-              <ValuePicker
-                value={expectedRoi}
-                symbol="%"
-                symbolBg={false}
-                symbolPosition="right"
-                onChange={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
-                title="Expected Return (CAGR %)"
-                titleStyle="merged"
-                stepData={DEFAULT_RATE_STEPS}
-                tabs={[]}
-                showWords={false}
-              />
-            </div>
-            <div className={styles.fieldGroup}>
-              <ValuePicker
-                value={retirementAge - currentAge}
-                symbol={null}
-                onChange={(v) => {
-                  const years = parseInt(v, 10) || 1;
-                  setRetirementAge(Math.min(75, currentAge + years));
-                }}
-                title="Accumulation Period"
-                titleStyle="merged"
-                stepData={[
-                  { id: 't-5', value: '5', title: '5 yrs' },
-                  { id: 't-10', value: '10', title: '10 yrs' },
-                  { id: 't-15', value: '15', title: '15 yrs' },
-                  { id: 't-20', value: '20', title: '20 yrs' },
-                  { id: 't-25', value: '25', title: '25 yrs' },
-                  { id: 't-30', value: '30', title: '30 yrs' },
-                  { id: 't-35', value: '35', title: '35 yrs' },
-                ]}
-                tabs={[]}
-                showWords={false}
-              />
-            </div>
-          </section>
-          <br />
-          <section>
-            <h2 className={styles.sectionHeading}>
-              <FiPieChart /> Annuity &amp; Pension Allocation
-            </h2>
-            <div className={styles.fieldGroup}>
-              <ValuePicker
-                title="Annuity Allocation Share (PFRDA Min 40%)"
-                symbol="%"
-                value={annuityPercent}
-                min={40}
-                max={100}
-                defaultStep={5}
-                stepData={[
-                  { id: 'a40', label: '40%', value: 40 },
-                  { id: 'a50', label: '50%', value: 50 },
-                  { id: 'a60', label: '60%', value: 60 },
-                  { id: 'a80', label: '80%', value: 80 },
-                  { id: 'a100', label: '100%', value: 100 },
-                ]}
-                singleRow={true}
-                showWords={false}
-                onChange={(v) => {
-                  const num = parseInt(v, 10) || 40;
-                  setAnnuityPercent(Math.min(100, Math.max(40, num)));
-                }}
-              />
-              <p className={styles.annuitySplitNote}>
-                {annuityPercent}% Annuity / {100 - annuityPercent}% Lump Sum
-              </p>
-            </div>
-            <div className={styles.fieldGroup}>
-              <ValuePicker
-                title="Expected Annuity Return Rate (Pension Yield %)"
-                symbol="%"
-                value={annuityRate}
-                min={1}
-                max={15}
-                defaultStep={0.5}
-                stepData={DEFAULT_RATE_STEPS}
-                singleRow={true}
-                showWords={false}
-                onChange={(v) => setAnnuityRate(parseFloat(v) || 6.0)}
-              />
-            </div>
-          </section>
+          <div className={styles.fieldGroup}>
+            <ValuePicker
+              title="Your Monthly Investment in NPS Tier-1"
+              value={monthlyContribution}
+              onChange={setMonthlyContribution}
+              stepData={NPS_MONTHLY_STEPS}
+              min={500}
+              max={500000}
+              singleRow={true}
+            />
+          </div>
+          {/* Employer Contribution (Section 80CCD(2)) */}
+          <div className={styles.fieldGroup}>
+            <label className={`${styles.fieldLabel} ${styles.checkboxLabel}`}>
+              <span>
+                <input
+                  type="checkbox"
+                  checked={hasEmployerContribution}
+                  onChange={(e) => setHasEmployerContribution(e.target.checked)}
+                  className={styles.checkboxInput}
+                />
+                Add Employer Contribution (Section 80CCD(2))
+              </span>
+            </label>
+            {hasEmployerContribution && (
+              <div className={styles.employerWrapper}>
+                <ValuePicker
+                  title="Employer Monthly Contribution"
+                  value={employerMonthly}
+                  onChange={setEmployerMonthly}
+                  stepData={NPS_MONTHLY_STEPS}
+                  min={500}
+                  max={500000}
+                  singleRow={true}
+                />
+                <p className={styles.noteText}>
+                  Corporate employer contributions up to 10% of Basic + DA are tax-exempt under both
+                  Old and New Tax Regimes.
+                </p>
+              </div>
+            )}
+          </div>
+          <div className={styles.fieldGroup}>
+            <ValuePicker
+              variant="paired"
+              sourceBadgeText="Current Age"
+              targetBadgeText="Retire Age"
+              sourceSlot={
+                <select
+                  id="nps-current-age"
+                  value={currentAge}
+                  onChange={(e) => {
+                    const newAge = Number(e.target.value);
+                    setCurrentAge(newAge);
+                    if (retirementAge <= newAge) {
+                      setRetirementAge(Math.min(75, newAge + 5));
+                    }
+                  }}
+                  className={styles.numberInput}
+                  aria-label="Current Age"
+                >
+                  {Array.from({ length: 48 }, (_, i) => i + 18).map((age) => (
+                    <option key={age} value={age}>
+                      {age} Years
+                    </option>
+                  ))}
+                </select>
+              }
+              targetSlot={
+                <select
+                  id="nps-retirement-age"
+                  value={retirementAge}
+                  onChange={(e) => setRetirementAge(Number(e.target.value))}
+                  className={styles.numberInput}
+                  aria-label="Retirement Age"
+                >
+                  {Array.from(
+                    { length: Math.max(1, 75 - currentAge) },
+                    (_, i) => currentAge + 1 + i
+                  ).map((age) => (
+                    <option key={age} value={age}>
+                      {age} Years
+                    </option>
+                  ))}
+                </select>
+              }
+            />
+            <p className={styles.annuitySplitNote}>
+              Accumulation Period: <strong>{retirementAge - currentAge} Years</strong>
+            </p>
+          </div>
+          <div className={styles.fieldGroup}>
+            <ValuePicker
+              value={expectedRoi}
+              symbol="%"
+              symbolBg={false}
+              symbolPosition="right"
+              onChange={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
+              title="Expected Return (CAGR %)"
+              titleStyle="merged"
+              stepData={DEFAULT_RATE_STEPS}
+              tabs={[]}
+              showWords={false}
+              singleRow={true}
+            />
+          </div>
+          <div className={styles.fieldGroup}>
+            <ValuePicker
+              title="Annuity Allocation Share (PFRDA Min 40%)"
+              symbol="%"
+              value={annuityPercent}
+              min={40}
+              max={100}
+              defaultStep={5}
+              stepData={[
+                { id: 'a05', label: '5%', value: 5 },
+                { id: 'a10', label: '10%', value: 10 },
+                { id: 'a20', label: '20%', value: 20 },
+                { id: 'a40', label: '40%', value: 40 },
+                { id: 'a100', label: '100%', value: 100 },
+              ]}
+              singleRow={true}
+              showWords={false}
+              onChange={(v) => {
+                const num = parseInt(v, 10) || 40;
+                setAnnuityPercent(Math.min(100, Math.max(40, num)));
+              }}
+            />
+            <p className={styles.annuitySplitNote}>
+              {annuityPercent}% Annuity / {100 - annuityPercent}% Lump Sum
+            </p>
+          </div>
+          <div className={styles.fieldGroup}>
+            <ValuePicker
+              title="Expected Annuity Return Rate (Pension Yield %)"
+              symbol="%"
+              value={annuityRate}
+              min={1}
+              max={15}
+              defaultStep={0.5}
+              stepData={DEFAULT_RATE_STEPS}
+              singleRow={true}
+              showWords={false}
+              onChange={(v) => setAnnuityRate(parseFloat(v) || 6.0)}
+            />
+          </div>
         </div>
         {/* Right Column: Retirement Corpus & Pension Results */}
         <div className={styles.summaryCol}>
@@ -343,9 +305,7 @@ const NpsCalculator: React.FC = () => {
           </div>
           {/* Corpus Distribution (Lump Sum vs Annuity) */}
           <div className={styles.corpusSplitCard}>
-            <div className={styles.corpusSplitTitle}>
-              Corpus Utilization at Age {retirementAge}
-            </div>
+            <div className={styles.corpusSplitTitle}>Corpus Utilization at Age {retirementAge}</div>
             <div className={styles.splitBar}>
               <div
                 className={styles.splitLumpSum}
@@ -371,9 +331,7 @@ const NpsCalculator: React.FC = () => {
                     {currencySymbol}
                     {npsResult.lumpSumAmount.toLocaleString('en-IN')}
                   </div>
-                  <div className={styles.splitDesc}>
-                    100% Tax-Free (Sec 10(12A))
-                  </div>
+                  <div className={styles.splitDesc}>100% Tax-Free (Sec 10(12A))</div>
                 </div>
               </div>
               <div className={styles.splitItem}>
@@ -384,9 +342,7 @@ const NpsCalculator: React.FC = () => {
                     {currencySymbol}
                     {npsResult.annuityCorpus.toLocaleString('en-IN')}
                   </div>
-                  <div className={styles.splitDesc}>
-                    Lifelong Monthly Pension
-                  </div>
+                  <div className={styles.splitDesc}>Lifelong Monthly Pension</div>
                 </div>
               </div>
             </div>
