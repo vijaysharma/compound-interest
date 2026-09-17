@@ -114,9 +114,9 @@
 }
 
 .tagPrimary {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--color-primary-light, #f6edf7);
+  color: var(--color-primary, #6d0b74);
+  border: 1px solid var(--color-primary-subtle, #ebd5ed);
 }
 
 .tagSuccess {
@@ -144,21 +144,31 @@
 
 .controlBar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 12px;
   background: var(--bg-hover, #f8fafc);
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 12px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+  }
 }
 
 .controlGroup {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  flex-wrap: wrap;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 .controlLabel {
@@ -166,97 +176,6 @@
   font-weight: 600;
   color: var(--text-muted, #64748b);
   white-space: nowrap;
-}
-
-.presetGroup {
-  display: inline-flex;
-  border-radius: 8px;
-  border: 1px solid var(--border-color, #cbd5e1);
-  overflow: hidden;
-  background: var(--bg-card, #ffffff);
-}
-
-.presetBtn {
-  border: none;
-  background: transparent;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted, #64748b);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border-right: 1px solid var(--border-color, #e2e8f0);
-
-  &:last-child {
-    border-right: none;
-  }
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.04);
-    color: var(--text-primary, #0f172a);
-  }
-
-  &.activePreset {
-    background: #2563eb;
-    color: #ffffff;
-  }
-}
-
-.typeToggleGroup {
-  display: inline-flex;
-  border-radius: 8px;
-  border: 1px solid var(--border-color, #cbd5e1);
-  overflow: hidden;
-  background: var(--bg-card, #ffffff);
-}
-
-.typeToggleBtn {
-  border: none;
-  background: transparent;
-  padding: 5px 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-muted, #64748b);
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &.activeType {
-    background: #2563eb;
-    color: #ffffff;
-  }
-}
-
-.inputField {
-  padding: 5px 10px;
-  border: 1px solid var(--border-color, #cbd5e1);
-  border-radius: 6px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-primary, #0f172a);
-  background: var(--bg-card, #ffffff);
-  width: 120px;
-
-  &:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-  }
-}
-
-.dateInput {
-  padding: 4px 8px;
-  border: 1px solid var(--border-color, #cbd5e1);
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--text-primary, #0f172a);
-  background: var(--bg-card, #ffffff);
-
-  &:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-  }
 }
 
 .modalBody {
@@ -270,7 +189,7 @@
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
 }
 
@@ -398,7 +317,7 @@
 
 .taxCardsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
 }
 
@@ -494,7 +413,7 @@
 }
 
 .doneBtn {
-  background: #2563eb;
+  background: var(--color-primary, #6d0b74);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -505,6 +424,6 @@
   transition: background 0.15s ease;
 
   &:hover {
-    background: #1d4ed8;
+    background: var(--color-primary-hover, #58085e);
   }
 }
