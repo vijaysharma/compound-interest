@@ -1,5 +1,6 @@
 import { MFJSONType, NavType } from '../types/types';
 import { DEFAULT_PPP_RECORDS } from './default_ppp_data';
+import { parseAnyDate, parseNavDate } from '../utilities/utility';
 import { DEFAULT_EXCHANGE_RATES } from './default_exchange_rates';
 import {
   getBatchMutualFundNavAction,
@@ -201,7 +202,8 @@ export const fetchMFbySchemeCode = async (schemeCode: string, _signal?: AbortSig
  * Resolves all funds in a single server action call instead of multiple parallel requests.
  */
 export const fetchBatchMFbySchemeCodes = async (
-  schemeCodes: (string | number)[]
+  schemeCodes: (string | number)[],
+  requestedEndDate?: string | null
 ): Promise<Record<string, NavType[]>> => {
   const result: Record<string, NavType[]> = {};
   if (!Array.isArray(schemeCodes) || schemeCodes.length === 0) return result;
@@ -209,21 +211,42 @@ export const fetchBatchMFbySchemeCodes = async (
   for (const rawCode of schemeCodes) {
     const code = String(rawCode).trim();
     if (!code || code === '0') continue;
-    // 1. Check in-memory cache
+    // Check if we already have it in memory/session
     const cached = mfNavCache.get(code);
-    if (cached && cached.expiresAt > Date.now()) {
-      result[code] = cached.data;
-      continue;
-    }
-    // 2. Check sessionStorage
     const sessionCached = getSessionItem<NavType[]>('mf_nav_' + code);
-    if (sessionCached && Array.isArray(sessionCached) && sessionCached.length > 0) {
-      mfNavCache.set(code, {
-        expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
-        data: sessionCached,
-      });
-      result[code] = sessionCached;
-      continue;
+    let existingData: NavType[] | null = null;
+    if (cached && cached.expiresAt > Date.now()) {
+      existingData = cached.data;
+    } else if (sessionCached && Array.isArray(sessionCached) && sessionCached.length > 0) {
+      existingData = sessionCached;
+    }
+    if (existingData) {
+      // Validate if our existing data covers the requested end date
+      let cacheSatisfies = true;
+      if (requestedEndDate) {
+        // Find the latest date in the cache
+        let latestDateMs = 0;
+        for (const n of existingData) {
+           const time = parseNavDate(n.date).getTime();
+           if (time > latestDateMs) latestDateMs = time;
+        }
+        const reqDateMs = parseAnyDate(requestedEndDate).getTime();
+        // If the requested date is in the future relative to our latest cached NAV,
+        // we should try to fetch new data.
+        if (reqDateMs > latestDateMs) {
+          cacheSatisfies = false;
+        }
+      }
+      if (cacheSatisfies) {
+        if (!cached) {
+          mfNavCache.set(code, {
+            expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
+            data: existingData,
+          });
+        }
+        result[code] = existingData;
+        continue;
+      }
     }
     missingCodes.push(code);
   }
@@ -232,7 +255,7 @@ export const fetchBatchMFbySchemeCodes = async (
   }
   recordApiUsage();
   try {
-    const batchData = await getBatchMutualFundNavAction(missingCodes);
+    const batchData = await getBatchMutualFundNavAction(missingCodes, requestedEndDate);
     for (const [code, rawPayload] of Object.entries(batchData)) {
       let parsed = rawPayload;
       if (typeof parsed === 'string') {

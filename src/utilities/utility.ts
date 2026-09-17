@@ -12,7 +12,7 @@ type DurationType = {
  * This deliberately avoids new Date("DD-MM-YYYY"),
  * which is not reliably parsed by JavaScript.
  */
-const parseNavDate = (date: string): Date => {
+export const parseNavDate = (date: string): Date => {
   const parts = date.split('-');
   if (parts.length !== 3) {
     return new Date(NaN);
@@ -30,7 +30,7 @@ const parseNavDate = (date: string): Date => {
  *
  * into a local Date object.
  */
-const parseAnyDate = (date: string): Date => {
+export const parseAnyDate = (date: string): Date => {
   const parts = date.split('-');
   if (parts.length !== 3) {
     return new Date(NaN);

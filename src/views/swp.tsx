@@ -3,7 +3,7 @@ import { Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from
 import dynamic from 'next/dynamic';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import ValuePicker from '../components/ValuePicker';
-import { getNearest } from '../utilities/utility';
+import { getNearest, parseAnyDate, parseNavDate } from '../utilities/utility';
 import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
 import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
@@ -460,12 +460,23 @@ const SWP = ({
     if (pinnedFunds.length === 0) {
       return;
     }
-    const missingFunds = pinnedFunds.filter(
-      (fund) =>
-        (!pinnedNavDataRef.current[fund.schemeCode] || pinnedNavDataRef.current[fund.schemeCode].length === 0) &&
-        !attemptedFundsRef.current.has(fund.schemeCode)
-    );
+    const reqDateMs = endSwpDate ? parseAnyDate(endSwpDate).getTime() : 0;
+    const missingFunds = pinnedFunds.filter((fund) => {
+      if (attemptedFundsRef.current.has(fund.schemeCode)) return false;
+      const data = pinnedNavDataRef.current[fund.schemeCode];
+      if (!data || data.length === 0) return true;
+      if (reqDateMs > 0) {
+        let latestDateMs = 0;
+        for (const n of data) {
+           const time = parseNavDate(n.date).getTime();
+           if (time > latestDateMs) latestDateMs = time;
+        }
+        if (reqDateMs > latestDateMs) return true;
+      }
+      return false;
+    });
     if (missingFunds.length === 0) {
+      setIsNavLoading(false);
       return;
     }
     let cancelled = false;
@@ -474,7 +485,7 @@ const SWP = ({
       missingFunds.forEach((f) => attemptedFundsRef.current.add(f.schemeCode));
       try {
         const codes = missingFunds.map((f) => f.schemeCode);
-        const batchResults = await fetchBatchMFbySchemeCodes(codes);
+        const batchResults = await fetchBatchMFbySchemeCodes(codes, endSwpDate);
         if (cancelled) return;
         setPinnedNavData((previous) => ({
           ...previous,
@@ -499,7 +510,7 @@ const SWP = ({
     return () => {
       cancelled = true;
     };
-  }, [pinnedFunds]);
+  }, [pinnedFunds, endSwpDate]);
   useEffect(() => {
     if (!selectedCode || selectedCode === '0') {
       return;
