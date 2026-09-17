@@ -5,7 +5,9 @@
   width: 100%;
   max-width: 64rem;
   margin-inline: auto;
-  padding: 0.5rem 0.5rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -353,13 +355,13 @@
   }
 
   &:hover {
-    border-color: var(--color-primary, #6d0b74);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary, #6d0b74) 10%, transparent);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 10%, transparent);
     transform: translateY(-1px);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--color-primary, #6d0b74);
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
 }
@@ -494,11 +496,7 @@
 }
 
 .textSuccess {
-  color: #047857;
-
-  @media (prefers-color-scheme: dark) {
-    color: #34d399;
-  }
+  color: var(--color-success-text-strong);
 }
 
 .textError {

@@ -6,7 +6,9 @@
   max-width: 56rem;
   margin-left: auto;
   margin-right: auto;
-  padding: 0.25rem 0.5rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
 
   @include tablet-up {
     max-width: 68rem;
@@ -174,10 +176,10 @@
 .heroPensionCard {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, #10b981 12%, var(--color-bg)),
-    color-mix(in srgb, #10b981 22%, var(--color-bg))
+    color-mix(in srgb, var(--color-success) 12%, var(--color-bg)),
+    color-mix(in srgb, var(--color-success) 22%, var(--color-bg))
   );
-  border: 1px solid color-mix(in srgb, #10b981 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
   border-radius: var(--radius-md, 8px);
   padding: 1.25rem;
   text-align: center;
@@ -188,7 +190,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #059669;
+  color: var(--color-success-text-strong);
   margin-bottom: 0.25rem;
 }
 
@@ -238,7 +240,7 @@
 }
 
 .statValueGain {
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .statValueCorpus {
@@ -262,12 +264,12 @@
 }
 
 .splitLumpSum {
-  background: #3b82f6;
+  background: var(--color-info);
   transition: width 0.3s;
 }
 
 .splitAnnuity {
-  background: #10b981;
+  background: var(--color-success);
   transition: width 0.3s;
 }
 
@@ -289,7 +291,7 @@
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 50%;
-  background: #3b82f6;
+  background: var(--color-info);
   margin-top: 0.25rem;
   flex-shrink: 0;
 }
@@ -298,7 +300,7 @@
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--color-success);
   margin-top: 0.25rem;
   flex-shrink: 0;
 }
@@ -319,7 +321,7 @@
 }
 
 .taxBenefitIcon {
-  color: #16a34a;
+  color: var(--color-success);
   margin-top: 0.125rem;
   flex-shrink: 0;
 }
@@ -418,12 +420,12 @@
 }
 
 .splitAmountLumpSum {
-  color: #3b82f6;
+  color: var(--color-info);
   font-weight: 700;
 }
 
 .splitAmountAnnuity {
-  color: #059669;
+  color: var(--color-success-text-strong);
   font-weight: 700;
 }
 
@@ -441,7 +443,7 @@
 }
 
 .taxBenefitsAwardIcon {
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .scheduleHeader {
@@ -457,7 +459,7 @@
 }
 
 .interestCell {
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 600;
 }
 

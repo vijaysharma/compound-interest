@@ -12,9 +12,11 @@
     flex-direction: column;
     height: calc(100dvh - 64px);
     flex-shrink: 0;
-    background-color: color-mix(in srgb, var(--color-primary) 82%, #000);
+    // Themed darker primary rather than a mix toward black, which would
+    // collapse to near-black under the dark theme.
+    background-color: var(--color-primary-active);
     border-right: 1px solid color-mix(in srgb, var(--color-primary-content) 15%, transparent);
-    color: var(--color-primary-content, #ffffff);
+    color: var(--color-primary-content);
     transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: sticky;
     top: 64px;
@@ -93,7 +95,7 @@
 
   &:hover {
     background-color: color-mix(in srgb, var(--color-primary-content) 15%, transparent);
-    color: #ffffff;
+    color: var(--color-primary-content);
   }
 }
 
@@ -126,17 +128,17 @@
 
 .active {
   background-color: color-mix(in srgb, var(--color-primary-content) 22%, transparent);
-  color: #ffffff;
+  color: var(--color-primary-content);
   font-weight: 600;
 
   .itemIcon {
-    color: #ffffff;
+    color: var(--color-primary-content);
   }
 }
 
 .pending {
   background-color: color-mix(in srgb, var(--color-primary-content) 18%, transparent);
-  color: #ffffff;
+  color: var(--color-primary-content);
   animation: pendingPulse 1s ease-in-out infinite;
 
   .itemIcon {

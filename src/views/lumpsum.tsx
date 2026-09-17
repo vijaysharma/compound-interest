@@ -9,7 +9,7 @@ import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
 import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFundDetailModal';
-import { CHART_COLORS } from '../data/chartColors';
+import { getChartSeriesColor } from '../data/chartColors';
 import SEOHead from '../components/SEOHead';
 import CalculatorContentSection from '../components/CalculatorContentSection';
 import { FiBarChart2, FiPlus, FiTrendingUp } from 'react-icons/fi';
@@ -278,7 +278,7 @@ const Lumpsum = ({
             setPinnedFunds(
               saved.pinnedFunds.map((fund, index) => ({
                 ...fund,
-                color: CHART_COLORS[index % CHART_COLORS.length],
+                color: getChartSeriesColor(index),
               }))
             );
           }
@@ -590,7 +590,7 @@ const Lumpsum = ({
     if (pinnedFunds.length >= 8) {
       return;
     }
-    const color = CHART_COLORS[pinnedFunds.length % CHART_COLORS.length];
+    const color = getChartSeriesColor(pinnedFunds.length);
     const newPinnedFund: PinnedFund = {
       schemeCode,
       schemeName: mf.name,

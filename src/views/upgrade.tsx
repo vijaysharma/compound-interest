@@ -77,7 +77,7 @@ const Upgrade = () => {
           email: orderData.user?.email || user?.email || '',
         },
         theme: {
-          color: planId.startsWith('tax') ? '#d97706' : '#10b981',
+          color: planId.startsWith('tax') ? 'var(--color-warning)' : 'var(--color-success)',
         },
         handler: async (response: {
           razorpay_payment_id: string;

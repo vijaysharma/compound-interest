@@ -94,14 +94,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-error, #ef4444);
+  color: var(--color-error);
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s, background-color 0.2s;
 
   &:hover:not(:disabled) {
     opacity: 1;
-    background-color: color-mix(in srgb, var(--color-error, #ef4444) 10%, transparent);
+    background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
   }
 
   &:disabled {
@@ -142,7 +142,7 @@
 }
 
 .priceInput {
-  color: #047857;
+  color: var(--color-success-text-strong);
   font-weight: 600;
 }
 
@@ -242,8 +242,8 @@
 
 .finalCostCard {
   padding: 1rem;
-  background-color: color-mix(in srgb, #047857 10%, transparent);
-  color: #047857;
+  background-color: color-mix(in srgb, var(--color-success-text-strong) 10%, transparent);
+  color: var(--color-success-text-strong);
   border-radius: 0.75rem;
   display: flex;
   justify-content: space-between;

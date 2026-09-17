@@ -9,7 +9,7 @@ import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
 import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
 import { calculateSip, calculateSipGrowth } from '../utilities/mutualFundCalculations';
-import { CHART_COLORS } from '../data/chartColors';
+import { getChartSeriesColor } from '../data/chartColors';
 import { DEFAULT_AMOUNT_STEPS } from '../data/valuePickerData';
 import MutualFundDetailModal, { DetailedFundItem } from '../components/MutualFundDetailModal';
 import SEOHead from '../components/SEOHead';
@@ -302,7 +302,7 @@ const SIP = ({
             setPinnedFunds(
               saved.pinnedFunds.map((fund, index) => ({
                 ...fund,
-                color: CHART_COLORS[index % CHART_COLORS.length],
+                color: getChartSeriesColor(index),
               }))
             );
           }
@@ -620,7 +620,7 @@ const SIP = ({
     if (pinnedFunds.length >= 8) {
       return;
     }
-    const color = CHART_COLORS[pinnedFunds.length % CHART_COLORS.length];
+    const color = getChartSeriesColor(pinnedFunds.length);
     const newPinnedFund: PinnedFund = { schemeCode, schemeName: mf.name, color };
     setPinnedFunds((previous) => [...previous, newPinnedFund]);
     setSelectedCode(schemeCode);

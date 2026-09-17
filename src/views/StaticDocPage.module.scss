@@ -5,7 +5,12 @@
   width: 100%;
   max-width: 56rem;
   margin-inline: auto;
-  padding: 2rem 1rem;
+  // Mobile keeps a 0.125rem side gutter; roomier padding resumes at tablet.
+  padding: 1rem 0.125rem;
+
+  @include tablet-up {
+    padding: 2rem 1rem;
+  }
 }
 
 .header {
@@ -62,8 +67,8 @@
 
 .calloutSuccess {
   padding: 1.25rem;
-  background-color: color-mix(in srgb, #047857 10%, transparent);
-  border: 1px solid color-mix(in srgb, #047857 30%, transparent);
+  background-color: color-mix(in srgb, var(--color-success-text-strong) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success-text-strong) 30%, transparent);
   border-radius: 0.75rem;
 }
 

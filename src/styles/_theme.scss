@@ -72,6 +72,70 @@
   --color-error-content: #ffffff;
 
   // ---------------------------------------------------------------------------
+  // Component Surface Aliases
+  // Legacy/shorthand names consumed by components. Defined via var() indirection
+  // so they automatically follow whichever theme block is active.
+  // ---------------------------------------------------------------------------
+  --bg-card: var(--color-bg);
+  --bg-card-header: var(--color-bg-secondary);
+  --bg-hover: var(--color-bg-secondary);
+  --border-color: var(--color-border);
+  --color-card: var(--color-bg);
+  --tag-bg: var(--color-bg-tertiary);
+  --tag-text: var(--color-text-secondary);
+  --text-primary: var(--color-text-primary);
+  --text-muted: var(--color-text-secondary);
+
+  // ---------------------------------------------------------------------------
+  // Semantic Tinted Surfaces
+  // Tinted block backgrounds/borders/text for success, error, warning and info
+  // regions. Components reference these instead of inlining hex values.
+  // ---------------------------------------------------------------------------
+  --color-success-surface: #f0fdf4;
+  --color-success-surface-strong: #dcfce7;
+  --color-success-border: #bbf7d0;
+  --color-success-border-strong: #86efac;
+  --color-success-text: #166534;
+  --color-success-text-strong: #15803d;
+  --color-success-text-muted: #4b7a58;
+
+  --color-error-surface: #fee2e2;
+  --color-error-border: #fecaca;
+  --color-error-text: #991b1b;
+  --color-error-text-strong: #b91c1c;
+
+  --color-warning-surface: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-warning-text: #92400e;
+
+  --color-info-surface: #eff6ff;
+  --color-info-border: #bfdbfe;
+  --color-info-text: #1e40af;
+
+  // ---------------------------------------------------------------------------
+  // Chart Palette
+  // Primary-anchored categorical series colors plus chart chrome. Series colors
+  // stay perceptually distinct so multiple funds remain separable, while the
+  // first series and all chrome derive from the brand primary.
+  // ---------------------------------------------------------------------------
+  --chart-series-1: #6d0b74;
+  --chart-series-2: #0891b2;
+  --chart-series-3: #c2410c;
+  --chart-series-4: #15803d;
+  --chart-series-5: #9333ea;
+  --chart-series-6: #be123c;
+  --chart-series-7: #0369a1;
+  --chart-series-8: #a16207;
+
+  --chart-axis-line: var(--color-border);
+  --chart-grid-line: var(--color-border-subtle);
+  --chart-label-text: var(--color-text-secondary);
+  --chart-title-text: var(--color-text-primary);
+  --chart-tooltip-bg: var(--color-bg);
+  --chart-tooltip-border: var(--color-border);
+  --chart-tooltip-text: var(--color-text-primary);
+
+  // ---------------------------------------------------------------------------
   // Shape, Radii & Sizing Tokens
   // ---------------------------------------------------------------------------
   --radius-xs: 4px;
@@ -143,4 +207,36 @@
   --color-warning-content: #0f172a;
   --color-error: #ef4444;
   --color-error-content: #ffffff;
+
+  // Semantic tinted surfaces (dark)
+  --color-success-surface: #052e16;
+  --color-success-surface-strong: #14532d;
+  --color-success-border: #166534;
+  --color-success-border-strong: #15803d;
+  --color-success-text: #86efac;
+  --color-success-text-strong: #4ade80;
+  --color-success-text-muted: #86a992;
+
+  --color-error-surface: #450a0a;
+  --color-error-border: #7f1d1d;
+  --color-error-text: #fca5a5;
+  --color-error-text-strong: #f87171;
+
+  --color-warning-surface: #451a03;
+  --color-warning-border: #78350f;
+  --color-warning-text: #fcd34d;
+
+  --color-info-surface: #172554;
+  --color-info-border: #1e3a8a;
+  --color-info-text: #93c5fd;
+
+  // Chart palette (dark) - brightened for contrast on dark surfaces
+  --chart-series-1: #c084fc;
+  --chart-series-2: #22d3ee;
+  --chart-series-3: #fb923c;
+  --chart-series-4: #4ade80;
+  --chart-series-5: #e879f9;
+  --chart-series-6: #fb7185;
+  --chart-series-7: #60a5fa;
+  --chart-series-8: #fbbf24;
 }

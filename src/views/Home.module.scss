@@ -54,7 +54,7 @@
 }
 
 .heroGradient {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary, #9333ea));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -200,10 +200,11 @@
 
 // Simulator Section
 .simulatorSection {
-  padding: 2rem 1rem;
+  // Vertical rhythm kept; side gutter trimmed so the section spans the screen.
+  padding: 2rem 0.125rem;
   background-color: color-mix(in srgb, var(--color-base-200) 50%, transparent);
   border-radius: 1rem;
-  margin-inline: 0.5rem;
+  margin-inline: 0.125rem;
 
   @include tablet-up {
     margin-inline: 1rem;
@@ -301,7 +302,7 @@
     135deg,
     color-mix(in srgb, var(--color-primary) 10%, transparent),
     var(--color-base-100),
-    color-mix(in srgb, var(--color-secondary, #9333ea) 10%, transparent)
+    color-mix(in srgb, var(--color-secondary) 10%, transparent)
   );
   padding: 1.5rem;
   border-radius: 0.75rem;
@@ -361,7 +362,7 @@
 .gainValue {
   font-size: 1rem;
   font-weight: 700;
-  color: #047857;
+  color: var(--color-success-text-strong);
 }
 
 .multiplierRow {
@@ -402,7 +403,12 @@
 
 // Pillars Section
 .pillarsSection {
-  padding: 4rem 1rem;
+  // Vertical rhythm kept; side gutter trimmed so the section spans the screen.
+  padding: 2.5rem 0.125rem;
+
+  @include tablet-up {
+    padding: 4rem 1rem;
+  }
 }
 
 .pillarsInner {
@@ -477,9 +483,14 @@
 
 // Why Section
 .whySection {
-  padding: 3rem 1rem;
+  // Vertical rhythm kept; side gutter trimmed so the section spans the screen.
+  padding: 2rem 0.125rem;
   background-color: color-mix(in srgb, var(--color-base-200) 40%, transparent);
   border-block: 1px solid var(--color-base-300);
+
+  @include tablet-up {
+    padding: 3rem 1rem;
+  }
 }
 
 .whyGrid {
@@ -528,7 +539,12 @@
 
 // FAQs Section
 .faqSection {
-  padding: 4rem 1rem;
+  // Vertical rhythm kept; side gutter trimmed so the section spans the screen.
+  padding: 2.5rem 0.125rem;
+
+  @include tablet-up {
+    padding: 4rem 1rem;
+  }
 }
 
 .faqInner {
@@ -603,7 +619,7 @@
   border-radius: 1rem;
   background-color: var(--color-primary);
   color: var(--color-primary-content);
-  padding: 2rem 1.5rem;
+  padding: 2rem 0.875rem;
   text-align: center;
   box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 35%, transparent);
 
@@ -654,8 +670,8 @@
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.5rem;
-  background-color: var(--color-secondary, #9333ea);
-  color: #fff;
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-content);
   font-weight: 700;
   font-size: 0.875rem;
   border-radius: var(--rounded-btn, 0.5rem);

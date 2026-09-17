@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import '@/index.scss';
 import AppClientLayout from '@/components/AppClientLayout';
+import { BRAND_PRIMARY } from '@/data/brand';
 export const metadata: Metadata = {
   metadataBase: new URL('https://rupees.vercel.app'),
   title: {
@@ -79,7 +80,7 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
 };
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: BRAND_PRIMARY,
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,

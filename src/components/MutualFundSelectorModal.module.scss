@@ -30,6 +30,10 @@
   flex-direction: column;
   background-color: var(--color-base-100);
   padding: 1rem;
+
+  @include mobile-only {
+    padding: 0.625rem 0.5rem;
+  }
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   border-radius: var(--radius-box, 0.75rem);
 }
@@ -51,6 +55,10 @@
   margin-bottom: 0.5rem;
   display: flex;
   gap: 0.5rem;
+  // The two plan/option toggle groups together exceed a 320px viewport, so they
+  // wrap rather than pushing the last option past the modal edge.
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .pinnedRow {

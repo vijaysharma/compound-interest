@@ -6,7 +6,9 @@
   max-width: 56rem;
   margin-left: auto;
   margin-right: auto;
-  padding: 0.25rem 0.5rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
 
   @include tablet-up {
     max-width: 68rem;
@@ -199,8 +201,8 @@
   font-size: 0.75rem;
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm, 6px);
-  background: color-mix(in srgb, #f59e0b 12%, transparent);
-  border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
   color: var(--color-text);
   line-height: 1.4;
 }
@@ -278,7 +280,7 @@
 }
 
 .statValueGain {
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .badgeEee {
@@ -287,7 +289,7 @@
   gap: 0.35rem;
   padding: 0.25rem 0.625rem;
   background: rgba(34, 197, 94, 0.12);
-  color: #16a34a;
+  color: var(--color-success);
   border: 1px solid rgba(34, 197, 94, 0.25);
   border-radius: 9999px;
   font-size: 0.6875rem;
@@ -327,7 +329,7 @@
 }
 
 .progressGains {
-  background: #16a34a;
+  background: var(--color-success);
   transition: width 0.3s;
 }
 
@@ -398,8 +400,8 @@
   }
 
   &Projected {
-    background: color-mix(in srgb, #f59e0b 15%, transparent);
-    color: #d97706;
+    background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+    color: var(--color-warning);
   }
 }
 
@@ -449,7 +451,7 @@
 }
 
 .checkIcon {
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .scheduleHeader {
@@ -472,11 +474,11 @@
 .extBadge {
   margin-left: 0.25rem;
   font-size: 0.625rem;
-  color: #d97706;
+  color: var(--color-warning);
 }
 
 .interestCell {
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 600;
 }
 
@@ -495,5 +497,5 @@
 }
 
 .monthCellInterest {
-  color: #16a34a;
+  color: var(--color-success);
 }

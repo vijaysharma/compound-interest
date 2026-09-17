@@ -4,6 +4,12 @@ interface GlobalErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
 }
+/*
+ * global-error replaces the root layout when it fires, so no stylesheet and
+ * therefore no theme custom properties are guaranteed to be present. Every
+ * colour here is an inline literal by necessity; the values mirror the light
+ * theme tokens in `src/styles/_theme.scss` and must be updated alongside them.
+ */
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   useEffect(() => {
     console.error('Critical root error captured in global error boundary:', error);

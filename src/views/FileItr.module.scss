@@ -6,7 +6,9 @@
   max-width: 60rem;
   margin-left: auto;
   margin-right: auto;
-  padding: 0.5rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
 
   @include tablet-up {
     padding: 1rem;
@@ -130,7 +132,7 @@
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-content);
   border: none;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -168,8 +170,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.875rem 1.25rem;
-  background-color: color-mix(in srgb, #16a34a 10%, var(--color-bg));
-  border: 1px solid #16a34a;
+  background-color: color-mix(in srgb, var(--color-success) 10%, var(--color-bg));
+  border: 1px solid var(--color-success);
   border-radius: 0.75rem;
   margin-top: 1rem;
   flex-wrap: wrap;
@@ -182,7 +184,7 @@
   gap: 0.75rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .clearFileBtn {
@@ -216,13 +218,13 @@
   }
 
   &.heroRefund {
-    background: linear-gradient(135deg, color-mix(in srgb, #16a34a 18%, var(--color-bg)), color-mix(in srgb, #16a34a 6%, var(--color-bg)));
-    border: 1.5px solid #16a34a;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-success) 18%, var(--color-bg)), color-mix(in srgb, var(--color-success) 6%, var(--color-bg)));
+    border: 1.5px solid var(--color-success);
   }
 
   &.heroPayable {
-    background: linear-gradient(135deg, color-mix(in srgb, #e11d48 16%, var(--color-bg)), color-mix(in srgb, #e11d48 6%, var(--color-bg)));
-    border: 1.5px solid #e11d48;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-error) 16%, var(--color-bg)), color-mix(in srgb, var(--color-error) 6%, var(--color-bg)));
+    border: 1.5px solid var(--color-error);
   }
 
   &.heroNil {
@@ -402,8 +404,8 @@
   transition: all 0.2s ease;
 
   &.regimeCardRecommended {
-    border: 2px solid #16a34a;
-    background-color: color-mix(in srgb, #16a34a 4%, var(--color-bg));
+    border: 2px solid var(--color-success);
+    background-color: color-mix(in srgb, var(--color-success) 4%, var(--color-bg));
   }
 }
 
@@ -418,8 +420,8 @@
   margin-bottom: 0.5rem;
 
   &.regimeTagRecommended {
-    background-color: #16a34a;
-    color: #ffffff;
+    background-color: var(--color-success);
+    color: var(--color-success-content);
   }
 }
 
@@ -469,7 +471,7 @@
 }
 
 .checkIcon {
-  color: #16a34a;
+  color: var(--color-success);
   flex-shrink: 0;
   margin-top: 0.15rem;
 }
@@ -488,7 +490,7 @@
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-content);
   border: none;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -525,11 +527,11 @@
 }
 
 .tagRefund {
-  color: #16a34a !important;
+  color: var(--color-success) !important;
 }
 
 .tagPayable {
-  color: #e11d48 !important;
+  color: var(--color-error) !important;
 }
 
 .tagPrimary {
@@ -537,15 +539,15 @@
 }
 
 .metricRefund {
-  color: #16a34a !important;
+  color: var(--color-success) !important;
 }
 
 .metricPayable {
-  color: #e11d48 !important;
+  color: var(--color-error) !important;
 }
 
 .metricSuccess {
-  color: #16a34a !important;
+  color: var(--color-success) !important;
 }
 
 .textCapitalize {
@@ -575,7 +577,7 @@
   font-size: 0.8125rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .gridGapSmall {
@@ -584,9 +586,9 @@
 
 .highlightGreenInput {
   font-weight: 700;
-  border-color: #16a34a !important;
+  border-color: var(--color-success) !important;
 }
 
 .rowValSuccess {
-  color: #16a34a !important;
+  color: var(--color-success) !important;
 }

@@ -12,6 +12,7 @@ import {
 } from '@/actions/payments';
 import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './PaywallModal.module.scss';
+import { resolveThemeToken } from '@/data/chartColors';
 const PaywallModal = () => {
   const { user, showPaywall, setShowPaywall, refreshUser } = useAuth();
   useScrollLock(showPaywall);
@@ -79,7 +80,9 @@ const PaywallModal = () => {
           email: user?.email || '',
         },
         theme: {
-          color: '#6e0b75',
+          // Razorpay renders in its own iframe and cannot read our CSS
+          // variables, so the primary is resolved to a concrete value here.
+          color: resolveThemeToken('--color-primary'),
         },
         handler: async (response: {
           razorpay_payment_id: string;

@@ -105,7 +105,7 @@
   }
 
   &.btnSuccess {
-    color: #16a34a;
+    color: var(--color-success);
 
     &:hover {
       background: rgba(34, 197, 94, 0.1);
@@ -130,7 +130,7 @@
   border-radius: 8px;
   border: none;
   background: var(--color-primary);
-  color: var(--color-primary-content, #ffffff);
+  color: var(--color-primary-content);
   cursor: pointer;
   margin-left: 0.25rem;
   transition: opacity 0.15s, transform 0.1s, background-color 0.15s;
@@ -373,11 +373,11 @@
   }
 
   &.danger:hover {
-    color: #ef4444;
+    color: var(--color-error);
   }
 
   &.success:hover {
-    color: #16a34a;
+    color: var(--color-success);
   }
 }
 
@@ -459,7 +459,7 @@
 }
 
 .emptyTrashBtn {
-  color: #ef4444;
+  color: var(--color-error);
   text-decoration: underline;
   background: transparent;
   border: none;
@@ -473,7 +473,7 @@
   align-items: center;
   gap: 0.25rem;
   font-size: 10.5px;
-  color: #16a34a;
+  color: var(--color-success);
   text-decoration: underline;
   background: transparent;
   border: none;
@@ -593,7 +593,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .deleteModalText {
@@ -608,5 +608,5 @@
 }
 
 .deleteConfirmBtn {
-  background: #ef4444 !important;
+  background: var(--color-error) !important;
 }

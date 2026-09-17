@@ -12,6 +12,7 @@ import {
 } from 'ag-charts-community';
 import { AgCartesianChartOptions } from 'ag-charts-types';
 import Spinner from './Spinner';
+import { useChartTheme } from '@/utilities/useChartTheme';
 import styles from './Chart.module.scss';
 if (typeof window !== 'undefined') {
   ModuleRegistry.registerModules([
@@ -112,6 +113,7 @@ const Chart = ({
   onPresetChange,
 }: ChartProps) => {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const chartTheme = useChartTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [userZoom, setUserZoom] = useState<{ start: string; end: string } | 'all' | null>(null);
   const [userPreset, setUserPreset] = useState<string | null>(null);
@@ -322,6 +324,7 @@ const Chart = ({
       yKey: `fund_${index}`,
       yName: dataset.label,
       stroke: dataset.color,
+      strokeWidth: chartTheme.isMobile ? 1.5 : 2,
       marker: {
         enabled: false,
       },
@@ -358,34 +361,81 @@ const Chart = ({
       legend: {
         enabled: false,
         position: 'bottom',
+        item: {
+          label: {
+            color: chartTheme.labelText,
+            fontSize: chartTheme.isMobile ? 10 : 12,
+          },
+        },
         toggleSeries: false,
+      },
+      tooltip: {
+        enabled: true,
+        // `range: 'nearest'` makes a tap anywhere near the line register, which
+        // matters on touch where there is no hover to guide the pointer.
+        range: 'nearest' as const,
+        // The placement list is a fallback chain: ag-charts walks it until the
+        // tooltip fits inside the chart, so it flips instead of clipping off
+        // the edge of a narrow screen.
+        position: {
+          placement: ['top', 'bottom', 'right', 'left'] as const,
+        },
+        wrapping: 'on-space' as const,
       },
       series,
       axes: {
         x: {
           type: 'category',
           position: 'bottom',
+          line: {
+            enabled: true,
+            stroke: chartTheme.axisLine,
+          },
+          gridLine: {
+            enabled: !chartTheme.isMobile,
+            style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
+          },
+          tick: {
+            stroke: chartTheme.axisLine,
+          },
           label: {
             enabled: false,
             rotation: 0,
             avoidCollisions: true,
-            fontSize: 9,
+            fontSize: chartTheme.isMobile ? 8 : 9,
             fontWeight: 'bold',
+            color: chartTheme.labelText,
           },
         },
         y: {
           type: 'number',
           position: 'left',
+          line: {
+            enabled: true,
+            stroke: chartTheme.axisLine,
+          },
+          gridLine: {
+            style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
+          },
+          tick: {
+            stroke: chartTheme.axisLine,
+          },
+          // Wider minimum gap on mobile so the compacted currency labels do not
+          // collide in the narrow gutter.
+          interval: {
+            minSpacing: chartTheme.isMobile ? 44 : 28,
+          },
           label: {
             avoidCollisions: true,
-            fontSize: 9,
+            fontSize: chartTheme.isMobile ? 8 : 9,
             fontWeight: 'bold',
+            color: chartTheme.labelText,
             formatter: ({ value }: { value: number }) => formatAxisCurrency(value),
           },
         },
       },
     };
-  }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates]);
+  }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates, chartTheme]);
   const targetHeight = typeof height === 'number' ? height : (minHeight > 0 ? minHeight : 280);
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
   if (isLoading) {

@@ -1,3 +1,5 @@
+@use '../styles/mixins' as *;
+
 .emptyContainer {
   display: flex;
   align-items: center;
@@ -31,17 +33,26 @@
   padding: 4px 6px 6px;
   font-size: 0.75rem;
   user-select: none;
+
+  @include mobile-only {
+    padding: 2px 0 4px;
+    gap: 6px;
+  }
 }
 
 .zoomPresets {
   display: flex;
   align-items: center;
   gap: 4px;
+
+  @include mobile-only {
+    flex-wrap: wrap;
+  }
 }
 
 .zoomPresetBtn {
-  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 2px 8px;
   font-size: 0.72rem;
@@ -49,17 +60,23 @@
   cursor: pointer;
   color: inherit;
   transition: all 0.15s ease;
+  touch-action: manipulation;
+
+  @include mobile-only {
+    min-height: 28px;
+    padding: 2px 10px;
+  }
 
   &:hover {
-    background: rgba(37, 99, 235, 0.1);
-    border-color: #2563eb;
-    color: #2563eb;
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
   }
 
   &.activePreset {
-    background: #2563eb;
-    border-color: #2563eb;
-    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-primary-content);
   }
 }
 
@@ -71,16 +88,16 @@
 }
 
 .zoomBadge {
-  background: rgba(37, 99, 235, 0.1);
-  color: #1e40af;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
 }
 
 .resetZoomBtn {
-  background: #2563eb;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
   border: none;
   border-radius: 4px;
   padding: 2px 8px;
@@ -92,7 +109,7 @@
   gap: 4px;
 
   &:hover {
-    background: #1d4ed8;
+    background: var(--color-primary-hover);
   }
 }
 
@@ -110,9 +127,9 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  background: rgba(37, 99, 235, 0.18);
-  border-left: 2px solid #2563eb;
-  border-right: 2px solid #2563eb;
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-left: 2px solid var(--color-primary);
+  border-right: 2px solid var(--color-primary);
   pointer-events: none;
   z-index: 10;
 }

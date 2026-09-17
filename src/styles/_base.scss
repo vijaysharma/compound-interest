@@ -67,10 +67,10 @@ button, [role="button"] {
 .noscriptHeading {
   font-size: 2rem;
   font-weight: 800;
-  color: #1d4ed8;
+  color: var(--color-primary);
 }
 
 .noscriptBody {
-  color: #374151;
+  color: var(--color-text);
   line-height: 1.6;
 }

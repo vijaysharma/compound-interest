@@ -6,7 +6,9 @@
   max-width: 56rem;
   margin-left: auto;
   margin-right: auto;
-  padding: 0.5rem 0.75rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
 
   @include tablet-up {
     max-width: 72rem;
@@ -310,10 +312,10 @@
 .verdictBanner {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, #10b981 12%, var(--color-bg)),
-    color-mix(in srgb, #10b981 22%, var(--color-bg))
+    color-mix(in srgb, var(--color-success) 12%, var(--color-bg)),
+    color-mix(in srgb, var(--color-success) 22%, var(--color-bg))
   );
-  border: 1.5px solid #10b981;
+  border: 1.5px solid var(--color-success);
   border-radius: var(--radius-md, 8px);
   padding: 1.125rem 1.25rem;
   display: flex;
@@ -323,7 +325,7 @@
 
 .verdictIcon {
   font-size: 1.75rem;
-  color: #10b981;
+  color: var(--color-success);
   flex-shrink: 0;
   margin-top: 0.125rem;
 }
@@ -379,21 +381,21 @@
   color: var(--color-text);
 
   &.ltcg {
-    background: color-mix(in srgb, #10b981 12%, transparent);
-    border-color: #10b981;
-    color: #10b981;
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    border-color: var(--color-success);
+    color: var(--color-success);
   }
 
   &.stcg {
-    background: color-mix(in srgb, #f59e0b 12%, transparent);
-    border-color: #f59e0b;
-    color: #f59e0b;
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    border-color: var(--color-warning);
+    color: var(--color-warning);
   }
 
   &.grandfathered {
-    background: color-mix(in srgb, #6366f1 12%, transparent);
-    border-color: #6366f1;
-    color: #6366f1;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
   }
 }
 
@@ -424,8 +426,8 @@
   transition: all 0.2s ease;
 
   &.winner {
-    border-color: #10b981;
-    box-shadow: 0 0 0 1px #10b981, 0 4px 12px rgba(16, 185, 129, 0.08);
+    border-color: var(--color-success);
+    box-shadow: 0 0 0 1px var(--color-success), 0 4px 12px rgba(16, 185, 129, 0.08);
   }
 
   &.disabled {
@@ -437,8 +439,8 @@
   position: absolute;
   top: -10px;
   right: 12px;
-  background: #10b981;
-  color: #fff;
+  background: var(--color-success);
+  color: var(--color-success-content);
   font-size: 0.6875rem;
   font-weight: 800;
   padding: 0.125rem 0.5rem;
@@ -473,7 +475,7 @@
   margin: 0.5rem 0 0.25rem;
 
   &.winnerColor {
-    color: #10b981;
+    color: var(--color-success);
   }
 }
 
@@ -573,7 +575,7 @@
   }
 
   .winnerCell {
-    color: #10b981;
+    color: var(--color-success);
     font-weight: 700;
   }
 
@@ -583,8 +585,8 @@
 }
 
 .disclaimerBanner {
-  background: color-mix(in srgb, #f59e0b 8%, var(--color-bg));
-  border: 1px solid color-mix(in srgb, #f59e0b 25%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 25%, transparent);
   border-radius: var(--radius-md, 8px);
   padding: 0.75rem 1rem;
   font-size: 0.75rem;

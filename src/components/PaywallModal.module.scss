@@ -8,10 +8,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: color-mix(in srgb, var(--color-neutral) 80%, transparent);
   padding: 1rem;
   backdrop-filter: blur(2px);
   overflow-y: auto;
+
+  @include mobile-only {
+    padding: 0.125rem;
+    align-items: flex-start;
+  }
 }
 
 .modalCard {
@@ -25,6 +30,16 @@
   margin-top: 2rem;
   margin-bottom: 2rem;
   border-radius: var(--radius-box, 1rem);
+
+  @include mobile-only {
+    padding: 0.875rem 0.75rem;
+    margin-top: 0.125rem;
+    margin-bottom: 0.125rem;
+    max-height: 96vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 
   @include tablet-up {
     padding: 2rem;
@@ -72,13 +87,13 @@
   margin-bottom: 0.5rem;
 
   &.active {
-    background-color: rgba(59, 130, 246, 0.15);
-    color: #2563eb;
+    background-color: color-mix(in srgb, var(--color-info) 15%, transparent);
+    color: var(--color-info);
   }
 
   &.expired {
-    background-color: rgba(234, 179, 8, 0.15);
-    color: #d97706;
+    background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+    color: var(--color-warning);
   }
 }
 
@@ -115,15 +130,15 @@
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   &Success {
-    background-color: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
+    background-color: var(--color-success-surface-strong);
+    color: var(--color-success-text);
+    border: 1px solid var(--color-success-border);
   }
 
   &Error {
-    background-color: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    background-color: var(--color-error-surface);
+    color: var(--color-error-text);
+    border: 1px solid var(--color-error-border);
   }
 }
 
@@ -144,7 +159,7 @@
   font-size: 0.875rem;
   font-weight: 700;
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-content);
   border: none;
   border-radius: var(--radius-btn, 0.5rem);
   cursor: pointer;
@@ -220,7 +235,7 @@
 .planToggleBtn {
   padding: 0.35rem 0.85rem;
   border-radius: 9999px;
-  border: 1px solid var(--color-border, #ccc);
+  border: 1px solid var(--color-border);
   background-color: transparent;
   color: inherit;
   font-weight: 600;
@@ -229,9 +244,9 @@
   transition: all 0.2s ease;
 
   &Active {
-    background-color: var(--color-primary, #6e0b75);
-    color: #ffffff;
-    border-color: var(--color-primary, #6e0b75);
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+    border-color: var(--color-primary);
   }
 }
 
@@ -243,7 +258,7 @@
 .taxProLink {
   background: none;
   border: none;
-  color: var(--color-primary, #6e0b75);
+  color: var(--color-primary);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;

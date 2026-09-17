@@ -45,6 +45,10 @@ interface GoogleSignInButtonProps {
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
   modalTitle?: string;
 }
+/*
+ * The four fills below are Google's official brand colours and are fixed by
+ * their sign-in branding guidelines, so they are deliberately not themed.
+ */
 const GoogleIcon = () => (
   <svg className={styles.googleIcon} viewBox="0 0 24 24">
     <path

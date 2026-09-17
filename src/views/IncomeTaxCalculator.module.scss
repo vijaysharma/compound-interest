@@ -6,7 +6,9 @@
   max-width: 60rem;
   margin-left: auto;
   margin-right: auto;
-  padding: 0.25rem 0.5rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
 
   @include tablet-up {
     padding: 1rem;
@@ -67,10 +69,10 @@
 .winnerBanner {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, #16a34a 15%, var(--color-bg)),
-    color-mix(in srgb, #16a34a 25%, var(--color-bg))
+    color-mix(in srgb, var(--color-success) 15%, var(--color-bg)),
+    color-mix(in srgb, var(--color-success) 25%, var(--color-bg))
   );
-  border: 1px solid color-mix(in srgb, #16a34a 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 40%, transparent);
   border-radius: var(--radius-md, 8px);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
@@ -94,7 +96,7 @@
 .winnerIcon {
   width: 2rem;
   height: 2rem;
-  color: #16a34a;
+  color: var(--color-success);
   flex-shrink: 0;
   margin-top: 0.125rem;
 }
@@ -117,8 +119,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #16a34a;
-  color: #ffffff;
+  background: var(--color-success);
+  color: var(--color-primary-content);
   padding: 0.375rem 0.875rem;
   border-radius: 9999px;
   font-size: 0.8125rem;
@@ -153,7 +155,7 @@
   transition: all 0.2s;
 
   &Recommended {
-    border-color: #16a34a;
+    border-color: var(--color-success);
     box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
   }
 }
@@ -182,7 +184,7 @@
 
 .tagRecommended {
   background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
+  color: var(--color-success);
   border: 1px solid rgba(22, 163, 74, 0.3);
   font-size: 0.6875rem;
   font-weight: 700;
@@ -233,7 +235,7 @@
 }
 
 .detailValueNegative {
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 600;
 }
 
@@ -266,10 +268,10 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: var(--color-base-200, #f1f5f9);
+  background: var(--color-base-200);
   border-radius: var(--radius-md, 10px);
   margin-bottom: 1.25rem;
-  border: 1.5px solid var(--color-base-300, #e2e8f0);
+  border: 1.5px solid var(--color-base-300);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
@@ -281,29 +283,29 @@
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: var(--radius-sm, 8px);
-  background: var(--color-base-100, #ffffff);
-  border: 1px solid var(--color-base-300, #cbd5e1);
-  color: var(--color-text-primary, #1e293b);
+  background: var(--color-base-100);
+  border: 1px solid var(--color-base-300);
+  color: var(--color-text-primary);
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: var(--color-base-200, #e2e8f0);
+    background: var(--color-base-200);
     border-color: var(--color-primary);
     color: var(--color-primary);
     transform: translateY(-1px);
   }
 
   &Active {
-    background: var(--color-primary, #6d0b74);
-    color: #ffffff !important;
-    border-color: var(--color-primary, #6d0b74);
+    background: var(--color-primary);
+    color: var(--color-primary-content) !important;
+    border-color: var(--color-primary);
     font-weight: 700;
-    box-shadow: 0 2px 6px rgba(109, 11, 116, 0.35);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary) 35%, transparent);
 
     svg {
-      stroke: #ffffff;
+      stroke: var(--color-primary-content);
     }
   }
 }
@@ -421,7 +423,7 @@
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
   background: rgba(34, 197, 94, 0.12);
-  color: #16a34a;
+  color: var(--color-success);
   font-size: 0.6875rem;
   font-weight: 700;
   margin-left: 0.5rem;
@@ -467,7 +469,7 @@
 .tipSavings {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .tipTitle {
@@ -488,10 +490,10 @@
 .aiCard {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, #6366f1 10%, var(--color-bg)),
-    color-mix(in srgb, #a855f7 10%, var(--color-bg))
+    color-mix(in srgb, var(--color-primary) 10%, var(--color-bg)),
+    color-mix(in srgb, var(--color-secondary) 10%, var(--color-bg))
   );
-  border: 1px solid color-mix(in srgb, #6366f1 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   border-radius: var(--radius-md, 8px);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
@@ -515,7 +517,7 @@
 .aiIcon {
   width: 1.5rem;
   height: 1.5rem;
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .aiTitle {
@@ -526,8 +528,8 @@
 }
 
 .aiBadge {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-primary-content);
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
   font-size: 0.6875rem;
@@ -548,8 +550,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-primary-content);
   border: none;
   border-radius: var(--radius-sm, 6px);
   font-size: 0.875rem;
@@ -627,7 +629,7 @@
   align-items: center;
   padding: 0 1rem;
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-content);
   border: none;
   border-radius: var(--radius-sm, 6px);
   font-size: 0.8125rem;
@@ -662,8 +664,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary-hover), var(--color-secondary-hover));
+  color: var(--color-primary-content);
   border: none;
   border-radius: var(--radius-sm, 6px);
   font-size: 0.875rem;
@@ -719,9 +721,9 @@
   width: 36px;
   height: 36px;
   background: transparent;
-  border: 1px solid color-mix(in srgb, #ef4444 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
   border-radius: var(--radius-sm, 6px);
-  color: #ef4444;
+  color: var(--color-error);
   cursor: pointer;
   flex-shrink: 0;
 
@@ -788,7 +790,7 @@
 
 /* Form 16 Integration Banner */
 .form16Banner {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg)), color-mix(in srgb, #6366f1 14%, var(--color-bg)));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg)), color-mix(in srgb, var(--color-primary) 14%, var(--color-bg)));
   border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
   border-radius: var(--radius-md, 8px);
   padding: 1rem 1.25rem;
@@ -842,7 +844,7 @@
   align-items: center;
   gap: 0.4rem;
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-content);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: var(--radius-sm, 6px);
@@ -919,7 +921,7 @@
 
 .meterFill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, var(--color-primary));
+  background: linear-gradient(90deg, var(--color-success), var(--color-primary));
   transition: width 0.3s ease;
 }
 
@@ -973,13 +975,13 @@
 
 .warningTextSmall {
   font-size: 0.6875rem;
-  color: #d97706;
+  color: var(--color-warning);
   font-weight: 600;
 }
 
 .successTextSmall {
   font-size: 0.6875rem;
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 600;
 }
 
@@ -1022,7 +1024,7 @@
 }
 
 .trendingIcon {
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .tipRef {
@@ -1080,25 +1082,25 @@
 
 .fieldHintGreen {
   font-size: 0.6875rem;
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 600;
 }
 
 .fieldBadgeAmber {
   margin-left: 0.5rem;
-  color: #d97706;
+  color: var(--color-warning);
   font-size: 0.6875rem;
 }
 
 .fieldBadgeGreen {
   margin-left: 0.5rem;
-  color: #16a34a;
+  color: var(--color-success);
   font-size: 0.6875rem;
 }
 
 .fieldBadgeIndigo {
   margin-left: 0.5rem;
-  color: #6366f1;
+  color: var(--color-primary);
   font-size: 0.6875rem;
 }
 
@@ -1114,7 +1116,7 @@
   margin: 0.375rem 0 0;
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--color-text-secondary, #6b7280);
+  color: var(--color-text-secondary);
 }
 
 .stdOverrideInput {
@@ -1155,7 +1157,7 @@
 
 .itemizedLimitExceeded {
   font-size: 0.6875rem;
-  color: #10b981;
+  color: var(--color-success);
   font-weight: 600;
   margin-top: 0.375rem;
 }

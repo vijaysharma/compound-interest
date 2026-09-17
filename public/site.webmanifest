@@ -8,9 +8,13 @@
   "id": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#2563eb",
-  "background_color": "#0f172a",
-  "categories": ["finance", "utilities", "productivity"],
+  "theme_color": "#6d0b74",
+  "background_color": "#ffffff",
+  "categories": [
+    "finance",
+    "utilities",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/favicon-48x48.png",

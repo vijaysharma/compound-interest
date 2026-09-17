@@ -8,6 +8,7 @@ import { getNearest, isoDateToNavDate, navDateToISO } from '../utilities/utility
 import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
 import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './MutualFundDetailModal.module.scss';
+import { getChartSeriesColor } from '@/data/chartColors';
 import ValuePicker from './ValuePicker';
 const Chart = dynamic(() => import('./Chart'), {
   ssr: false,
@@ -306,7 +307,7 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
         datasets: [
           {
             label: `${fund?.schemeName || 'Fund'} (Lumpsum)`,
-            color: fund?.color || '#2563eb',
+            color: fund?.color || getChartSeriesColor(0),
             data: points,
           },
         ],
@@ -365,7 +366,7 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
       datasets: [
         {
           label: `${fund?.schemeName || 'Fund'} (SIP)`,
-          color: fund?.color || '#2563eb',
+          color: fund?.color || getChartSeriesColor(0),
           data: points,
         },
       ],
@@ -510,7 +511,7 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
           <div className={styles.headerLeft}>
             <span
               className={styles.colorIndicator}
-              style={{ backgroundColor: fund.color || '#2563eb' }}
+              style={{ backgroundColor: fund.color || getChartSeriesColor(0) }}
             />
             <div className={styles.titleGroup}>
               <h2 className={styles.title}>{fund.schemeName}</h2>
@@ -535,16 +536,8 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
           {/* Dedicated Interactive Chart with Zoom Presets */}
           <div className={styles.chartSection}>
             <div className={styles.chartTitle}>
-              <span>Historical NAV & Portfolio Trajectory</span>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 500,
-                  color: 'var(--text-muted, #64748b)',
-                }}
-              >
-                Use presets or drag horizontally to zoom
-              </span>
+              <span>Historical NAV &amp; Portfolio Trajectory</span>
+              <span className={styles.chartHint}>Use presets or drag horizontally to zoom</span>
             </div>
             <div className={styles.chartWrapper}>
               <Chart
@@ -561,21 +554,8 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
               />
             </div>
           </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '1rem',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-              }}
-            >
+          <div className={styles.controlsStatsGrid}>
+            <div className={styles.controlsColumn}>
               <ValuePicker
                 variant="date-range"
                 startDate={startDateISO}
@@ -598,7 +578,6 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
                 onChange={setInvestmentValue}
                 defaultStep={investmentType === 'sip' ? 500 : 5000}
                 min={100}
-                singleRow={true}
                 tabSize="sm"
               />
             </div>
@@ -688,45 +667,43 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
                 <span className={styles.taxCardLabel}>Holding & Tax Classification</span>
                 <span
                   className={styles.taxCardValue}
-                  style={{ fontSize: '1rem', color: 'var(--text-primary, #0f172a)' }}
+                  style={{ fontSize: '1rem', color: 'var(--text-primary)' }}
                 >
                   {holdingDays} Days ({holdingYears} Yrs)
                 </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted, #64748b)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                   Asset: <strong>{fundCategory.toUpperCase()}</strong> (
                   {isLongTerm ? 'Long Term' : 'Short Term'})
                 </span>
               </div>
               <div className={styles.taxCard}>
                 <span className={styles.taxCardLabel}>Estimated Tax Deducted</span>
-                <span className={styles.taxCardValue} style={{ color: '#b91c1c' }}>
+                <span className={styles.taxCardValue} style={{ color: 'var(--color-error-text-strong)' }}>
                   {formatINR(taxCalculations.taxAmount)}
                 </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted, #64748b)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                   Rate: {taxCalculations.rateLabel}
                 </span>
               </div>
               <div
-                className={styles.taxCard}
-                style={{ background: '#f0fdf4', borderColor: '#86efac' }}
+                className={`${styles.taxCard} ${styles.taxCardHighlight}`}
               >
                 <span className={styles.taxCardLabel}>Actual Post-Tax In-Hand</span>
-                <span className={styles.taxCardValue} style={{ color: '#15803d' }}>
+                <span className={styles.taxCardValue} style={{ color: 'var(--color-success-text-strong)' }}>
                   {formatINR(taxCalculations.postTaxMaturity)}
                 </span>
-                <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-success-text)', fontWeight: 600 }}>
                   Net Gain: +{formatINR(taxCalculations.postTaxProfit)}
                 </span>
               </div>
               <div
-                className={styles.taxCard}
-                style={{ background: '#f0fdf4', borderColor: '#86efac' }}
+                className={`${styles.taxCard} ${styles.taxCardHighlight}`}
               >
                 <span className={styles.taxCardLabel}>Post-Tax Net Return</span>
-                <span className={styles.taxCardValue} style={{ color: '#15803d' }}>
+                <span className={styles.taxCardValue} style={{ color: 'var(--color-success-text-strong)' }}>
                   {taxCalculations.postTaxCagr.toFixed(2)}%
                 </span>
-                <span style={{ fontSize: '0.72rem', color: '#166534' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-success-text)' }}>
                   Gross Return: {performance.cagr.toFixed(2)}%
                 </span>
               </div>
@@ -766,13 +743,13 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
             </div>
             <div className={styles.constituentsBox}>
               <div
-                style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text-primary, #0f172a)' }}
+                style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text-primary)' }}
               >
                 Typical Core Holdings & Major Constituents:
               </div>
               <div style={{ marginBottom: 6 }}>{constituentProfile.topHoldings}</div>
               <div
-                style={{ fontWeight: 700, marginBottom: 2, color: 'var(--text-primary, #0f172a)' }}
+                style={{ fontWeight: 700, marginBottom: 2, color: 'var(--text-primary)' }}
               >
                 Representative Sector Exposure:
               </div>

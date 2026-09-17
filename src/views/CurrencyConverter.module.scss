@@ -5,7 +5,9 @@
   width: 100%;
   max-width: 56rem;
   margin-inline: auto;
-  padding: 0.25rem 0.75rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
 
   @include tablet-up {
     max-width: 68rem;
@@ -165,8 +167,8 @@
   gap: 0.5rem;
   padding: 0.75rem;
   font-size: 0.75rem;
-  background-color: color-mix(in srgb, var(--color-error, #ef4444) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-error, #ef4444) 30%, transparent);
+  background-color: color-mix(in srgb, var(--color-error) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
   color: var(--color-base-content);
   border-radius: 0.5rem;
 }

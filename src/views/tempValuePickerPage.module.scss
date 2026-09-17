@@ -3,8 +3,13 @@
 
 .demoPage {
   min-height: 100%;
-  padding: 1.5rem 1rem 4rem;
-  background-color: #f8fafc;
+  // Mobile keeps a 0.125rem side gutter; roomier padding resumes at tablet.
+  padding: 0.75rem 0.125rem 2rem;
+
+  @include tablet-up {
+    padding: 1.5rem 1rem 4rem;
+  }
+  background-color: var(--color-bg-secondary);
   color: $text-dark;
 
   @include tablet-up {
@@ -55,7 +60,7 @@
   gap: 0.5rem;
   margin: 1.5rem auto 2.5rem;
   padding: 0.35rem;
-  background-color: #e2e8f0;
+  background-color: var(--color-border);
   border-radius: $radius-lg;
   width: fit-content;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -110,9 +115,9 @@
 
   &.mobileFrame {
     max-width: 400px;
-    background: #ffffff;
+    background: var(--color-base-100);
     border-radius: 2rem;
-    border: 8px solid #1e293b;
+    border: 8px solid var(--color-text-primary);
     padding: 1.5rem 1rem;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     position: relative;
@@ -122,7 +127,7 @@
       display: block;
       width: 4.5rem;
       height: 0.35rem;
-      background: #334155;
+      background: var(--color-text-secondary);
       border-radius: $radius-full;
       margin: 0 auto 1.25rem;
     }
@@ -130,16 +135,16 @@
 
   &.tabletFrame {
     max-width: 640px;
-    background: #ffffff;
+    background: var(--color-base-100);
     border-radius: 1.5rem;
-    border: 6px solid #334155;
+    border: 6px solid var(--color-text-secondary);
     padding: 2rem 1.5rem;
     box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
   }
 
   &.desktopFrame {
     max-width: 800px;
-    background: #ffffff;
+    background: var(--color-base-100);
     border-radius: 1rem;
     border: 1px solid $border-light;
     padding: 2.5rem 2rem;
@@ -173,10 +178,10 @@
 }
 
 .stateItem {
-  background-color: #f8fafc;
+  background-color: var(--color-bg-secondary);
   padding: 0.75rem 1rem;
   border-radius: $radius-md;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--color-bg-tertiary);
 
   .label {
     display: block;
@@ -200,7 +205,7 @@
   color: $text-dark;
   margin-bottom: 1.25rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .variationsGrid {
@@ -236,8 +241,8 @@
 
 // Code usage block
 .codeSnippet {
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: var(--color-heading);
+  color: var(--color-border);
   padding: 1.25rem;
   border-radius: $radius-lg;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -249,7 +254,7 @@
 .variationResultText {
   margin-top: 0.75rem;
   font-size: 0.875rem;
-  color: #6d0b74;
+  color: var(--color-primary);
   font-weight: 600;
 }
 

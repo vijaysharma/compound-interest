@@ -6,7 +6,7 @@
 // =============================================================================
 
 // Theme
-$primary: var(--color-primary, #6d0b74);
+$primary: var(--color-primary);
 
 // Typography Tokens
 $font-family:
@@ -49,13 +49,13 @@ $font-size-title-bar-mobile: 11.5px;
 $font-size-title-bar-web: 12.5px;
 
 // Colors
-$color-primary: var(--color-primary, #6d0b74);
-$color-secondary: var(--color-secondary, #9c27b0);
-$color-neutral-bg: var(--color-neutral-bg, #ffffff);
-$color-neutral-border: var(--color-neutral-border, #e0e0e0);
-$color-text-primary: var(--color-text-primary, #212121);
-$color-text-secondary: var(--color-text-secondary, #757575);
-$color-feedback: var(--color-feedback, #6d0b74);
+$color-primary: var(--color-primary);
+$color-secondary: var(--color-secondary);
+$color-neutral-bg: var(--color-neutral-bg, var(--color-primary-content));
+$color-neutral-border: var(--color-neutral-border);
+$color-text-primary: var(--color-text-primary);
+$color-text-secondary: var(--color-text-secondary);
+$color-feedback: var(--color-feedback);
 
 // Spacing Tokens
 $space-xs: 4px; // icon padding
@@ -176,7 +176,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   align-items: center;
   padding: 3px 10px 3px 10px;
   background-color: $color-primary;
-  color: #ffffff;
+  color: var(--color-primary-content);
   font-family: $font-family;
   font-size: 11px;
   font-weight: 600;
@@ -223,12 +223,12 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   &:hover:not(.tabActive):not(:disabled) {
     color: $color-text-primary;
-    background-color: #faf5fb;
+    background-color: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg));
   }
 
   &.tabActive {
     background-color: $color-primary;
-    color: #ffffff;
+    color: var(--color-primary-content);
     font-weight: 600;
   }
 
@@ -317,7 +317,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   height: 38px;
   min-width: 38px;
   padding: 0;
-  background-color: #f1f5f9;
+  background-color: var(--color-bg-tertiary);
   border: 1px solid $color-neutral-border;
   border-radius: $input-radius;
   color: $color-text-primary;
@@ -436,8 +436,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   height: 38px;
   min-width: 38px;
   border-radius: $btn-radius;
-  border: 1px solid #ebdfee;
-  background-color: #fbf7fb;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
+  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   font-family: $font-family;
   font-size: $font-size-button-mobile;
   line-height: 1;
@@ -468,63 +468,63 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
 // Clear button ('C')
 .clearBtn {
-  background-color: #fbf7fb;
+  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   color: $color-text-primary;
-  border: 1px solid #ebdfee;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: #f3e5f5;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
   }
 }
 
 // Operation increment button ('+')
 .plusBtn {
-  background-color: #fbf7fb;
+  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   color: $color-text-primary;
-  border: 1px solid #ebdfee;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: #f3e5f5;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
   }
 
   &.activeOp {
     background-color: $color-primary;
-    color: #ffffff;
+    color: var(--color-primary-content);
     border-color: $color-primary;
 
     &:hover:not(:disabled) {
       background-color: $color-secondary;
       border-color: $color-secondary;
-      color: #ffffff;
+      color: var(--color-primary-content);
     }
   }
 }
 
 // Operation decrement button ('-')
 .minusBtn {
-  background-color: #fbf7fb;
+  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   color: $color-text-primary;
-  border: 1px solid #ebdfee;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: #f3e5f5;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
   }
 
   &.activeOp {
     background-color: $color-primary;
-    color: #ffffff;
+    color: var(--color-primary-content);
     border-color: $color-primary;
 
     &:hover:not(:disabled) {
       background-color: $color-secondary;
       border-color: $color-secondary;
-      color: #ffffff;
+      color: var(--color-primary-content);
     }
   }
 }
@@ -566,7 +566,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   // Separator between rows
   &:not(:last-child) {
-    border-bottom: 1px solid #ebdfee;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
   }
 }
 
@@ -587,23 +587,23 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   line-height: $font-line-height-button-sm-mobile;
   font-weight: 600;
   color: $color-primary;
-  background-color: #fbf7fc;
+  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   transition:
     background-color $transition-fast,
     color $transition-fast;
 
   // Separator between cells
   &:not(:last-child) {
-    border-right: 1px solid #ebdfee;
+    border-right: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
   }
 
   &:hover:not(:disabled) {
     color: $color-secondary;
-    background-color: #f3e5f5;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
   }
 
   &:active:not(:disabled) {
-    background-color: #ead5ee;
+    background-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-bg));
   }
 
   @include vp-focus-ring(-2px);
@@ -718,7 +718,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   justify-content: flex-start;
   padding: 3px 10px 3px 10px;
   background-color: $color-primary;
-  color: #ffffff;
+  color: var(--color-primary-content);
   font-family: $font-family;
   font-size: 11px;
   font-weight: 600;
@@ -782,7 +782,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
   padding: 0 8px;
   background-color: $color-primary;
-  color: #ffffff;
+  color: var(--color-primary-content);
   border-radius: 0;
   font-family: $font-family;
   font-size: 12.5px;

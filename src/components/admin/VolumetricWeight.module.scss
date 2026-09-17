@@ -126,8 +126,8 @@
 
 .resultCard {
   padding: 1rem;
-  background-color: color-mix(in srgb, #047857 10%, transparent);
-  color: #047857;
+  background-color: color-mix(in srgb, var(--color-success-text-strong) 10%, transparent);
+  color: var(--color-success-text-strong);
   border-radius: 0.75rem;
   display: flex;
   justify-content: space-between;

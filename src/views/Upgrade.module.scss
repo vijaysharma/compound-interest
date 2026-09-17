@@ -5,7 +5,9 @@
   width: 100%;
   max-width: 48rem;
   margin-inline: auto;
-  padding: 2rem 1rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 1rem 0.125rem;
 
   @include tablet-up {
     padding: 3rem 1rem;
@@ -140,12 +142,12 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &Success {
-    background-color: color-mix(in srgb, #047857 15%, transparent);
-    border: 1px solid color-mix(in srgb, #047857 30%, transparent);
-    color: #047857;
+    background-color: color-mix(in srgb, var(--color-success-text-strong) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-success-text-strong) 30%, transparent);
+    color: var(--color-success-text-strong);
 
     @media (prefers-color-scheme: dark) {
-      color: #34d399;
+      color: var(--color-success);
     }
   }
 
@@ -367,12 +369,12 @@
 }
 
 .featureCheckIcon {
-  color: #047857;
+  color: var(--color-success-text-strong);
   font-weight: 700;
   flex-shrink: 0;
 
   @media (prefers-color-scheme: dark) {
-    color: #34d399;
+    color: var(--color-success);
   }
 }
 
@@ -414,7 +416,7 @@
 .saveBadge {
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #16a34a;
+  color: var(--color-success);
   background-color: rgba(22, 163, 74, 0.12);
   padding: 0.2rem 0.5rem;
   border-radius: 9999px;
@@ -435,20 +437,20 @@
 .pricingCardTax {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, #d97706 12%, transparent) 0%,
+    color-mix(in srgb, var(--color-warning) 12%, transparent) 0%,
     var(--color-base-100) 50%,
     var(--color-base-200) 100%
   );
-  border: 2px solid color-mix(in srgb, #d97706 50%, transparent);
+  border: 2px solid color-mix(in srgb, var(--color-warning) 50%, transparent);
 }
 
 .taxBadge {
-  background-color: #d97706 !important;
-  color: #ffffff !important;
+  background-color: var(--color-warning) !important;
+  color: var(--color-warning-content) !important;
 }
 
 .taxButton {
-  background-color: #d97706 !important;
+  background-color: var(--color-warning) !important;
 }
 
 .spinner {
@@ -468,7 +470,7 @@
 
 .savingsBadgeText {
   font-size: 0.75rem;
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 600;
   margin-top: 0.25rem;
 }
@@ -478,10 +480,10 @@
 }
 
 .priceTaxColor {
-  color: #d97706 !important;
+  color: var(--color-warning) !important;
 }
 
 .taxFeatureCheckIcon {
-  color: #d97706 !important;
+  color: var(--color-warning) !important;
 }
 

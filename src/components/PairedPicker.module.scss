@@ -1,12 +1,12 @@
 @use "../styles/variables" as *;
 @use "../styles/mixins" as *;
 
-$primary: var(--color-primary, #6d0b74);
-$color-primary: var(--color-primary, #6d0b74);
-$color-secondary: var(--color-secondary, #9c27b0);
-$color-neutral-bg: var(--color-neutral-bg, #ffffff);
-$color-text-primary: var(--color-text-primary, #212121);
-$color-text-secondary: var(--color-text-secondary, #757575);
+$primary: var(--color-primary);
+$color-primary: var(--color-primary);
+$color-secondary: var(--color-secondary);
+$color-neutral-bg: var(--color-neutral-bg, var(--color-primary-content));
+$color-text-primary: var(--color-text-primary);
+$color-text-secondary: var(--color-text-secondary);
 $btn-radius: 8px;
 $space-xs: 4px;
 $space-sm: 8px;
@@ -86,7 +86,7 @@ $font-family:
   justify-content: flex-start;
   padding: 3px 10px;
   background-color: $color-primary;
-  color: #ffffff;
+  color: var(--color-primary-content);
   font-family: $font-family;
   font-size: 11px;
   font-weight: 600;

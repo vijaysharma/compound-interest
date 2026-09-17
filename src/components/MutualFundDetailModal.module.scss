@@ -1,3 +1,5 @@
+@use '../styles/mixins' as *;
+
 .dialogOverlay {
   position: fixed;
   inset: 0;
@@ -6,9 +8,15 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background-color: rgba(15, 23, 42, 0.65);
+  background-color: color-mix(in srgb, var(--color-neutral) 65%, transparent);
   backdrop-filter: blur(6px);
   animation: fadeIn 0.18s ease-out;
+
+  @include mobile-only {
+    padding: 0.125rem;
+    // Bottom-align on mobile so the footer actions sit within thumb reach.
+    align-items: flex-end;
+  }
 }
 
 @keyframes fadeIn {
@@ -32,14 +40,20 @@
   position: relative;
   width: 95%;
   max-height: 90vh;
-  background: var(--bg-card, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @include mobile-only {
+    width: 100%;
+    max-height: 96vh;
+    border-radius: 12px;
+  }
 
   @media (min-width: 768px) {
     width: 85%;
@@ -65,8 +79,13 @@
   justify-content: space-between;
   gap: 16px;
   padding: 18px 24px;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
-  background: var(--bg-card-header, #f8fafc);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card-header);
+
+  @include mobile-only {
+    gap: 8px;
+    padding: 10px 12px;
+  }
 }
 
 .headerLeft {
@@ -91,7 +110,7 @@
 .title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.35;
 }
@@ -109,20 +128,20 @@
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 9999px;
-  background: var(--tag-bg, #e2e8f0);
-  color: var(--tag-text, #475569);
+  background: var(--tag-bg);
+  color: var(--tag-text);
 }
 
 .tagPrimary {
-  background: var(--color-primary-light, #f6edf7);
-  color: var(--color-primary, #6d0b74);
-  border: 1px solid var(--color-primary-subtle, #ebd5ed);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-subtle);
 }
 
 .tagSuccess {
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #a7f3d0;
+  background: var(--color-success-surface);
+  color: var(--color-success-text-strong);
+  border: 1px solid var(--color-success-border);
 }
 
 .closeBtn {
@@ -130,7 +149,7 @@
   border: none;
   font-size: 1.5rem;
   line-height: 1;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
@@ -138,7 +157,7 @@
 
   &:hover {
     background: rgba(0, 0, 0, 0.06);
-    color: var(--text-primary, #0f172a);
+    color: var(--text-primary);
   }
 }
 
@@ -147,8 +166,8 @@
   flex-direction: column;
   align-items: stretch;
   gap: 12px;
-  background: var(--bg-hover, #f8fafc);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px;
 
@@ -174,84 +193,198 @@
 .controlLabel {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .modalBody {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  min-width: 0;
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+
+  @include mobile-only {
+    padding: 8px 6px;
+    gap: 10px;
+  }
+}
+
+/*
+ * Controls beside stats. This was previously an inline `grid-template-columns:
+ * 1fr 1fr`, which could not carry a media query and so stayed two-up on phones
+ * — the stat cards overflowed the modal and clipped off the right edge.
+ */
+.controlsStatsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  min-width: 0;
+
+  @include mobile-only {
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.controlsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+
+  @include mobile-only {
+    gap: 0.5rem;
+  }
 }
 
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
+
+  // 140px minimum forces a single column under ~320px; 0 + 2 columns keeps the
+  // stat cards side by side on the narrowest phones.
+  @include mobile-only {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
 }
 
 .statCard {
-  background: var(--bg-hover, #f8fafc);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  // Without this a grid item refuses to shrink below its content width, which
+  // is what pushed the stat cards past the edge of the modal.
+  min-width: 0;
+
+  @include mobile-only {
+    padding: 8px 10px;
+  }
 }
 
 .statLabel {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.025em;
+  min-width: 0;
+  overflow-wrap: break-word;
+
+  @include mobile-only {
+    // Uppercase plus letter-spacing is what made these labels truncate in a
+    // narrow card, so both are relaxed on mobile.
+    font-size: 0.625rem;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1.25;
+  }
 }
 
 .statValue {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary);
+  min-width: 0;
+  // Long INR amounts must be allowed to break rather than overflow the card.
+  overflow-wrap: anywhere;
+
+  @include mobile-only {
+    font-size: 0.9375rem;
+    line-height: 1.2;
+  }
 }
 
 .statGain {
-  color: #16a34a;
+  color: var(--color-success);
 }
 
 .statLoss {
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .statSubtext {
   font-size: 0.72rem;
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted);
+  min-width: 0;
+  overflow-wrap: break-word;
+
+  @include mobile-only {
+    font-size: 0.625rem;
+    line-height: 1.25;
+  }
 }
 
 .chartSection {
-  background: var(--bg-hover, #f8fafc);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  // Minimal side padding so the chart keeps its full drawable width on mobile.
+  @include mobile-only {
+    padding: 8px 2px;
+    gap: 8px;
+    border-radius: 8px;
+  }
 }
 
 .chartTitle {
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+
+  // Side by side these two crowd each other into two ragged columns on a
+  // phone, so the hint drops below the heading.
+  @include mobile-only {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    font-size: 0.8125rem;
+  }
+}
+
+.chartHint {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+
+  @include mobile-only {
+    font-size: 0.6875rem;
+  }
 }
 
 .chartWrapper {
   height: 280px;
   width: 100%;
+
+  @include mobile-only {
+    height: 220px;
+  }
 }
 
 .chart {
@@ -260,10 +393,15 @@
 }
 
 .taxSection {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--color-success-surface);
+  border: 1px solid var(--color-success-border);
   border-radius: 12px;
   padding: 16px 20px;
+
+  @include mobile-only {
+    padding: 10px 8px;
+    border-radius: 8px;
+  }
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -280,7 +418,7 @@
 .taxTitle {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #166534;
+  color: var(--color-success-text);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -298,72 +436,106 @@
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid #86efac;
-  background: #ffffff;
-  color: #166534;
+  border: 1px solid var(--color-success-border-strong);
+  background: var(--bg-card);
+  color: var(--color-success-text);
   cursor: pointer;
   transition: all 0.15s ease;
+  touch-action: manipulation;
 
   &:hover {
-    background: #dcfce7;
+    background: var(--color-success-surface-strong);
   }
 
   &.activeToggle {
-    background: #16a34a;
-    border-color: #16a34a;
-    color: #ffffff;
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--color-success-content);
   }
 }
 
 .taxCardsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+
+  @include mobile-only {
+    gap: 6px;
+  }
 }
 
 .taxCard {
-  background: #ffffff;
-  border: 1px solid #dcfce7;
+  background: var(--bg-card);
+  border: 1px solid var(--color-success-surface-strong);
   border-radius: 8px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+
+  @include mobile-only {
+    padding: 8px;
+  }
+}
+
+.taxCardHighlight {
+  background: var(--color-success-surface);
+  border-color: var(--color-success-border-strong);
 }
 
 .taxCardLabel {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--text-muted);
+  min-width: 0;
+  overflow-wrap: break-word;
+
+  @include mobile-only {
+    font-size: 0.625rem;
+    line-height: 1.25;
+  }
 }
 
 .taxCardValue {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #15803d;
+  color: var(--color-success-text-strong);
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  @include mobile-only {
+    font-size: 0.9375rem;
+    line-height: 1.2;
+  }
 }
 
 .taxDisclaimer {
   font-size: 0.72rem;
-  color: #4b7a58;
+  color: var(--color-success-text-muted);
   line-height: 1.4;
   margin: 0;
 }
 
 .infoSection {
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px 20px;
+
+  @include mobile-only {
+    padding: 10px 8px;
+    border-radius: 8px;
+  }
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: var(--bg-hover, #f8fafc);
+  background: var(--bg-hover);
 }
 
 .infoSectionTitle {
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -372,6 +544,11 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
   font-size: 0.8rem;
+
+  @include mobile-only {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
 }
 
 .infoItem {
@@ -382,23 +559,23 @@
 
 .infoItemLabel {
   font-size: 0.72rem;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .infoItemValue {
   font-weight: 600;
-  color: var(--text-primary, #0f172a);
+  color: var(--text-primary);
   word-break: break-word;
 }
 
 .constituentsBox {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px;
   font-size: 0.78rem;
-  color: #475569;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -408,13 +585,17 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 14px 24px;
-  border-top: 1px solid var(--border-color, #e2e8f0);
-  background: var(--bg-card-header, #f8fafc);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-card-header);
+
+  @include mobile-only {
+    padding: 8px 10px;
+  }
 }
 
 .doneBtn {
-  background: var(--color-primary, #6d0b74);
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
   border: none;
   border-radius: 8px;
   padding: 8px 20px;
@@ -424,6 +605,6 @@
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--color-primary-hover, #58085e);
+    background: var(--color-primary-hover);
   }
 }

@@ -5,7 +5,9 @@
   width: 100%;
   max-width: 48rem;
   margin-inline: auto;
-  padding: 0.25rem 0.75rem;
+  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
+  // the app shell already supplies the outer spacing.
+  padding: 0.25rem 0.125rem;
 
   @include tablet-up {
     padding: 0.5rem 1rem;
@@ -136,8 +138,8 @@
 }
 
 .resultInput {
-  // background-color: color-mix(in srgb, #047857 10%, transparent);
-  color: #047857;
+  // background-color: color-mix(in srgb, var(--color-success-text-strong) 10%, transparent);
+  color: var(--color-success-text-strong);
   font-weight: 700;
 }
 
@@ -262,7 +264,7 @@
 .card {
   background-color: var(--color-base-100);
   border: 1px solid var(--color-base-300);
-  border-radius: var(--rounded-box, 0.75rem);
+  border-radius: var(--radius-box, 0.75rem);
   padding: 1rem 1.25rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }

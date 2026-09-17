@@ -85,6 +85,8 @@ function detectContentFontSize(html: string): string | null {
 }
 const TEXT_COLORS = [
   { label: 'Default', value: 'inherit' },
+  // User-selectable text colours: these are note content, not theme accents,
+  // so they stay fixed literals.
   { label: 'Slate', value: '#475569' },
   { label: 'Red', value: '#ef4444' },
   { label: 'Orange', value: '#f97316' },
@@ -593,7 +595,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
   const applyTextColor = (color: string) => {
     if (!editorRef.current) return;
     restoreSelection();
-    document.execCommand('foreColor', false, color === 'inherit' ? 'var(--color-base-content, #333333)' : color);
+    document.execCommand('foreColor', false, color === 'inherit' ? 'var(--color-base-content)' : color);
     saveSelection();
     handleContentChange();
   };
@@ -1567,7 +1569,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     }}
                     className={styles.dropdownItem}
                   >
-                    <SiGoogledrive size={14} color="#3b82f6" />
+                    <SiGoogledrive size={14} color="var(--color-info)" />
                     Save to Google Drive
                   </button>
                 </li>
@@ -1615,7 +1617,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       <FiCopy size={14} />
                       Copy Content
                     </span>
-                    {copySuccess && <FiCheck size={14} color="#16a34a" />}
+                    {copySuccess && <FiCheck size={14} color="var(--color-success)" />}
                   </button>
                 </li>
                 <li>
@@ -1881,7 +1883,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       }}
                       className={styles.colorSwatch}
                       ref={(el) => {
-                        if (el) el.style.backgroundColor = c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value;
+                        if (el) el.style.backgroundColor = c.value === 'inherit' ? 'var(--color-heading)' : c.value;
                       }}
                       title={c.label}
                     />
@@ -2042,7 +2044,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
             title="Copy Selected Text"
           >
             {copySuccess ? (
-              <FiCheck size={14} color="#16a34a" />
+              <FiCheck size={14} color="var(--color-success)" />
             ) : (
               <FiCopy size={14} />
             )}
@@ -2405,7 +2407,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                       }}
                       className={styles.colorSwatch}
                       ref={(el) => {
-                        if (el) el.style.backgroundColor = c.value === 'inherit' ? 'var(--color-heading, #333333)' : c.value;
+                        if (el) el.style.backgroundColor = c.value === 'inherit' ? 'var(--color-heading)' : c.value;
                       }}
                       title={c.label}
                     />
@@ -2590,7 +2592,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({
                     }}
                     className={styles.dropdownItem}
                   >
-                    {copySuccess ? <FiCheck size={14} color="#16a34a" /> : <FiCopy size={14} />}
+                    {copySuccess ? <FiCheck size={14} color="var(--color-success)" /> : <FiCopy size={14} />}
                     {copySuccess ? 'Copied!' : 'Copy'}
                   </button>
                 </li>

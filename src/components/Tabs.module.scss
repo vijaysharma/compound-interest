@@ -10,7 +10,12 @@
 }
 
 .contentWrapper {
-  padding: 1rem;
+  // Mobile keeps a 0.125rem side gutter; roomier padding resumes at tablet.
+  padding: 0.125rem;
   width: 100%;
   overflow-y: auto;
+
+  @include tablet-up {
+    padding: 1rem;
+  }
 }
