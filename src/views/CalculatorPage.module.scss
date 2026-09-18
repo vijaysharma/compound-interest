@@ -6,9 +6,7 @@
   max-width: 42rem;
   margin-left: auto;
   margin-right: auto;
-  // The app shell supplies the mobile gutter; adding padding here as well is
-  // what produced the doubled-up side margins on small screens.
-  padding: 0.125rem;
+  padding: 0.25rem;
 
   @include tablet-up {
     max-width: 68rem;

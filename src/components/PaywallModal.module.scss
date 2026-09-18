@@ -14,8 +14,8 @@
   overflow-y: auto;
 
   @include mobile-only {
-    padding: 0.125rem;
-    align-items: flex-start;
+    padding: 0.5rem;
+    align-items: center;
   }
 }
 
@@ -32,13 +32,14 @@
   border-radius: var(--radius-box, 1rem);
 
   @include mobile-only {
-    padding: 0.875rem 0.75rem;
-    margin-top: 0.125rem;
-    margin-bottom: 0.125rem;
-    max-height: 96vh;
+    padding: 1rem 0.75rem;
+    margin-top: 0;
+    margin-bottom: 0;
+    max-height: calc(100dvh - 1rem);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    border-radius: 12px;
   }
 
   @include tablet-up {

@@ -6,8 +6,7 @@
   min-height: 80vh;
   align-items: center;
   justify-content: center;
-  // Mobile keeps a 0.125rem side gutter; roomier padding resumes at tablet.
-  padding: 1rem 0.125rem;
+  padding: 1rem 0.25rem;
 
   @include tablet-up {
     padding: 2rem 1rem;

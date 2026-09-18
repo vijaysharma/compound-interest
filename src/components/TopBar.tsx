@@ -14,7 +14,7 @@ import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAVIGATION_SECTIONS, ADMIN_SECTION } from '@/data/navigation';
-import { useScrollLock } from '../utilities/useScrollLock';
+import { useScrollLock, forceUnlockScroll } from '../utilities/useScrollLock';
 import styles from './TopBar.module.scss';
 const getNavTitle = (pathname: string) => {
   const titles: Record<string, string> = {
@@ -87,6 +87,7 @@ const TopBar = ({ className }: { className?: string }) => {
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
     setIsMenuOpen(false);
+    forceUnlockScroll();
   }
   const allSections = mounted && isAdmin ? [...NAVIGATION_SECTIONS, ADMIN_SECTION] : NAVIGATION_SECTIONS;
   useEffect(() => {
@@ -114,10 +115,6 @@ const TopBar = ({ className }: { className?: string }) => {
   }, []);
   useEffect(() => {
     if (!isMenuOpen) return;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsMenuOpen(false);
@@ -125,8 +122,6 @@ const TopBar = ({ className }: { className?: string }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isMenuOpen]);

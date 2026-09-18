@@ -5,9 +5,7 @@
   width: 100%;
   max-width: 64rem;
   margin-inline: auto;
-  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
-  // the app shell already supplies the outer spacing.
-  padding: 0.25rem 0.125rem;
+  padding: 0.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -217,7 +215,7 @@
 }
 
 .lumpsumOutputCol {
-  min-height: 380px;
+  min-height: 240px;
   width: 100%;
 
   @include tablet-up {
@@ -228,10 +226,10 @@
 }
 
 .lumpsumChartContainer {
-  min-height: 380px;
-  height: 380px;
+  min-height: 240px;
+  height: 240px;
   width: 100%;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.125rem;
   clear: both;
   position: relative;
   display: flex;
@@ -246,8 +244,8 @@
 }
 
 .lumpsumLoadingWrapper {
-  min-height: 380px;
-  height: 380px;
+  min-height: 240px;
+  height: 240px;
 
   @include tablet-up {
     height: 100%;
@@ -320,7 +318,7 @@
 
 .statsGrid {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   clear: both;
 }
 

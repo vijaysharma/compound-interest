@@ -38,6 +38,12 @@ const MutualFundSelectorModal = ({
   loadingSchemeCodes,
 }: MutualFundSelectorModalProps) => {
   useScrollLock(open);
+  const handleClose = () => {
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    onClose();
+  };
   const pinnedFundMap = useMemo(
     () => new Map(pinnedFunds.map((f) => [f.schemeCode, f])),
     [pinnedFunds]
@@ -54,7 +60,7 @@ const MutualFundSelectorModal = ({
         type="button"
         className={styles.backdrop}
         aria-label="Close mutual fund selector"
-        onClick={onClose}
+        onClick={handleClose}
       />
       <section className={styles.modalContent}>
         <div className={styles.header}>
@@ -65,7 +71,7 @@ const MutualFundSelectorModal = ({
             type="button"
             className={styles.closeBtn}
             aria-label="Close"
-            onClick={onClose}
+            onClick={handleClose}
           >
             <span aria-hidden="true" className={styles.closeIcon}>
               &times;
@@ -80,7 +86,9 @@ const MutualFundSelectorModal = ({
             ]}
             selectedValue={selectedType}
             updateSelectedValue={setSelectedType}
-            sizePrefix="sm"
+            sizePrefix="xs"
+            compact
+            className={styles.filterGroup}
           />
           <JoinedButtonGroup
             data={[
@@ -90,7 +98,9 @@ const MutualFundSelectorModal = ({
             ]}
             selectedValue={selectedGrowth}
             updateSelectedValue={setSelectedGrowth}
-            sizePrefix="sm"
+            sizePrefix="xs"
+            compact
+            className={styles.filterGroup}
           />
         </div>
         <input
@@ -178,7 +188,7 @@ const MutualFundSelectorModal = ({
             </p>
           )}
         </div>
-        <button type="button" className={styles.doneBtn} onClick={onClose}>
+        <button type="button" className={styles.doneBtn} onClick={handleClose}>
           Done
         </button>
       </section>

@@ -348,11 +348,27 @@ const Chart = ({
       },
     }));
     const isAutoHeight = autoHeight || height === 'auto';
-    const resolvedMinHeight = minHeight > 0 ? minHeight : 280;
+    const resolvedMinHeight = chartTheme.isMobile
+      ? (minHeight > 0 ? Math.min(minHeight, 240) : 240)
+      : (minHeight > 0 ? minHeight : 280);
     const resolvedHeight = typeof height === 'number' ? height : resolvedMinHeight;
     return {
       background: {
         visible: false,
+      },
+      padding: {
+        top: 8,
+        right: 8,
+        bottom: 6,
+        left: 4,
+      },
+      seriesArea: {
+        padding: {
+          top: 6,
+          right: 6,
+          bottom: 6,
+          left: 4,
+        },
       },
       data: chartData,
       ...(isAutoHeight
@@ -436,7 +452,9 @@ const Chart = ({
       },
     };
   }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates, chartTheme]);
-  const targetHeight = typeof height === 'number' ? height : (minHeight > 0 ? minHeight : 280);
+  const targetHeight = typeof height === 'number'
+    ? height
+    : (chartTheme.isMobile ? (minHeight > 0 ? Math.min(minHeight, 240) : 240) : (minHeight > 0 ? minHeight : 280));
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
   if (isLoading) {
     return (

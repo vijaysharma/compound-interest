@@ -22,6 +22,10 @@
   flex: 1;
   min-height: 280px;
   overflow: hidden;
+
+  @include mobile-only {
+    min-height: 200px;
+  }
 }
 
 .zoomToolbar {
@@ -121,6 +125,10 @@
   min-height: 240px;
   cursor: crosshair;
   overflow: hidden;
+
+  @include mobile-only {
+    min-height: 180px;
+  }
 }
 
 .zoomSelectionOverlay {
@@ -139,4 +147,8 @@
   height: 100%;
   flex: 1;
   min-height: 240px;
+
+  @include mobile-only {
+    min-height: 180px;
+  }
 }

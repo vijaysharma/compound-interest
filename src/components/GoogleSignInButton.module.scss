@@ -61,6 +61,10 @@
   background-color: rgba(0, 0, 0, 0.6);
   padding: 1rem;
   backdrop-filter: blur(2px);
+
+  @include mobile-only {
+    padding: 0.5rem;
+  }
 }
 
 .modalCard {
@@ -72,6 +76,12 @@
   border-radius: var(--radius-box, 1rem);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   position: relative;
+
+  @include mobile-only {
+    max-height: calc(100dvh - 1rem);
+    padding: 1rem;
+    border-radius: 12px;
+  }
 
   @include tablet-up {
     padding: 2rem;
@@ -173,13 +183,17 @@
 
 .input {
   width: 100%;
-  font-size: 0.875rem;
+  font-size: 16px;
   padding: 0.625rem 0.75rem;
   border-radius: var(--radius-field, 0.5rem);
   border: 1px solid var(--color-base-300);
   background-color: var(--color-base-100);
   color: var(--color-base-content);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  @include laptop-up {
+    font-size: 0.875rem;
+  }
 
   &:focus {
     outline: none;

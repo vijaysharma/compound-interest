@@ -53,9 +53,8 @@
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
-  // Mobile runs an intentionally minimal 0.125rem gutter so content and charts
-  // get the full screen width; the roomier padding starts at tablet.
-  padding: 0.125rem;
+  // Standardized 0.25rem mobile gutter; roomier padding starts at tablet.
+  padding: 0.25rem;
   transition: opacity $transition-fast;
 
   &:has(:global(.quick-notes-theme)) {

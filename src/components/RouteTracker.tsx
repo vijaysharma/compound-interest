@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from '@/navigation';
+import { forceUnlockScroll } from '@/utilities/useScrollLock';
 const LAST_VISITED_ROUTE_KEY = 'last_visited_route';
 const STAY_ON_HOME_SESSION_KEY = 'stay_on_home';
 const IGNORED_ROUTES = ['/login', '/upgrade'];
@@ -15,6 +16,9 @@ export const RouteTracker = () => {
   const { pathname, search, hash, state } = useLocation();
   const navigate = useNavigate();
   const isInitialMountRef = useRef(true);
+  useEffect(() => {
+    forceUnlockScroll();
+  }, [pathname]);
   useEffect(() => {
     if (!isInitialMountRef.current) return;
     isInitialMountRef.current = false;

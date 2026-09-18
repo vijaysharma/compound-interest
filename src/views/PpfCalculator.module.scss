@@ -6,9 +6,7 @@
   max-width: 56rem;
   margin-left: auto;
   margin-right: auto;
-  // Mobile keeps a 0.125rem side gutter so content spans the full screen;
-  // the app shell already supplies the outer spacing.
-  padding: 0.25rem 0.125rem;
+  padding: 0.25rem;
 
   @include tablet-up {
     max-width: 68rem;
