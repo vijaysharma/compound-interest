@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Link, LinkProps } from '@/navigation';
 import { prefetchRoute } from '../utilities/prefetchRoute';
@@ -11,14 +11,12 @@ export const PrefetchLink: React.FC<PrefetchLinkProps> = ({
   to,
   href,
   children,
-  onMouseEnter,
-  onMouseLeave,
-  onTouchStart,
+  onMouseDown,
+  onPointerDown,
   ...props
 }) => {
   const router = useRouter();
   const target = href ?? to;
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const getCleanPath = (): string | undefined => {
     if (typeof target === 'string') {
       return target.split('?')[0].split('#')[0];
@@ -45,26 +43,13 @@ export const PrefetchLink: React.FC<PrefetchLinkProps> = ({
     <Link
       to={to}
       href={href}
-      onMouseEnter={(e) => {
-        // 120ms intent delay: only prefetch when user genuinely hovers,
-        // avoiding rapid cursor brush-by triggering premature CSS preloads
-        timeoutRef.current = setTimeout(handlePrefetch, 120);
-        onMouseEnter?.(e);
-      }}
-      onMouseLeave={(e) => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-        onMouseLeave?.(e);
-      }}
       onMouseDown={(e) => {
         handlePrefetch();
-        props.onMouseDown?.(e);
+        onMouseDown?.(e);
       }}
-      onTouchStart={(e) => {
+      onPointerDown={(e) => {
         handlePrefetch();
-        onTouchStart?.(e);
+        onPointerDown?.(e);
       }}
       {...props}
     >
