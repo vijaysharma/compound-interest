@@ -175,6 +175,7 @@ const PpfCalculator: React.FC = () => {
               min={frequency === 'yearly' ? MIN_PPF_ANNUAL_DEPOSIT : 100}
               max={frequency === 'yearly' ? MAX_PPF_ANNUAL_DEPOSIT : 12500}
               singleRow={true}
+              tabSize="sm"
             />
           </div>
           {/* Deposit Timing: 5th of the month rule */}

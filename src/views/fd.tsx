@@ -242,6 +242,7 @@ const FD: React.FC = () => {
                 { id: 'tgt', title: 'Target amount' },
               ]}
               singleRow={true}
+              tabSize="sm"
             />
             <ValuePicker
               className={styles.field}
@@ -253,7 +254,6 @@ const FD: React.FC = () => {
               title="Interest rate"
               titleStyle="merged"
               stepData={DEFAULT_RATE_STEPS}
-              tabs={[]}
               showWords={false}
               singleRow={true}
             />
@@ -265,7 +265,6 @@ const FD: React.FC = () => {
               title="Tenure"
               titleStyle="merged"
               stepData={getTenureStepData(rt.tenureFormat)}
-              tabs={[]}
               endAdornment={
                 <select
                   className={styles.tenureFormatSelect}

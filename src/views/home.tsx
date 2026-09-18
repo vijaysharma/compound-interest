@@ -155,16 +155,10 @@ const Home = () => {
             Power Parity in real time.
           </p>
           <div className={styles.heroActions}>
-            <Link
-              to="/sip-calculator"
-              className={styles.btnPrimary}
-            >
+            <Link to="/sip-calculator" className={styles.btnPrimary}>
               Open SIP Calculator &rarr;
             </Link>
-            <Link
-              to="/mutual-funds/lumpsum"
-              className={styles.btnOutline}
-            >
+            <Link to="/mutual-funds/lumpsum" className={styles.btnOutline}>
               Mutual Fund Engine
             </Link>
             <Link to="/fd-calculator" className={styles.btnGhost}>
@@ -215,16 +209,10 @@ const Home = () => {
                 onChange={(v) => {
                   const num = Math.max(0, parseInt(v, 10) || 0);
                   setMonthlySip(num);
-                  trackCalculatorEvent(
-                    'home_quick_sip',
-                    'slider_changed',
-                    'monthly_sip',
-                    num
-                  );
+                  trackCalculatorEvent('home_quick_sip', 'slider_changed', 'monthly_sip', num);
                 }}
                 currencySymbol={currencySymbol}
                 locale="en-IN"
-                tabs={[]}
                 stepRows={[
                   [
                     { id: 's1', label: '10K', value: 10000 },
@@ -251,12 +239,7 @@ const Home = () => {
                 onChange={(v) => {
                   const num = Math.max(0, parseFloat(v) || 0);
                   setExpectedRoi(num);
-                  trackCalculatorEvent(
-                    'home_quick_sip',
-                    'slider_changed',
-                    'roi',
-                    num
-                  );
+                  trackCalculatorEvent('home_quick_sip', 'slider_changed', 'roi', num);
                 }}
               />
               <ValuePicker
@@ -280,20 +263,13 @@ const Home = () => {
                 onChange={(v) => {
                   const num = Math.max(1, parseInt(v, 10) || 1);
                   setTenureYears(num);
-                  trackCalculatorEvent(
-                    'home_quick_sip',
-                    'slider_changed',
-                    'tenure_years',
-                    num
-                  );
+                  trackCalculatorEvent('home_quick_sip', 'slider_changed', 'tenure_years', num);
                 }}
               />
             </div>
             {/* Live Result Card */}
             <div className={styles.resultCard}>
-              <div className={styles.resultTag}>
-                Projected Maturity Value
-              </div>
+              <div className={styles.resultTag}>Projected Maturity Value</div>
               <div className={styles.resultAmount}>
                 {currencySymbol}
                 {quickCalc.maturityAmount.toLocaleString('en-IN')}
@@ -319,9 +295,7 @@ const Home = () => {
               </div>
               <div className={styles.multiplierRow}>
                 <span>Wealth Multiplier:</span>
-                <span className={styles.badgePrimary}>
-                  {quickCalc.wealthMultiple}x Capital
-                </span>
+                <span className={styles.badgePrimary}>{quickCalc.wealthMultiple}x Capital</span>
               </div>
               <div className={styles.resultCardActions}>
                 <Link to="/sip-calculator" className={styles.btnPrimary}>
@@ -352,13 +326,11 @@ const Home = () => {
                 </h3>
                 <p className={styles.pillarDesc}>
                   Dual-regime comparison (Old vs New) with Budget 2024 slab updates, capital gains
-                  rules, PPF EEE exemption, breakeven deductions, and personalized AI recommendations.
+                  rules, PPF EEE exemption, breakeven deductions, and personalized AI
+                  recommendations.
                 </p>
               </div>
-              <Link
-                to="/income-tax-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/income-tax-calculator" className={styles.pillarLink}>
                 Calculate &amp; Optimize Tax &rarr;
               </Link>
             </div>
@@ -369,13 +341,11 @@ const Home = () => {
                 </h3>
                 <p className={styles.pillarDesc}>
                   Calculate Public Provident Fund compounding with real historical interest rates
-                  declared by the Ministry of Finance, 5th-of-month banking rules, and 5-year extensions.
+                  declared by the Ministry of Finance, 5th-of-month banking rules, and 5-year
+                  extensions.
                 </p>
               </div>
-              <Link
-                to="/ppf-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/ppf-calculator" className={styles.pillarLink}>
                 Calculate PPF Growth &rarr;
               </Link>
             </div>
@@ -389,10 +359,7 @@ const Home = () => {
                   60% tax-free lump sum withdrawal, and monthly pension payouts under PFRDA rules.
                 </p>
               </div>
-              <Link
-                to="/nps-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/nps-calculator" className={styles.pillarLink}>
                 Plan NPS Retirement &rarr;
               </Link>
             </div>
@@ -406,10 +373,7 @@ const Home = () => {
                   benchmark growth, and visualize historical lumpsum and SIP performance.
                 </p>
               </div>
-              <Link
-                to="/mutual-funds/lumpsum"
-                className={styles.pillarLink}
-              >
+              <Link to="/mutual-funds/lumpsum" className={styles.pillarLink}>
                 Explore Mutual Funds &rarr;
               </Link>
             </div>
@@ -423,46 +387,35 @@ const Home = () => {
                   capital accumulation or monthly income sustainability.
                 </p>
               </div>
-              <Link
-                to="/sip-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/sip-calculator" className={styles.pillarLink}>
                 Explore Systematic Plans &rarr;
               </Link>
             </div>
             <div className={styles.pillarCard}>
               <div>
                 <h3 className={styles.pillarHeading}>
-                  <FiLayers className={styles.pillarIcon} /> Fixed &amp; Recurring
-                  Deposits
+                  <FiLayers className={styles.pillarIcon} /> Fixed &amp; Recurring Deposits
                 </h3>
                 <p className={styles.pillarDesc}>
                   High-precision compound interest calculator with support for monthly, quarterly,
                   semi-annual, and annual compounding frequencies.
                 </p>
               </div>
-              <Link
-                to="/fd-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/fd-calculator" className={styles.pillarLink}>
                 Explore Deposit Plans &rarr;
               </Link>
             </div>
             <div className={styles.pillarCard}>
               <div>
                 <h3 className={styles.pillarHeading}>
-                  <FiGlobe className={styles.pillarIcon} /> Purchasing Power Parity
-                  (PPP)
+                  <FiGlobe className={styles.pillarIcon} /> Purchasing Power Parity (PPP)
                 </h3>
                 <p className={styles.pillarDesc}>
                   Convert salary and living costs across 150+ countries using real World Bank PPP
                   conversion factors and currency mappings.
                 </p>
               </div>
-              <Link
-                to="/ppp-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/ppp-calculator" className={styles.pillarLink}>
                 Calculate Global PPP &rarr;
               </Link>
             </div>
@@ -476,28 +429,21 @@ const Home = () => {
                   inflation data and forward forecasts.
                 </p>
               </div>
-              <Link
-                to="/inflation-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/inflation-calculator" className={styles.pillarLink}>
                 Explore Inflation Rates &rarr;
               </Link>
             </div>
             <div className={styles.pillarCard}>
               <div>
                 <h3 className={styles.pillarHeading}>
-                  <FiPercent className={styles.pillarIcon} /> EMI &amp; Loan
-                  Amortization
+                  <FiPercent className={styles.pillarIcon} /> EMI &amp; Loan Amortization
                 </h3>
                 <p className={styles.pillarDesc}>
                   Calculate home, personal, or vehicle loan EMIs with full month-by-month principal
                   vs interest repayment breakdown schedules.
                 </p>
               </div>
-              <Link
-                to="/emi-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/emi-calculator" className={styles.pillarLink}>
                 Calculate Loan EMI &rarr;
               </Link>
             </div>
@@ -525,10 +471,7 @@ const Home = () => {
                   time intervals from any date.
                 </p>
               </div>
-              <Link
-                to="/date-calculator"
-                className={styles.pillarLink}
-              >
+              <Link to="/date-calculator" className={styles.pillarLink}>
                 Open Date Calculator &rarr;
               </Link>
             </div>
@@ -542,10 +485,7 @@ const Home = () => {
                   bank markups, and instant bidirectional calculation.
                 </p>
               </div>
-              <Link
-                to="/currency-converter"
-                className={styles.pillarLink}
-              >
+              <Link to="/currency-converter" className={styles.pillarLink}>
                 Open Currency Converter &rarr;
               </Link>
             </div>
@@ -556,9 +496,7 @@ const Home = () => {
       <section className={styles.whySection}>
         <div className={styles.pillarsInner}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>
-              Why Indian Investors Choose Rupee Calculator
-            </h2>
+            <h2 className={styles.sectionTitle}>Why Indian Investors Choose Rupee Calculator</h2>
             <p className={styles.sectionSubtitle}>
               The premier privacy-first financial simulation suite in India.
             </p>
@@ -608,19 +546,12 @@ const Home = () => {
           </div>
           <div className={styles.faqList}>
             {homeFaqs.map((faq, idx) => (
-              <details
-                key={idx}
-                className={styles.faqItem}
-              >
+              <details key={idx} className={styles.faqItem}>
                 <summary className={styles.faqSummary}>
                   <span>{faq.question}</span>
-                  <span className={styles.faqArrow}>
-                    &darr;
-                  </span>
+                  <span className={styles.faqArrow}>&darr;</span>
                 </summary>
-                <p className={styles.faqAnswer}>
-                  {faq.answer}
-                </p>
+                <p className={styles.faqAnswer}>{faq.answer}</p>
               </details>
             ))}
           </div>
@@ -637,10 +568,7 @@ const Home = () => {
             <Link to="/sip-calculator" className={styles.btnCtaSecondary}>
               Start Calculating Now &rarr;
             </Link>
-            <Link
-              to="/fd-calculator"
-              className={styles.btnCtaOutline}
-            >
+            <Link to="/fd-calculator" className={styles.btnCtaOutline}>
               Deposit &amp; EMI Tools &rarr;
             </Link>
           </div>

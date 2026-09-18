@@ -261,6 +261,7 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
                 { id: 'tgt', title: 'Target amount' },
               ]}
               singleRow={true}
+              tabSize="sm"
             />
             <ValuePicker
               className={styles.field}
@@ -272,7 +273,6 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
               title="Expected return rate (p.a)"
               titleStyle="merged"
               stepData={DEFAULT_RATE_STEPS}
-              tabs={[]}
               showWords={false}
               singleRow={true}
             />
@@ -284,7 +284,6 @@ const FixedRateSIP = ({ className, title }: { className?: string; title?: string
               title="Time period"
               titleStyle="merged"
               stepData={getTenureStepData(rt.tenureFormat)}
-              tabs={[]}
               endAdornment={
                 <select
                   className={styles.tenureFormatSelect}

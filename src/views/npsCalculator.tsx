@@ -214,7 +214,6 @@ const NpsCalculator: React.FC = () => {
               title="Expected Return (CAGR %)"
               titleStyle="merged"
               stepData={DEFAULT_RATE_STEPS}
-              tabs={[]}
               showWords={false}
               singleRow={true}
             />

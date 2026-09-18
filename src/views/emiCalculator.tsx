@@ -656,7 +656,6 @@ const EmiCalculator: React.FC = () => {
               title="Loan amount"
               titleStyle="merged"
               stepData={stepData}
-              tabs={[]}
               singleRow={true}
             />
             <ValuePicker
@@ -669,7 +668,6 @@ const EmiCalculator: React.FC = () => {
               title="Interest rate"
               titleStyle="merged"
               stepData={DEFAULT_RATE_STEPS}
-              tabs={[]}
               showWords={false}
               singleRow={true}
             />
@@ -681,12 +679,13 @@ const EmiCalculator: React.FC = () => {
               title="Loan tenure"
               titleStyle="merged"
               stepData={getTenureStepData(rt.tenureFormat)}
-              tabs={[]}
               endAdornment={
                 <select
                   className={styles.tenureFormatSelect}
                   value={rt.tenureFormat}
-                  onChange={(e) => setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))}
+                  onChange={(e) =>
+                    setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))
+                  }
                   aria-label="Tenure Unit"
                 >
                   <option value="y">Years</option>

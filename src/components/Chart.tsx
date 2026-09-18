@@ -112,7 +112,11 @@ const Chart = ({
   endDate,
   onPresetChange,
 }: ChartProps) => {
-  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const chartTheme = useChartTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [userZoom, setUserZoom] = useState<{ start: string; end: string } | 'all' | null>(null);
@@ -349,8 +353,12 @@ const Chart = ({
     }));
     const isAutoHeight = autoHeight || height === 'auto';
     const resolvedMinHeight = chartTheme.isMobile
-      ? (minHeight > 0 ? Math.min(minHeight, 240) : 240)
-      : (minHeight > 0 ? minHeight : 280);
+      ? minHeight > 0
+        ? Math.min(minHeight, 240)
+        : 240
+      : minHeight > 0
+        ? minHeight
+        : 280;
     const resolvedHeight = typeof height === 'number' ? height : resolvedMinHeight;
     return {
       background: {
@@ -371,9 +379,7 @@ const Chart = ({
         },
       },
       data: chartData,
-      ...(isAutoHeight
-        ? { minHeight: resolvedMinHeight }
-        : { height: resolvedHeight }),
+      ...(isAutoHeight ? { minHeight: resolvedMinHeight } : { height: resolvedHeight }),
       legend: {
         enabled: false,
         position: 'bottom',
@@ -407,13 +413,13 @@ const Chart = ({
             enabled: true,
             stroke: chartTheme.axisLine,
           },
-          gridLine: {
-            enabled: !chartTheme.isMobile,
-            style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
-          },
-          tick: {
-            stroke: chartTheme.axisLine,
-          },
+          // gridLine: {
+          //   enabled: !chartTheme.isMobile,
+          //   style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
+          // },
+          // tick: {
+          //   stroke: chartTheme.axisLine,
+          // },
           label: {
             enabled: false,
             rotation: 0,
@@ -430,12 +436,12 @@ const Chart = ({
             enabled: true,
             stroke: chartTheme.axisLine,
           },
-          gridLine: {
-            style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
-          },
-          tick: {
-            stroke: chartTheme.axisLine,
-          },
+          // gridLine: {
+          //   style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
+          // },
+          // tick: {
+          //   stroke: chartTheme.axisLine,
+          // },
           // Wider minimum gap on mobile so the compacted currency labels do not
           // collide in the narrow gutter.
           interval: {
@@ -451,63 +457,105 @@ const Chart = ({
         },
       },
     };
-  }, [datasets, initialInvestment, dataMode, height, autoHeight, minHeight, activeDates, chartTheme]);
-  const targetHeight = typeof height === 'number'
-    ? height
-    : (chartTheme.isMobile ? (minHeight > 0 ? Math.min(minHeight, 240) : 240) : (minHeight > 0 ? minHeight : 280));
+  }, [
+    datasets,
+    initialInvestment,
+    dataMode,
+    height,
+    autoHeight,
+    minHeight,
+    activeDates,
+    chartTheme,
+  ]);
+  const targetHeight =
+    typeof height === 'number'
+      ? height
+      : chartTheme.isMobile
+        ? minHeight > 0
+          ? Math.min(minHeight, 240)
+          : 240
+        : minHeight > 0
+          ? minHeight
+          : 280;
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
   if (isLoading) {
     return (
-      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
+      <div
+        className={`${className || ''} ${styles.emptyContainer}`}
+        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
+      >
         <Spinner size="md" label={loadingLabel || 'Loading historical NAV data...'} />
       </div>
     );
   }
   if (datasets.length > 0 && !hasAnyData) {
     return (
-      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
+      <div
+        className={`${className || ''} ${styles.emptyContainer}`}
+        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
+      >
         <span className={styles.emptyText}>No NAV data available for the selected dates</span>
       </div>
     );
   }
   if (datasets.length === 0) {
     return (
-      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
-        <span className={styles.emptyText}>{emptyMessage || 'Select a mutual fund to view trajectory'}</span>
+      <div
+        className={`${className || ''} ${styles.emptyContainer}`}
+        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
+      >
+        <span className={styles.emptyText}>
+          {emptyMessage || 'Select a mutual fund to view trajectory'}
+        </span>
       </div>
     );
   }
   if (allSortedDates.length === 0) {
     return (
-      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
+      <div
+        className={`${className || ''} ${styles.emptyContainer}`}
+        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
+      >
         <span className={styles.emptyText}>No NAV history found for the selected dates</span>
       </div>
     );
   }
   if (initialInvestment <= 0) {
     return (
-      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
+      <div
+        className={`${className || ''} ${styles.emptyContainer}`}
+        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
+      >
         <span className={styles.emptyText}>Enter an investment amount to view growth</span>
       </div>
     );
   }
   if (!chartOptions) {
     return (
-      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
+      <div
+        className={`${className || ''} ${styles.emptyContainer}`}
+        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
+      >
         <Spinner size="sm" label="Preparing chart..." />
       </div>
     );
   }
   if (!mounted) {
     return (
-      <div className={`${className || ''} ${styles.emptyContainer}`} style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}>
+      <div
+        className={`${className || ''} ${styles.emptyContainer}`}
+        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
+      >
         <Spinner size="sm" label="Loading chart..." />
       </div>
     );
   }
   const hasZoomToolbar = enableZoom && allSortedDates.length > 5 && (showPresets || zoomRange);
   return (
-    <div className={`${className || ''} ${styles.chartWrapper}`} style={{ minHeight: `${targetHeight}px` }}>
+    <div
+      className={`${className || ''} ${styles.chartWrapper}`}
+      style={{ minHeight: `${targetHeight}px` }}
+    >
       {hasZoomToolbar && (
         <div className={styles.zoomToolbar}>
           {showPresets && (

@@ -191,7 +191,10 @@ const loadSavedState = (): SavedState => {
             schemeName: fund.schemeName,
           }))
       : [];
-    let duration = typeof parsed.duration === 'string' && parsed.duration ? parsed.duration : defaultState.duration;
+    let duration =
+      typeof parsed.duration === 'string' && parsed.duration
+        ? parsed.duration
+        : defaultState.duration;
     if (parseInt(duration, 10) < 20) {
       duration = '740';
     }
@@ -451,8 +454,8 @@ const SIP = ({
       if (reqDateMs > 0) {
         let latestDateMs = 0;
         for (const n of data) {
-           const time = parseNavDate(n.date).getTime();
-           if (time > latestDateMs) latestDateMs = time;
+          const time = parseNavDate(n.date).getTime();
+          if (time > latestDateMs) latestDateMs = time;
         }
         if (reqDateMs > latestDateMs) return true;
       }
@@ -474,7 +477,10 @@ const SIP = ({
           ...previous,
           ...batchResults,
         }));
-        const activeCode = selectedCodeRef.current && selectedCodeRef.current !== '0' ? selectedCodeRef.current : pinnedFunds[0]?.schemeCode;
+        const activeCode =
+          selectedCodeRef.current && selectedCodeRef.current !== '0'
+            ? selectedCodeRef.current
+            : pinnedFunds[0]?.schemeCode;
         if (activeCode && batchResults[activeCode] && batchResults[activeCode].length > 0) {
           setJsonNavData(batchResults[activeCode]);
           if (!selectedCodeRef.current || selectedCodeRef.current === '0') {
@@ -539,7 +545,10 @@ const SIP = ({
       return;
     }
     const durationDays = parseInt(duration, 10);
-    const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
+    const durationIndex = Math.max(
+      Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740,
+      0
+    );
     const index = Math.min(durationIndex, navSource.length - 1);
     const start = navSource[index];
     const end = navSource[0];
@@ -560,7 +569,10 @@ const SIP = ({
       return;
     }
     const durationDays = parseInt(value, 10);
-    const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
+    const durationIndex = Math.max(
+      Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740,
+      0
+    );
     const index = Math.min(durationIndex, navSource.length - 1);
     const start = navSource[index];
     const end = navSource[0];
@@ -629,7 +641,10 @@ const SIP = ({
       setJsonNavData(existingNav);
       if (!startDate || !endDate) {
         const durationDays = parseInt(duration, 10);
-        const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
+        const durationIndex = Math.max(
+          Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740,
+          0
+        );
         const index = Math.min(durationIndex, existingNav.length - 1);
         const start = existingNav[index];
         const end = existingNav[0];
@@ -648,7 +663,10 @@ const SIP = ({
       setJsonNavData(navData);
       if (!startDate || !endDate) {
         const durationDays = parseInt(duration, 10);
-        const durationIndex = Math.max(Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740, 0);
+        const durationIndex = Math.max(
+          Number.isFinite(durationDays) && durationDays >= 20 ? durationDays : 740,
+          0
+        );
         const index = Math.min(durationIndex, navData.length - 1);
         const start = navData[index];
         const end = navData[0];
@@ -877,7 +895,14 @@ const SIP = ({
           </span>
         </div>
         {!start || !end ? (
-          <div style={{ padding: '1.25rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              padding: '1.25rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <Spinner size="sm" label="Loading NAV data..." />
           </div>
         ) : (
@@ -890,7 +915,9 @@ const SIP = ({
               </div>
               <div
                 className={
-                  parseFloat(end.nav) >= parseFloat(start.nav) ? styles.textSuccess : styles.textError
+                  parseFloat(end.nav) >= parseFloat(start.nav)
+                    ? styles.textSuccess
+                    : styles.textError
                 }
               >
                 <div className={styles.statTitle}>{end.date}</div>
@@ -917,7 +944,9 @@ const SIP = ({
                 </span>
               </>
             )}
-            <div className={`${styles.statRow} ${profitAmount >= 0 ? styles.textSuccess : styles.textError}`}>
+            <div
+              className={`${styles.statRow} ${profitAmount >= 0 ? styles.textSuccess : styles.textError}`}
+            >
               {profitAmount < 0 ? '-' : '+'}
               &nbsp;₹
               {Math.abs(profitAmount).toLocaleString('en-IN')}
@@ -962,12 +991,8 @@ const SIP = ({
         schema={liveSipSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          AMFI Live Feed &bull; True XIRR Backtesting
-        </div>
-        <h1 className={styles.title}>
-          Mutual Fund SIP Historical Backtest &amp; XIRR Calculator
-        </h1>
+        <div className={styles.badge}>AMFI Live Feed &bull; True XIRR Backtesting</div>
+        <h1 className={styles.title}>Mutual Fund SIP Historical Backtest &amp; XIRR Calculator</h1>
         <p className={styles.subtitle}>
           Simulate actual historical SIP returns, average purchase price, unit accumulation, and
           internal rate of return (XIRR).
@@ -983,11 +1008,7 @@ const SIP = ({
             >
               Select mutual funds ({pinnedFunds.length}/8)
             </button>
-            <button
-              type="button"
-              className={styles.outlineButton}
-              onClick={toggleShowDate}
-            >
+            <button type="button" className={styles.outlineButton} onClick={toggleShowDate}>
               {showDate ? 'Time Slots' : 'Date Picker'}
             </button>
             <button
@@ -1166,12 +1187,9 @@ const SIP = ({
             title="Monthly"
             singleRow={true}
             stepData={DEFAULT_AMOUNT_STEPS}
-            tabs={[]}
           />
           <div className={styles.joinRow}>
-            <span className={styles.joinLabel}>
-              Invested on
-            </span>
+            <span className={styles.joinLabel}>Invested on</span>
             <select
               className={styles.joinSelect}
               value={dayOfMonth}
@@ -1183,9 +1201,7 @@ const SIP = ({
                 </option>
               ))}
             </select>
-            <span className={styles.joinLabel}>
-              Yearly increase
-            </span>
+            <span className={styles.joinLabel}>Yearly increase</span>
             <select
               className={styles.joinSelect}
               value={investmentStepUp}
@@ -1290,7 +1306,8 @@ const SIP = ({
             </div>
             <h3 className={styles.emptyStateTitle}>Select Mutual Funds to Backtest</h3>
             <p className={styles.emptyStateDescription}>
-              Compare historical SIP performance, XIRR returns, and compounding growth on live AMFI data.
+              Compare historical SIP performance, XIRR returns, and compounding growth on live AMFI
+              data.
             </p>
             <button
               type="button"
@@ -1303,10 +1320,7 @@ const SIP = ({
           </div>
         )}
       </div>
-      <MutualFundDetailModal
-        fund={detailModalFund}
-        onClose={() => setDetailModalFund(null)}
-      />
+      <MutualFundDetailModal fund={detailModalFund} onClose={() => setDetailModalFund(null)} />
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
         onClose={() => setIsFundSelectorOpen(false)}

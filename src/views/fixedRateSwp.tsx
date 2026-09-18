@@ -224,7 +224,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               onChange={setPa}
               title="Invested Amount"
               stepData={invStepData}
-              tabs={[]}
               singleRow={true}
             />
             <ValuePicker
@@ -233,7 +232,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               onChange={setWa}
               stepData={wdStepData}
               title="Withdrawal amount per month"
-              tabs={[]}
               singleRow={true}
             />
             <ValuePicker
@@ -246,7 +244,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               title="Expected return rate (p.a.)"
               titleStyle="merged"
               stepData={DEFAULT_RATE_STEPS}
-              tabs={[]}
               showWords={false}
               singleRow={true}
             />
@@ -258,7 +255,6 @@ const FixedRateSWP = ({ className, title }: { className?: string; title?: string
               title="Time period"
               titleStyle="merged"
               stepData={getTenureStepData(t.tenureFormat)}
-              tabs={[]}
               endAdornment={
                 <select
                   className={styles.tenureFormatSelect}

@@ -223,7 +223,11 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   &:hover:not(.tabActive):not(:disabled) {
     color: $color-text-primary;
-    background-color: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg));
+    background-color: color-mix(
+      in srgb,
+      var(--color-primary) 5%,
+      var(--color-bg)
+    );
   }
 
   &.tabActive {
@@ -436,8 +440,13 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   height: 38px;
   min-width: 38px;
   border-radius: $btn-radius;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
-  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary) 4%,
+    var(--color-bg)
+  );
   font-family: $font-family;
   font-size: $font-size-button-mobile;
   line-height: 1;
@@ -468,27 +477,45 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
 // Clear button ('C')
 .clearBtn {
-  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary) 4%,
+    var(--color-bg)
+  );
   color: $color-text-primary;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+    background-color: color-mix(
+      in srgb,
+      var(--color-primary) 10%,
+      var(--color-bg)
+    );
   }
 }
 
 // Operation increment button ('+')
 .plusBtn {
-  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary) 4%,
+    var(--color-bg)
+  );
   color: $color-text-primary;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+    background-color: color-mix(
+      in srgb,
+      var(--color-primary) 10%,
+      var(--color-bg)
+    );
   }
 
   &.activeOp {
@@ -506,14 +533,23 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
 // Operation decrement button ('-')
 .minusBtn {
-  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary) 4%,
+    var(--color-bg)
+  );
   color: $color-text-primary;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
 
   &:hover:not(:disabled) {
     border-color: $color-secondary;
     color: $color-secondary;
-    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+    background-color: color-mix(
+      in srgb,
+      var(--color-primary) 10%,
+      var(--color-bg)
+    );
   }
 
   &.activeOp {
@@ -566,7 +602,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   // Separator between rows
   &:not(:last-child) {
-    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
   }
 }
 
@@ -587,23 +624,36 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   line-height: $font-line-height-button-sm-mobile;
   font-weight: 600;
   color: $color-primary;
-  background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary) 4%,
+    var(--color-bg)
+  );
   transition:
     background-color $transition-fast,
     color $transition-fast;
 
   // Separator between cells
   &:not(:last-child) {
-    border-right: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
+    border-right: 1px solid
+      color-mix(in srgb, var(--color-primary) 18%, var(--color-bg));
   }
 
   &:hover:not(:disabled) {
     color: $color-secondary;
-    background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg));
+    background-color: color-mix(
+      in srgb,
+      var(--color-primary) 10%,
+      var(--color-bg)
+    );
   }
 
   &:active:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-bg));
+    background-color: color-mix(
+      in srgb,
+      var(--color-primary) 22%,
+      var(--color-bg)
+    );
   }
 
   @include vp-focus-ring(-2px);

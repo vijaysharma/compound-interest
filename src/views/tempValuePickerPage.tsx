@@ -57,9 +57,8 @@ export const TempValuePickerPage: React.FC = () => {
         <span className={styles.badge}>Component Preview</span>
         <h1 className={styles.pageTitle}>ValuePicker Component</h1>
         <p className={styles.pageSubtitle}>
-          Mobile-first, fully responsive numeric selector styled with modular SCSS. Recreated
-          from the reference design with dual-mode tabs, quick-step grid, and real-time words
-          formatting.
+          Mobile-first, fully responsive numeric selector styled with modular SCSS. Recreated from
+          the reference design with dual-mode tabs, quick-step grid, and real-time words formatting.
         </p>
         {/* Responsive Viewport Simulator Controls */}
         <div className={styles.viewportSwitcher} role="group" aria-label="Viewport Preview Mode">
@@ -112,7 +111,10 @@ export const TempValuePickerPage: React.FC = () => {
                 currencySymbol="₹"
                 locale="en-IN"
                 showWords={true}
-                layout={viewport === 'mobile' ? 'mobile' : viewport === 'desktop' ? 'desktop' : 'auto'}
+                layout={
+                  viewport === 'mobile' ? 'mobile' : viewport === 'desktop' ? 'desktop' : 'auto'
+                }
+                tabSize="sm"
               />
               {/* State Inspector */}
               <div className={styles.inspectorCard}>
@@ -151,7 +153,6 @@ export const TempValuePickerPage: React.FC = () => {
                 title="Monthly SIP Contribution"
                 value={sipValue}
                 onChange={setSipValue}
-                tabs={[]}
                 currencySymbol="₹"
                 locale="en-IN"
                 showWords={true}
@@ -165,7 +166,6 @@ export const TempValuePickerPage: React.FC = () => {
                 title="Target Retirement Corpus ($)"
                 value={usdValue}
                 onChange={setUsdValue}
-                tabs={[]}
                 stepRows={usdSteps}
                 currencySymbol="$"
                 locale="en-US"
@@ -195,14 +195,15 @@ export const TempValuePickerPage: React.FC = () => {
                 showWords={false}
                 onChange={setDemoRoi}
               />
-              <div className={styles.variationResultText}>
-                Current ROI: {demoRoi}%
-              </div>
+              <div className={styles.variationResultText}>Current ROI: {demoRoi}%</div>
             </div>
             {/* Case 2: Tenure Stepper */}
             <div className={styles.variationCard}>
               <h3>Case 2: Tenure Picker</h3>
-              <p>Generic ValuePicker with format unit selector in endAdornment and quick tenure steps.</p>
+              <p>
+                Generic ValuePicker with format unit selector in endAdornment and quick tenure
+                steps.
+              </p>
               <ValuePicker
                 title="Tenure"
                 titleStyle="merged"
@@ -286,7 +287,7 @@ export const TempValuePickerPage: React.FC = () => {
         <section>
           <h2 className={styles.sectionTitle}>How to Integrate Generic ValuePicker</h2>
           <pre className={styles.codeSnippet}>
-{`// 1. Amount Picker (Classic currency with tabs & quick steps):
+            {`// 1. Amount Picker (Classic currency with tabs & quick steps):
 <ValuePicker value={amount} onChange={setAmount} tabs={tabs} currencySymbol="₹" />
 
 // 2. Rate of Interest (%):

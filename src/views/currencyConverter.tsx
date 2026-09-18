@@ -203,7 +203,8 @@ const CurrencyConverter = () => {
       if (!code || code.length !== 3) continue;
       const country = cleanCountryName(item.name);
       if (!map.has(country)) {
-        const locale = code === 'INR' || IndianFormat.includes(item.currency_code) ? 'en-IN' : 'en-US';
+        const locale =
+          code === 'INR' || IndianFormat.includes(item.currency_code) ? 'en-IN' : 'en-US';
         const symbol = getCurrencySymbol(locale, code) || code;
         const name = CURRENCY_NAME_MAP[code] || item.name;
         map.set(country, {
@@ -356,12 +357,8 @@ const CurrencyConverter = () => {
         schema={currencyConverterSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          Forex &bull; Live Mid-Market Rates
-        </div>
-        <h1 className={styles.title}>
-          Live Currency Converter &amp; Exchange Rates
-        </h1>
+        <div className={styles.badge}>Forex &bull; Live Mid-Market Rates</div>
+        <h1 className={styles.title}>Live Currency Converter &amp; Exchange Rates</h1>
         <p className={styles.subtitle}>
           Convert 160+ global currencies in real time with zero bank markup.
         </p>
@@ -372,7 +369,7 @@ const CurrencyConverter = () => {
             variant="paired"
             sourceBadgeText="Source"
             targetBadgeText="Target"
-            sourceSlot={(
+            sourceSlot={
               <CountrySelect
                 label="source"
                 value={srcCountry}
@@ -380,8 +377,8 @@ const CurrencyConverter = () => {
                 onChange={setSrcCountry}
                 getSecondaryText={(country) => countryData.get(country)?.code}
               />
-            )}
-            targetSlot={(
+            }
+            targetSlot={
               <CountrySelect
                 label="target"
                 value={tgtCountry}
@@ -389,15 +386,11 @@ const CurrencyConverter = () => {
                 onChange={setTgtCountry}
                 getSecondaryText={(country) => countryData.get(country)?.code}
               />
-            )}
+            }
           />
           {/* Swap link */}
           <div className={styles.swapRow}>
-            <button
-              type="button"
-              onClick={handleSwapCountries}
-              className={styles.swapBtn}
-            >
+            <button type="button" onClick={handleSwapCountries} className={styles.swapBtn}>
               <FiRepeat />
               <span>Swap source &amp; target countries</span>
             </button>
@@ -407,7 +400,6 @@ const CurrencyConverter = () => {
             onChange={setAmount}
             className={styles.amountField}
             title="Amount"
-            tabs={[]}
             stepData={[
               {
                 id: 'ip1',
@@ -431,6 +423,7 @@ const CurrencyConverter = () => {
             ]}
             currencySymbol={sourceCurrency.symbol}
             locale={sourceCurrency.locale}
+            tabSize="sm"
           />
           {/* Error notification */}
           {error && (
@@ -502,12 +495,10 @@ const CurrencyConverter = () => {
                   Need to compare purchasing power instead of exchange rates?
                 </h3>
                 <p className={styles.promoDesc}>
-                  Nominal exchange rates don&apos;t account for local costs of living. Use our Purchasing Power Parity (PPP) calculator to see real living standard equivalents.
+                  Nominal exchange rates don&apos;t account for local costs of living. Use our
+                  Purchasing Power Parity (PPP) calculator to see real living standard equivalents.
                 </p>
-                <Link
-                  to="/ppp-calculator"
-                  className={styles.promoLink}
-                >
+                <Link to="/ppp-calculator" className={styles.promoLink}>
                   <span>Compare salaries using PPP Calculator</span>
                   <FiArrowRight />
                 </Link>

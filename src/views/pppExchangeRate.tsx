@@ -235,10 +235,13 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
       : 0;
     const primarySub =
       hasRates && convertedToSource > 0
-        ? `(${sourceCurrencySymbol} ${convertedToSource.toLocaleString(source.currencyCode === 'en-IN' ? 'en-IN' : 'en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })})`
+        ? `(${sourceCurrencySymbol} ${convertedToSource.toLocaleString(
+            source.currencyCode === 'en-IN' ? 'en-IN' : 'en-US',
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          )})`
         : '';
     return {
       tgtAmt,
@@ -296,9 +299,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
         schema={pppSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          Global Economics &bull; World Bank Verified Data
-        </div>
+        <div className={styles.badge}>Global Economics &bull; World Bank Verified Data</div>
         <h1 className={styles.title}>
           Purchasing Power Parity (PPP) &amp; Global Salary Calculator
         </h1>
@@ -314,7 +315,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
               variant="paired"
               sourceBadgeText="Source"
               targetBadgeText="Target"
-              sourceSlot={(
+              sourceSlot={
                 <CountrySelect
                   label="source"
                   value={srcCountry}
@@ -322,8 +323,8 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
                   onChange={setSrcCountry}
                   getSecondaryText={(country) => data[country]?.currencyName}
                 />
-              )}
-              targetSlot={(
+              }
+              targetSlot={
                 <CountrySelect
                   label="target"
                   value={tgtCountry}
@@ -331,15 +332,11 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
                   onChange={setTgtCountry}
                   getSecondaryText={(country) => data[country]?.currencyName}
                 />
-              )}
+              }
             />
             {/* Swap link */}
             <div className={styles.swapRow}>
-              <button
-                type="button"
-                onClick={handleSwapCountries}
-                className={styles.swapBtn}
-              >
+              <button type="button" onClick={handleSwapCountries} className={styles.swapBtn}>
                 <FiRepeat className={styles.swapIcon} />
                 <span>Swap source &amp; target countries</span>
               </button>
@@ -349,7 +346,6 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
               onChange={setSrcAmt}
               className={styles.fieldTight}
               title="Amount"
-              tabs={[]}
               stepData={[
                 {
                   id: 'ip1',
@@ -399,10 +395,7 @@ const PPPExchangeRate = ({ className, title }: { className?: string; title?: str
               <span className={styles.promoText}>
                 Looking for pure real-time foreign exchange rates across 160+ world currencies?
               </span>
-              <Link
-                to="/currency-converter"
-                className={styles.promoLink}
-              >
+              <Link to="/currency-converter" className={styles.promoLink}>
                 <span>Try Currency Converter &rarr;</span>
               </Link>
             </div>

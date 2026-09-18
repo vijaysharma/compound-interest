@@ -468,8 +468,8 @@ const SWP = ({
       if (reqDateMs > 0) {
         let latestDateMs = 0;
         for (const n of data) {
-           const time = parseNavDate(n.date).getTime();
-           if (time > latestDateMs) latestDateMs = time;
+          const time = parseNavDate(n.date).getTime();
+          if (time > latestDateMs) latestDateMs = time;
         }
         if (reqDateMs > latestDateMs) return true;
       }
@@ -491,7 +491,10 @@ const SWP = ({
           ...previous,
           ...batchResults,
         }));
-        const activeCode = selectedCodeRef.current && selectedCodeRef.current !== '0' ? selectedCodeRef.current : pinnedFunds[0]?.schemeCode;
+        const activeCode =
+          selectedCodeRef.current && selectedCodeRef.current !== '0'
+            ? selectedCodeRef.current
+            : pinnedFunds[0]?.schemeCode;
         if (activeCode && batchResults[activeCode] && batchResults[activeCode].length > 0) {
           setJsonNavData(batchResults[activeCode]);
           if (!selectedCodeRef.current || selectedCodeRef.current === '0') {
@@ -838,7 +841,14 @@ const SWP = ({
           </span>
         </div>
         {!start || !end ? (
-          <div style={{ padding: '1.25rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              padding: '1.25rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <Spinner size="sm" label="Loading NAV data..." />
           </div>
         ) : (
@@ -851,7 +861,9 @@ const SWP = ({
               </div>
               <div
                 className={
-                  parseFloat(end.nav) >= parseFloat(start.nav) ? styles.textSuccess : styles.textError
+                  parseFloat(end.nav) >= parseFloat(start.nav)
+                    ? styles.textSuccess
+                    : styles.textError
                 }
               >
                 <div className={styles.statTitle}>{end.date}</div>
@@ -872,9 +884,7 @@ const SWP = ({
               {Math.round(totalWithdrawn ?? 0).toLocaleString('en-IN')}
             </div>
             <div className={`${styles.statValueLg} ${styles.textPrimary}`}>
-              <div className={styles.statTitle}>
-                Last Withdrawal {lastWithdrawalDate ?? 'N/A'}
-              </div>
+              <div className={styles.statTitle}>Last Withdrawal {lastWithdrawalDate ?? 'N/A'}</div>
               {lastWithdrawalAmount === undefined
                 ? 'N/A'
                 : Math.round(lastWithdrawalAmount).toLocaleString('en-IN')}
@@ -912,12 +922,8 @@ const SWP = ({
         schema={liveSwpSchema}
       />
       <header className={styles.header}>
-        <div className={styles.badge}>
-          Retirement Engine &bull; AMFI Historical Backtest
-        </div>
-        <h1 className={styles.title}>
-          Mutual Fund SWP Retirement Backtesting Engine
-        </h1>
+        <div className={styles.badge}>Retirement Engine &bull; AMFI Historical Backtest</div>
+        <h1 className={styles.title}>Mutual Fund SWP Retirement Backtesting Engine</h1>
         <p className={styles.subtitle}>
           Backtest systematic monthly withdrawals, step-up pension payouts, and residual portfolio
           longevity using live AMFI NAV histories.
@@ -958,7 +964,6 @@ const SWP = ({
             title="Lump Sum Investment"
             singleRow={true}
             stepData={DEFAULT_AMOUNT_STEPS}
-            tabs={[]}
           />
           {jsonNavData.length > 0 && (
             <ValuePicker
@@ -980,12 +985,9 @@ const SWP = ({
             title="Monthly Withdrawals"
             singleRow={true}
             stepData={DEFAULT_AMOUNT_STEPS}
-            tabs={[]}
           />
           <div className={styles.joinRow}>
-            <span className={styles.joinLabel}>
-              Withdrawal on
-            </span>
+            <span className={styles.joinLabel}>Withdrawal on</span>
             <select
               className={styles.joinSelect}
               value={dayOfMonth}
@@ -997,9 +999,7 @@ const SWP = ({
                 </option>
               ))}
             </select>
-            <span className={styles.joinLabel}>
-              Yearly increase
-            </span>
+            <span className={styles.joinLabel}>Yearly increase</span>
             <select
               className={styles.joinSelect}
               value={investmentStepUp}
@@ -1102,7 +1102,8 @@ const SWP = ({
             </div>
             <h3 className={styles.emptyStateTitle}>Select Mutual Funds to Backtest SWP</h3>
             <p className={styles.emptyStateDescription}>
-              Compare historical monthly SWP cashflows, remaining portfolio values, and returns on live AMFI data.
+              Compare historical monthly SWP cashflows, remaining portfolio values, and returns on
+              live AMFI data.
             </p>
             <button
               type="button"
@@ -1115,10 +1116,7 @@ const SWP = ({
           </div>
         )}
       </div>
-      <MutualFundDetailModal
-        fund={detailModalFund}
-        onClose={() => setDetailModalFund(null)}
-      />
+      <MutualFundDetailModal fund={detailModalFund} onClose={() => setDetailModalFund(null)} />
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
         onClose={() => setIsFundSelectorOpen(false)}

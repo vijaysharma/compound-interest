@@ -4,7 +4,13 @@ import dynamic from 'next/dynamic';
 import { MFJSONType, MFType, NavType } from '../types/types';
 import JoinedButtonGroup from '../components/JoinedButtonGroup';
 import ValuePicker from '../components/ValuePicker';
-import { getDuration, getNearest, navDateToISO, parseAnyDate, parseNavDate } from '../utilities/utility';
+import {
+  getDuration,
+  getNearest,
+  navDateToISO,
+  parseAnyDate,
+  parseNavDate,
+} from '../utilities/utility';
 import { getTodayISO, resolveDateRange } from '../utilities/dateGuards';
 import { fetchAllMfs, fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../data/api_data';
 import MutualFundSelectorModal from '../components/MutualFundSelectorModal';
@@ -422,8 +428,8 @@ const Lumpsum = ({
       if (reqDateMs > 0) {
         let latestDateMs = 0;
         for (const n of data) {
-           const time = parseNavDate(n.date).getTime();
-           if (time > latestDateMs) latestDateMs = time;
+          const time = parseNavDate(n.date).getTime();
+          if (time > latestDateMs) latestDateMs = time;
         }
         if (reqDateMs > latestDateMs) return true;
       }
@@ -832,7 +838,14 @@ const Lumpsum = ({
           </span>
         </div>
         {!start || !end ? (
-          <div style={{ padding: '1.25rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              padding: '1.25rem 0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <Spinner size="sm" label="Loading NAV data..." />
           </div>
         ) : (
@@ -1109,7 +1122,6 @@ const Lumpsum = ({
             onChange={setInvAmt}
             className={styles.fieldTight}
             title="Invested"
-            tabs={[]}
           />
         </div>
         <div className={`${styles.outputCol} ${styles.lumpsumOutputCol}`}>
@@ -1210,7 +1222,8 @@ const Lumpsum = ({
             </div>
             <h3 className={styles.emptyStateTitle}>Select Mutual Funds to Backtest Lumpsum</h3>
             <p className={styles.emptyStateDescription}>
-              Compare historical lumpsum CAGR returns, absolute growth, and tax-efficiency across direct and regular funds.
+              Compare historical lumpsum CAGR returns, absolute growth, and tax-efficiency across
+              direct and regular funds.
             </p>
             <button
               type="button"
@@ -1223,10 +1236,7 @@ const Lumpsum = ({
           </div>
         )}
       </div>
-      <MutualFundDetailModal
-        fund={detailModalFund}
-        onClose={() => setDetailModalFund(null)}
-      />
+      <MutualFundDetailModal fund={detailModalFund} onClose={() => setDetailModalFund(null)} />
       <MutualFundSelectorModal
         open={isFundSelectorOpen}
         onClose={() => setIsFundSelectorOpen(false)}

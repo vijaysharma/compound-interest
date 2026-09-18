@@ -228,6 +228,7 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
                 { id: 'tgt', title: 'Target amount' },
               ]}
               singleRow={true}
+              tabSize="sm"
             />
             <ValuePicker
               className={styles.field}
@@ -239,7 +240,6 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
               title="Interest rate"
               titleStyle="merged"
               stepData={DEFAULT_RATE_STEPS}
-              tabs={[]}
               showWords={false}
               singleRow={true}
             />
@@ -251,7 +251,6 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
               title="Tenure"
               titleStyle="merged"
               stepData={getTenureStepData(rt.tenureFormat)}
-              tabs={[]}
               endAdornment={
                 <select
                   className={styles.tenureFormatSelect}

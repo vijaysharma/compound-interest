@@ -78,6 +78,15 @@ $font-family:
   &:first-child {
     border-right: 1px solid $color-primary;
   }
+  &:only-child {
+    border-right: 0;
+    .pairedStackedLabel {
+      border-top-right-radius: 7px;
+    }
+    .pairedStackedSlot {
+      border-bottom-left-radius: 7px;
+    }
+  }
 }
 
 .pairedStackedLabel {

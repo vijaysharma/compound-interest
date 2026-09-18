@@ -253,6 +253,7 @@ const InflationRates = ({ className, title }: { className?: string; title?: stri
               currencySymbol={currencySymbol}
               locale={locale}
               singleRow={true}
+              tabSize="sm"
             />
             <ValuePicker
               variant="date-range"
