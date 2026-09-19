@@ -101,6 +101,7 @@ export const ADMIN_SECTION: NavigationSection = {
   title: 'Admin',
   items: [
     { name: 'Data administration', href: '/admin', icon: FiDatabase },
+    { name: 'Shiprocket Manager', href: '/admin/shiprocket', icon: FiTruck, aliases: ['/admin/shiprocket-manager'] },
     { name: 'Shiprocket Rates', href: '/admin/shiprocket-rates', icon: FiTruck },
     { name: 'Volumetric Weight', href: '/admin/volumetric-weight', icon: FiBox },
     { name: 'Wood Calculator', href: '/admin/wood-calculator', icon: FiLayers },
