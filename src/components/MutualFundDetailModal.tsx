@@ -578,8 +578,16 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
                 value={investmentValue}
                 onChange={setInvestmentValue}
                 defaultStep={investmentType === 'sip' ? 500 : 5000}
-                min={100}
                 tabSize="sm"
+                singleRow={true}
+                stepData={[
+                  { id: 'i1', value: 100, title: '100' },
+                  { id: 'i2', value: 1000, title: '1K' },
+                  { id: 'i3', value: 5000, title: '5K' },
+                  { id: 'i4', value: 50000, title: '50K' },
+                  { id: 'i5', value: 500000, title: '5L' },
+                  { id: 'i6', value: 10000000, title: '1CR' },
+                ]}
               />
             </div>
             {/* Key Return Stats Grid */}
@@ -679,29 +687,40 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
               </div>
               <div className={styles.taxCard}>
                 <span className={styles.taxCardLabel}>Estimated Tax Deducted</span>
-                <span className={styles.taxCardValue} style={{ color: 'var(--color-error-text-strong)' }}>
+                <span
+                  className={styles.taxCardValue}
+                  style={{ color: 'var(--color-error-text-strong)' }}
+                >
                   {formatINR(taxCalculations.taxAmount)}
                 </span>
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                   Rate: {taxCalculations.rateLabel}
                 </span>
               </div>
-              <div
-                className={`${styles.taxCard} ${styles.taxCardHighlight}`}
-              >
+              <div className={`${styles.taxCard} ${styles.taxCardHighlight}`}>
                 <span className={styles.taxCardLabel}>Actual Post-Tax In-Hand</span>
-                <span className={styles.taxCardValue} style={{ color: 'var(--color-success-text-strong)' }}>
+                <span
+                  className={styles.taxCardValue}
+                  style={{ color: 'var(--color-success-text-strong)' }}
+                >
                   {formatINR(taxCalculations.postTaxMaturity)}
                 </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--color-success-text)', fontWeight: 600 }}>
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    color: 'var(--color-success-text)',
+                    fontWeight: 600,
+                  }}
+                >
                   Net Gain: +{formatINR(taxCalculations.postTaxProfit)}
                 </span>
               </div>
-              <div
-                className={`${styles.taxCard} ${styles.taxCardHighlight}`}
-              >
+              <div className={`${styles.taxCard} ${styles.taxCardHighlight}`}>
                 <span className={styles.taxCardLabel}>Post-Tax Net Return</span>
-                <span className={styles.taxCardValue} style={{ color: 'var(--color-success-text-strong)' }}>
+                <span
+                  className={styles.taxCardValue}
+                  style={{ color: 'var(--color-success-text-strong)' }}
+                >
                   {taxCalculations.postTaxCagr.toFixed(2)}%
                 </span>
                 <span style={{ fontSize: '0.72rem', color: 'var(--color-success-text)' }}>
@@ -743,15 +762,11 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
               </div>
             </div>
             <div className={styles.constituentsBox}>
-              <div
-                style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text-primary)' }}
-              >
+              <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text-primary)' }}>
                 Typical Core Holdings & Major Constituents:
               </div>
               <div style={{ marginBottom: 6 }}>{constituentProfile.topHoldings}</div>
-              <div
-                style={{ fontWeight: 700, marginBottom: 2, color: 'var(--text-primary)' }}
-              >
+              <div style={{ fontWeight: 700, marginBottom: 2, color: 'var(--text-primary)' }}>
                 Representative Sector Exposure:
               </div>
               <div>{constituentProfile.sectors}</div>
