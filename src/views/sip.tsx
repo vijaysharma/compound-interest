@@ -1231,7 +1231,7 @@ const SIP = ({
                   investmentAmount={parseFloat(monthlyAmount) || 0}
                   dataMode="value"
                   autoHeight
-                  minHeight={280}
+                  minHeight={350}
                   startDate={startDate}
                   endDate={endDate}
                   showPresets={false}

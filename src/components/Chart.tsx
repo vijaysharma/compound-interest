@@ -102,7 +102,7 @@ const Chart = ({
   dataMode = 'nav',
   height,
   autoHeight = false,
-  minHeight = 280,
+  minHeight = 350,
   enableZoom = true,
   showPresets = false,
   isLoading = false,
@@ -237,6 +237,7 @@ const Chart = ({
     setUserZoom(null);
     setUserPreset(null);
   };
+  const [hoverX, setHoverX] = useState<number | null>(null);
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!enableZoom || !containerRef.current || allSortedDates.length < 5) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -244,10 +245,18 @@ const Chart = ({
     setDragState({ isDragging: true, startX: x, currentX: x });
   };
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragState?.isDragging || !containerRef.current) return;
+    if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    setDragState((prev) => (prev ? { ...prev, currentX: x } : null));
+    const x = e.clientX - rect.left;
+    if (x >= 35 && x <= rect.width - 4) {
+      setHoverX(x);
+    } else {
+      setHoverX(null);
+    }
+    if (dragState?.isDragging) {
+      const clampedX = Math.max(0, Math.min(x, rect.width));
+      setDragState((prev) => (prev ? { ...prev, currentX: clampedX } : null));
+    }
   };
   const handleMouseUp = () => {
     if (!dragState?.isDragging || !containerRef.current) {
@@ -273,6 +282,25 @@ const Chart = ({
       }
     }
     setDragState(null);
+  };
+  const handleMouseLeave = () => {
+    setHoverX(null);
+    if (dragState?.isDragging) {
+      handleMouseUp();
+    }
+  };
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!containerRef.current || e.touches.length === 0) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    if (x >= 35 && x <= rect.width - 4) {
+      setHoverX(x);
+    } else {
+      setHoverX(null);
+    }
+  };
+  const handleTouchEnd = () => {
+    setHoverX(null);
   };
   const chartOptions = useMemo<AgCartesianChartOptions | null>(() => {
     if (datasets.length === 0 || initialInvestment <= 0 || activeDates.length === 0) {
@@ -321,6 +349,7 @@ const Chart = ({
       }
       return row;
     });
+    const isSingleDataset = normalizedDatasets.length === 1;
     const series = normalizedDatasets.map((dataset, index) => ({
       type: 'line' as const,
       xKey: 'date',
@@ -336,15 +365,35 @@ const Chart = ({
         showArrow: false,
         renderer: ({ datum }: { datum: Record<string, string | number> }) => {
           const value = datum[`fund_${index}`];
+          if (typeof value !== 'number' || !Number.isFinite(value)) {
+            return undefined;
+          }
+          const valFormatted = formatCurrency(value);
+          if (isSingleDataset) {
+            return {
+              heading: String(datum.date),
+              data: [
+                {
+                  label: 'Value',
+                  value: valFormatted,
+                },
+              ],
+            };
+          }
           return {
-            title: dataset.label,
+            heading: String(datum.date),
+            symbol: {
+              marker: {
+                enabled: true,
+                shape: 'circle' as const,
+                fill: dataset.color,
+                stroke: dataset.color,
+              },
+            },
             data: [
               {
-                label: 'Value',
-                value:
-                  typeof value === 'number' && Number.isFinite(value)
-                    ? formatCurrency(value)
-                    : 'N/A',
+                label: dataset.label,
+                value: valFormatted,
               },
             ],
           };
@@ -358,7 +407,7 @@ const Chart = ({
         : 240
       : minHeight > 0
         ? minHeight
-        : 280;
+        : 350;
     const resolvedHeight = typeof height === 'number' ? height : resolvedMinHeight;
     return {
       background: {
@@ -393,6 +442,7 @@ const Chart = ({
       },
       tooltip: {
         enabled: true,
+        mode: isSingleDataset ? ('single' as const) : ('shared' as const),
         // `range: 'nearest'` makes a tap anywhere near the line register, which
         // matters on touch where there is no hover to guide the pointer.
         range: 'nearest' as const,
@@ -476,7 +526,7 @@ const Chart = ({
           : 240
         : minHeight > 0
           ? minHeight
-          : 280;
+          : 350;
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
   if (isLoading) {
     return (
@@ -600,7 +650,11 @@ const Chart = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchMove}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         {dragState?.isDragging && (
           <div
@@ -609,6 +663,12 @@ const Chart = ({
               left: Math.min(dragState.startX, dragState.currentX),
               width: Math.abs(dragState.currentX - dragState.startX),
             }}
+          />
+        )}
+        {hoverX !== null && !dragState?.isDragging && (
+          <div
+            className={styles.verticalGuideLine}
+            style={{ left: `${hoverX}px` }}
           />
         )}
         <AgCharts className={styles.chart} options={chartOptions} />

@@ -545,7 +545,7 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
               investmentAmount={performance.invested}
               dataMode="value"
               autoHeight={true}
-              minHeight={240}
+              minHeight={350}
               enableZoom={true}
               showPresets={true}
               startDate={currentNavStartDate}
