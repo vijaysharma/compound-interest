@@ -173,12 +173,15 @@ const fdFaqs = [
       'A Fixed Deposit (FD) generally yields slightly higher effective returns than a Recurring Deposit (RD) for the same interest rate and tenure. This is because the entire FD principal compounds from Day 1, while RD installments are staggered monthly — earlier installments compound longer but later ones compound less. For a 5-year tenure at 7%, an FD earns about 40% total interest vs. approximately 20% on an equivalent total RD investment.',
   },
 ];
+const TAX_SLABS = [0, 5, 10, 15, 20, 30];
 const FD: React.FC = () => {
   const [pa, setPa] = useState(PA);
   const [rt, setRt] = useState<RT>(RATE_TENURE);
   const [mode, setMode] = useState('1');
   const [frequency, setFrequency] = useState('4');
   const [invType, setInvType] = useState('inv');
+  const [taxSlab, setTaxSlab] = useState<number>(30);
+  const [isSeniorCitizen, setIsSeniorCitizen] = useState<boolean>(false);
   const stepData: StepAmountType[] = STEP_AMOUNT;
   const payoutAmount = useMemo(() => {
     const rtRoi = rt.roi ? rt.roi : '0';
@@ -191,10 +194,24 @@ const FD: React.FC = () => {
     }
     return Math.round(finalAmount);
   }, [pa, rt, mode, invType, frequency]);
+  const tenureMonths = useMemo(() => {
+    const raw = sanctnum(rt.tenure);
+    return rt.tenureFormat === 'y' ? raw * 12 : raw;
+  }, [rt.tenure, rt.tenureFormat]);
+  const tenureYears = useMemo(() => {
+    const raw = sanctnum(rt.tenure);
+    return rt.tenureFormat === 'y' ? raw : raw / 12;
+  }, [rt.tenure, rt.tenureFormat]);
   const { principalDeposit, totalInterestEarned } = useMemo(() => {
     if (invType === 'inv') {
       const principal = sanctnum(pa);
-      const interest = Math.max(0, payoutAmount - principal);
+      if (mode === '100') {
+        const interest = Math.max(0, payoutAmount - principal);
+        return { principalDeposit: principal, totalInterestEarned: interest };
+      }
+      const modeMonths = sanctnum(mode) || 1;
+      const numPayouts = Math.max(1, tenureMonths / modeMonths);
+      const interest = Math.round(payoutAmount * numPayouts);
       return { principalDeposit: principal, totalInterestEarned: interest };
     } else {
       const target = sanctnum(pa);
@@ -202,12 +219,63 @@ const FD: React.FC = () => {
       const interest = Math.max(0, target - principal);
       return { principalDeposit: principal, totalInterestEarned: interest };
     }
-  }, [pa, invType, payoutAmount]);
+  }, [pa, invType, payoutAmount, mode, tenureMonths]);
   const principalPercent = useMemo(() => {
     const total = principalDeposit + totalInterestEarned;
     if (total <= 0) return 50;
     return Math.min(100, Math.max(0, Math.round((principalDeposit / total) * 100)));
   }, [principalDeposit, totalInterestEarned]);
+  const taxAnalysis = useMemo(() => {
+    const numPayouts =
+      mode === '100'
+        ? 1
+        : Math.max(1, Math.round(tenureMonths / (sanctnum(mode) || 1)));
+    const maxSec80TTB = isSeniorCitizen
+      ? Math.min(totalInterestEarned, 50000 * Math.max(1, Math.ceil(tenureYears)))
+      : 0;
+    const taxableInterest = Math.max(0, totalInterestEarned - maxSec80TTB);
+    const effectiveRate = (taxSlab / 100) * 1.04;
+    const estimatedTax = Math.round(taxableInterest * effectiveRate);
+    const postTaxInterest = Math.max(0, totalInterestEarned - estimatedTax);
+    const postTaxMaturity = principalDeposit + postTaxInterest;
+    const postTaxCagr =
+      principalDeposit > 0 && tenureYears > 0
+        ? ((Math.pow(postTaxMaturity / principalDeposit, 1 / tenureYears) - 1) * 100).toFixed(2)
+        : '0.00';
+    const annualInterest =
+      tenureYears > 0 ? totalInterestEarned / tenureYears : totalInterestEarned;
+    const tdsThreshold = isSeniorCitizen ? 50000 : 40000;
+    const isTdsApplicable = annualInterest > tdsThreshold;
+    const periodicTax =
+      mode !== '100' && numPayouts > 0 ? Math.round(estimatedTax / numPayouts) : 0;
+    const postTaxPeriodicPayout =
+      mode !== '100' ? Math.max(0, payoutAmount - periodicTax) : 0;
+    return {
+      maxSec80TTB,
+      taxableInterest,
+      estimatedTax,
+      postTaxInterest,
+      postTaxMaturity,
+      postTaxCagr,
+      annualInterest,
+      tdsThreshold,
+      isTdsApplicable,
+      numPayouts,
+      periodicTax,
+      postTaxPeriodicPayout,
+    };
+  }, [
+    totalInterestEarned,
+    principalDeposit,
+    tenureYears,
+    tenureMonths,
+    isSeniorCitizen,
+    taxSlab,
+    mode,
+    payoutAmount,
+  ]);
+  const selectedPayoutTitle =
+    PAYOUT_MODE_DATA.find((el) => el.value === mode)?.title || 'Payout';
   return (
     <main className={styles.container}>
       <SEOHead
@@ -284,24 +352,31 @@ const FD: React.FC = () => {
           </div>
         </div>
         <div className={styles.resultsCol}>
-          <JoinedButtonGroup
-            className={styles.field}
-            data={FREQUENCY_DATA}
-            sizePrefix="sm"
-            selectedValue={frequency}
-            updateSelectedValue={setFrequency}
-            title="Compounded"
+          <ValuePicker
+            variant="paired"
+            sourceBadgeText="Compounded"
+            targetBadgeText="Payment Mode"
+            sourceSlot={
+              <JoinedButtonGroup
+                className={styles.field}
+                data={FREQUENCY_DATA}
+                sizePrefix="xs"
+                selectedValue={frequency}
+                updateSelectedValue={setFrequency}
+              />
+            }
+            targetSlot={
+              invType === 'inv' && (
+                <JoinedButtonGroup
+                  className={styles.fieldLast}
+                  data={PAYOUT_MODE_DATA}
+                  sizePrefix="xs"
+                  selectedValue={mode}
+                  updateSelectedValue={setMode}
+                />
+              )
+            }
           />
-          {invType === 'inv' && (
-            <JoinedButtonGroup
-              className={styles.fieldLast}
-              data={PAYOUT_MODE_DATA}
-              sizePrefix="sm"
-              selectedValue={mode}
-              updateSelectedValue={setMode}
-              title="Payout Mode"
-            />
-          )}
           <DisplayCard
             primaryAmount={payoutAmount}
             title={
@@ -312,7 +387,7 @@ const FD: React.FC = () => {
           />
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
-              <span>FD Maturity Summary</span>
+              <span>{mode === '100' ? 'FD Maturity Summary' : `FD Summary (${selectedPayoutTitle})`}</span>
               <span className={styles.summarySub}>
                 {rt.tenure} {rt.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt.roi}%
               </span>
@@ -325,7 +400,9 @@ const FD: React.FC = () => {
                 </span>
               </div>
               <div className={styles.statBox}>
-                <span className={styles.statLabel}>Total Interest</span>
+                <span className={styles.statLabel}>
+                  {mode === '100' ? 'Total Interest' : `Total Interest (${selectedPayoutTitle})`}
+                </span>
                 <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
                   +₹{totalInterestEarned.toLocaleString('en-IN')}
                 </span>
@@ -352,6 +429,114 @@ const FD: React.FC = () => {
               <span className={styles.ratioLegendItem}>
                 <span className={styles.ratioDotReturns} /> Interest ({100 - principalPercent}%)
               </span>
+            </div>
+          </div>
+          <div className={styles.taxCard}>
+            <div className={styles.taxHeader}>
+              <span className={styles.taxTitle}>
+                {mode === '100'
+                  ? 'Taxation & Post-Tax Returns'
+                  : `Taxation (${selectedPayoutTitle} Payout)`}
+              </span>
+              <label className={styles.seniorCitizenToggle}>
+                <input
+                  type="checkbox"
+                  checked={isSeniorCitizen}
+                  onChange={(e) => setIsSeniorCitizen(e.target.checked)}
+                />
+                Senior Citizen (Sec 80TTB)
+              </label>
+            </div>
+            <div className={styles.taxSlabSelector}>
+              {TAX_SLABS.map((slab) => (
+                <button
+                  key={slab}
+                  type="button"
+                  className={`${styles.taxSlabBtn} ${taxSlab === slab ? styles.taxSlabBtnActive : ''}`}
+                  onClick={() => setTaxSlab(slab)}
+                >
+                  {slab}% Slab
+                </button>
+              ))}
+            </div>
+            <div className={styles.taxStatsGrid}>
+              {mode !== '100' && invType === 'inv' ? (
+                <>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Post-Tax {selectedPayoutTitle}</span>
+                    <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                      ₹{taxAnalysis.postTaxPeriodicPayout.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Tax / {selectedPayoutTitle}</span>
+                    <span className={`${styles.statValue} ${styles.statValueWarning}`}>
+                      ₹{taxAnalysis.periodicTax.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Total Post-Tax Interest</span>
+                    <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+                      +₹{taxAnalysis.postTaxInterest.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Total Tax Over Tenure</span>
+                    <span className={`${styles.statValue} ${styles.statValueWarning}`}>
+                      ₹{taxAnalysis.estimatedTax.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Estimated Tax (4% Cess)</span>
+                    <span className={`${styles.statValue} ${styles.statValueWarning}`}>
+                      ₹{taxAnalysis.estimatedTax.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Post-Tax Interest</span>
+                    <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+                      ₹{taxAnalysis.postTaxInterest.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Post-Tax Maturity</span>
+                    <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+                      ₹{taxAnalysis.postTaxMaturity.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className={styles.taxStatBox}>
+                    <span className={styles.statLabel}>Effective Post-Tax CAGR</span>
+                    <span className={styles.statValue}>{taxAnalysis.postTaxCagr}% p.a.</span>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className={styles.taxNotice}>
+              {mode !== '100' && invType === 'inv' && (
+                <div>
+                  Pre-tax {selectedPayoutTitle.toLowerCase()} payout: ₹{payoutAmount.toLocaleString('en-IN')} (Total interest: ₹{totalInterestEarned.toLocaleString('en-IN')} over {taxAnalysis.numPayouts} payouts).
+                </div>
+              )}
+              {taxAnalysis.isTdsApplicable
+                ? `Sec 194A TDS (~10%) is likely deducted by your bank since estimated annual interest (~₹${Math.round(
+                    taxAnalysis.annualInterest
+                  ).toLocaleString('en-IN')}) exceeds ₹${taxAnalysis.tdsThreshold.toLocaleString(
+                    'en-IN'
+                  )}. Submit Form 15G/15H if total income is below basic exemption.`
+                : `Estimated annual interest (~₹${Math.round(taxAnalysis.annualInterest).toLocaleString(
+                    'en-IN'
+                  )}) is below the ₹${taxAnalysis.tdsThreshold.toLocaleString(
+                    'en-IN'
+                  )} TDS threshold (Sec 194A). No TDS deducted by bank, but interest is taxable per slab.`}
+              {isSeniorCitizen && taxAnalysis.maxSec80TTB > 0 && (
+                <span>
+                  {' '}
+                  Section 80TTB deduction of ₹{taxAnalysis.maxSec80TTB.toLocaleString('en-IN')} applied.
+                </span>
+              )}
             </div>
           </div>
         </div>

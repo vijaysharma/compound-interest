@@ -29,6 +29,10 @@ export interface NPSCalculationResult {
   monthlyPension: number;
   annualPension: number;
   yearlyBreakdown: NPSYearDetail[];
+  isPremature: boolean;
+  isSmallCorpus: boolean;
+  smallCorpusThreshold: number;
+  minAnnuityPercent: number;
 }
 export function calculateNPS(input: NPSCalculationInput): NPSCalculationResult {
   const {
@@ -72,11 +76,20 @@ export function calculateNPS(input: NPSCalculationInput): NPSCalculationResult {
   const totalCorpus = Math.round(runningCorpus);
   const totalInvestedRounded = Math.round(cumulativeInvested);
   const interestEarnedRounded = Math.max(0, totalCorpus - totalInvestedRounded);
-  const safeAnnuityPercent = Math.max(40, Math.min(100, annuityPercent));
+  // Indian PFRDA Exit & Withdrawal Rules:
+  // 1. Superannuation (Age >= 60): Min 40% annuity, max 60% lump sum.
+  //    If corpus <= ₹5,00,000, 100% lump sum is permitted (0% annuity).
+  // 2. Premature Exit (Age < 60): Min 80% annuity, max 20% lump sum.
+  //    If corpus <= ₹2,50,000, 100% lump sum is permitted (0% annuity).
+  const isPremature = retirementAge < 60;
+  const smallCorpusThreshold = isPremature ? 250000 : 500000;
+  const isSmallCorpus = totalCorpus <= smallCorpusThreshold;
+  const minAnnuityPercent = isSmallCorpus ? 0 : isPremature ? 80 : 40;
+  const safeAnnuityPercent = Math.min(100, Math.max(minAnnuityPercent, annuityPercent));
   const lumpSumPercent = 100 - safeAnnuityPercent;
   const annuityCorpus = Math.round((totalCorpus * safeAnnuityPercent) / 100);
   const lumpSumAmount = Math.round((totalCorpus * lumpSumPercent) / 100);
-  const annualPension = Math.round((annuityCorpus * annuityRate) / 100);
+  const annualPension = safeAnnuityPercent > 0 ? Math.round((annuityCorpus * annuityRate) / 100) : 0;
   const monthlyPension = Math.round(annualPension / 12);
   return {
     tenureYears,
@@ -92,5 +105,9 @@ export function calculateNPS(input: NPSCalculationInput): NPSCalculationResult {
     monthlyPension,
     annualPension,
     yearlyBreakdown,
+    isPremature,
+    isSmallCorpus,
+    smallCorpusThreshold,
+    minAnnuityPercent,
   };
 }

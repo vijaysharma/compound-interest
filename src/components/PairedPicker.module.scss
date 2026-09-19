@@ -137,6 +137,18 @@ $font-family:
   @include tablet-up {
     min-height: 48px;
   }
+  > [class^="JoinedButtonGroup"] {
+    margin: 0;
+    height: 100%;
+    padding: 0.25rem;
+    > div {
+      border: 0 none;
+      height: 100%;
+    }
+    button {
+      height: 100%;
+    }
+  }
 }
 
 .pairedInput {

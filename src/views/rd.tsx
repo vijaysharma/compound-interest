@@ -132,6 +132,7 @@ const rdFaqs = [
       'For short-term goals (1–3 years), bank RDs offer guaranteed returns and capital protection. For long-term wealth creation (5+ years), mutual fund SIPs historically deliver significantly higher returns (12–15% CAGR vs. 6–7% RD rates) due to equity market compounding. RDs are ideal for risk-averse savers, while SIPs suit investors with higher risk tolerance and longer horizons.',
   },
 ];
+const TAX_SLABS = [0, 5, 10, 15, 20, 30];
 const RD = ({ className, title }: { className?: string; title?: string }) => {
   const [pa, setPa] = useState('10000');
   const [rt, setRt] = useState<RT>({
@@ -140,6 +141,8 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
     tenureFormat: 'y',
   });
   const [invType, setInvType] = useState('my');
+  const [taxSlab, setTaxSlab] = useState<number>(30);
+  const [isSeniorCitizen, setIsSeniorCitizen] = useState<boolean>(false);
   const stepData = [
     { id: 'p1', value: '50000000', title: '5Cr' },
     { id: 'p2', value: '5000000', title: '50L' },
@@ -195,6 +198,39 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
     if (total <= 0) return 50;
     return Math.min(100, Math.max(0, Math.round((totalDeposited / total) * 100)));
   }, [totalDeposited, totalInterestEarned]);
+  const tenureYears = useMemo(() => {
+    const raw = sanctnum(rt.tenure);
+    return rt.tenureFormat === 'y' ? raw : raw / 12;
+  }, [rt.tenure, rt.tenureFormat]);
+  const taxAnalysis = useMemo(() => {
+    const maxSec80TTB = isSeniorCitizen
+      ? Math.min(totalInterestEarned, 50000 * Math.max(1, Math.ceil(tenureYears)))
+      : 0;
+    const taxableInterest = Math.max(0, totalInterestEarned - maxSec80TTB);
+    const effectiveRate = (taxSlab / 100) * 1.04;
+    const estimatedTax = Math.round(taxableInterest * effectiveRate);
+    const postTaxInterest = Math.max(0, totalInterestEarned - estimatedTax);
+    const postTaxMaturity = totalDeposited + postTaxInterest;
+    const postTaxCagr =
+      totalDeposited > 0 && tenureYears > 0
+        ? ((postTaxInterest / totalDeposited / tenureYears) * 100).toFixed(2)
+        : '0.00';
+    const annualInterest =
+      tenureYears > 0 ? totalInterestEarned / tenureYears : totalInterestEarned;
+    const tdsThreshold = isSeniorCitizen ? 50000 : 40000;
+    const isTdsApplicable = annualInterest > tdsThreshold;
+    return {
+      maxSec80TTB,
+      taxableInterest,
+      estimatedTax,
+      postTaxInterest,
+      postTaxMaturity,
+      postTaxCagr,
+      annualInterest,
+      tdsThreshold,
+      isTdsApplicable,
+    };
+  }, [totalInterestEarned, totalDeposited, tenureYears, isSeniorCitizen, taxSlab]);
   return (
     <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
@@ -318,6 +354,74 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
               </span>
             </div>
           </div>
+        </div>
+      </div>
+      <div className={styles.taxCard}>
+        <div className={styles.taxHeader}>
+          <span className={styles.taxTitle}>Taxation &amp; Post-Tax Returns</span>
+          <label className={styles.seniorCitizenToggle}>
+            <input
+              type="checkbox"
+              checked={isSeniorCitizen}
+              onChange={(e) => setIsSeniorCitizen(e.target.checked)}
+            />
+            Senior Citizen (Sec 80TTB)
+          </label>
+        </div>
+        <div className={styles.taxSlabSelector}>
+          {TAX_SLABS.map((slab) => (
+            <button
+              key={slab}
+              type="button"
+              className={`${styles.taxSlabBtn} ${taxSlab === slab ? styles.taxSlabBtnActive : ''}`}
+              onClick={() => setTaxSlab(slab)}
+            >
+              {slab}% Slab
+            </button>
+          ))}
+        </div>
+        <div className={styles.taxStatsGrid}>
+          <div className={styles.taxStatBox}>
+            <span className={styles.statLabel}>Estimated Tax (4% Cess)</span>
+            <span className={`${styles.statValue} ${styles.statValueWarning}`}>
+              ₹{taxAnalysis.estimatedTax.toLocaleString('en-IN')}
+            </span>
+          </div>
+          <div className={styles.taxStatBox}>
+            <span className={styles.statLabel}>Post-Tax Interest</span>
+            <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
+              ₹{taxAnalysis.postTaxInterest.toLocaleString('en-IN')}
+            </span>
+          </div>
+          <div className={styles.taxStatBox}>
+            <span className={styles.statLabel}>Post-Tax Maturity</span>
+            <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
+              ₹{taxAnalysis.postTaxMaturity.toLocaleString('en-IN')}
+            </span>
+          </div>
+          <div className={styles.taxStatBox}>
+            <span className={styles.statLabel}>Effective Post-Tax Return</span>
+            <span className={styles.statValue}>{taxAnalysis.postTaxCagr}% p.a.</span>
+          </div>
+        </div>
+        <div className={styles.taxNotice}>
+          {taxAnalysis.isTdsApplicable
+            ? `Sec 194A TDS (~10%) is likely deducted by your bank since estimated annual interest (~₹${Math.round(
+                taxAnalysis.annualInterest
+              ).toLocaleString('en-IN')}) exceeds ₹${taxAnalysis.tdsThreshold.toLocaleString(
+                'en-IN'
+              )}. Submit Form 15G/15H if total income is below basic exemption.`
+            : `Estimated annual interest (~₹${Math.round(taxAnalysis.annualInterest).toLocaleString(
+                'en-IN'
+              )}) is below the ₹${taxAnalysis.tdsThreshold.toLocaleString(
+                'en-IN'
+              )} TDS threshold (Sec 194A). No TDS deducted by bank, but interest is taxable per slab.`}
+          {isSeniorCitizen && taxAnalysis.maxSec80TTB > 0 && (
+            <span>
+              {' '}
+              Section 80TTB deduction of ₹{taxAnalysis.maxSec80TTB.toLocaleString('en-IN')} applied.
+            </span>
+          )}
         </div>
       </div>
       <CalculatorContentSection

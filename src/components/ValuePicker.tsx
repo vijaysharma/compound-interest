@@ -139,7 +139,7 @@ const GenericValuePicker: React.FC<ValuePickerProps> = React.memo(
     stepRows,
     stepData,
     singleRow = false,
-    symbol = '₹',
+    symbol,
     currencySymbol,
     symbolPosition = 'left',
     symbolBg = true,

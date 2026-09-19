@@ -220,28 +220,51 @@ const NpsCalculator: React.FC = () => {
           </div>
           <div className={styles.fieldGroup}>
             <ValuePicker
-              title="Annuity Allocation Share (PFRDA Min 40%)"
+              title={
+                npsResult.isSmallCorpus
+                  ? `Annuity Share (Corpus ≤ ₹${(npsResult.smallCorpusThreshold / 100000).toFixed(1)}L: Optional 0% to 100%)`
+                  : npsResult.isPremature
+                    ? 'Annuity Share (Premature Exit < Age 60: PFRDA Min 80%)'
+                    : 'Annuity Allocation Share (PFRDA Mandatory Min 40%)'
+              }
               symbol="%"
-              value={annuityPercent}
-              min={40}
+              value={npsResult.annuityPercent}
+              min={npsResult.minAnnuityPercent}
               max={100}
               defaultStep={5}
-              stepData={[
-                { id: 'a05', label: '5%', value: 5 },
-                { id: 'a10', label: '10%', value: 10 },
-                { id: 'a20', label: '20%', value: 20 },
-                { id: 'a40', label: '40%', value: 40 },
-                { id: 'a100', label: '100%', value: 100 },
-              ]}
+              stepData={
+                npsResult.isSmallCorpus
+                  ? [
+                      { id: 'a0', label: '0% (Full Lump Sum)', value: 0 },
+                      { id: 'a40', label: '40%', value: 40 },
+                      { id: 'a60', label: '60%', value: 60 },
+                      { id: 'a80', label: '80%', value: 80 },
+                      { id: 'a100', label: '100%', value: 100 },
+                    ]
+                  : npsResult.isPremature
+                    ? [
+                        { id: 'a80', label: '80% (Min)', value: 80 },
+                        { id: 'a90', label: '90%', value: 90 },
+                        { id: 'a100', label: '100%', value: 100 },
+                      ]
+                    : [
+                        { id: 'a40', label: '40% (Min)', value: 40 },
+                        { id: 'a50', label: '50%', value: 50 },
+                        { id: 'a60', label: '60%', value: 60 },
+                        { id: 'a80', label: '80%', value: 80 },
+                        { id: 'a100', label: '100%', value: 100 },
+                      ]
+              }
               singleRow={true}
               showWords={false}
               onChange={(v) => {
-                const num = parseInt(v, 10) || 40;
-                setAnnuityPercent(Math.min(100, Math.max(40, num)));
+                const num = parseInt(v, 10);
+                const safeNum = Number.isFinite(num) ? num : npsResult.minAnnuityPercent;
+                setAnnuityPercent(Math.min(100, Math.max(npsResult.minAnnuityPercent, safeNum)));
               }}
             />
             <p className={styles.annuitySplitNote}>
-              {annuityPercent}% Annuity / {100 - annuityPercent}% Lump Sum
+              {npsResult.annuityPercent}% Annuity / {npsResult.lumpSumPercent}% Lump Sum
             </p>
           </div>
           <div className={styles.fieldGroup}>
@@ -261,6 +284,19 @@ const NpsCalculator: React.FC = () => {
         </div>
         {/* Right Column: Retirement Corpus & Pension Results */}
         <div className={styles.summaryCol}>
+          {npsResult.isSmallCorpus && (
+            <div className={styles.smallCorpusNotice} style={{ background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', border: '1px solid var(--color-primary)', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FiCheckCircle style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+              <span>
+                <strong>PFRDA Small Corpus Exemption:</strong> Since total corpus is ≤ ₹{(npsResult.smallCorpusThreshold / 100000).toFixed(1)} Lakhs, you can withdraw <strong>100% tax-free lump sum</strong> without purchasing any mandatory annuity.
+              </span>
+            </div>
+          )}
+          {npsResult.isPremature && !npsResult.isSmallCorpus && (
+            <div className={styles.prematureNotice} style={{ background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent)', border: '1px solid var(--color-warning, #f59e0b)', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', marginBottom: '12px' }}>
+              <strong>⚠️ Premature Exit (Retirement before Age 60):</strong> Under PFRDA regulations, exit prior to age 60 mandates a minimum <strong>80% annuity investment</strong> and a maximum 20% lump sum withdrawal.
+            </div>
+          )}
           <div className={styles.heroPensionCard}>
             <div className={styles.heroPensionLabel}>Estimated Monthly Pension</div>
             <div className={styles.heroPensionAmount}>
@@ -269,7 +305,9 @@ const NpsCalculator: React.FC = () => {
               <span className={styles.perMonth}>/mo</span>
             </div>
             <div className={styles.heroPensionWords}>
-              {convertToWords(npsResult.monthlyPension, 'en-IN')} per month for life
+              {npsResult.annuityPercent > 0
+                ? `${convertToWords(npsResult.monthlyPension, 'en-IN')} per month for life`
+                : '100% Lump Sum opted — No monthly annuity pension'}
             </div>
           </div>
           <div className={styles.statsGrid}>
@@ -281,7 +319,7 @@ const NpsCalculator: React.FC = () => {
               </div>
             </div>
             <div className={styles.statBox}>
-              <div className={styles.statLabel}>Tax-Free Lump Sum (60%)</div>
+              <div className={styles.statLabel}>Tax-Free Lump Sum ({npsResult.lumpSumPercent}%)</div>
               <div className={styles.statValue}>
                 {currencySymbol}
                 {npsResult.lumpSumAmount.toLocaleString('en-IN')}
@@ -304,7 +342,9 @@ const NpsCalculator: React.FC = () => {
           </div>
           {/* Corpus Distribution (Lump Sum vs Annuity) */}
           <div className={styles.corpusSplitCard}>
-            <div className={styles.corpusSplitTitle}>Corpus Utilization at Age {retirementAge}</div>
+            <div className={styles.corpusSplitTitle}>
+              Corpus Utilization at Age {retirementAge} {npsResult.isPremature ? '(Premature Exit)' : '(Superannuation)'}
+            </div>
             <div className={styles.splitBar}>
               <div
                 className={styles.splitLumpSum}
@@ -341,7 +381,11 @@ const NpsCalculator: React.FC = () => {
                     {currencySymbol}
                     {npsResult.annuityCorpus.toLocaleString('en-IN')}
                   </div>
-                  <div className={styles.splitDesc}>Lifelong Monthly Pension</div>
+                  <div className={styles.splitDesc}>
+                    {npsResult.annuityPercent > 0
+                      ? 'Lifelong Monthly Pension (Taxable at slab)'
+                      : '0% Annuity allocated'}
+                  </div>
                 </div>
               </div>
             </div>
