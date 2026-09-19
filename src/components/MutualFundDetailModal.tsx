@@ -534,26 +534,24 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
         {/* Scrollable Body */}
         <div className={styles.modalBody}>
           {/* Dedicated Interactive Chart with Zoom Presets */}
-          <div className={styles.chartSection}>
+          <div>
             <div className={styles.chartTitle}>
               <span>Historical NAV &amp; Portfolio Trajectory</span>
               <span className={styles.chartHint}>Use presets or drag horizontally to zoom</span>
             </div>
-            <div className={styles.chartWrapper}>
-              <Chart
-                className={styles.chart}
-                datasets={performance.datasets}
-                investmentAmount={performance.invested}
-                dataMode="value"
-                autoHeight={true}
-                minHeight={240}
-                enableZoom={true}
-                showPresets={true}
-                startDate={currentNavStartDate}
-                endDate={currentNavEndDate}
-                onPresetChange={handleSelectPreset}
-              />
-            </div>
+            <Chart
+              className={styles.chart}
+              datasets={performance.datasets}
+              investmentAmount={performance.invested}
+              dataMode="value"
+              autoHeight={true}
+              minHeight={240}
+              enableZoom={true}
+              showPresets={true}
+              startDate={currentNavStartDate}
+              endDate={currentNavEndDate}
+              onPresetChange={handleSelectPreset}
+            />
           </div>
           <div className={styles.controlsStatsGrid}>
             <div className={styles.controlsColumn}>
