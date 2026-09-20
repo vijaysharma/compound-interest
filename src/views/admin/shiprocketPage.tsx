@@ -3,10 +3,11 @@ import React from 'react';
 import ShiprocketDashboard from '../../components/admin/ShiprocketDashboard';
 import { useAuth } from '../../context/useAuth';
 import SEOHead from '../../components/SEOHead';
+import styles from './AdminPage.module.scss';
 const ShiprocketPage: React.FC = () => {
   const { token } = useAuth();
   return (
-    <main style={{ width: '100%', minHeight: '100vh', padding: '0 0.5rem' }}>
+    <main className={styles.shiprocketContainer}>
       <SEOHead
         title="Shiprocket Dashboard | Admin"
         description="Shiprocket Account, Shipments, History & Creation"

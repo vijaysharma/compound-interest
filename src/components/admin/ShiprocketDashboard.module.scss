@@ -852,3 +852,158 @@
     transform: rotate(360deg);
   }
 }
+
+.awbPending {
+  color: #f59e0b;
+  font-size: 0.75rem;
+  fontWeight: 600;
+}
+
+.createdActions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.formSubmitRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.sectionHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sectionHeading {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.companyStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.valueHighlight {
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.createdAtText {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.pickupsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.pickupCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem;
+  background: var(--color-bg);
+}
+
+.pickupCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.pickupTitle {
+  font-size: 0.9375rem;
+  color: var(--color-heading);
+}
+
+.pickupDetails {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.pickupContact {
+  margin-top: 0.35rem;
+}
+
+.trackingMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.metaLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+.metaValueLg {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.metaValue {
+  font-weight: 600;
+}
+
+.courierRating {
+  font-size: 0.75rem;
+  color: #f59e0b;
+}
+
+.podLinkWrapper {
+  font-size: 0.8125rem;
+}
+
+.noEventsText {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.shipModalSummary {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.couriersHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.couriersTitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.couriersStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.emptyText {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
