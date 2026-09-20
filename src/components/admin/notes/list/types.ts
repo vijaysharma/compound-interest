@@ -1,0 +1,30 @@
+import { Note, ViewMode, SortOption } from '../NotesTypes';
+export interface NotesListProps {
+  notes: Note[];
+  selectedNoteId: string | null;
+  activeFolder: string;
+  activeTag: string | null;
+  searchQuery: string;
+  viewMode: ViewMode;
+  sortOption: SortOption;
+  folders: string[];
+  onSelectNote: (note: Note) => void;
+  onNewNote: () => void;
+  onSearchChange: (query: string) => void;
+  onViewModeChange: (mode: ViewMode) => void;
+  onSortChange: (sort: SortOption) => void;
+  onTogglePin: (id: string, e: React.MouseEvent) => void;
+  onDeleteNote: (id: string, e?: React.MouseEvent) => void;
+  onPermanentDelete?: (id: string) => void;
+  onDuplicateNote: (note: Note, e: React.MouseEvent) => void;
+  onRestoreNote: (id: string, e: React.MouseEvent) => void;
+  onEmptyTrash: () => void;
+  onMoveNoteToFolder: (noteId: string, targetFolder: string) => void;
+  onCreateFolder: (name: string) => void;
+  onBackToFolders?: () => void;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
+  onOpenBackupModal?: () => void;
+  onOpenSecurityModal?: () => void;
+  isMobileScreen?: boolean;
+}
