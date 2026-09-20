@@ -464,3 +464,29 @@
 .balanceCell {
   font-weight: 700;
 }
+
+.smallCorpusNotice {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.smallCorpusIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.prematureNotice {
+  background: color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent);
+  border: 1px solid var(--color-warning, #f59e0b);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+}

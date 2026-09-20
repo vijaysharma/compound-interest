@@ -1,95 +1,26 @@
 'use client';
-import React, { useMemo, useState } from 'react';
-import { FiAward, FiCheckCircle, FiShield } from 'react-icons/fi';
-import ValuePicker from '../components/ValuePicker';
-import { DEFAULT_RATE_STEPS } from '../data/valuePickerData';
+import React from 'react';
+import { FiShield } from 'react-icons/fi';
 import SEOHead from '../components/SEOHead';
-import CalculatorContentSection from '../components/CalculatorContentSection';
-import convertToWords, { getCurrencySymbol } from '../utilities/currency';
-import { calculateNPS } from '../utilities/npsCalculations';
+import { npsSchema } from '../data/seo/npsData';
+import { useNpsState } from './nps/useNpsState';
+import { NpsInputs } from './nps/NpsInputs';
+import { NpsSummaryCol } from './nps/NpsSummaryCol';
+import { NpsScheduleTable } from './nps/NpsScheduleTable';
+import { NpsContent } from './nps/NpsContent';
 import styles from './NpsCalculator.module.scss';
-const npsSchema = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'FinancialProduct',
-      name: 'NPS Calculator India (National Pension System)',
-      description:
-        'Calculate your retirement pension corpus, mandatory 40% annuity purchase, 60% tax-free lump sum withdrawal, and monthly pension payout with PFRDA rules.',
-      category: 'PensionPlan',
-      provider: {
-        '@type': 'Organization',
-        name: 'Rupee Calculator',
-        url: 'https://rupees.vercel.app/',
-      },
-    },
-    {
-      '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'What is the mandatory annuity percentage in NPS at retirement?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Under PFRDA regulations, an subscriber retiring at age 60 must utilize a minimum of 40% of the accumulated pension corpus to purchase an immediate annuity from an approved life insurance company. The remaining 60% can be withdrawn as a completely tax-free lump sum.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'What extra tax deductions are offered by NPS over Section 80C?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Under Section 80CCD(1B), individuals can claim an exclusive tax deduction of up to ₹50,000 per financial year over and above the ₹1.5 Lakh limit under Section 80C. Furthermore, employer contributions under Section 80CCD(2) up to 10% of salary are tax-deductible in both Old and New Tax Regimes.',
-          },
-        },
-      ],
-    },
-  ],
-};
-const NPS_MONTHLY_STEPS = [
-  { id: 'n1', value: '50000', title: '₹50K' },
-  { id: 'n2', value: '25000', title: '₹25K' },
-  { id: 'n3', value: '10000', title: '₹10K' },
-  { id: 'n4', value: '1000', title: '₹1K' },
-  { id: 'n5', value: '500', title: '₹500 (Min)' },
-];
 const NpsCalculator: React.FC = () => {
-  const [currentAge, setCurrentAge] = useState<number>(28);
-  const [retirementAge, setRetirementAge] = useState<number>(60);
-  const [monthlyContribution, setMonthlyContribution] = useState<string>('5000');
-  const [hasEmployerContribution, setHasEmployerContribution] = useState<boolean>(false);
-  const [employerMonthly, setEmployerMonthly] = useState<string>('5000');
-  const [expectedRoi, setExpectedRoi] = useState<number>(10.0);
-  const [annuityPercent, setAnnuityPercent] = useState<number>(40);
-  const [annuityRate, setAnnuityRate] = useState<number>(6.0);
-  const currencySymbol = getCurrencySymbol('en-IN', 'INR');
-  const numericSelf = useMemo(() => {
-    return Math.max(500, Number(monthlyContribution.replace(/[^0-9]/g, '')) || 500);
-  }, [monthlyContribution]);
-  const numericEmployer = useMemo(() => {
-    if (!hasEmployerContribution) return 0;
-    return Math.max(0, Number(employerMonthly.replace(/[^0-9]/g, '')) || 0);
-  }, [hasEmployerContribution, employerMonthly]);
-  const npsResult = useMemo(() => {
-    return calculateNPS({
-      currentAge,
-      retirementAge,
-      monthlyContribution: numericSelf,
-      employerContribution: numericEmployer,
-      expectedRoi,
-      annuityPercent,
-      annuityRate,
-    });
-  }, [
-    currentAge,
-    retirementAge,
-    numericSelf,
-    numericEmployer,
-    expectedRoi,
-    annuityPercent,
-    annuityRate,
-  ]);
-  const wealthMultiple = (npsResult.totalCorpus / (npsResult.totalInvested || 1)).toFixed(1);
+  const {
+    currentAge, setCurrentAge,
+    retirementAge, setRetirementAge,
+    monthlyContribution, setMonthlyContribution,
+    hasEmployerContribution, setHasEmployerContribution,
+    employerMonthly, setEmployerMonthly,
+    expectedRoi, setExpectedRoi,
+    setAnnuityPercent,
+    annuityRate, setAnnuityRate,
+    npsResult, wealthMultiple,
+  } = useNpsState();
   return (
     <main className={styles.container}>
       <SEOHead
@@ -111,428 +42,36 @@ const NpsCalculator: React.FC = () => {
         </p>
       </header>
       <div className={styles.formGrid}>
-        {/* Left Column: Interactive Inputs */}
-        <div className={styles.inputsCol}>
-          <div className={styles.fieldGroup}>
-            <ValuePicker
-              title="Your Monthly Investment in NPS Tier-1"
-              value={monthlyContribution}
-              onChange={setMonthlyContribution}
-              stepData={NPS_MONTHLY_STEPS}
-              min={500}
-              max={500000}
-              singleRow={true}
-            />
-          </div>
-          {/* Employer Contribution (Section 80CCD(2)) */}
-          <div className={styles.fieldGroup}>
-            <label className={`${styles.fieldLabel} ${styles.checkboxLabel}`}>
-              <span>
-                <input
-                  type="checkbox"
-                  checked={hasEmployerContribution}
-                  onChange={(e) => setHasEmployerContribution(e.target.checked)}
-                  className={styles.checkboxInput}
-                />
-                Add Employer Contribution (Section 80CCD(2))
-              </span>
-            </label>
-            {hasEmployerContribution && (
-              <div className={styles.employerWrapper}>
-                <ValuePicker
-                  title="Employer Monthly Contribution"
-                  value={employerMonthly}
-                  onChange={setEmployerMonthly}
-                  stepData={NPS_MONTHLY_STEPS}
-                  min={500}
-                  max={500000}
-                  singleRow={true}
-                />
-                <p className={styles.noteText}>
-                  Corporate employer contributions up to 10% of Basic + DA are tax-exempt under both
-                  Old and New Tax Regimes.
-                </p>
-              </div>
-            )}
-          </div>
-          <div className={styles.fieldGroup}>
-            <ValuePicker
-              variant="paired"
-              sourceBadgeText="Current Age"
-              targetBadgeText="Retire Age"
-              sourceSlot={
-                <select
-                  id="nps-current-age"
-                  value={currentAge}
-                  onChange={(e) => {
-                    const newAge = Number(e.target.value);
-                    setCurrentAge(newAge);
-                    if (retirementAge <= newAge) {
-                      setRetirementAge(Math.min(75, newAge + 5));
-                    }
-                  }}
-                  className={styles.numberInput}
-                  aria-label="Current Age"
-                >
-                  {Array.from({ length: 48 }, (_, i) => i + 18).map((age) => (
-                    <option key={age} value={age}>
-                      {age} Years
-                    </option>
-                  ))}
-                </select>
-              }
-              targetSlot={
-                <select
-                  id="nps-retirement-age"
-                  value={retirementAge}
-                  onChange={(e) => setRetirementAge(Number(e.target.value))}
-                  className={styles.numberInput}
-                  aria-label="Retirement Age"
-                >
-                  {Array.from(
-                    { length: Math.max(1, 75 - currentAge) },
-                    (_, i) => currentAge + 1 + i
-                  ).map((age) => (
-                    <option key={age} value={age}>
-                      {age} Years
-                    </option>
-                  ))}
-                </select>
-              }
-            />
-            <p className={styles.annuitySplitNote}>
-              Accumulation Period: <strong>{retirementAge - currentAge} Years</strong>
-            </p>
-          </div>
-          <div className={styles.fieldGroup}>
-            <ValuePicker
-              value={expectedRoi}
-              symbol="%"
-              symbolBg={false}
-              symbolPosition="right"
-              onChange={(v) => setExpectedRoi(parseFloat(v) || 10.0)}
-              title="Expected Return (CAGR %)"
-              titleStyle="merged"
-              stepData={DEFAULT_RATE_STEPS}
-              showWords={false}
-              singleRow={true}
-            />
-          </div>
-          <div className={styles.fieldGroup}>
-            <ValuePicker
-              title={
-                npsResult.isSmallCorpus
-                  ? `Annuity Share (Corpus ≤ ₹${(npsResult.smallCorpusThreshold / 100000).toFixed(1)}L: Optional 0% to 100%)`
-                  : npsResult.isPremature
-                    ? 'Annuity Share (Premature Exit < Age 60: PFRDA Min 80%)'
-                    : 'Annuity Allocation Share (PFRDA Mandatory Min 40%)'
-              }
-              symbol="%"
-              value={npsResult.annuityPercent}
-              min={npsResult.minAnnuityPercent}
-              max={100}
-              defaultStep={5}
-              stepData={
-                npsResult.isSmallCorpus
-                  ? [
-                      { id: 'a0', label: '0% (Full Lump Sum)', value: 0 },
-                      { id: 'a40', label: '40%', value: 40 },
-                      { id: 'a60', label: '60%', value: 60 },
-                      { id: 'a80', label: '80%', value: 80 },
-                      { id: 'a100', label: '100%', value: 100 },
-                    ]
-                  : npsResult.isPremature
-                    ? [
-                        { id: 'a80', label: '80% (Min)', value: 80 },
-                        { id: 'a90', label: '90%', value: 90 },
-                        { id: 'a100', label: '100%', value: 100 },
-                      ]
-                    : [
-                        { id: 'a40', label: '40% (Min)', value: 40 },
-                        { id: 'a50', label: '50%', value: 50 },
-                        { id: 'a60', label: '60%', value: 60 },
-                        { id: 'a80', label: '80%', value: 80 },
-                        { id: 'a100', label: '100%', value: 100 },
-                      ]
-              }
-              singleRow={true}
-              showWords={false}
-              onChange={(v) => {
-                const num = parseInt(v, 10);
-                const safeNum = Number.isFinite(num) ? num : npsResult.minAnnuityPercent;
-                setAnnuityPercent(Math.min(100, Math.max(npsResult.minAnnuityPercent, safeNum)));
-              }}
-            />
-            <p className={styles.annuitySplitNote}>
-              {npsResult.annuityPercent}% Annuity / {npsResult.lumpSumPercent}% Lump Sum
-            </p>
-          </div>
-          <div className={styles.fieldGroup}>
-            <ValuePicker
-              title="Expected Annuity Return Rate (Pension Yield %)"
-              symbol="%"
-              value={annuityRate}
-              min={1}
-              max={15}
-              defaultStep={0.5}
-              stepData={DEFAULT_RATE_STEPS}
-              singleRow={true}
-              showWords={false}
-              onChange={(v) => setAnnuityRate(parseFloat(v) || 6.0)}
-            />
-          </div>
-        </div>
-        {/* Right Column: Retirement Corpus & Pension Results */}
-        <div className={styles.summaryCol}>
-          {npsResult.isSmallCorpus && (
-            <div className={styles.smallCorpusNotice} style={{ background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', border: '1px solid var(--color-primary)', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FiCheckCircle style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
-              <span>
-                <strong>PFRDA Small Corpus Exemption:</strong> Since total corpus is ≤ ₹{(npsResult.smallCorpusThreshold / 100000).toFixed(1)} Lakhs, you can withdraw <strong>100% tax-free lump sum</strong> without purchasing any mandatory annuity.
-              </span>
-            </div>
-          )}
-          {npsResult.isPremature && !npsResult.isSmallCorpus && (
-            <div className={styles.prematureNotice} style={{ background: 'color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent)', border: '1px solid var(--color-warning, #f59e0b)', borderRadius: '8px', padding: '10px 14px', fontSize: '0.8rem', marginBottom: '12px' }}>
-              <strong>⚠️ Premature Exit (Retirement before Age 60):</strong> Under PFRDA regulations, exit prior to age 60 mandates a minimum <strong>80% annuity investment</strong> and a maximum 20% lump sum withdrawal.
-            </div>
-          )}
-          <div className={styles.heroPensionCard}>
-            <div className={styles.heroPensionLabel}>Estimated Monthly Pension</div>
-            <div className={styles.heroPensionAmount}>
-              {currencySymbol}
-              {npsResult.monthlyPension.toLocaleString('en-IN')}
-              <span className={styles.perMonth}>/mo</span>
-            </div>
-            <div className={styles.heroPensionWords}>
-              {npsResult.annuityPercent > 0
-                ? `${convertToWords(npsResult.monthlyPension, 'en-IN')} per month for life`
-                : '100% Lump Sum opted — No monthly annuity pension'}
-            </div>
-          </div>
-          <div className={styles.statsGrid}>
-            <div className={styles.statBox}>
-              <div className={styles.statLabel}>Total Pension Corpus</div>
-              <div className={`${styles.statValue} ${styles.statValueCorpus}`}>
-                {currencySymbol}
-                {npsResult.totalCorpus.toLocaleString('en-IN')}
-              </div>
-            </div>
-            <div className={styles.statBox}>
-              <div className={styles.statLabel}>Tax-Free Lump Sum ({npsResult.lumpSumPercent}%)</div>
-              <div className={styles.statValue}>
-                {currencySymbol}
-                {npsResult.lumpSumAmount.toLocaleString('en-IN')}
-              </div>
-            </div>
-            <div className={styles.statBox}>
-              <div className={styles.statLabel}>Total Invested</div>
-              <div className={styles.statValue}>
-                {currencySymbol}
-                {npsResult.totalInvested.toLocaleString('en-IN')}
-              </div>
-            </div>
-            <div className={styles.statBox}>
-              <div className={styles.statLabel}>Wealth Gained</div>
-              <div className={`${styles.statValue} ${styles.statValueGain}`}>
-                +{currencySymbol}
-                {npsResult.interestEarned.toLocaleString('en-IN')}
-              </div>
-            </div>
-          </div>
-          {/* Corpus Distribution (Lump Sum vs Annuity) */}
-          <div className={styles.corpusSplitCard}>
-            <div className={styles.corpusSplitTitle}>
-              Corpus Utilization at Age {retirementAge} {npsResult.isPremature ? '(Premature Exit)' : '(Superannuation)'}
-            </div>
-            <div className={styles.splitBar}>
-              <div
-                className={styles.splitLumpSum}
-                ref={(el) => {
-                  if (el) el.style.width = `${npsResult.lumpSumPercent}%`;
-                }}
-                title={`Lump Sum: ${npsResult.lumpSumPercent}%`}
-              />
-              <div
-                className={styles.splitAnnuity}
-                ref={(el) => {
-                  if (el) el.style.width = `${npsResult.annuityPercent}%`;
-                }}
-                title={`Annuity: ${npsResult.annuityPercent}%`}
-              />
-            </div>
-            <div className={styles.splitLegend}>
-              <div className={styles.splitItem}>
-                <span className={styles.splitDotLumpSum} />
-                <div>
-                  <div className={styles.splitTitle}>Lump Sum ({npsResult.lumpSumPercent}%)</div>
-                  <div className={styles.splitAmountLumpSum}>
-                    {currencySymbol}
-                    {npsResult.lumpSumAmount.toLocaleString('en-IN')}
-                  </div>
-                  <div className={styles.splitDesc}>100% Tax-Free (Sec 10(12A))</div>
-                </div>
-              </div>
-              <div className={styles.splitItem}>
-                <span className={styles.splitDotAnnuity} />
-                <div>
-                  <div className={styles.splitTitle}>Annuity ({npsResult.annuityPercent}%)</div>
-                  <div className={styles.splitAmountAnnuity}>
-                    {currencySymbol}
-                    {npsResult.annuityCorpus.toLocaleString('en-IN')}
-                  </div>
-                  <div className={styles.splitDesc}>
-                    {npsResult.annuityPercent > 0
-                      ? 'Lifelong Monthly Pension (Taxable at slab)'
-                      : '0% Annuity allocated'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Tax Advantages Card */}
-          <section>
-            <div className={styles.taxBenefitsHeader}>
-              <FiAward className={styles.taxBenefitsAwardIcon} />
-              <span>NPS Exclusive Tax Advantages</span>
-            </div>
-            <div className={styles.taxBenefitsList}>
-              <div className={styles.taxBenefitItem}>
-                <FiCheckCircle className={styles.taxBenefitIcon} />
-                <div>
-                  <strong>Section 80CCD(1B):</strong> Exclusive additional ₹50,000 deduction over
-                  and above Section 80C limit.
-                </div>
-              </div>
-              <div className={styles.taxBenefitItem}>
-                <FiCheckCircle className={styles.taxBenefitIcon} />
-                <div>
-                  <strong>Section 80CCD(2):</strong> Employer contribution up to 10% of Basic+DA is
-                  tax-free in both regimes without any ₹1.5L cap.
-                </div>
-              </div>
-              <div className={styles.taxBenefitItem}>
-                <FiCheckCircle className={styles.taxBenefitIcon} />
-                <div>
-                  <strong>Section 10(12A):</strong> The 60% lump sum withdrawal at maturity is 100%
-                  tax-free.
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
+        <NpsInputs
+          currentAge={currentAge}
+          setCurrentAge={setCurrentAge}
+          retirementAge={retirementAge}
+          setRetirementAge={setRetirementAge}
+          monthlyContribution={monthlyContribution}
+          setMonthlyContribution={setMonthlyContribution}
+          hasEmployerContribution={hasEmployerContribution}
+          setHasEmployerContribution={setHasEmployerContribution}
+          employerMonthly={employerMonthly}
+          setEmployerMonthly={setEmployerMonthly}
+          expectedRoi={expectedRoi}
+          setExpectedRoi={setExpectedRoi}
+          setAnnuityPercent={setAnnuityPercent}
+          annuityRate={annuityRate}
+          setAnnuityRate={setAnnuityRate}
+          npsResult={npsResult}
+        />
+        <NpsSummaryCol
+          npsResult={npsResult}
+          retirementAge={retirementAge}
+        />
       </div>
-      {/* Year-by-Year Schedule */}
-      <section className={styles.scheduleSection}>
-        <div>
-          <div className={styles.scheduleHeader}>
-            <h2 className={`${styles.sectionHeading} ${styles.subheading}`}>
-              Retirement Wealth Accumulation Trajectory
-            </h2>
-            <p className={`${styles.subtitle} ${styles.subheadingDesc}`}>
-              Growth of your pension corpus year-by-year from age {currentAge} to {retirementAge} (
-              {wealthMultiple}x Capital Multiplier).
-            </p>
-          </div>
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  <th>Age</th>
-                  <th>Annual Contribution</th>
-                  <th>Total Invested</th>
-                  <th>Interest Earned This Year</th>
-                  <th>Closing Pension Corpus</th>
-                </tr>
-              </thead>
-              <tbody>
-                {npsResult.yearlyBreakdown.map((row) => (
-                  <tr key={row.yearNumber}>
-                    <td>Yr {row.yearNumber}</td>
-                    <td>
-                      <strong>{row.age} Yrs</strong>
-                    </td>
-                    <td>
-                      {currencySymbol}
-                      {row.annualContribution.toLocaleString('en-IN')}
-                    </td>
-                    <td>
-                      {currencySymbol}
-                      {row.cumulativeInvested.toLocaleString('en-IN')}
-                    </td>
-                    <td className={styles.interestCell}>
-                      +{currencySymbol}
-                      {row.interestEarned.toLocaleString('en-IN')}
-                    </td>
-                    <td className={styles.balanceCell}>
-                      {currencySymbol}
-                      {row.closingCorpus.toLocaleString('en-IN')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-      {/* Content Section & FAQ */}
-      <CalculatorContentSection
-        title="Comprehensive National Pension System (NPS) Guide"
-        subtitle="Instituted by the Pension Fund Regulatory and Development Authority (PFRDA), NPS is an ultra-low-cost, government-regulated defined-contribution pension scheme created to secure the post-retirement lives of Indian citizens."
-        comparisonTable={{
-          headers: [
-            'Feature',
-            'National Pension System (NPS)',
-            'Employees Provident Fund (EPF)',
-            'Public Provident Fund (PPF)',
-          ],
-          rows: [
-            ['Regulator', 'PFRDA', 'EPFO (Ministry of Labour)', 'Ministry of Finance / RBI'],
-            [
-              'Equity Exposure',
-              'Up to 75% in Equity (Class E)',
-              'Up to 15% in Equity ETFs',
-              '0% (Pure Sovereign Debt)',
-            ],
-            [
-              'Exclusive Tax Deduction',
-              '₹50,000 under 80CCD(1B) beyond 80C',
-              'Covered inside ₹1.5L 80C',
-              'Covered inside ₹1.5L 80C',
-            ],
-            [
-              'Employer Tax Benefit',
-              '10% of Basic+DA under 80CCD(2)',
-              'Exempt up to 12% of Basic',
-              'Not Applicable',
-            ],
-            [
-              'Withdrawal at Age 60',
-              '60% Tax-Free Lump Sum + 40% Annuity',
-              '100% Tax-Free Lump Sum',
-              '100% Tax-Free Lump Sum',
-            ],
-          ],
-        }}
-        faqs={[
-          {
-            question: 'Can I withdraw 100% of my NPS corpus at age 60 without buying an annuity?',
-            answer:
-              'If your total accumulated pension corpus at age 60 is ₹5 Lakh or less, PFRDA permits you to withdraw 100% of the corpus as a lump sum without any mandatory annuity purchase. If the corpus exceeds ₹5 Lakh, you must utilize at least 40% to purchase a lifelong annuity.',
-          },
-          {
-            question: 'What are the asset choices available in NPS?',
-            answer:
-              'NPS offers two choices: (1) Active Choice — you decide the allocation across Asset Class E (Equities up to 75%), Asset Class C (Corporate Bonds), Asset Class G (Government Securities), and Asset Class A (Alternative Assets up to 5%); (2) Auto Choice — your funds are automatically allocated across LifeCycle funds (Aggressive LC-75, Moderate LC-50, or Conservative LC-25) where equity exposure automatically de-risks as your age advances.',
-          },
-          {
-            question: 'Is the monthly annuity pension from NPS taxable?',
-            answer:
-              'While the 60% lump sum withdrawal is 100% tax-free under Section 10(12A), the monthly pension received from the annuity provider is treated as salary/income from other sources and is taxed at your applicable income tax slab rates in the year of receipt.',
-          },
-        ]}
+      <NpsScheduleTable
+        currentAge={currentAge}
+        retirementAge={retirementAge}
+        wealthMultiple={wealthMultiple}
+        yearlyBreakdown={npsResult.yearlyBreakdown}
       />
+      <NpsContent />
     </main>
   );
 };

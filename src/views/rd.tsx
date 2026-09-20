@@ -1,236 +1,28 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import DisplayCard from '../components/DisplayCard';
-import ValuePicker from '../components/ValuePicker';
-import { sanctnum } from '../utilities/numSanitity';
-import { RT } from '../types/types';
-import { DEFAULT_RATE_STEPS, getTenureStepData } from '../data/valuePickerData';
+import type { RT } from '../types/types';
 import SEOHead from '../components/SEOHead';
-import CalculatorContentSection from '../components/CalculatorContentSection';
+import { rdSchema } from '../data/seo/rdData';
+import { useRdCalculations } from './rd/useRdCalculations';
+import { RdInputs } from './rd/RdInputs';
+import { RdSummaryCard } from './rd/RdSummaryCard';
+import { RdTaxCard } from './rd/RdTaxCard';
+import { RdContent } from './rd/RdContent';
 import styles from './CalculatorPage.module.scss';
-const rdSchema = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'FinancialProduct',
-      name: 'Recurring Deposit (RD) Maturity Calculator India',
-      description:
-        'Calculates Recurring Deposit (RD) maturity amount, total interest yield, and compound growth on monthly savings across commercial banks and Post Office RD schemes.',
-      category: 'DepositAccount',
-      provider: {
-        '@type': 'Organization',
-        name: 'Rupee Calculator',
-        url: 'https://rupees.vercel.app/',
-      },
-    },
-    {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Home',
-          item: 'https://rupees.vercel.app/',
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Recurring Deposit Calculator',
-          item: 'https://rupees.vercel.app/rd-calculator',
-        },
-      ],
-    },
-    {
-      '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'How is interest compounded on Recurring Deposits in Indian banks?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Indian banks compound Recurring Deposit interest on a quarterly basis. Each monthly installment earns interest for the remaining quarters in the tenure, compounding at the bank agreed interest rate.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Is TDS deducted on Recurring Deposit interest in India?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes. Under Section 194A of the Income Tax Act, TDS is deducted at 10% on cumulative RD and FD interest exceeding ₹40,000 in a financial year across a bank (₹50,000 for senior citizens).',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Can I withdraw from a Recurring Deposit prematurely?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes, banks allow premature closure of RDs with a nominal penalty (usually 0.5% to 1.0% deduction from the applicable interest rate for the actual period held).',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'How to calculate recurring deposit maturity amount?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: "RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank's quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).",
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'RD vs SIP: Which is better for monthly savings?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'For short-term goals (1–3 years), bank RDs offer guaranteed returns and capital protection. For long-term wealth creation (5+ years), mutual fund SIPs historically deliver significantly higher returns (12–15% CAGR vs. 6–7% RD rates) due to equity market compounding. RDs are ideal for risk-averse savers, while SIPs suit investors with higher risk tolerance and longer horizons.',
-          },
-        },
-      ],
-    },
-    {
-      '@type': 'WebApplication',
-      name: 'RD Calculator — Rupee Calculator',
-      url: 'https://rupees.vercel.app/rd-calculator',
-      applicationCategory: 'FinanceApplication',
-      operatingSystem: 'All',
-      browserRequirements: 'Requires JavaScript',
-      offers: {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'INR',
-      },
-    },
-  ],
-};
-const rdFaqs = [
-  {
-    question: 'How is an RD different from a Fixed Deposit (FD)?',
-    answer:
-      'In a Fixed Deposit, you deposit a single lump-sum amount at inception. In a Recurring Deposit, you deposit a fixed monthly installment every month over a chosen tenure, making RD ideal for salaried individuals saving from monthly income.',
-  },
-  {
-    question: 'What is the Post Office Recurring Deposit scheme interest rate and tenure?',
-    answer:
-      'The Post Office 5-Year National Savings Recurring Deposit Account (RD) offers sovereign-backed guaranteed quarterly compounding returns (historically ~6.7% p.a.) with a mandatory 5-year tenure and options for loan advances against the deposit.',
-  },
-  {
-    question: 'Is Recurring Deposit interest taxable under the New Tax Regime?',
-    answer:
-      'Yes. RD interest is fully taxable under both Old and New Tax Regimes as "Income from Other Sources" according to your marginal income tax slab.',
-  },
-  {
-    question: 'Should I choose an RD or a Mutual Fund SIP for a 3-year goal?',
-    answer:
-      'For short-term non-negotiable goals under 3 years (e.g., vacation, wedding down payment, emergency fund), an RD or Debt Fund provides zero market volatility. For goals 5+ years away, an Equity SIP offers higher inflation-beating potential.',
-  },
-  {
-    question: 'How to calculate recurring deposit maturity amount?',
-    answer:
-      "RD maturity is calculated using quarterly compounding: each monthly installment compounds at the bank's quarterly rate until the end of the tenure. The effective formula accounts for each installment earning interest for a decreasing number of quarters. For example, ₹5,000/month RD at 7% for 5 years yields approximately ₹3,58,000 (invested: ₹3,00,000, interest earned: ~₹58,000).",
-  },
-  {
-    question: 'RD vs SIP: Which is better for monthly savings?',
-    answer:
-      'For short-term goals (1–3 years), bank RDs offer guaranteed returns and capital protection. For long-term wealth creation (5+ years), mutual fund SIPs historically deliver significantly higher returns (12–15% CAGR vs. 6–7% RD rates) due to equity market compounding. RDs are ideal for risk-averse savers, while SIPs suit investors with higher risk tolerance and longer horizons.',
-  },
-];
-const TAX_SLABS = [0, 5, 10, 15, 20, 30];
-const RD = ({ className, title }: { className?: string; title?: string }) => {
+interface RdProps {
+  className?: string;
+  title?: string;
+}
+const RD = ({ className, title }: RdProps) => {
   const [pa, setPa] = useState('10000');
-  const [rt, setRt] = useState<RT>({
-    roi: '7.1',
-    tenure: '5',
-    tenureFormat: 'y',
-  });
+  const [rt, setRt] = useState<RT>({ roi: '7.1', tenure: '5', tenureFormat: 'y' });
   const [invType, setInvType] = useState('my');
   const [taxSlab, setTaxSlab] = useState<number>(30);
   const [isSeniorCitizen, setIsSeniorCitizen] = useState<boolean>(false);
-  const stepData = [
-    { id: 'p1', value: '50000000', title: '5Cr' },
-    { id: 'p2', value: '5000000', title: '50L' },
-    { id: 'p3', value: '500000', title: '5L' },
-    { id: 'p4', value: '50000', title: '50K' },
-    { id: 'p5', value: '5000', title: '5K' },
-    { id: 'p6', value: '500', title: '500' },
-    { id: 'p7', value: '50', title: '50' },
-  ];
-  const calculate = (p: string, t: string, tf: string, invType: string, r?: string) => {
-    const tenure = tf === 'y' ? sanctnum(t) : sanctnum(t) / 12;
-    const principal = sanctnum(p);
-    const rate = r ? sanctnum(r) / 100 : 0;
-    const n = 4;
-    const totalMonths = tenure * 12;
-    let fa = 0;
-    if (invType === 'my') {
-      for (let i = 1; i <= totalMonths; i++) {
-        const monthsLeft = totalMonths - i + 1;
-        const yearsLeft = monthsLeft / 12;
-        fa += principal * Math.pow(1 + rate / n, n * yearsLeft);
-      }
-    } else {
-      let sum = 0;
-      for (let i = 1; i <= totalMonths; i++) {
-        const monthsLeft = totalMonths - i + 1;
-        const yearsLeft = monthsLeft / 12;
-        sum += Math.pow(1 + rate / n, n * yearsLeft);
-      }
-      fa = principal / sum;
-    }
-    return sanctnum(fa);
-  };
-  const payoutAmount = Math.ceil(calculate(pa, rt.tenure, rt.tenureFormat, invType, rt.roi));
-  const { totalDeposited, totalInterestEarned } = useMemo(() => {
-    const tenureYears = rt.tenureFormat === 'y' ? sanctnum(rt.tenure) : sanctnum(rt.tenure) / 12;
-    const months = Math.round(tenureYears * 12);
-    if (invType === 'my') {
-      const monthly = sanctnum(pa);
-      const deposited = Math.round(monthly * months);
-      const interest = Math.max(0, payoutAmount - deposited);
-      return { totalDeposited: deposited, totalInterestEarned: interest };
-    } else {
-      const monthlyReq = payoutAmount;
-      const deposited = Math.round(monthlyReq * months);
-      const target = sanctnum(pa);
-      const interest = Math.max(0, target - deposited);
-      return { totalDeposited: deposited, totalInterestEarned: interest };
-    }
-  }, [pa, rt.tenure, rt.tenureFormat, invType, payoutAmount]);
-  const depositPercent = useMemo(() => {
-    const total = totalDeposited + totalInterestEarned;
-    if (total <= 0) return 50;
-    return Math.min(100, Math.max(0, Math.round((totalDeposited / total) * 100)));
-  }, [totalDeposited, totalInterestEarned]);
-  const tenureYears = useMemo(() => {
-    const raw = sanctnum(rt.tenure);
-    return rt.tenureFormat === 'y' ? raw : raw / 12;
-  }, [rt.tenure, rt.tenureFormat]);
-  const taxAnalysis = useMemo(() => {
-    const maxSec80TTB = isSeniorCitizen
-      ? Math.min(totalInterestEarned, 50000 * Math.max(1, Math.ceil(tenureYears)))
-      : 0;
-    const taxableInterest = Math.max(0, totalInterestEarned - maxSec80TTB);
-    const effectiveRate = (taxSlab / 100) * 1.04;
-    const estimatedTax = Math.round(taxableInterest * effectiveRate);
-    const postTaxInterest = Math.max(0, totalInterestEarned - estimatedTax);
-    const postTaxMaturity = totalDeposited + postTaxInterest;
-    const postTaxCagr =
-      totalDeposited > 0 && tenureYears > 0
-        ? ((postTaxInterest / totalDeposited / tenureYears) * 100).toFixed(2)
-        : '0.00';
-    const annualInterest =
-      tenureYears > 0 ? totalInterestEarned / tenureYears : totalInterestEarned;
-    const tdsThreshold = isSeniorCitizen ? 50000 : 40000;
-    const isTdsApplicable = annualInterest > tdsThreshold;
-    return {
-      maxSec80TTB,
-      taxableInterest,
-      estimatedTax,
-      postTaxInterest,
-      postTaxMaturity,
-      postTaxCagr,
-      annualInterest,
-      tdsThreshold,
-      isTdsApplicable,
-    };
-  }, [totalInterestEarned, totalDeposited, tenureYears, isSeniorCitizen, taxSlab]);
+  const {
+    payoutAmount, totalDeposited, totalInterestEarned, depositPercent, taxAnalysis,
+  } = useRdCalculations(pa, rt, invType, taxSlab, isSeniorCitizen);
   return (
     <main className={`${styles.container} ${styles.containerWide} ${className || ''}`}>
       <SEOHead
@@ -244,243 +36,40 @@ const RD = ({ className, title }: { className?: string; title?: string }) => {
         <div className={styles.badge}>Disciplined Savings &bull; Guaranteed Returns</div>
         <h1 className={styles.title}>Recurring Deposit (RD) Calculator India</h1>
         <p className={styles.subtitle}>
-          Calculate maturity values, total interest yield, and compound returns on monthly recurring
-          deposits.
+          Calculate maturity values, total interest yield, and compound returns on monthly recurring deposits.
         </p>
       </header>
       <div className={styles.calculatorGrid}>
-        <div className={styles.inputsCol}>
-          <div className={styles.formStack}>
-            {title && <h5 className={styles.sectionTitle}>{title}</h5>}
-            <ValuePicker
-              className={styles.field}
-              value={pa}
-              onChange={setPa}
-              activeTab={invType}
-              onTabChange={setInvType}
-              stepData={stepData}
-              tabs={[
-                { id: 'my', title: 'Monthly amount' },
-                { id: 'tgt', title: 'Target amount' },
-              ]}
-              singleRow={true}
-              tabSize="sm"
-            />
-            <ValuePicker
-              className={styles.field}
-              value={rt.roi}
-              symbol="%"
-              symbolBg={false}
-              symbolPosition="right"
-              onChange={(newRoi) => setRt((prev) => ({ ...prev, roi: newRoi }))}
-              title="Interest rate"
-              titleStyle="merged"
-              stepData={DEFAULT_RATE_STEPS}
-              showWords={false}
-              singleRow={true}
-            />
-            <ValuePicker
-              className={styles.fieldLast}
-              value={rt.tenure}
-              symbol={null}
-              onChange={(newTenure) => setRt((prev) => ({ ...prev, tenure: newTenure }))}
-              title="Tenure"
-              titleStyle="merged"
-              stepData={getTenureStepData(rt.tenureFormat)}
-              endAdornment={
-                <select
-                  className={styles.tenureFormatSelect}
-                  value={rt.tenureFormat}
-                  onChange={(e) =>
-                    setRt((prev) => ({ ...prev, tenureFormat: e.target.value as 'y' | 'm' }))
-                  }
-                  aria-label="Tenure Unit"
-                >
-                  <option value="m">Months</option>
-                  <option value="y">Years</option>
-                </select>
-              }
-              showWords={false}
-              singleRow={true}
-            />
-          </div>
-        </div>
+        <RdInputs
+          title={title}
+          pa={pa}
+          setPa={setPa}
+          rt={rt}
+          setRt={setRt}
+          invType={invType}
+          setInvType={setInvType}
+        />
         <div className={styles.resultsCol}>
           <DisplayCard
             primaryAmount={payoutAmount}
             title={invType === 'tgt' ? 'Monthly investment required' : 'Maturity amount'}
           />
-          <div className={styles.summaryCard}>
-            <div className={styles.summaryHeader}>
-              <span>RD Maturity Summary</span>
-              <span className={styles.summarySub}>
-                {rt.tenure} {rt.tenureFormat === 'y' ? 'Years' : 'Months'} @ {rt.roi}%
-              </span>
-            </div>
-            <div className={styles.statsGrid}>
-              <div className={styles.statBox}>
-                <span className={styles.statLabel}>Total Deposited</span>
-                <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
-                  ₹{totalDeposited.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div className={styles.statBox}>
-                <span className={styles.statLabel}>Total Interest</span>
-                <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
-                  +₹{totalInterestEarned.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-            <div className={styles.ratioBar}>
-              <div
-                className={styles.ratioFillInvested}
-                ref={(el) => {
-                  if (el) el.style.width = `${depositPercent}%`;
-                }}
-              />
-              <div
-                className={styles.ratioFillReturns}
-                ref={(el) => {
-                  if (el) el.style.width = `${100 - depositPercent}%`;
-                }}
-              />
-            </div>
-            <div className={styles.ratioLegend}>
-              <span className={styles.ratioLegendItem}>
-                <span className={styles.ratioDotInvested} /> Deposited ({depositPercent}%)
-              </span>
-              <span className={styles.ratioLegendItem}>
-                <span className={styles.ratioDotReturns} /> Interest ({100 - depositPercent}%)
-              </span>
-            </div>
-          </div>
+          <RdSummaryCard
+            rt={rt}
+            totalDeposited={totalDeposited}
+            totalInterestEarned={totalInterestEarned}
+            depositPercent={depositPercent}
+          />
         </div>
       </div>
-      <div className={styles.taxCard}>
-        <div className={styles.taxHeader}>
-          <span className={styles.taxTitle}>Taxation &amp; Post-Tax Returns</span>
-          <label className={styles.seniorCitizenToggle}>
-            <input
-              type="checkbox"
-              checked={isSeniorCitizen}
-              onChange={(e) => setIsSeniorCitizen(e.target.checked)}
-            />
-            Senior Citizen (Sec 80TTB)
-          </label>
-        </div>
-        <div className={styles.taxSlabSelector}>
-          {TAX_SLABS.map((slab) => (
-            <button
-              key={slab}
-              type="button"
-              className={`${styles.taxSlabBtn} ${taxSlab === slab ? styles.taxSlabBtnActive : ''}`}
-              onClick={() => setTaxSlab(slab)}
-            >
-              {slab}% Slab
-            </button>
-          ))}
-        </div>
-        <div className={styles.taxStatsGrid}>
-          <div className={styles.taxStatBox}>
-            <span className={styles.statLabel}>Estimated Tax (4% Cess)</span>
-            <span className={`${styles.statValue} ${styles.statValueWarning}`}>
-              ₹{taxAnalysis.estimatedTax.toLocaleString('en-IN')}
-            </span>
-          </div>
-          <div className={styles.taxStatBox}>
-            <span className={styles.statLabel}>Post-Tax Interest</span>
-            <span className={`${styles.statValue} ${styles.statValueSuccess}`}>
-              ₹{taxAnalysis.postTaxInterest.toLocaleString('en-IN')}
-            </span>
-          </div>
-          <div className={styles.taxStatBox}>
-            <span className={styles.statLabel}>Post-Tax Maturity</span>
-            <span className={`${styles.statValue} ${styles.statValuePrimary}`}>
-              ₹{taxAnalysis.postTaxMaturity.toLocaleString('en-IN')}
-            </span>
-          </div>
-          <div className={styles.taxStatBox}>
-            <span className={styles.statLabel}>Effective Post-Tax Return</span>
-            <span className={styles.statValue}>{taxAnalysis.postTaxCagr}% p.a.</span>
-          </div>
-        </div>
-        <div className={styles.taxNotice}>
-          {taxAnalysis.isTdsApplicable
-            ? `Sec 194A TDS (~10%) is likely deducted by your bank since estimated annual interest (~₹${Math.round(
-                taxAnalysis.annualInterest
-              ).toLocaleString('en-IN')}) exceeds ₹${taxAnalysis.tdsThreshold.toLocaleString(
-                'en-IN'
-              )}. Submit Form 15G/15H if total income is below basic exemption.`
-            : `Estimated annual interest (~₹${Math.round(taxAnalysis.annualInterest).toLocaleString(
-                'en-IN'
-              )}) is below the ₹${taxAnalysis.tdsThreshold.toLocaleString(
-                'en-IN'
-              )} TDS threshold (Sec 194A). No TDS deducted by bank, but interest is taxable per slab.`}
-          {isSeniorCitizen && taxAnalysis.maxSec80TTB > 0 && (
-            <span>
-              {' '}
-              Section 80TTB deduction of ₹{taxAnalysis.maxSec80TTB.toLocaleString('en-IN')} applied.
-            </span>
-          )}
-        </div>
-      </div>
-      <CalculatorContentSection
-        title="How Recurring Deposit Compounding Works in India"
-        subtitle="A Recurring Deposit (RD) is a guaranteed investment instrument tailored for individuals with regular monthly earnings. By depositing a fixed sum each month, each installment compounds quarterly until maturity."
-        comparisonTable={{
-          headers: [
-            'Parameter',
-            'Bank Recurring Deposit (RD)',
-            'Post Office 5-Year RD',
-            'Mutual Fund Equity SIP',
-          ],
-          rows: [
-            ['Minimum Deposit', '₹500 / month (varies by bank)', '₹100 / month', '₹500 / month'],
-            [
-              'Returns Structure',
-              'Guaranteed & Fixed',
-              'Sovereign Guarantee (Govt)',
-              'Market Linked (~12-15% CAGR)',
-            ],
-            [
-              'Compounding Frequency',
-              'Quarterly Compounding',
-              'Quarterly Compounding',
-              'Daily NAV Compounding',
-            ],
-            [
-              'Tenure Flexibility',
-              '6 months to 10 years',
-              'Fixed 5-year tenure',
-              'Open-ended / Any duration',
-            ],
-            [
-              'Risk Profile',
-              'Very Low (DICGC insured)',
-              'Zero Risk (Govt of India)',
-              'Moderate to High Equity Risk',
-            ],
-          ],
-        }}
-        keyBenefits={[
-          {
-            title: 'Disciplined Monthly Habits',
-            description:
-              'Automate deductions from your salary account to build a predictable savings cushion.',
-          },
-          {
-            title: 'Guaranteed Interest Lock-in',
-            description:
-              'Your agreed interest rate remains immune to future RBI repo rate cuts throughout the tenure.',
-          },
-          {
-            title: 'Loan Against RD Facility',
-            description:
-              'Borrow up to 90% of your accumulated RD balance at low interest rates in emergencies.',
-          },
-        ]}
-        faqs={rdFaqs}
+      <RdTaxCard
+        isSeniorCitizen={isSeniorCitizen}
+        setIsSeniorCitizen={setIsSeniorCitizen}
+        taxSlab={taxSlab}
+        setTaxSlab={setTaxSlab}
+        taxAnalysis={taxAnalysis}
       />
+      <RdContent />
     </main>
   );
 };
