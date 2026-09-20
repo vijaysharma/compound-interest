@@ -1,5 +1,12 @@
-import { Streamline } from './types';
-import { DEFAULT_SOURCE_FUNDS, DEFAULT_SIP_FUNDS } from './strategyPresets';
+import { Streamline, SelectedFund } from './types';
+export const DEFAULT_SOURCE_FUNDS: SelectedFund[] = [
+  { schemeCode: '119551', schemeName: 'HDFC Nifty 50 Index Fund', allocationPercent: 100, expectedCagr: 12.5, fundType: 'equity' },
+];
+export const DEFAULT_SIP_FUNDS: SelectedFund[] = [
+  { schemeCode: '119551', schemeName: 'HDFC Nifty 50 Index Fund', allocationPercent: 40, expectedCagr: 12.5, fundType: 'equity' },
+  { schemeCode: '120503', schemeName: 'Mirae Asset Large & Midcap Fund', allocationPercent: 30, expectedCagr: 14.0, fundType: 'equity' },
+  { schemeCode: '125354', schemeName: 'Nippon India Small Cap Fund', allocationPercent: 30, expectedCagr: 16.0, fundType: 'equity' },
+];
 export const DEFAULT_STREAMLINES: Streamline[] = [
   {
     id: 'streamline-1',

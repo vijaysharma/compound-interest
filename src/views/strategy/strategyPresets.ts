@@ -1,7 +1,7 @@
 import type { ButtonDataType } from '../../types/types';
-import { SelectedFund, SwpFrequency, StepUpType, SwpInterval } from './types';
+import { SwpFrequency, StepUpType, SwpInterval } from './types';
 import { TopUpFrequency, RecurringTopUpSource } from './column1Types';
-export { DEFAULT_STREAMLINES } from './streamlinePresets';
+export { DEFAULT_STREAMLINES, DEFAULT_SOURCE_FUNDS, DEFAULT_SIP_FUNDS } from './streamlinePresets';
 export interface StrategyAmountStep {
   value: string;
   label: string;
@@ -99,11 +99,3 @@ export const DEFAULT_RECURRING_TOPUPS: RecurringTopUpSource[] = [
 ];
 export const MAX_INITIAL_FUNDS = 4;
 export const MAX_SIP_FUNDS = 6;
-export const DEFAULT_SOURCE_FUNDS: SelectedFund[] = [
-  { schemeCode: '119551', schemeName: 'HDFC Nifty 50 Index Fund', allocationPercent: 100, expectedCagr: 12.5, fundType: 'equity' },
-];
-export const DEFAULT_SIP_FUNDS: SelectedFund[] = [
-  { schemeCode: '119551', schemeName: 'HDFC Nifty 50 Index Fund', allocationPercent: 40, expectedCagr: 12.5, fundType: 'equity' },
-  { schemeCode: '120503', schemeName: 'Mirae Asset Large & Midcap Fund', allocationPercent: 30, expectedCagr: 14.0, fundType: 'equity' },
-  { schemeCode: '125354', schemeName: 'Nippon India Small Cap Fund', allocationPercent: 30, expectedCagr: 16.0, fundType: 'equity' },
-];
