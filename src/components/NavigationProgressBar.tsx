@@ -129,9 +129,11 @@ export function NavigationProgressBar() {
         aria-hidden="true"
       >
         <div
-          ref={barRef}
+          ref={(el) => {
+            barRef.current = el;
+            if (el) el.style.width = `${progress}%`;
+          }}
           className={`${styles.progressBar} ${progress === 100 ? styles.complete : ''}`}
-          style={{ width: `${progress}%` }}
         >
           <div className={styles.peg} />
         </div>

@@ -1,39 +1,28 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from '@/navigation';
-import { FiClock, FiLock, FiX, FiZap } from 'react-icons/fi';
-import { useAuth } from '../context/useAuth';
-import { PaymentSettings } from '../types/auth';
-import { loadRazorpayScript } from '../utils/razorpay';
-import {
-  createRazorpayOrderAction,
-  getPaymentSettingsAction,
-  verifyRazorpayPaymentAction,
-} from '@/actions/payments';
+import { FiX } from 'react-icons/fi';
 import { useScrollLock } from '../utilities/useScrollLock';
+import { usePaywallPayment } from './paywall/usePaywallPayment';
+import { PaywallHeader } from './paywall/PaywallHeader';
+import { PaywallActions } from './paywall/PaywallActions';
 import styles from './PaywallModal.module.scss';
-import { resolveThemeToken } from '@/data/chartColors';
 const PaywallModal = () => {
-  const { user, showPaywall, setShowPaywall, refreshUser } = useAuth();
+  const {
+    user,
+    showPaywall,
+    setShowPaywall,
+    isProcessing,
+    message,
+    billingInterval,
+    setBillingInterval,
+    proMonthlyAmount,
+    planAmount,
+    handleRazorpayPayment,
+  } = usePaywallPayment();
   useScrollLock(showPaywall);
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<PaymentSettings | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [now] = useState(() => Date.now());
-  const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
-  useEffect(() => {
-    if (!showPaywall) return;
-    const fetchSettings = async () => {
-      try {
-        const data = await getPaymentSettingsAction();
-        setSettings(data.settings);
-      } catch (err) {
-        console.warn('Failed to load payment settings:', err);
-      }
-    };
-    void fetchSettings();
-  }, [showPaywall]);
   if (!showPaywall) return null;
   const handleCloseOrLater = () => {
     setShowPaywall(false);
@@ -41,95 +30,16 @@ const PaywallModal = () => {
       navigate('/upgrade');
     }
   };
-  const isTrialActive = user && !user.isBlocked && user.subscription_status !== 'active';
+  const isTrialActive = Boolean(user && !user.isBlocked && user.subscription_status !== 'active');
   const remainingCalculations = Math.max(0, (user?.freeLimit || 15) - (user?.api_usage_count || 0));
   const getRemainingHours = () => {
     if (!user?.trial_expires_at) return null;
     const diff = new Date(user.trial_expires_at).getTime() - now;
-    if (diff <= 0) return 0;
+    if (diff <= 0) return '0m';
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     if (hours > 0) return `${hours}h ${mins}m`;
     return `${mins}m`;
-  };
-  const remainingTimeStr = getRemainingHours();
-  const proMonthlyAmount = settings?.amount ?? 54;
-  const planId = billingInterval === 'monthly' ? 'pro_monthly' : 'pro_yearly';
-  const planAmount = billingInterval === 'monthly' ? proMonthlyAmount : 499;
-  const handleRazorpayPayment = async () => {
-    setIsProcessing(true);
-    setMessage(null);
-    try {
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded || !window.Razorpay) {
-        throw new Error('Could not load payment gateway. Please check your internet connection.');
-      }
-      const storedToken = localStorage.getItem('auth_token');
-      const orderData = await createRazorpayOrderAction(storedToken, planId);
-      if (!orderData.orderId || !orderData.keyId) {
-        throw new Error('Failed to create payment order');
-      }
-      const options = {
-        key: orderData.keyId,
-        amount: orderData.amount,
-        currency: orderData.currency || 'INR',
-        name: 'Rupee Calculator Pro',
-        description: orderData.planName || 'Pro Subscription',
-        order_id: orderData.orderId,
-        prefill: {
-          email: user?.email || '',
-        },
-        theme: {
-          // Razorpay renders in its own iframe and cannot read our CSS
-          // variables, so the primary is resolved to a concrete value here.
-          color: resolveThemeToken('--color-primary'),
-        },
-        handler: async (response: {
-          razorpay_payment_id: string;
-          razorpay_order_id: string;
-          razorpay_signature: string;
-        }) => {
-          try {
-            setIsProcessing(true);
-            const verifyData = await verifyRazorpayPaymentAction(
-              { ...response, plan_id: planId },
-              storedToken
-            );
-            setMessage({
-              type: 'success',
-              text: verifyData.message || 'Payment successful! Pro access is now active.',
-            });
-            await refreshUser();
-            setTimeout(() => {
-              setShowPaywall(false);
-              const saved = localStorage.getItem('last_visited_route');
-              const target = saved && saved !== '/login' && saved !== '/upgrade' ? saved : '/';
-              navigate(target, { replace: true });
-            }, 1200);
-          } catch (err) {
-            setMessage({
-              type: 'error',
-              text: err instanceof Error ? err.message : 'Verification failed',
-            });
-          } finally {
-            setIsProcessing(false);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setIsProcessing(false);
-          },
-        },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to process payment',
-      });
-      setIsProcessing(false);
-    }
   };
   return (
     <div className={styles.dialogOverlay} role="dialog" aria-modal="true" aria-labelledby="paywall-title">
@@ -142,58 +52,15 @@ const PaywallModal = () => {
         >
           <FiX className={styles.iconLarge} />
         </button>
-        <div className={styles.header}>
-          {isTrialActive ? (
-            <div className={`${styles.badgeTrial} ${styles.active}`}>
-              <FiClock className={styles.iconSmall} />
-              <span>Trial Active</span>
-            </div>
-          ) : (
-            <div className={`${styles.badgeTrial} ${styles.expired}`}>
-              <FiZap className={styles.iconSmall} />
-              <span>Trial Expired</span>
-            </div>
-          )}
-          <h2 id="paywall-title" className={styles.title}>
-            {isTrialActive ? 'Unlock Unlimited Financial Analytics' : 'Unlock Pro Access'}
-          </h2>
-          <p className={styles.subtitle}>
-            {isTrialActive ? (
-               <>
-                 You have{' '}
-                 <span className={styles.highlightPrimary}>
-                   {remainingCalculations} of {user?.freeLimit || 15}
-                 </span>{' '}
-                 live Mutual Fund, Inflation &amp; PPP calculation runs remaining
-                 {remainingTimeStr ? ` (${remainingTimeStr} left in your 48h trial)` : ''}. All other
-                 tools in the Calculators Suite are 100% free. Unlock unlimited access today.
-               </>
-             ) : (
-               <>
-                 Your free trial for live AMFI Mutual Funds, Inflation &amp; PPP analytics has ended for{' '}
-                 <span className={styles.highlightSemibold}>{user?.email}</span>. Calculators Suite tools remain
-                 free to use.
-               </>
-             )}
-          </p>
-          {/* Monthly / Yearly Plan Toggle */}
-          <div className={styles.planToggleContainer}>
-            <button
-              type="button"
-              onClick={() => setBillingInterval('monthly')}
-              className={`${styles.planToggleBtn} ${billingInterval === 'monthly' ? styles.planToggleBtnActive : ''}`}
-            >
-              ₹{proMonthlyAmount} / 30 Days
-            </button>
-            <button
-              type="button"
-              onClick={() => setBillingInterval('yearly')}
-              className={`${styles.planToggleBtn} ${billingInterval === 'yearly' ? styles.planToggleBtnActive : ''}`}
-            >
-              ₹499 / Year (Save 23%)
-            </button>
-          </div>
-        </div>
+        <PaywallHeader
+          user={user}
+          isTrialActive={isTrialActive}
+          remainingCalculations={remainingCalculations}
+          remainingTimeStr={getRemainingHours()}
+          billingInterval={billingInterval}
+          setBillingInterval={setBillingInterval}
+          proMonthlyAmount={proMonthlyAmount}
+        />
         {message && (
           <div
             className={`${styles.alert} ${message.type === 'success' ? styles.alertSuccess : styles.alertError}`}
@@ -201,41 +68,15 @@ const PaywallModal = () => {
             <span>{message.text}</span>
           </div>
         )}
-        <div className={styles.actions}>
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={() => void handleRazorpayPayment()}
-            className={styles.payBtn}
-          >
-            {isProcessing ? (
-              <>
-                <span className={styles.spinner} />
-                <span>Processing Payment...</span>
-              </>
-            ) : (
-              <>
-                <FiLock className={styles.iconMedium} />
-                <span>Pay ₹{planAmount} &amp; Unlock Pro Access</span>
-              </>
-            )}
-          </button>
-          <div className={styles.taxProContainer}>
-            <button
-              type="button"
-              onClick={() => {
-                setShowPaywall(false);
-                navigate('/upgrade');
-              }}
-              className={styles.taxProLink}
-            >
-              Looking for Tax Advisory? View Tax Pro Plans (₹129/mo) &rarr;
-            </button>
-          </div>
-          <p className={styles.securityInfo}>
-            Secure checkout via Razorpay • UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking
-          </p>
-        </div>
+        <PaywallActions
+          isProcessing={isProcessing}
+          planAmount={planAmount}
+          handleRazorpayPayment={handleRazorpayPayment}
+          onTaxProClick={() => {
+            setShowPaywall(false);
+            navigate('/upgrade');
+          }}
+        />
         <div className={styles.footerNote}>
           <button
             type="button"

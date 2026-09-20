@@ -1,0 +1,448 @@
+.container {
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.card {
+  max-width: 740px;
+  width: 100%;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: 0 25px 50px -12px rgba(109, 11, 116, 0.12), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.headerBanner {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  padding: 28px 24px 20px;
+  color: var(--color-primary-content);
+  text-align: center;
+  position: relative;
+}
+
+.svgContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.svgCircuit {
+  overflow: visible;
+}
+
+.shieldG {
+  cursor: pointer;
+}
+
+.shieldCircleOuter {
+  fill: color-mix(in srgb, var(--color-primary-content) 15%, transparent);
+  stroke: var(--color-primary-content);
+  stroke-width: 2;
+}
+
+.shieldCircleInner {
+  fill: var(--color-primary-content);
+}
+
+.shieldText {
+  text-anchor: middle;
+  fill: var(--color-primary);
+  font-size: 18px;
+  font-weight: 800;
+  font-family: sans-serif;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.18);
+  padding: 4px 14px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-warning);
+  box-shadow: 0 0 8px var(--color-warning);
+}
+
+.title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+
+.description {
+  font-size: 0.9rem;
+  opacity: 0.92;
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.subsystemsBar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 16px 20px;
+  background-color: var(--color-primary-light);
+  border-bottom: 1px solid var(--color-primary-subtle);
+}
+
+.subsystemItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-bg);
+  padding: 8px 12px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+  font-size: 0.78rem;
+}
+
+.subsystemIcon {
+  font-size: 1rem;
+}
+
+.subsystemTitle {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.subsystemStatus {
+  font-size: 0.68rem;
+  font-weight: 600;
+
+  &.statusSuccess {
+    color: var(--color-success);
+  }
+
+  &.statusWarning {
+    color: var(--color-warning);
+  }
+}
+
+.tabsBar {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+  padding: 0 16px;
+  gap: 8px;
+}
+
+.tabBtn {
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  &.tabActive {
+    border-bottom-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+
+.contentArea {
+  padding: 24px;
+  flex: 1;
+}
+
+.actionRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.retryBtn {
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  border: none;
+  border-radius: var(--radius-btn, 8px);
+  padding: 12px 28px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(109, 11, 116, 0.25);
+  transition: all 0.15s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.homeLink {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn, 8px);
+  padding: 12px 22px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: var(--color-bg-secondary);
+  }
+}
+
+.directoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.directoryLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chips {
+  display: flex;
+  gap: 4px;
+}
+
+.chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &.chipActive {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+  }
+}
+
+.calcsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.calcCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.calcIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.calcTitle {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.calcDesc {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.diagGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.diagCard {
+  padding: 16px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+  text-align: center;
+}
+
+.diagLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.diagValue {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.diagStatus {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+
+  &.statusSuccess {
+    color: var(--color-success);
+  }
+
+  &.statusWarning {
+    color: var(--color-warning);
+  }
+}
+
+.checklist {
+  padding: 16px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  margin-bottom: 20px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.rerunContainer {
+  text-align: center;
+}
+
+.rerunBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: var(--radius-btn, 8px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background-color: var(--color-bg-secondary);
+  }
+}
+
+.reportBox {
+  padding: 16px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+  font-family: monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  word-break: break-all;
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.stackDetails {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 0.8rem;
+  background-color: var(--color-bg);
+}
+
+.stackSummary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.stackPre {
+  margin-top: 10px;
+  padding: 12px;
+  background-color: var(--color-bg-secondary);
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: var(--radius-btn, 8px);
+  border: none;
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
