@@ -1,10 +1,10 @@
-@use '../../styles/variables' as *;
+@use "../../styles/variables" as *;
 
 .pageContainer {
   width: 100%;
-  max-width: 1680px;
+  max-width: 1920px;
   margin: 0 auto;
-  padding: 1.5rem 1rem 4rem;
+  padding: 1rem;
 }
 
 // Mobile Viewport Guardrail (< 768px)
@@ -199,7 +199,7 @@
 .threeColumnLayout {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
+  gap: 0.75rem;
   align-items: start;
 
   @media (min-width: 1024px) {
@@ -211,7 +211,7 @@
   grid-column: 1 / -1;
 
   @media (min-width: 1024px) {
-    grid-column: span 3 / span 3;
+    grid-column: span 4 / span 4;
   }
 }
 
@@ -219,7 +219,7 @@
   grid-column: 1 / -1;
 
   @media (min-width: 1024px) {
-    grid-column: span 5 / span 5;
+    grid-column: span 4 / span 4;
   }
 }
 
@@ -1862,10 +1862,18 @@
   border-radius: 50%;
   flex-shrink: 0;
 
-  &[data-fund-index="0"] { background: #7b1fa2; }
-  &[data-fund-index="1"] { background: #0284c7; }
-  &[data-fund-index="2"] { background: #10b981; }
-  &[data-fund-index="3"] { background: #f59e0b; }
+  &[data-fund-index="0"] {
+    background: #7b1fa2;
+  }
+  &[data-fund-index="1"] {
+    background: #0284c7;
+  }
+  &[data-fund-index="2"] {
+    background: #10b981;
+  }
+  &[data-fund-index="3"] {
+    background: #f59e0b;
+  }
 }
 
 .fundTitleWrap {
@@ -1989,8 +1997,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .searchResultsList {
@@ -2176,3 +2188,229 @@
   }
 }
 
+// Single Fund Selector (Column 1)
+.fundHeaderTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.singleFundLockedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: $radius-full;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.singleFundCard {
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.singleFundMetaRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.singleFundInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.singleFundName {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  line-height: 1.3;
+}
+
+.singleFundPills {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.fundCodePill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.alloc100Pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.switchFundSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border, #e2e8f0);
+}
+
+.switchFundLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+// Multi-Source Recurring Top-Up Source Card
+.disabledSourceCard {
+  opacity: 0.55;
+  filter: grayscale(0.2);
+}
+
+.sourceIndexBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.sourceNameInlineInput {
+  flex: 1;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+  background: var(--color-bg, #ffffff);
+  color: var(--color-text-primary, #0f172a);
+
+  &:focus {
+    outline: none;
+    border-color: #0284c7;
+  }
+}
+
+.sourceActionButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggleCheckboxWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #475569);
+  cursor: pointer;
+}
+
+.toggleText {
+  user-select: none;
+}
+
+// Column 1 Real NAV Embedded Trajectory Chart
+.column1ChartCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.column1ChartHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.column1ChartTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.column1ChartSubtitle {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.chartStatPillsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.chartStatPill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+}
+
+.statPillLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.statPillValPurple {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #7b1fa2;
+}
+
+.statPillValBlue {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.statPillValGreen {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.col1ChartCanvas {
+  width: 100%;
+  min-height: 260px;
+}

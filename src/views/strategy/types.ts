@@ -107,8 +107,9 @@ export interface Streamline {
   swpStartDate?: string;
   swpEndDate?: string;
   swpIntervals?: import('./column1Types').SwpInterval[];
+  recurringTopUps?: import('./column1Types').RecurringTopUpSource[];
 }
-export type { SwpFrequency, StepUpType, SwpInterval, SelectedFundAllocation, StrategyColumn1State } from './column1Types';
+export type { SwpFrequency, StepUpType, SwpInterval, SelectedFundAllocation, StrategyColumn1State, RecurringTopUpSource, Column1GrowthPoint } from './column1Types';
 export interface TimelineStage {
   monthIndex: number;
   date: string;
