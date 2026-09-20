@@ -79,6 +79,7 @@ $font-family:
     border-right: 1px solid $color-primary;
   }
   &:only-child {
+    width: 100%;
     border-right: 0;
     .pairedStackedLabel {
       border-top-right-radius: 7px;
@@ -86,6 +87,10 @@ $font-family:
     .pairedStackedSlot {
       border-bottom-left-radius: 7px;
     }
+  }
+
+  &.singleColumn {
+    width: 100%;
   }
 }
 

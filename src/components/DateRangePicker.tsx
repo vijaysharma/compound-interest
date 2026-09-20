@@ -2,33 +2,11 @@
 import React, { useMemo } from 'react';
 import styles from './PairedPicker.module.scss';
 import { getDateAsISO } from '../utilities/utility';
-import type { NavType } from '../types/types';
-export interface DateRangePickerProps {
-  title?: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  setStartDate?: (date: string) => void;
-  setEndDate?: (date: string) => void;
-  startBadgeText?: string;
-  endBadgeText?: string;
-  startMinDate?: string;
-  dateMode?: 'date' | 'year';
-  startOptions?: string[];
-  endOptions?: string[];
-  startYearOptions?: string[];
-  endYearOptions?: string[];
-  data?: NavType[];
-  navData?: NavType[];
-  startTitle?: string;
-  endTitle?: string;
-  disabled?: boolean;
-  className?: string;
-  compact?: boolean;
-  embedded?: boolean;
-  singleDate?: boolean;
-  layout?: 'auto' | 'mobile' | 'desktop';
-  variant?: 'paired' | 'stacked-paired';
-}
+import type { DateRangePickerProps } from './date-range-picker/types';
+import { YearPickerSection } from './date-range-picker/YearPickerSection';
+import { SingleDatePickerSection } from './date-range-picker/SingleDatePickerSection';
+import { PairedDatePickerSection } from './date-range-picker/PairedDatePickerSection';
+export type { DateRangePickerProps };
 export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo(
   ({
     title,
@@ -96,128 +74,52 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo(
         (year) => !startDate || Number(year) >= Number(startDate)
       );
       return (
-        <div className={rootContainerClass}>
-          {title && <h5 className={styles.title}>{title}</h5>}
-          <div
-            className={`${styles.pairedStackedWrapper} ${
-              variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
-            }`.trim()}
-          >
-            <div className={styles.pairedStackedColumn}>
-              <div className={styles.pairedStackedLabel}>
-                {resolvedStartBadge} Year
-              </div>
-              <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
-                <select
-                  className={styles.pairedSelect}
-                  value={startDate ?? ''}
-                  onChange={(e) => handleStartYearChange(e.target.value)}
-                  disabled={disabled}
-                  aria-label={`${resolvedStartBadge} Year`}
-                >
-                  {effectiveStartYearOptions.map((year) => (
-                    <option key={`s-${year}`} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className={styles.pairedStackedColumn}>
-              <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
-                {resolvedEndBadge} Year
-              </div>
-              <div className={styles.pairedStackedSlot}>
-                <select
-                  className={styles.pairedSelect}
-                  value={endDate ?? ''}
-                  onChange={(e) => handleEndYearChange(e.target.value)}
-                  disabled={disabled}
-                  aria-label={`${resolvedEndBadge} Year`}
-                >
-                  {availableEndOptions.map((year) => (
-                    <option key={`e-${year}`} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
+        <YearPickerSection
+          title={title}
+          rootContainerClass={rootContainerClass}
+          variant={variant}
+          resolvedStartBadge={resolvedStartBadge}
+          resolvedEndBadge={resolvedEndBadge}
+          startDate={startDate}
+          endDate={endDate}
+          disabled={disabled}
+          effectiveStartYearOptions={effectiveStartYearOptions}
+          availableEndOptions={availableEndOptions}
+          onStartYearChange={handleStartYearChange}
+          onEndYearChange={handleEndYearChange}
+        />
       );
     }
     const isSingle = singleDate || (!setEndDate && endDate === undefined);
     if (isSingle) {
       return (
-        <div className={rootContainerClass}>
-          {title && <h5 className={styles.title}>{title}</h5>}
-          <div className={styles.pairedStackedWrapper}>
-            <div className={styles.pairedStackedColumn} style={{ width: '100%' }}>
-              <div className={styles.pairedStackedLabel}>
-                {resolvedStartBadge}
-              </div>
-              <div className={styles.pairedStackedSlot}>
-                <input
-                  type="date"
-                  min={startMinDate || undefined}
-                  max={today}
-                  value={startDate ?? ''}
-                  className={styles.pairedInput}
-                  onChange={(e) => handleStartDateChange(e.target.value)}
-                  disabled={disabled}
-                  aria-label={resolvedStartBadge}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <SingleDatePickerSection
+          title={title}
+          rootContainerClass={rootContainerClass}
+          resolvedStartBadge={resolvedStartBadge}
+          startMinDate={startMinDate}
+          today={today}
+          startDate={startDate}
+          disabled={disabled}
+          onStartDateChange={handleStartDateChange}
+        />
       );
     }
     return (
-      <div className={rootContainerClass}>
-        {title && <h5 className={styles.title}>{title}</h5>}
-        <div
-          className={`${styles.pairedStackedWrapper} ${
-            variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
-          }`.trim()}
-        >
-          <div className={styles.pairedStackedColumn}>
-            <div className={styles.pairedStackedLabel}>
-              {resolvedStartBadge}
-            </div>
-            <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
-              <input
-                type="date"
-                min={startMinDate || undefined}
-                max={endDate || today}
-                value={startDate ?? ''}
-                className={styles.pairedInput}
-                onChange={(e) => handleStartDateChange(e.target.value)}
-                disabled={disabled}
-                aria-label={resolvedStartBadge}
-              />
-            </div>
-          </div>
-          <div className={styles.pairedStackedColumn}>
-            <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
-              {resolvedEndBadge}
-            </div>
-            <div className={styles.pairedStackedSlot}>
-              <input
-                type="date"
-                min={startDate || undefined}
-                max={today}
-                value={endDate ?? ''}
-                className={styles.pairedInput}
-                onChange={(e) => handleEndDateChange(e.target.value)}
-                disabled={disabled}
-                aria-label={resolvedEndBadge}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <PairedDatePickerSection
+        title={title}
+        rootContainerClass={rootContainerClass}
+        variant={variant}
+        resolvedStartBadge={resolvedStartBadge}
+        resolvedEndBadge={resolvedEndBadge}
+        startMinDate={startMinDate}
+        today={today}
+        startDate={startDate}
+        endDate={endDate}
+        disabled={disabled}
+        onStartDateChange={handleStartDateChange}
+        onEndDateChange={handleEndDateChange}
+      />
     );
   }
 );

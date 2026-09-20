@@ -1,100 +1,15 @@
 'use client';
-import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { AgCharts } from 'ag-charts-react';
-import {
-  CartesianChartModule,
-  CategoryAxisModule,
-  LegendModule,
-  LineSeriesModule,
-  LocaleModule,
-  ModuleRegistry,
-  NumberAxisModule,
-} from 'ag-charts-community';
-import { AgCartesianChartOptions } from 'ag-charts-types';
-import Spinner from './Spinner';
 import { useChartTheme } from '@/utilities/useChartTheme';
+import type { ChartProps, ChartDataset, ChartPoint } from './chart/types';
+import { emptySubscribe, getTargetHeight } from './chart/chartUtils';
+import { useChartZoom } from './chart/useChartZoom';
+import { useChartOptions } from './chart/useChartOptions';
+import { ChartZoomToolbar } from './chart/ChartZoomToolbar';
+import { ChartEmptyState } from './chart/ChartEmptyState';
 import styles from './Chart.module.scss';
-if (typeof window !== 'undefined') {
-  ModuleRegistry.registerModules([
-    CartesianChartModule,
-    LineSeriesModule,
-    CategoryAxisModule,
-    NumberAxisModule,
-    LegendModule,
-    LocaleModule,
-  ]);
-}
-interface ChartPoint {
-  date: string;
-  nav: number;
-}
-interface ChartDataset {
-  label: string;
-  color: string;
-  data: ChartPoint[];
-}
-interface ChartProps {
-  className: string;
-  datasets: ChartDataset[];
-  investmentAmount: number;
-  dataMode?: 'nav' | 'value';
-  height?: number | 'auto';
-  autoHeight?: boolean;
-  minHeight?: number;
-  enableZoom?: boolean;
-  showPresets?: boolean;
-  isLoading?: boolean;
-  loadingLabel?: string;
-  emptyMessage?: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  onPresetChange?: (preset: string) => void;
-}
-/*
- * NAV dates are DD-MM-YYYY.
- *
- * Do not use:
- *
- * new Date("24-08-2026")
- *
- * because that format is not reliably parsed by JavaScript.
- */
-const getDateTime = (date: string): number => {
-  const parts = date.split('-');
-  if (parts.length !== 3) {
-    return Number.NaN;
-  }
-  if (parts[0].length === 4) {
-    const year = Number(parts[0]);
-    const month = Number(parts[1]) - 1;
-    const day = Number(parts[2]);
-    return Number.isFinite(day) && Number.isFinite(month) && Number.isFinite(year)
-      ? new Date(year, month, day).getTime()
-      : Number.NaN;
-  }
-  const day = Number(parts[0]);
-  const month = Number(parts[1]) - 1;
-  const year = Number(parts[2]);
-  if (!Number.isFinite(day) || !Number.isFinite(month) || !Number.isFinite(year)) {
-    return Number.NaN;
-  }
-  return new Date(year, month, day).getTime();
-};
-/*
- * Format investment values for tooltips.
- */
-const formatCurrency = (value: number): string =>
-  `₹${value.toLocaleString('en-IN', {
-    maximumFractionDigits: 0,
-  })}`;
-const formatAxisCurrency = (value: number): string => {
-  const absoluteValue = Math.abs(value);
-  if (absoluteValue >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
-  if (absoluteValue >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
-  if (absoluteValue >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
-  return `₹${Math.round(value)}`;
-};
-const emptySubscribe = () => () => {};
+export type { ChartProps, ChartDataset, ChartPoint };
 const Chart = ({
   className,
   datasets,
@@ -112,563 +27,80 @@ const Chart = ({
   endDate,
   onPresetChange,
 }: ChartProps) => {
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const chartTheme = useChartTheme();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [userZoom, setUserZoom] = useState<{ start: string; end: string } | 'all' | null>(null);
-  const [userPreset, setUserPreset] = useState<string | null>(null);
-  const matchedKey = `${startDate || ''}:${endDate || ''}`;
-  const [prevMatchedKey, setPrevMatchedKey] = useState(matchedKey);
-  if (prevMatchedKey !== matchedKey) {
-    setPrevMatchedKey(matchedKey);
-    setUserZoom(null);
-    setUserPreset(null);
-  }
-  const [dragState, setDragState] = useState<{
-    isDragging: boolean;
-    startX: number;
-    currentX: number;
-  } | null>(null);
-  const initialInvestment =
-    Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
-  // Compute all unique dates sorted chronologically
-  const allSortedDates = useMemo(() => {
-    const uniqueDateTimes = new Map<string, number>();
-    for (const dataset of datasets) {
-      for (const point of dataset.data) {
-        if (Number.isFinite(point.nav) && point.nav > 0) {
-          const time = getDateTime(point.date);
-          if (Number.isFinite(time) && !uniqueDateTimes.has(point.date)) {
-            uniqueDateTimes.set(point.date, time);
-          }
-        }
-      }
-    }
-    return Array.from(uniqueDateTimes.entries())
-      .sort((a, b) => a[1] - b[1])
-      .map(([date]) => date);
-  }, [datasets]);
-  // Compute initial matched range based on provided startDate and endDate
-  const matchedRange = useMemo(() => {
-    if (allSortedDates.length === 0) return null;
-    let startIdx = 0;
-    let endIdx = allSortedDates.length - 1;
-    if (startDate) {
-      const targetStartTime = getDateTime(startDate);
-      if (Number.isFinite(targetStartTime)) {
-        for (let i = 0; i < allSortedDates.length; i++) {
-          if (getDateTime(allSortedDates[i]) >= targetStartTime) {
-            startIdx = i;
-            break;
-          }
-        }
-      }
-    }
-    if (endDate) {
-      const targetEndTime = getDateTime(endDate);
-      if (Number.isFinite(targetEndTime)) {
-        for (let i = allSortedDates.length - 1; i >= 0; i--) {
-          if (getDateTime(allSortedDates[i]) <= targetEndTime) {
-            endIdx = i;
-            break;
-          }
-        }
-      }
-    }
-    if (startIdx <= endIdx && (startDate || endDate)) {
-      return {
-        start: allSortedDates[startIdx],
-        end: allSortedDates[endIdx],
-      };
-    }
-    return null;
-  }, [allSortedDates, startDate, endDate]);
-  // Derived zoom range: if user hasn't zoomed, default to matchedRange
-  const zoomRange = userZoom === 'all' ? null : (userZoom ?? matchedRange);
-  const activePreset =
-    userZoom === 'all' ? 'All' : userZoom === null && !matchedRange ? 'All' : userPreset;
-  // Compute active dates based on zoom
-  const activeDates = useMemo(() => {
-    if (!zoomRange || allSortedDates.length === 0) return allSortedDates;
-    const startIdx = allSortedDates.indexOf(zoomRange.start);
-    const endIdx = allSortedDates.indexOf(zoomRange.end);
-    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) return allSortedDates;
-    return allSortedDates.slice(startIdx, endIdx + 1);
-  }, [allSortedDates, zoomRange]);
-  const handleApplyPreset = (preset: string) => {
-    setUserPreset(preset);
-    onPresetChange?.(preset);
-    if (preset === 'All' || allSortedDates.length === 0) {
-      setUserZoom('all');
-      return;
-    }
-    const daysMap: Record<string, number> = {
-      '1M': 30,
-      '6M': 180,
-      '1Y': 365,
-      '3Y': 365 * 3,
-      '5Y': 365 * 5,
-    };
-    const days = daysMap[preset];
-    if (!days) return;
-    const baseEnd = matchedRange?.end || allSortedDates[allSortedDates.length - 1];
-    const baseEndTime = getDateTime(baseEnd);
-    const targetStartTime = baseEndTime - days * 24 * 60 * 60 * 1000;
-    let targetIdx = 0;
-    for (let i = 0; i < allSortedDates.length; i++) {
-      if (getDateTime(allSortedDates[i]) >= targetStartTime) {
-        targetIdx = i;
-        break;
-      }
-    }
-    const endIdx = allSortedDates.indexOf(baseEnd);
-    if (targetIdx <= endIdx && endIdx !== -1) {
-      setUserZoom({
-        start: allSortedDates[targetIdx],
-        end: baseEnd,
-      });
-    }
-  };
-  const handleResetZoom = () => {
-    setUserZoom(null);
-    setUserPreset(null);
-  };
-  const [hoverX, setHoverX] = useState<number | null>(null);
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!enableZoom || !containerRef.current || allSortedDates.length < 5) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    setDragState({ isDragging: true, startX: x, currentX: x });
-  };
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    if (x >= 35 && x <= rect.width - 4) {
-      setHoverX(x);
-    } else {
-      setHoverX(null);
-    }
-    if (dragState?.isDragging) {
-      const clampedX = Math.max(0, Math.min(x, rect.width));
-      setDragState((prev) => (prev ? { ...prev, currentX: clampedX } : null));
-    }
-  };
-  const handleMouseUp = () => {
-    if (!dragState?.isDragging || !containerRef.current) {
-      setDragState(null);
-      return;
-    }
-    const rect = containerRef.current.getBoundingClientRect();
-    const leftPx = Math.min(dragState.startX, dragState.currentX);
-    const rightPx = Math.max(dragState.startX, dragState.currentX);
-    const diff = rightPx - leftPx;
-    if (diff > 15 && activeDates.length > 5) {
-      const chartWidth = rect.width;
-      const startRatio = Math.max(0, Math.min(leftPx / chartWidth, 1));
-      const endRatio = Math.max(0, Math.min(rightPx / chartWidth, 1));
-      const startIdx = Math.floor(startRatio * activeDates.length);
-      const endIdx = Math.min(activeDates.length - 1, Math.ceil(endRatio * activeDates.length));
-      if (endIdx - startIdx >= 2) {
-        setUserZoom({
-          start: activeDates[startIdx],
-          end: activeDates[endIdx],
-        });
-        setUserPreset(null);
-      }
-    }
-    setDragState(null);
-  };
-  const handleMouseLeave = () => {
-    setHoverX(null);
-    if (dragState?.isDragging) {
-      handleMouseUp();
-    }
-  };
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!containerRef.current || e.touches.length === 0) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    if (x >= 35 && x <= rect.width - 4) {
-      setHoverX(x);
-    } else {
-      setHoverX(null);
-    }
-  };
-  const handleTouchEnd = () => {
-    setHoverX(null);
-  };
-  const chartOptions = useMemo<AgCartesianChartOptions | null>(() => {
-    if (datasets.length === 0 || initialInvestment <= 0 || activeDates.length === 0) {
-      return null;
-    }
-    const normalizedDatasets = datasets.map((dataset) => {
-      const validPoints: { date: string; time: number; nav: number }[] = [];
-      for (const point of dataset.data) {
-        if (Number.isFinite(point.nav) && point.nav > 0) {
-          const time = getDateTime(point.date);
-          if (Number.isFinite(time)) {
-            validPoints.push({ date: point.date, time, nav: point.nav });
-          }
-        }
-      }
-      validPoints.sort((a, b) => a.time - b.time);
-      if (validPoints.length === 0) {
-        return {
-          label: dataset.label,
-          color: dataset.color,
-          valueMap: new Map<string, number>(),
-        };
-      }
-      const startingNav = validPoints[0].nav;
-      const valueMap = new Map<string, number>();
-      if (dataMode === 'value') {
-        for (const pt of validPoints) {
-          valueMap.set(pt.date, pt.nav);
-        }
-      } else if (Number.isFinite(startingNav) && startingNav > 0) {
-        const factor = initialInvestment / startingNav;
-        for (const pt of validPoints) {
-          valueMap.set(pt.date, Number((pt.nav * factor).toFixed(2)));
-        }
-      }
-      return {
-        label: dataset.label,
-        color: dataset.color,
-        valueMap,
-      };
-    });
-    const chartData = activeDates.map((date) => {
-      const row: Record<string, string | number> = { date };
-      for (let i = 0; i < normalizedDatasets.length; i++) {
-        row[`fund_${i}`] = normalizedDatasets[i].valueMap.get(date) ?? NaN;
-      }
-      return row;
-    });
-    const isSingleDataset = normalizedDatasets.length === 1;
-    const series = normalizedDatasets.map((dataset, index) => ({
-      type: 'line' as const,
-      xKey: 'date',
-      xName: 'Date',
-      yKey: `fund_${index}`,
-      yName: dataset.label,
-      stroke: dataset.color,
-      strokeWidth: chartTheme.isMobile ? 1.5 : 2,
-      marker: {
-        enabled: false,
-      },
-      tooltip: {
-        showArrow: false,
-        renderer: ({ datum }: { datum: Record<string, string | number> }) => {
-          const value = datum[`fund_${index}`];
-          if (typeof value !== 'number' || !Number.isFinite(value)) {
-            return undefined;
-          }
-          const valFormatted = formatCurrency(value);
-          if (isSingleDataset) {
-            return {
-              heading: String(datum.date),
-              data: [
-                {
-                  label: 'Value',
-                  value: valFormatted,
-                },
-              ],
-            };
-          }
-          return {
-            heading: String(datum.date),
-            symbol: {
-              marker: {
-                enabled: true,
-                shape: 'circle' as const,
-                fill: dataset.color,
-                stroke: dataset.color,
-              },
-            },
-            data: [
-              {
-                label: dataset.label,
-                value: valFormatted,
-              },
-            ],
-          };
-        },
-      },
-    }));
-    const isAutoHeight = autoHeight || height === 'auto';
-    const resolvedMinHeight = chartTheme.isMobile
-      ? minHeight > 0
-        ? Math.min(minHeight, 240)
-        : 240
-      : minHeight > 0
-        ? minHeight
-        : 350;
-    const resolvedHeight = typeof height === 'number' ? height : resolvedMinHeight;
-    return {
-      background: {
-        visible: false,
-      },
-      padding: {
-        top: 8,
-        right: 8,
-        bottom: 6,
-        left: 4,
-      },
-      seriesArea: {
-        padding: {
-          top: 6,
-          right: 6,
-          bottom: 6,
-          left: 4,
-        },
-      },
-      data: chartData,
-      ...(isAutoHeight ? { minHeight: resolvedMinHeight } : { height: resolvedHeight }),
-      legend: {
-        enabled: false,
-        position: 'bottom',
-        item: {
-          label: {
-            color: chartTheme.labelText,
-            fontSize: chartTheme.isMobile ? 10 : 12,
-          },
-        },
-        toggleSeries: false,
-      },
-      tooltip: {
-        enabled: true,
-        mode: isSingleDataset ? ('single' as const) : ('shared' as const),
-        // `range: 'nearest'` makes a tap anywhere near the line register, which
-        // matters on touch where there is no hover to guide the pointer.
-        range: 'nearest' as const,
-        // The placement list is a fallback chain: ag-charts walks it until the
-        // tooltip fits inside the chart, so it flips instead of clipping off
-        // the edge of a narrow screen.
-        position: {
-          placement: ['top', 'bottom', 'right', 'left'] as const,
-        },
-        wrapping: 'on-space' as const,
-      },
-      series,
-      axes: {
-        x: {
-          type: 'category',
-          position: 'bottom',
-          line: {
-            enabled: true,
-            stroke: chartTheme.axisLine,
-          },
-          // gridLine: {
-          //   enabled: !chartTheme.isMobile,
-          //   style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
-          // },
-          // tick: {
-          //   stroke: chartTheme.axisLine,
-          // },
-          label: {
-            enabled: false,
-            rotation: 0,
-            avoidCollisions: true,
-            fontSize: chartTheme.isMobile ? 8 : 9,
-            fontWeight: 'bold',
-            color: chartTheme.labelText,
-          },
-        },
-        y: {
-          type: 'number',
-          position: 'left',
-          line: {
-            enabled: true,
-            stroke: chartTheme.axisLine,
-          },
-          // gridLine: {
-          //   style: [{ stroke: chartTheme.gridLine, lineDash: [] }],
-          // },
-          // tick: {
-          //   stroke: chartTheme.axisLine,
-          // },
-          // Wider minimum gap on mobile so the compacted currency labels do not
-          // collide in the narrow gutter.
-          interval: {
-            minSpacing: chartTheme.isMobile ? 44 : 28,
-          },
-          label: {
-            avoidCollisions: true,
-            fontSize: chartTheme.isMobile ? 8 : 9,
-            fontWeight: 'bold',
-            color: chartTheme.labelText,
-            formatter: ({ value }: { value: number }) => formatAxisCurrency(value),
-          },
-        },
-      },
-    };
-  }, [
-    datasets,
-    initialInvestment,
-    dataMode,
-    height,
-    autoHeight,
-    minHeight,
-    activeDates,
-    chartTheme,
-  ]);
-  const targetHeight =
-    typeof height === 'number'
-      ? height
-      : chartTheme.isMobile
-        ? minHeight > 0
-          ? Math.min(minHeight, 240)
-          : 240
-        : minHeight > 0
-          ? minHeight
-          : 350;
+  const zoom = useChartZoom(datasets, startDate, endDate, enableZoom, onPresetChange);
+  const initialInvestment = Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
+  const chartOptions = useChartOptions(datasets, initialInvestment, dataMode, height, autoHeight, minHeight, zoom.activeDates, chartTheme);
+  const targetHeight = getTargetHeight(height, minHeight, chartTheme.isMobile);
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
-  if (isLoading) {
+  const isEmpty = isLoading || (datasets.length > 0 && !hasAnyData) || datasets.length === 0 || zoom.allSortedDates.length === 0 || initialInvestment <= 0 || !chartOptions || !mounted;
+  if (isEmpty) {
     return (
-      <div
-        className={`${className || ''} ${styles.emptyContainer}`}
-        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
-      >
-        <Spinner size="md" label={loadingLabel || 'Loading historical NAV data...'} />
-      </div>
+      <ChartEmptyState
+        className={className}
+        targetHeight={targetHeight}
+        isLoading={isLoading}
+        loadingLabel={loadingLabel}
+        hasAnyData={hasAnyData}
+        datasetsCount={datasets.length}
+        emptyMessage={emptyMessage}
+        allSortedDatesCount={zoom.allSortedDates.length}
+        initialInvestment={initialInvestment}
+        hasChartOptions={Boolean(chartOptions)}
+        mounted={mounted}
+      />
     );
   }
-  if (datasets.length > 0 && !hasAnyData) {
-    return (
-      <div
-        className={`${className || ''} ${styles.emptyContainer}`}
-        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
-      >
-        <span className={styles.emptyText}>No NAV data available for the selected dates</span>
-      </div>
-    );
-  }
-  if (datasets.length === 0) {
-    return (
-      <div
-        className={`${className || ''} ${styles.emptyContainer}`}
-        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
-      >
-        <span className={styles.emptyText}>
-          {emptyMessage || 'Select a mutual fund to view trajectory'}
-        </span>
-      </div>
-    );
-  }
-  if (allSortedDates.length === 0) {
-    return (
-      <div
-        className={`${className || ''} ${styles.emptyContainer}`}
-        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
-      >
-        <span className={styles.emptyText}>No NAV history found for the selected dates</span>
-      </div>
-    );
-  }
-  if (initialInvestment <= 0) {
-    return (
-      <div
-        className={`${className || ''} ${styles.emptyContainer}`}
-        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
-      >
-        <span className={styles.emptyText}>Enter an investment amount to view growth</span>
-      </div>
-    );
-  }
-  if (!chartOptions) {
-    return (
-      <div
-        className={`${className || ''} ${styles.emptyContainer}`}
-        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
-      >
-        <Spinner size="sm" label="Preparing chart..." />
-      </div>
-    );
-  }
-  if (!mounted) {
-    return (
-      <div
-        className={`${className || ''} ${styles.emptyContainer}`}
-        style={{ minHeight: `${targetHeight}px`, height: `${targetHeight}px` }}
-      >
-        <Spinner size="sm" label="Loading chart..." />
-      </div>
-    );
-  }
-  const hasZoomToolbar = enableZoom && allSortedDates.length > 5 && (showPresets || zoomRange);
+  const hasZoomToolbar = enableZoom && zoom.allSortedDates.length > 5 && (showPresets || zoom.zoomRange);
   return (
     <div
       className={`${className || ''} ${styles.chartWrapper}`}
-      style={{ minHeight: `${targetHeight}px` }}
+      ref={(el) => {
+        if (el) el.style.setProperty('--chart-target-height', `${targetHeight}px`);
+      }}
     >
       {hasZoomToolbar && (
-        <div className={styles.zoomToolbar}>
-          {showPresets && (
-            <div className={styles.zoomPresets}>
-              {['1M', '6M', '1Y', '3Y', '5Y', 'All'].map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  className={`${styles.zoomPresetBtn} ${activePreset === preset ? styles.activePreset : ''}`}
-                  onClick={() => handleApplyPreset(preset)}
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className={styles.zoomInfo}>
-            {zoomRange ? (
-              <>
-                <span className={styles.zoomBadge}>
-                  {zoomRange.start} → {zoomRange.end}
-                </span>
-                <button
-                  type="button"
-                  className={styles.resetZoomBtn}
-                  onClick={handleResetZoom}
-                  title="Reset Zoom"
-                >
-                  ↩ Reset
-                </button>
-              </>
-            ) : (
-              <span className={styles.zoomHint}>Drag horizontally to zoom into a section</span>
-            )}
-          </div>
-        </div>
+        <ChartZoomToolbar
+          showPresets={showPresets}
+          activePreset={zoom.activePreset}
+          zoomRange={zoom.zoomRange}
+          onApplyPreset={zoom.handleApplyPreset}
+          onResetZoom={zoom.handleResetZoom}
+        />
       )}
       <div
-        ref={containerRef}
+        ref={(el) => {
+          if (el) el.style.setProperty('--chart-container-height', `${targetHeight - (hasZoomToolbar ? 34 : 0)}px`);
+          zoom.setContainerRef(el);
+        }}
         className={styles.chartContainer}
-        style={{ minHeight: `${targetHeight - (hasZoomToolbar ? 34 : 0)}px` }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchMove}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
+        onMouseDown={zoom.handleMouseDown}
+        onMouseMove={zoom.handleMouseMove}
+        onMouseUp={zoom.handleMouseUp}
+        onMouseLeave={zoom.handleMouseLeave}
+        onTouchStart={zoom.handleTouchMove}
+        onTouchMove={zoom.handleTouchMove}
+        onTouchEnd={zoom.handleTouchEnd}
+        onTouchCancel={zoom.handleTouchEnd}
       >
-        {dragState?.isDragging && (
+        {zoom.dragState?.isDragging && (
           <div
             className={styles.zoomSelectionOverlay}
-            style={{
-              left: Math.min(dragState.startX, dragState.currentX),
-              width: Math.abs(dragState.currentX - dragState.startX),
+            ref={(el) => {
+              if (el && zoom.dragState) {
+                el.style.left = `${Math.min(zoom.dragState.startX, zoom.dragState.currentX)}px`;
+                el.style.width = `${Math.abs(zoom.dragState.currentX - zoom.dragState.startX)}px`;
+              }
             }}
           />
         )}
-        {hoverX !== null && !dragState?.isDragging && (
+        {zoom.hoverX !== null && !zoom.dragState?.isDragging && (
           <div
             className={styles.verticalGuideLine}
-            style={{ left: `${hoverX}px` }}
+            ref={(el) => {
+              if (el && zoom.hoverX !== null) el.style.left = `${zoom.hoverX}px`;
+            }}
           />
         )}
         <AgCharts className={styles.chart} options={chartOptions} />

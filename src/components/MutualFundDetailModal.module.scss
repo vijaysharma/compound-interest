@@ -610,3 +610,55 @@
     background: var(--color-primary-hover);
   }
 }
+
+.chartLoadingFallback {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.taxCardValPrimary {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.taxCardSubtextMuted {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.taxCardValError {
+  color: var(--color-error-text-strong);
+}
+
+.taxCardValSuccess {
+  color: var(--color-success-text-strong);
+}
+
+.taxCardSubtextSuccessBold {
+  font-size: 0.72rem;
+  color: var(--color-success-text);
+  font-weight: 600;
+}
+
+.taxCardSubtextSuccess {
+  font-size: 0.72rem;
+  color: var(--color-success-text);
+}
+
+.constituentsTitle {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.constituentsContent {
+  margin-bottom: 6px;
+}
+
+.constituentsSubTitle {
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: var(--text-primary);
+}
