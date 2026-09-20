@@ -1,18 +1,15 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import SEOHead from '../components/SEOHead';
-import { useStrategyState } from './strategy/useStrategyState';
+import { useStreamlinesState } from './strategy/useStreamlinesState';
 import { MobileFallbackBanner } from './strategy/MobileFallbackBanner';
 import { StrategyHeader } from './strategy/StrategyHeader';
-import { StepALumpsumSection } from './strategy/StepALumpsumSection';
-import { StepBSwpSipSection } from './strategy/StepBSwpSipSection';
-import { StepCTopUpsSection } from './strategy/StepCTopUpsSection';
-import { StepDTaxationSection } from './strategy/StepDTaxationSection';
-import { StrategyTimelineTable } from './strategy/StrategyTimelineTable';
-import { StrategyChartSection } from './strategy/StrategyChartSection';
+import { Column1Inputs } from './strategy/Column1Inputs';
+import { Column2Stages } from './strategy/Column2Stages';
+import { Column3Analytics } from './strategy/Column3Analytics';
 import styles from './strategy/StrategyCalculator.module.scss';
 const StrategyCalculatorView: React.FC = () => {
-  const state = useStrategyState();
+  const state = useStreamlinesState();
   const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   useEffect(() => {
@@ -36,39 +33,38 @@ const StrategyCalculatorView: React.FC = () => {
       />
       {mounted && !isDesktop && <MobileFallbackBanner />}
       <div className={styles.desktopWorkspace}>
-        <StrategyHeader summary={state.simulationResult.summary} />
-        <StepALumpsumSection
-          investmentDate={state.investmentDate}
-          onInvestmentDateChange={state.setInvestmentDate}
-          investmentAmount={state.investmentAmount}
-          onInvestmentAmountChange={state.setInvestmentAmount}
-          sourceFunds={state.sourceFunds}
-          onUpdateSourceFunds={state.setSourceFunds}
-        />
-        <StepBSwpSipSection
-          swpConfig={state.swpConfig}
-          onUpdateSwpConfig={state.setSwpConfig}
-          sipConfig={state.sipConfig}
-          onUpdateSipConfig={state.setSipConfig}
-          sipFunds={state.sipFunds}
-          onUpdateSipFunds={state.setSipFunds}
-        />
-        <StepCTopUpsSection
-          topUps={state.topUps}
-          onAddTopUp={state.handleAddTopUp}
-          onRemoveTopUp={state.handleRemoveTopUp}
-          durationYears={state.durationYears}
-          onDurationChange={state.setDurationYears}
-        />
-        <StepDTaxationSection
-          summary={state.simulationResult.summary}
-          stages={state.simulationResult.stages}
-        />
-        <StrategyChartSection
-          stages={state.simulationResult.stages}
-          initialAmount={parseFloat(state.investmentAmount) || 0}
-        />
-        <StrategyTimelineTable stages={state.simulationResult.stages} />
+        <StrategyHeader summary={state.activeResult.summary} />
+        <div className={styles.threeColumnLayout}>
+          <div className={styles.col1Wrapper}>
+            <Column1Inputs
+              streamlines={state.streamlines}
+              activeId={state.activeId}
+              activeStreamline={state.activeStreamline}
+              onSelectStreamline={state.setActiveId}
+              onUpdateActive={state.updateActive}
+              onSave={state.saveStreamline}
+              onDuplicate={state.duplicateStreamline}
+              onAdd={state.addStreamline}
+              onDelete={state.deleteStreamline}
+              isSaved={state.isSaved}
+            />
+          </div>
+          <div className={styles.col2Wrapper}>
+            <Column2Stages
+              stages={state.activeResult.stages}
+              activeStreamline={state.activeStreamline}
+            />
+          </div>
+          <div className={styles.col3Wrapper}>
+            <Column3Analytics
+              activeStreamline={state.activeStreamline}
+              activeSteps={state.activeResult.monthlySteps}
+              allStreamlines={state.allStreamlineResults}
+              activeId={state.activeId}
+              onSelectStreamline={state.setActiveId}
+            />
+          </div>
+        </div>
       </div>
     </main>
   );

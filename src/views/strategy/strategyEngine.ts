@@ -1,5 +1,8 @@
-import { SelectedFund, TopUpEvent, SwpConfig, SipConfig, TimelineStage, StrategySummary } from './types';
-import { TaxTracker } from './strategyTaxEngine';
+import { SelectedFund, TopUpEvent, SwpConfig, SipConfig, ExecutionStage, StrategySummary } from './types';
+import { FifoPortfolioTracker } from './strategyFifoEngine';
+import { getCachedNav } from './strategyNavService';
+import { extractExecutionStages, MonthlySimulationStep } from './stageExtractor';
+import { simulateMonthlySeries } from './simulationStepRunner';
 export function runStrategySimulation(
   investmentDate: string,
   initialAmount: number,
@@ -9,101 +12,58 @@ export function runStrategySimulation(
   sipFunds: SelectedFund[],
   topUps: TopUpEvent[],
   totalMonths = 120
-): { stages: TimelineStage[]; summary: StrategySummary } {
-  const sourceCagr = sourceFunds.reduce((acc, f) => acc + (f.allocationPercent / 100) * f.expectedCagr, 0) || 12;
-  const sourceMonthlyRate = Math.pow(1 + sourceCagr / 100, 1 / 12) - 1;
+): { stages: ExecutionStage[]; summary: StrategySummary; monthlySteps: MonthlySimulationStep[] } {
+  const fifo = new FifoPortfolioTracker();
+  const fundNavs = new Map<string, number>();
+  const fundRates = new Map<string, number>();
+  const fundCashIn = new Map<string, number>();
+  const fundCashOut = new Map<string, number>();
+  sourceFunds.forEach((f) => {
+    const nav = getCachedNav(f.schemeCode);
+    fundNavs.set(f.schemeCode, nav);
+    fundRates.set(f.schemeCode, Math.pow(1 + f.expectedCagr / 100, 1 / 12) - 1);
+    const allocAmt = initialAmount * (f.allocationPercent / 100);
+    fifo.addLot(f.schemeCode, allocAmt / nav, nav, investmentDate || '2024-01-01', f.fundType);
+    fundCashIn.set(f.schemeCode, allocAmt);
+    fundCashOut.set(f.schemeCode, 0);
+  });
   const sipCagr = sipFunds.reduce((acc, f) => acc + (f.allocationPercent / 100) * f.expectedCagr, 0) || 12;
   const sipMonthlyRate = Math.pow(1 + sipCagr / 100, 1 / 12) - 1;
-  const equityWeight = sourceFunds.filter((f) => f.fundType === 'equity').reduce((a, f) => a + f.allocationPercent, 0) / 100;
-  const stages: TimelineStage[] = [];
-  const taxTracker = new TaxTracker();
-  let sourceBal = initialAmount;
-  let sourceCost = initialAmount;
-  let sipBal = 0;
-  let totalTopUps = 0;
-  let totalSwpWithdrawn = 0;
-  let totalTaxPaid = 0;
-  let totalSipInvested = 0;
   const startDateObj = new Date(investmentDate || '2024-01-01');
   const swpStartObj = new Date(swpConfig.startDate || '2025-01-01');
   const swpChangeObj = new Date(swpConfig.changeDate || '2027-01-01');
-  for (let m = 1; m <= totalMonths; m++) {
-    const curDate = new Date(startDateObj);
-    curDate.setMonth(startDateObj.getMonth() + m);
-    const dateStr = curDate.toISOString().slice(0, 10);
-    const daysSinceStart = Math.max(0, Math.floor((curDate.getTime() - startDateObj.getTime()) / 86400000));
-    const openSource = sourceBal;
-    const sReturns = openSource * sourceMonthlyRate;
-    sourceBal += sReturns;
-    let topUpThisMonth = 0;
-    for (const tu of topUps) {
-      if (tu.date.slice(0, 7) === dateStr.slice(0, 7)) {
-        topUpThisMonth += tu.amount;
-        sourceBal += tu.amount;
-        sourceCost += tu.amount;
-        totalTopUps += tu.amount;
-      }
-    }
-    let grossSwp = 0;
-    if (curDate >= swpStartObj && sourceBal > 0) {
-      grossSwp = swpConfig.baseAmount;
-      if (swpConfig.hasChange && curDate >= swpChangeObj) {
-        grossSwp = swpConfig.changeType === 'percentage'
-          ? swpConfig.baseAmount * (1 + swpConfig.changeValue / 100)
-          : swpConfig.baseAmount + swpConfig.changeValue;
-      }
-      grossSwp = Math.min(grossSwp, sourceBal);
-    }
-    const taxRes = taxTracker.calculateRedemptionTax(dateStr, grossSwp, sourceCost, sourceBal, equityWeight, daysSinceStart);
-    if (sourceBal > 0 && grossSwp > 0) {
-      sourceCost = Math.max(0, sourceCost * (1 - grossSwp / sourceBal));
-    }
-    sourceBal = Math.max(0, sourceBal - grossSwp);
-    totalSwpWithdrawn += grossSwp;
-    totalTaxPaid += taxRes.taxPayable;
-    let sipInflow = 0;
-    if (sipConfig.enabled) {
-      if (sipConfig.linkToSwp) {
-        sipInflow = taxRes.netWithdrawn;
-      } else {
-        const stepFactor = sipConfig.stepUpFrequency === 'Monthly' ? m : sipConfig.stepUpFrequency === 'Quarterly' ? Math.floor(m / 3) : Math.floor(m / 12);
-        sipInflow = sipConfig.amount * Math.pow(1 + sipConfig.stepUpPercent / 100, stepFactor);
-      }
-      totalSipInvested += sipInflow;
-    }
-    const sipReturns = (sipBal + sipInflow) * sipMonthlyRate;
-    sipBal = sipBal + sipInflow + sipReturns;
-    stages.push({
-      monthIndex: m,
-      date: dateStr,
-      eventDescription: m === 1 ? 'Initial Phase' : grossSwp > 0 ? 'SWP Active' : 'Compounding Phase',
-      sourceOpeningBalance: Math.round(openSource),
-      sourceReturns: Math.round(sReturns),
-      topUpAdded: Math.round(topUpThisMonth),
-      swpGrossWithdrawn: Math.round(grossSwp),
-      stcgGains: taxRes.stcgGains,
-      ltcgGains: taxRes.ltcgGains,
-      taxPayable: taxRes.taxPayable,
-      swpNetReceived: taxRes.netWithdrawn,
-      sourceClosingBalance: Math.round(sourceBal),
-      sipInjected: Math.round(sipInflow),
-      sipReturns: Math.round(sipReturns),
-      sipClosingBalance: Math.round(sipBal),
-      combinedNetWorth: Math.round(sourceBal + sipBal),
-    });
-  }
+  const swpStartMonth = Math.max(1, Math.round((swpStartObj.getTime() - startDateObj.getTime()) / (30.44 * 86400000)));
+  const swpChangeMonth = swpConfig.hasChange
+    ? Math.max(1, Math.round((swpChangeObj.getTime() - startDateObj.getTime()) / (30.44 * 86400000)))
+    : -1;
+  const { monthlySteps, topUpMonths, cumSip } = simulateMonthlySeries(
+    totalMonths,
+    startDateObj,
+    swpStartObj,
+    swpChangeObj,
+    sourceFunds,
+    swpConfig,
+    sipConfig,
+    sipMonthlyRate,
+    topUps,
+    initialAmount,
+    { fifo, fundNavs, fundRates, fundCashIn, fundCashOut }
+  );
+  const stages = extractExecutionStages(monthlySteps, sourceFunds, swpStartMonth, swpChangeMonth, topUpMonths);
+  const lastStep = monthlySteps[monthlySteps.length - 1];
   return {
     stages,
+    monthlySteps,
     summary: {
       totalInitialInvested: initialAmount,
-      totalTopUps,
-      totalSwpWithdrawn: Math.round(totalSwpWithdrawn),
-      totalTaxPaid: Math.round(totalTaxPaid),
-      netCashflowReceived: Math.round(totalSwpWithdrawn - totalTaxPaid),
-      totalSipInvested: Math.round(totalSipInvested),
-      finalSourceBalance: Math.round(sourceBal),
-      finalSipBalance: Math.round(sipBal),
-      finalCombinedNetWorth: Math.round(sourceBal + sipBal),
+      totalTopUps: lastStep ? lastStep.cumulativeInvested - initialAmount : 0,
+      totalSwpWithdrawn: lastStep ? lastStep.cumulativeWithdrawn : 0,
+      totalTaxPaid: lastStep ? lastStep.cumulativeTaxPaid : 0,
+      netCashflowReceived: lastStep ? lastStep.cumulativeWithdrawn - lastStep.cumulativeTaxPaid : 0,
+      totalSipInvested: Math.round(cumSip),
+      finalSourceBalance: lastStep ? lastStep.sourceBalance : 0,
+      finalSipBalance: lastStep ? lastStep.sipBalance : 0,
+      finalCombinedNetWorth: lastStep ? lastStep.combinedNetWorth : 0,
     },
   };
 }

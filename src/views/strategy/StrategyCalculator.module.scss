@@ -2,12 +2,12 @@
 
 .pageContainer {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1680px;
   margin: 0 auto;
   padding: 1.5rem 1rem 4rem;
 }
 
-// Mobile Viewport Guardrail
+// Mobile Viewport Guardrail (< 768px)
 .mobileFallbackContainer {
   display: block;
   padding: 2rem 1rem;
@@ -60,28 +60,42 @@
 .mobileFallbackTitle {
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--color-heading, #212121);
+  color: var(--color-text-primary, #1e293b);
   margin-bottom: 0.75rem;
 }
 
-.mobileFallbackText {
+.mobileFallbackDesc {
   font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--color-text-secondary, #757575);
+  line-height: 1.6;
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 1.5rem;
 }
 
-// Desktop Strategy Workspace
+.mobileFallbackHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-primary, #6d0b74);
+  background: var(--color-surface, #f8fafc);
+  padding: 0.5rem 1rem;
+  border-radius: $radius-md;
+  border: 1px dashed var(--color-border, #cbd5e1);
+}
+
+// Desktop Workspace (>= 768px)
 .desktopWorkspace {
   display: none;
 
   @media (min-width: 768px) {
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.5rem;
   }
 }
 
-// Header Styles
+// Top Strategy Header
 .header {
   margin-bottom: 0.5rem;
 }
@@ -91,48 +105,62 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.85rem;
-  border-radius: $radius-full;
-  background: var(--color-primary-light, #f6edf7);
-  color: var(--color-primary, #6d0b74);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
+  color: var(--color-primary, #6d0b74);
+  background: var(--color-primary-light, #f6edf7);
+  border: 1px solid var(--color-primary-border, #e9d5eb);
+  border-radius: $radius-full;
   margin-bottom: 0.75rem;
 }
 
 .badgeIcon {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .title {
-  font-size: 1.85rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: var(--color-heading, #212121);
-  margin-bottom: 0.5rem;
   letter-spacing: -0.02em;
+  color: var(--color-text-primary, #0f172a);
+  margin-bottom: 0.5rem;
+
+  @media (min-width: 1024px) {
+    font-size: 2.15rem;
+  }
 }
 
 .subtitle {
   font-size: 0.95rem;
-  color: var(--color-text-secondary, #757575);
-  line-height: 1.5;
-  max-width: 1000px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #475569);
+  max-width: 1050px;
+  margin-bottom: 1.25rem;
 }
 
 .headerMetricsGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1rem;
-  margin-top: 1.25rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .headerMetricCard {
   background: var(--color-bg, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
   border-radius: $radius-md;
-  padding: 1rem;
+  padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .headerMetricLabel {
@@ -140,60 +168,370 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-secondary, #757575);
+  color: var(--color-text-secondary, #64748b);
 }
 
 .headerMetricValue {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-heading, #212121);
+  color: var(--color-text-primary, #0f172a);
 }
 
 .headerMetricValueHighlight {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #0284c7;
+  color: var(--color-primary, #6d0b74);
 }
 
 .headerMetricValueDanger {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #dc2626;
+  color: #ef4444;
 }
 
 .headerMetricValueSuccess {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #059669;
+  color: #10b981;
 }
 
-// Stage Cards
-.stageCard {
+// 3-Column Desktop Grid Layout (lg:grid lg:grid-cols-12 gap-4)
+.threeColumnLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+.col1Wrapper {
+  grid-column: 1 / -1;
+
+  @media (min-width: 1024px) {
+    grid-column: span 3 / span 3;
+  }
+}
+
+.col2Wrapper {
+  grid-column: 1 / -1;
+
+  @media (min-width: 1024px) {
+    grid-column: span 5 / span 5;
+  }
+}
+
+.col3Wrapper {
+  grid-column: 1 / -1;
+
+  @media (min-width: 1024px) {
+    grid-column: span 4 / span 4;
+  }
+}
+
+// Column Containers
+.column1Container,
+.column2Container,
+.column3Container {
   background: var(--color-bg, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
   border-radius: $radius-lg;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.columnHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.columnBadge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--color-primary-light, #f6edf7);
+  color: var(--color-primary, #6d0b74);
+  border-radius: $radius-sm;
+}
+
+.columnTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+  letter-spacing: -0.01em;
+}
+
+.columnSubtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.4;
+}
+
+.columnTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.titleWithBadge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.activeStreamlineBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+// Scrollable Areas
+.column1Scrollable,
+.stagesListScrollable,
+.column3Scrollable {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: 1250px;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border, #cbd5e1);
+    border-radius: 4px;
+  }
+}
+
+// Streamline Manager (Column 1)
+.streamlineManager {
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.streamlineTabsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.streamlineTabsList {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.streamlineTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-md;
+  color: var(--color-text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary, #6d0b74);
+    color: var(--color-primary, #6d0b74);
+  }
+
+  &.activeTab {
+    background: var(--color-primary-light, #f6edf7);
+    border-color: var(--color-primary, #6d0b74);
+    color: var(--color-primary, #6d0b74);
+  }
+}
+
+.tabDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #7b1fa2;
+
+  &[data-index="0"] {
+    background-color: #7b1fa2;
+  }
+  &[data-index="1"] {
+    background-color: #0284c7;
+  }
+  &[data-index="2"] {
+    background-color: #10b981;
+  }
+}
+
+.tabLabel {
+  white-space: nowrap;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addStreamlineBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--color-primary, #6d0b74);
+  color: #ffffff;
+  border: none;
+  border-radius: $radius-md;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.streamlineMetaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.streamlineNameInput {
+  flex: 1;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+  color: var(--color-text-primary, #0f172a);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #6d0b74);
+  }
+}
+
+.streamlineActionsGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.streamlineActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+  color: var(--color-text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary, #6d0b74);
+    color: var(--color-primary, #6d0b74);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &.savedSuccessBtn {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+  }
+}
+
+.streamlineDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  background: transparent;
+  border: 1px solid #fecaca;
+  color: #ef4444;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  font-size: 0.75rem;
+
+  &:hover {
+    background: #fee2e2;
+  }
+}
+
+// Stage Cards & Section Controls
+.stageCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 .stageHeader {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  gap: 0.75rem;
 }
 
 .stageNumber {
-  background: var(--color-primary, #6d0b74);
-  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary-light, #f6edf7);
+  color: var(--color-primary, #6d0b74);
   font-size: 0.75rem;
   font-weight: 700;
-  padding: 0.25rem 0.6rem;
-  border-radius: $radius-sm;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .stageTitleGroup {
@@ -202,43 +540,23 @@
 }
 
 .stageTitle {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--color-heading, #212121);
-  margin: 0;
+  color: var(--color-text-primary, #0f172a);
 }
 
 .stageSubtitle {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary, #757575);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #64748b);
 }
 
 .stageFields {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.85rem;
 }
 
-.splitConfigGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.75rem;
-}
-
-.configSubColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.subColumnTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-heading, #212121);
-  margin: 0 0 0.25rem;
-}
-
-// Form Controls
+.datePickerGroup,
 .fieldGroup {
   display: flex;
   flex-direction: column;
@@ -246,37 +564,56 @@
 }
 
 .fieldLabel {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-secondary, #757575);
+  color: var(--color-text-secondary, #475569);
 }
 
-.datePickerGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  max-width: 260px;
-}
-
-.dateInput,
-.numInput,
-.textInput {
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--color-border, #e2e8f0);
+.dateInput {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--color-border, #cbd5e1);
   border-radius: $radius-sm;
-  font-size: 0.9rem;
-  color: var(--color-text, #212121);
   background: var(--color-bg, #ffffff);
-  outline: none;
-  transition: border-color 0.15s ease;
+  color: var(--color-text-primary, #0f172a);
 
   &:focus {
+    outline: none;
     border-color: var(--color-primary, #6d0b74);
   }
 }
 
 .fieldTight {
-  margin-bottom: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.subCardContainer {
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 1rem;
+}
+
+.configSubColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.subColumnTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.stepUpBox {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  padding: 0.75rem;
+  background: var(--color-bg, #ffffff);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .checkboxRow {
@@ -286,466 +623,288 @@
 }
 
 .checkboxLabel {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-heading, #212121);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #0f172a);
   cursor: pointer;
-}
-
-.stepUpBox {
-  background: var(--color-bg-secondary, #f8fafc);
-  border: 1px dashed var(--color-border, #e2e8f0);
-  border-radius: $radius-md;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
 
 .stepUpContent {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.65rem;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--color-border, #e2e8f0);
+  border-top: 1px solid var(--color-border, #f1f5f9);
 }
 
-// Fund Selector
-.fundSelectorWrap {
-  background: var(--color-bg-secondary, #f8fafc);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: $radius-md;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.fundSelectorHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.fundSelectorTitle {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-heading, #212121);
-}
-
-.fundCounter {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-primary, #6d0b74);
-}
-
-.fundList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.fundCard {
-  background: var(--color-bg, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: $radius-sm;
-  padding: 0.6rem 0.85rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.fundMainInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.fundName {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-heading, #212121);
-}
-
-.fundTags {
+.stepUpInputRow {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.tagEquity {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
-  border-radius: $radius-xs;
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.tagDebt {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
-  border-radius: $radius-xs;
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.tagCagr {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #7b1fa2;
-}
-
-.tagWeight {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--color-text-secondary, #757575);
-}
-
-.deleteFundBtn {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 0.35rem;
-  border-radius: $radius-xs;
-
-  &:hover {
-    color: #ef4444;
-    background: #fef2f2;
-  }
-}
-
-.addFundForm {
-  display: grid;
-  grid-template-columns: 1fr 80px 90px auto;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.addFundInput,
-.addCagrInput,
-.addTypeSelect {
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--color-border, #e2e8f0);
+.stepUpInput {
+  width: 100px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--color-border, #cbd5e1);
   border-radius: $radius-sm;
-  font-size: 0.8rem;
-  background: #ffffff;
 }
 
-.addFundSubmitBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.45rem 0.75rem;
-  border-radius: $radius-sm;
-  border: none;
-  background: var(--color-primary, #6d0b74);
-  color: #ffffff;
+.stepUpUnit {
   font-size: 0.8rem;
   font-weight: 600;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--color-primary-hover, #58085e);
-  }
+  color: var(--color-text-secondary, #64748b);
 }
 
-// SIP Toggle
-.sipHeaderRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.toggleSwitch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-
-    &:checked + .slider {
-      background-color: var(--color-primary, #6d0b74);
-    }
-
-    &:checked + .slider:before {
-      transform: translateX(20px);
-    }
-  }
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #cbd5e1;
-  transition: 0.2s;
-  border-radius: 24px;
-
-  &:before {
-    position: absolute;
-    content: '';
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: 0.2s;
-    border-radius: 50%;
-  }
-}
-
-.sipFieldsWrap {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-// Step C: Top-Ups
+// Top-ups & Horizon
 .topUpsControls {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.85rem;
 }
 
 .timelineDurationRow {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .durationLabel {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-heading, #212121);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #475569);
 }
 
 .durationButtons {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .durationBtn {
-  padding: 0.45rem 0.85rem;
-  border: 1px solid var(--color-border, #e2e8f0);
-  background: var(--color-bg, #ffffff);
-  border-radius: $radius-sm;
-  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: var(--color-text, #212121);
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+  color: var(--color-text-secondary, #475569);
   cursor: pointer;
 
   &:hover {
     border-color: var(--color-primary, #6d0b74);
   }
-}
 
-.activeDuration {
-  background: var(--color-primary, #6d0b74);
-  color: #ffffff;
-  border-color: var(--color-primary, #6d0b74);
-
-  &:hover {
+  &.activeDuration {
     background: var(--color-primary, #6d0b74);
+    color: #ffffff;
+    border-color: var(--color-primary, #6d0b74);
   }
 }
 
 .addTopUpRow {
   display: grid;
-  grid-template-columns: 160px 180px 1fr auto;
-  gap: 0.75rem;
-  align-items: flex-end;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.textInput {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+  background: var(--color-bg, #ffffff);
+  color: var(--color-text-primary, #0f172a);
 }
 
 .addTopUpBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  padding: 0.65rem 1rem;
-  border-radius: $radius-sm;
-  border: none;
+  padding: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   background: var(--color-primary, #6d0b74);
   color: #ffffff;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border: none;
+  border-radius: $radius-sm;
   cursor: pointer;
-
-  &:hover {
-    background: var(--color-primary-hover, #58085e);
-  }
 }
 
 .topUpsList {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-.topUpChip {
-  display: inline-flex;
+.topUpItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.65rem;
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+}
+
+.topUpMeta {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.75rem;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: $radius-full;
-  font-size: 0.8rem;
 }
 
 .topUpDate {
-  font-weight: 600;
-  color: var(--color-heading, #212121);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #64748b);
 }
 
 .topUpAmount {
+  font-size: 0.78rem;
   font-weight: 700;
-  color: #059669;
+  color: #10b981;
 }
 
 .topUpNote {
-  color: var(--color-text-secondary, #757575);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #94a3b8);
 }
 
-.deleteTopUpBtn {
+.removeTopUpBtn {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+// Fund Selector
+.fundSelectorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fundSelectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fundSelectorTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #475569);
+}
+
+.allocValidationPill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-full;
+  background: #f1f5f9;
+  color: #475569;
+
+  &.allocValid {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  &.allocInvalid {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+}
+
+.fundsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fundCard {
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fundMainRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fundName {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.fundControlsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fundInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.fundMiniInput {
+  width: 50px;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+}
+
+.fundTypeBadge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: $radius-sm;
+  background: #e2e8f0;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.removeFundBtn {
   background: transparent;
   border: none;
   color: #94a3b8;
   cursor: pointer;
-  padding: 0;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
 
   &:hover {
     color: #ef4444;
   }
 }
 
-// Step D: Tax Breakdown
-.taxSummaryGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.taxCard {
-  background: var(--color-bg-secondary, #f8fafc);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: $radius-md;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.taxCardHeader {
-  display: flex;
+.addFundBtn {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.taxCardIcon {
-  color: var(--color-primary, #6d0b74);
-  font-size: 1rem;
-}
-
-.taxCardTitle {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-heading, #212121);
-}
-
-.taxCardValue {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-heading, #212121);
-}
-
-.taxCardValueDanger {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #dc2626;
-}
-
-.taxCardValueSuccess {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #059669;
-}
-
-.taxCardDesc {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary, #757575);
-}
-
-.taxRulesCallout {
-  margin-top: 1rem;
-  padding: 0.85rem 1rem;
-  border-left: 3px solid var(--color-primary, #6d0b74);
-  background: var(--color-primary-light, #f6edf7);
-  border-radius: 0 $radius-sm $radius-sm 0;
-}
-
-.calloutTitle {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--color-primary, #6d0b74);
-  margin-bottom: 0.25rem;
-}
-
-.calloutText {
-  font-size: 0.78rem;
-  color: #4a044e;
-  line-height: 1.4;
-  margin: 0;
-}
-
-// Table Styles
-.timelineTableCard {
-  background: var(--color-bg, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: $radius-lg;
-  padding: 1.5rem;
-}
-
-.tableHeaderBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.tableTitle {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--color-heading, #212121);
-  margin: 0 0 0.25rem;
-}
-
-.tableSubtitle {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary, #757575);
-}
-
-.filterButtonGroup {
-  display: flex;
-  gap: 0.35rem;
-}
-
-.tableFilterBtn {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.75rem;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  border: 1px solid var(--color-border, #e2e8f0);
   background: var(--color-bg, #ffffff);
+  border: 1px dashed var(--color-border, #cbd5e1);
   border-radius: $radius-sm;
-  color: var(--color-text, #212121);
+  color: var(--color-primary, #6d0b74);
   cursor: pointer;
 
   &:hover {
@@ -753,132 +912,695 @@
   }
 }
 
-.activeFilterBtn {
-  background: var(--color-primary, #6d0b74);
-  color: #ffffff;
-  border-color: var(--color-primary, #6d0b74);
+// Column 2: Stage-by-Stage Matrix & Taxation
+.stagesFilterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border, #e2e8f0);
+}
 
-  &:hover {
+.filterStats {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #475569);
+}
+
+.filterToggleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.filterToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+  color: var(--color-text-secondary, #475569);
+  cursor: pointer;
+
+  &.activeFilterBtn {
     background: var(--color-primary, #6d0b74);
+    border-color: var(--color-primary, #6d0b74);
+    color: #ffffff;
   }
 }
 
-.tableScrollWrap {
-  overflow-x: auto;
+// Individual Stage Card
+.stageMatrixCard {
+  background: var(--color-bg, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
   border-radius: $radius-md;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary-border, #e9d5eb);
+  }
 }
 
-.dataTable {
+.stageCardHeader {
+  padding: 0.85rem 1rem;
+  background: var(--color-surface, #f8fafc);
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.stageHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stageBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stageBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+  background: var(--color-primary-light, #f6edf7);
+  color: var(--color-primary, #6d0b74);
+}
+
+.stageDatePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.stageCardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.stageCardDesc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.stageHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.netWorthHeaderBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.netWorthLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.netWorthValue {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.expandCollapseBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--color-text-secondary, #64748b);
+  display: flex;
+  align-items: center;
+}
+
+.stageCardBody {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.stageQuickStats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  padding: 0.65rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.quickStatItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.statLabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.statVal {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.statValTax {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+// Stage Micro-Graph
+.stageGraphContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 0.75rem;
+}
+
+.stageGraphHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.graphTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.graphMetrics {
+  display: flex;
+  align-items: center;
+}
+
+.graphCurVal {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary, #6d0b74);
+}
+
+.sparklineCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  padding: 0.4rem 0.5rem 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sparklineSvg {
+  width: 100%;
+  height: 70px;
+  display: block;
+}
+
+.sparklineLabels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--color-text-secondary, #94a3b8);
+  padding: 0 0.25rem;
+}
+
+.stageAllocRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.allocBarStacked {
+  height: 14px;
+  width: 100%;
+  border-radius: 4px;
+  display: flex;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.allocSegment {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #ffffff;
+  transition: width 0.3s ease;
+
+  &[data-fund-index="0"] {
+    background: #7b1fa2;
+  }
+  &[data-fund-index="1"] {
+    background: #0284c7;
+  }
+  &[data-fund-index="2"] {
+    background: #10b981;
+  }
+  &[data-fund-index="3"] {
+    background: #f59e0b;
+  }
+}
+
+.allocLegend {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.legendPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.legendColorDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+
+  &[data-fund-index="0"] {
+    background: #7b1fa2;
+  }
+  &[data-fund-index="1"] {
+    background: #0284c7;
+  }
+  &[data-fund-index="2"] {
+    background: #10b981;
+  }
+  &[data-fund-index="3"] {
+    background: #f59e0b;
+  }
+}
+
+.legendName {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+// Stage Per-Fund Breakdown
+.stageFundBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sectionSubhead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.subheadTitleGroup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.subheadTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.subheadNote {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.fundTableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+}
+
+.fundMetricsTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
 
-  thead {
-    background: var(--color-bg-secondary, #f8fafc);
+  th {
+    background: var(--color-surface, #f8fafc);
+    color: var(--color-text-secondary, #475569);
+    padding: 0.4rem 0.5rem;
+    font-weight: 600;
+    text-align: left;
     border-bottom: 1px solid var(--color-border, #e2e8f0);
-
-    th {
-      padding: 0.65rem 0.85rem;
-      text-align: left;
-      font-weight: 700;
-      color: var(--color-text-secondary, #757575);
-      white-space: nowrap;
-    }
+    white-space: nowrap;
   }
 
-  tbody {
-    tr {
-      border-bottom: 1px solid var(--color-border, #f1f5f9);
+  td {
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid var(--color-border, #f1f5f9);
+    white-space: nowrap;
+  }
 
-      &:hover {
-        background: #faf5ff;
-      }
-    }
-
-    td {
-      padding: 0.6rem 0.85rem;
-      white-space: nowrap;
-    }
+  tr:last-child td {
+    border-bottom: none;
   }
 }
 
-.annualRow {
-  background: #fdf4ff;
+.fundNameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.fundNameText {
   font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.dateCell {
-  font-family: monospace;
-}
-
-.eventBadge {
+.tagEquity {
   display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: $radius-xs;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: #f1f5f9;
-  color: #475569;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #0284c7;
 }
 
-.numCell {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.tagDebt {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #7b1fa2;
 }
 
-.numCellHighlight {
+.numericCell {
   text-align: right;
-  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary, #334155);
+}
+
+.numericCellBold {
+  text-align: right;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.positiveGain {
+  font-weight: 700;
+  color: #10b981;
+}
+
+.negativeGain {
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.cashFlowCell {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.cashIn {
   color: #0284c7;
   font-weight: 600;
 }
 
-.numCellDanger {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: #dc2626;
-}
-
-.numCellSuccess {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: #059669;
+.cashOut {
+  color: #f59e0b;
   font-weight: 600;
 }
 
-.numCellBold {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--color-heading, #212121);
+// Stage-Level Taxation & Visualizer
+.stageTaxContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 0.75rem;
 }
 
-// Chart Styles
-.chartCard {
+.effectiveTaxBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-full;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.taxCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.taxMetricCard,
+.taxMetricCardHighlight {
   background: var(--color-bg, #ffffff);
   border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: $radius-lg;
-  padding: 1.5rem;
+  border-radius: $radius-sm;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
-.chartHeader {
-  margin-bottom: 1rem;
+.taxMetricCardHighlight {
+  border-color: #86efac;
+  background: #f0fdf4;
 }
 
-.chartTitle {
-  font-size: 1.15rem;
+.taxMetricLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #64748b);
+  text-transform: uppercase;
+}
+
+.taxMetricValue {
+  font-size: 0.85rem;
   font-weight: 700;
-  color: var(--color-heading, #212121);
-  margin: 0 0 0.25rem;
+  color: var(--color-text-primary, #0f172a);
 }
 
-.chartSubtitle {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary, #757575);
+.taxMetricValueGreen {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #15803d;
 }
 
-.strategyChart {
+.taxLiabilityText {
+  color: #ef4444;
+}
+
+.taxRateSub {
+  font-size: 0.62rem;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.taxVisualizerContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  padding: 0.5rem;
+}
+
+.gaugeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.gaugeLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #475569);
+}
+
+.gaugeLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.legendTaxDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  display: inline-block;
+}
+
+.legendNetDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+}
+
+.splitGaugeBar {
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  display: flex;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.gaugeTaxSegment {
+  height: 100%;
+  width: 18%;
+  background: #ef4444;
+
+  &[data-tax-level="high"] {
+    width: 25%;
+    background: #ef4444;
+  }
+  &[data-tax-level="med"] {
+    width: 14%;
+    background: #f59e0b;
+  }
+  &[data-tax-level="low"] {
+    width: 6%;
+    background: #e2e8f0;
+  }
+}
+
+.gaugeNetSegment {
+  height: 100%;
+  flex: 1;
+  background: #10b981;
+}
+
+.gaugeValuesRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+// Column 3: Overall Analytics & Macro Chart
+.macroChartCard {
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.macroChartHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.chartTitleArea {
+  display: flex;
+  flex-direction: column;
+}
+
+.macroChartTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.macroChartSubtitle {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.chartToggleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.chartToggleBtn {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: $radius-sm;
+  color: var(--color-text-secondary, #475569);
+  cursor: pointer;
+
+  &.activeToggleBtn {
+    background: var(--color-primary, #6d0b74);
+    border-color: var(--color-primary, #6d0b74);
+    color: #ffffff;
+  }
+}
+
+.macroTrajectoryChart {
   width: 100%;
 }
 
@@ -886,5 +1608,187 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 350px;
+  min-height: 320px;
+}
+
+// Multi-Streamline Comparison Engine Card
+.comparisonEngineCard {
+  background: var(--color-surface, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.comparisonHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comparisonTitleGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.comparisonTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.comparisonSubtitle {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.comparisonCardsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.streamlineOutcomeCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary-border, #e9d5eb);
+  }
+
+  &.activeOutcomeCard {
+    border-color: var(--color-primary, #6d0b74);
+    box-shadow: 0 0 0 2px rgba(109, 11, 116, 0.12);
+  }
+}
+
+.outcomeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.outcomeTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.streamlineDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+
+  &[data-index="0"] {
+    background: #7b1fa2;
+  }
+  &[data-index="1"] {
+    background: #0284c7;
+  }
+  &[data-index="2"] {
+    background: #10b981;
+  }
+}
+
+.outcomeName {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.activeCheckBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-primary, #6d0b74);
+  background: var(--color-primary-light, #f6edf7);
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-full;
+}
+
+.outcomeBadgesRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.badgeMaxWealth {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+}
+
+.badgeLowTax {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #0284c7;
+  background: #e0f2fe;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+}
+
+.badgeHighSwp {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #7b1fa2;
+  background: #f3e8ff;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-sm;
+}
+
+.outcomeMetricsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--color-border, #f1f5f9);
+}
+
+.metricRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+}
+
+.mLabel {
+  color: var(--color-text-secondary, #64748b);
+}
+
+.mVal {
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+}
+
+.mValWealth {
+  font-weight: 800;
+  color: #10b981;
+}
+
+.mValTax {
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.mValGreen {
+  font-weight: 700;
+  color: #15803d;
 }

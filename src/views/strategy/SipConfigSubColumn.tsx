@@ -54,7 +54,7 @@ export const SipConfigSubColumn: React.FC<SipConfigSubColumnProps> = ({
                 singleRow={true}
                 stepData={DEFAULT_AMOUNT_STEPS}
               />
-              <JoinedButtonGroup
+              <JoinedButtonGroup<'Monthly' | 'Quarterly' | 'Yearly'>
                 title="Step-Up Frequency"
                 data={FREQUENCY_BUTTON_DATA}
                 selectedValue={sipConfig.stepUpFrequency}

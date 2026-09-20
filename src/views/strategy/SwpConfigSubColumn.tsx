@@ -58,7 +58,7 @@ export const SwpConfigSubColumn: React.FC<SwpConfigSubColumnProps> = ({
                 onChange={(e) => onUpdateSwpConfig({ ...swpConfig, changeDate: e.target.value })}
               />
             </div>
-            <JoinedButtonGroup
+            <JoinedButtonGroup<'percentage' | 'fixed'>
               title="Change Logic"
               data={CHANGE_TYPE_BUTTONS}
               selectedValue={swpConfig.changeType}
