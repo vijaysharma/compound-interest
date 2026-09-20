@@ -1,130 +1,119 @@
-export type FundType = 'equity' | 'debt';
-export interface SelectedFund {
+import type { NavType } from '../../types/types';
+export type Frequency = 'monthly' | 'quarterly' | 'yearly';
+/** A NAV row resolved to ISO (YYYY-MM-DD) with a numeric NAV. */
+export interface NavPoint {
+  date: string;
+  nav: number;
+}
+/** Raw AMFI NAV history keyed by scheme code, as returned by the MF API. */
+export type NavBook = Record<string, NavType[]>;
+export interface FundRef {
   schemeCode: string;
   schemeName: string;
-  allocationPercent: number;
-  expectedCagr: number;
-  fundType: FundType;
-}
-export interface TopUpEvent {
-  id: string;
-  date: string;
-  amount: number;
-  note?: string;
-}
-export interface SwpConfig {
-  startDate: string;
-  baseAmount: number;
-  hasChange: boolean;
-  changeDate: string;
-  changeType: 'percentage' | 'fixed';
-  changeValue: number;
-}
-export interface SipConfig {
-  enabled: boolean;
-  linkToSwp: boolean;
-  startDate: string;
-  amount: number;
-  stepUpFrequency: 'Monthly' | 'Quarterly' | 'Yearly';
-  stepUpPercent: number;
-}
-export interface FundLot {
-  schemeCode: string;
-  units: number;
-  purchaseNav: number;
-  purchaseDate: string;
-  costBasis: number;
-  fundType: FundType;
-}
-export interface FundStageMetrics {
-  schemeCode: string;
-  schemeName: string;
-  fundType: FundType;
-  allocationPercent: number;
-  currentNav: number;
-  units: number;
-  costBasis: number;
-  currentValue: number;
-  absoluteReturn: number;
-  cagr: number;
-  cashFlowIn: number;
-  cashFlowOut: number;
-}
-export interface StageTaxSummary {
-  grossWithdrawalOrRealized: number;
-  stcgGains: number;
-  ltcgGains: number;
-  stcgTax: number;
-  ltcgTax: number;
-  debtTax: number;
-  totalTaxPayable: number;
-  netPostTaxCashFlow: number;
-  preTaxPortfolioValue: number;
-  postTaxPortfolioValue: number;
-  effectiveTaxRate: number;
-}
-export interface ExecutionStage {
-  id: string;
-  stageNumber: number;
-  title: string;
-  badge: string;
-  date: string;
-  monthIndex: number;
-  description: string;
-  preTaxPortfolioValue: number;
-  postTaxPortfolioValue: number;
-  cumulativeInvested: number;
-  cumulativeWithdrawn: number;
-  cumulativeTaxPaid: number;
-  combinedNetWorth: number;
-  fundMetrics: FundStageMetrics[];
-  taxSummary: StageTaxSummary;
-  trajectoryPoints: Array<{ month: number; date: string; value: number; cost: number }>;
-}
-export interface StrategySummary {
-  totalInitialInvested: number;
-  totalTopUps: number;
-  totalSwpWithdrawn: number;
-  totalTaxPaid: number;
-  netCashflowReceived: number;
-  totalSipInvested: number;
-  finalSourceBalance: number;
-  finalSipBalance: number;
-  finalCombinedNetWorth: number;
-}
-export interface Streamline {
-  id: string;
-  name: string;
   color: string;
-  investmentDate: string;
-  investmentAmount: string;
-  sourceFunds: SelectedFund[];
-  swpConfig: SwpConfig;
-  sipConfig: SipConfig;
-  sipFunds: SelectedFund[];
-  topUps: TopUpEvent[];
-  durationYears: number;
-  swpStartDate?: string;
-  swpEndDate?: string;
-  swpIntervals?: import('./column1Types').SwpInterval[];
-  recurringTopUps?: import('./column1Types').RecurringTopUpSource[];
 }
-export type { SwpFrequency, StepUpType, SwpInterval, SelectedFundAllocation, StrategyColumn1State, RecurringTopUpSource, Column1GrowthPoint } from './column1Types';
-export interface TimelineStage {
-  monthIndex: number;
+/** One Column 1 withdrawal window. Personal use = amount - toColumn2. */
+export interface WithdrawalPeriod {
+  id: string;
+  startDate: string;
+  endDate: string;
+  frequency: Frequency;
+  amount: number;
+  toColumn2: number;
+  /**
+   * Yearly increase applied to `amount`, as a percentage. The Column 2 share
+   * escalates by the same factor, so the personal/Column 2 split stays in the
+   * proportion the user set.
+   */
+  annualStepUpPct: number;
+}
+export interface Column1Config {
+  fund: FundRef | null;
+  amount: number;
+  investmentDate: string;
+  withdrawals: WithdrawalPeriod[];
+}
+/** Column 2 SWP. Personal use = amount - toColumn3. */
+export interface SwpRule {
+  enabled: boolean;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  frequency: Frequency;
+  toColumn3: number;
+}
+export interface Column2FundConfig {
+  id: string;
+  fund: FundRef;
+  allocationPct: number;
+  sipStartDate: string;
+  swp: SwpRule;
+}
+/** Column 3 sweeps its cash pool back into the Column 1 fund. */
+export interface Column3Config {
+  frequency: Frequency;
+  startDate: string;
+  mode: 'sweep' | 'fixed';
+  amount: number;
+}
+export interface StrategyConfig {
+  column1: Column1Config;
+  column2: Column2FundConfig[];
+  column3: Column3Config;
+  asOfDate: string;
+}
+export type TransactionKind = 'c1-invest' | 'c1-withdraw' | 'c2-sip' | 'c2-swp' | 'c3-reinvest';
+export interface PlannedTransaction {
+  kind: TransactionKind;
+  /** Requested calendar date (ISO). The applicable NAV date may differ. */
   date: string;
-  eventDescription: string;
-  sourceOpeningBalance: number;
-  sourceReturns: number;
-  topUpAdded: number;
-  swpGrossWithdrawn: number;
-  stcgGains: number;
-  ltcgGains: number;
-  taxPayable: number;
-  swpNetReceived: number;
-  sourceClosingBalance: number;
-  sipInjected: number;
-  sipReturns: number;
-  sipClosingBalance: number;
-  combinedNetWorth: number;
+  bucket: 'column1' | 'column2';
+  schemeCode: string;
+  /** Column 2 fund config id, for SIP/SWP rows. */
+  configId?: string;
+  /** Requested rupee amount. Zero for a Column 3 sweep-everything row. */
+  amount: number;
+  /** Portion of `amount` routed onward (C1 -> C2, or C2 -> C3). */
+  routedOnward: number;
+}
+export interface ExecutedTransaction extends PlannedTransaction {
+  /** NAV date actually applied (nearest published NAV on or before `date`). */
+  navDate: string;
+  nav: number;
+  /** Positive when units were bought, negative when sold. */
+  units: number;
+  /** Rupees actually moved, which can be less than `amount` when clamped. */
+  settledAmount: number;
+}
+export interface PortfolioSnapshot {
+  date: string;
+  column1Value: number;
+  column2Value: number;
+  totalValue: number;
+}
+export interface StrategyTotals {
+  initialInvestment: number;
+  column1Units: number;
+  column1Value: number;
+  column2Value: number;
+  totalValue: number;
+  personalFromColumn1: number;
+  personalFromColumn2: number;
+  totalPersonalWithdrawals: number;
+  withdrawnFromColumn1: number;
+  routedToColumn2: number;
+  investedInColumn2: number;
+  unallocatedColumn2Cash: number;
+  routedToColumn3: number;
+  reinvestedIntoColumn1: number;
+  column3CashBalance: number;
+  asOfDate: string;
+  asOfNavDate: string;
+}
+export interface StrategyResult {
+  transactions: ExecutedTransaction[];
+  snapshots: PortfolioSnapshot[];
+  column2Units: Record<string, number>;
+  totals: StrategyTotals;
+  warnings: string[];
 }
