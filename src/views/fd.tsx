@@ -22,8 +22,12 @@ const FD: React.FC = () => {
   const [taxSlab, setTaxSlab] = useState<number>(30);
   const [isSeniorCitizen, setIsSeniorCitizen] = useState<boolean>(false);
   const {
-    payoutAmount, principalDeposit, totalInterestEarned, principalPercent,
-    taxAnalysis, selectedPayoutTitle,
+    payoutAmount,
+    principalDeposit,
+    totalInterestEarned,
+    principalPercent,
+    taxAnalysis,
+    selectedPayoutTitle,
   } = useFdCalculations(pa, rt, mode, frequency, invType, taxSlab, isSeniorCitizen);
   return (
     <main className={styles.container}>
@@ -36,9 +40,12 @@ const FD: React.FC = () => {
       />
       <header className={styles.header}>
         <div className={styles.badge}>Fixed Income &bull; Guaranteed Returns</div>
-        <h1 className={styles.title}>Compound Interest Calculator &amp; Fixed Deposit (FD) Calculator India</h1>
+        <h1 className={styles.title}>
+          Compound Interest Calculator &amp; Fixed Deposit (FD) Calculator India
+        </h1>
         <p className={styles.subtitle}>
-          Simulate cumulative maturity amounts, periodic payout yields, and compound growth with institutional precision.
+          Simulate cumulative maturity amounts, periodic payout yields, and compound growth with
+          institutional precision.
         </p>
       </header>
       <div className={styles.calculatorGrid}>
@@ -78,11 +85,7 @@ const FD: React.FC = () => {
           />
           <DisplayCard
             primaryAmount={payoutAmount}
-            title={
-              invType === 'tgt'
-                ? 'Lumpsum amount required'
-                : `${selectedPayoutTitle} Payout`
-            }
+            title={invType === 'tgt' ? 'Lumpsum amount required' : `${selectedPayoutTitle} Payout`}
           />
           <FdSummaryCard
             mode={mode}
@@ -92,20 +95,20 @@ const FD: React.FC = () => {
             totalInterestEarned={totalInterestEarned}
             principalPercent={principalPercent}
           />
-          <FdTaxCard
-            mode={mode}
-            selectedPayoutTitle={selectedPayoutTitle}
-            isSeniorCitizen={isSeniorCitizen}
-            setIsSeniorCitizen={setIsSeniorCitizen}
-            taxSlab={taxSlab}
-            setTaxSlab={setTaxSlab}
-            invType={invType}
-            taxAnalysis={taxAnalysis}
-            payoutAmount={payoutAmount}
-            totalInterestEarned={totalInterestEarned}
-          />
         </div>
       </div>
+      <FdTaxCard
+        mode={mode}
+        selectedPayoutTitle={selectedPayoutTitle}
+        isSeniorCitizen={isSeniorCitizen}
+        setIsSeniorCitizen={setIsSeniorCitizen}
+        taxSlab={taxSlab}
+        setTaxSlab={setTaxSlab}
+        invType={invType}
+        taxAnalysis={taxAnalysis}
+        payoutAmount={payoutAmount}
+        totalInterestEarned={totalInterestEarned}
+      />
       <FdContent />
     </main>
   );
