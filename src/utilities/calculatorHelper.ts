@@ -1,537 +1,98 @@
-// Comprehensive, arbitrary-precision expression evaluator for Online Calculator
-export interface HistoryItem {
-  expression: string;
-  result: string;
-  timestamp: string;
-}
-export interface LastOperation {
-  op: string;
-  operand: string;
-}
-// Convert numbers to superscript characters
-export const toSuperscript = (str: string): string => {
-  const map: Record<string, string> = {
-    '0': '⁰',
-    '1': '¹',
-    '2': '²',
-    '3': '³',
-    '4': '⁴',
-    '5': '⁵',
-    '6': '⁶',
-    '7': '⁷',
-    '8': '⁸',
-    '9': '⁹',
-  };
-  return str
-    .split('')
-    .map((c) => map[c] || c)
-    .join('');
-};
-// Factorial helper with Overflow detection
-export function factorial(n: number): number {
-  if (n < 0 || !Number.isInteger(n)) throw new Error('Undefined');
-  if (n > 170) throw new Error('Overflow');
-  if (n === 0 || n === 1) return 1;
-  let res = 1;
-  for (let i = 2; i <= n; i++) res *= i;
-  return res;
-}
-// Convert superscript numbers to regular digits
-export function normalizeSuperscripts(s: string): string {
-  const supMap: Record<string, string> = {
-    '⁰': '0',
-    '¹': '1',
-    '²': '2',
-    '³': '3',
-    '⁴': '4',
-    '⁵': '5',
-    '⁶': '6',
-    '⁷': '7',
-    '⁸': '8',
-    '⁹': '9',
-    ʸ: 'y',
-    ˣ: 'x',
-  };
-  return s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹ʸˣ]/g, (m) => supMap[m] || m);
-}
-// Arbitrary-precision Decimal arithmetic (supports arbitrary exponents up to any magnitude)
-export class Decimal {
-  m: bigint; // unscaled integer mantissa
-  e: number; // base-10 exponent: value = m * 10^e
-  constructor(m: bigint | number | string, e: number) {
-    this.m = BigInt(m);
-    this.e = e;
-    this.normalize();
+import {
+  factorial,
+  nthRoot,
+  replaceAllRoots,
+} from './calculator/mathFns';
+import {
+  log10,
+  ln,
+  sinFn,
+  cosFn,
+  tanFn,
+  asinFn,
+  acosFn,
+  atanFn,
+  acoshFn,
+  atanhFn,
+} from './calculator/trigFns';
+import { tryDecimalEvaluation } from './calculator/decimalEval';
+export type { HistoryItem, LastOperation } from './calculator/types';
+export {
+  toSuperscript,
+  normalizeSuperscripts,
+  extractLastOperation,
+} from './calculator/textHelpers';
+export { Decimal } from './calculator/decimal';
+export { factorial, nthRoot, replaceAllRoots } from './calculator/mathFns';
+const FUNC_LIST = 'sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|ln|log|abs|nthRoot';
+function sanitizeExpression(expr: string): string {
+  let s = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/\s+/g, '');
+  while (/[+\-*/^.(√∛∜]$/.test(s) || /E[+-]?$/.test(s)) {
+    s = s.replace(/E[+-]?$/, '').replace(/[+\-*/^.(√∛∜]$/, '');
   }
-  normalize() {
-    if (this.m === 0n) {
-      this.e = 0;
-      return;
-    }
-    while (this.m % 10n === 0n) {
-      this.m /= 10n;
-      this.e += 1;
-    }
-  }
-  static fromString(str: string): Decimal {
-    str = str.trim();
-    const isNeg = str.startsWith('-');
-    const clean = str.replace(/^[+-]/, '');
-    // Handle scientific notation e.g. 8.06581751709e+67 or 1.5e-5
-    const sciMatch = clean.match(/^(\d+)(?:\.(\d+))?[eE]([+-]?\d+)$/);
-    if (sciMatch) {
-      const intPart = sciMatch[1] || '0';
-      const fracPart = sciMatch[2] || '';
-      const exp = parseInt(sciMatch[3], 10);
-      const digits = intPart + fracPart;
-      const decPlaces = fracPart.length;
-      let m = BigInt(digits);
-      if (isNeg) m = -m;
-      return new Decimal(m, exp - decPlaces);
-    }
-    // Handle standard decimal numbers
-    const decMatch = clean.match(/^(\d+)(?:\.(\d+))?$/);
-    if (decMatch) {
-      const intPart = decMatch[1] || '0';
-      const fracPart = decMatch[2] || '';
-      const digits = intPart + fracPart;
-      const decPlaces = fracPart.length;
-      let m = BigInt(digits);
-      if (isNeg) m = -m;
-      return new Decimal(m, -decPlaces);
-    }
-    return new Decimal(0n, 0);
-  }
-  static fromNumber(n: number): Decimal {
-    if (isNaN(n) || !isFinite(n)) throw new Error('Undefined');
-    return Decimal.fromString(n.toString());
-  }
-  add(other: Decimal): Decimal {
-    const diff = this.e - other.e;
-    if (diff >= 0) {
-      const m1 = this.m * 10n ** BigInt(diff);
-      return new Decimal(m1 + other.m, other.e);
-    } else {
-      const m2 = other.m * 10n ** BigInt(-diff);
-      return new Decimal(this.m + m2, this.e);
-    }
-  }
-  sub(other: Decimal): Decimal {
-    return this.add(new Decimal(-other.m, other.e));
-  }
-  mul(other: Decimal): Decimal {
-    return new Decimal(this.m * other.m, this.e + other.e);
-  }
-  div(other: Decimal, precision = 40): Decimal {
-    if (other.m === 0n) throw new Error('Undefined');
-    const m = (this.m * 10n ** BigInt(precision)) / other.m;
-    return new Decimal(m, this.e - other.e - precision);
-  }
-  toNumber(): number {
-    const isNeg = this.m < 0n;
-    const absM = isNeg ? -this.m : this.m;
-    const s = absM.toString();
-    const e = this.e;
-    if (e >= 0) {
-      return (isNeg ? -1 : 1) * Number(s + '0'.repeat(e));
-    }
-    const decPos = s.length + e;
-    if (decPos > 0) {
-      const str = s.slice(0, decPos) + '.' + s.slice(decPos);
-      return (isNeg ? -1 : 1) * parseFloat(str);
-    } else {
-      const str = '0.' + '0'.repeat(-decPos) + s;
-      return (isNeg ? -1 : 1) * parseFloat(str);
-    }
-  }
-  toString(): string {
-    if (this.m === 0n) return '0';
-    const isNeg = this.m < 0n;
-    const absM = isNeg ? -this.m : this.m;
-    const s = absM.toString();
-    const e = this.e;
-    if (e >= 0) {
-      if (e + s.length > 15) {
-        const exp = s.length - 1 + e;
-        let mant = s[0] + (s.length > 1 ? '.' + s.slice(1) : '');
-        if (mant.length > 14) mant = mant.slice(0, 14);
-        mant = mant.replace(/0+$/, '').replace(/\.$/, '');
-        return (isNeg ? '-' : '') + mant + 'e+' + exp;
-      }
-      return (isNeg ? '-' : '') + s + '0'.repeat(e);
-    }
-    const decPos = s.length + e;
-    if (decPos > 0) {
-      let frac = s.slice(decPos);
-      if (frac.length > 12) frac = frac.slice(0, 12).replace(/0+$/, '');
-      return (isNeg ? '-' : '') + s.slice(0, decPos) + (frac ? '.' + frac : '');
-    } else {
-      const frac = '0'.repeat(-decPos) + s;
-      if (frac.length > 12) {
-        const num = this.toNumber();
-        return parseFloat(num.toPrecision(12)).toString();
-      }
-      return (isNeg ? '-' : '') + '0.' + frac;
-    }
-  }
-}
-// High-precision nth-root helper: y√(x) = x^(1/y)
-export function nthRoot(x: number, y: number): number {
-  if (y === 0) throw new Error('Undefined');
-  if (x === 0) return 0;
-  if (x < 0) {
-    if (Math.abs(y % 2) === 1) {
-      return -Math.pow(-x, 1 / y);
-    }
-    throw new Error('Undefined');
-  }
-  if (y === 2) return Math.sqrt(x);
-  if (y === 3) return Math.cbrt(x);
-  return Math.pow(x, 1 / y);
-}
-// Parse and replace nested roots, cube roots, and arbitrary y-th roots with balanced parentheses
-export function replaceAllRoots(expr: string): string {
-  let s = expr
-    .replace(/∛/g, '³√')
-    .replace(/∜/g, '⁴√')
-    .replace(/\bcbrt\s*\(/g, '³√(')
-    .replace(/\bsqrt\s*\(/g, '√(');
-  const supMap: Record<string, string> = {
-    '⁰': '0',
-    '¹': '1',
-    '²': '2',
-    '³': '3',
-    '⁴': '4',
-    '⁵': '5',
-    '⁶': '6',
-    '⁷': '7',
-    '⁸': '8',
-    '⁹': '9',
-  };
-  const supToNum = (txt: string) =>
-    txt
-      .split('')
-      .map((c) => supMap[c] || c)
-      .join('');
-  let safety = 0;
-  while (safety < 50) {
-    safety++;
-    const rootParenRegex = /([⁰¹²³⁴⁵⁶⁷⁸⁹]*)√\s*\(/;
-    const match = rootParenRegex.exec(s);
-    if (!match) break;
-    const sup = match[1];
-    const degree = sup ? supToNum(sup) : '2';
-    const matchIndex = match.index;
-    const openParenIndex = s.indexOf('(', matchIndex);
-    let depth = 0;
-    let closeParenIndex = -1;
-    for (let i = openParenIndex; i < s.length; i++) {
-      if (s[i] === '(') depth++;
-      else if (s[i] === ')') {
-        depth--;
-        if (depth === 0) {
-          closeParenIndex = i;
-          break;
-        }
-      }
-    }
-    if (closeParenIndex !== -1) {
-      const inner = s.slice(openParenIndex + 1, closeParenIndex);
-      const processedInner = replaceAllRoots(inner);
-      const replacement = `nthRoot((${processedInner.trim() || '0'}), ${degree})`;
-      s = s.slice(0, matchIndex) + replacement + s.slice(closeParenIndex + 1);
-    } else {
-      const inner = s.slice(openParenIndex + 1);
-      const processedInner = replaceAllRoots(inner);
-      const replacement = `nthRoot((${processedInner.trim() || '0'}), ${degree})`;
-      s = s.slice(0, matchIndex) + replacement;
-      break;
-    }
-  }
-  s = s.replace(
-    /([⁰¹²³⁴⁵⁶⁷⁸⁹]*)√\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
-    (_, sup, num) => {
-      const degree = sup ? supToNum(sup) : '2';
-      return `nthRoot((${num}), ${degree})`;
-    }
-  );
+  const openCount = (s.match(/\(/g) || []).length;
+  const closeCount = (s.match(/\)/g) || []).length;
+  if (openCount > closeCount) s += ')'.repeat(openCount - closeCount);
+  s = s.replace(/((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\)))\s*([+-])\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g, '($1 $2 ($1 * ($3 / 100)))');
+  s = s.replace(/((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\)))\s*([*/])\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g, '($1 $2 ($3 / 100))');
+  s = s.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\))%/g, '($1 / 100)');
+  s = replaceAllRoots(s);
+  const sciMap: string[] = [];
+  s = s.replace(/\b\d+(?:\.\d+)?E[+-]?\d+\b/g, (m) => {
+    sciMap.push(m.toLowerCase());
+    return `__SCI_${sciMap.length - 1}__`;
+  });
+  s = s.replace(/(?<![a-zA-Z0-9_])E([+-]?\d+)\b/g, (_, p1) => {
+    sciMap.push(`1e${p1}`);
+    return `__SCI_${sciMap.length - 1}__`;
+  });
+  s = s.replace(/(\d+(?:\.\d+)?)\s*e/g, '$1*Math.E');
+  s = s.replace(/e\s*(\d+(?:\.\d+)?)/g, 'Math.E*$1');
+  s = s.replace(/(?<![a-zA-Z0-9_])e(?![a-zA-Z0-9_])/g, 'Math.E');
+  s = s.replace(/π/g, 'Math.PI');
+  s = s.replace(/__SCI_(\d+)__/g, (_, idx) => sciMap[Number(idx)]);
+  s = s.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
+  s = s.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\(/g, '$1*(');
+  s = s.replace(/\)\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, ')*$1');
+  s = s.replace(/\)\s*\(/g, ')*(');
+  s = s.replace(/((?:Math\.PI|Math\.E))\s*(\d+|\()/g, '$1*$2');
+  s = s.replace(/(\d+|\))\s*((?:Math\.PI|Math\.E))/g, '$1*$2');
+  s = s.replace(/((?:Math\.PI|Math\.E))\s*((?:Math\.PI|Math\.E))/g, '$1*$2');
+  s = s.replace(new RegExp('((?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|\\)|Math\\.PI|Math\\.E))\\s*(' + FUNC_LIST + ')', 'g'), '$1*$2');
+  s = s.replace(new RegExp('\\)\\s*(' + FUNC_LIST + ')', 'g'), ')*$1');
+  s = s.replace(/(?<![a-zA-Z.])log\(/g, 'log10(');
+  s = s.replace(/(?<![a-zA-Z.])sin\(/g, 'sinFn(');
+  s = s.replace(/(?<![a-zA-Z.])cos\(/g, 'cosFn(');
+  s = s.replace(/(?<![a-zA-Z.])tan\(/g, 'tanFn(');
+  s = s.replace(/(?<![a-zA-Z.])asin\(/g, 'asinFn(');
+  s = s.replace(/(?<![a-zA-Z.])acos\(/g, 'acosFn(');
+  s = s.replace(/(?<![a-zA-Z.])atan\(/g, 'atanFn(');
+  s = s.replace(/(?<![a-zA-Z.])sinh\(/g, 'Math.sinh(');
+  s = s.replace(/(?<![a-zA-Z.])cosh\(/g, 'Math.cosh(');
+  s = s.replace(/(?<![a-zA-Z.])tanh\(/g, 'Math.tanh(');
+  s = s.replace(/(?<![a-zA-Z.])asinh\(/g, 'Math.asinh(');
+  s = s.replace(/(?<![a-zA-Z.])acosh\(/g, 'acoshFn(');
+  s = s.replace(/(?<![a-zA-Z.])atanh\(/g, 'atanhFn(');
+  s = s.replace(/(?<![a-zA-Z.])abs\(/g, 'Math.abs(');
+  s = s.replace(/\^/g, '**');
   return s;
 }
-// Extract last binary operation from expression for repeat on "="
-export function extractLastOperation(expr: string): LastOperation | null {
-  if (!expr) return null;
-  const sanitized = expr.trim();
-  const match = sanitized.match(/([+\-×÷^])\s*([0-9.]+(?:[eE][+-]?\d+)?%?|[πe]|\([^()]+\))$/);
-  if (match) {
-    return {
-      op: match[1],
-      operand: match[2],
-    };
-  }
-  return null;
-}
-// // Math helper functions for safe mathematical evaluation
-const log10 = (v: number) => {
-  if (v <= 0 || isNaN(v)) throw new Error('Undefined');
-  return Math.log10(v);
-};
-const ln = (v: number) => {
-  if (v <= 0 || isNaN(v)) throw new Error('Undefined');
-  return Math.log(v);
-};
-const sinFn = (v: number, isDeg: boolean) => {
-  if (isNaN(v)) throw new Error('Undefined');
-  if (isDeg) {
-    const mod = ((v % 360) + 360) % 360;
-    if (mod === 0 || mod === 180 || mod === 360) return 0;
-    if (mod === 90) return 1;
-    if (mod === 270) return -1;
-    return Math.sin((v * Math.PI) / 180);
-  }
-  return Math.sin(v);
-};
-const cosFn = (v: number, isDeg: boolean) => {
-  if (isNaN(v)) throw new Error('Undefined');
-  if (isDeg) {
-    const mod = ((v % 360) + 360) % 360;
-    if (mod === 90 || mod === 270) return 0;
-    if (mod === 0 || mod === 360) return 1;
-    if (mod === 180) return -1;
-    return Math.cos((v * Math.PI) / 180);
-  }
-  return Math.cos(v);
-};
-const tanFn = (v: number, isDeg: boolean) => {
-  if (isNaN(v)) throw new Error('Undefined');
-  if (isDeg) {
-    const mod = ((v % 180) + 180) % 180;
-    if (Math.abs(mod - 90) < 1e-9) throw new Error('Undefined');
-    if (mod === 0) return 0;
-    return Math.tan((v * Math.PI) / 180);
-  }
-  if (Math.abs(Math.cos(v)) < 1e-15) throw new Error('Undefined');
-  return Math.tan(v);
-};
-const asinFn = (v: number, isDeg: boolean) => {
-  if (Math.abs(v) > 1 || isNaN(v)) throw new Error('Undefined');
-  const r = Math.asin(v);
-  return isDeg ? (r * 180) / Math.PI : r;
-};
-const acosFn = (v: number, isDeg: boolean) => {
-  if (Math.abs(v) > 1 || isNaN(v)) throw new Error('Undefined');
-  const r = Math.acos(v);
-  return isDeg ? (r * 180) / Math.PI : r;
-};
-const atanFn = (v: number, isDeg: boolean) => {
-  if (isNaN(v)) throw new Error('Undefined');
-  const r = Math.atan(v);
-  return isDeg ? (r * 180) / Math.PI : r;
-};
-const acoshFn = (v: number) => {
-  if (v < 1 || isNaN(v)) throw new Error('Undefined');
-  return Math.acosh(v);
-};
-const atanhFn = (v: number) => {
-  if (Math.abs(v) >= 1 || isNaN(v)) throw new Error('Undefined');
-  return Math.atanh(v);
-};
-// Tokenize and evaluate expression supporting arbitrary-precision Decimals, trig singularities, factorials, and y√(x)
-export function evaluateExpression(
-  expr: string,
-  isDeg: boolean
-): { result: string | null; error: boolean } {
+export function evaluateExpression(expr: string, isDeg: boolean): { result: string | null; error: boolean } {
   if (!expr || expr.trim() === '') return { result: null, error: false };
   try {
-    let sanitized = expr
-      .replace(/×/g, '*')
-      .replace(/÷/g, '/')
-      .replace(/−/g, '-')
-      .replace(/\s+/g, '');
-    // Trim trailing operators and incomplete capital E exponents for live preview
-    while (/[+\-*/^.(√∛∜]$/.test(sanitized) || /E[+-]?$/.test(sanitized)) {
-      sanitized = sanitized.replace(/E[+-]?$/, '').replace(/[+\-*/^.(√∛∜]$/, '');
-    }
+    const sanitized = sanitizeExpression(expr);
     if (!sanitized) return { result: null, error: false };
-    // Auto-close open parentheses for live preview
-    const openCount = (sanitized.match(/\(/g) || []).length;
-    const closeCount = (sanitized.match(/\)/g) || []).length;
-    if (openCount > closeCount) {
-      sanitized += ')'.repeat(openCount - closeCount);
+    const decimalResult = tryDecimalEvaluation(sanitized);
+    if (decimalResult.handled) {
+      return { result: decimalResult.result, error: false };
     }
-    // ─────────────────────────────────────────────────────────────────
-    // 1. Percentage logic
-    // ─────────────────────────────────────────────────────────────────
-    sanitized = sanitized.replace(
-      /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\)))\s*([+-])\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g,
-      '($1 $2 ($1 * ($3 / 100)))'
-    );
-    sanitized = sanitized.replace(
-      /((?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\)))\s*([*/])\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)%/g,
-      '($1 $2 ($3 / 100))'
-    );
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\([^()]+\))%/g, '($1 / 100)');
-    // ─────────────────────────────────────────────────────────────────
-    // 2. Roots: square roots, cube roots (∛ / ³√), nested roots √(√(16))
-    // ─────────────────────────────────────────────────────────────────
-    sanitized = replaceAllRoots(sanitized);
-    // ─────────────────────────────────────────────────────────────────
-    // 4. Protect Scientific Notation numbers with capital E (e.g. 2E3, 1.5E-4, 5E+2)
-    // ─────────────────────────────────────────────────────────────────
-    const sciMap: string[] = [];
-    sanitized = sanitized.replace(/\b\d+(?:\.\d+)?E[+-]?\d+\b/g, (m) => {
-      sciMap.push(m.toLowerCase());
-      return `__SCI_${sciMap.length - 1}__`;
-    });
-    sanitized = sanitized.replace(/(?<![a-zA-Z0-9_])E([+-]?\d+)\b/g, (_, p1) => {
-      sciMap.push(`1e${p1}`);
-      return `__SCI_${sciMap.length - 1}__`;
-    });
-    // Euler number e after digits: 2e => 2*Math.E
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?)\s*e/g, '$1*Math.E');
-    // Euler number e before digits: e2 => Math.E*2
-    sanitized = sanitized.replace(/e\s*(\d+(?:\.\d+)?)/g, 'Math.E*$1');
-    // Standalone Euler number e
-    sanitized = sanitized.replace(/(?<![a-zA-Z0-9_])e(?![a-zA-Z0-9_])/g, 'Math.E');
-    // Pi
-    sanitized = sanitized.replace(/π/g, 'Math.PI');
-    // Restore Scientific Notation numbers
-    sanitized = sanitized.replace(/__SCI_(\d+)__/g, (_, idx) => sciMap[Number(idx)]);
-    // ─────────────────────────────────────────────────────────────────
-    // 5. Factorials (e.g. 5! or 52! or 5000!)
-    // ─────────────────────────────────────────────────────────────────
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?)!/g, 'fact($1)');
-    // ─────────────────────────────────────────────────────────────────
-    // 6. Implicit Multiplication (Parentheses, Constants & Functions)
-    // ─────────────────────────────────────────────────────────────────
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\s*\(/g, '$1*(');
-    sanitized = sanitized.replace(/\)\s*(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, ')*$1');
-    sanitized = sanitized.replace(/\)\s*\(/g, ')*(');
-    sanitized = sanitized.replace(/((?:Math\.PI|Math\.E))\s*(\d+|\()/g, '$1*$2');
-    sanitized = sanitized.replace(/(\d+|\))\s*((?:Math\.PI|Math\.E))/g, '$1*$2');
-    sanitized = sanitized.replace(/((?:Math\.PI|Math\.E))\s*((?:Math\.PI|Math\.E))/g, '$1*$2');
-    const funcList =
-      'sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|ln|log|abs|nthRoot';
-    sanitized = sanitized.replace(
-      new RegExp(
-        '((?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|\\)|Math\\.PI|Math\\.E))\\s*(' + funcList + ')',
-        'g'
-      ),
-      '$1*$2'
-    );
-    sanitized = sanitized.replace(new RegExp('\\)\\s*(' + funcList + ')', 'g'), ')*$1');
-    // ─────────────────────────────────────────────────────────────────
-    // 7. Replace function calls with mathematical evaluation functions
-    // ─────────────────────────────────────────────────────────────────
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])log\(/g, 'log10(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])sin\(/g, 'sinFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])cos\(/g, 'cosFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])tan\(/g, 'tanFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])asin\(/g, 'asinFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])acos\(/g, 'acosFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])atan\(/g, 'atanFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])sinh\(/g, 'Math.sinh(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])cosh\(/g, 'Math.cosh(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])tanh\(/g, 'Math.tanh(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])asinh\(/g, 'Math.asinh(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])acosh\(/g, 'acoshFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])atanh\(/g, 'atanhFn(');
-    sanitized = sanitized.replace(/(?<![a-zA-Z.])abs\(/g, 'Math.abs(');
-    sanitized = sanitized.replace(/\^/g, '**');
-    // ─────────────────────────────────────────────────────────────────
-    // 8. High-Precision Decimal Evaluation for pure basic arithmetic
-    // ─────────────────────────────────────────────────────────────────
-    const isDecimalEligible = new RegExp(
-      '^(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/() ])+$'
-    ).test(sanitized);
-    if (isDecimalEligible) {
-      try {
-        const rawTokens = sanitized.match(
-          new RegExp('(?:\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?|[-+*/()])', 'g')
-        );
-        if (rawTokens && rawTokens.length > 0) {
-          const output: (Decimal | string)[] = [];
-          const ops: string[] = [];
-          const precedence: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
-          let prevToken: string | null = null;
-          for (let i = 0; i < rawTokens.length; i++) {
-            const token = rawTokens[i];
-            if (/^\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(token)) {
-              output.push(Decimal.fromString(token));
-            } else if (token === '(') {
-              ops.push(token);
-            } else if (token === ')') {
-              while (ops.length && ops[ops.length - 1] !== '(') {
-                output.push(ops.pop()!);
-              }
-              ops.pop();
-            } else if (['+', '-', '*', '/'].includes(token)) {
-              if (
-                (token === '-' || token === '+') &&
-                (prevToken === null || ['+', '-', '*', '/', '('].includes(prevToken))
-              ) {
-                output.push(new Decimal(0n, 0));
-              }
-              while (
-                ops.length &&
-                ops[ops.length - 1] !== '(' &&
-                precedence[ops[ops.length - 1]] >= precedence[token]
-              ) {
-                output.push(ops.pop()!);
-              }
-              ops.push(token);
-            }
-            prevToken = token;
-          }
-          while (ops.length) output.push(ops.pop()!);
-          const stack: Decimal[] = [];
-          for (const tok of output) {
-            if (tok instanceof Decimal) {
-              stack.push(tok);
-            } else {
-              const b = stack.pop();
-              const a = stack.pop();
-              if (!a || !b) throw new Error('Invalid');
-              if (tok === '+') stack.push(a.add(b));
-              else if (tok === '-') stack.push(a.sub(b));
-              else if (tok === '*') stack.push(a.mul(b));
-              else if (tok === '/') stack.push(a.div(b));
-            }
-          }
-          if (stack.length === 1) {
-            return { result: stack[0].toString(), error: false };
-          }
-        }
-      } catch (e) {
-        if (e instanceof Error && e.message === 'Undefined')
-          return { result: 'Undefined', error: false };
-      }
-    }
-    // Strict security whitelist: Ensure sanitized expression only contains numbers, safe arithmetic operators,
-    // and approved mathematical functions/constants before entering evaluator.
     const strippedCheck = sanitized
-      .replace(
-        /\b(Math\.(?:E|PI|sinh|cosh|tanh|asinh|abs)|log10|ln|sinFn|cosFn|tanFn|asinFn|acosFn|atanFn|acoshFn|atanhFn|nthRoot|fact)\b/g,
-        ''
-      )
+      .replace(/\b(Math\.(?:E|PI|sinh|cosh|tanh|asinh|abs)|log10|ln|sinFn|cosFn|tanFn|asinFn|acosFn|atanFn|acoshFn|atanhFn|nthRoot|fact)\b/g, '')
       .replace(/\b[eE][+-]?\d+\b/g, '')
       .replace(/[\d.+\-*/%^(),\s]/g, '');
-    if (strippedCheck.length > 0) {
-      return { result: null, error: true };
-    }
-    // Standard high-level execution context with math helpers
+    if (strippedCheck.length > 0) return { result: null, error: true };
     const evaluator = new Function(
-      'log10',
-      'ln',
-      'sinFn',
-      'cosFn',
-      'tanFn',
-      'asinFn',
-      'acosFn',
-      'atanFn',
-      'acoshFn',
-      'atanhFn',
-      'nthRoot',
-      'fact',
+      'log10', 'ln', 'sinFn', 'cosFn', 'tanFn', 'asinFn', 'acosFn', 'atanFn', 'acoshFn', 'atanhFn', 'nthRoot', 'fact',
       `try {
         const res = (${sanitized});
         if (res === Infinity || res === -Infinity) throw new Error('Undefined');
@@ -543,31 +104,17 @@ export function evaluateExpression(
       }`
     );
     const val = evaluator(
-      log10,
-      ln,
-      (v: number) => sinFn(v, isDeg),
-      (v: number) => cosFn(v, isDeg),
-      (v: number) => tanFn(v, isDeg),
-      (v: number) => asinFn(v, isDeg),
-      (v: number) => acosFn(v, isDeg),
-      (v: number) => atanFn(v, isDeg),
-      acoshFn,
-      atanhFn,
-      nthRoot,
-      factorial
+      log10, ln, (v: number) => sinFn(v, isDeg), (v: number) => cosFn(v, isDeg),
+      (v: number) => tanFn(v, isDeg), (v: number) => asinFn(v, isDeg), (v: number) => acosFn(v, isDeg),
+      (v: number) => atanFn(v, isDeg), acoshFn, atanhFn, nthRoot, factorial
     );
     if (val === null) return { result: null, error: false };
-    // Format number nicely
     const formatted = parseFloat(Number(val).toPrecision(12)).toString();
     return { result: formatted, error: false };
   } catch (err) {
     if (err instanceof Error) {
-      if (err.message === 'Undefined') {
-        return { result: 'Undefined', error: false };
-      }
-      if (err.message === 'Overflow') {
-        return { result: 'Overflow', error: false };
-      }
+      if (err.message === 'Undefined') return { result: 'Undefined', error: false };
+      if (err.message === 'Overflow') return { result: 'Overflow', error: false };
     }
     return { result: null, error: true };
   }

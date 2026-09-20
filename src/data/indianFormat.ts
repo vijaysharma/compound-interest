@@ -1,0 +1,18 @@
+export const IndianFormat: string[] = [
+  "en-IN",
+  "hi-IN",
+  "bn-IN",
+  "te-IN",
+  "en-PK",
+  "ur-PK",
+  "bn-BD",
+  "en-BD",
+  "ne-NP",
+  "si-LK",
+  "ta-LK",
+  "dz-BT",
+  "dv-MV",
+  "en-MV",
+  "my-MM",
+  "th-TH",
+];

@@ -1,0 +1,111 @@
+import { createPageMetadata } from './seoConfig';
+export const SEO_DEPOSITS_AND_FUNDS = {
+  fdCalculator: createPageMetadata({
+    title: 'Compound Interest Calculator & FD Calculator — Fixed Deposit India 2026',
+    description:
+      'Free compound interest calculator for Indian fixed deposits. Calculate FD maturity with daily, monthly & quarterly compounding. Compare cumulative vs non-cumulative FD returns.',
+    keywords: [
+      'compound interest calculator India',
+      'FD calculator',
+      'fixed deposit calculator',
+      'quarterly compounding calculator',
+      'bank FD interest rate',
+      'FD maturity calculator',
+      'daily compound interest calculator',
+      'monthly compound interest calculator',
+      'maturity calculator',
+      'interest rate calculator savings',
+      'compound interest formula',
+      'savings calculator',
+    ],
+    canonicalPath: '/fd-calculator',
+  }),
+  rdCalculator: createPageMetadata({
+    title: 'RD Calculator — Recurring Deposit Maturity & Interest Calculator India 2026',
+    description:
+      'Free recurring deposit calculator for Indian banks & Post Office RD. Calculate RD maturity amount with quarterly compounding. Compare RD vs FD vs SIP returns.',
+    keywords: [
+      'RD calculator',
+      'recurring deposit calculator',
+      'post office RD calculator',
+      'bank RD interest rate',
+      'monthly deposit calculator India',
+      'compound interest calculator RD',
+      'post office RD interest rate',
+      'RD vs FD',
+      'how to calculate RD maturity',
+    ],
+    canonicalPath: '/rd-calculator',
+  }),
+  sipCalculator: createPageMetadata({
+    title: 'SIP Calculator — Free Mutual Fund SIP Return Calculator India 2026',
+    description:
+      'Calculate SIP returns with step-up SIP & target corpus planning. Estimate mutual fund growth for ₹500–₹1 Lakh monthly SIP over 1–35 years. 100% free & private.',
+    keywords: [
+      'SIP calculator',
+      'systematic investment plan calculator',
+      'mutual fund return calculator',
+      'step up SIP calculator',
+      'best SIP calculator India',
+      'SIP maturity calculator',
+      'mutual fund calculator',
+      'investment calculator',
+      'future value calculator',
+      'CAGR calculator',
+      'MF calculator',
+      'how to calculate SIP returns',
+      'SIP vs lump sum',
+    ],
+    canonicalPath: '/sip-calculator',
+  }),
+  swpCalculator: createPageMetadata({
+    title: 'SWP Calculator — Systematic Withdrawal Plan Calculator India 2026',
+    description:
+      'Free SWP calculator to plan retirement income. Model monthly pension withdrawals, inflation-adjusted cashflows & corpus longevity from mutual funds. 100% private.',
+    keywords: [
+      'SWP calculator',
+      'systematic withdrawal plan calculator',
+      'monthly pension calculator',
+      'retirement withdrawal calculator India',
+      'safe withdrawal rate India',
+      'retirement calculator',
+      'annuity calculator',
+      'retirement planning',
+      'safe withdrawal rate',
+    ],
+    canonicalPath: '/swp-calculator',
+  }),
+  ppfCalculator: createPageMetadata({
+    title: 'PPF Calculator India — Historical & Projected Public Provident Fund Returns',
+    description:
+      'Official PPF Calculator following RBI 5th-of-the-month rules, real historical interest rates, 5-year extension blocks, and EEE tax-exempt maturity value.',
+    keywords: [
+      'PPF calculator',
+      'public provident fund calculator',
+      'PPF interest rate',
+      '5th of month rule PPF',
+      'PPF extension calculator',
+      'PPF maturity calculator',
+      'tax free savings India',
+      'Section 80C PPF',
+      'PPF rules RBI',
+    ],
+    canonicalPath: '/ppf-calculator',
+  }),
+  npsCalculator: createPageMetadata({
+    title: 'NPS Calculator India — Retirement Pension & Corpus Planner | Rupee Calculator',
+    description:
+      'Calculate your National Pension System (NPS) Tier-1 retirement corpus, 40% mandatory annuity, 60% tax-free lump sum withdrawal, and monthly pension payout.',
+    keywords: [
+      'NPS calculator',
+      'national pension system calculator',
+      'retirement calculator India',
+      'pension calculator India',
+      '80CCD 1B calculator',
+      'annuity calculator',
+      'lump sum withdrawal NPS',
+      'PFRDA pension',
+    ],
+    canonicalPath: '/nps-calculator',
+  }),
+};

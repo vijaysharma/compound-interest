@@ -1,0 +1,111 @@
+export const fdSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FinancialProduct',
+      name: 'Fixed Deposit Compound Interest Calculator India',
+      description: 'Calculates Fixed Deposit maturity amount, total interest yield, and compound growth across monthly, quarterly, semi-annual, and annual compounding frequencies.',
+      category: 'DepositAccount',
+      provider: { '@type': 'Organization', name: 'Rupee Calculator', url: 'https://rupees.vercel.app/' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://rupees.vercel.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Fixed Deposit Calculator', item: 'https://rupees.vercel.app/fd-calculator' },
+      ],
+    },
+    {
+      '@type': 'HowTo',
+      name: 'How to Use the FD Compound Interest Calculator',
+      description: 'Calculate Fixed Deposit maturity amount and compound interest in 4 steps.',
+      totalTime: 'PT1M',
+      step: [
+        { '@type': 'HowToStep', position: 1, name: 'Enter Principal Amount', text: 'Enter the amount you wish to deposit as a Fixed Deposit (e.g., ₹1,00,000).' },
+        { '@type': 'HowToStep', position: 2, name: 'Set Annual Interest Rate', text: 'Enter the interest rate offered by your bank (e.g., 7.5% per annum).' },
+        { '@type': 'HowToStep', position: 3, name: 'Choose Tenure and Compounding Frequency', text: 'Select the FD duration and how often interest is compounded (monthly, quarterly, half-yearly, or annually).' },
+        { '@type': 'HowToStep', position: 4, name: 'View Maturity Amount', text: 'Instantly see your total maturity value, interest earned, and effective annual yield.' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'How is compound interest calculated on Fixed Deposits in Indian banks?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Indian banks typically compound Fixed Deposit interest on a quarterly basis using the formula: A = P(1 + r/n)^(nt), where P is the principal, r is the annual rate of interest, n is 4 (quarterly compounding), and t is the tenure in years.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the TDS limit on Fixed Deposit interest in India?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Under Indian Income Tax rules, TDS (Tax Deducted at Source) is deducted at 10% if the total annual FD interest exceeds ₹40,000 across all branches of a bank (₹50,000 for senior citizens under Section 80TTB). Submit Form 15G or 15H if your total income is below the taxable threshold.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the difference between Cumulative and Non-Cumulative Fixed Deposits?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'In Cumulative FDs, interest is reinvested and paid along with the principal at maturity, maximizing compound interest. In Non-Cumulative FDs, interest is paid out periodically (monthly, quarterly, or annually) into your bank account as regular income.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How to calculate compound interest on a fixed deposit?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Use the formula A = P(1 + r/n)^(nt), where P is the deposit amount, r is the annual interest rate (as a decimal), n is the compounding frequency per year (4 for quarterly, 12 for monthly), and t is the number of years.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'FD vs RD: Which gives higher returns?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'A Fixed Deposit (FD) generally yields slightly higher effective returns than a Recurring Deposit (RD) for the same interest rate and tenure because the entire FD principal compounds from Day 1.',
+          },
+        },
+      ],
+    },
+    {
+      '@type': 'WebApplication',
+      name: 'Compound Interest & FD Calculator — Rupee Calculator',
+      url: 'https://rupees.vercel.app/fd-calculator',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires JavaScript',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+    },
+  ],
+};
+export const fdFaqs = [
+  {
+    question: 'How does quarterly compounding increase FD returns compared to simple interest?',
+    answer: 'With quarterly compounding (standard for Indian bank FDs), interest earned in each 3-month quarter is added to your principal balance. In the subsequent quarter, you earn interest on both your initial deposit and accumulated interest, resulting in a higher effective annual yield (Annual Percentage Yield) than the nominal interest rate.',
+  },
+  {
+    question: 'What are the tax implications on Fixed Deposit interest in India?',
+    answer: 'FD interest is fully taxable as "Income from Other Sources" at your applicable income tax slab rate. Banks deduct TDS at 10% if interest exceeds ₹40,000 (₹50,000 for senior citizens). If PAN is not provided, TDS is deducted at 20%.',
+  },
+  {
+    question: 'Are 5-year Tax Saving Fixed Deposits eligible for Section 80C deductions?',
+    answer: 'Yes, deposits in 5-year Tax Saving FDs qualify for tax deductions up to ₹1.5 Lakh under Section 80C of the Income Tax Act (Old Tax Regime). These deposits have a mandatory 5-year lock-in period with no premature withdrawal or loan facility.',
+  },
+  {
+    question: 'Is FD investment safe in Indian Commercial and Small Finance Banks?',
+    answer: 'All deposits across commercial, small finance, and cooperative banks are insured up to ₹5,00,000 (including principal and interest) per depositor per bank by DICGC (Deposit Insurance and Credit Guarantee Corporation), a wholly-owned subsidiary of the Reserve Bank of India (RBI).',
+  },
+  {
+    question: 'How to calculate compound interest on a fixed deposit?',
+    answer: 'Use the formula A = P(1 + r/n)^(nt), where P is the deposit amount, r is the annual interest rate (as a decimal), n is the compounding frequency per year (4 for quarterly, 12 for monthly), and t is the number of years. For example, ₹1,00,000 at 7.5% compounded quarterly for 5 years: A = 1,00,000 × (1 + 0.075/4)^(4×5) = ₹1,44,995.',
+  },
+  {
+    question: 'FD vs RD: Which gives higher returns?',
+    answer: 'A Fixed Deposit (FD) generally yields slightly higher effective returns than a Recurring Deposit (RD) for the same interest rate and tenure. This is because the entire FD principal compounds from Day 1, while RD installments are staggered monthly.',
+  },
+];
