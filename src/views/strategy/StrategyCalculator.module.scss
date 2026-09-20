@@ -1,0 +1,890 @@
+@use '../../styles/variables' as *;
+
+.pageContainer {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+// Mobile Viewport Guardrail
+.mobileFallbackContainer {
+  display: block;
+  padding: 2rem 1rem;
+  margin: 1rem auto;
+  max-width: 600px;
+  text-align: center;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.mobileFallbackCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-lg;
+  padding: 2.5rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.mobileFallbackIconWrap {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: var(--color-primary-light, #f6edf7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobileFallbackIcon {
+  font-size: 2rem;
+  color: var(--color-primary, #6d0b74);
+}
+
+.mobileFallbackBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary, #6d0b74);
+  background: var(--color-primary-light, #f6edf7);
+  border-radius: $radius-full;
+  margin-bottom: 1rem;
+}
+
+.mobileFallbackTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+  margin-bottom: 0.75rem;
+}
+
+.mobileFallbackText {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #757575);
+}
+
+// Desktop Strategy Workspace
+.desktopWorkspace {
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+}
+
+// Header Styles
+.header {
+  margin-bottom: 0.5rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: $radius-full;
+  background: var(--color-primary-light, #f6edf7);
+  color: var(--color-primary, #6d0b74);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.badgeIcon {
+  font-size: 1rem;
+}
+
+.title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--color-heading, #212121);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary, #757575);
+  line-height: 1.5;
+  max-width: 1000px;
+}
+
+.headerMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.headerMetricCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.headerMetricLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary, #757575);
+}
+
+.headerMetricValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+}
+
+.headerMetricValueHighlight {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.headerMetricValueDanger {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.headerMetricValueSuccess {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+// Stage Cards
+.stageCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-lg;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.stageHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.stageNumber {
+  background: var(--color-primary, #6d0b74);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: $radius-sm;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.stageTitleGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.stageTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+  margin: 0;
+}
+
+.stageSubtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #757575);
+}
+
+.stageFields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.splitConfigGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+}
+
+.configSubColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.subColumnTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+  margin: 0 0 0.25rem;
+}
+
+// Form Controls
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fieldLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #757575);
+}
+
+.datePickerGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 260px;
+}
+
+.dateInput,
+.numInput,
+.textInput {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  font-size: 0.9rem;
+  color: var(--color-text, #212121);
+  background: var(--color-bg, #ffffff);
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: var(--color-primary, #6d0b74);
+  }
+}
+
+.fieldTight {
+  margin-bottom: 0.25rem;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkboxLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-heading, #212121);
+  cursor: pointer;
+}
+
+.stepUpBox {
+  background: var(--color-bg-secondary, #f8fafc);
+  border: 1px dashed var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stepUpContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+}
+
+// Fund Selector
+.fundSelectorWrap {
+  background: var(--color-bg-secondary, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fundSelectorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fundSelectorTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+}
+
+.fundCounter {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary, #6d0b74);
+}
+
+.fundList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fundCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fundMainInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fundName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-heading, #212121);
+}
+
+.fundTags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tagEquity {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-xs;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.tagDebt {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-xs;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.tagCagr {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #7b1fa2;
+}
+
+.tagWeight {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #757575);
+}
+
+.deleteFundBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: $radius-xs;
+
+  &:hover {
+    color: #ef4444;
+    background: #fef2f2;
+  }
+}
+
+.addFundForm {
+  display: grid;
+  grid-template-columns: 1fr 80px 90px auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.addFundInput,
+.addCagrInput,
+.addTypeSelect {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+  background: #ffffff;
+}
+
+.addFundSubmitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: $radius-sm;
+  border: none;
+  background: var(--color-primary, #6d0b74);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-primary-hover, #58085e);
+  }
+}
+
+// SIP Toggle
+.sipHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .slider {
+      background-color: var(--color-primary, #6d0b74);
+    }
+
+    &:checked + .slider:before {
+      transform: translateX(20px);
+    }
+  }
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.2s;
+  border-radius: 24px;
+
+  &:before {
+    position: absolute;
+    content: '';
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+  }
+}
+
+.sipFieldsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Step C: Top-Ups
+.topUpsControls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.timelineDurationRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.durationLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+}
+
+.durationButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.durationBtn {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-bg, #ffffff);
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text, #212121);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-primary, #6d0b74);
+  }
+}
+
+.activeDuration {
+  background: var(--color-primary, #6d0b74);
+  color: #ffffff;
+  border-color: var(--color-primary, #6d0b74);
+
+  &:hover {
+    background: var(--color-primary, #6d0b74);
+  }
+}
+
+.addTopUpRow {
+  display: grid;
+  grid-template-columns: 160px 180px 1fr auto;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.addTopUpBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 1rem;
+  border-radius: $radius-sm;
+  border: none;
+  background: var(--color-primary, #6d0b74);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-primary-hover, #58085e);
+  }
+}
+
+.topUpsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.topUpChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: $radius-full;
+  font-size: 0.8rem;
+}
+
+.topUpDate {
+  font-weight: 600;
+  color: var(--color-heading, #212121);
+}
+
+.topUpAmount {
+  font-weight: 700;
+  color: #059669;
+}
+
+.topUpNote {
+  color: var(--color-text-secondary, #757575);
+}
+
+.deleteTopUpBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: #ef4444;
+  }
+}
+
+// Step D: Tax Breakdown
+.taxSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.taxCard {
+  background: var(--color-bg-secondary, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.taxCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.taxCardIcon {
+  color: var(--color-primary, #6d0b74);
+  font-size: 1rem;
+}
+
+.taxCardTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+}
+
+.taxCardValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+}
+
+.taxCardValueDanger {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.taxCardValueSuccess {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.taxCardDesc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #757575);
+}
+
+.taxRulesCallout {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--color-primary, #6d0b74);
+  background: var(--color-primary-light, #f6edf7);
+  border-radius: 0 $radius-sm $radius-sm 0;
+}
+
+.calloutTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary, #6d0b74);
+  margin-bottom: 0.25rem;
+}
+
+.calloutText {
+  font-size: 0.78rem;
+  color: #4a044e;
+  line-height: 1.4;
+  margin: 0;
+}
+
+// Table Styles
+.timelineTableCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-lg;
+  padding: 1.5rem;
+}
+
+.tableHeaderBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.tableTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+  margin: 0 0 0.25rem;
+}
+
+.tableSubtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #757575);
+}
+
+.filterButtonGroup {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.tableFilterBtn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-bg, #ffffff);
+  border-radius: $radius-sm;
+  color: var(--color-text, #212121);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-primary, #6d0b74);
+  }
+}
+
+.activeFilterBtn {
+  background: var(--color-primary, #6d0b74);
+  color: #ffffff;
+  border-color: var(--color-primary, #6d0b74);
+
+  &:hover {
+    background: var(--color-primary, #6d0b74);
+  }
+}
+
+.tableScrollWrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-md;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+
+  thead {
+    background: var(--color-bg-secondary, #f8fafc);
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+
+    th {
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      font-weight: 700;
+      color: var(--color-text-secondary, #757575);
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--color-border, #f1f5f9);
+
+      &:hover {
+        background: #faf5ff;
+      }
+    }
+
+    td {
+      padding: 0.6rem 0.85rem;
+      white-space: nowrap;
+    }
+  }
+}
+
+.annualRow {
+  background: #fdf4ff;
+  font-weight: 600;
+}
+
+.dateCell {
+  font-family: monospace;
+}
+
+.eventBadge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: $radius-xs;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.numCell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.numCellHighlight {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.numCellDanger {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #dc2626;
+}
+
+.numCellSuccess {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #059669;
+  font-weight: 600;
+}
+
+.numCellBold {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+}
+
+// Chart Styles
+.chartCard {
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: $radius-lg;
+  padding: 1.5rem;
+}
+
+.chartHeader {
+  margin-bottom: 1rem;
+}
+
+.chartTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-heading, #212121);
+  margin: 0 0 0.25rem;
+}
+
+.chartSubtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #757575);
+}
+
+.strategyChart {
+  width: 100%;
+}
+
+.chartLoadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 350px;
+}

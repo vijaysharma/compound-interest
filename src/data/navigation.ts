@@ -44,6 +44,7 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
       { name: 'Lumpsum Returns', href: '/mutual-funds/lumpsum', icon: FiPieChart },
       { name: 'MF SIP Explorer', href: '/mutual-funds/sip', icon: FiTrendingUp },
       { name: 'MF SWP Explorer', href: '/mutual-funds/swp', icon: FiBarChart2 },
+      { name: 'Strategy Builder', href: '/strategy-calculator', icon: FiRepeat, aliases: ['/mutual-funds/strategy'] },
     ],
   },
   {
