@@ -22,15 +22,13 @@ const StrategyCalculatorView: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const seoTitle = 'Advanced Multi-Stage Investment & SWP/SIP Strategy Calculator | Rupee Calculator';
-  const seoDesc = 'Simulate two-tier capital trajectories: lumpsum deployment across mutual funds, staged SWP redemptions with dynamic step-ups, parallel SIP wealth compounding, and stage-by-stage STCG & LTCG tax tracking.';
+  const seoTitle =
+    'Advanced Multi-Stage Investment & SWP/SIP Strategy Calculator | Rupee Calculator';
+  const seoDesc =
+    'Simulate two-tier capital trajectories: lumpsum deployment across mutual funds, staged SWP redemptions with dynamic step-ups, parallel SIP wealth compounding, and stage-by-stage STCG & LTCG tax tracking.';
   return (
-    <main className={styles.pageContainer}>
-      <SEOHead
-        title={seoTitle}
-        description={seoDesc}
-        canonicalPath="/strategy-calculator"
-      />
+    <main className={`${styles.pageContainer} strategy-calculator-page`}>
+      <SEOHead title={seoTitle} description={seoDesc} canonicalPath="/strategy-calculator" />
       {mounted && !isDesktop && <MobileFallbackBanner />}
       <div className={styles.desktopWorkspace}>
         <StrategyHeader summary={state.activeResult.summary} />

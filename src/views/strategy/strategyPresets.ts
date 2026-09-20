@@ -1,5 +1,5 @@
 import type { ButtonDataType } from '../../types/types';
-import { SelectedFund, Streamline } from './types';
+import { SelectedFund, Streamline, SwpFrequency, StepUpType, SwpInterval } from './types';
 export interface StrategyAmountStep {
   value: string;
   label: string;
@@ -19,6 +19,44 @@ export const FREQUENCY_BUTTON_DATA = FREQUENCY_BUTTONS;
 export const CHANGE_TYPE_BUTTONS: ButtonDataType<'percentage' | 'fixed'>[] = [
   { id: 'ct-pct', value: 'percentage', title: 'Percentage (%)' },
   { id: 'ct-fix', value: 'fixed', title: 'Flat Amount (₹)' },
+];
+export const SWP_FREQ_BUTTONS: ButtonDataType<SwpFrequency>[] = [
+  { id: 'swp-freq-m', value: 'monthly', title: 'Monthly' },
+  { id: 'swp-freq-q', value: 'quarterly', title: 'Quarterly' },
+  { id: 'swp-freq-y', value: 'yearly', title: 'Yearly' },
+];
+export const STEP_UP_TYPE_BUTTONS: ButtonDataType<StepUpType>[] = [
+  { id: 'su-pct', value: 'percentage', title: 'Percentage (%)' },
+  { id: 'su-fix', value: 'fixed', title: 'Fixed Amount (₹)' },
+];
+export const SWP_AMOUNT_PRESETS: StrategyAmountStep[] = [
+  { value: '25000', label: '₹25K' },
+  { value: '35000', label: '₹35K' },
+  { value: '50000', label: '₹50K' },
+  { value: '75000', label: '₹75K' },
+  { value: '100000', label: '₹1L' },
+];
+export const DEFAULT_SWP_INTERVALS: SwpInterval[] = [
+  {
+    id: 'swp-int-1',
+    fromDate: '2025-01-01',
+    toDate: '2026-12-31',
+    amount: 35000,
+    frequency: 'monthly',
+    enableStepUp: false,
+    stepUpType: 'percentage',
+    stepUpValue: 5,
+  },
+  {
+    id: 'swp-int-2',
+    fromDate: '2027-01-01',
+    toDate: '2033-12-31',
+    amount: 45000,
+    frequency: 'monthly',
+    enableStepUp: true,
+    stepUpType: 'percentage',
+    stepUpValue: 8,
+  },
 ];
 export const MAX_INITIAL_FUNDS = 4;
 export const MAX_SIP_FUNDS = 6;

@@ -104,7 +104,11 @@ export interface Streamline {
   sipFunds: SelectedFund[];
   topUps: TopUpEvent[];
   durationYears: number;
+  swpStartDate?: string;
+  swpEndDate?: string;
+  swpIntervals?: import('./column1Types').SwpInterval[];
 }
+export type { SwpFrequency, StepUpType, SwpInterval, SelectedFundAllocation, StrategyColumn1State } from './column1Types';
 export interface TimelineStage {
   monthIndex: number;
   date: string;
