@@ -1,11 +1,7 @@
 'use client';
 import React from 'react';
-import {
-  AmountField,
-  DateRangeField,
-  FrequencyField,
-  StepUpSelect,
-} from './StrategyFields';
+import { DateRangeField, FrequencyField, STEP_UP_OPTIONS } from './StrategyFields';
+import PairedValuePicker from '../../components/PairedValuePicker';
 import { DerivedRow } from './StrategyReadouts';
 import { CollapsibleItem } from './CollapsibleItem';
 import { FREQUENCY_LABEL } from './schedule';
@@ -66,24 +62,18 @@ export const WithdrawalPeriodCard = ({
         value={period.frequency}
         onChange={(frequency: Frequency) => onPatch(period.id, { frequency })}
       />
-      <AmountField
-        title="Withdrawal per instalment"
-        value={period.amount}
-        onChange={(amount) =>
-          onPatch(period.id, { amount, toColumn2: Math.min(period.toColumn2, amount) })
-        }
-      />
-      <StepUpSelect
-        id={`step-up-${period.id}`}
-        label="Yearly increase"
-        value={period.annualStepUpPct}
-        onChange={(annualStepUpPct) => onPatch(period.id, { annualStepUpPct })}
-      />
-      <AmountField
-        title={`Of which to ${COLUMN_WORDS.growth}`}
-        value={period.toColumn2}
-        max={period.amount}
-        onChange={(toColumn2) => onPatch(period.id, { toColumn2 })}
+      <PairedValuePicker
+        primaryTitle="Withdrawal per instalment"
+        primaryValue={period.amount}
+        onPrimaryChange={(amount) => onPatch(period.id, { amount })}
+        secondaryTitle={`Of which to ${COLUMN_WORDS.growth}`}
+        secondaryValue={period.toColumn2}
+        onSecondaryChange={(toColumn2) => onPatch(period.id, { toColumn2 })}
+        bridgeId={`step-up-${period.id}`}
+        bridgeLabel="Yearly increase"
+        bridgeValue={period.annualStepUpPct}
+        bridgeOptions={STEP_UP_OPTIONS}
+        onBridgeChange={(value) => onPatch(period.id, { annualStepUpPct: Number(value) })}
       />
       <DerivedRow label="Personal use per instalment" value={personalUse} />
       {period.annualStepUpPct > 0 && latest && (

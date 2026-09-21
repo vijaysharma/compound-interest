@@ -1,0 +1,310 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+// Mirrors the ValuePicker tokens this card borrows its chrome from, so the two
+// stay dimensionally identical at equal widths.
+$font-family:
+  Inter,
+  Roboto,
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  "Segoe UI",
+  sans-serif;
+$grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sizing is keyed off the container, never the viewport.
+//
+// This card packs two fields and ten controls into whatever column it is given
+// — inside the strategy calculator that is ~380px on a 1300px screen. The
+// ValuePicker chrome it borrows sizes itself with `tablet-up`, which emits a
+// media branch as well as a container one, so it jumps to its 44px/46px/20px
+// web scale off the window width and overflows a narrow column. Every borrowed
+// dimension is therefore restated below against `@container` alone, at a
+// specificity that beats the shared rules.
+//
+// Tiers: base = the touch-friendly compact scale, ≥640px = the full web scale,
+// ≤360px tightens only what is not a touch target.
+// ─────────────────────────────────────────────────────────────────────────────
+
+.container {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  font-family: $font-family;
+  box-sizing: border-box;
+
+  &.compact {
+    gap: 0.35rem;
+  }
+}
+
+// One merged title bar spanning both fields, each heading sitting over its own
+// column. Headings wrap rather than truncate, so the bar grows to two lines
+// when a title is long.
+.titleBar {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+}
+
+.titleCell {
+  flex: 1;
+  min-width: 0;
+}
+
+// Both fields share the single currency badge, so they split whatever the
+// badge leaves rather than each carrying their own.
+.inputRow {
+  gap: 6px;
+  padding: 6px 8px;
+  min-height: 52px;
+}
+
+.symbol {
+  width: auto;
+  min-width: 0;
+  height: 32px;
+  font-size: 16px;
+  padding: 0;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 8px;
+
+  input {
+    font-size: 16.5px;
+    line-height: 22px;
+  }
+}
+
+// The shared C / + / - and step buttons drive whichever field was focused
+// last, so the active one is ringed to show where a press will land.
+.fieldActive {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+// One control strip for both fields: the actions keep their cluster spacing on
+// the left, and the step grid runs flush to the card's right edge.
+.controlRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 8px;
+  background-color: $grid-tint;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+
+  button {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    font-size: 13.5px;
+  }
+}
+
+.grid {
+  flex: 1;
+  min-width: 0;
+
+  // ValuePicker floors every step track at its label's min-content width, which
+  // pushes the last steps outside the card once the actions share the strip.
+  // The tracks (gridContainer > gridRow) are let below that floor here so the
+  // whole strip fits whatever width the card has.
+  > div > div {
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  button {
+    min-width: 0;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 2px;
+    font-size: 13px;
+  }
+}
+
+// Sits under the card, aligned to the field it modifies rather than to the
+// card's left edge.
+.bridgeRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  padding: 0 0.1rem;
+}
+
+.bridgeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $color-text-secondary;
+}
+
+.bridgeSelect {
+  border: 1px solid $border-light;
+  border-radius: $radius-sm;
+  background: $bg-muted;
+  color: $color-text;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.3rem;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// In-words readouts, one under each field, in the same two columns.
+.wordsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  font-size: 13px;
+  line-height: 18px;
+  color: $color-text-secondary;
+}
+
+// ── Tight columns: give up label size, never touch-target size ──────────────
+@include container-max(360px) {
+  .titleBar {
+    gap: 4px;
+    padding: 4px 6px;
+    font-size: 10.5px;
+  }
+
+  .inputRow {
+    gap: 4px;
+    padding: 5px 6px;
+    min-height: 48px;
+  }
+
+  // Decorative, so it can shrink below the touch floor to buy the fields room.
+  .symbol {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .field {
+    padding: 0 6px;
+
+    input {
+      font-size: 15.5px;
+      line-height: 20px;
+    }
+  }
+
+  .controlRow {
+    gap: 4px;
+    padding-left: 6px;
+  }
+
+  .grid button {
+    font-size: 11px;
+    padding: 0 1px;
+  }
+
+  .wordsRow {
+    gap: 4px;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+}
+
+// Phone-width columns: ten cells across ~320px leave each step ~26px, which a
+// 4-character label overruns. The last size step keeps every label inside its
+// own cell instead of letting neighbours touch.
+@include container-max(340px) {
+  .grid button {
+    font-size: 10px;
+    letter-spacing: -0.03em;
+  }
+}
+
+// ── Roomy columns: the full ValuePicker web scale ───────────────────────────
+@include container-min(640px) {
+  .titleBar {
+    gap: 8px;
+    padding: 5px 16px;
+    font-size: 12.5px;
+  }
+
+  .inputRow {
+    gap: 8px;
+    padding: 8px 16px;
+    min-height: 64px;
+  }
+
+  .symbol {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .field {
+    height: 44px;
+    padding: 0 16px;
+
+    input {
+      font-size: 20px;
+      line-height: 26px;
+    }
+  }
+
+  .controlRow {
+    gap: 8px;
+    padding-left: 10px;
+  }
+
+  .actions button {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    font-size: 14.5px;
+  }
+
+  .grid button {
+    height: 46px;
+    min-height: 46px;
+    padding: 0 8px;
+    font-size: 14px;
+  }
+
+  .bridgeRow {
+    gap: 0.5rem;
+  }
+
+  .bridgeLabel,
+  .bridgeSelect {
+    font-size: 0.8rem;
+  }
+
+  .wordsRow {
+    gap: 8px;
+    padding: 0 16px;
+    font-size: 14.5px;
+    line-height: 20px;
+  }
+}

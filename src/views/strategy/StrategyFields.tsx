@@ -107,6 +107,8 @@ interface StepUpSelectProps {
   onChange: (value: number) => void;
 }
 const STEP_UP_CHOICES = Array.from({ length: MAX_STEP_UP_PCT + 1 }, (_, pct) => pct);
+/** The same choices, shaped for a component that renders its own dropdown. */
+export const STEP_UP_OPTIONS = STEP_UP_CHOICES.map((pct) => ({ label: `${pct}%`, value: pct }));
 /**
  * Yearly increase for an escalating withdrawal, as a dropdown. Mirrors the
  * "Yearly increase" control the SWP calculator already uses.
