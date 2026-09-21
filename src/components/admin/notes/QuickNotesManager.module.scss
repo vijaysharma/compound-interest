@@ -121,13 +121,15 @@
       flex: none;
     }
 
-    &.hidden {
-      display: none !important;
-    }
-
     &.mobileVisible {
       width: auto;
       flex: none;
+    }
+
+    // Last of the equally specific (0-2-0) rules wins, so hiding beats both
+    // visibility classes above on source order alone.
+    &.hidden {
+      display: none;
     }
   }
 }
@@ -143,31 +145,31 @@
   }
 
   @include laptop-up {
-    display: flex !important;
-    flex: 0 0 20rem !important;
-    width: 20rem !important;
-    min-width: 20rem !important;
-    max-width: 20rem !important;
     border-right: 1px solid var(--color-border);
 
+    /*
+     * Desktop shows a fixed-width list whether or not the mobile visibility
+     * class is on the element. A media query adds no specificity, so plain
+     * `&` here is 0-1-0 and loses to the `&.mobileVisible` rule above it —
+     * which is what !important used to paper over. Naming both states in the
+     * selector list matches that 0-2-0 and wins on order instead.
+     */
+    &,
     &.mobileVisible {
-      flex: 0 0 20rem !important;
-      width: 20rem !important;
-      min-width: 20rem !important;
-      max-width: 20rem !important;
+      display: flex;
+      flex: 0 0 20rem;
+      width: 20rem;
+      min-width: 20rem;
+      max-width: 20rem;
     }
 
     @include desktop-up {
-      flex: 0 0 22rem !important;
-      width: 22rem !important;
-      min-width: 22rem !important;
-      max-width: 22rem !important;
-
+      &,
       &.mobileVisible {
-        flex: 0 0 22rem !important;
-        width: 22rem !important;
-        min-width: 22rem !important;
-        max-width: 22rem !important;
+        flex: 0 0 22rem;
+        width: 22rem;
+        min-width: 22rem;
+        max-width: 22rem;
       }
     }
   }
@@ -187,15 +189,14 @@
   }
 
   @include laptop-up {
-    display: flex !important;
-    flex: 1 1 0% !important;
     flex-direction: column;
-    width: auto !important;
 
+    // Both states again, for the same reason as .listPane above.
+    &,
     &.mobileVisible {
-      display: flex !important;
-      flex: 1 1 0% !important;
-      width: auto !important;
+      display: flex;
+      flex: 1 1 0%;
+      width: auto;
     }
   }
 }

@@ -911,11 +911,11 @@
 }
 
 .mb025 {
-  margin-bottom: 0.25rem !important;
+  margin-bottom: 0.25rem;
 }
 
 .mb15 {
-  margin-bottom: 1.5rem !important;
+  margin-bottom: 1.5rem;
 }
 
 .wFull {
@@ -941,16 +941,16 @@
 }
 
 .dropdownItemPrimary {
-  color: var(--color-primary) !important;
-  font-weight: 600 !important;
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .dropdownWidth13 {
-  width: 13rem !important;
+  width: 13rem;
 }
 
 .dropdownWidth9 {
-  width: 9rem !important;
+  width: 9rem;
 }
 
 .svgOneDrive {
@@ -972,7 +972,7 @@
 }
 
 .btnMinHeight38 {
-  min-height: 38px !important;
+  min-height: 38px;
 }
 
 .iconMr025 {
@@ -980,24 +980,24 @@
 }
 
 .btnDangerMin38 {
-  color: var(--color-error) !important;
-  min-height: 38px !important;
+  color: var(--color-error);
+  min-height: 38px;
 }
 
 .fw700 {
-  font-weight: 700 !important;
+  font-weight: 700;
 }
 
 .fw600 {
-  font-weight: 600 !important;
+  font-weight: 600;
 }
 
 .fw500 {
-  font-weight: 500 !important;
+  font-weight: 500;
 }
 
 .fontMono {
-  font-family: monospace !important;
+  font-family: monospace;
 }
 
 .arrowDownSmall {
@@ -1012,8 +1012,8 @@
 }
 
 .paletteDropdown {
-  width: 14rem !important;
-  padding: 0.65rem !important;
+  width: 14rem;
+  padding: 0.65rem;
 }
 
 .colorGrid5 {
@@ -1030,9 +1030,9 @@
 }
 
 .restoreBtnSm {
-  padding: 0.2rem 0.5rem !important;
-  font-size: 0.75rem !important;
-  border-radius: 8px !important;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 8px;
 }
 
 .tableToolsTitle {
@@ -1043,7 +1043,7 @@
 }
 
 .mlAuto {
-  margin-left: auto !important;
+  margin-left: auto;
 }
 
 .saveStatus {
@@ -1071,11 +1071,20 @@
 }
 
 .tagSubmitBtn {
-  color: var(--color-success) !important;
+  color: var(--color-success);
+
+  // `.tagRemoveBtn:hover` (0-2-0) would otherwise repaint this on hover.
+  &:hover {
+    color: var(--color-success);
+  }
 }
 
 .tagCancelBtn {
-  color: var(--color-error) !important;
+  color: var(--color-error);
+
+  &:hover {
+    color: var(--color-error);
+  }
 }
 
 .relativeBox {
@@ -1083,8 +1092,8 @@
 }
 
 .mobileFormatBtn {
-  font-weight: 700 !important;
-  font-size: 12px !important;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .mobileStylesHeader {
@@ -1097,11 +1106,11 @@
 }
 
 .dropdownTitleNoPad {
-  padding: 0 !important;
+  padding: 0;
 }
 
 .dropdownTitlePadY {
-  padding: 0.2rem 0 !important;
+  padding: 0.2rem 0;
 }
 
 .mobileColorGrid5 {
@@ -1133,6 +1142,14 @@
   margin-top: 1rem;
 }
 
-.deleteConfirmBtn {
-  background: var(--color-error) !important;
+/*
+ * This sits on the same button as NotesModal's `.btnPrimary`, which sets the
+ * background from a different stylesheet at the same 0-1-0 specificity — so
+ * which one wins would come down to the order the bundler happens to emit the
+ * two modules in. Repeating the class makes this 0-2-0, which beats any
+ * single-class rule from anywhere without resorting to !important, and unlike
+ * !important it can still be overridden by something more specific later.
+ */
+.deleteConfirmBtn.deleteConfirmBtn {
+  background: var(--color-error);
 }

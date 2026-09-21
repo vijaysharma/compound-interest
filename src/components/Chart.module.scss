@@ -181,23 +181,32 @@
   }
 }
 
-:global(.ag-charts-popover) {
-  border-radius: 8px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  font-family: inherit !important;
+/*
+ * ag-charts tooltip overrides.
+ *
+ * The library injects its own stylesheet into <head> at runtime, so it can land
+ * after this one and source order cannot be relied on. Every rule it ships for
+ * these classes is a single class (0-1-0), so repeating the class here makes
+ * each override 0-2-0 and it wins on specificity instead — no !important, and
+ * still overridable by anything more specific.
+ */
+:global(.ag-charts-popover.ag-charts-popover) {
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
 }
 
-:global(.ag-charts-tooltip-heading) {
-  font-weight: 700 !important;
-  font-size: 0.8rem !important;
+:global(.ag-charts-tooltip-heading.ag-charts-tooltip-heading) {
+  font-weight: 700;
+  font-size: 0.8rem;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
-:global(.ag-charts-tooltip-row) {
-  font-size: 0.75rem !important;
+:global(.ag-charts-tooltip-row.ag-charts-tooltip-row) {
+  font-size: 0.75rem;
 }
 
-:global(.ag-charts-tooltip-value) {
-  font-weight: 700 !important;
+:global(.ag-charts-tooltip-value.ag-charts-tooltip-value) {
+  font-weight: 700;
 }

@@ -297,9 +297,15 @@
 
   &Active {
     background: var(--color-primary);
-    color: var(--color-primary-content) !important;
+    color: var(--color-primary-content);
     border-color: var(--color-primary);
     font-weight: 700;
+
+    // `.tabBtn:hover` (0-2-0) outranks this rule's 0-1-0, which would make the
+    // selected tab's label primary-on-primary while hovered.
+    &:hover {
+      color: var(--color-primary-content);
+    }
     box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary) 35%, transparent);
 
     svg {
@@ -940,8 +946,8 @@
 }
 
 .breakevenCard {
-  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
-  background: color-mix(in srgb, var(--color-primary) 3%, var(--color-card)) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 3%, var(--color-card));
 }
 
 .breakevenTitle {

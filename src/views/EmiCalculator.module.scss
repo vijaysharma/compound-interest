@@ -506,30 +506,29 @@
 }
 
 .prepaymentModeGroup {
-  margin: 0 !important;
+  /*
+   * JoinedButtonGroup's own restyling hooks. They are read from this ancestor,
+   * so they pin the size on desktop too without having to out-specify
+   * `.button.sizeXs` (0-2-0) from another module, which is not possible.
+   * The weight is pinned so the selected button stays at 600 rather than
+   * jumping to the component's default 700.
+   */
+  --jbg-margin-y: 0;
+  --jbg-height: 30px;
+  --jbg-font-size: 0.75rem;
+  --jbg-font-weight: 600;
+  --jbg-padding: 0 0.5rem;
 
+  // `.prepaymentModeGroup h5` is 0-1-1 and already outranks the component's
+  // own `.title` (0-1-0), so these need no help.
   h5 {
-    font-size: 0.6875rem !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.04em !important;
-    margin-top: 0 !important;
-    margin-bottom: 2px !important;
-    opacity: 0.7 !important;
-  }
-
-  button {
-    height: 30px !important;
-    min-height: 30px !important;
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    padding: 0 0.5rem !important;
-
-    @include laptop-up {
-      height: 30px !important;
-      min-height: 30px !important;
-      font-size: 0.75rem !important;
-    }
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0;
+    margin-bottom: 2px;
+    opacity: 0.7;
   }
 }
 

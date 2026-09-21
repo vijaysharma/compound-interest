@@ -612,6 +612,14 @@
   margin-top: 1rem;
 }
 
-.deleteConfirmBtn {
-  background: var(--color-error) !important;
+/*
+ * This sits on the same button as NotesModal's `.btnPrimary`, which sets the
+ * background from a different stylesheet at the same 0-1-0 specificity — so
+ * which one wins would come down to the order the bundler happens to emit the
+ * two modules in. Repeating the class makes this 0-2-0, which beats any
+ * single-class rule from anywhere without resorting to !important, and unlike
+ * !important it can still be overridden by something more specific later.
+ */
+.deleteConfirmBtn.deleteConfirmBtn {
+  background: var(--color-error);
 }

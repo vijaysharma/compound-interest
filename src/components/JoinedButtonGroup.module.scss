@@ -7,23 +7,50 @@ $color-secondary: var(--color-secondary);
 $color-text-primary: var(--color-text-primary);
 $btn-radius: 8px;
 
+/*
+ * Consumer restyling hooks
+ * ------------------------
+ * A parent module that wants smaller buttons cannot win on specificity: its
+ * `.someGroup button` is 0-1-1 and loses to this file's `.button.sizeXs`
+ * (0-2-0). That is why consumers used to reach for !important. These custom
+ * properties are read from any ancestor, so setting one on the class passed in
+ * through `className` sidesteps the cascade altogether.
+ *
+ *   --jbg-margin-y     vertical margin around the whole group
+ *   --jbg-height       button height (also applied as min-height)
+ *   --jbg-font-size    button label size
+ *   --jbg-font-weight  button label weight, selected or not
+ *   --jbg-padding      button inline padding
+ *
+ * Each is consumed with the variant's own value as the fallback, so leaving
+ * them unset renders exactly as before.
+ */
+@mixin jbg-size($height, $font-size, $padding) {
+  height: var(--jbg-height, #{$height});
+  min-height: var(--jbg-height, #{$height});
+  font-size: var(--jbg-font-size, #{$font-size});
+  padding: var(--jbg-padding, #{$padding});
+}
+
 .container {
   display: flex;
   flex-direction: column;
   width: 100%;
   text-align: center;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-top: var(--jbg-margin-y, 0.5rem);
+  margin-bottom: var(--jbg-margin-y, 0.5rem);
   box-sizing: border-box;
 
   @include tablet-up {
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin-top: var(--jbg-margin-y, 0.75rem);
+    margin-bottom: var(--jbg-margin-y, 0.75rem);
   }
 
+  // 0-2-0, so this already outranks the .container rules above it without
+  // needing !important.
   &.compact {
-    margin-top: 0.25rem !important;
-    margin-bottom: 0.25rem !important;
+    margin-top: var(--jbg-margin-y, 0.25rem);
+    margin-bottom: var(--jbg-margin-y, 0.25rem);
   }
 
   &:has(.attachedTop) {
@@ -120,13 +147,10 @@ $btn-radius: 8px;
   justify-content: center;
   flex: 1;
   min-width: 0;
-  height: 42px;
-  min-height: 42px;
-  padding: 0 6px;
+  @include jbg-size(42px, 13.5px, 0 6px);
   font-family: $font-family;
-  font-size: 13.5px;
   line-height: 1;
-  font-weight: 600;
+  font-weight: var(--jbg-font-weight, 600);
   white-space: nowrap;
   border: none;
   border-right: 1px solid $color-primary;
@@ -151,7 +175,7 @@ $btn-radius: 8px;
   &.active {
     background-color: $color-primary;
     color: var(--color-primary-content);
-    font-weight: 700;
+    font-weight: var(--jbg-font-weight, 700);
   }
 
   &:disabled {
@@ -165,71 +189,44 @@ $btn-radius: 8px;
   }
 
   @include tablet-up {
-    height: 48px;
-    min-height: 48px;
-    font-size: 14.5px;
-    padding: 0 12px;
+    @include jbg-size(48px, 14.5px, 0 12px);
   }
 
   // Size variants
   &.sizeXs {
-    height: 30px;
-    min-height: 30px;
-    font-size: 12px;
-    padding: 0 6px;
+    @include jbg-size(30px, 12px, 0 6px);
 
     @include tablet-up {
-      height: 32px;
-      min-height: 32px;
-      font-size: 12.5px;
-      padding: 0 8px;
+      @include jbg-size(32px, 12.5px, 0 8px);
     }
   }
 
   &.sizeSm {
-    height: 40px;
-    min-height: 40px;
-    font-size: 13px;
-    padding: 0 6px;
+    @include jbg-size(40px, 13px, 0 6px);
 
     @include container-max(380px) {
-      font-size: 12px;
-      padding: 0 3px;
+      font-size: var(--jbg-font-size, 12px);
+      padding: var(--jbg-padding, 0 3px);
     }
 
     @include tablet-up {
-      height: 46px;
-      min-height: 46px;
-      font-size: 14px;
-      padding: 0 10px;
+      @include jbg-size(46px, 14px, 0 10px);
     }
   }
 
   &.sizeMd {
-    height: 42px;
-    min-height: 42px;
-    font-size: 13.5px;
-    padding: 0 8px;
+    @include jbg-size(42px, 13.5px, 0 8px);
 
     @include tablet-up {
-      height: 48px;
-      min-height: 48px;
-      font-size: 14.5px;
-      padding: 0 12px;
+      @include jbg-size(48px, 14.5px, 0 12px);
     }
   }
 
   &.sizeLg {
-    height: 44px;
-    min-height: 44px;
-    font-size: 14.5px;
-    padding: 0 12px;
+    @include jbg-size(44px, 14.5px, 0 12px);
 
     @include tablet-up {
-      height: 50px;
-      min-height: 50px;
-      font-size: 15.5px;
-      padding: 0 16px;
+      @include jbg-size(50px, 15.5px, 0 16px);
     }
   }
 }

@@ -443,12 +443,12 @@
 }
 
 .taxBadge {
-  background-color: var(--color-warning) !important;
-  color: var(--color-warning-content) !important;
+  background-color: var(--color-warning);
+  color: var(--color-warning-content);
 }
 
 .taxButton {
-  background-color: var(--color-warning) !important;
+  background-color: var(--color-warning);
 }
 
 .spinner {
@@ -474,14 +474,14 @@
 }
 
 .gridCol1 {
-  grid-template-columns: 1fr !important;
+  grid-template-columns: 1fr;
 }
 
 .priceTaxColor {
-  color: var(--color-warning) !important;
+  color: var(--color-warning);
 }
 
 .taxFeatureCheckIcon {
-  color: var(--color-warning) !important;
+  color: var(--color-warning);
 }
 

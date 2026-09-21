@@ -58,12 +58,26 @@ button, input, optgroup, select, textarea {
   margin: 0;
 }
 
-// Prevent iOS Safari auto-zoom on input focus (< 768px / md viewport)
+/*
+ * Prevent iOS Safari auto-zoom on input focus (< 768px / md viewport).
+ *
+ * This has to beat whatever font-size a component sets on its own controls, and
+ * it used to do that with !important. It does not need to: the chain of
+ * :not([type=...]) already puts the input arm at 0-7-1, far above the 0-1-0
+ * single-class rules components actually use.
+ *
+ * Bare `select` and `textarea` would only be 0-0-1 and would lose to any of
+ * them, so they get `:not([type])` — always true, since neither element takes a
+ * type attribute — purely to reach 0-1-1. Every competing rule in the app was
+ * checked and the most specific is 0-1-0, so 0-1-1 wins on specificity rather
+ * than on stylesheet order. A component that ever needs to beat this should
+ * raise its own specificity, which !important would have made impossible.
+ */
 @include viewport-max($bp-laptop - 1px) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
-  select,
-  textarea {
-    font-size: 16px !important;
+  select:not([type]),
+  textarea:not([type]) {
+    font-size: 16px;
   }
 }
 
