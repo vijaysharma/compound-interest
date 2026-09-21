@@ -14,6 +14,14 @@ import {
   mfNavCache,
 } from './mfApi';
 /**
+ * `${schemeCode}|${requestedEndDate}` pairs already fetched from the server.
+ * AMFI publishes no NAV on weekends/holidays and the current day's NAV lands
+ * late in the evening, so cached data can legitimately stop short of the
+ * requested end date. Retrying once per end date keeps the cache useful instead
+ * of re-hitting the network on every call for a date that will never resolve.
+ */
+const resolvedEndDateAttempts = new Set<string>();
+/**
  * High-performance batch fetcher for multiple pinned mutual funds.
  * Resolves all funds in a single server action call instead of multiple parallel requests.
  */
@@ -44,7 +52,7 @@ export const fetchBatchMFbySchemeCodes = async (
           if (time > latestDateMs) latestDateMs = time;
         }
         const reqDateMs = parseAnyDate(requestedEndDate).getTime();
-        if (reqDateMs > latestDateMs) {
+        if (reqDateMs > latestDateMs && !resolvedEndDateAttempts.has(code + '|' + requestedEndDate)) {
           cacheSatisfies = false;
         }
       }
@@ -90,6 +98,11 @@ export const fetchBatchMFbySchemeCodes = async (
             data: { data: data.data, meta: data.meta },
           });
         }
+      }
+    }
+    if (requestedEndDate) {
+      for (const code of missingCodes) {
+        if (result[code]?.length) resolvedEndDateAttempts.add(code + '|' + requestedEndDate);
       }
     }
     const stillUnresolved = missingCodes.filter((c) => !result[c] || result[c].length === 0);

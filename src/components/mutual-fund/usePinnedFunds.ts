@@ -18,6 +18,12 @@ export function usePinnedFunds(
   const [isNavLoading, setIsNavLoading] = useState(false);
   const pinnedFundsRef = useRef(pinnedFunds);
   const pinnedNavDataRef = useRef(pinnedNavData);
+  // `${schemeCode}|${endDate}` pairs already fetched. AMFI publishes no NAV on
+  // weekends/holidays and the current day's NAV lands late in the evening, so a
+  // fund's latest NAV legitimately predates the requested end date. Without
+  // this record the staleness check below would refetch on every render and the
+  // chart would never leave its loading state.
+  const fetchedEndDatesRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     pinnedFundsRef.current = pinnedFunds;
     pinnedNavDataRef.current = pinnedNavData;
@@ -28,7 +34,7 @@ export function usePinnedFunds(
     const missingFunds = pinnedFunds.filter((fund) => {
       const data = pinnedNavDataRef.current[fund.schemeCode];
       if (!data || data.length === 0) return true;
-      if (reqDateMs > 0) {
+      if (reqDateMs > 0 && !fetchedEndDatesRef.current.has(`${fund.schemeCode}|${endDate}`)) {
         let latestDateMs = 0;
         for (const n of data) {
           const time = parseNavDate(n.date).getTime();
@@ -45,10 +51,19 @@ export function usePinnedFunds(
     let cancelled = false;
     const restore = async () => {
       setIsNavLoading(true);
+      const codes = missingFunds.map((f) => f.schemeCode);
       try {
-        const codes = missingFunds.map((f) => f.schemeCode);
         const batchResults = await fetchBatchMFbySchemeCodes(codes, endDate);
-        if (!cancelled) setPinnedNavData((prev) => ({ ...prev, ...batchResults }));
+        if (!cancelled) {
+          // Only record funds the fetch actually resolved, so a failed request
+          // is retried rather than silently accepted as "no newer NAV exists".
+          for (const code of codes) {
+            if (batchResults[code]?.length || pinnedNavDataRef.current[code]?.length) {
+              fetchedEndDatesRef.current.add(`${code}|${endDate}`);
+            }
+          }
+          setPinnedNavData((prev) => ({ ...prev, ...batchResults }));
+        }
       } catch (err) {
         console.error('Failed to restore batch NAV data:', err);
       } finally {
