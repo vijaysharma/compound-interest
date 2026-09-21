@@ -44,7 +44,10 @@ const StrategyCalculatorView = () => {
         ? 'Fix the configuration errors below to calculate the strategy.'
         : null;
   return (
-    <main className={styles.page}>
+    <main
+      className={`${styles.page} strategy-calculator-page`}
+      aria-labelledby="strategy-calculator-title"
+    >
       <SEOHead
         title="Historical NAV Strategy Calculator — Backtest SWP, SIP & Reinvestment | Rupee Calculator"
         description="Backtest a real mutual fund strategy on actual AMFI NAV history: an initial lumpsum, staged withdrawals, SIPs into multiple funds, SWPs, and reinvestment back into the original fund."
