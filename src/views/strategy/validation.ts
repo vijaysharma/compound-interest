@@ -1,6 +1,7 @@
 import { firstNavDate } from './navLookup';
 import { earliestDate, isBefore } from './schedule';
 import { roundMoney } from './money';
+import { COLUMN_WORDS } from './labels';
 import type { NavBook, StrategyConfig } from './types';
 export interface ValidationIssue {
   id: string;
@@ -13,7 +14,11 @@ const checkColumn1 = (config: StrategyConfig, navBook: NavBook): ValidationIssue
   const issues: ValidationIssue[] = [];
   const { fund, amount, investmentDate } = config.column1;
   if (!fund) {
-    issues.push({ id: 'c1-fund', message: 'Select the Column 1 investment fund.', severity: 'error' });
+    issues.push({
+      id: 'c1-fund',
+      message: `Select the ${COLUMN_WORDS.core} investment fund.`,
+      severity: 'error',
+    });
     return issues;
   }
   if (amount <= 0) {
@@ -48,7 +53,7 @@ const checkWithdrawals = (config: StrategyConfig): ValidationIssue[] => {
     if (period.toColumn2 > period.amount) {
       issues.push({
         id: `wd-${period.id}-split`,
-        message: `${label} routes more to Column 2 than it withdraws.`,
+        message: `${label} routes more to the ${COLUMN_WORDS.growth} than it withdraws.`,
         severity: 'error',
       });
     }
@@ -60,7 +65,11 @@ const checkColumn2 = (config: StrategyConfig): ValidationIssue[] => {
   const routesMoney = config.column1.withdrawals.some((period) => period.toColumn2 > 0);
   if (!routesMoney) return issues;
   if (config.column2.length === 0) {
-    issues.push({ id: 'c2-empty', message: 'Column 1 routes money to Column 2, so add at least one Column 2 fund.', severity: 'error' });
+    issues.push({
+      id: 'c2-empty',
+      message: `The ${COLUMN_WORDS.core} routes money onward, so add at least one growth fund.`,
+      severity: 'error',
+    });
     return issues;
   }
   const allocation = totalAllocation(config);
@@ -76,7 +85,7 @@ const checkColumn2 = (config: StrategyConfig): ValidationIssue[] => {
     if (firstWithdrawal && isBefore(entry.sipStartDate, firstWithdrawal)) {
       issues.push({
         id: `c2-${entry.id}-sip-start`,
-        message: `${entry.fund.schemeName} starts its SIP before Column 1 funds it (${firstWithdrawal}).`,
+        message: `${entry.fund.schemeName} starts its SIP before the ${COLUMN_WORDS.core} funds it (${firstWithdrawal}).`,
         severity: 'error',
       });
     }
@@ -97,7 +106,7 @@ const checkColumn2 = (config: StrategyConfig): ValidationIssue[] => {
     if (entry.swp.toColumn3 > entry.swp.amount) {
       issues.push({
         id: `c2-${entry.id}-swp-split`,
-        message: `${entry.fund.schemeName} routes more to Column 3 than it withdraws.`,
+        message: `${entry.fund.schemeName} routes more to the ${COLUMN_WORDS.reinvest} than it withdraws.`,
         severity: 'error',
       });
     }
@@ -111,7 +120,7 @@ const checkColumn3 = (config: StrategyConfig): ValidationIssue[] => {
   if (firstSwp && isBefore(config.column3.startDate, firstSwp)) {
     return [{
       id: 'c3-start',
-      message: `Column 3 starts before any SWP reaches it (${firstSwp}); early instalments have nothing to reinvest.`,
+      message: `The ${COLUMN_WORDS.reinvest} starts before any SWP reaches it (${firstSwp}); early instalments have nothing to reinvest.`,
       severity: 'warning',
     }];
   }

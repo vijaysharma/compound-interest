@@ -1,7 +1,6 @@
 'use client';
 import { useCallback, useState } from 'react';
 import { createDefaultConfig, nextId } from './defaults';
-import { clearStoredConfig } from './storage';
 import {
   withAddedWithdrawal,
   withColumn1,
@@ -35,7 +34,7 @@ export interface StrategyConfigApi {
   patchColumn3: (patch: Partial<Column3Config>) => void;
   /** Replaces the whole config, used when restoring a saved strategy. */
   restoreConfig: (config: StrategyConfig) => void;
-  /** Discards the saved strategy and returns to the defaults. */
+  /** Returns the active strategy to the defaults, keeping it in the library. */
   resetConfig: () => void;
 }
 /** All user-editable strategy state, with the Column 1 -> Column 2 defaults applied. */
@@ -78,7 +77,8 @@ export function useStrategyConfig(): StrategyConfigApi {
     setConfig(restored);
   }, []);
   const resetConfig = useCallback(() => {
-    clearStoredConfig();
+    // Persistence belongs to the library, which writes this back to the active
+    // entry; clearing storage here would fight it.
     setConfig(createDefaultConfig());
   }, []);
   return {

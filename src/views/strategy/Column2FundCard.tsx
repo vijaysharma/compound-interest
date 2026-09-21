@@ -12,6 +12,7 @@ import { CollapsibleItem } from './CollapsibleItem';
 import { column2Summary, sipAmountPerInstallment } from './summaries';
 import { formatRupees, formatUnits, roundMoney } from './money';
 import type { StrategyConfigApi } from './useStrategyConfig';
+import { COLUMN_WORDS } from './labels';
 import type { Column2FundConfig, Frequency, NavBook, StrategyResult } from './types';
 import styles from './StrategyCalculator.module.scss';
 interface Column2FundCardProps {
@@ -110,14 +111,14 @@ export const Column2FundCard = ({
             }
           />
           <AmountField
-            title="Of which to Column 3"
+            title={`Of which to ${COLUMN_WORDS.reinvest}`}
             value={entry.swp.toColumn3}
             max={entry.swp.amount}
             onChange={(toColumn3) => patchSwp(entry.id, { toColumn3 })}
           />
           <DerivedRow label="Personal use per instalment" value={personalUse} />
           <DerivedRow label="Withdrawn so far" value={summary.withdrawn} />
-          <DerivedRow label="Sent to Column 3" value={summary.routedToColumn3} />
+          <DerivedRow label={`Sent to ${COLUMN_WORDS.reinvest}`} value={summary.routedToColumn3} />
         </>
       )}
       <DerivedRow label="Units held" value={formatUnits(summary.units)} isMoney={false} />

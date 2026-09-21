@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { formatRupees } from './money';
+import { COLUMN_LABELS } from './labels';
 import type { PortfolioSnapshot } from './types';
 import styles from './StrategyCalculator.module.scss';
 /** One row per calendar year plus the final snapshot, so the table stays readable. */
@@ -35,8 +36,8 @@ export const ChartDataTable = ({ snapshots }: { snapshots: PortfolioSnapshot[] }
           <thead>
             <tr>
               <th scope="col">Date</th>
-              <th scope="col">Column 1</th>
-              <th scope="col">Column 2</th>
+              <th scope="col">{COLUMN_LABELS.core}</th>
+              <th scope="col">{COLUMN_LABELS.growth}</th>
               <th scope="col">Combined</th>
             </tr>
           </thead>

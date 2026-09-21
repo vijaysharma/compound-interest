@@ -12,8 +12,15 @@ export const FREQUENCY_LABEL: Record<Frequency, string> = {
   yearly: 'Yearly',
 };
 export const FREQUENCY_OPTIONS: Frequency[] = ['monthly', 'quarterly', 'yearly'];
-/** Cap on generated installments, so an accidental 200-year range cannot hang the UI. */
-const MAX_INSTALLMENTS = 1200;
+/**
+ * Cap on generated installments, so a mistyped date range cannot hang the UI.
+ *
+ * Sized for the longest run the projection can ask for: a monthly instruction
+ * that started at a fund's inception and is carried a hundred years past today
+ * is a little over 1,700 instalments, and the old 1,200 cap silently truncated
+ * it — the schedule simply stopped part way through the horizon.
+ */
+const MAX_INSTALLMENTS = 3000;
 /**
  * Installment dates from `startDate` up to and including `endDate`, stepping by
  * the frequency. The day-of-month is anchored to the start date and clamped to

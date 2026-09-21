@@ -1,6 +1,7 @@
 import { resolveNav } from './navLookup';
 import { planTransactions } from './transactions';
 import { addMoney, isZeroMoney, roundMoney, unitsFor } from './money';
+import { COLUMN_LABELS } from './labels';
 import type {
   ExecutedTransaction,
   NavBook,
@@ -72,11 +73,11 @@ export const executeTransactions = (
     if (row.kind === 'c1-withdraw') {
       const result = sell(state.column1Units, row.amount, nav.nav);
       if (isZeroMoney(result.settled)) {
-        warn(state, `Column 1 had no units left to withdraw on ${row.date}.`);
+        warn(state, `${COLUMN_LABELS.core} had no units left to withdraw on ${row.date}.`);
         continue;
       }
       if (result.clamped) {
-        warn(state, `Column 1 could only fund a partial withdrawal on ${row.date}.`);
+        warn(state, `${COLUMN_LABELS.core} could only fund a partial withdrawal on ${row.date}.`);
       }
       const share = row.amount > 0 ? result.settled / row.amount : 0;
       const routed = roundMoney(row.routedOnward * share);

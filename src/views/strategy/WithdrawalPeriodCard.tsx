@@ -10,6 +10,7 @@ import { DerivedRow } from './StrategyReadouts';
 import { CollapsibleItem } from './CollapsibleItem';
 import { FREQUENCY_LABEL } from './schedule';
 import { formatRupees, roundMoney } from './money';
+import { COLUMN_WORDS } from './labels';
 import type { Frequency, StrategyResult, WithdrawalPeriod } from './types';
 interface WithdrawalPeriodCardProps {
   period: WithdrawalPeriod;
@@ -41,7 +42,7 @@ export const WithdrawalPeriodCard = ({
   const meta =
     `${period.startDate} → ${period.endDate} · ` +
     `${formatRupees(period.amount)} ${FREQUENCY_LABEL[period.frequency].toLowerCase()}` +
-    `${stepUpNote} · ${formatRupees(period.toColumn2)} to Column 2 · ${executed.length} taken`;
+    `${stepUpNote} · ${formatRupees(period.toColumn2)} to ${COLUMN_WORDS.growth} · ${executed.length} taken`;
   return (
     <CollapsibleItem
       title={label}
@@ -79,7 +80,7 @@ export const WithdrawalPeriodCard = ({
         onChange={(annualStepUpPct) => onPatch(period.id, { annualStepUpPct })}
       />
       <AmountField
-        title="Of which to Column 2"
+        title={`Of which to ${COLUMN_WORDS.growth}`}
         value={period.toColumn2}
         max={period.amount}
         onChange={(toColumn2) => onPatch(period.id, { toColumn2 })}

@@ -91,6 +91,21 @@ export interface PortfolioSnapshot {
   column2Value: number;
   totalValue: number;
 }
+/**
+ * The most recent instalment that actually paid money out to the user, after
+ * the share routed onward to the next stage. Null until one has been paid.
+ */
+export interface PersonalWithdrawal {
+  /** Scheduled instalment date. */
+  date: string;
+  /** NAV date the units were actually sold at. */
+  navDate: string;
+  /** Rupees kept, i.e. settled amount less the share routed onward. */
+  amount: number;
+  source: 'core' | 'growth';
+  /** Scheme the units were sold from. */
+  fundName: string;
+}
 export interface StrategyTotals {
   initialInvestment: number;
   column1Units: number;
@@ -100,6 +115,8 @@ export interface StrategyTotals {
   personalFromColumn1: number;
   personalFromColumn2: number;
   totalPersonalWithdrawals: number;
+  /** The latest personal-use payout, for the "last drawn" readout. */
+  lastPersonalWithdrawal: PersonalWithdrawal | null;
   withdrawnFromColumn1: number;
   routedToColumn2: number;
   investedInColumn2: number;

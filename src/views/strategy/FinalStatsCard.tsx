@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { formatRupees, formatUnits } from './money';
+import { COLUMN_LABELS } from './labels';
 import type { StrategyTotals } from './types';
 import styles from './StrategyCalculator.module.scss';
 interface StatRow {
@@ -17,53 +18,77 @@ const buildGroups = (totals: StrategyTotals): StatGroup[] => [
     title: 'Holdings',
     rows: [
       { label: 'Initial investment', value: formatRupees(totals.initialInvestment) },
-      { label: 'Column 1 value', value: formatRupees(totals.column1Value), strong: true },
-      { label: 'Column 2 value', value: formatRupees(totals.column2Value), strong: true },
+      { label: `${COLUMN_LABELS.core} value`, value: formatRupees(totals.column1Value), strong: true },
+      { label: `${COLUMN_LABELS.growth} value`, value: formatRupees(totals.column2Value), strong: true },
       { label: 'Total portfolio value', value: formatRupees(totals.totalValue), strong: true },
-      { label: 'Column 1 units held', value: formatUnits(totals.column1Units) },
+      { label: `${COLUMN_LABELS.core} units held`, value: formatUnits(totals.column1Units) },
     ],
   },
   {
     title: 'Money taken out',
     rows: [
-      { label: 'Withdrawn from Column 1', value: formatRupees(totals.withdrawnFromColumn1) },
-      { label: 'Withdrawn from Column 2 SWPs', value: formatRupees(totals.routedToColumn3 + totals.personalFromColumn2) },
+      { label: `Withdrawn from ${COLUMN_LABELS.core.toLowerCase()}`, value: formatRupees(totals.withdrawnFromColumn1) },
+      {
+        label: `Withdrawn by ${COLUMN_LABELS.growth.toLowerCase()} SWPs`,
+        value: formatRupees(totals.routedToColumn3 + totals.personalFromColumn2),
+      },
     ],
   },
   {
-    title: 'Money moved between columns',
+    title: 'Money moved between stages',
     rows: [
-      { label: 'Column 1 to Column 2', value: formatRupees(totals.routedToColumn2) },
-      { label: 'Invested by Column 2 SIPs', value: formatRupees(totals.investedInColumn2) },
-      { label: 'Column 2 cash uninvested', value: formatRupees(totals.unallocatedColumn2Cash) },
-      { label: 'Column 2 to Column 3', value: formatRupees(totals.routedToColumn3) },
-      { label: 'Reinvested into Column 1', value: formatRupees(totals.reinvestedIntoColumn1) },
-      { label: 'Column 3 cash awaiting', value: formatRupees(totals.column3CashBalance) },
+      { label: `${COLUMN_LABELS.core} to ${COLUMN_LABELS.growth.toLowerCase()}`, value: formatRupees(totals.routedToColumn2) },
+      { label: `Invested by ${COLUMN_LABELS.growth.toLowerCase()} SIPs`, value: formatRupees(totals.investedInColumn2) },
+      { label: `${COLUMN_LABELS.growth} cash uninvested`, value: formatRupees(totals.unallocatedColumn2Cash) },
+      { label: `${COLUMN_LABELS.growth} to ${COLUMN_LABELS.reinvest.toLowerCase()}`, value: formatRupees(totals.routedToColumn3) },
+      { label: `Reinvested into ${COLUMN_LABELS.core.toLowerCase()}`, value: formatRupees(totals.reinvestedIntoColumn1) },
+      { label: `${COLUMN_LABELS.reinvest} cash awaiting`, value: formatRupees(totals.column3CashBalance) },
     ],
   },
 ];
 /**
  * Money the user actually took out and kept, called out on its own because it
  * is the figure the whole strategy exists to produce. It is the sum of the
- * personal-use share of every Column 1 withdrawal and Column 2 SWP — the
+ * personal-use share of every core withdrawal and growth-fund SWP — the
  * remainder of each was routed onward, not pocketed.
+ *
+ * The last drawn instalment is shown alongside the running total: the total
+ * answers "how much have I taken so far", which says nothing about what the
+ * strategy is paying right now, and that is what a step-up or a depleting
+ * corpus actually changes.
  */
-const PersonalUseCard = ({ totals }: { totals: StrategyTotals }) => (
-  <div className={styles.personalCard}>
-    <h3 className={styles.personalTitle}>Personal use withdrawals</h3>
-    <p className={styles.personalValue}>{formatRupees(totals.totalPersonalWithdrawals)}</p>
-    <dl className={styles.personalSplit}>
-      <div>
-        <dt>From Column 1</dt>
-        <dd>{formatRupees(totals.personalFromColumn1)}</dd>
-      </div>
-      <div>
-        <dt>From Column 2 SWP</dt>
-        <dd>{formatRupees(totals.personalFromColumn2)}</dd>
-      </div>
-    </dl>
-  </div>
-);
+const PersonalUseCard = ({ totals }: { totals: StrategyTotals }) => {
+  const last = totals.lastPersonalWithdrawal;
+  return (
+    <div className={styles.personalCard}>
+      <h3 className={styles.personalTitle}>Personal use withdrawals</h3>
+      <p className={styles.personalValue}>{formatRupees(totals.totalPersonalWithdrawals)}</p>
+      <dl className={styles.personalSplit}>
+        <div>
+          <dt>From {COLUMN_LABELS.core.toLowerCase()}</dt>
+          <dd>{formatRupees(totals.personalFromColumn1)}</dd>
+        </div>
+        <div>
+          <dt>From {COLUMN_LABELS.growth.toLowerCase()} SWP</dt>
+          <dd>{formatRupees(totals.personalFromColumn2)}</dd>
+        </div>
+      </dl>
+      <dl className={styles.personalLast}>
+        <dt className={styles.personalLastLabel}>Last drawn</dt>
+        <dd className={styles.personalLastValue}>
+          {last ? formatRupees(last.amount) : '—'}
+          {last && (
+            <span className={styles.personalLastMeta}>
+              {last.date} · {last.source === 'core' ? COLUMN_LABELS.core : COLUMN_LABELS.growth} ·{' '}
+              {last.fundName}
+              {last.navDate !== last.date ? ` · NAV ${last.navDate}` : ''}
+            </span>
+          )}
+        </dd>
+      </dl>
+    </div>
+  );
+};
 /**
  * The closing position. Every figure here comes from the same engine run that
  * draws the chart, valued at the NAV applicable to the as-of date.

@@ -1,27 +1,53 @@
 'use client';
-import React, { useState } from 'react';
-import { FiRotateCcw } from 'react-icons/fi';
+import React, { useCallback, useState } from 'react';
 import SEOHead from '../components/SEOHead';
 import { useStrategyConfig } from './strategy/useStrategyConfig';
 import { useStrategyNav } from './strategy/useStrategyNav';
 import { useStrategyCalculation } from './strategy/useStrategyCalculation';
-import { useStrategyStorage } from './strategy/useStrategyStorage';
+import { useStrategyLibrary } from './strategy/useStrategyLibrary';
+import { StrategyLibraryBar } from './strategy/StrategyLibraryBar';
 import { StrategyChartCard } from './strategy/StrategyChartCard';
 import { FinalStatsCard } from './strategy/FinalStatsCard';
 import { StrategyIssues } from './strategy/StrategyIssues';
 import { Column1Panel } from './strategy/Column1Panel';
 import { Column2Panel } from './strategy/Column2Panel';
 import { Column3Panel } from './strategy/Column3Panel';
+import { ProjectionCard } from './strategy/ProjectionCard';
+import { useStrategyProjection } from './strategy/useStrategyProjection';
 import { StrategyFundModal } from './strategy/StrategyFundModal';
+import { COLUMN_WORDS } from './strategy/labels';
+import type { ProjectionSettings } from './strategy/projection';
 import type { FundRef } from './strategy/types';
 import styles from './strategy/StrategyCalculator.module.scss';
 type PickerTarget = 'column1' | 'column2' | null;
 const StrategyCalculatorView = () => {
   const api = useStrategyConfig();
-  useStrategyStorage(api.config, api.restoreConfig);
+  const library = useStrategyLibrary(api.config, api.restoreConfig);
   const { navBook, isLoading, error } = useStrategyNav(api.config);
   const { result, issues, blocked, hasNavData } = useStrategyCalculation(api.config, navBook);
   const [picker, setPicker] = useState<PickerTarget>(null);
+  const [showProjection, setShowProjection] = useState(false);
+  /*
+   * Projection settings are deliberately not part of StrategyConfig: they ask
+   * "what if this carried on", which is a question about the strategy rather
+   * than part of it, and keeping them out leaves the saved shape unchanged.
+   * The yearly increase starts at 0, i.e. whatever the configuration already
+   * says, and the note under the table points out what that means over decades.
+   */
+  const [projectionSettings, setProjectionSettings] = useState<ProjectionSettings>({
+    horizonYears: 30,
+    annualIncreasePct: 0,
+  });
+  const patchProjection = useCallback((patch: Partial<ProjectionSettings>) => {
+    setProjectionSettings((prev) => ({ ...prev, ...patch }));
+  }, []);
+  const projection = useStrategyProjection(
+    api.config,
+    navBook,
+    result,
+    projectionSettings,
+    showProjection && !blocked && hasNavData
+  );
   const handleToggleFund = (fund: FundRef) => {
     if (picker === 'column1') {
       const isSelected = api.config.column1.fund?.schemeCode === fund.schemeCode;
@@ -37,7 +63,7 @@ const StrategyCalculatorView = () => {
         : []
       : api.config.column2.map((entry) => entry.fund);
   const chartMessage = !api.config.column1.fund
-    ? 'Select the Column 1 fund to plot its actual NAV history.'
+    ? `Select the ${COLUMN_WORDS.core} fund to plot its actual NAV history.`
     : !hasNavData
       ? 'Historical NAV data is unavailable for the selected fund.'
       : blocked
@@ -57,9 +83,7 @@ const StrategyCalculatorView = () => {
       <header className={styles.header}>
         <div className={styles.headerRow}>
           <h1 className={styles.headerTitle}>Strategy calculator</h1>
-          <button type="button" className={styles.resetButton} onClick={api.resetConfig}>
-            <FiRotateCcw aria-hidden="true" /> Reset
-          </button>
+          <StrategyLibraryBar library={library} onReset={api.resetConfig} />
         </div>
         {/* <p className={styles.headerNote}>
           Every figure on this page is calculated from actual published NAVs. Units are bought and
@@ -93,6 +117,15 @@ const StrategyCalculatorView = () => {
         />
         <Column3Panel api={api} result={result} />
       </div>
+      <ProjectionCard
+        config={api.config}
+        projection={projection}
+        settings={projectionSettings}
+        onSettingsChange={patchProjection}
+        shown={showProjection}
+        onToggle={() => setShowProjection((prev) => !prev)}
+        unavailableMessage={chartMessage}
+      />
       <StrategyFundModal
         open={picker !== null}
         onClose={() => setPicker(null)}

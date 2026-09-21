@@ -4,6 +4,7 @@ import JoinedButtonGroup from '../../components/JoinedButtonGroup';
 import { AmountField, DateField, FrequencyField } from './StrategyFields';
 import { DerivedChips } from './StrategyReadouts';
 import type { StrategyConfigApi } from './useStrategyConfig';
+import { COLUMN_LABELS, COLUMN_BLURBS, COLUMN_WORDS } from './labels';
 import type { Column3Config, Frequency, StrategyResult } from './types';
 import styles from './StrategyCalculator.module.scss';
 interface Column3PanelProps {
@@ -22,16 +23,13 @@ export const Column3Panel = ({ api, result }: Column3PanelProps) => {
   return (
     <section className={styles.card} aria-labelledby="strategy-column-3">
       <h2 className={styles.cardTitle} id="strategy-column-3">
-        Column 3 · Reinvestment
+        3 · {COLUMN_LABELS.reinvest}
       </h2>
-      <p className={styles.cardSubtitle}>
-        Moves the Column 2 SWP share back into the Column 1 fund, buying units at the NAV
-        applicable to each reinvestment date.
-      </p>
+      <p className={styles.cardSubtitle}>{COLUMN_BLURBS.reinvest}</p>
       <div className={styles.derivedRow}>
         <span>Destination</span>
         <span className={styles.derivedValue}>
-          {destination ? destination.schemeName : 'Select the Column 1 fund first'}
+          {destination ? destination.schemeName : `Select the ${COLUMN_WORDS.core} fund first`}
         </span>
       </div>
       <FrequencyField
@@ -62,7 +60,7 @@ export const Column3Panel = ({ api, result }: Column3PanelProps) => {
       )}
       <DerivedChips
         items={[
-          { label: 'From Column 2', value: result.totals.routedToColumn3 },
+          { label: `From ${COLUMN_WORDS.growth}`, value: result.totals.routedToColumn3 },
           { label: 'Reinvested', value: result.totals.reinvestedIntoColumn1 },
           { label: 'Awaiting', value: result.totals.column3CashBalance },
           { label: 'Instalments', value: String(reinvestments.length) },

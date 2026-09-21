@@ -4,6 +4,7 @@ import { Column2FundCard } from './Column2FundCard';
 import { DerivedChips } from './StrategyReadouts';
 import { allocationTotal } from './summaries';
 import { MAX_COLUMN2_FUNDS } from './defaults';
+import { COLUMN_LABELS, COLUMN_BLURBS, COLUMN_WORDS } from './labels';
 import type { StrategyConfigApi } from './useStrategyConfig';
 import type { NavBook, StrategyResult } from './types';
 import styles from './StrategyCalculator.module.scss';
@@ -23,14 +24,12 @@ export const Column2Panel = ({ api, navBook, result, onOpenFundPicker }: Column2
   return (
     <section className={styles.card} aria-labelledby="strategy-column-2">
       <h2 className={styles.cardTitle} id="strategy-column-2">
-        Column 2 · SIP / SWP funds
+        2 · {COLUMN_LABELS.growth}
         <span className={`${styles.badge} ${isBalanced ? styles.badgeOk : styles.badgeError}`}>
           {allocation}% allocated
         </span>
       </h2>
-      <p className={styles.cardSubtitle}>
-        Funded by Column 1. Each fund buys units at the NAV applicable to its instalment date.
-      </p>
+      <p className={styles.cardSubtitle}>{COLUMN_BLURBS.growth}</p>
       <button type="button" className={styles.primaryButton} onClick={onOpenFundPicker}>
         Select funds ({config.column2.length}/{MAX_COLUMN2_FUNDS})
       </button>
@@ -41,7 +40,7 @@ export const Column2Panel = ({ api, navBook, result, onOpenFundPicker }: Column2
       )}
       {config.column2.length === 0 ? (
         <p className={styles.emptyHint}>
-          Add four or more funds to spread the money Column 1 routes here.
+          Add four or more funds to spread the money the {COLUMN_WORDS.core} routes here.
         </p>
       ) : (
         config.column2.map((entry) => (
@@ -58,13 +57,13 @@ export const Column2Panel = ({ api, navBook, result, onOpenFundPicker }: Column2
       )}
       <DerivedChips
         items={[
-          { label: 'From Column 1', value: result.totals.routedToColumn2 },
+          { label: `From ${COLUMN_WORDS.core}`, value: result.totals.routedToColumn2 },
           { label: 'Invested', value: result.totals.investedInColumn2 },
           ...(result.totals.unallocatedColumn2Cash > 0
             ? [{ label: 'Uninvested', value: result.totals.unallocatedColumn2Cash }]
             : []),
           { label: 'Personal', value: result.totals.personalFromColumn2 },
-          { label: 'To Column 3', value: result.totals.routedToColumn3 },
+          { label: `To ${COLUMN_WORDS.reinvest}`, value: result.totals.routedToColumn3 },
           { label: 'Value', value: result.totals.column2Value },
         ]}
       />

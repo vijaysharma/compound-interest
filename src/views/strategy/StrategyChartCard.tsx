@@ -4,6 +4,7 @@ import Chart, { type ChartDataset } from '../../components/Chart';
 import { getChartSeriesColor } from '../../data/chartColors';
 import { ChartDataTable } from './ChartDataTable';
 import { formatRupees } from './money';
+import { COLUMN_LABELS } from './labels';
 import type { StrategyConfig, StrategyResult } from './types';
 import styles from './StrategyCalculator.module.scss';
 interface StrategyChartCardProps {
@@ -13,8 +14,8 @@ interface StrategyChartCardProps {
   message: string | null;
 }
 const SERIES = [
-  { key: 'column1Value', label: 'Column 1 value', colorIndex: 0 },
-  { key: 'column2Value', label: 'Column 2 value', colorIndex: 1 },
+  { key: 'column1Value', label: `${COLUMN_LABELS.core} value`, colorIndex: 0 },
+  { key: 'column2Value', label: `${COLUMN_LABELS.growth} value`, colorIndex: 1 },
   { key: 'totalValue', label: 'Combined value', colorIndex: 4 },
 ] as const;
 export const StrategyChartCard = ({
@@ -39,8 +40,8 @@ export const StrategyChartCard = ({
   const last = result.snapshots.at(-1);
   const summary =
     first && last
-      ? `Historical portfolio value from ${first.date} to ${last.date}. Column 1 moved from ` +
-        `${formatRupees(first.column1Value)} to ${formatRupees(last.column1Value)}; Column 2 ` +
+      ? `Historical portfolio value from ${first.date} to ${last.date}. The ${COLUMN_LABELS.core.toLowerCase()} moved from ` +
+        `${formatRupees(first.column1Value)} to ${formatRupees(last.column1Value)}; the ${COLUMN_LABELS.growth.toLowerCase()} ` +
         `reached ${formatRupees(last.column2Value)}; combined value ` +
         `${formatRupees(last.totalValue)}.`
       : 'No historical portfolio values to show yet.';

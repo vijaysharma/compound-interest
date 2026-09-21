@@ -6,6 +6,7 @@ import { DerivedChips } from './StrategyReadouts';
 import { WithdrawalPeriodCard } from './WithdrawalPeriodCard';
 import { firstNavDate } from './navLookup';
 import { formatUnits } from './money';
+import { COLUMN_LABELS, COLUMN_BLURBS, COLUMN_WORDS } from './labels';
 import type { StrategyConfigApi } from './useStrategyConfig';
 import type { NavBook, StrategyResult } from './types';
 import styles from './StrategyCalculator.module.scss';
@@ -34,8 +35,9 @@ export const Column1Panel = ({ api, navBook, result, onOpenFundPicker }: Column1
   return (
     <section className={styles.card} aria-labelledby="strategy-column-1">
       <h2 className={styles.cardTitle} id="strategy-column-1">
-        Column 1 · Initial investment
+        1 · {COLUMN_LABELS.core}
       </h2>
+      <p className={styles.cardSubtitle}>{COLUMN_BLURBS.core}</p>
       <button type="button" className={styles.fundButton} onClick={onOpenFundPicker}>
         {column1.fund ? (
           <>
@@ -103,7 +105,7 @@ export const Column1Panel = ({ api, navBook, result, onOpenFundPicker }: Column1
         items={[
           { label: 'Withdrawn', value: result.totals.withdrawnFromColumn1 },
           { label: 'Personal', value: result.totals.personalFromColumn1 },
-          { label: 'To Column 2', value: result.totals.routedToColumn2 },
+          { label: `To ${COLUMN_WORDS.growth}`, value: result.totals.routedToColumn2 },
           { label: 'Reinvested', value: result.totals.reinvestedIntoColumn1 },
         ]}
       />

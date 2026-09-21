@@ -35,6 +35,7 @@ export const EMPTY_RESULT: StrategyResult = {
     personalFromColumn1: 0,
     personalFromColumn2: 0,
     totalPersonalWithdrawals: 0,
+    lastPersonalWithdrawal: null,
     withdrawnFromColumn1: 0,
     routedToColumn2: 0,
     investedInColumn2: 0,

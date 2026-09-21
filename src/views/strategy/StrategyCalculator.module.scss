@@ -38,7 +38,16 @@
   color: $color-heading;
 }
 
-.resetButton {
+// Saved-strategy toolbar. Wraps onto its own line on a narrow screen rather
+// than squeezing the title, which is why the buttons keep their labels.
+.libraryBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.libraryButton {
   @include button-reset;
   display: inline-flex;
   align-items: center;
@@ -52,7 +61,7 @@
   color: $color-text-secondary;
   white-space: nowrap;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: $primary;
     color: $primary;
   }
@@ -61,6 +70,43 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.libraryDanger {
+  border-color: #b3261e;
+  color: #b3261e;
+
+  &:hover:not(:disabled) {
+    border-color: #b3261e;
+    color: #b3261e;
+    background: #fdecea;
+  }
+}
+
+.librarySelect,
+.libraryInput {
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-white;
+  color: $color-heading;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.5rem;
+  max-width: 14rem;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.libraryInput {
+  min-width: 9rem;
 }
 
 .headerNote {
@@ -69,6 +115,30 @@
   max-width: 60ch;
 }
 
+// Projection readouts.
+.projectionHorizon {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: $primary;
+  font-variant-numeric: tabular-nums;
+}
+.projectionWarn {
+  color: #b3261e;
+  font-weight: 700;
+}
+.projectionNotes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.25rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: $color-text-secondary;
+  li {
+    list-style: disc;
+  }
+}
 .topRow {
   display: flex;
   flex-direction: column;
@@ -315,6 +385,45 @@
     font-weight: 700;
     color: $color-heading;
   }
+}
+
+// The most recent payout, separated from the running totals above it by a rule
+// because it answers a different question: not "how much so far" but "how much
+// is this strategy paying right now".
+.personalLast {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.5rem;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid $primary-subtle;
+  font-variant-numeric: tabular-nums;
+}
+
+.personalLastLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $primary;
+}
+
+.personalLastValue {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.4rem;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: $color-heading;
+}
+
+.personalLastMeta {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: $color-text-secondary;
 }
 
 // Label-plus-dropdown row, matching the select styling used elsewhere.
