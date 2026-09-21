@@ -18,11 +18,11 @@
     flex-shrink: 0;
     padding: 0.5rem 0.75rem;
 
-    @media (min-width: 768px) {
+    @include laptop-up {
       width: 320px;
     }
 
-    @media (min-width: 1024px) {
+    @include desktop-up {
       width: 352px;
     }
   }
@@ -74,7 +74,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  @media (min-width: 640px) {
+  @include tablet-up {
     font-size: 1.125rem;
   }
 }

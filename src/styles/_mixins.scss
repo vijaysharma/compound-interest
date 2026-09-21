@@ -55,6 +55,74 @@
   }
 }
 
+// One-off widths. The named mixins above cover every breakpoint token; these
+// take an explicit width for the few places that need a value with no token
+// behind it, and follow the same convention of emitting the viewport query and
+// the container query so a rule keeps working when the component is sized by a
+// container rather than by the screen.
+@mixin min-width($width) {
+  @media (min-width: $width) {
+    @content;
+  }
+  @container (min-width: #{$width}) {
+    @content;
+  }
+}
+
+@mixin max-width($width) {
+  @media (max-width: $width) {
+    @content;
+  }
+  @container (max-width: #{$width}) {
+    @content;
+  }
+}
+
+// Single-axis variants.
+//
+// A container is never wider than its own viewport, so adding the container
+// branch to a min-width query can only restate what the media query already
+// matched. max-width is not symmetric: a narrow container inside a wide window
+// matches the container branch while the media branch does not. Use these two
+// families wherever that difference matters.
+//
+// viewport-*: key off the window alone. Required for rules that can land inside
+// an element declaring container-type (ValuePicker's root does) — the dual form
+// would resolve against that element's width and fire on a wide screen.
+@mixin viewport-min($width) {
+  @media (min-width: $width) {
+    @content;
+  }
+}
+
+@mixin viewport-max($width) {
+  @media (max-width: $width) {
+    @content;
+  }
+}
+
+// container-*: key off the nearest container alone, for a component that should
+// adapt to the space it is given no matter how wide the window is.
+@mixin container-min($width) {
+  @container (min-width: #{$width}) {
+    @content;
+  }
+}
+
+@mixin container-max($width) {
+  @container (max-width: #{$width}) {
+    @content;
+  }
+}
+
+// Colour-scheme preference. Deliberately media-only: @container tests size and
+// style, not media features, so there is no container equivalent to emit.
+@mixin dark-scheme {
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
 // Button reset
 @mixin button-reset {
   appearance: none;

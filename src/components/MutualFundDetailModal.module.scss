@@ -54,7 +54,7 @@
     border-radius: 12px;
   }
 
-  @media (min-width: 768px) {
+  @include laptop-up {
     width: 85%;
     min-width: 80%;
     max-width: 1200px;
@@ -170,7 +170,7 @@
   border-radius: 12px;
   padding: 12px;
 
-  @media (min-width: 768px) {
+  @include laptop-up {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -183,7 +183,7 @@
   flex-direction: column;
   gap: 8px;
 
-  @media (min-width: 768px) {
+  @include laptop-up {
     flex-direction: row;
     align-items: center;
   }
@@ -230,7 +230,7 @@
     margin-bottom: 0.75rem;
   }
 
-  @media (min-width: 768px) {
+  @include laptop-up {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

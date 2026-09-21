@@ -313,7 +313,7 @@
   align-items: center;
   gap: 0.25rem;
 
-  @media (prefers-color-scheme: dark) {
+  @include dark-scheme {
     color: var(--color-success);
   }
 }

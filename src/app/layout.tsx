@@ -1,5 +1,16 @@
 import type { Metadata, Viewport } from 'next';
 import '@/index.scss';
+// Next lists the stylesheets of the error/not-found boundaries in every route's
+// asset manifest, but those boundaries never render on a healthy page, so the
+// browser only ever sees `<link rel="preload" as="style">` for them and logs
+// "preloaded but not used" on each navigation. Importing them here promotes the
+// same chunks to real `<link rel="stylesheet">` tags on the layout. That
+// silences the warning and means a boundary is fully styled the instant it
+// trips, instead of fetching CSS while the app is already broken. All three are
+// CSS modules, so nothing here leaks into the rest of the app.
+import '@/components/error/ErrorPage.module.scss';
+import './NotFound.module.scss';
+import './GlobalError.module.scss';
 import AppClientLayout from '@/components/AppClientLayout';
 import { rootMetadata, rootViewport, jsonLdData } from '@/data/rootMetadata';
 export const metadata: Metadata = rootMetadata;

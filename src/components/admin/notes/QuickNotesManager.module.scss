@@ -1,4 +1,5 @@
 @use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
 
 .container {
   position: relative;
@@ -112,7 +113,7 @@
     width: 100%;
   }
 
-  @media (min-width: 768px) {
+  @include laptop-up {
     border-right: 1px solid var(--color-border);
 
     &.desktopVisible {
@@ -141,7 +142,7 @@
     width: 100%;
   }
 
-  @media (min-width: 768px) {
+  @include laptop-up {
     display: flex !important;
     flex: 0 0 20rem !important;
     width: 20rem !important;
@@ -156,7 +157,7 @@
       max-width: 20rem !important;
     }
 
-    @media (min-width: 1024px) {
+    @include desktop-up {
       flex: 0 0 22rem !important;
       width: 22rem !important;
       min-width: 22rem !important;
@@ -185,7 +186,7 @@
     width: 100%;
   }
 
-  @media (min-width: 768px) {
+  @include laptop-up {
     display: flex !important;
     flex: 1 1 0% !important;
     flex-direction: column;

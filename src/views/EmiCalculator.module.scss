@@ -525,7 +525,7 @@
     font-weight: 600 !important;
     padding: 0 0.5rem !important;
 
-    @media (min-width: 768px) {
+    @include laptop-up {
       height: 30px !important;
       min-height: 30px !important;
       font-size: 0.75rem !important;
@@ -796,7 +796,7 @@
 .textEmerald {
   color: var(--color-success-text-strong);
 
-  @media (prefers-color-scheme: dark) {
+  @include dark-scheme {
     color: var(--color-success);
   }
 }
@@ -804,7 +804,7 @@
 .textRose {
   color: var(--color-error);
 
-  @media (prefers-color-scheme: dark) {
+  @include dark-scheme {
     color: var(--color-error);
   }
 }
@@ -812,7 +812,7 @@
 .textAmber {
   color: var(--color-warning);
 
-  @media (prefers-color-scheme: dark) {
+  @include dark-scheme {
     color: var(--color-warning);
   }
 }

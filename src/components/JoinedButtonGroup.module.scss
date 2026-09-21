@@ -192,7 +192,7 @@ $btn-radius: 8px;
     font-size: 13px;
     padding: 0 6px;
 
-    @container (max-width: 380px) {
+    @include container-max(380px) {
       font-size: 12px;
       padding: 0 3px;
     }

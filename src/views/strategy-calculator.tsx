@@ -61,12 +61,12 @@ const StrategyCalculatorView = () => {
             <FiRotateCcw aria-hidden="true" /> Reset
           </button>
         </div>
-        <p className={styles.headerNote}>
+        {/* <p className={styles.headerNote}>
           Every figure on this page is calculated from actual published NAVs. Units are bought and
           sold at the NAV applicable to each transaction date, and holdings are valued at the NAV
           applicable to the valuation date. Nothing here assumes a rate of return. Your
           configuration is saved in this browser.
-        </p>
+        </p> */}
       </header>
       <div className={styles.topRow}>
         <StrategyChartCard

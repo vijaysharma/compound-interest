@@ -113,7 +113,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   margin-bottom: 1.5rem;
 
-  @media (min-width: 640px) {
+  @include tablet-up {
     padding: 1.5rem;
   }
 }
@@ -147,7 +147,7 @@
   gap: 1rem;
   margin-bottom: 1rem;
 
-  @media (min-width: 640px) {
+  @include tablet-up {
     grid-template-columns: repeat(2, 1fr);
   }
 }

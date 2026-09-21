@@ -144,7 +144,7 @@
     border: 1px solid color-mix(in srgb, var(--color-success-text-strong) 30%, transparent);
     color: var(--color-success-text-strong);
 
-    @media (prefers-color-scheme: dark) {
+    @include dark-scheme {
       color: var(--color-success);
     }
   }
@@ -371,7 +371,7 @@
   font-weight: 700;
   flex-shrink: 0;
 
-  @media (prefers-color-scheme: dark) {
+  @include dark-scheme {
     color: var(--color-success);
   }
 }
