@@ -60,7 +60,11 @@ const SIP = ({ onSelectionChange }: SipProps) => {
     startDate: dates.startDate, endDate: dates.endDate, dayOfMonth, investmentStepUp,
   };
   useSipStorage(currentState, handleRestore);
-  useEffect(() => { dates.alignInitialDates(pinned.jsonNavData); }, [dates, pinned.jsonNavData]);
+  // `dates` is a fresh object every render, so keeping it in the dependency list
+  // re-ran this on every render. Aligning only when the NAV series changes is
+  // both sufficient and what the guard inside alignInitialDates expects.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { dates.alignInitialDates(pinned.jsonNavData); }, [pinned.jsonNavData]);
   useEffect(() => {
     onSelectionChange?.({ funds: pinned.pinnedFunds, navData: pinned.pinnedNavData, startDate: dates.startDate, endDate: dates.endDate });
   }, [onSelectionChange, pinned.pinnedFunds, pinned.pinnedNavData, dates.startDate, dates.endDate]);

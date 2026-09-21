@@ -13,17 +13,24 @@ export function useStrategyStorage(
   onRestore: (config: StrategyConfig) => void
 ): void {
   const isLoadedRef = useRef(false);
+  const onRestoreRef = useRef(onRestore);
   useEffect(() => {
+    onRestoreRef.current = onRestore;
+  }, [onRestore]);
+  useEffect(() => {
+    if (isLoadedRef.current) return;
     const frame = requestAnimationFrame(() => {
       try {
         const saved = loadStoredConfig();
-        if (saved) onRestore(saved);
+        if (saved) onRestoreRef.current(saved);
       } finally {
         isLoadedRef.current = true;
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [onRestore]);
+    // Restore must run exactly once; the callback is read through a ref so an
+    // unstable `onRestore` identity cannot re-trigger it (infinite render loop).
+  }, []);
   useEffect(() => {
     // Skip until the restore has run, so defaults cannot overwrite saved state.
     if (!isLoadedRef.current) return;

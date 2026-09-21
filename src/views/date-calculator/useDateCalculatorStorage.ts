@@ -43,11 +43,16 @@ export function useDateCalculatorStorage(
   onRestore: (saved: SavedDateState) => void
 ) {
   const isLoadedRef = useRef(false);
+  const onRestoreRef = useRef(onRestore);
   useEffect(() => {
+    onRestoreRef.current = onRestore;
+  }, [onRestore]);
+  useEffect(() => {
+    if (isLoadedRef.current) return;
     const handleRestore = () => {
       try {
         const saved = getSavedDateState();
-        onRestore(saved);
+        onRestoreRef.current(saved);
       } catch (err) {
         console.warn('Failed to restore date calculator state:', err);
       } finally {
@@ -56,7 +61,9 @@ export function useDateCalculatorStorage(
     };
     const id = requestAnimationFrame(handleRestore);
     return () => cancelAnimationFrame(id);
-  }, [onRestore]);
+    // Restore must run exactly once; the callback is read through a ref so an
+    // unstable `onRestore` identity cannot re-trigger it (infinite render loop).
+  }, []);
   useEffect(() => {
     if (!isLoadedRef.current || typeof window === 'undefined') return;
     try {
