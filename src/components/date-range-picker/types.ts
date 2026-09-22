@@ -23,5 +23,7 @@ export interface DateRangePickerProps {
   embedded?: boolean;
   singleDate?: boolean;
   layout?: 'auto' | 'mobile' | 'desktop';
+  /** Shrinks the control to the compact scale; see ValuePickerProps.condensed. */
+  condensed?: boolean;
   variant?: 'paired' | 'stacked-paired';
 }

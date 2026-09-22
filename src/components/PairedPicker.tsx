@@ -21,6 +21,8 @@ export interface PairedPickerProps {
   compact?: boolean;
   embedded?: boolean;
   layout?: 'auto' | 'mobile' | 'desktop';
+  /** Shrinks the control to the compact scale; see ValuePickerProps.condensed. */
+  condensed?: boolean;
   variant?: 'paired' | 'stacked-paired';
 }
 export const PairedPicker: React.FC<PairedPickerProps> = React.memo(
@@ -45,13 +47,15 @@ export const PairedPicker: React.FC<PairedPickerProps> = React.memo(
     compact = false,
     embedded = false,
     layout = 'auto',
+    condensed = false,
   }) => {
     const layoutClass =
       layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
     const compactClass = compact ? styles.compact : '';
     const embeddedClass = embedded ? styles.embedded : '';
+    const condensedClass = condensed ? styles.condensed : '';
     const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${condensedClass} ${className}`.trim();
     return (
       <div className={rootContainerClass}>
         {title && <h5 className={styles.title}>{title}</h5>}

@@ -1159,3 +1159,187 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     line-height: $font-line-height-feedback-web;
   }
 }
+
+// =============================================================================
+// Condensed variant (`condensed` prop)
+// =============================================================================
+//
+// Sizes the picker off its own container instead of the viewport. Every rule
+// above reaches its web scale through `tablet-up`, which emits a media branch
+// as well as a container one, so a picker in a ~380px column on a 1300px
+// screen renders at 44px/46px/20px and crowds the column. Restating the same
+// dimensions under `@container` alone — at the higher specificity `.condensed`
+// buys — puts the control back on the compact scale until it actually has the
+// room, and matches PairedValuePicker tier for tier.
+//
+// Selectors stay descendant-only: `.condensed` is itself the container, so a
+// rule on it inside `@container` would resolve against its parent instead.
+
+.condensed {
+  .title {
+    font-size: $font-size-heading-mobile;
+    line-height: $font-line-height-heading-mobile;
+    margin-bottom: $space-xs;
+  }
+
+  .titleBar {
+    padding: 4px 8px;
+    font-size: $font-size-title-bar-mobile;
+  }
+
+  .tabBtn {
+    height: $btn-height-mobile;
+    min-height: $btn-height-mobile;
+    padding: 0 $space-sm;
+    font-size: $font-size-button-mobile;
+    line-height: $font-line-height-button-mobile;
+  }
+
+  .inputRow {
+    gap: 6px;
+    padding: 6px 8px;
+    min-height: 52px;
+  }
+
+  .symbolBadge {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .inputWrapper {
+    height: 38px;
+    padding: 0 8px;
+  }
+
+  .inputField {
+    font-size: $font-size-input-mobile;
+    line-height: $font-line-height-input-mobile;
+  }
+
+  .actionBtn {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    font-size: $font-size-button-mobile;
+  }
+
+  .gridCell {
+    height: 40px;
+    min-height: 40px;
+    padding: 0 4px;
+    font-size: $font-size-button-sm-mobile;
+  }
+
+  .wordsDisplay {
+    margin-top: 6px;
+    font-size: $font-size-feedback-mobile;
+    line-height: $font-line-height-feedback-mobile;
+  }
+
+  // Tight columns: give up label size, never touch-target size.
+  @include container-max(360px) {
+    .titleBar {
+      padding: 4px 6px;
+      font-size: 10.5px;
+    }
+
+    .inputRow {
+      gap: 4px;
+      padding: 5px 6px;
+      min-height: 48px;
+    }
+
+    // Decorative, so it can shrink below the touch floor to buy the field room.
+    .symbolBadge {
+      width: 32px;
+      min-width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+
+    .inputWrapper {
+      padding: 0 6px;
+    }
+
+    .inputField {
+      font-size: 15.5px;
+      line-height: 20px;
+    }
+
+    .gridCell {
+      padding: 0 2px;
+      font-size: 11px;
+    }
+
+    .wordsDisplay {
+      font-size: 12px;
+    }
+  }
+
+  // Roomy columns: the control has the space, so hand back the full web scale.
+  @include container-min(640px) {
+    .title {
+      font-size: $font-size-heading-web;
+      line-height: $font-line-height-heading-web;
+      margin-bottom: $space-sm;
+    }
+
+    .titleBar {
+      padding: 3px 10px;
+      font-size: $font-size-title-bar-web;
+    }
+
+    .tabBtn {
+      height: $btn-height-web;
+      min-height: $btn-height-web;
+      padding: 0 $space-md;
+      font-size: $font-size-button-web;
+      line-height: $font-line-height-button-web;
+    }
+
+    .inputRow {
+      gap: $space-sm;
+      padding: $space-sm $space-md;
+      min-height: 64px;
+    }
+
+    .symbolBadge {
+      width: 44px;
+      min-width: 44px;
+      height: 44px;
+      font-size: 18px;
+    }
+
+    .inputWrapper {
+      height: 44px;
+      padding: 0 $space-md;
+    }
+
+    .inputField {
+      font-size: $font-size-input-web;
+      line-height: $font-line-height-input-web;
+    }
+
+    .actionBtn {
+      width: 44px;
+      min-width: 44px;
+      height: 44px;
+      font-size: $font-size-button-web;
+    }
+
+    .gridCell {
+      height: 46px;
+      min-height: 46px;
+      padding: 0 $space-sm;
+      font-size: $font-size-button-sm-web;
+    }
+
+    .wordsDisplay {
+      margin-top: 8px;
+      font-size: $font-size-feedback-web;
+      line-height: $font-line-height-feedback-web;
+    }
+  }
+}

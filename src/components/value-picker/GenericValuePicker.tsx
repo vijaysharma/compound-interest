@@ -14,7 +14,7 @@ export const GenericValuePicker: React.FC<ValuePickerProps> = React.memo((props)
     singleRow = false, symbol, currencySymbol, symbolPosition = 'left', symbolBg = true,
     endAdornment, locale = 'en-IN', min = 0, max, defaultStep, showWords = true, allowDecimals,
     className = '', compact = false, embedded = false, layout = 'auto', disabled = false,
-    readOnly = false, placeholder, tabSize = 'md',
+    readOnly = false, placeholder, tabSize = 'md', condensed = false,
   } = props;
   const componentId = useId();
   const effectiveSymbol = symbol !== undefined ? symbol : currencySymbol !== undefined ? currencySymbol : '₹';
@@ -60,7 +60,8 @@ export const GenericValuePicker: React.FC<ValuePickerProps> = React.memo((props)
   const compactClass = compact ? styles.compact : '';
   const embeddedClass = embedded ? styles.embedded : '';
   const tabSizeClass = styles[`tabSize-${tabSize}`] || '';
-  const rootContainerClass = `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${tabSizeClass} ${className}`.trim();
+  const condensedClass = condensed ? styles.condensed : '';
+  const rootContainerClass = `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${tabSizeClass} ${condensedClass} ${className}`.trim();
   const isMergedTitle = titleStyle === 'merged' && !!title;
   const ariaLabel = title || resolvedTabs?.find((t) => t.id === currentTab || t.value === currentTab)?.title || 'Value';
   return (

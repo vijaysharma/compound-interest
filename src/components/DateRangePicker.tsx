@@ -30,6 +30,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo(
     embedded = false,
     singleDate = false,
     layout = 'auto',
+    condensed = false,
     variant = 'stacked-paired',
   }) => {
     const today = useMemo(() => getDateAsISO(), []);
@@ -67,8 +68,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo(
       layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
     const compactClass = compact ? styles.compact : '';
     const embeddedClass = embedded ? styles.embedded : '';
+    const condensedClass = condensed ? styles.condensed : '';
     const rootContainerClass =
-      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${className}`.trim();
+      `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${condensedClass} ${className}`.trim();
     if (dateMode === 'year') {
       const availableEndOptions = effectiveEndYearOptions.filter(
         (year) => !startDate || Number(year) >= Number(startDate)

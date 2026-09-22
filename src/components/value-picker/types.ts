@@ -42,6 +42,13 @@ export interface ValuePickerProps
   disabled?: boolean;
   readOnly?: boolean;
   layout?: 'auto' | 'mobile' | 'desktop';
+  /**
+   * Sizes the control off its own container at the compact scale PairedValuePicker
+   * uses, instead of off the viewport. Set it wherever the picker sits in a
+   * narrow column on a wide screen — the shared `tablet-up` chrome would
+   * otherwise render at its full 44px/46px/20px web scale and crowd the column.
+   */
+  condensed?: boolean;
   placeholder?: string;
   tabSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }

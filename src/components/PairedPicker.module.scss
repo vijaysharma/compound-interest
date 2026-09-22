@@ -223,3 +223,79 @@ $font-family:
   margin: 0;
   border: none;
 }
+
+// =============================================================================
+// Condensed variant (`condensed` prop)
+// =============================================================================
+//
+// Mirrors ValuePicker's condensed tiers so a date range or paired selector
+// sitting next to a condensed picker matches it. The rules above reach their
+// larger scale through `tablet-up` / `laptop-up`, which each emit a media
+// branch, so a control in a ~380px column on a wide screen renders at full
+// size; these restate the same dimensions under `@container` alone.
+//
+// `container-type` is declared only on `.condensed`, never on `.container`, so
+// opting in cannot change how the existing rules resolve for every other
+// instance. Selectors are descendant-only — `.condensed` is the container
+// itself, so a rule on it inside `@container` would resolve against its parent.
+
+.condensed {
+  container-type: inline-size;
+
+  .title {
+    font-size: 14px;
+  }
+
+  .pairedStackedLabel {
+    padding: 3px 8px;
+    font-size: 10.5px;
+  }
+
+  .pairedStackedSlot {
+    min-height: 38px;
+  }
+
+  .pairedInput,
+  .pairedSelect {
+    font-size: 15px;
+    padding: 0 $space-sm;
+  }
+
+  @include container-max(360px) {
+    .pairedStackedLabel {
+      padding: 3px 6px;
+      font-size: 10px;
+    }
+
+    .pairedStackedSlot {
+      min-height: 34px;
+    }
+
+    .pairedInput,
+    .pairedSelect {
+      font-size: 14px;
+      padding: 0 $space-xs;
+    }
+  }
+
+  @include container-min(640px) {
+    .title {
+      font-size: 15px;
+    }
+
+    .pairedStackedLabel {
+      padding: 3px 10px;
+      font-size: 11px;
+    }
+
+    .pairedStackedSlot {
+      min-height: 48px;
+    }
+
+    .pairedInput,
+    .pairedSelect {
+      font-size: 15px;
+      padding: 0 $space-md;
+    }
+  }
+}

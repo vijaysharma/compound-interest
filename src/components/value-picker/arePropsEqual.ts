@@ -22,6 +22,7 @@ export function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): b
     prev.className !== next.className ||
     prev.compact !== next.compact ||
     prev.embedded !== next.embedded ||
+    prev.condensed !== next.condensed ||
     prev.layout !== next.layout ||
     prev.disabled !== next.disabled ||
     prev.readOnly !== next.readOnly ||

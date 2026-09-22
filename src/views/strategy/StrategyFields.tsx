@@ -26,6 +26,7 @@ export const AmountField = ({ title, value, onChange, max, symbol, stepData }: A
     singleRow
     compact
     embedded
+    condensed
     showWords={false}
     symbol={symbol ?? '₹'}
     min={0}
@@ -54,6 +55,7 @@ export const DateField = ({ label, value, onChange, minDate }: DateFieldProps) =
     startMinDate={minDate}
     compact
     embedded
+    condensed
   />
 );
 interface DateRangeFieldProps {
@@ -79,6 +81,7 @@ export const DateRangeField = ({
     startMinDate={minDate}
     compact
     embedded
+    condensed
   />
 );
 interface FrequencyFieldProps {
