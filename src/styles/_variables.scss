@@ -59,6 +59,20 @@ $radius-lg: var(--radius-lg, 0.75rem);
 $radius-xl: var(--radius-xl, 1rem);
 $radius-full: 9999px;
 
+// Condensed control height.
+//
+// `scale="container"` renders every picker control at this height: the tab
+// strip, the symbol badge, the input, the C/+/- cluster and the step cells. It
+// lives here rather than in one component's module because all four picker
+// shells have to agree on it — ValuePicker, PairedPicker, DateRangePicker and
+// PairedValuePicker each own part of the same card, and they previously drifted
+// (38px action buttons next to 32px ones in the same column).
+//
+// Deliberately below the 44px touch-target guideline: the condensed tier exists
+// for dense desktop columns, which is why it is opt-in per call site and why
+// `scale` hands back the full web scale once the container passes 640px.
+$control-height-condensed: 32px;
+
 // Breakpoints
 $bp-mobile-sm: 360px;
 $bp-mobile-md: 480px;

@@ -79,7 +79,7 @@ export const PPPInputsCol: React.FC<PPPInputsColProps> = ({
             { id: 'ip6', value: '500', title: '500' },
             { id: 'ip7', value: '50', title: '50' },
           ]}
-          currencySymbol={sourceCurrencySymbol || 'XYZ'}
+          symbol={sourceCurrencySymbol || 'XYZ'}
           locale={sourceLocale || 'en-US'}
         />
       </div>

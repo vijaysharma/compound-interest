@@ -1,29 +1,29 @@
-import type { NavType } from '../../types/types';
-export interface DateRangePickerProps {
-  title?: string;
+import type { PickerChromeProps } from '../value-picker/chrome';
+/**
+ * One date, a start/end pair, or a year range, in the same joined box
+ * `PairedPicker` draws.
+ *
+ * `startTitle` / `endTitle` label the two sides. The range stays ordered on its
+ * own: moving the start past the end drags the end with it, and vice versa.
+ */
+export interface DateRangePickerProps extends PickerChromeProps {
+  variant?: 'paired' | 'stacked-paired';
   startDate?: string | null;
   endDate?: string | null;
   setStartDate?: (date: string) => void;
   setEndDate?: (date: string) => void;
-  startBadgeText?: string;
-  endBadgeText?: string;
-  startMinDate?: string;
-  dateMode?: 'date' | 'year';
-  startOptions?: string[];
-  endOptions?: string[];
-  startYearOptions?: string[];
-  endYearOptions?: string[];
-  data?: NavType[];
-  navData?: NavType[];
+  /** Label over the start field. Also its accessible name. */
   startTitle?: string;
+  /** Label over the end field. Ignored when `singleDate` is set. */
   endTitle?: string;
-  disabled?: boolean;
-  className?: string;
-  compact?: boolean;
-  embedded?: boolean;
+  /** Floor for the start field, as an ISO date. Defaults to unbounded. */
+  startMinDate?: string;
+  /** `year` swaps both date inputs for year dropdowns fed by `startYearOptions`. */
+  dateMode?: 'date' | 'year';
+  /** Year options for the start dropdown. Only read when `dateMode="year"`. */
+  startYearOptions?: string[];
+  /** Year options for the end dropdown; those before the start year are filtered out. */
+  endYearOptions?: string[];
+  /** Renders a single labelled date field instead of a pair. */
   singleDate?: boolean;
-  layout?: 'auto' | 'mobile' | 'desktop';
-  /** Shrinks the control to the compact scale; see ValuePickerProps.condensed. */
-  condensed?: boolean;
-  variant?: 'paired' | 'stacked-paired';
 }

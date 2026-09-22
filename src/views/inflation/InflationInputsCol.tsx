@@ -56,7 +56,7 @@ export const InflationInputsCol: React.FC<InflationInputsColProps> = ({
             { id: 'p5', value: '5000', title: '5K' },
             { id: 'p6', value: '500', title: '100' },
           ]}
-          currencySymbol={currencySymbol}
+          symbol={currencySymbol}
           locale={locale}
           singleRow={true}
           tabSize="sm"
@@ -68,8 +68,8 @@ export const InflationInputsCol: React.FC<InflationInputsColProps> = ({
           endDate={endYear}
           setStartDate={setStartYear}
           setEndDate={setEndYear}
-          startOptions={startYearOptions}
-          endOptions={endYearOptions}
+          startYearOptions={startYearOptions}
+          endYearOptions={endYearOptions}
         />
       </div>
     </div>

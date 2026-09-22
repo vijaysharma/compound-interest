@@ -5,13 +5,13 @@ export interface YearPickerSectionProps {
   title?: string;
   rootContainerClass: string;
   variant?: 'paired' | 'stacked-paired';
-  resolvedStartBadge: string;
-  resolvedEndBadge: string;
+  startLabel: string;
+  endLabel: string;
   startDate?: string | null;
   endDate?: string | null;
   disabled?: boolean;
-  effectiveStartYearOptions: string[];
-  availableEndOptions: string[];
+  startYearOptions: string[];
+  endYearOptions: string[];
   onStartYearChange: (val: string) => void;
   onEndYearChange: (val: string) => void;
 }
@@ -20,13 +20,13 @@ export const YearPickerSection: React.FC<YearPickerSectionProps> = React.memo(
     title,
     rootContainerClass,
     variant,
-    resolvedStartBadge,
-    resolvedEndBadge,
+    startLabel,
+    endLabel,
     startDate,
     endDate,
     disabled,
-    effectiveStartYearOptions,
-    availableEndOptions,
+    startYearOptions,
+    endYearOptions,
     onStartYearChange,
     onEndYearChange,
   }) => (
@@ -39,7 +39,7 @@ export const YearPickerSection: React.FC<YearPickerSectionProps> = React.memo(
       >
         <div className={styles.pairedStackedColumn}>
           <div className={styles.pairedStackedLabel}>
-            {resolvedStartBadge} Year
+            {startLabel} Year
           </div>
           <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
             <select
@@ -47,9 +47,9 @@ export const YearPickerSection: React.FC<YearPickerSectionProps> = React.memo(
               value={startDate ?? ''}
               onChange={(e) => onStartYearChange(e.target.value)}
               disabled={disabled}
-              aria-label={`${resolvedStartBadge} Year`}
+              aria-label={`${startLabel} Year`}
             >
-              {effectiveStartYearOptions.map((year) => (
+              {startYearOptions.map((year) => (
                 <option key={`s-${year}`} value={year}>
                   {year}
                 </option>
@@ -59,7 +59,7 @@ export const YearPickerSection: React.FC<YearPickerSectionProps> = React.memo(
         </div>
         <div className={styles.pairedStackedColumn}>
           <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
-            {resolvedEndBadge} Year
+            {endLabel} Year
           </div>
           <div className={styles.pairedStackedSlot}>
             <select
@@ -67,9 +67,9 @@ export const YearPickerSection: React.FC<YearPickerSectionProps> = React.memo(
               value={endDate ?? ''}
               onChange={(e) => onEndYearChange(e.target.value)}
               disabled={disabled}
-              aria-label={`${resolvedEndBadge} Year`}
+              aria-label={`${endLabel} Year`}
             >
-              {availableEndOptions.map((year) => (
+              {endYearOptions.map((year) => (
                 <option key={`e-${year}`} value={year}>
                   {year}
                 </option>

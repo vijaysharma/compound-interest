@@ -40,8 +40,8 @@ export function PropertyTaxInputs({
         <ValuePicker
           variant="date-range"
           className={calcStyles.field}
-          startBadgeText={`Purchase (FY ${getFinancialYear(purchaseDate)})`}
-          endBadgeText={`Sale (FY ${getFinancialYear(saleDate)})`}
+          startTitle={`Purchase (FY ${getFinancialYear(purchaseDate)})`}
+          endTitle={`Sale (FY ${getFinancialYear(saleDate)})`}
           startDate={purchaseDate}
           setStartDate={onPurchaseDateChange}
           endDate={saleDate}

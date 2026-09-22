@@ -27,8 +27,9 @@ export const InteractiveModelPreview: React.FC<InteractiveModelPreviewProps> = (
       : viewport === 'tablet'
         ? styles.tabletFrame
         : styles.desktopFrame;
-  const layoutMode =
-    viewport === 'mobile' ? 'mobile' : viewport === 'desktop' ? 'desktop' : 'auto';
+  // The frame imitates a viewport the picker is not really in, so the scale has
+  // to be pinned rather than measured.
+  const scale = viewport === 'mobile' ? 'mobile' : viewport === 'desktop' ? 'desktop' : 'auto';
   return (
     <section>
       <div className={styles.previewArea}>
@@ -40,10 +41,10 @@ export const InteractiveModelPreview: React.FC<InteractiveModelPreviewProps> = (
             activeTab={mainTab}
             onTabChange={setMainTab}
             stepRows={DEFAULT_VALUE_PICKER_ROWS}
-            currencySymbol="₹"
+            symbol="₹"
             locale="en-IN"
             showWords={true}
-            layout={layoutMode}
+            scale={scale}
             tabSize="sm"
           />
           <div className={styles.inspectorCard}>

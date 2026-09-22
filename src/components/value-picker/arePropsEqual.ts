@@ -1,68 +1,59 @@
 import type { ValuePickerProps } from './types';
+/**
+ * The `React.memo` comparator for `ValuePicker`.
+ *
+ * It used to be a hand-written list of every prop to compare, which meant any
+ * prop added to `ValuePickerProps` and forgotten here would silently stop
+ * triggering re-renders. This walks the props instead, with two deliberate
+ * exceptions:
+ *
+ * 1. **Callbacks are ignored.** Calculators pass fresh closures every render,
+ *    so comparing them would defeat the memo entirely. A memoised instance
+ *    therefore keeps the handlers from the render it last committed — never
+ *    close over a value the picker's own props don't include; read it from a
+ *    ref instead.
+ * 2. **Arrays compare by content, one level into their entries.** Step lists,
+ *    tab strips and option lists are nearly always inline literals, so identity
+ *    would change on every render.
+ *
+ * Everything else — including React nodes in `sourceSlot` / `targetSlot` /
+ * `endAdornment` — compares by identity, so an inline node re-renders.
+ */
 export function arePropsEqual(prev: ValuePickerProps, next: ValuePickerProps): boolean {
-  if (prev.variant !== next.variant) return false;
-  if (
-    prev.value !== next.value ||
-    prev.inputAmount !== next.inputAmount ||
-    prev.activeTab !== next.activeTab ||
-    prev.type !== next.type ||
-    prev.defaultTab !== next.defaultTab ||
-    prev.title !== next.title ||
-    prev.titleStyle !== next.titleStyle ||
-    prev.symbol !== next.symbol ||
-    prev.currencySymbol !== next.currencySymbol ||
-    prev.symbolPosition !== next.symbolPosition ||
-    prev.symbolBg !== next.symbolBg ||
-    prev.locale !== next.locale ||
-    prev.min !== next.min ||
-    prev.max !== next.max ||
-    prev.defaultStep !== next.defaultStep ||
-    prev.showWords !== next.showWords ||
-    prev.allowDecimals !== next.allowDecimals ||
-    prev.className !== next.className ||
-    prev.compact !== next.compact ||
-    prev.embedded !== next.embedded ||
-    prev.condensed !== next.condensed ||
-    prev.layout !== next.layout ||
-    prev.disabled !== next.disabled ||
-    prev.readOnly !== next.readOnly ||
-    prev.placeholder !== next.placeholder ||
-    prev.tabSize !== next.tabSize ||
-    prev.singleRow !== next.singleRow ||
-    prev.sourceBadgeText !== next.sourceBadgeText ||
-    prev.targetBadgeText !== next.targetBadgeText ||
-    prev.sourceValue !== next.sourceValue ||
-    prev.targetValue !== next.targetValue ||
-    prev.startDate !== next.startDate ||
-    prev.endDate !== next.endDate ||
-    prev.startBadgeText !== next.startBadgeText ||
-    prev.endBadgeText !== next.endBadgeText
-  ) {
-    return false;
-  }
-  if (prev.stepRows !== next.stepRows) {
-    if (!prev.stepRows || !next.stepRows) return false;
-    if (prev.stepRows.length !== next.stepRows.length) return false;
-  }
-  if (prev.endAdornment !== next.endAdornment) return false;
-  if (prev.sourceSlot !== next.sourceSlot || prev.targetSlot !== next.targetSlot) return false;
-  if (prev.stepData !== next.stepData) {
-    if (!prev.stepData || !next.stepData) return false;
-    if (prev.stepData.length !== next.stepData.length) return false;
-    for (let i = 0; i < prev.stepData.length; i++) {
-      const a = prev.stepData[i];
-      const b = next.stepData[i];
-      if (a.id !== b.id || a.value !== b.value || a.label !== b.label || a.title !== b.title) return false;
-    }
-  }
-  if (prev.tabs !== next.tabs) {
-    if (!prev.tabs || !next.tabs) return false;
-    if (prev.tabs.length !== next.tabs.length) return false;
-    for (let i = 0; i < prev.tabs.length; i++) {
-      const a = prev.tabs[i];
-      const b = next.tabs[i];
-      if (a.id !== b.id || a.title !== b.title || a.value !== b.value) return false;
-    }
+  const a = prev as Record<string, unknown>;
+  const b = next as Record<string, unknown>;
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const key of keys) {
+    if (!valuesEqual(a[key], b[key])) return false;
   }
   return true;
+}
+function valuesEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a === 'function' && typeof b === 'function') return true;
+  if (Array.isArray(a) && Array.isArray(b)) return entriesEqual(a, b);
+  return false;
+}
+function entriesEqual(a: unknown[], b: unknown[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((entry, i) => {
+    const other = b[i];
+    if (entry === other) return true;
+    // `stepRows` nests one level deeper than `stepData` and `tabs`.
+    if (Array.isArray(entry) && Array.isArray(other)) return entriesEqual(entry, other);
+    if (isPlainObject(entry) && isPlainObject(other)) {
+      const keys = new Set([...Object.keys(entry), ...Object.keys(other)]);
+      return [...keys].every((key) => entry[key] === other[key]);
+    }
+    return false;
+  });
+}
+/** Narrows to a data object, so React elements keep comparing by identity. */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !('$$typeof' in value)
+  );
 }

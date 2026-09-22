@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from '../tempValuePickerPage.module.scss';
 const CODE_SAMPLE = `// 1. Amount Picker (Classic currency with tabs & quick steps):
-<ValuePicker value={amount} onChange={setAmount} tabs={tabs} currencySymbol="₹" />
+<ValuePicker value={amount} onChange={setAmount} tabs={tabs} symbol="₹" />
 
 // 2. Rate of Interest (%):
 <ValuePicker title="Rate" symbol="%" value={roi} onChange={setRoi} stepData={DEFAULT_RATE_STEPS} singleRow />

@@ -4,7 +4,7 @@ import styles from '../PairedPicker.module.scss';
 export interface SingleDatePickerSectionProps {
   title?: string;
   rootContainerClass: string;
-  resolvedStartBadge: string;
+  startLabel: string;
   startMinDate?: string;
   today: string;
   startDate?: string | null;
@@ -15,7 +15,7 @@ export const SingleDatePickerSection: React.FC<SingleDatePickerSectionProps> = R
   ({
     title,
     rootContainerClass,
-    resolvedStartBadge,
+    startLabel,
     startMinDate,
     today,
     startDate,
@@ -27,7 +27,7 @@ export const SingleDatePickerSection: React.FC<SingleDatePickerSectionProps> = R
       <div className={styles.pairedStackedWrapper}>
         <div className={`${styles.pairedStackedColumn} ${styles.singleColumn}`}>
           <div className={styles.pairedStackedLabel}>
-            {resolvedStartBadge}
+            {startLabel}
           </div>
           <div className={styles.pairedStackedSlot}>
             <input
@@ -38,7 +38,7 @@ export const SingleDatePickerSection: React.FC<SingleDatePickerSectionProps> = R
               className={styles.pairedInput}
               onChange={(e) => onStartDateChange(e.target.value)}
               disabled={disabled}
-              aria-label={resolvedStartBadge}
+              aria-label={startLabel}
             />
           </div>
         </div>

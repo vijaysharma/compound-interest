@@ -91,7 +91,6 @@ export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
           { id: 'ip7', value: '50', title: '50' },
         ]}
         symbol={sourceCurrency.symbol}
-        currencySymbol={sourceCurrency.symbol}
         locale={sourceCurrency.locale}
         tabSize="sm"
       />

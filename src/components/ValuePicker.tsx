@@ -6,13 +6,14 @@ import type { ValuePickerProps, ValuePickerVariant } from './value-picker/types'
 import { arePropsEqual } from './value-picker/arePropsEqual';
 import { GenericValuePicker } from './value-picker/GenericValuePicker';
 export type { ValuePickerProps, ValuePickerVariant };
+export type { PickerScale } from './value-picker/chrome';
 const BaseValuePicker: React.FC<ValuePickerProps> = (props) => {
   const { variant } = props;
   if (variant === 'date-range') {
     return <DateRangePicker {...(props as unknown as DateRangePickerProps)} />;
   }
   if (variant === 'paired' || variant === 'stacked-paired') {
-    return <PairedPicker {...(props as unknown as PairedPickerProps)} />;
+    return <PairedPicker {...(props as unknown as PairedPickerProps)} variant={variant} />;
   }
   return <GenericValuePicker {...props} />;
 };

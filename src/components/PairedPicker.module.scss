@@ -225,19 +225,24 @@ $font-family:
 }
 
 // =============================================================================
-// Condensed variant (`condensed` prop)
+// Container scale (`scale="container"`)
 // =============================================================================
 //
-// Mirrors ValuePicker's condensed tiers so a date range or paired selector
-// sitting next to a condensed picker matches it. The rules above reach their
-// larger scale through `tablet-up` / `laptop-up`, which each emit a media
+// Mirrors ValuePicker's container tiers so a date range or paired selector
+// sitting next to a container-scaled picker matches it. The rules above reach
+// their larger scale through `tablet-up` / `laptop-up`, which each emit a media
 // branch, so a control in a ~380px column on a wide screen renders at full
 // size; these restate the same dimensions under `@container` alone.
 //
 // `container-type` is declared only on `.condensed`, never on `.container`, so
 // opting in cannot change how the existing rules resolve for every other
-// instance. Selectors are descendant-only — `.condensed` is the container
-// itself, so a rule on it inside `@container` would resolve against its parent.
+// instance. ValuePicker's module puts it on `.container` instead, and the two
+// are not interchangeable: its base rules use `container-max(380px)` outside
+// any scale class, so its root has to be a container at every scale. Nothing
+// here does, so the narrower placement is available and preferred.
+//
+// Selectors are descendant-only — `.condensed` is the container itself, so a
+// rule on it inside `@container` would resolve against its parent.
 
 .condensed {
   container-type: inline-size;
@@ -252,7 +257,7 @@ $font-family:
   }
 
   .pairedStackedSlot {
-    min-height: 38px;
+    min-height: $control-height-condensed;
   }
 
   .pairedInput,
@@ -265,10 +270,6 @@ $font-family:
     .pairedStackedLabel {
       padding: 3px 6px;
       font-size: 10px;
-    }
-
-    .pairedStackedSlot {
-      min-height: 34px;
     }
 
     .pairedInput,

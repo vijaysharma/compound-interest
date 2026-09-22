@@ -5,8 +5,8 @@ export interface PairedDatePickerSectionProps {
   title?: string;
   rootContainerClass: string;
   variant?: 'paired' | 'stacked-paired';
-  resolvedStartBadge: string;
-  resolvedEndBadge: string;
+  startLabel: string;
+  endLabel: string;
   startMinDate?: string;
   today: string;
   startDate?: string | null;
@@ -20,8 +20,8 @@ export const PairedDatePickerSection: React.FC<PairedDatePickerSectionProps> = R
     title,
     rootContainerClass,
     variant,
-    resolvedStartBadge,
-    resolvedEndBadge,
+    startLabel,
+    endLabel,
     startMinDate,
     today,
     startDate,
@@ -39,7 +39,7 @@ export const PairedDatePickerSection: React.FC<PairedDatePickerSectionProps> = R
       >
         <div className={styles.pairedStackedColumn}>
           <div className={styles.pairedStackedLabel}>
-            {resolvedStartBadge}
+            {startLabel}
           </div>
           <div className={`${styles.pairedStackedSlot} ${styles.pairedStackedSlotLeft}`}>
             <input
@@ -50,13 +50,13 @@ export const PairedDatePickerSection: React.FC<PairedDatePickerSectionProps> = R
               className={styles.pairedInput}
               onChange={(e) => onStartDateChange(e.target.value)}
               disabled={disabled}
-              aria-label={resolvedStartBadge}
+              aria-label={startLabel}
             />
           </div>
         </div>
         <div className={styles.pairedStackedColumn}>
           <div className={`${styles.pairedStackedLabel} ${styles.pairedStackedLabelRight}`}>
-            {resolvedEndBadge}
+            {endLabel}
           </div>
           <div className={styles.pairedStackedSlot}>
             <input
@@ -67,7 +67,7 @@ export const PairedDatePickerSection: React.FC<PairedDatePickerSectionProps> = R
               className={styles.pairedInput}
               onChange={(e) => onEndDateChange(e.target.value)}
               disabled={disabled}
-              aria-label={resolvedEndBadge}
+              aria-label={endLabel}
             />
           </div>
         </div>

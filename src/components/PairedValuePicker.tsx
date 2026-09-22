@@ -6,6 +6,7 @@ import { useValuePickerState } from './value-picker/useValuePickerState';
 import { MAX_SAFE_FINANCIAL_VALUE } from './value-picker/inputUtils';
 import { sanctnum } from '../utilities/numSanitity';
 import { DEFAULT_PAIRED_AMOUNT_STEPS } from '../data/valuePickerData';
+import { pickerRootClass, type PickerChromeProps, type PickerScale } from './value-picker/chrome';
 import vp from './ValuePicker.module.scss';
 import styles from './PairedValuePicker.module.scss';
 export interface PairedValuePickerOption {
@@ -19,7 +20,28 @@ type PairedValuePickerStepData = Array<{
   label?: string;
 }>;
 type Side = 'primary' | 'secondary';
-export interface PairedValuePickerProps {
+/**
+ * The scales this card supports — `PickerScale` minus `auto`, and defaulting to
+ * `container` rather than to `auto`.
+ *
+ * The card borrows its chrome from ValuePicker, whose rules size off the
+ * viewport through `tablet-up`. It has no viewport-keyed tier set of its own,
+ * so an `auto` instance would fall through to those borrowed rules at equal
+ * specificity, leaving the result to the source order of two CSS modules — and
+ * jumping to the 44px/46px/20px web scale in the ~380px column this card was
+ * built for. Excluding the value makes that a compile error instead of a
+ * silently ignored prop.
+ */
+export type PairedValuePickerScale = Exclude<PickerScale, 'auto'>;
+/**
+ * `title` is omitted because the card has two headings of its own
+ * (`primaryTitle` / `secondaryTitle`) fused into a split title bar, with no
+ * single slot a shared one could occupy.
+ */
+export interface PairedValuePickerProps
+  extends Omit<PickerChromeProps, 'title' | 'scale'> {
+  /** See `PairedValuePickerScale`. Defaults to `container`. */
+  scale?: PairedValuePickerScale;
   /** Heading over the left field, e.g. "Withdrawal per instalment". */
   primaryTitle: string;
   primaryValue: number;
@@ -58,10 +80,7 @@ export interface PairedValuePickerProps {
   showWords?: boolean;
   allowDecimals?: boolean;
   defaultStep?: number;
-  compact?: boolean;
-  disabled?: boolean;
   readOnly?: boolean;
-  className?: string;
 }
 /**
  * Two amounts in one ValuePicker-styled card: a split title bar, both fields
@@ -71,6 +90,10 @@ export interface PairedValuePickerProps {
  * The three controls travel as one component because their values constrain
  * each other — the right field is a share of the left, and the bridge under the
  * card escalates both.
+ *
+ * Sizing keys off the card's own container by default rather than the viewport,
+ * because the column it is built for is ~380px wide on a full-size screen. See
+ * `PairedValuePickerScale`.
  */
 const BasePairedValuePicker: React.FC<PairedValuePickerProps> = ({
   primaryTitle,
@@ -98,7 +121,9 @@ const BasePairedValuePicker: React.FC<PairedValuePickerProps> = ({
   showWords = false,
   allowDecimals,
   defaultStep,
+  scale = 'container',
   compact = true,
+  embedded = false,
   disabled = false,
   readOnly = false,
   className = '',
@@ -200,9 +225,16 @@ const BasePairedValuePicker: React.FC<PairedValuePickerProps> = ({
       </div>
     );
   };
+  // `embedded` is the one chrome prop this card cannot resolve on its root: the
+  // border it has to shed belongs to `vp.card`, whose hashed name only
+  // ValuePicker's own module can reach. Hence the companion class there.
+  const rootContainerClass = pickerRootClass(styles, { scale, compact, embedded, className });
+  const cardClass = [vp.card, vp.cardWithMergedTitle, embedded && vp.cardEmbedded]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <div className={`${styles.container} ${compact ? styles.compact : ''} ${className}`.trim()}>
-      <div className={`${vp.card} ${vp.cardWithMergedTitle}`}>
+    <div className={rootContainerClass}>
+      <div className={cardClass}>
         <div className={`${vp.titleBar} ${styles.titleBar}`}>
           <span className={styles.symbolSpacer} aria-hidden="true"></span>
           <span className={styles.titleCell}>{primaryTitle}</span>
@@ -281,6 +313,9 @@ const BasePairedValuePicker: React.FC<PairedValuePickerProps> = ({
       )}
       {(primaryState.wordsText || secondaryState.wordsText) && (
         <div className={styles.wordsRow} aria-live="polite" suppressHydrationWarning>
+          {/* Reserves the badge's column, as the title bar does, so each
+              readout stays under the field it describes. */}
+          <span className={styles.symbolSpacer} aria-hidden="true"></span>
           <span className={styles.titleCell}>{primaryState.wordsText}</span>
           <span className={styles.titleCell}>{secondaryState.wordsText}</span>
         </div>

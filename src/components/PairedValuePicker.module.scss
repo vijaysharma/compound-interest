@@ -21,177 +21,118 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 // ValuePicker chrome it borrows sizes itself with `tablet-up`, which emits a
 // media branch as well as a container one, so it jumps to its 44px/46px/20px
 // web scale off the window width and overflows a narrow column. Every borrowed
-// dimension is therefore restated below against `@container` alone, at a
-// specificity that beats the shared rules.
+// dimension is therefore restated against `@container` alone, at a specificity
+// that beats the shared rules.
 //
-// Tiers: base = the touch-friendly compact scale, ≥640px = the full web scale,
-// ≤360px tightens only what is not a touch target.
+// Tiers: compact = the condensed scale, every control at
+// `$control-height-condensed`; ≥640px = the full web scale; ≤360px tightens
+// padding and labels only; ≤340px only step labels.
+//
+// Each tier's declarations live in a mixin so the container-keyed tiers
+// (`scale="container"`, the default) and the pinned `scale="mobile"` /
+// `scale="desktop"` variants share one source of truth. Every mixin is
+// included one level inside a scale class, which is what buys the two-class
+// specificity the comment above relies on; the top-level rules that follow
+// carry only the structural declarations no tier varies.
 // ─────────────────────────────────────────────────────────────────────────────
 
-.container {
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-  min-width: 0;
-  font-family: $font-family;
-  box-sizing: border-box;
-
-  &.compact {
-    gap: 0.35rem;
+// The badge column, and the blank cell each of the two stacked rows puts in
+// front of its headings to reserve it.
+//
+// Nothing lines these up on its own: they are three separate flex rows, so the
+// only thing holding the two headings over the two fields is that all three
+// leading cells are the same width. Emitting them from one mixin means a tier
+// cannot move one without the others.
+//
+// Both need the two-class specificity a scale class gives them. `vp.symbolBadge`
+// is a filled 38px pill that floors its own `min-width` (44px once `tablet-up`
+// fires), and this card strips the fill to a bare glyph that has to sit
+// narrower than that floor — at equal specificity, module source order would
+// decide which width wins.
+@mixin symbol-columns($width) {
+  .symbol,
+  .symbolSpacer {
+    width: $width;
+    min-width: $width;
   }
 }
 
-// One merged title bar spanning both fields, each heading sitting over its own
-// column. Headings wrap rather than truncate, so the bar grows to two lines
-// when a title is long.
-.titleBar {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 2px 4px;
-  font-size: 11.5px;
-}
-
-.titleCell {
-  flex: 1;
-  min-width: 0;
-}
-
-// Both fields share the single currency badge, so they split whatever the
-// badge leaves rather than each carrying their own.
-.inputRow {
-  gap: 8px;
-  padding: 4px;
-  min-height: 52px;
-}
-
-.symbol {
-  width: 12px;
-  min-width: 0;
-  height: 32px;
-  font-size: 16px;
-  padding: 0;
-  background: none;
-  border: none;
-}
-.symbolSpacer {
-  width: 12px;
-  min-width: 0;
-}
-
-.field {
-  flex: 1;
-  min-width: 0;
-  height: 38px;
-  padding: 0 8px;
-
-  input {
-    font-size: 16.5px;
-    line-height: 22px;
+// The condensed scale — every control at `$control-height-condensed`, shared
+// with the other three picker shells. Also the floor for `.condensed`, so the
+// borrowed `tablet-up` rules cannot win it back by source order on a wide
+// window.
+@mixin tier-compact {
+  .titleBar {
+    gap: 8px;
+    padding: 2px 4px;
+    font-size: 11.5px;
   }
-}
 
-// The shared C / + / - and step buttons drive whichever field was focused
-// last, so the active one is ringed to show where a press will land.
-.fieldActive {
-  border-color: var(--color-primary);
-  box-shadow: inset 0 0 0 1px var(--color-primary);
-}
+  .inputRow {
+    gap: 8px;
+    padding: 4px;
+    min-height: 40px;
+  }
 
-// One control strip for both fields: the actions keep their cluster spacing on
-// the left, and the step grid runs flush to the card's right edge.
-.controlRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-left: 8px;
-  background-color: $grid-tint;
-}
+  @include symbol-columns(12px);
 
-.actions {
-  display: flex;
-  flex-shrink: 0;
+  .symbol {
+    height: $control-height-condensed;
+    font-size: 16px;
+  }
 
-  button {
-    width: 32px;
-    min-width: 32px;
-    height: 32px;
+  .field {
+    height: $control-height-condensed;
+    padding: 0 8px;
+
+    input {
+      font-size: 16.5px;
+      line-height: 22px;
+    }
+  }
+
+  .controlRow {
+    gap: 6px;
+    padding-left: 8px;
+  }
+
+  .actions button {
+    width: $control-height-condensed;
+    min-width: $control-height-condensed;
+    height: $control-height-condensed;
     font-size: 13.5px;
   }
-}
 
-.grid {
-  flex: 1;
-  min-width: 0;
-
-  // ValuePicker floors every step track at its label's min-content width, which
-  // pushes the last steps outside the card once the actions share the strip.
-  // The tracks (gridContainer > gridRow) are let below that floor here so the
-  // whole strip fits whatever width the card has.
-  > div > div {
-    grid-auto-columns: minmax(0, 1fr);
-  }
-
-  button {
-    min-width: 0;
-    height: 40px;
-    min-height: 40px;
+  .grid button {
+    height: $control-height-condensed;
+    min-height: $control-height-condensed;
     padding: 0 2px;
     font-size: 13px;
   }
-}
 
-// Sits under the card, aligned to the field it modifies rather than to the
-// card's left edge.
-.bridgeRow {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.4rem;
-  padding: 0 0.1rem;
-}
-
-.bridgeLabel {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.bridgeSelect {
-  border: 1px solid var(--color-primary);
-  border-radius: $radius-sm;
-  background: $bg-muted;
-  color: var(--color-primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.15rem 0.3rem;
-
-  &:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 1px;
+  .bridgeRow {
+    gap: 0.4rem;
+    padding: 0 0.1rem;
   }
 
-  &:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
+  .bridgeLabel,
+  .bridgeSelect {
+    font-size: 0.75rem;
+  }
+
+  // Matches `.inputRow`'s gap and padding, not its own — the two readouts are
+  // captions for the two fields and have to sit in the same columns.
+  .wordsRow {
+    gap: 8px;
+    padding: 0 4px;
+    font-size: 13px;
+    line-height: 18px;
   }
 }
 
-// In-words readouts, one under each field, in the same two columns.
-.wordsRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 0 8px;
-  font-size: 13px;
-  line-height: 18px;
-  color: $color-text-secondary;
-}
-
-// ── Tight columns: give up label size, never touch-target size ──────────────
-@include container-max(360px) {
+// Tight columns: give up padding and label size. Control heights already sit at
+// the condensed floor, so only the decorative glyph and the labels move.
+@mixin tier-tight {
   .titleBar {
     gap: 4px;
     padding: 4px 6px;
@@ -200,15 +141,14 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 
   .inputRow {
     gap: 4px;
-    padding: 5px 6px;
-    min-height: 48px;
+    padding: 4px 6px;
+    min-height: 40px;
   }
 
-  // Decorative, so it can shrink below the touch floor to buy the fields room.
+  // Only the glyph shrinks: the column it sits in is already as narrow as the
+  // compact tier makes it, and widening it here would take room from the very
+  // fields this tier exists to protect.
   .symbol {
-    width: 32px;
-    min-width: 32px;
-    height: 32px;
     font-size: 14px;
   }
 
@@ -241,15 +181,15 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 // Phone-width columns: ten cells across ~320px leave each step ~26px, which a
 // 4-character label overruns. The last size step keeps every label inside its
 // own cell instead of letting neighbours touch.
-@include container-max(340px) {
+@mixin tier-phone {
   .grid button {
     font-size: 10px;
     letter-spacing: -0.03em;
   }
 }
 
-// ── Roomy columns: the full ValuePicker web scale ───────────────────────────
-@include container-min(640px) {
+// Roomy columns: the full ValuePicker web scale.
+@mixin tier-roomy {
   .titleBar {
     gap: 8px;
     padding: 5px 16px;
@@ -262,9 +202,12 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
     min-height: 64px;
   }
 
+  // 14px, not the 44px of vp's filled pill: with the fill stripped, a 44px box
+  // is 30px of blank space that pushes the glyph off the field it labels. Keeps
+  // the compact tier's ratio of roughly three-quarters of the font size.
+  @include symbol-columns(14px);
+
   .symbol {
-    width: 44px;
-    min-width: 44px;
     height: 44px;
     font-size: 18px;
   }
@@ -313,4 +256,166 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
     font-size: 14.5px;
     line-height: 20px;
   }
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  font-family: $font-family;
+  box-sizing: border-box;
+
+  &.compact {
+    gap: 0.35rem;
+  }
+}
+
+// One merged title bar spanning both fields, each heading sitting over its own
+// column. Headings wrap rather than truncate, so the bar grows to two lines
+// when a title is long.
+.titleBar {
+  display: flex;
+  align-items: flex-start;
+}
+
+.titleCell {
+  flex: 1;
+  min-width: 0;
+}
+
+// Both fields share the single currency badge, so they split whatever the
+// badge leaves rather than each carrying their own — which is why it is a bare
+// glyph here and not the filled pill vp hands over. Its width is tier-dependent
+// and set by `symbol-columns`; what is left here is shedding the fill, at any
+// scale.
+.symbol {
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+}
+
+// The shared C / + / - and step buttons drive whichever field was focused
+// last, so the active one is ringed to show where a press will land.
+.fieldActive {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+// One control strip for both fields: the actions keep their cluster spacing on
+// the left, and the step grid runs flush to the card's right edge.
+.controlRow {
+  display: flex;
+  align-items: center;
+  background-color: $grid-tint;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.grid {
+  flex: 1;
+  min-width: 0;
+
+  // ValuePicker floors every step track at its label's min-content width, which
+  // pushes the last steps outside the card once the actions share the strip.
+  // The tracks (gridContainer > gridRow) are let below that floor here so the
+  // whole strip fits whatever width the card has.
+  > div > div {
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  button {
+    min-width: 0;
+  }
+}
+
+// Sits under the card, aligned to the field it modifies rather than to the
+// card's left edge.
+.bridgeRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.bridgeLabel {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.bridgeSelect {
+  border: 1px solid var(--color-primary);
+  border-radius: $radius-sm;
+  background: $bg-muted;
+  color: var(--color-primary);
+  font-weight: 700;
+  padding: 0.15rem 0.3rem;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// In-words readouts, one under each field, in the same two columns.
+.wordsRow {
+  display: flex;
+  align-items: flex-start;
+  color: $color-text-secondary;
+}
+
+// =============================================================================
+// Scale classes (`PickerChromeProps.scale`, via `pickerRootClass`)
+// =============================================================================
+//
+// `container-type` is declared only on `.condensed`, never on `.container`, so
+// opting into container sizing cannot change how the borrowed ValuePicker rules
+// resolve for a pinned instance. Selectors stay descendant-only: `.condensed`
+// is itself the container, so a rule on it inside `@container` would resolve
+// against its parent instead.
+//
+// `auto` has no class here, and the component's `scale` type excludes it — the
+// card has no viewport-keyed tier set, and leaving one out would drop it to the
+// borrowed `tablet-up` rules at equal specificity, where source order between
+// two CSS modules decides the result. See `PairedValuePickerScale`.
+
+.condensed {
+  container-type: inline-size;
+
+  @include tier-compact;
+
+  @include container-max(360px) {
+    @include tier-tight;
+  }
+
+  @include container-max(340px) {
+    @include tier-phone;
+  }
+
+  @include container-min(640px) {
+    @include tier-roomy;
+  }
+}
+
+// Pinned scales, for preview frames that imitate a viewport they are not in.
+// No `container-type`, so nothing here reacts to the column's own width.
+.layoutMobile {
+  @include tier-compact;
+}
+
+.layoutDesktop {
+  @include tier-roomy;
 }

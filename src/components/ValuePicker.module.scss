@@ -167,6 +167,19 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   border-color: $color-primary;
 }
 
+// The card half of `PickerChromeProps.embedded`: the picker sits in a slot that
+// already draws its own border and radius, so shed both here rather than
+// nesting a second box inside the first.
+//
+// This lives in ValuePicker's module rather than the caller's because `.card`
+// is this module's class — a sibling module cannot reach its hashed name. Must
+// stay after `.card` and `.cardWithMergedTitle`: all three are single-class
+// selectors, so source order is what settles the border.
+.cardEmbedded {
+  border: none;
+  border-radius: 0;
+}
+
 // Merged title bar (titleStyle="merged"): a solid badge fused to the top of
 // the card — no gap, uppercase text. Rendered as the first child of `.card`,
 // so it inherits the card's rounded top corners via the card's own
@@ -247,7 +260,8 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 }
 
-// Dynamic Tab Sizing Overrides
+// `tabSize` overrides, one class per step. `md` is the base `.tabBtn` scale and
+// so has no rule of its own — the class is still emitted, it just adds nothing.
 .tabSize-xs .tabBtn {
   height: 24px;
   min-height: 24px;
@@ -257,9 +271,6 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   height: 32px;
   min-height: 32px;
   font-size: 12px;
-}
-.tabSize-md .tabBtn {
-  // Default is handled by base .tabBtn styles
 }
 .tabSize-lg .tabBtn {
   height: 52px;
@@ -271,29 +282,6 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   min-height: 60px;
   font-size: 16px;
 }
-
-// @include tablet-up {
-//   .tabSize-xs .tabBtn {
-//     height: 36px;
-//     min-height: 36px;
-//     font-size: 13px;
-//   }
-//   .tabSize-sm .tabBtn {
-//     height: 42px;
-//     min-height: 42px;
-//     font-size: 14px;
-//   }
-//   .tabSize-lg .tabBtn {
-//     height: 56px;
-//     min-height: 56px;
-//     font-size: 16px;
-//   }
-//   .tabSize-xl .tabBtn {
-//     height: 64px;
-//     min-height: 64px;
-//     font-size: 17px;
-//   }
-// }
 
 // Input row section
 .inputRow {
@@ -999,7 +987,11 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 // =============================================================================
-// Explicit Layout Modes (Overrides for mobile / desktop preview frames)
+// Pinned scales (`scale="mobile"` / `scale="desktop"`)
+// =============================================================================
+//
+// For preview frames that imitate a viewport they are not in, so neither the
+// media queries nor the container ones report the size the frame is showing.
 // =============================================================================
 
 .layoutMobile {
@@ -1161,7 +1153,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 // =============================================================================
-// Condensed variant (`condensed` prop)
+// Container scale (`scale="container"`)
 // =============================================================================
 //
 // Sizes the picker off its own container instead of the viewport. Every rule
@@ -1169,8 +1161,15 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 // as well as a container one, so a picker in a ~380px column on a 1300px
 // screen renders at 44px/46px/20px and crowds the column. Restating the same
 // dimensions under `@container` alone — at the higher specificity `.condensed`
-// buys — puts the control back on the compact scale until it actually has the
-// room, and matches PairedValuePicker tier for tier.
+// buys — holds the control at `$control-height-condensed` until it actually has
+// the room, and matches the other three picker shells tier for tier.
+//
+// This is a genuinely denser scale, not a restatement of the mobile one. It
+// used to be the latter: every control here repeated the base mobile values
+// (42/38/38/38/40px), so `condensed` condensed nothing — it only stopped
+// `tablet-up`'s media branch from promoting a narrow column to the web scale.
+// Every control is now 32px, which is below the 44px touch guideline on
+// purpose; that is why it is opt-in and why ≥640px hands the web scale back.
 //
 // Selectors stay descendant-only: `.condensed` is itself the container, so a
 // rule on it inside `@container` would resolve against its parent instead.
@@ -1188,46 +1187,50 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   .tabBtn {
-    height: $btn-height-mobile;
-    min-height: $btn-height-mobile;
+    height: $control-height-condensed;
+    min-height: $control-height-condensed;
     padding: 0 $space-sm;
     font-size: $font-size-button-mobile;
     line-height: $font-line-height-button-mobile;
   }
 
+  // 4px of padding around a 32px control, so the row is the control plus its
+  // frame and nothing more. The 52px floor here was sized for a 38px input.
   .inputRow {
     gap: 6px;
-    padding: 6px 8px;
-    min-height: 52px;
+    padding: 4px 8px;
+    min-height: 40px;
   }
 
   .symbolBadge {
-    width: 38px;
-    min-width: 38px;
-    height: 38px;
-    font-size: 16px;
+    width: $control-height-condensed;
+    min-width: $control-height-condensed;
+    height: $control-height-condensed;
+    font-size: 15px;
   }
 
   .inputWrapper {
-    height: 38px;
+    height: $control-height-condensed;
     padding: 0 8px;
   }
 
+  // Held at 16.5px on purpose: iOS zooms the page when a focused input's text
+  // is under 16px, and shrinking it to match the shorter control would trip it.
   .inputField {
     font-size: $font-size-input-mobile;
     line-height: $font-line-height-input-mobile;
   }
 
   .actionBtn {
-    width: 38px;
-    min-width: 38px;
-    height: 38px;
+    width: $control-height-condensed;
+    min-width: $control-height-condensed;
+    height: $control-height-condensed;
     font-size: $font-size-button-mobile;
   }
 
   .gridCell {
-    height: 40px;
-    min-height: 40px;
+    height: $control-height-condensed;
+    min-height: $control-height-condensed;
     padding: 0 4px;
     font-size: $font-size-button-sm-mobile;
   }
@@ -1247,15 +1250,16 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
     .inputRow {
       gap: 4px;
-      padding: 5px 6px;
-      min-height: 48px;
+      padding: 4px 6px;
+      min-height: 40px;
     }
 
-    // Decorative, so it can shrink below the touch floor to buy the field room.
+    // Decorative, so it can still shrink under the control height to buy the
+    // field room — the only thing allowed below the condensed control size.
     .symbolBadge {
-      width: 32px;
-      min-width: 32px;
-      height: 32px;
+      width: 28px;
+      min-width: 28px;
+      height: 28px;
       font-size: 14px;
     }
 

@@ -95,7 +95,6 @@ const Lumpsum = ({ onSelectionChange }: LumpsumProps) => {
           onToggleViewChart={() => setViewChart((p) => !p)}
           duration={dates.duration}
           onDurationChange={(val) => dates.handleDurationChange(val, pinned.jsonNavData)}
-          jsonNavData={pinned.jsonNavData}
           startDate={dates.startDate}
           endDate={dates.endDate}
           onStartDateChange={dates.handleStartDateChange}

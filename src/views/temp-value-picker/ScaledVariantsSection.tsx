@@ -122,10 +122,10 @@ export const ScaledVariantsSection: React.FC<ScaledVariantsSectionProps> = ({
         {/* Case 4: Dual Date Range */}
         <div className={styles.variationCard}>
           <h3>Case 4: Dual Date Range Picker</h3>
-          <p>Dedicated DateRangePicker component with [Start] and [End] badges.</p>
+          <p>Dedicated DateRangePicker component with [Start] and [End] labels.</p>
           <DateRangePicker
-            startBadgeText="Start"
-            endBadgeText="End"
+            startTitle="Start"
+            endTitle="End"
             startDate={demoStartDate}
             setStartDate={setDemoStartDate}
             endDate={demoEndDate}

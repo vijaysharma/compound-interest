@@ -2,7 +2,6 @@ import React from 'react';
 import { FiBarChart2 } from 'react-icons/fi';
 import ValuePicker from '../../components/ValuePicker';
 import { LumpsumDurationPicker } from '../../components/mutual-fund/LumpsumDurationPicker';
-import type { NavType } from '../../types/types';
 import styles from '../MutualFundAnalytics.module.scss';
 export interface LumpsumControlsProps {
   pinnedCount: number;
@@ -13,7 +12,6 @@ export interface LumpsumControlsProps {
   onToggleViewChart: () => void;
   duration: string;
   onDurationChange: (val: string) => void;
-  jsonNavData: NavType[];
   startDate: string | null;
   endDate: string | null;
   onStartDateChange: (val: string | null) => void;
@@ -31,7 +29,6 @@ export const LumpsumControls: React.FC<LumpsumControlsProps> = React.memo(
     onToggleViewChart,
     duration,
     onDurationChange,
-    jsonNavData,
     startDate,
     endDate,
     onStartDateChange,
@@ -66,7 +63,6 @@ export const LumpsumControls: React.FC<LumpsumControlsProps> = React.memo(
       {showDate && (
         <ValuePicker
           variant="date-range"
-          data={jsonNavData}
           startDate={startDate}
           endDate={endDate}
           setStartDate={onStartDateChange}

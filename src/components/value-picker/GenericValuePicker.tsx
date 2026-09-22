@@ -1,5 +1,6 @@
 import React, { useId, useState, useMemo } from 'react';
 import type { ValuePickerProps } from './types';
+import { pickerRootClass } from './chrome';
 import { MAX_SAFE_FINANCIAL_VALUE } from './inputUtils';
 import { useValuePickerState } from './useValuePickerState';
 import { ValuePickerTabs } from './ValuePickerTabs';
@@ -7,35 +8,32 @@ import { ValuePickerInputRow } from './ValuePickerInputRow';
 import { ValuePickerGrid } from './ValuePickerGrid';
 import { DEFAULT_VALUE_PICKER_TABS } from '../../data/valuePickerData';
 import styles from '../ValuePicker.module.scss';
+const noop = () => {};
 export const GenericValuePicker: React.FC<ValuePickerProps> = React.memo((props) => {
   const {
-    value, inputAmount, onChange, setInputAmount, tabs, typeData, activeTab: controlledTab,
-    type, defaultTab, onTabChange, setType, title, titleStyle = 'merged', stepRows, stepData,
-    singleRow = false, symbol, currencySymbol, symbolPosition = 'left', symbolBg = true,
-    endAdornment, locale = 'en-IN', min = 0, max, defaultStep, showWords = true, allowDecimals,
-    className = '', compact = false, embedded = false, layout = 'auto', disabled = false,
-    readOnly = false, placeholder, tabSize = 'md', condensed = false,
+    value = '0', onChange, tabs, activeTab, defaultTab, onTabChange, title,
+    titleStyle = 'merged', stepRows, stepData, singleRow = false, symbol = '₹',
+    symbolPosition = 'left', symbolBg = true, endAdornment, locale = 'en-IN', min = 0, max,
+    defaultStep, showWords = true, allowDecimals, disabled = false, readOnly = false,
+    placeholder, tabSize = 'md',
   } = props;
   const componentId = useId();
-  const effectiveSymbol = symbol !== undefined ? symbol : currencySymbol !== undefined ? currencySymbol : '₹';
-  const effectiveValue = value !== undefined ? value : inputAmount !== undefined ? inputAmount : '0';
-  const effectiveOnChange = useMemo(() => onChange || setInputAmount || (() => {}), [onChange, setInputAmount]);
+  const effectiveOnChange = useMemo(() => onChange ?? noop, [onChange]);
   const supportsDecimals = Boolean(
-    allowDecimals || effectiveSymbol === '%' || title?.toLowerCase().includes('rate') ||
-    title?.toLowerCase().includes('roi') || (typeof effectiveValue === 'string' && effectiveValue.includes('.')) ||
-    (typeof effectiveValue === 'number' && !Number.isInteger(effectiveValue)) ||
+    allowDecimals || symbol === '%' || title?.toLowerCase().includes('rate') ||
+    title?.toLowerCase().includes('roi') || (typeof value === 'string' && value.includes('.')) ||
+    (typeof value === 'number' && !Number.isInteger(value)) ||
     (stepData && stepData.some((s) => Number(s.value) % 1 !== 0))
   );
   const effectiveDefaultStep = defaultStep !== undefined ? defaultStep : supportsDecimals ? 0.5 : 500;
   const safeMax = max !== undefined ? max : MAX_SAFE_FINANCIAL_VALUE;
-  const providedTabs = tabs !== undefined ? tabs : typeData;
-  const resolvedTabs = providedTabs !== undefined ? providedTabs : title ? [] : DEFAULT_VALUE_PICKER_TABS;
-  const currentActiveTab = controlledTab !== undefined ? controlledTab : type;
-  const effectiveOnTabChange = onTabChange || setType;
-  const [internalTab, setInternalTab] = useState<string>(currentActiveTab ?? defaultTab ?? resolvedTabs?.[0]?.id ?? '');
-  const currentTab = currentActiveTab !== undefined ? currentActiveTab : internalTab;
+  // A `title` on its own means a labelled single field, so the default tab strip
+  // only fills in when neither was supplied.
+  const resolvedTabs = tabs !== undefined ? tabs : title ? [] : DEFAULT_VALUE_PICKER_TABS;
+  const [internalTab, setInternalTab] = useState<string>(activeTab ?? defaultTab ?? resolvedTabs?.[0]?.id ?? '');
+  const currentTab = activeTab !== undefined ? activeTab : internalTab;
   const state = useValuePickerState({
-    effectiveValue,
+    effectiveValue: value,
     effectiveOnChange,
     supportsDecimals,
     effectiveDefaultStep,
@@ -43,7 +41,7 @@ export const GenericValuePicker: React.FC<ValuePickerProps> = React.memo((props)
     min,
     locale,
     showWords,
-    effectiveSymbol,
+    effectiveSymbol: symbol,
     title,
     stepRows,
     stepData,
@@ -53,15 +51,10 @@ export const GenericValuePicker: React.FC<ValuePickerProps> = React.memo((props)
   });
   const handleTabClick = (tabId: string) => {
     if (disabled) return;
-    if (currentActiveTab === undefined) setInternalTab(tabId);
-    effectiveOnTabChange?.(tabId);
+    if (activeTab === undefined) setInternalTab(tabId);
+    onTabChange?.(tabId);
   };
-  const layoutClass = layout === 'mobile' ? styles.layoutMobile : layout === 'desktop' ? styles.layoutDesktop : '';
-  const compactClass = compact ? styles.compact : '';
-  const embeddedClass = embedded ? styles.embedded : '';
-  const tabSizeClass = styles[`tabSize-${tabSize}`] || '';
-  const condensedClass = condensed ? styles.condensed : '';
-  const rootContainerClass = `${styles.container} ${layoutClass} ${compactClass} ${embeddedClass} ${tabSizeClass} ${condensedClass} ${className}`.trim();
+  const rootContainerClass = pickerRootClass(styles, props, styles[`tabSize-${tabSize}`]);
   const isMergedTitle = titleStyle === 'merged' && !!title;
   const ariaLabel = title || resolvedTabs?.find((t) => t.id === currentTab || t.value === currentTab)?.title || 'Value';
   return (
@@ -72,7 +65,7 @@ export const GenericValuePicker: React.FC<ValuePickerProps> = React.memo((props)
         <ValuePickerTabs tabs={resolvedTabs} currentTab={currentTab} componentId={componentId} disabled={disabled} onTabClick={handleTabClick} />
         <ValuePickerInputRow
           componentId={componentId}
-          effectiveSymbol={effectiveSymbol}
+          effectiveSymbol={symbol}
           symbolPosition={symbolPosition}
           symbolBg={symbolBg}
           inputRef={state.inputRef}
@@ -99,7 +92,7 @@ export const GenericValuePicker: React.FC<ValuePickerProps> = React.memo((props)
           resolvedStepRows={state.resolvedStepRows}
           singleRow={singleRow}
           operation={state.operation}
-          effectiveSymbol={effectiveSymbol}
+          effectiveSymbol={symbol}
           locale={locale}
           disabled={disabled}
           numericValue={state.numericValue}

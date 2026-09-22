@@ -47,7 +47,7 @@ export const HomeWealthSimulator: React.FC = () => {
                 setMonthlySip(num);
                 trackCalculatorEvent('home_quick_sip', 'slider_changed', 'monthly_sip', num);
               }}
-              currencySymbol={currencySymbol}
+              symbol={currencySymbol}
               locale="en-IN"
               stepRows={SIP_STEP_ROWS}
             />

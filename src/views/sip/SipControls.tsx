@@ -80,7 +80,6 @@ export function SipControls({
       {showDate && jsonNavData.length > 0 && (
         <ValuePicker
           variant="date-range"
-          data={jsonNavData}
           startDate={startDate}
           endDate={endDate}
           setStartDate={onStartDateChange}

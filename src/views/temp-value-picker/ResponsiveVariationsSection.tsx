@@ -40,7 +40,7 @@ export const ResponsiveVariationsSection: React.FC<ResponsiveVariationsSectionPr
             title="Monthly SIP Contribution"
             value={sipValue}
             onChange={setSipValue}
-            currencySymbol="₹"
+            symbol="₹"
             locale="en-IN"
             showWords={true}
           />
@@ -53,7 +53,7 @@ export const ResponsiveVariationsSection: React.FC<ResponsiveVariationsSectionPr
             value={usdValue}
             onChange={setUsdValue}
             stepRows={USD_STEPS}
-            currencySymbol="$"
+            symbol="$"
             locale="en-US"
             showWords={true}
           />

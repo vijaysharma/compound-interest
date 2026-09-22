@@ -51,7 +51,6 @@ export function SwpControls({
       <ValuePicker
         variant="date-range"
         singleDate={true}
-        data={jsonNavData}
         startTitle="Investment Date"
         startDate={lumpsumStartDate}
         setStartDate={onLumpsumStartDateChange}
@@ -67,7 +66,6 @@ export function SwpControls({
       {jsonNavData.length > 0 && (
         <ValuePicker
           variant="date-range"
-          data={jsonNavData}
           startDate={startSwpDate}
           startTitle="Start SWP"
           endDate={endSwpDate}
