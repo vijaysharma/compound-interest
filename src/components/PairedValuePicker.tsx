@@ -5,7 +5,7 @@ import { ValuePickerGrid } from './value-picker/ValuePickerGrid';
 import { useValuePickerState } from './value-picker/useValuePickerState';
 import { MAX_SAFE_FINANCIAL_VALUE } from './value-picker/inputUtils';
 import { sanctnum } from '../utilities/numSanitity';
-import { DEFAULT_AMOUNT_STEPS } from '../data/valuePickerData';
+import { DEFAULT_PAIRED_AMOUNT_STEPS } from '../data/valuePickerData';
 import vp from './ValuePicker.module.scss';
 import styles from './PairedValuePicker.module.scss';
 export interface PairedValuePickerOption {
@@ -108,14 +108,14 @@ const BasePairedValuePicker: React.FC<PairedValuePickerProps> = ({
   // The shared buttons have to land somewhere, so they follow the focus and
   // start on the left field.
   const [activeSide, setActiveSide] = useState<Side>('primary');
-  const primarySteps = primaryStepData ?? DEFAULT_AMOUNT_STEPS;
+  const primarySteps = primaryStepData ?? DEFAULT_PAIRED_AMOUNT_STEPS;
   const secondarySteps = secondaryStepData ?? primarySteps;
   const supportsDecimals = Boolean(
     allowDecimals ||
-      symbol === '%' ||
-      !Number.isInteger(primaryValue) ||
-      !Number.isInteger(secondaryValue) ||
-      primarySteps.some((step) => Number(step.value) % 1 !== 0)
+    symbol === '%' ||
+    !Number.isInteger(primaryValue) ||
+    !Number.isInteger(secondaryValue) ||
+    primarySteps.some((step) => Number(step.value) % 1 !== 0)
   );
   const effectiveDefaultStep = defaultStep ?? (supportsDecimals ? 0.5 : 500);
   // The tighter of the two ceilings wins, so an explicit `secondaryMax` can
@@ -201,11 +201,10 @@ const BasePairedValuePicker: React.FC<PairedValuePickerProps> = ({
     );
   };
   return (
-    <div
-      className={`${styles.container} ${compact ? styles.compact : ''} ${className}`.trim()}
-    >
+    <div className={`${styles.container} ${compact ? styles.compact : ''} ${className}`.trim()}>
       <div className={`${vp.card} ${vp.cardWithMergedTitle}`}>
         <div className={`${vp.titleBar} ${styles.titleBar}`}>
+          <span className={styles.symbolSpacer} aria-hidden="true"></span>
           <span className={styles.titleCell}>{primaryTitle}</span>
           <span className={styles.titleCell}>{secondaryTitle}</span>
         </div>
@@ -218,11 +217,7 @@ const BasePairedValuePicker: React.FC<PairedValuePickerProps> = ({
           {renderField('primary')}
           {renderField('secondary')}
         </div>
-        <div
-          className={styles.controlRow}
-          role="group"
-          aria-label={`Adjust ${activeTitle}`}
-        >
+        <div className={styles.controlRow} role="group" aria-label={`Adjust ${activeTitle}`}>
           <div className={styles.actions}>
             <ValuePickerActions
               operation={active.operation}

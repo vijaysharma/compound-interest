@@ -30,7 +30,8 @@ export const WithdrawalPeriodCard = ({
 }: WithdrawalPeriodCardProps) => {
   const label = `Withdrawal period ${index + 1}`;
   const executed = result.transactions.filter(
-    (row) => row.kind === 'c1-withdraw' && row.date >= period.startDate && row.date <= period.endDate
+    (row) =>
+      row.kind === 'c1-withdraw' && row.date >= period.startDate && row.date <= period.endDate
   );
   const personalUse = roundMoney(Math.max(0, period.amount - period.toColumn2));
   const latest = executed.at(-1);

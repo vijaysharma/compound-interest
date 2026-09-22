@@ -49,8 +49,8 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 .titleBar {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: 8px;
+  padding: 2px 4px;
   font-size: 11.5px;
 }
 
@@ -62,17 +62,23 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 // Both fields share the single currency badge, so they split whatever the
 // badge leaves rather than each carrying their own.
 .inputRow {
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 8px;
+  padding: 4px;
   min-height: 52px;
 }
 
 .symbol {
-  width: auto;
+  width: 12px;
   min-width: 0;
   height: 32px;
   font-size: 16px;
   padding: 0;
+  background: none;
+  border: none;
+}
+.symbolSpacer {
+  width: 12px;
+  min-width: 0;
 }
 
 .field {
@@ -109,9 +115,9 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   flex-shrink: 0;
 
   button {
-    width: 38px;
-    min-width: 38px;
-    height: 38px;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
     font-size: 13.5px;
   }
 }
@@ -150,14 +156,14 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 .bridgeLabel {
   font-size: 0.75rem;
   font-weight: 700;
-  color: $color-text-secondary;
+  color: var(--color-primary);
 }
 
 .bridgeSelect {
-  border: 1px solid $border-light;
+  border: 1px solid var(--color-primary);
   border-radius: $radius-sm;
   background: $bg-muted;
-  color: $color-text;
+  color: var(--color-primary);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.15rem 0.3rem;

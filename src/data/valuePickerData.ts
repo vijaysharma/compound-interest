@@ -102,3 +102,11 @@ export const DEFAULT_AMOUNT_STEPS = [
   { id: 'p6', value: '100', title: '100' },
   { id: 'p7', value: '10', title: '10' },
 ];
+// Standard amount quick-step presets matching EMI calculator
+export const DEFAULT_PAIRED_AMOUNT_STEPS = [
+  { id: 'p1', value: '100000', title: '1L' },
+  { id: 'p2', value: '50000', title: '50K' },
+  { id: 'p3', value: '10000', title: '10K' },
+  { id: 'p4', value: '1000', title: '1K' },
+  { id: 'p5', value: '500', title: '500' },
+];
