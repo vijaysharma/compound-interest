@@ -150,6 +150,8 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   // fields this tier exists to protect.
   .symbol {
     font-size: 14px;
+    background: transparent;
+    border: none;
   }
 
   .field {
@@ -294,11 +296,6 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   padding: 0;
   background: none;
   border: none;
-}
-
-.symbolBadge {
-  background: transparent;
-  border: 0 none;
 }
 
 .field {
