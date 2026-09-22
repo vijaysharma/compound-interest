@@ -33,13 +33,18 @@ export const WithdrawalPeriodCard = ({
     (row) =>
       row.kind === 'c1-withdraw' && row.date >= period.startDate && row.date <= period.endDate
   );
+  // Nothing at all is priced until a core corpus fund is picked and its NAVs
+  // load, and then every period counts zero. Reporting a bare "0" there reads
+  // as "the schedule ran and drew nothing", so the unpriced case says so.
+  const isPriced = result.transactions.length > 0;
   const personalUse = roundMoney(Math.max(0, period.amount - period.toColumn2));
   const latest = executed.at(-1);
   const stepUpNote = period.annualStepUpPct > 0 ? ` · +${period.annualStepUpPct}%/yr` : '';
+  const takenNote = isPriced ? `${executed.length} taken` : 'not priced yet';
   const meta =
     `${period.startDate} → ${period.endDate} · ` +
     `${formatRupees(period.amount)} ${FREQUENCY_LABEL[period.frequency].toLowerCase()}` +
-    `${stepUpNote} · ${formatRupees(period.toColumn2)} to ${COLUMN_WORDS.growth} · ${executed.length} taken`;
+    `${stepUpNote} · ${formatRupees(period.toColumn2)} to ${COLUMN_WORDS.growth} · ${takenNote}`;
   return (
     <CollapsibleItem
       title={label}
@@ -80,7 +85,11 @@ export const WithdrawalPeriodCard = ({
       {period.annualStepUpPct > 0 && latest && (
         <DerivedRow label={`Latest instalment ${latest.date}`} value={latest.settledAmount} />
       )}
-      <DerivedRow label="Instalments taken" value={String(executed.length)} isMoney={false} />
+      <DerivedRow
+        label="Instalments taken"
+        value={isPriced ? String(executed.length) : 'Not priced yet'}
+        isMoney={false}
+      />
     </CollapsibleItem>
   );
 };
