@@ -22,8 +22,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo((props
     startTitle = 'Start',
     endTitle = 'End',
     disabled = false,
-    singleDate = false,
-    variant = 'stacked-paired',
+    variant = 'date-range',
+    orientation = 'column',
   } = props;
   const today = useMemo(() => getDateAsISO(), []);
   const handleStartYearChange = (val: string) => {
@@ -63,7 +63,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo((props
       <YearPickerSection
         title={title}
         rootContainerClass={rootContainerClass}
-        variant={variant}
+        orientation={orientation}
         startLabel={startTitle}
         endLabel={endTitle}
         startDate={startDate}
@@ -76,8 +76,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo((props
       />
     );
   }
-  const isSingle = singleDate || (!setEndDate && endDate === undefined);
-  if (isSingle) {
+  if (variant === 'date') {
     return (
       <SingleDatePickerSection
         title={title}
@@ -95,7 +94,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = React.memo((props
     <PairedDatePickerSection
       title={title}
       rootContainerClass={rootContainerClass}
-      variant={variant}
+      orientation={orientation}
       startLabel={startTitle}
       endLabel={endTitle}
       startMinDate={startMinDate}

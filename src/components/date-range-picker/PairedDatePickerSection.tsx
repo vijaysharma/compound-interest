@@ -4,7 +4,7 @@ import styles from '../PairedPicker.module.scss';
 export interface PairedDatePickerSectionProps {
   title?: string;
   rootContainerClass: string;
-  variant?: 'paired' | 'stacked-paired';
+  orientation?: 'row' | 'column';
   startLabel: string;
   endLabel: string;
   startMinDate?: string;
@@ -19,7 +19,7 @@ export const PairedDatePickerSection: React.FC<PairedDatePickerSectionProps> = R
   ({
     title,
     rootContainerClass,
-    variant,
+    orientation,
     startLabel,
     endLabel,
     startMinDate,
@@ -34,7 +34,7 @@ export const PairedDatePickerSection: React.FC<PairedDatePickerSectionProps> = R
       {title && <h5 className={styles.title}>{title}</h5>}
       <div
         className={`${styles.pairedStackedWrapper} ${
-          variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
+          orientation === 'column' ? styles.pairedStackedWrapperStack : ''
         }`.trim()}
       >
         <div className={styles.pairedStackedColumn}>

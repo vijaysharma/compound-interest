@@ -47,8 +47,7 @@ interface DateFieldProps {
 }
 export const DateField = ({ label, value, onChange, minDate }: DateFieldProps) => (
   <ValuePicker
-    variant="date-range"
-    singleDate
+    variant="date"
     startTitle={label}
     startDate={value}
     setStartDate={onChange}

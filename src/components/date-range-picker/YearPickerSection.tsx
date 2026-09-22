@@ -4,7 +4,7 @@ import styles from '../PairedPicker.module.scss';
 export interface YearPickerSectionProps {
   title?: string;
   rootContainerClass: string;
-  variant?: 'paired' | 'stacked-paired';
+  orientation?: 'row' | 'column';
   startLabel: string;
   endLabel: string;
   startDate?: string | null;
@@ -19,7 +19,7 @@ export const YearPickerSection: React.FC<YearPickerSectionProps> = React.memo(
   ({
     title,
     rootContainerClass,
-    variant,
+    orientation,
     startLabel,
     endLabel,
     startDate,
@@ -34,7 +34,7 @@ export const YearPickerSection: React.FC<YearPickerSectionProps> = React.memo(
       {title && <h5 className={styles.title}>{title}</h5>}
       <div
         className={`${styles.pairedStackedWrapper} ${
-          variant === 'stacked-paired' ? styles.pairedStackedWrapperStack : ''
+          orientation === 'column' ? styles.pairedStackedWrapperStack : ''
         }`.trim()}
       >
         <div className={styles.pairedStackedColumn}>

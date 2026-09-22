@@ -49,8 +49,7 @@ export function SwpControls({
         </button>
       </div>
       <ValuePicker
-        variant="date-range"
-        singleDate={true}
+        variant="date"
         startTitle="Investment Date"
         startDate={lumpsumStartDate}
         setStartDate={onLumpsumStartDateChange}

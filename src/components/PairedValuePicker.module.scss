@@ -93,13 +93,13 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 
   .controlRow {
     gap: 6px;
-    padding-left: 8px;
+    padding-left: 4px;
   }
 
   .actions button {
-    width: $control-height-condensed;
-    min-width: $control-height-condensed;
-    height: $control-height-condensed;
+    width: $control-height-condensed - 4px;
+    min-width: $control-height-condensed - 4px;
+    height: $control-height-condensed - 4px;
     font-size: 13.5px;
   }
 

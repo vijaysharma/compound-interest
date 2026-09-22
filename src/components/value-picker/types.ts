@@ -4,7 +4,13 @@ import type { DateRangePickerProps } from '../DateRangePicker';
 import type { ValuePickerStep, ValuePickerTab } from '../../data/valuePickerData';
 import type { PickerChromeProps } from './chrome';
 export type { PickerChromeProps, PickerScale } from './chrome';
-export type ValuePickerVariant = 'amount' | 'value' | 'paired' | 'stacked-paired' | 'date-range';
+export type ValuePickerVariant =
+  | 'amount'
+  | 'value'
+  | 'paired'
+  | 'stacked-paired'
+  | 'date'
+  | 'date-range';
 /** Quick-step buttons as the calculators declare them: `value` is the only required field. */
 export type ValuePickerStepData = Array<{
   id?: string;
@@ -67,7 +73,8 @@ export interface SingleValuePickerProps extends PickerChromeProps {
  * | --- | --- | --- |
  * | `amount` / `value` (default) | `GenericValuePicker` | `SingleValuePickerProps` |
  * | `paired` / `stacked-paired` | `PairedPicker` | the `source*` / `target*` props |
- * | `date-range` | `DateRangePicker` | the `start*` / `end*` props |
+ * | `date` | `DateRangePicker` | the `start*` props — one labelled field |
+ * | `date-range` | `DateRangePicker` | the `start*` / `end*` props — a pair |
  *
  * Every shell reads `PickerChromeProps` (`title`, `scale`, `compact`,
  * `embedded`, `disabled`, `className`).
@@ -75,7 +82,7 @@ export interface SingleValuePickerProps extends PickerChromeProps {
 export interface ValuePickerProps
   extends SingleValuePickerProps,
     Omit<PairedPickerProps, 'variant' | keyof PickerChromeProps>,
-    Omit<DateRangePickerProps, 'variant' | keyof PickerChromeProps> {
+    Omit<DateRangePickerProps, 'variant' | 'orientation' | keyof PickerChromeProps> {
   variant?: ValuePickerVariant;
 }
 export interface ValuePickerStateOptions {
