@@ -16,11 +16,16 @@ import {
  * | `amount` / `value` (default) | `GenericValuePicker` | a single number with a stepper grid |
  * | `paired` | `PairedPicker` | two slots side by side in one joined box |
  * | `stacked-paired` | `PairedPicker` | the same two slots, stacked |
- * | `date-range` | `DateRangePicker` | one date, a date range, or a year range |
+ * | `date` | `DateRangePicker` | one labelled date field |
+ * | `date-range` | `DateRangePicker` | a start/end date pair, or a year range |
  *
  * `amount` and `value` are the same thing — two spellings of the default, kept
  * because call sites use both. Props belonging to a variant you are not
- * rendering are ignored, so the control table below is the union of all four.
+ * rendering are ignored, so the control table below is the union of all five.
+ *
+ * `date` and `date-range` replaced a single `date-range` variant plus a
+ * `singleDate` boolean: the shape of the control is what `variant` is for, so
+ * one field versus two is a variant rather than a flag on top of one.
  *
  * ### Controlled, always
  * The picker never owns its value. Pass `value` + `onChange` and echo the
@@ -60,7 +65,7 @@ const meta = {
     variant: {
       description: 'Which sub-component renders. Drives the whole shape of the control.',
       control: 'select',
-      options: ['amount', 'value', 'paired', 'stacked-paired', 'date-range'],
+      options: ['amount', 'value', 'paired', 'stacked-paired', 'date', 'date-range'],
       table: { category: 'Variant', defaultValue: { summary: 'amount' } },
     },
     // ── Value ────────────────────────────────────────────────────────────────
@@ -207,17 +212,13 @@ const meta = {
     onTargetChange: { table: { category: 'Paired slots' } },
     sourcePlaceholder: { table: { category: 'Paired slots' } },
     targetPlaceholder: { table: { category: 'Paired slots' } },
-    // ── variant="date-range" ─────────────────────────────────────────────────
+    // ── variant="date" / "date-range" ────────────────────────────────────────
     dateMode: {
-      description: '`year` swaps both date inputs for year dropdowns.',
+      description:
+        '`year` swaps both date inputs for year dropdowns. Only meaningful with `variant="date-range"` — a year range is a pair by construction.',
       control: 'inline-radio',
       options: ['date', 'year'],
       table: { category: 'Date range', defaultValue: { summary: 'date' } },
-    },
-    singleDate: {
-      description: 'Renders a single labelled date field instead of a pair.',
-      control: 'boolean',
-      table: { category: 'Date range' },
     },
     startTitle: {
       description: 'Label over the start field.',
@@ -225,7 +226,7 @@ const meta = {
       table: { category: 'Date range', defaultValue: { summary: 'Start' } },
     },
     endTitle: {
-      description: 'Label over the end field. Ignored when `singleDate` is set.',
+      description: 'Label over the end field. Ignored by `variant="date"`.',
       control: 'text',
       table: { category: 'Date range', defaultValue: { summary: 'End' } },
     },
@@ -678,20 +679,24 @@ export const StackedPaired: Story = {
     targetValue: 'growth',
   },
 };
-// ── variant="date-range" ────────────────────────────────────────────────────
-/** `variant="date-range"` with `singleDate` — one labelled date field. */
+// ── variant="date" / "date-range" ───────────────────────────────────────────
+/**
+ * `variant="date"` — one labelled field in the joined box. `endTitle` and the
+ * `end*` props are ignored, so there is no half-configured range to get wrong.
+ */
 export const SingleDate: Story = {
+  name: 'Date (single field)',
   render: (args) => <DateControlled {...args} />,
   args: {
-    variant: 'date-range',
-    singleDate: true,
-    startTitle: 'Investment date',
-    startDate: '2018-01-01',
+    variant: 'date',
+    startTitle: 'Reinvestment start',
+    startDate: '2024-01-01',
   },
 };
 /**
- * A start/end pair in one joined box. The component keeps the range ordered:
- * moving the start past the end drags the end with it, and vice versa.
+ * `variant="date-range"` — a start/end pair in one joined box, side by side.
+ * The component keeps the range ordered: moving the start past the end drags
+ * the end with it, and vice versa.
  */
 export const DateRange: Story = {
   render: (args) => <DateControlled {...args} />,
@@ -710,14 +715,20 @@ export const DateRangeContainerScale: Story = {
   render: (args) => <DateControlled {...args} />,
   args: { ...DateRange.args, scale: 'container', compact: true, embedded: true },
 };
-/** `dateMode="year"` swaps the date inputs for year dropdowns. */
+/**
+ * `dateMode="year"` swaps the date inputs for year dropdowns. It stays on
+ * `date-range` rather than getting a variant of its own: a year range is a pair
+ * by construction, and there is no single-year field to pair it with.
+ */
 export const YearRange: Story = {
   render: (args) => <DateControlled {...args} />,
   args: {
     variant: 'date-range',
     dateMode: 'year',
-    startTitle: 'From year',
-    endTitle: 'To year',
+    // The year section appends " Year" to each label, so these stay bare —
+    // "From year" would render as "FROM YEAR YEAR".
+    startTitle: 'From',
+    endTitle: 'To',
     startDate: '2019',
     endDate: '2026',
     startYearOptions: ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026'],

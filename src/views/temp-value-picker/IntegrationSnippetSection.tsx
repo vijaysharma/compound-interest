@@ -16,9 +16,17 @@ const CODE_SAMPLE = `// 1. Amount Picker (Classic currency with tabs & quick ste
   targetValue={target} onTargetChange={setTarget}
 />
 
-// 5. Date Range:
-<DateRangePicker
-  startBadgeText="Start" endBadgeText="End"
+// 5. Single date (variant="date" — one labelled field):
+<ValuePicker
+  variant="date"
+  startTitle="Reinvestment start"
+  startDate={startDate} setStartDate={setStartDate}
+/>
+
+// 6. Date range (variant="date-range" — a start/end pair):
+<ValuePicker
+  variant="date-range"
+  startTitle="From" endTitle="To"
   startDate={startDate} setStartDate={setStartDate}
   endDate={endDate} setEndDate={setEndDate}
 />`;
