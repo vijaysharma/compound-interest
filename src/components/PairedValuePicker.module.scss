@@ -296,6 +296,11 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   border: none;
 }
 
+.symbolBadge {
+  background: transparent;
+  border: 0 none;
+}
+
 .field {
   flex: 1;
   min-width: 0;
