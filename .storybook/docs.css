@@ -1,0 +1,58 @@
+/*
+ * Autodocs page chrome. Loaded from `preview.tsx`, which puts it in the same
+ * document as the docs page, so these rules reach the wrappers the docs addon
+ * renders around each story — those sit outside the story tree and a decorator
+ * therefore cannot style them.
+ */
+
+/*
+ * Pins the primary story so it stays on screen while the args table below it is
+ * scrolled and edited. Without this the component is the first thing off the
+ * top of the page, and every control you change is a control you cannot see the
+ * effect of.
+ *
+ * The selector deliberately keys off the anchor id, not a class: the docs addon
+ * styles these wrappers with Emotion, so their `css-1esgs33`-style class names
+ * are content hashes that change whenever Storybook or the addon is upgraded.
+ * `anchor--primary--<story-id>` is generated from the story id and is the one
+ * stable way to tell the primary block from the ~31 secondary ones, which must
+ * stay static or they would each pin in turn on the way down.
+ *
+ * `position: sticky` survives here only because no element between this one and
+ * the scrollport scrolls: the docs `body` carries `overflow-y: auto` but is as
+ * tall as its content, so `html` is the real scroller. Introducing a scrolling
+ * ancestor (a fixed-height `.sbdocs-wrapper`, say) would silently break this.
+ */
+.sbdocs-content > [id^='anchor--primary--'] {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  /*
+   * The preview box is opaque but this wrapper is not, and the "Show code" bar
+   * below it is transparent — without a background the args table rows show
+   * through as they pass under the pinned block.
+   */
+  background: var(--color-bg, #fff);
+  /*
+   * Keeps a tall primary story from taking the whole viewport and leaving no
+   * room for the controls it is supposed to be demonstrating. Overflow on the
+   * sticky element itself is safe; only a scrolling *ancestor* breaks sticky.
+   */
+  max-height: 65vh;
+  overflow: auto;
+  /* Reads as pinned rather than as a rendering seam. */
+  box-shadow: 0 6px 12px -8px rgb(0 0 0 / 35%);
+}
+
+/*
+ * On a short viewport the pinned block is most of the window, which leaves too
+ * little room to scroll the table underneath — worse than not pinning at all.
+ */
+@media (max-height: 600px) {
+  .sbdocs-content > [id^='anchor--primary--'] {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
+  }
+}

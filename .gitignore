@@ -30,3 +30,6 @@ yarn-error.log*
 # Private credentials & secrets documentation (DO NOT COMMIT)
 README_SECRETS.md
 README_PRIVATE.md
+
+# Storybook build output
+storybook-static
