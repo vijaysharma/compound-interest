@@ -1,0 +1,168 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+/*
+ * Shape-aware route placeholders.
+ *
+ * These replace a centred spinner. A spinner says "something is happening" but
+ * nothing about what, so the viewport still reads as blank and the layout jumps
+ * when content lands. Blocking out the real regions instead means the page
+ * arrives in the shape it will keep.
+ */
+
+.shimmer {
+  border-radius: $radius-sm;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-base-content) 6%, transparent) 25%,
+    color-mix(in srgb, var(--color-base-content) 12%, transparent) 37%,
+    color-mix(in srgb, var(--color-base-content) 6%, transparent) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+/*
+ * Honour the OS reduced-motion setting: a sweeping gradient across a full page
+ * of placeholders is exactly the kind of large-area movement that setting is
+ * there to suppress. The block stays visible, it just holds still.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    background: color-mix(in srgb, var(--color-base-content) 8%, transparent);
+  }
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.title {
+  height: 1.75rem;
+  width: min(22rem, 70%);
+}
+
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+/* Mirrors the calculators' input column: a stack of picker-sized blocks. */
+.inputsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+
+  @include tablet-up {
+    width: 380px;
+    flex: 0 0 380px;
+  }
+}
+
+.outputCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+/* One ValuePicker: merged title bar plus the control row beneath it. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pickerLabel {
+  height: 0.85rem;
+  width: 45%;
+}
+
+.pickerBody {
+  height: 4.25rem;
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem;
+}
+
+.stat {
+  height: 4.5rem;
+}
+
+/*
+ * The chart placeholder carries the axis furniture, not just a grey box, so the
+ * plot area lands where the skeleton said it would.
+ */
+.chart {
+  position: relative;
+  min-height: 350px;
+  border-radius: $radius-md;
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+  padding: 1rem 1rem 1.75rem 2.5rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 4%;
+  box-sizing: border-box;
+}
+
+.bar {
+  flex: 1;
+  border-radius: $radius-xs $radius-xs 0 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Mirrors the stat card's start/end NAV pair so the card keeps its height. */
+.navValues {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+  width: 100%;
+}
+
+.navValueCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}

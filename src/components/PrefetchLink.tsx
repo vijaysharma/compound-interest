@@ -43,6 +43,22 @@ export const PrefetchLink: React.FC<PrefetchLinkProps> = ({
     <Link
       to={to}
       href={href}
+      /*
+       * Warm the route on intent, not on the click.
+       *
+       * Prefetching only fired on mouse/pointer *down*, which is the same tick
+       * the navigation starts in — by then it saves nothing. Hover on a pointer
+       * device, and focus for keyboard users, give the route a head start of
+       * however long it takes to move a finger. `touchstart` covers mobile,
+       * where there is no hover to work with but still a gap between the finger
+       * landing and the tap completing.
+       *
+       * `prefetchedPaths` makes all of these idempotent, so firing from several
+       * events costs one prefetch.
+       */
+      onMouseEnter={handlePrefetch}
+      onFocus={handlePrefetch}
+      onTouchStart={handlePrefetch}
       onMouseDown={(e) => {
         handlePrefetch();
         onMouseDown?.(e);
