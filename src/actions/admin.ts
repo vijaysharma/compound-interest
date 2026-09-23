@@ -8,6 +8,7 @@ import * as orders from './admin/shiprocketOrders';
 import * as fulfillment from './admin/shiprocketFulfillment';
 import * as postcode from './admin/postcode';
 import * as sync from './admin/sync';
+import * as navSync from './admin/navSync';
 export async function getShiprocketAuth(forceRefresh?: boolean) {
   return client.getShiprocketAuth(forceRefresh);
 }
@@ -104,9 +105,12 @@ export async function getPostcodeDetailsAction(postcodeVal: string) {
 export async function syncMutualFundsAction(token?: string | null) {
   return sync.syncMutualFundsAction(token);
 }
-export async function syncIMFAction(payload: unknown, token?: string | null) {
-  return sync.syncIMFAction(payload, token);
+export async function syncIMFAction(token: string | null | undefined, payload: unknown) {
+  return sync.syncIMFAction(token, payload);
 }
-export async function syncPPPAction(inputPayload?: unknown, token?: string | null) {
-  return sync.syncPPPAction(inputPayload, token);
+export async function syncPPPAction(token?: string | null, inputPayload?: unknown) {
+  return sync.syncPPPAction(token, inputPayload);
+}
+export async function syncNavAction(token?: string | null, options?: { schemeCodes?: string[] }) {
+  return navSync.syncNavAction(token, options);
 }

@@ -35,9 +35,16 @@ export async function syncMutualFundsAction(token?: string | null): Promise<{ sy
   await redisSet('cache:mf:all_schemes', compactSchemes, 86400 * 30).catch(() => {});
   return { synced: payload.length };
 }
+/**
+ * Parameter order matters here: `token` comes first, matching every other admin
+ * action. It used to be `(payload, token)` while the only caller passed
+ * `(token, body)` — so the token was stored as the payload and the payload used
+ * as the token, and this action could never succeed. TypeScript could not see
+ * it because an `unknown` first parameter accepts a token string happily.
+ */
 export async function syncIMFAction(
-  payload: unknown,
-  token?: string | null
+  token: string | null | undefined,
+  payload: unknown
 ): Promise<{ synced: boolean }> {
   const sql = getDb();
   await ensureTables(sql);
@@ -54,9 +61,10 @@ export async function syncIMFAction(
   `;
   return { synced: true };
 }
+/** Token first, for the reason given on `syncIMFAction`. */
 export async function syncPPPAction(
-  inputPayload?: unknown,
-  token?: string | null
+  token?: string | null,
+  inputPayload?: unknown
 ): Promise<{ synced: number | boolean }> {
   const sql = getDb();
   await ensureTables(sql);

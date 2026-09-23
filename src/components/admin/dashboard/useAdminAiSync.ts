@@ -6,7 +6,9 @@ import {
   syncMutualFundsAction,
   syncIMFAction,
   syncPPPAction,
+  syncNavAction,
 } from '../../../actions/admin';
+import type { NavSyncReport } from '../../../actions/admin/navSync';
 export function useAdminAiSync(
   effectiveToken: string,
   setBusy: (val: string | null) => void,
@@ -22,6 +24,14 @@ export function useAdminAiSync(
   );
   const [imfJson, setImfJson] = useState('');
   const [pppJson, setPppJson] = useState('');
+  /** Comma/space separated scheme codes to target, or blank for "whatever is furthest behind". */
+  const [navSchemeCodes, setNavSchemeCodes] = useState('');
+  /**
+   * Kept as state rather than folded into the status message because the point
+   * of a manual run is seeing *what* was fetched and stored, per scheme — a
+   * single "synced N" line is exactly what this is meant to replace.
+   */
+  const [navReport, setNavReport] = useState<NavSyncReport | null>(null);
   const fetchAiSettings = useCallback(async () => {
     if (!effectiveToken) return;
     try {
@@ -100,6 +110,23 @@ export function useAdminAiSync(
       } else if (endpoint.includes('sync-ppp')) {
         const res = await syncPPPAction(effectiveToken, body);
         synced = res.synced;
+      } else if (endpoint.includes('sync-nav')) {
+        const codes = navSchemeCodes
+          .split(/[\s,]+/)
+          .map((c) => c.trim())
+          .filter(Boolean);
+        const report = await syncNavAction(effectiveToken, codes.length ? { schemeCodes: codes } : undefined);
+        setNavReport(report);
+        const stored = report.schemes.filter((r) => r.outcome === 'stored').length;
+        setMessage({
+          type: 'success',
+          text:
+            `NAV sync: ${stored} of ${report.considered} stored. ` +
+            `Market as of ${report.watermark ?? 'unknown'}` +
+            (report.watermarkAdvanced ? ' (advanced)' : '') +
+            `, ${(report.elapsedMs / 1000).toFixed(1)}s.`,
+        });
+        return;
       } else {
         throw new Error('Unknown sync action');
       }
@@ -137,6 +164,9 @@ export function useAdminAiSync(
     setImfJson,
     pppJson,
     setPppJson,
+    navSchemeCodes,
+    setNavSchemeCodes,
+    navReport,
     fetchAiSettings,
     handleSaveAiSettings,
     sync,

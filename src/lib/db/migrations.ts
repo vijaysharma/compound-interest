@@ -1,7 +1,7 @@
 import { Query } from './types';
 import { applyCoreMigrations } from './coreMigrations';
 import { applyDataMigrations } from './dataMigrations';
-export const SCHEMA_VERSION = 5; // 5: mutual_fund_nav.latest_nav_date
+export const SCHEMA_VERSION = 6; // 5: mutual_fund_nav.latest_nav_date, 6: user_strategies
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {

@@ -22,6 +22,37 @@ export async function applyDataMigrations(sql: Query, schemaVersion: number): Pr
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  /*
+   * Saved strategies from /strategy-calculator, one row per strategy.
+   *
+   * A row each rather than one library blob per user, so two devices editing
+   * different strategies both keep their work — see `strategyMerge` for the
+   * resolution rules. `updated_at` is the resolution key and is millisecond
+   * precision on purpose: the library's own `savedAt` is a calendar date and
+   * cannot order two edits made on the same day, which is most real conflicts.
+   *
+   * `deleted_at` makes a row a tombstone rather than removing it. Hard deletes
+   * cannot survive a merge: one device removes a strategy, another still holds
+   * its copy, and the union brings it back as though the delete never happened.
+   * Tombstones are cleared once every device has converged.
+   */
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_strategies (
+      id TEXT NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      config JSONB NOT NULL,
+      saved_at DATE,
+      is_active BOOLEAN NOT NULL DEFAULT FALSE,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      deleted_at TIMESTAMPTZ,
+      PRIMARY KEY (user_id, id)
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS user_strategies_user_idx
+      ON user_strategies (user_id, updated_at DESC)
+  `;
   await sql`CREATE INDEX IF NOT EXISTS mutual_fund_schemes_name_idx ON mutual_fund_schemes (scheme_name)`;
   await sql`CREATE INDEX IF NOT EXISTS mutual_fund_nav_updated_at_idx ON mutual_fund_nav (updated_at)`;
   /*

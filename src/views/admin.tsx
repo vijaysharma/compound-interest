@@ -86,10 +86,13 @@ const Admin: React.FC = () => {
           token={token}
           imfJson={aiSync.imfJson}
           pppJson={aiSync.pppJson}
+          navSchemeCodes={aiSync.navSchemeCodes}
+          navReport={aiSync.navReport}
           busy={busy}
           onTokenChange={setToken}
           onImfJsonChange={aiSync.setImfJson}
           onPppJsonChange={aiSync.setPppJson}
+          onNavSchemeCodesChange={aiSync.setNavSchemeCodes}
           onSync={aiSync.sync}
           onErrorMessage={(txt) => setMessage({ type: 'error', text: txt })}
         />
