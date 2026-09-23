@@ -1,5 +1,8 @@
 @use "./styles/variables" as *;
 @use "./styles/mixins" as *;
+.test {
+  color: red;
+}
 
 .navProgressBar {
   position: fixed;
