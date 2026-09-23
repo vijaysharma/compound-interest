@@ -58,7 +58,12 @@ export const ProjectionCard = ({
         switched on runs to the horizon. An instruction that has already finished is not restarted.
       </p>
       <div id="strategy-projection-body" hidden={!shown}>
-        {!shown ? null : unavailableMessage ? (
+        {!shown ? null : !settings.enabled ? (
+          <p className={styles.emptyHint}>
+            The projection is switched off. Turn it on in the controls above the chart to see the
+            forward return each fund is being compounded at, and where each scenario ends up.
+          </p>
+        ) : unavailableMessage ? (
           <p className={styles.emptyHint}>{unavailableMessage}</p>
         ) : !projection.isAvailable ? (
           <p className={styles.emptyHint}>

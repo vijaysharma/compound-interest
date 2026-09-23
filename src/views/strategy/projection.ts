@@ -64,6 +64,16 @@ export interface RateBand {
   degraded: boolean;
 }
 export interface ProjectionSettings {
+  /**
+   * Master switch. Off by default.
+   *
+   * A projection is a different kind of claim from the rest of this page —
+   * everything else is what the fund actually did. Leaving it on by default
+   * would present an extrapolation as part of the record, and it also costs a
+   * second full engine run on every edit, which nobody who is not looking at
+   * it should pay for.
+   */
+  enabled: boolean;
   horizonYears: number;
   /**
    * Yearly increase applied to the withdrawal that continues past today. It is
@@ -396,6 +406,7 @@ export const DEFAULT_INFLATION_PCT = 6;
  * the axis before the user had touched anything.
  */
 export const DEFAULT_PROJECTION_SETTINGS: ProjectionSettings = {
+  enabled: false,
   horizonYears: 30,
   annualIncreasePct: 0,
   scenarioKey: 'median',

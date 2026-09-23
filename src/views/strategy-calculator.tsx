@@ -44,10 +44,12 @@ const StrategyCalculatorView = () => {
     navBook,
     result,
     projectionSettings,
-    // No longer tied to the disclosure: the main chart draws the projection
-    // inline, so it has to be available whenever it can be computed.
-    !blocked && hasNavData,
-    showProjection
+    // Gated on the user's own switch as well as on there being data: with the
+    // projection off, no extra engine run happens at all.
+    projectionSettings.enabled && !blocked && hasNavData,
+    // All three scenarios are only needed for the comparison table, and only
+    // when the projection is on at all.
+    showProjection && projectionSettings.enabled
   );
   const handleToggleFund = (fund: FundRef) => {
     if (picker === 'column1') {

@@ -43,9 +43,24 @@ const COMBINED_COLOR_INDEX = 4;
 /** Pushes the projected line back without changing its hue. */
 const PROJECTED_STROKE_OPACITY = 0.55;
 const VALUE_MODES = [
-  { id: 'value-today', value: 'today' as const, title: "Today's ₹" },
-  { id: 'value-nominal', value: 'nominal' as const, title: 'Nominal' },
+  {
+    id: 'value-today',
+    value: 'today' as const,
+    title: "Today's ₹",
+    tooltip: 'Discounted back to what the money would buy now',
+  },
+  {
+    id: 'value-nominal',
+    value: 'nominal' as const,
+    title: 'Nominal',
+    tooltip: 'The rupee figure printed on that future date',
+  },
 ];
+const PROJECTION_TOGGLE = [
+  { id: 'projection-off', value: false, title: 'Off' },
+  { id: 'projection-on', value: true, title: 'On' },
+];
+const percent = (rate: number): string => `${(rate * 100).toFixed(1)}%`;
 const DEFLATED_KEYS = ['column1Value', 'column2Value', 'totalValue'] as const;
 export const StrategyChartCard = ({
   config,
@@ -57,7 +72,16 @@ export const StrategyChartCard = ({
   message,
 }: StrategyChartCardProps) => {
   const selected = projection.selected;
-  const isProjecting = projection.isAvailable && selected !== null;
+  const isProjecting = settings.enabled && projection.isAvailable && selected !== null;
+  /**
+   * Whether the switch is worth showing at all. Offering it with no fund or no
+   * NAV history would be a control that silently does nothing.
+   */
+  const canProject = Boolean(config.column1.fund) && result.snapshots.length > 0;
+  const primaryFundName = config.column1.fund?.schemeName ?? '';
+  const primaryBand = config.column1.fund
+    ? projection.bands[config.column1.fund.schemeCode]
+    : undefined;
   const datasets = useMemo<ChartDataset[]>(() => {
     /*
      * A projected run's snapshots already span investment date to horizon as one
@@ -130,44 +154,87 @@ export const StrategyChartCard = ({
       <h2 className={styles.cardTitle} id="strategy-chart-title">
         Portfolio value
       </h2>
-      {isProjecting && (
+      {canProject && (
         <div className={styles.chartControls}>
-          <JoinedButtonGroup<number>
-            title="Project to"
-            data={HORIZON_PRESETS.map((years) => ({
-              id: `horizon-${years}`,
-              value: years,
-              title: `${years}y`,
-            }))}
-            selectedValue={settings.horizonYears}
-            updateSelectedValue={(horizonYears) => onSettingsChange({ horizonYears })}
+          <JoinedButtonGroup<boolean>
+            title="Projection"
+            data={PROJECTION_TOGGLE}
+            selectedValue={settings.enabled}
+            updateSelectedValue={(enabled) => onSettingsChange({ enabled })}
             sizePrefix="xs"
             compact
+            className={styles.chartControl}
           />
-          <JoinedButtonGroup<ProjectionSettings['scenarioKey']>
-            title="Return scenario"
-            data={SCENARIO_KEYS.map((key) => ({
-              id: `scenario-${key}`,
-              value: key,
-              title: SCENARIO_LABELS[key],
-              // Keeps the percentile meaning attached to the plain-language
-              // label, which is otherwise lost by calling them Low/Moderate/High.
-              tooltip: SCENARIO_BLURBS[key],
-            }))}
-            selectedValue={settings.scenarioKey}
-            updateSelectedValue={(scenarioKey) => onSettingsChange({ scenarioKey })}
-            sizePrefix="xs"
-            compact
-          />
-          <JoinedButtonGroup<ProjectionSettings['valueMode']>
-            title={`In today's money (at ${settings.inflationPct}% inflation)`}
-            data={VALUE_MODES}
-            selectedValue={settings.valueMode}
-            updateSelectedValue={(valueMode) => onSettingsChange({ valueMode })}
-            sizePrefix="xs"
-            compact
-          />
+          {isProjecting && (
+            <>
+              <JoinedButtonGroup<number>
+                title="Project to"
+                data={HORIZON_PRESETS.map((years) => ({
+                  id: `horizon-${years}`,
+                  value: years,
+                  title: `${years}y`,
+                }))}
+                selectedValue={settings.horizonYears}
+                updateSelectedValue={(horizonYears) => onSettingsChange({ horizonYears })}
+                sizePrefix="xs"
+                compact
+                className={styles.chartControl}
+              />
+              <JoinedButtonGroup<ProjectionSettings['scenarioKey']>
+                title="Return scenario"
+                data={SCENARIO_KEYS.map((key) => ({
+                  id: `scenario-${key}`,
+                  value: key,
+                  title: SCENARIO_LABELS[key],
+                  // Keeps the percentile meaning attached to the plain-language
+                  // label, which calling them Low/Moderate/High otherwise loses.
+                  tooltip: SCENARIO_BLURBS[key],
+                }))}
+                selectedValue={settings.scenarioKey}
+                updateSelectedValue={(scenarioKey) => onSettingsChange({ scenarioKey })}
+                sizePrefix="xs"
+                compact
+                className={styles.chartControl}
+              />
+              <JoinedButtonGroup<ProjectionSettings['valueMode']>
+                title="Money"
+                data={VALUE_MODES}
+                selectedValue={settings.valueMode}
+                updateSelectedValue={(valueMode) => onSettingsChange({ valueMode })}
+                sizePrefix="xs"
+                compact
+                className={styles.chartControl}
+              />
+            </>
+          )}
         </div>
+      )}
+      {isProjecting && (
+        /*
+         * The controls name three scenarios and two ways of counting money, and
+         * neither label says what it means. Spelling both out here rather than
+         * relying on hover text, which is invisible on touch and easy to miss.
+         */
+        <dl className={styles.chartControlNotes}>
+          <dt>Low / Moderate / High</dt>
+          <dd>
+            The 10th, 50th and 90th percentiles of what this fund has actually
+            returned over every rolling window in its own published history — not
+            assumptions. Low means it did worse than this in 1 window out of 10.
+            {primaryBand
+              ? ` For ${primaryFundName}: Low ${percent(primaryBand.weak)}, Moderate ` +
+                `${percent(primaryBand.median)}, High ${percent(primaryBand.strong)} a year, ` +
+                `from ${primaryBand.historyYears.toFixed(1)} years of NAVs.`
+              : ''}
+          </dd>
+          <dt>Today&apos;s ₹ / Nominal</dt>
+          <dd>
+            Nominal is the rupee figure on that future date. Today&apos;s ₹ discounts
+            it by {settings.inflationPct}% a year, so it reads as what that money
+            would buy now — which is the only way the early years stay visible on
+            the chart once decades of compounding are on it.
+          </dd>
+        </dl>
       )}
       <ul className={styles.chartLegend}>
         {datasets.map((dataset) => (

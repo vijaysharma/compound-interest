@@ -268,18 +268,69 @@
 }
 
 /*
- * Projection controls above the chart: horizon, scenario and value mode.
+ * Projection controls above the chart: on/off, horizon, scenario, value mode.
  *
- * Wraps rather than scrolls, and sits above the legend so the chart itself
- * never shifts as the groups reflow — ten horizon buttons plus two three-way
- * toggles is more than fits one row on a phone.
+ * One row on a desktop width, wrapping on narrow screens. It sits above the
+ * legend so the chart itself never shifts as the groups reflow.
  */
 .chartControls {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.75rem 1rem;
-  margin-bottom: 0.6rem;
+  gap: 0.4rem 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/*
+ * Shrinks a JoinedButtonGroup to its content.
+ *
+ * Its own `.container` is `width: 100%`, which is right when a group is the
+ * only thing on a line and wrong here — four full-width groups stacked into
+ * four tall rows instead of sitting side by side. The custom properties are the
+ * restyling hooks that module documents, so the sizes come down without
+ * fighting its cascade.
+ */
+.chartControl {
+  width: auto;
+  flex: 0 0 auto;
+  --jbg-margin-y: 0;
+  --jbg-height: 1.6rem;
+  --jbg-font-size: 0.7rem;
+  --jbg-padding: 0 0.5rem;
+
+  h5 {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $color-text-secondary;
+    margin: 0 0 0.15rem;
+    text-align: left;
+  }
+}
+
+/*
+ * What the control labels mean.
+ *
+ * "Low" and "Nominal" are not self-explanatory, and the per-button hover text
+ * that carries the detail is invisible on touch. A definition list keeps the
+ * term attached to its explanation for a screen reader too.
+ */
+.chartControlNotes {
+  margin: 0 0 0.7rem;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: $color-text-secondary;
+
+  dt {
+    font-weight: 700;
+    color: $color-text-primary;
+    margin-top: 0.3rem;
+  }
+
+  dd {
+    margin: 0;
+  }
 }
 
 .chart {
