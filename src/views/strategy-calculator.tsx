@@ -16,7 +16,7 @@ import { ProjectionCard } from './strategy/ProjectionCard';
 import { useStrategyProjection } from './strategy/useStrategyProjection';
 import { StrategyFundModal } from './strategy/StrategyFundModal';
 import { COLUMN_WORDS } from './strategy/labels';
-import type { ProjectionSettings } from './strategy/projection';
+import { DEFAULT_PROJECTION_SETTINGS, type ProjectionSettings } from './strategy/projection';
 import type { FundRef } from './strategy/types';
 import styles from './strategy/StrategyCalculator.module.scss';
 type PickerTarget = 'column1' | 'column2' | null;
@@ -34,10 +34,8 @@ const StrategyCalculatorView = () => {
    * The yearly increase starts at 0, i.e. whatever the configuration already
    * says, and the note under the table points out what that means over decades.
    */
-  const [projectionSettings, setProjectionSettings] = useState<ProjectionSettings>({
-    horizonYears: 30,
-    annualIncreasePct: 0,
-  });
+  const [projectionSettings, setProjectionSettings] =
+    useState<ProjectionSettings>(DEFAULT_PROJECTION_SETTINGS);
   const patchProjection = useCallback((patch: Partial<ProjectionSettings>) => {
     setProjectionSettings((prev) => ({ ...prev, ...patch }));
   }, []);
@@ -46,7 +44,10 @@ const StrategyCalculatorView = () => {
     navBook,
     result,
     projectionSettings,
-    showProjection && !blocked && hasNavData
+    // No longer tied to the disclosure: the main chart draws the projection
+    // inline, so it has to be available whenever it can be computed.
+    !blocked && hasNavData,
+    showProjection
   );
   const handleToggleFund = (fund: FundRef) => {
     if (picker === 'column1') {
@@ -97,6 +98,9 @@ const StrategyCalculatorView = () => {
           config={api.config}
           result={result}
           isLoading={isLoading}
+          projection={projection}
+          settings={projectionSettings}
+          onSettingsChange={patchProjection}
           message={chartMessage}
         />
         <FinalStatsCard totals={result.totals} />

@@ -247,6 +247,41 @@
   flex-shrink: 0;
 }
 
+/*
+ * Projected series swatch: a short dashed bar rather than a dot, so the legend
+ * carries the same distinction the line does. A dot at lower opacity would only
+ * read as a paler colour, which is easy to mistake for a different series.
+ *
+ * `background-color` is set inline from the series colour, so the dashes are
+ * cut out with a repeating gradient in the surface behind rather than drawn.
+ */
+.legendDotProjected {
+  width: 1rem;
+  height: 0.2rem;
+  border-radius: 0;
+  opacity: 0.65;
+  mask-image: repeating-linear-gradient(
+    to right,
+    #000 0 0.28rem,
+    transparent 0.28rem 0.44rem
+  );
+}
+
+/*
+ * Projection controls above the chart: horizon, scenario and value mode.
+ *
+ * Wraps rather than scrolls, and sits above the legend so the chart itself
+ * never shifts as the groups reflow — ten horizon buttons plus two three-way
+ * toggles is more than fits one row on a phone.
+ */
+.chartControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.6rem;
+}
+
 .chart {
   width: 100%;
   min-width: 0;

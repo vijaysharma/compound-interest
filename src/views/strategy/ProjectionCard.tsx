@@ -1,19 +1,12 @@
 'use client';
-import React, { useMemo } from 'react';
-import Chart, { type ChartDataset } from '../../components/Chart';
-import JoinedButtonGroup from '../../components/JoinedButtonGroup';
-import { getChartSeriesColor } from '../../data/chartColors';
-import { ChartDataTable } from './ChartDataTable';
+import React from 'react';
 import { StepUpSelect } from './StrategyFields';
 import { formatRupees } from './money';
 import {
-  HORIZON_PRESETS,
   SCENARIO_BLURBS,
   SCENARIO_LABELS,
-  downsample,
   strategySchemes,
   type ProjectionSettings,
-  type ScenarioKey,
 } from './projection';
 import type { StrategyProjection } from './useStrategyProjection';
 import type { StrategyConfig } from './types';
@@ -28,10 +21,7 @@ interface ProjectionCardProps {
   /** Why the projection cannot run, when it cannot. */
   unavailableMessage: string | null;
 }
-const SCENARIO_COLOR: Record<ScenarioKey, number> = { weak: 3, median: 4, strong: 2 };
 const percent = (rate: number): string => `${(rate * 100).toFixed(1)}%`;
-/** Roughly this many points per series keeps a hundred-year chart responsive. */
-const CHART_POINTS = 400;
 export const ProjectionCard = ({
   config,
   projection,
@@ -41,19 +31,6 @@ export const ProjectionCard = ({
   onToggle,
   unavailableMessage,
 }: ProjectionCardProps) => {
-  const datasets = useMemo<ChartDataset[]>(
-    () =>
-      projection.scenarios.map((scenario) => ({
-        label: `${SCENARIO_LABELS[scenario.key]} total value`,
-        color: getChartSeriesColor(SCENARIO_COLOR[scenario.key]),
-        data: downsample(scenario.result.snapshots, CHART_POINTS).map((snapshot) => ({
-          date: snapshot.date,
-          nav: snapshot.totalValue,
-        })),
-      })),
-    [projection.scenarios]
-  );
-  const median = projection.scenarios.find((scenario) => scenario.key === 'median');
   const schemes = strategySchemes(config);
   return (
     <section className={styles.card} aria-labelledby="strategy-projection-title">
@@ -70,10 +47,10 @@ export const ProjectionCard = ({
         </button>
       </h2>
       <p className={styles.cardSubtitle}>
-        Continues this strategy past its last published NAV. Every fund is compounded forward at
-        one of its own rolling-window returns — weak, median and strong are the 10th, 50th and 90th
-        percentiles of what it has actually delivered — and the same planner and executor then run
-        the schedule against those NAVs. Nothing before the as-of date changes.
+        The workings behind the projected line on the chart above. Every fund is compounded forward
+        at one of its own rolling-window returns — Low, Moderate and High are the 10th, 50th and
+        90th percentiles of what it has actually delivered — and the same planner and executor then
+        run the schedule against those NAVs. Nothing before the as-of date changes.
       </p>
       <p className={styles.cardSubtitle}>
         Whatever is running today carries on: the withdrawal continues at the amount it has already
@@ -89,18 +66,6 @@ export const ProjectionCard = ({
           </p>
         ) : (
           <>
-            <JoinedButtonGroup<number>
-              title="Horizon"
-              data={HORIZON_PRESETS.map((years) => ({
-                id: `horizon-${years}`,
-                value: years,
-                title: `${years}y`,
-              }))}
-              selectedValue={settings.horizonYears}
-              updateSelectedValue={(horizonYears) => onSettingsChange({ horizonYears })}
-              sizePrefix="xs"
-              compact
-            />
             <StepUpSelect
               id="projection-increase"
               label="Yearly increase in the withdrawal"
@@ -122,9 +87,9 @@ export const ProjectionCard = ({
                     <th scope="col">History</th>
                     <th scope="col">Window</th>
                     <th scope="col">Samples</th>
-                    <th scope="col">Weak</th>
-                    <th scope="col">Median</th>
-                    <th scope="col">Strong</th>
+                    <th scope="col">{SCENARIO_LABELS.weak}</th>
+                    <th scope="col">{SCENARIO_LABELS.median}</th>
+                    <th scope="col">{SCENARIO_LABELS.strong}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,31 +152,6 @@ export const ProjectionCard = ({
                 ? ` Today's rupees deflate the horizon value at the ${settings.annualIncreasePct}% yearly increase set above.`
                 : ' Set a yearly increase to see the horizon value in today’s rupees.'}
             </p>
-            <ul className={styles.chartLegend}>
-              {datasets.map((dataset) => (
-                <li key={dataset.label} className={styles.legendItem}>
-                  <span
-                    className={styles.legendDot}
-                    ref={(el) => {
-                      if (el) el.style.backgroundColor = dataset.color;
-                    }}
-                    aria-hidden="true"
-                  />
-                  {dataset.label}
-                </li>
-              ))}
-            </ul>
-            <Chart
-              className={styles.chart}
-              datasets={datasets}
-              investmentAmount={median?.result.totals.initialInvestment ?? 0}
-              dataMode="value"
-              startDate={config.column1.investmentDate}
-              endDate={projection.horizonIso}
-              minHeight={320}
-              emptyMessage="Nothing to project yet."
-            />
-            {median && <ChartDataTable snapshots={downsample(median.result.snapshots, 240)} />}
             {projection.notes.length > 0 && (
               <ul className={styles.projectionNotes}>
                 {projection.notes.map((note) => (

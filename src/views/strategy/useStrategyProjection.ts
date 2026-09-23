@@ -8,6 +8,7 @@ import {
   firstExhausted,
   firstShortfall,
   horizonDate,
+  projectedHorizonShortfall,
   inTodaysRupees,
   projectedNavBook,
   scenarioRates,
@@ -22,7 +23,13 @@ export interface StrategyProjection {
   /** False when there is nothing to project from, e.g. no fund or no NAVs yet. */
   isAvailable: boolean;
   bands: Record<string, RateBand>;
+  /**
+   * Computed scenarios. Holds only the selected one unless `allScenarios` was
+   * requested, because each entry is a full engine run.
+   */
   scenarios: ScenarioOutcome[];
+  /** The scenario the chart plots, or null when nothing could be projected. */
+  selected: ScenarioOutcome | null;
   horizonIso: string;
   /** Caveats worth reading before the numbers are believed. */
   notes: string[];
@@ -31,6 +38,7 @@ const EMPTY: StrategyProjection = {
   isAvailable: false,
   bands: {},
   scenarios: [],
+  selected: null,
   horizonIso: '',
   notes: [],
 };
@@ -88,15 +96,19 @@ const buildNotes = (
  * on or before the as-of date changes, so the overlap with the real timeline
  * reproduces the historical run exactly.
  *
- * `enabled` keeps three engine runs out of the render path until the user opens
- * the section that shows them.
+ * Only the selected scenario is run by default. The chart now draws the
+ * projection inline rather than behind a disclosure, so this runs on every
+ * config change — and running all three there would triple the cost of every
+ * keystroke for two lines nobody is looking at. `allScenarios` opts in to the
+ * full set for the side-by-side comparison table.
  */
 export function useStrategyProjection(
   config: StrategyConfig,
   navBook: NavBook,
   actual: StrategyResult,
   settings: ProjectionSettings,
-  enabled: boolean
+  enabled: boolean,
+  allScenarios = false
 ): StrategyProjection {
   return useMemo<StrategyProjection>(() => {
     if (!enabled || !config.column1.fund) return EMPTY;
@@ -105,9 +117,16 @@ export function useStrategyProjection(
     const horizonIso = horizonDate(config.asOfDate, settings.horizonYears);
     const projectedConfig = buildProjectedConfig(config, settings);
     const drawnSoFar = actual.totals.totalPersonalWithdrawals;
-    const scenarios: ScenarioOutcome[] = SCENARIO_KEYS.map((key) => {
+    const keys = allScenarios ? SCENARIO_KEYS : [settings.scenarioKey];
+    const truncated = new Set<string>();
+    const scenarios: ScenarioOutcome[] = keys.map((key) => {
       const rates = scenarioRates(bands, key);
-      const result = runStrategy(projectedConfig, projectedNavBook(config, navBook, rates, horizonIso));
+      const projectedBook = projectedNavBook(config, navBook, rates, horizonIso);
+      for (const scheme of strategySchemes(config)) {
+        const reached = projectedHorizonShortfall(projectedBook, scheme.schemeCode, horizonIso);
+        if (reached) truncated.add(`${scheme.schemeName}|${reached}`);
+      }
+      const result = runStrategy(projectedConfig, projectedBook);
       const terminalValue = result.totals.totalValue;
       return {
         key,
@@ -128,8 +147,19 @@ export function useStrategyProjection(
       isAvailable: true,
       bands,
       scenarios,
+      selected: scenarios.find((s) => s.key === settings.scenarioKey) ?? scenarios[0] ?? null,
       horizonIso,
-      notes: buildNotes(config, bands, settings),
+      notes: [
+        ...buildNotes(config, bands, settings),
+        ...[...truncated].map((entry) => {
+          const [name, reached] = entry.split('|');
+          return (
+            `${name} could not be compounded all the way to ${horizonIso} — the projected NAV ` +
+            `overflowed at ${reached}, so the line stops there rather than continuing. Shorten ` +
+            'the horizon or pick a lower scenario.'
+          );
+        }),
+      ],
     };
-  }, [enabled, config, navBook, actual.totals.totalPersonalWithdrawals, settings]);
+  }, [enabled, allScenarios, config, navBook, actual.totals.totalPersonalWithdrawals, settings]);
 }

@@ -15,17 +15,24 @@ import type {
 const MS_PER_YEAR = 365.2425 * 24 * 60 * 60 * 1000;
 export const MIN_HORIZON_YEARS = 10;
 export const MAX_HORIZON_YEARS = 100;
-export const HORIZON_PRESETS = [10, 20, 30, 50, 100] as const;
+export const HORIZON_PRESETS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] as const;
 /** Longest rolling window sampled, so a long history still yields many samples. */
 const MAX_WINDOW_YEARS = 10;
 /** Below this many rolling samples the percentiles mean nothing, so the band collapses. */
 const MIN_SAMPLES = 12;
 export type ScenarioKey = 'weak' | 'median' | 'strong';
 export const SCENARIO_KEYS: ScenarioKey[] = ['weak', 'median', 'strong'];
+/**
+ * User-facing names. The keys stay `weak`/`median`/`strong` because that is
+ * what they are — percentiles of the fund's own rolling windows — while the
+ * labels read as the plain-language choice people expect to be offered. The
+ * blurbs below carry the precise meaning, and are surfaced as hover text so
+ * relabelling does not lose it.
+ */
 export const SCENARIO_LABELS: Record<ScenarioKey, string> = {
-  weak: 'Weak',
-  median: 'Median',
-  strong: 'Strong',
+  weak: 'Low',
+  median: 'Moderate',
+  strong: 'High',
 };
 export const SCENARIO_BLURBS: Record<ScenarioKey, string> = {
   weak: '10th percentile of this fund’s own rolling windows — it did worse than this in 1 window out of 10',
@@ -64,6 +71,19 @@ export interface ProjectionSettings {
    * produces is still converted to units at the projected NAV.
    */
   annualIncreasePct: number;
+  /** Which of the fund's own return percentiles the chart plots. */
+  scenarioKey: ScenarioKey;
+  /**
+   * `today` deflates the projected portion into the money of the as-of date.
+   *
+   * The default, because it is what makes a long horizon readable: a strong
+   * scenario terminal can be millions of times the value a decade in, which on
+   * a linear axis flattens the measured history onto the axis line. `nominal`
+   * is a click away for the headline figure.
+   */
+  valueMode: 'nominal' | 'today';
+  /** Deflation rate for `valueMode: 'today'`. See `DEFAULT_INFLATION_PCT`. */
+  inflationPct: number;
 }
 export interface ScenarioOutcome {
   key: ScenarioKey;
@@ -208,10 +228,32 @@ export const extendNavHistory = (
     const date = addMonths(from, month);
     if (date.getTime() > horizonTime) break;
     const nav = last.nav * growth ** (month / 12);
+    // A high rate over a long horizon can overflow to Infinity. Stopping here
+    // is right, but it used to be silent — the projection simply ended early
+    // and nothing said so. `projectedHorizonShortfall` reports it.
     if (!Number.isFinite(nav) || nav <= 0) break;
     synthetic.push({ date: isoDateToNavDate(toISO(date)), nav: nav.toFixed(4) });
   }
   return synthetic.length > 0 ? [...navData, ...synthetic] : navData;
+};
+/**
+ * The date a scheme's synthetic NAVs actually reach, when that is short of the
+ * horizon asked for.
+ *
+ * Returns null when the full horizon was generated. Non-null means compounding
+ * overflowed before it got there, so every value past this date is missing
+ * rather than flat — worth saying out loud instead of letting the line stop.
+ */
+export const projectedHorizonShortfall = (
+  navBook: NavBook,
+  schemeCode: string,
+  horizonIso: string
+): string | null => {
+  const rows = navBook[schemeCode];
+  if (!rows || rows.length === 0) return null;
+  const lastIso = navDateToISO(rows[rows.length - 1].date);
+  if (!lastIso) return null;
+  return lastIso < horizonIso ? lastIso : null;
 };
 export const projectedNavBook = (
   config: StrategyConfig,
@@ -292,7 +334,7 @@ export const horizonDate = (asOfDate: string, horizonYears: number): string => {
  */
 export const buildProjectedConfig = (
   config: StrategyConfig,
-  settings: ProjectionSettings
+  settings: Pick<ProjectionSettings, 'horizonYears' | 'annualIncreasePct'>
 ): StrategyConfig => {
   const horizonIso = horizonDate(config.asOfDate, settings.horizonYears);
   const standing = standingWithdrawal(config.column1.withdrawals, config.asOfDate);
@@ -334,14 +376,70 @@ export const scenarioRates = (
   key: ScenarioKey
 ): Record<string, number> =>
   Object.fromEntries(Object.entries(bands).map(([code, band]) => [code, band[key]]));
-/** Reduces a long series to roughly `target` evenly spaced points, keeping the last. */
-export const downsample = <T,>(rows: T[], target: number): T[] => {
-  if (rows.length <= target) return rows;
-  const stride = Math.ceil(rows.length / target);
-  const sampled = rows.filter((_, index) => index % stride === 0);
-  const last = rows[rows.length - 1];
-  if (sampled[sampled.length - 1] !== last) sampled.push(last);
-  return sampled;
+/**
+ * Default rate for the "today's rupees" view.
+ *
+ * A deliberate, separate number rather than reusing the strategy's yearly
+ * withdrawal increase. That increase is the user's own spending escalation, not
+ * a claim about inflation, and it defaults to zero — so deflating by it would
+ * make the whole view a silent no-op for most configurations. Roughly the
+ * long-run Indian CPI average; exposed in the UI so it reads as an assumption
+ * rather than a fact.
+ */
+export const DEFAULT_INFLATION_PCT = 6;
+/**
+ * Starting settings.
+ *
+ * `median` because the middle of a fund's own history is the least
+ * presumptuous default, and `today` because the chart now runs to the horizon
+ * inline — nominal rupees at 100 years would flatten the measured history onto
+ * the axis before the user had touched anything.
+ */
+export const DEFAULT_PROJECTION_SETTINGS: ProjectionSettings = {
+  horizonYears: 30,
+  annualIncreasePct: 0,
+  scenarioKey: 'median',
+  valueMode: 'today',
+  inflationPct: DEFAULT_INFLATION_PCT,
+};
+/**
+ * Re-expresses projected values in the money of `baseDate`.
+ *
+ * At a hundred years the nominal numbers are the problem, not the resolution:
+ * a strong scenario terminal can be several million times the value a decade
+ * in, which on a linear axis flattens the entire measured history to the axis
+ * line. Deflating restores a readable range without changing the model.
+ *
+ * Only points after `baseDate` are touched. The measured history is in the
+ * rupees of its own time and re-expressing it would move the historical line —
+ * which every other part of this module is careful to keep identical to the
+ * unprojected run.
+ */
+export const deflateSnapshots = <T extends { date: string }>(
+  snapshots: T[],
+  keys: ReadonlyArray<keyof T & string>,
+  baseDate: string,
+  annualPct: number
+): T[] => {
+  if (annualPct <= 0 || snapshots.length === 0) return snapshots;
+  const baseTime = parseAnyDate(baseDate).getTime();
+  if (!Number.isFinite(baseTime)) return snapshots;
+  const rate = 1 + annualPct / 100;
+  return snapshots.map((snapshot) => {
+    const time = parseAnyDate(snapshot.date).getTime();
+    if (!Number.isFinite(time) || time <= baseTime) return snapshot;
+    const years = (time - baseTime) / MS_PER_YEAR;
+    const divisor = rate ** years;
+    if (!Number.isFinite(divisor) || divisor <= 0) return snapshot;
+    const next = { ...snapshot };
+    for (const key of keys) {
+      const value = snapshot[key];
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        (next as Record<string, unknown>)[key] = value / divisor;
+      }
+    }
+    return next;
+  });
 };
 /** Rupees at the horizon expressed in today's money, deflated at `annualPct`. */
 export const inTodaysRupees = (value: number, annualPct: number, years: number): number => {
