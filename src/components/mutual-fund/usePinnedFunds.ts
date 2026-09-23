@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import type { MFType, NavType } from '../../types/types';
 import type { PinnedFund } from './types';
-import { parseAnyDate, parseNavDate, navDateToISO } from '../../utilities/utility';
+import { navDateToISO } from '../../utilities/utility';
 import { fetchBatchMFbySchemeCodes, fetchMFbySchemeCode } from '../../data/api_data';
+import { historySatisfies } from '../../data/api/mfApi';
 import { getChartSeriesColor } from '../../data/chartColors';
 export function usePinnedFunds(
   initialPinned: PinnedFund[] = [],
@@ -18,32 +19,29 @@ export function usePinnedFunds(
   const [isNavLoading, setIsNavLoading] = useState(false);
   const pinnedFundsRef = useRef(pinnedFunds);
   const pinnedNavDataRef = useRef(pinnedNavData);
-  // `${schemeCode}|${endDate}` pairs already fetched. AMFI publishes no NAV on
-  // weekends/holidays and the current day's NAV lands late in the evening, so a
-  // fund's latest NAV legitimately predates the requested end date. Without
-  // this record the staleness check below would refetch on every render and the
-  // chart would never leave its loading state.
-  const fetchedEndDatesRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     pinnedFundsRef.current = pinnedFunds;
     pinnedNavDataRef.current = pinnedNavData;
   }, [pinnedFunds, pinnedNavData]);
   useEffect(() => {
     if (pinnedFunds.length === 0) return;
-    const reqDateMs = endDate ? parseAnyDate(endDate).getTime() : 0;
-    const missingFunds = pinnedFunds.filter((fund) => {
-      const data = pinnedNavDataRef.current[fund.schemeCode];
-      if (!data || data.length === 0) return true;
-      if (reqDateMs > 0 && !fetchedEndDatesRef.current.has(`${fund.schemeCode}|${endDate}`)) {
-        let latestDateMs = 0;
-        for (const n of data) {
-          const time = parseNavDate(n.date).getTime();
-          if (time > latestDateMs) latestDateMs = time;
-        }
-        if (reqDateMs > latestDateMs) return true;
-      }
-      return false;
-    });
+    /*
+     * A fund needs fetching when what we hold does not reach the newest NAV
+     * that exists. `historySatisfies` answers that against the watermark the
+     * server publishes, so a history ending on Friday counts as current when
+     * Friday is the last published NAV.
+     *
+     * This replaces a check against the *requested* end date, plus a
+     * never-expiring `Set` of `code|endDate` pairs that existed to stop it
+     * looping: because the requested date is usually today and the newest NAV
+     * never is, the check was permanently true and the chart would have
+     * refetched on every render. The `Set` suppressed the loop but also meant
+     * that once a date had been fetched, a genuinely newer NAV was never picked
+     * up again for the rest of the session.
+     */
+    const missingFunds = pinnedFunds.filter(
+      (fund) => !historySatisfies(pinnedNavDataRef.current[fund.schemeCode], endDate)
+    );
     if (missingFunds.length === 0) {
       setIsNavLoading(false);
       return;
@@ -55,13 +53,6 @@ export function usePinnedFunds(
       try {
         const batchResults = await fetchBatchMFbySchemeCodes(codes, endDate);
         if (!cancelled) {
-          // Only record funds the fetch actually resolved, so a failed request
-          // is retried rather than silently accepted as "no newer NAV exists".
-          for (const code of codes) {
-            if (batchResults[code]?.length || pinnedNavDataRef.current[code]?.length) {
-              fetchedEndDatesRef.current.add(`${code}|${endDate}`);
-            }
-          }
           setPinnedNavData((prev) => ({ ...prev, ...batchResults }));
         }
       } catch (err) {

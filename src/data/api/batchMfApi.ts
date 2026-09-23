@@ -1,7 +1,5 @@
 import { NavType } from '../../types/types';
 import { getBatchMutualFundNavAction } from '@/actions/data';
-import { getTodayISO } from '../../utilities/dateGuards';
-import { isNavHistoryFresh, navFreshnessCeiling } from '../../utilities/navCalendar';
 import {
   CLIENT_NAV_CACHE_TTL_MS,
   getSessionItem,
@@ -11,33 +9,10 @@ import {
 import {
   MFMetaType,
   fetchMFbySchemeCode,
+  historySatisfies,
   mfDetailsCache,
   mfNavCache,
 } from './mfApi';
-/**
- * Whether a cached history answers a request for `requestedEndDate`.
- *
- * This replaces a `Set` of `${schemeCode}|${endDate}` pairs that recorded
- * "already tried this date once". That existed to stop the network being hit
- * repeatedly for a date upstream will never publish — a weekend, a holiday, or
- * today before the evening — which was the right problem to notice but the
- * wrong layer to fix it at: the set never expired, so after one attempt the
- * cache was considered satisfactory for that date forever and a genuinely newer
- * NAV was never picked up for the rest of the session.
- *
- * Asking against the publication ceiling removes the need for the workaround
- * altogether: a history ending Friday *is* fresh for a Saturday request, so
- * there is no failed attempt to remember. The server applies the same ceiling,
- * and the re-sync cooldown there handles the holiday case.
- */
-const historySatisfies = (data: NavType[] | undefined, requestedEndDate?: string | null): boolean => {
-  if (!data || data.length === 0) return false;
-  return isNavHistoryFresh(data, navFreshnessCeiling(requestedEndDate || getTodayISO()));
-};
-/**
- * High-performance batch fetcher for multiple pinned mutual funds.
- * Resolves all funds in a single server action call instead of multiple parallel requests.
- */
 export const fetchBatchMFbySchemeCodes = async (
   schemeCodes: (string | number)[],
   requestedEndDate?: string | null
@@ -79,7 +54,7 @@ export const fetchBatchMFbySchemeCodes = async (
           // Keep raw object if not JSON string
         }
       }
-      const data = parsed as { data?: NavType[]; meta?: MFMetaType };
+      const data = parsed as { data?: NavType[]; meta?: MFMetaType; marketAsOf?: string };
       if (data && Array.isArray(data.data)) {
         result[code] = data.data;
         mfNavCache.set(code, {

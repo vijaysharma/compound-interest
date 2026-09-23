@@ -17,18 +17,47 @@ export interface MFDetailsResult {
   meta?: MFMetaType;
 }
 /**
- * Whether a cached NAV history is good enough to answer a request for
- * `endDate`, using the same ceiling the server applies.
+ * The newest NAV the server has told us exists, as of the last response.
  *
- * The browser previously had no notion of this: entries were keyed by scheme
- * code alone and trusted for 30 days, so a date change re-served a month-old
- * history and looked like the date had been ignored. Sharing
- * `navFreshnessCeiling` with the server means both sides agree on what "fresh"
- * means — before, each had its own rule and they disagreed.
+ * The server judges freshness against a watermark it *observes* upstream, which
+ * the browser cannot compute — it has no access to Redis and no way to know the
+ * provider is two business days behind. Reconstructing it here from the
+ * calendar is exactly what went wrong before: during a publication gap the two
+ * sides disagree on every request, so the browser calls its cache stale, asks
+ * the server, and the server returns the identical bytes it already held.
+ *
+ * So the server publishes `marketAsOf` with each response and the browser just
+ * believes it. One definition of "current", held in one place.
  */
-const historySatisfies = (data: NavType[] | undefined, endDate?: string | null): boolean => {
+let marketAsOf: string | null = null;
+const rememberMarketAsOf = (payload: { marketAsOf?: unknown }): void => {
+  if (typeof payload?.marketAsOf === 'string' && payload.marketAsOf) {
+    marketAsOf = payload.marketAsOf;
+  }
+};
+/**
+ * Whether a cached NAV history can answer a request for `endDate`.
+ *
+ * Entries used to be keyed by scheme code alone and trusted for 30 days, so a
+ * date change re-served a month-old history and looked as though the date had
+ * been ignored. Now an entry is good while it reaches whichever is earlier: the
+ * date asked for, or the newest NAV the server says exists.
+ *
+ * Before the first response of a session there is no watermark, so it falls
+ * back to the calendar prediction — wrong during a gap, but only for the very
+ * first request, which has to go to the server regardless.
+ */
+export const historySatisfies = (
+  data: NavType[] | undefined,
+  endDate?: string | null
+): boolean => {
   if (!data || data.length === 0) return false;
-  const ceiling = navFreshnessCeiling(endDate || getTodayISO());
+  const requested = endDate || getTodayISO();
+  const ceiling = marketAsOf
+    ? requested < marketAsOf
+      ? requested
+      : marketAsOf
+    : navFreshnessCeiling(requested);
   return isNavHistoryFresh(data, ceiling);
 };
 const mfSearchCache = new Map<string, MFJSONType[]>();
@@ -85,10 +114,16 @@ export const fetchMFWithMeta = async (
   if (typeof rawData === 'string') {
     try { rawData = JSON.parse(rawData); } catch { /* ignore non-JSON */ }
   }
-  const parsed = rawData as { data?: NavType[]; meta?: MFMetaType; error?: string };
+  const parsed = rawData as {
+    data?: NavType[];
+    meta?: MFMetaType;
+    error?: string;
+    marketAsOf?: string;
+  };
   if (!parsed || !Array.isArray(parsed.data)) {
     throw new Error(parsed?.error ?? 'Mutual fund response did not contain NAV data');
   }
+  rememberMarketAsOf(parsed);
   const result: MFDetailsResult = { data: parsed.data, meta: parsed.meta };
   mfDetailsCache.set(schemeCode, { expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS, data: result });
   mfNavCache.set(schemeCode, { expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS, data: parsed.data });
@@ -127,10 +162,16 @@ export const fetchMFbySchemeCode = async (
     if (typeof rawData === 'string') {
       try { rawData = JSON.parse(rawData); } catch { /* ignore non-JSON */ }
     }
-    const data = rawData as { data?: NavType[]; meta?: MFMetaType; error?: string };
+    const data = rawData as {
+      data?: NavType[];
+      meta?: MFMetaType;
+      error?: string;
+      marketAsOf?: string;
+    };
     if (!data || !Array.isArray(data.data)) {
       throw new Error(data?.error ?? 'Mutual fund response did not contain NAV data');
     }
+    rememberMarketAsOf(data);
     if (data.meta) {
       mfDetailsCache.set(schemeCode, { expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS, data: { data: data.data, meta: data.meta } });
     }
