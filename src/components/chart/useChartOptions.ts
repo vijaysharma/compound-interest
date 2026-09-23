@@ -11,6 +11,7 @@ import {
 import type { AgCartesianChartOptions } from 'ag-charts-types';
 import type { ChartDataset } from './types';
 import { getDateTime, formatCurrency, formatAxisCurrency } from './chartUtils';
+import { selectChartDates } from './downsample';
 if (typeof window !== 'undefined') {
   ModuleRegistry.registerModules([
     CartesianChartModule,
@@ -53,7 +54,14 @@ export function useChartOptions(
       }
       return { label: dataset.label, color: dataset.color, valueMap };
     });
-    const chartData = activeDates.map((date) => {
+    // Thin the shared date axis before building rows. Selection considers every
+    // series so all of them stay sampled at the same dates and keep their
+    // extremes; short windows come back untouched.
+    const plottedDates = selectChartDates(
+      activeDates,
+      normalizedDatasets.map((d) => d.valueMap)
+    );
+    const chartData = plottedDates.map((date) => {
       const row: Record<string, string | number> = { date };
       for (let i = 0; i < normalizedDatasets.length; i++) row[`fund_${i}`] = normalizedDatasets[i].valueMap.get(date) ?? NaN;
       return row;

@@ -1,5 +1,5 @@
 import React from 'react';
-import Spinner from '../Spinner';
+import { ChartSkeleton } from '../skeleton';
 import styles from '../Chart.module.scss';
 export interface ChartEmptyStateProps {
   className?: string;
@@ -31,10 +31,18 @@ export const ChartEmptyState: React.FC<ChartEmptyStateProps> = React.memo(
     const bindHeight = (el: HTMLDivElement | null) => {
       if (el) el.style.setProperty('--chart-target-height', `${targetHeight}px`);
     };
+    /*
+     * The three "on its way" states below render the plot-shaped skeleton rather
+     * than a spinner. A centred spinner in a 350px box was the single most
+     * visible symptom of the NAV fetch being slow — and because it is a
+     * different shape from the chart, the whole column jumped when data landed.
+     * The terminal states further down stay as text: they are answers, not
+     * waits, and a skeleton would imply something is still coming.
+     */
     if (isLoading) {
       return (
         <div className={`${className || ''} ${styles.emptyContainer}`} ref={bindHeight}>
-          <Spinner size="md" label={loadingLabel || 'Loading historical NAV data...'} />
+          <ChartSkeleton label={loadingLabel || 'Loading historical NAV data'} />
         </div>
       );
     }
@@ -69,14 +77,14 @@ export const ChartEmptyState: React.FC<ChartEmptyStateProps> = React.memo(
     if (!hasChartOptions) {
       return (
         <div className={`${className || ''} ${styles.emptyContainer}`} ref={bindHeight}>
-          <Spinner size="sm" label="Preparing chart..." />
+          <ChartSkeleton label="Preparing chart" />
         </div>
       );
     }
     if (!mounted) {
       return (
         <div className={`${className || ''} ${styles.emptyContainer}`} ref={bindHeight}>
-          <Spinner size="sm" label="Loading chart..." />
+          <ChartSkeleton label="Loading chart" />
         </div>
       );
     }

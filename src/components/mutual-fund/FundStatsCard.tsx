@@ -1,7 +1,7 @@
 import React from 'react';
 import type { NavType } from '../../types/types';
-import Spinner from '../Spinner';
 import styles from '../../views/MutualFundAnalytics.module.scss';
+import { NavValuesSkeleton } from '../skeleton';
 export interface FundStatsCardProps {
   start?: NavType;
   end?: NavType;
@@ -37,9 +37,7 @@ export const FundStatsCard: React.FC<FundStatsCardProps> = React.memo(
         </span>
       </div>
       {!start || !end ? (
-        <div className={styles.spinnerWrapper}>
-          <Spinner size="sm" label="Loading NAV data..." />
-        </div>
+        <NavValuesSkeleton />
       ) : (
         <>
           <div className={styles.navDatesRow}>

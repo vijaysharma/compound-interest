@@ -1,6 +1,6 @@
 import type { SwpFundAnalysis } from './types';
-import Spinner from '../../components/Spinner';
 import styles from '../MutualFundAnalytics.module.scss';
+import { NavValuesSkeleton } from '../../components/skeleton';
 const formatNav = (nav: string): string => {
   const [whole, fraction] = nav.split('.');
   return fraction ? `${whole}.${fraction.slice(0, 2)}` : whole;
@@ -22,9 +22,7 @@ export function SwpStatCard({ fund }: { fund: SwpFundAnalysis }) {
         <span title={schemeName} className={styles.fundName}>{schemeName}</span>
       </div>
       {!startNav || !endNav ? (
-        <div className={styles.spinnerWrapper}>
-          <Spinner size="sm" label="Loading NAV data..." />
-        </div>
+        <NavValuesSkeleton />
       ) : (
         <>
           <div className={`${styles.navDatesRow} ${styles.navDatesRowSpaced}`}>
