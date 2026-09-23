@@ -268,45 +268,109 @@
 }
 
 /*
- * Projection controls above the chart: on/off, horizon, scenario, value mode.
+ * Card heading with the projection switch alongside it.
  *
- * One row on a desktop width, wrapping on narrow screens. It sits above the
- * legend so the chart itself never shifts as the groups reflow.
+ * The switch governs whether the control row below exists at all, so it belongs
+ * next to the title rather than as a fourth group inside the row it controls.
  */
-.chartControls {
+.chartHeader {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.4rem 0.9rem;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  gap: 0.75rem 1.75rem;
+  justify-content: space-between;
+  .projectionToggle {
+    width: auto;
+    flex-direction: row;
+  }
+}
+
+.chartTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: $color-heading;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
 }
 
 /*
- * Shrinks a JoinedButtonGroup to its content.
- *
- * Its own `.container` is `width: 100%`, which is right when a group is the
- * only thing on a line and wrong here — four full-width groups stacked into
- * four tall rows instead of sitting side by side. The custom properties are the
- * restyling hooks that module documents, so the sizes come down without
- * fighting its cascade.
+ * The switch itself: label inline to the left of the buttons, not stacked above
+ * it, so the whole thing reads as one line beside the heading.
  */
-.chartControl {
+.projectionToggle {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
   width: auto;
-  flex: 0 0 auto;
+  margin: 0;
   --jbg-margin-y: 0;
-  --jbg-height: 1.6rem;
-  --jbg-font-size: 0.7rem;
+  --jbg-height: 28px;
+  --jbg-font-size: 0.75rem;
+  --jbg-font-weight: 600;
+  --jbg-padding: 0 0.85rem;
+  --jbg-border-radius: 9999px;
+
+  h5 {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $color-text-secondary;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: left;
+  }
+}
+
+/*
+ * Projection controls: horizon, scenario, value mode.
+ *
+ * One row at desktop width, wrapping on narrow screens — ten horizon buttons
+ * plus two toggles will not fit a phone. Sits above the legend so the chart
+ * never shifts as the groups reflow.
+ */
+.chartControls {
+  display: grid;
+  grid-template-columns: minmax(0, 2.15fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+
+  @include mobile-only {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+.chartControl {
+  width: 100%;
+  margin: 0;
+  --jbg-margin-y: 0;
+  --jbg-height: 28px;
+  --jbg-font-size: 0.8rem;
+  --jbg-font-weight: 600;
   --jbg-padding: 0 0.5rem;
 
   h5 {
-    font-size: 0.62rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: $color-text-secondary;
-    margin: 0 0 0.15rem;
-    text-align: left;
+    margin: 0 0 0.4rem;
+    text-align: center;
+    line-height: 1.2;
   }
+}
+
+.chartControlWide {
+  --jbg-padding: 0 0.25rem;
+  --jbg-font-size: 0.78rem;
 }
 
 /*
@@ -317,19 +381,23 @@
  * term attached to its explanation for a screen reader too.
  */
 .chartControlNotes {
-  margin: 0 0 0.7rem;
-  font-size: 0.68rem;
-  line-height: 1.45;
+  margin: 0.25rem 0 1rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
   color: $color-text-secondary;
 
   dt {
     font-weight: 700;
     color: $color-text-primary;
-    margin-top: 0.3rem;
+    margin-top: 0.6rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
 
   dd {
-    margin: 0;
+    margin: 0.15rem 0 0;
   }
 }
 

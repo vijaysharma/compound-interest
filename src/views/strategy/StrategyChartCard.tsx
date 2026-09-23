@@ -61,6 +61,18 @@ const PROJECTION_TOGGLE = [
   { id: 'projection-on', value: true, title: 'On' },
 ];
 const percent = (rate: number): string => `${(rate * 100).toFixed(1)}%`;
+/**
+ * Button labels, shortened from `SCENARIO_LABELS`.
+ *
+ * "Moderate" forces the scenario group far wider than the other two and
+ * unbalances the row. The notes underneath spell all three out in full, so the
+ * abbreviation costs nothing.
+ */
+const SCENARIO_BUTTON_LABELS: Record<ProjectionSettings['scenarioKey'], string> = {
+  weak: 'Low',
+  median: 'Mod',
+  strong: 'High',
+};
 const DEFLATED_KEYS = ['column1Value', 'column2Value', 'totalValue'] as const;
 export const StrategyChartCard = ({
   config,
@@ -151,11 +163,13 @@ export const StrategyChartCard = ({
       : 'No portfolio values to show yet.';
   return (
     <section className={styles.card} aria-labelledby="strategy-chart-title">
-      <h2 className={styles.cardTitle} id="strategy-chart-title">
-        Portfolio value
-      </h2>
-      {canProject && (
-        <div className={styles.chartControls}>
+      <div className={styles.chartHeader}>
+        <h2 className={styles.chartTitle} id="strategy-chart-title">
+          Portfolio value
+        </h2>
+        {canProject && (
+          // Beside the heading rather than in the row below, because it governs
+          // whether that row exists at all.
           <JoinedButtonGroup<boolean>
             title="Projection"
             data={PROJECTION_TOGGLE}
@@ -163,78 +177,80 @@ export const StrategyChartCard = ({
             updateSelectedValue={(enabled) => onSettingsChange({ enabled })}
             sizePrefix="xs"
             compact
-            className={styles.chartControl}
+            className={styles.projectionToggle}
           />
-          {isProjecting && (
-            <>
-              <JoinedButtonGroup<number>
-                title="Project to"
-                data={HORIZON_PRESETS.map((years) => ({
-                  id: `horizon-${years}`,
-                  value: years,
-                  title: `${years}y`,
-                }))}
-                selectedValue={settings.horizonYears}
-                updateSelectedValue={(horizonYears) => onSettingsChange({ horizonYears })}
-                sizePrefix="xs"
-                compact
-                className={styles.chartControl}
-              />
-              <JoinedButtonGroup<ProjectionSettings['scenarioKey']>
-                title="Return scenario"
-                data={SCENARIO_KEYS.map((key) => ({
-                  id: `scenario-${key}`,
-                  value: key,
-                  title: SCENARIO_LABELS[key],
-                  // Keeps the percentile meaning attached to the plain-language
-                  // label, which calling them Low/Moderate/High otherwise loses.
-                  tooltip: SCENARIO_BLURBS[key],
-                }))}
-                selectedValue={settings.scenarioKey}
-                updateSelectedValue={(scenarioKey) => onSettingsChange({ scenarioKey })}
-                sizePrefix="xs"
-                compact
-                className={styles.chartControl}
-              />
-              <JoinedButtonGroup<ProjectionSettings['valueMode']>
-                title="Money"
-                data={VALUE_MODES}
-                selectedValue={settings.valueMode}
-                updateSelectedValue={(valueMode) => onSettingsChange({ valueMode })}
-                sizePrefix="xs"
-                compact
-                className={styles.chartControl}
-              />
-            </>
-          )}
-        </div>
-      )}
+        )}
+      </div>
       {isProjecting && (
-        /*
-         * The controls name three scenarios and two ways of counting money, and
-         * neither label says what it means. Spelling both out here rather than
-         * relying on hover text, which is invisible on touch and easy to miss.
-         */
-        <dl className={styles.chartControlNotes}>
-          <dt>Low / Moderate / High</dt>
-          <dd>
-            The 10th, 50th and 90th percentiles of what this fund has actually
-            returned over every rolling window in its own published history — not
-            assumptions. Low means it did worse than this in 1 window out of 10.
-            {primaryBand
-              ? ` For ${primaryFundName}: Low ${percent(primaryBand.weak)}, Moderate ` +
-                `${percent(primaryBand.median)}, High ${percent(primaryBand.strong)} a year, ` +
-                `from ${primaryBand.historyYears.toFixed(1)} years of NAVs.`
-              : ''}
-          </dd>
-          <dt>Today&apos;s ₹ / Nominal</dt>
-          <dd>
-            Nominal is the rupee figure on that future date. Today&apos;s ₹ discounts
-            it by {settings.inflationPct}% a year, so it reads as what that money
-            would buy now — which is the only way the early years stay visible on
-            the chart once decades of compounding are on it.
-          </dd>
-        </dl>
+        <>
+          <div className={styles.chartControls}>
+            <JoinedButtonGroup<number>
+              title="Project to"
+              data={HORIZON_PRESETS.map((years) => ({
+                id: `horizon-${years}`,
+                value: years,
+                title: `${years}y`,
+              }))}
+              selectedValue={settings.horizonYears}
+              updateSelectedValue={(horizonYears) => onSettingsChange({ horizonYears })}
+              sizePrefix="sm"
+              compact
+              className={`${styles.chartControl} ${styles.chartControlWide}`}
+            />
+            <JoinedButtonGroup<ProjectionSettings['scenarioKey']>
+              title="Return scenario"
+              data={SCENARIO_KEYS.map((key) => ({
+                id: `scenario-${key}`,
+                value: key,
+                title: SCENARIO_BUTTON_LABELS[key],
+                // Keeps the percentile meaning on the button too, for anyone
+                // who hovers before reading the notes below.
+                tooltip: SCENARIO_BLURBS[key],
+              }))}
+              selectedValue={settings.scenarioKey}
+              updateSelectedValue={(scenarioKey) => onSettingsChange({ scenarioKey })}
+              sizePrefix="sm"
+              compact
+              className={styles.chartControl}
+            />
+            <JoinedButtonGroup<ProjectionSettings['valueMode']>
+              title="Money"
+              data={VALUE_MODES}
+              selectedValue={settings.valueMode}
+              updateSelectedValue={(valueMode) => onSettingsChange({ valueMode })}
+              sizePrefix="sm"
+              compact
+              className={styles.chartControl}
+            />
+          </div>
+          {/*
+           * Both control labels name things that are not self-explanatory, and
+           * the per-button hover text that carries the detail is invisible on
+           * touch. Worked through with this strategy's own numbers rather than
+           * described in the abstract — the spread between scenarios only lands
+           * when you see what it does to a real amount.
+           */}
+          <dl className={styles.chartControlNotes}>
+            <dt>Low / Moderate / High</dt>
+            <dd>
+              The 10th, 50th and 90th percentiles of what this fund has actually returned over every
+              rolling window in its own published history — not assumptions. Low means it did worse
+              than this in 1 window out of 10.
+              {primaryBand
+                ? ` For ${primaryFundName}: Low ${percent(primaryBand.weak)}, Moderate ` +
+                  `${percent(primaryBand.median)}, High ${percent(primaryBand.strong)} a year, ` +
+                  `from ${primaryBand.historyYears.toFixed(1)} years of NAVs.`
+                : ''}
+            </dd>
+            <dt>Today&apos;s ₹ / Nominal</dt>
+            <dd>
+              Nominal is the rupee figure on that future date. Today&apos;s ₹ discounts it by{' '}
+              {settings.inflationPct}% a year, so it reads as what that money would buy now — which
+              is the only way the early years stay visible on the chart once decades of compounding
+              are on it.
+            </dd>
+          </dl>
+        </>
       )}
       <ul className={styles.chartLegend}>
         {datasets.map((dataset) => (

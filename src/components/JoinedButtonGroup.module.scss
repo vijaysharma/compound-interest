@@ -16,11 +16,13 @@ $btn-radius: 8px;
  * properties are read from any ancestor, so setting one on the class passed in
  * through `className` sidesteps the cascade altogether.
  *
- *   --jbg-margin-y     vertical margin around the whole group
- *   --jbg-height       button height (also applied as min-height)
- *   --jbg-font-size    button label size
- *   --jbg-font-weight  button label weight, selected or not
- *   --jbg-padding      button inline padding
+ *   --jbg-margin-y            vertical margin around the whole group
+ *   --jbg-height              button height (also applied as min-height)
+ *   --jbg-font-size           button label size
+ *   --jbg-font-weight         button label weight, unselected
+ *   --jbg-active-font-weight  button label weight, selected
+ *   --jbg-padding             button inline padding
+ *   --jbg-border-radius       border radius for the button group and corners
  *
  * Each is consumed with the variant's own value as the fallback, so leaving
  * them unset renders exactly as before.
@@ -97,9 +99,9 @@ $btn-radius: 8px;
 }
 
 .buttonGroup {
-  @include joined-row($btn-radius);
+  @include joined-row(var(--jbg-border-radius, #{$btn-radius}));
   background-color: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
-  border-radius: $btn-radius;
+  border-radius: var(--jbg-border-radius, #{$btn-radius});
   border: 1px solid $color-primary;
   box-sizing: border-box;
   overflow: hidden;
@@ -175,7 +177,7 @@ $btn-radius: 8px;
   &.active {
     background-color: $color-primary;
     color: var(--color-primary-content);
-    font-weight: var(--jbg-font-weight, 700);
+    font-weight: var(--jbg-active-font-weight, 700);
   }
 
   &:disabled {
