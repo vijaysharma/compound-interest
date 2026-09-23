@@ -1,159 +1,169 @@
-import { getDb, MF_URL } from '@/lib/db';
-import { redisGet, redisIncr, redisSet } from '@/lib/redis';
-import { resolveDateRange } from '@/utilities/dateGuards';
-import { navFreshnessCeiling } from '@/utilities/navCalendar';
+import { after } from 'next/server';
+import { getDb } from '@/lib/db';
+import { redisGet } from '@/lib/redis';
+import { ISO_DATE_REGEX, resolveDateRange } from '@/utilities/dateGuards';
+import { latestNavDateIn } from '@/utilities/navCalendar';
+import { sliceNavHistory } from '@/utilities/navSlice';
 import {
-  NAV_CACHE_TTL_SECONDS,
   NAV_IN_MEMORY_TTL_MS,
-  NAV_SYNC_COOLDOWN_SECONDS,
-  NAV_UPSTREAM_TIMEOUT_MS,
-  getLatestNavDateISO,
-  isNavPayloadFresh,
   mfNavCache,
   navPayloadKey,
-  navSyncGateKey,
   parseNavPayload,
 } from './constants';
-type NavPayload = { data: unknown[]; [k: string]: unknown };
+import { resolveFreshnessCeiling } from './navWatermark';
+import {
+  FIRST_FETCH_TIMEOUT_MS,
+  type NavPayload,
+  runNavMaintenance,
+  syncSchemeFromUpstream,
+} from './navSync';
 /**
- * Claims the right to re-sync one scheme from upstream.
+ * Best copy of a scheme's history we already hold, and where it came from.
  *
- * `INCR` on a key with a TTL is an atomic counter, so exactly one caller sees
- * `1` within the cooldown window and everyone else sees a higher number and
- * serves what it already has. That does two jobs: it collapses a burst of
- * concurrent requests for the same cold scheme into one upstream fetch, and it
- * stops an unsatisfiable freshness ceiling — a holiday, a suspended scheme —
- * from turning every request back into an upstream call.
- *
- * Fails open: if Redis is unreachable the fetch is allowed rather than blocked,
- * because a slow correct answer beats a fast empty one.
+ * The layers are probed newest-first but *none of them gates on freshness*, in
+ * a deliberate reversal of how this used to work. Freshness no longer decides
+ * whether to answer — it decides whether to schedule a refresh afterwards.
+ * Judging it up front is what made a stale-but-usable payload turn into a
+ * blocking upstream fetch on every request.
  */
-async function claimSyncSlot(schemeCode: string): Promise<boolean> {
-  try {
-    const attempts = await redisIncr(navSyncGateKey(schemeCode), NAV_SYNC_COOLDOWN_SECONDS);
-    return attempts <= 1;
-  } catch {
-    return true;
+async function readStored(schemeCode: string): Promise<{
+  payload: NavPayload | null;
+  latest: string | null;
+  fromDb: boolean;
+}> {
+  const cached = mfNavCache.get(schemeCode);
+  if (cached && cached.expiresAt > Date.now()) {
+    const payload = parseNavPayload(cached.data);
+    if (payload) {
+      // `latest` was stored at write time; recomputing it here would walk every
+      // row on the one path that is supposed to be instant.
+      const latest =
+        cached.latest !== undefined
+          ? cached.latest
+          : latestNavDateIn(payload.data as Array<{ date?: string }>);
+      return { payload, latest, fromDb: false };
+    }
   }
+  const redisPayload = parseNavPayload(await redisGet(navPayloadKey(schemeCode)));
+  if (redisPayload) {
+    const latest = latestNavDateIn(redisPayload.data as Array<{ date?: string }>);
+    mfNavCache.set(schemeCode, {
+      expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+      data: redisPayload,
+      latest,
+    });
+    return { payload: redisPayload, latest, fromDb: false };
+  }
+  try {
+    const sql = getDb();
+    const rows = (await sql`
+      SELECT payload, latest_nav_date::text AS latest_nav_date
+      FROM mutual_fund_nav WHERE scheme_code = ${schemeCode}
+    `) as Array<{ payload: unknown; latest_nav_date: string | null }>;
+    if (rows.length > 0) {
+      const payload = parseNavPayload(rows[0].payload);
+      if (payload) {
+        // The denormalised column when it is there, a scan of the history when
+        // it is not — the column is backfilled lazily, so both cases are live.
+        const latest =
+          rows[0].latest_nav_date ??
+          latestNavDateIn(payload.data as Array<{ date?: string }>);
+        mfNavCache.set(schemeCode, {
+          expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+          data: payload,
+          latest,
+        });
+        return { payload, latest, fromDb: true };
+      }
+    }
+  } catch (dbErr) {
+    console.warn('[nav] DB read failed:', dbErr);
+  }
+  return { payload: null, latest: null, fromDb: false };
 }
-function rememberPayload(schemeCode: string, payload: NavPayload): void {
-  mfNavCache.set(schemeCode, {
-    expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-    data: payload,
-  });
-  redisSet(navPayloadKey(schemeCode), payload, NAV_CACHE_TTL_SECONDS).catch(() => {});
-}
+/**
+ * Serves a scheme's NAV history.
+ *
+ * `requestedStartDate` is optional and, when given, trims the response to that
+ * window plus a lookup margin. It has to be the *raw* value rather than
+ * anything `resolveDateRange` produces, because that helper invents a start
+ * date three months back when none is supplied — using it would quietly cut
+ * every full-history caller down to ninety days.
+ */
 export async function handleGetMutualFundNav(
   schemeCodeRaw: string | number,
-  requestedEndDate?: string | null
+  requestedEndDate?: string | null,
+  requestedStartDate?: string | null
 ): Promise<unknown> {
   const schemeCode = String(schemeCodeRaw).trim();
   if (!/^\d{1,10}$/.test(schemeCode)) {
     throw new Error('Invalid scheme code. Must be numeric.');
   }
   const { endDate } = resolveDateRange(undefined, requestedEndDate);
-  // The newest NAV that can exist, not the date the caller asked for. Comparing
-  // against the request is what made every cache layer miss on every call.
-  const ceiling = navFreshnessCeiling(endDate);
-  const cached = mfNavCache.get(schemeCode);
-  // `expiresAt` was previously written and never read, so a process served its
-  // first payload for as long as it lived.
-  if (cached && cached.expiresAt > Date.now() && isNavPayloadFresh(cached.data, ceiling)) {
-    return parseNavPayload(cached.data);
+  const explicitStart =
+    requestedStartDate && ISO_DATE_REGEX.test(requestedStartDate.trim())
+      ? requestedStartDate.trim()
+      : null;
+  const stored = await readStored(schemeCode);
+  // Nothing at all: the one case where a user has to wait, because an empty
+  // chart is worse than a pause. Once per scheme, ever.
+  if (!stored.payload) {
+    const fetched = await syncSchemeFromUpstream(schemeCode, FIRST_FETCH_TIMEOUT_MS, null);
+    if (!fetched) {
+      throw new Error('Failed to fetch mutual fund NAV data');
+    }
+    scheduleMaintenance([{ code: schemeCode, current: fetched }]);
+    const firstCeiling = await resolveFreshnessCeiling(
+      endDate,
+      latestNavDateIn(fetched.data as Array<{ date?: string }>)
+    );
+    return withResponseMeta(fetched, firstCeiling, explicitStart, endDate);
   }
-  const redisNav = parseNavPayload(await redisGet(navPayloadKey(schemeCode)));
-  if (redisNav && isNavPayloadFresh(redisNav, ceiling)) {
-    mfNavCache.set(schemeCode, {
-      expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-      data: redisNav,
-    });
-    return redisNav;
+  // The ceiling is the newest NAV known to exist, seeded from what we hold so a
+  // cold Redis does not fall back to guessing. It no longer gates the response.
+  const ceiling = await resolveFreshnessCeiling(endDate, stored.latest);
+  const isFresh = Boolean(stored.latest && stored.latest >= ceiling);
+  // Either way the caller gets data now; only the follow-up work differs.
+  if (!isFresh) {
+    scheduleMaintenance([{ code: schemeCode, current: stored.payload }]);
   }
-  let storedPayload: NavPayload | null = null;
+  return withResponseMeta(stored.payload, ceiling, explicitStart, endDate);
+}
+/**
+ * Attaches `marketAsOf` — the newest NAV known to exist — to the response.
+ *
+ * Without it the browser has to decide for itself whether its cached copy is
+ * current, and the only thing it can do that with is the calendar prediction
+ * this server no longer uses. The two would disagree on every request during a
+ * publication gap: the browser would call a payload stale, ask the server, and
+ * the server would hand back the very same bytes it already had. Publishing the
+ * watermark keeps both sides on one definition of "current" by construction.
+ */
+export function withResponseMeta(
+  payload: NavPayload,
+  marketAsOf: string,
+  startDate: string | null,
+  endDate: string
+): NavPayload {
+  const rows = startDate
+    ? sliceNavHistory(payload.data as Array<{ date?: string }>, startDate, endDate)
+    : payload.data;
+  const data = rows === payload.data ? payload.data : (rows as unknown[]);
+  return { ...payload, data, marketAsOf };
+}
+/**
+ * Hands the refresh to `after()`, which runs once the response has been sent.
+ *
+ * Wrapped because `after()` throws outside a request scope — the cron route and
+ * any direct call would otherwise fail on the scheduling rather than the work.
+ * Falling back to fire-and-forget keeps the refresh happening in those contexts.
+ */
+export function scheduleMaintenance(
+  schemes: Array<{ code: string; current: NavPayload | null }>
+): void {
   try {
-    const sql = getDb();
-    const stored = (await sql`
-      SELECT payload, latest_nav_date::text AS latest_nav_date
-      FROM mutual_fund_nav WHERE scheme_code = ${schemeCode}
-    `) as Array<{ payload: unknown; latest_nav_date: string | null }>;
-    if (stored.length > 0) {
-      storedPayload = parseNavPayload(stored[0].payload);
-      // Prefer the denormalised column: it answers the freshness question
-      // without parsing the history and scanning it for a maximum. A NULL means
-      // the row predates the column, so fall back to doing exactly that.
-      const storedLatest = stored[0].latest_nav_date;
-      const isFresh = storedLatest
-        ? storedLatest >= ceiling
-        : Boolean(storedPayload && isNavPayloadFresh(storedPayload, ceiling));
-      if (storedPayload && isFresh) {
-        rememberPayload(schemeCode, storedPayload);
-        return storedPayload;
-      }
-    }
-  } catch (dbErr) {
-    console.warn('DB check in getMutualFundNavAction failed:', dbErr);
+    after(() => runNavMaintenance(schemes));
+  } catch {
+    void runNavMaintenance(schemes);
   }
-  // Nothing on hand reaches the ceiling. Go upstream only if this request wins
-  // the cooldown slot; otherwise fall through to the best stale copy below.
-  const maySync = !storedPayload || (await claimSyncSlot(schemeCode));
-  if (maySync) {
-    try {
-      const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(NAV_UPSTREAM_TIMEOUT_MS),
-      });
-      if (upstream.ok) {
-        const payload = parseNavPayload(await upstream.json());
-        if (payload && Array.isArray(payload.data) && payload.data.length > 0) {
-          // Only overwrite when upstream is at least as complete as what we
-          // hold. A truncated response would otherwise destroy real history,
-          // and this row is the only copy of it.
-          const isAtLeastAsComplete =
-            !storedPayload || payload.data.length >= storedPayload.data.length;
-          if (isAtLeastAsComplete) {
-            try {
-              const sql = getDb();
-              await sql`
-                INSERT INTO mutual_fund_nav (scheme_code, payload, latest_nav_date, updated_at)
-                VALUES (
-                  ${schemeCode},
-                  ${JSON.stringify(payload)}::jsonb,
-                  ${getLatestNavDateISO(payload)}::date,
-                  NOW()
-                )
-                ON CONFLICT (scheme_code) DO UPDATE SET
-                  payload = EXCLUDED.payload,
-                  latest_nav_date = EXCLUDED.latest_nav_date,
-                  updated_at = NOW()
-              `;
-            } catch (syncErr) {
-              console.warn('DB sync in getMutualFundNavAction failed:', syncErr);
-            }
-          } else {
-            console.warn(
-              `Upstream payload for ${schemeCode} is shorter than the stored one ` +
-                `(${payload.data.length} < ${storedPayload?.data.length}); keeping stored history.`
-            );
-          }
-          rememberPayload(schemeCode, payload);
-          return payload;
-        }
-      }
-    } catch (fetchError) {
-      console.warn('Upstream AMFI fetch failed:', fetchError);
-    }
-  }
-  // Best available, newest-first. Serving a payload that stops short of the
-  // ceiling is correct and expected: on a holiday, or before the publication
-  // window opens, no newer NAV exists to serve.
-  if (storedPayload) {
-    rememberPayload(schemeCode, storedPayload);
-    return storedPayload;
-  }
-  if (redisNav) return redisNav;
-  if (cached) {
-    const staleMemory = parseNavPayload(cached.data);
-    if (staleMemory) return staleMemory;
-  }
-  throw new Error('Failed to fetch mutual fund NAV data');
 }

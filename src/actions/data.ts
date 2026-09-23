@@ -22,15 +22,24 @@ export async function searchMutualFundsAction(
 ): Promise<Array<{ schemeCode: number; schemeName: string }>> {
   return handleSearchMutualFunds(searchQuery);
 }
+/**
+ * `requestedStartDate` is optional. Supplying it trims the response to that
+ * window plus a lookup margin, which is a large saving — a full history is
+ * ~133KB over ~3,400 rows, a two-year window roughly a fifth of that. Omitting
+ * it returns the whole history, which is what the strategy engine needs.
+ */
 export async function getMutualFundNavAction(
   schemeCodeRaw: string | number,
-  requestedEndDate?: string | null
+  requestedEndDate?: string | null,
+  requestedStartDate?: string | null
 ): Promise<unknown> {
-  return handleGetMutualFundNav(schemeCodeRaw, requestedEndDate);
+  return handleGetMutualFundNav(schemeCodeRaw, requestedEndDate, requestedStartDate);
 }
+/** See `getMutualFundNavAction` for the meaning of `requestedStartDate`. */
 export async function getBatchMutualFundNavAction(
   schemeCodesRaw: (string | number)[],
-  requestedEndDate?: string | null
+  requestedEndDate?: string | null,
+  requestedStartDate?: string | null
 ): Promise<Record<string, unknown>> {
-  return handleGetBatchMutualFundNav(schemeCodesRaw, requestedEndDate);
+  return handleGetBatchMutualFundNav(schemeCodesRaw, requestedEndDate, requestedStartDate);
 }

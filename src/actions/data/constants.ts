@@ -44,7 +44,18 @@ export const memoryState: {
   imfData: null,
 };
 export const mfSearchCache = new Map<string, { expiresAt: number; data: unknown[] }>();
-export const mfNavCache = new Map<string, { expiresAt: number; data: unknown }>();
+/**
+ * Process-level NAV cache.
+ *
+ * `latest` is carried alongside the payload because deriving it means walking
+ * every row — ~3,400 for a typical scheme, each one a `split` and a `padStart`
+ * — and that walk happens on the hottest path there is, a cache hit. Storing it
+ * at write time makes the hit O(1).
+ */
+export const mfNavCache = new Map<
+  string,
+  { expiresAt: number; data: unknown; latest?: string | null }
+>();
 export function parseNavPayload(val: unknown): { data: unknown[]; [k: string]: unknown } | null {
   if (!val) return null;
   let parsed = val;
@@ -61,12 +72,12 @@ export function parseNavPayload(val: unknown): { data: unknown[]; [k: string]: u
   return null;
 }
 /**
- * Whether a stored payload is good enough to serve without going upstream.
+ * Whether a stored payload reaches `ceiling`.
  *
- * `ceiling` comes from `navFreshnessCeiling` — the newest NAV that can exist,
- * not the date the caller asked for. Keeping the test in one place is the point:
- * it was previously inlined at six call sites across the two handlers, which is
- * how the single- and batch-fetch paths came to disagree.
+ * `ceiling` comes from `resolveFreshnessCeiling` — the newest NAV *observed* to
+ * exist upstream, not a date predicted from a calendar. Keeping the test in one
+ * place is the point: it was previously inlined at six call sites across the two
+ * handlers, which is how the single- and batch-fetch paths came to disagree.
  */
 export function isNavPayloadFresh(payload: unknown, ceiling: string): boolean {
   return isNavHistoryFresh(parseNavPayload(payload)?.data as Array<{ date?: string }>, ceiling);

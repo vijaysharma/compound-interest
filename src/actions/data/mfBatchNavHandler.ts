@@ -1,29 +1,18 @@
-import { getDb, MF_URL } from '@/lib/db';
-import { redisIncr, redisMGet, redisSet } from '@/lib/redis';
-import { resolveDateRange } from '@/utilities/dateGuards';
-import { navFreshnessCeiling } from '@/utilities/navCalendar';
+import { getDb } from '@/lib/db';
+import { redisMGet } from '@/lib/redis';
+import { ISO_DATE_REGEX, resolveDateRange } from '@/utilities/dateGuards';
+import { latestNavDateIn } from '@/utilities/navCalendar';
 import {
   NAV_BATCH_CONCURRENCY,
-  NAV_CACHE_TTL_SECONDS,
   NAV_IN_MEMORY_TTL_MS,
-  NAV_SYNC_COOLDOWN_SECONDS,
-  NAV_UPSTREAM_TIMEOUT_MS,
-  getLatestNavDateISO,
-  isNavPayloadFresh,
   mfNavCache,
   navPayloadKey,
-  navSyncGateKey,
   parseNavPayload,
 } from './constants';
-type NavPayload = { data: unknown[]; [k: string]: unknown };
-/**
- * Runs `task` over `items` with at most `limit` in flight.
- *
- * The batch path previously issued one `Promise.all` leg per missing scheme, so
- * a ten-fund portfolio opened ten concurrent full-history downloads against the
- * third-party API — enough to get rate-limited, and enough that one slow scheme
- * held the whole invocation open.
- */
+import { resolveFreshnessCeiling } from './navWatermark';
+import { FIRST_FETCH_TIMEOUT_MS, type NavPayload, syncSchemeFromUpstream } from './navSync';
+import { scheduleMaintenance, withResponseMeta } from './mfNavHandler';
+/** Runs `task` over `items` with at most `limit` in flight. */
 async function mapWithConcurrency<T>(
   items: T[],
   limit: number,
@@ -38,27 +27,25 @@ async function mapWithConcurrency<T>(
   });
   await Promise.all(workers);
 }
-/** See `claimSyncSlot` in `mfNavHandler` — same gate, same reasoning. */
-async function claimSyncSlot(schemeCode: string): Promise<boolean> {
-  try {
-    const attempts = await redisIncr(navSyncGateKey(schemeCode), NAV_SYNC_COOLDOWN_SECONDS);
-    return attempts <= 1;
-  } catch {
-    return true;
-  }
-}
-function rememberPayload(schemeCode: string, payload: NavPayload, toRedis: boolean): void {
-  mfNavCache.set(schemeCode, {
-    expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-    data: payload,
-  });
-  if (toRedis) {
-    redisSet(navPayloadKey(schemeCode), payload, NAV_CACHE_TTL_SECONDS).catch(() => {});
-  }
-}
+const latestOf = (payload: NavPayload) =>
+  latestNavDateIn(payload.data as Array<{ date?: string }>);
+/**
+ * Serves several schemes at once, for the pinned-fund charts.
+ *
+ * Mirrors the single-fetch path: every scheme is answered from whatever is
+ * already stored, and staleness only schedules a refresh for afterwards. The
+ * previous version went upstream inline for any scheme behind the ceiling,
+ * which with a ten-fund portfolio meant up to ten full-history downloads — each
+ * of which was measured taking anywhere between 1.2s and 62s — before the user
+ * saw a single data point.
+ *
+ * Only a scheme with nothing stored at all is fetched inline, because there is
+ * nothing else to return for it.
+ */
 export async function handleGetBatchMutualFundNav(
   schemeCodesRaw: (string | number)[],
-  requestedEndDate?: string | null
+  requestedEndDate?: string | null,
+  requestedStartDate?: string | null
 ): Promise<Record<string, unknown>> {
   const result: Record<string, unknown> = {};
   if (!Array.isArray(schemeCodesRaw) || schemeCodesRaw.length === 0) {
@@ -73,121 +60,97 @@ export async function handleGetBatchMutualFundNav(
   );
   if (validCodes.length === 0) return result;
   const { endDate } = resolveDateRange(undefined, requestedEndDate);
-  const ceiling = navFreshnessCeiling(endDate);
-  const missingFromMemory: string[] = [];
+  const explicitStart =
+    requestedStartDate && ISO_DATE_REGEX.test(requestedStartDate.trim())
+      ? requestedStartDate.trim()
+      : null;
+  const found = new Map<string, { payload: NavPayload; latest: string | null }>();
+  const missing: string[] = [];
   for (const code of validCodes) {
     const cached = mfNavCache.get(code);
-    if (cached && cached.expiresAt > Date.now() && isNavPayloadFresh(cached.data, ceiling)) {
-      result[code] = parseNavPayload(cached.data);
-      continue;
-    }
-    missingFromMemory.push(code);
-  }
-  if (missingFromMemory.length === 0) {
-    return result;
-  }
-  const redisResults = await redisMGet<unknown>(missingFromMemory.map(navPayloadKey));
-  const missingFromRedis: string[] = [];
-  for (const code of missingFromMemory) {
-    const parsed = parseNavPayload(redisResults[navPayloadKey(code)]);
-    if (parsed && isNavPayloadFresh(parsed, ceiling)) {
-      result[code] = parsed;
-      rememberPayload(code, parsed, false);
-      continue;
-    }
-    missingFromRedis.push(code);
-  }
-  if (missingFromRedis.length === 0) {
-    return result;
-  }
-  // Kept so a scheme whose upstream refresh is skipped or fails can still be
-  // answered from the newest copy we hold, rather than dropped from the result.
-  const storedFallbacks = new Map<string, NavPayload>();
-  const missingFromDb: string[] = [];
-  try {
-    const sql = getDb();
-    const stored = (await sql`
-      SELECT scheme_code, payload, latest_nav_date::text AS latest_nav_date
-      FROM mutual_fund_nav WHERE scheme_code = ANY(${missingFromRedis})
-    `) as Array<{ scheme_code: string; payload: unknown; latest_nav_date: string | null }>;
-    const storedMap = new Map<string, NavPayload>();
-    const storedLatest = new Map<string, string | null>();
-    for (const row of stored) {
-      const parsed = parseNavPayload(row.payload);
-      if (parsed) {
-        storedMap.set(row.scheme_code, parsed);
-        storedLatest.set(row.scheme_code, row.latest_nav_date);
-      }
-    }
-    for (const code of missingFromRedis) {
-      const storedPayload = storedMap.get(code);
-      if (storedPayload) {
-        // The column when present, a parse of the payload when it is not.
-        const latest = storedLatest.get(code);
-        const isFresh = latest ? latest >= ceiling : isNavPayloadFresh(storedPayload, ceiling);
-        if (isFresh) {
-          result[code] = storedPayload;
-          rememberPayload(code, storedPayload, true);
-          continue;
-        }
-        storedFallbacks.set(code, storedPayload);
-      }
-      missingFromDb.push(code);
-    }
-  } catch (dbErr) {
-    console.warn('DB check in getBatchMutualFundNavAction failed:', dbErr);
-    missingFromDb.push(...missingFromRedis);
-  }
-  if (missingFromDb.length === 0) {
-    return result;
-  }
-  await mapWithConcurrency(missingFromDb, NAV_BATCH_CONCURRENCY, async (code) => {
-    const fallback = storedFallbacks.get(code);
-    const maySync = !fallback || (await claimSyncSlot(code));
-    if (maySync) {
-      try {
-        const upstream = await fetch(`${MF_URL}/${encodeURIComponent(code)}`, {
-          headers: { Accept: 'application/json' },
-          signal: AbortSignal.timeout(NAV_UPSTREAM_TIMEOUT_MS),
+    if (cached && cached.expiresAt > Date.now()) {
+      const payload = parseNavPayload(cached.data);
+      if (payload) {
+        found.set(code, {
+          payload,
+          latest: cached.latest !== undefined ? cached.latest : latestOf(payload),
         });
-        if (upstream.ok) {
-          const payload = parseNavPayload(await upstream.json());
-          if (payload && Array.isArray(payload.data) && payload.data.length > 0) {
-            result[code] = payload;
-            rememberPayload(code, payload, true);
-            // Same guard as the single-fetch path: never trade real history for
-            // a shorter upstream response.
-            if (!fallback || payload.data.length >= fallback.data.length) {
-              try {
-                const sql = getDb();
-                await sql`
-                  INSERT INTO mutual_fund_nav (scheme_code, payload, latest_nav_date, updated_at)
-                  VALUES (
-                    ${code},
-                    ${JSON.stringify(payload)}::jsonb,
-                    ${getLatestNavDateISO(payload)}::date,
-                    NOW()
-                  )
-                  ON CONFLICT (scheme_code) DO UPDATE SET
-                    payload = EXCLUDED.payload,
-                    latest_nav_date = EXCLUDED.latest_nav_date,
-                    updated_at = NOW()
-                `;
-              } catch (dbSyncErr) {
-                console.warn(`DB sync for scheme ${code} failed:`, dbSyncErr);
-              }
-            }
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn(`AMFI sync for scheme ${code} failed:`, err);
+        continue;
       }
     }
-    if (fallback) {
-      result[code] = fallback;
-      rememberPayload(code, fallback, true);
+    missing.push(code);
+  }
+  if (missing.length > 0) {
+    const redisResults = await redisMGet<unknown>(missing.map(navPayloadKey));
+    const stillMissing: string[] = [];
+    for (const code of missing) {
+      const payload = parseNavPayload(redisResults[navPayloadKey(code)]);
+      if (payload) {
+        const latest = latestOf(payload);
+        mfNavCache.set(code, {
+          expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+          data: payload,
+          latest,
+        });
+        found.set(code, { payload, latest });
+        continue;
+      }
+      stillMissing.push(code);
     }
-  });
+    missing.length = 0;
+    missing.push(...stillMissing);
+  }
+  if (missing.length > 0) {
+    try {
+      const sql = getDb();
+      const rows = (await sql`
+        SELECT scheme_code, payload, latest_nav_date::text AS latest_nav_date
+        FROM mutual_fund_nav WHERE scheme_code = ANY(${missing})
+      `) as Array<{ scheme_code: string; payload: unknown; latest_nav_date: string | null }>;
+      const stillMissing = new Set(missing);
+      for (const row of rows) {
+        const payload = parseNavPayload(row.payload);
+        if (!payload) continue;
+        const latest = row.latest_nav_date ?? latestOf(payload);
+        mfNavCache.set(row.scheme_code, {
+          expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+          data: payload,
+          latest,
+        });
+        found.set(row.scheme_code, { payload, latest });
+        stillMissing.delete(row.scheme_code);
+      }
+      missing.length = 0;
+      missing.push(...stillMissing);
+    } catch (dbErr) {
+      console.warn('[nav] batch DB read failed:', dbErr);
+    }
+  }
+  // Schemes with nothing stored have to be fetched inline — there is nothing
+  // else to answer with. Pooled so a large cold portfolio cannot open one
+  // upstream connection per fund.
+  if (missing.length > 0) {
+    await mapWithConcurrency(missing, NAV_BATCH_CONCURRENCY, async (code) => {
+      const fetched = await syncSchemeFromUpstream(code, FIRST_FETCH_TIMEOUT_MS, null);
+      if (fetched) found.set(code, { payload: fetched, latest: latestOf(fetched) });
+    });
+  }
+  const ceiling = await resolveFreshnessCeiling(
+    endDate,
+    // Seed from the newest date across the batch, so a cold Redis still has a
+    // real observation to work from rather than a calendar guess.
+    [...found.values()].reduce<string | null>(
+      (acc, v) => (v.latest && (!acc || v.latest > acc) ? v.latest : acc),
+      null
+    )
+  );
+  const stale: Array<{ code: string; current: NavPayload | null }> = [];
+  for (const [code, entry] of found) {
+    result[code] = withResponseMeta(entry.payload, ceiling, explicitStart, endDate);
+    if (!entry.latest || entry.latest < ceiling) {
+      stale.push({ code, current: entry.payload });
+    }
+  }
+  if (stale.length > 0) scheduleMaintenance(stale);
   return result;
 }
