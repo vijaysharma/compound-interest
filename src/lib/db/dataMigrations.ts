@@ -24,6 +24,23 @@ export async function applyDataMigrations(sql: Query, schemaVersion: number): Pr
   `;
   await sql`CREATE INDEX IF NOT EXISTS mutual_fund_schemes_name_idx ON mutual_fund_schemes (scheme_name)`;
   await sql`CREATE INDEX IF NOT EXISTS mutual_fund_nav_updated_at_idx ON mutual_fund_nav (updated_at)`;
+  /*
+   * The newest NAV date inside `payload`, denormalised out of the blob.
+   *
+   * Deciding whether a stored row is fresh previously meant parsing the whole
+   * history and scanning it for a maximum — ~5,000 rows for a twenty-year
+   * scheme, on a request that then usually discarded the result. The date is
+   * the only part of the payload that decision needs, so it is kept alongside
+   * it. Also the column a future range-query schema would be keyed on.
+   *
+   * Nullable on purpose: existing rows are backfilled lazily by the next write
+   * rather than by a migration that would have to parse every blob in one
+   * transaction. A NULL reads as "unknown", which falls back to parsing the
+   * payload exactly as before, so the column is safe the moment it is added and
+   * self-heals as schemes are refreshed.
+   */
+  await sql`ALTER TABLE mutual_fund_nav ADD COLUMN IF NOT EXISTS latest_nav_date DATE`;
+  await sql`CREATE INDEX IF NOT EXISTS mutual_fund_nav_latest_date_idx ON mutual_fund_nav (latest_nav_date)`;
   await sql`
     CREATE TABLE IF NOT EXISTS admin_notes (
       id TEXT PRIMARY KEY,

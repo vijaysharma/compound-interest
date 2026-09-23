@@ -1,3 +1,4 @@
+import { isNavHistoryFresh, latestNavDateIn } from '../../utilities/navCalendar';
 export const OPEN_EXCHANGE_API = 'https://open.er-api.com/v6/latest';
 export const WORLD_BANK_PPP_API =
   'https://api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP?format=json&per_page=400&mrv=1&gapfill=y';
@@ -5,6 +6,32 @@ export const DB_TTL_MS = 24 * 60 * 60 * 1000;
 export const PPP_DB_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 export const NAV_CACHE_TTL_SECONDS = 30 * 24 * 60 * 60;
 export const NAV_IN_MEMORY_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/**
+ * Upstream was given 15s. Nothing downstream waits that long usefully — the
+ * page has already rendered a skeleton — and a 15s hold on a serverless
+ * invocation is expensive. 8s is comfortably above the observed p99 for a full
+ * scheme history and fails fast enough to fall back to a stored payload.
+ */
+export const NAV_UPSTREAM_TIMEOUT_MS = 8000;
+/**
+ * Upstream fetches run through a pool of this size in the batch path, which
+ * previously issued one `Promise.all` leg per missing scheme with no ceiling —
+ * a portfolio of ten funds meant ten concurrent full-history downloads.
+ */
+export const NAV_BATCH_CONCURRENCY = 4;
+/**
+ * Minimum gap between upstream re-sync attempts for one scheme.
+ *
+ * The freshness ceiling says whether a refresh is wanted; this says whether one
+ * is allowed. It is what keeps an unsatisfiable ceiling — an exchange holiday,
+ * a suspended scheme, a fund whose AMC published late — from turning every
+ * request back into an upstream fetch, and it collapses a burst of concurrent
+ * requests for the same cold scheme into a single fetch.
+ */
+export const NAV_SYNC_COOLDOWN_SECONDS = 15 * 60;
+/** Redis key namespaces. Centralised so the read and write sides cannot drift. */
+export const navPayloadKey = (schemeCode: string): string => `cache:mf:nav:${schemeCode}`;
+export const navSyncGateKey = (schemeCode: string): string => `gate:mf:nav:sync:${schemeCode}`;
 export const SEARCH_CACHE_TTL_SECONDS = 30 * 24 * 60 * 60;
 export const SEARCH_IN_MEMORY_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 export const memoryState: {
@@ -33,35 +60,18 @@ export function parseNavPayload(val: unknown): { data: unknown[]; [k: string]: u
   }
   return null;
 }
+/**
+ * Whether a stored payload is good enough to serve without going upstream.
+ *
+ * `ceiling` comes from `navFreshnessCeiling` — the newest NAV that can exist,
+ * not the date the caller asked for. Keeping the test in one place is the point:
+ * it was previously inlined at six call sites across the two handlers, which is
+ * how the single- and batch-fetch paths came to disagree.
+ */
+export function isNavPayloadFresh(payload: unknown, ceiling: string): boolean {
+  return isNavHistoryFresh(parseNavPayload(payload)?.data as Array<{ date?: string }>, ceiling);
+}
+/** Newest NAV date inside a server payload wrapper. */
 export function getLatestNavDateISO(payload: unknown): string | null {
-  const parsed = parseNavPayload(payload);
-  if (!parsed || !Array.isArray(parsed.data) || parsed.data.length === 0) {
-    return null;
-  }
-  let maxTime = -Infinity;
-  let latestIso = '';
-  for (const item of parsed.data as Array<{ date?: string; nav?: string }>) {
-    if (!item || !item.date) continue;
-    const parts = item.date.split('-');
-    if (parts.length === 3) {
-      let y: number, m: number, d: number;
-      if (parts[0].length === 4) {
-        y = Number(parts[0]);
-        m = Number(parts[1]);
-        d = Number(parts[2]);
-      } else {
-        d = Number(parts[0]);
-        m = Number(parts[1]);
-        y = Number(parts[2]);
-      }
-      if (Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d)) {
-        const time = new Date(y, m - 1, d).getTime();
-        if (time > maxTime) {
-          maxTime = time;
-          latestIso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        }
-      }
-    }
-  }
-  return latestIso || null;
+  return latestNavDateIn(parseNavPayload(payload)?.data as Array<{ date?: string }>);
 }

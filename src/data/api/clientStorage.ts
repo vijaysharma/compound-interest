@@ -1,5 +1,16 @@
 import { trackUsageAction } from '@/actions/auth';
-export const CLIENT_NAV_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30-day client cache
+/**
+ * Backstop lifetime for a cached NAV history in the browser.
+ *
+ * This used to be 30 days and was the *only* freshness rule, with cache keys
+ * that carried no date — so changing the date in the UI re-read a history
+ * snapshot that could be a month old and appeared to ignore the new date
+ * entirely. Freshness is now decided by `navFreshnessCeiling` against the
+ * newest NAV the entry actually contains; this value only evicts entries nobody
+ * has revalidated, so it no longer has to be short to be correct, just short
+ * enough that a long-lived tab does not hoard history.
+ */
+export const CLIENT_NAV_CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12h backstop
 export function getSessionItem<T>(key: string, maxAgeMs = 30 * 24 * 60 * 60 * 1000): T | null {
   if (typeof window === 'undefined') return null;
   try {

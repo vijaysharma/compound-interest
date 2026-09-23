@@ -1,6 +1,7 @@
 import { NavType } from '../../types/types';
-import { parseAnyDate, parseNavDate } from '../../utilities/utility';
 import { getBatchMutualFundNavAction } from '@/actions/data';
+import { getTodayISO } from '../../utilities/dateGuards';
+import { isNavHistoryFresh, navFreshnessCeiling } from '../../utilities/navCalendar';
 import {
   CLIENT_NAV_CACHE_TTL_MS,
   getSessionItem,
@@ -14,13 +15,25 @@ import {
   mfNavCache,
 } from './mfApi';
 /**
- * `${schemeCode}|${requestedEndDate}` pairs already fetched from the server.
- * AMFI publishes no NAV on weekends/holidays and the current day's NAV lands
- * late in the evening, so cached data can legitimately stop short of the
- * requested end date. Retrying once per end date keeps the cache useful instead
- * of re-hitting the network on every call for a date that will never resolve.
+ * Whether a cached history answers a request for `requestedEndDate`.
+ *
+ * This replaces a `Set` of `${schemeCode}|${endDate}` pairs that recorded
+ * "already tried this date once". That existed to stop the network being hit
+ * repeatedly for a date upstream will never publish — a weekend, a holiday, or
+ * today before the evening — which was the right problem to notice but the
+ * wrong layer to fix it at: the set never expired, so after one attempt the
+ * cache was considered satisfactory for that date forever and a genuinely newer
+ * NAV was never picked up for the rest of the session.
+ *
+ * Asking against the publication ceiling removes the need for the workaround
+ * altogether: a history ending Friday *is* fresh for a Saturday request, so
+ * there is no failed attempt to remember. The server applies the same ceiling,
+ * and the re-sync cooldown there handles the holiday case.
  */
-const resolvedEndDateAttempts = new Set<string>();
+const historySatisfies = (data: NavType[] | undefined, requestedEndDate?: string | null): boolean => {
+  if (!data || data.length === 0) return false;
+  return isNavHistoryFresh(data, navFreshnessCeiling(requestedEndDate || getTodayISO()));
+};
 /**
  * High-performance batch fetcher for multiple pinned mutual funds.
  * Resolves all funds in a single server action call instead of multiple parallel requests.
@@ -37,35 +50,17 @@ export const fetchBatchMFbySchemeCodes = async (
     if (!code || code === '0') continue;
     const cached = mfNavCache.get(code);
     const sessionCached = getSessionItem<NavType[]>('mf_nav_' + code);
-    let existingData: NavType[] | null = null;
-    if (cached && cached.expiresAt > Date.now()) {
-      existingData = cached.data;
-    } else if (sessionCached && Array.isArray(sessionCached) && sessionCached.length > 0) {
-      existingData = sessionCached;
-    }
-    if (existingData) {
-      let cacheSatisfies = true;
-      if (requestedEndDate) {
-        let latestDateMs = 0;
-        for (const n of existingData) {
-          const time = parseNavDate(n.date).getTime();
-          if (time > latestDateMs) latestDateMs = time;
-        }
-        const reqDateMs = parseAnyDate(requestedEndDate).getTime();
-        if (reqDateMs > latestDateMs && !resolvedEndDateAttempts.has(code + '|' + requestedEndDate)) {
-          cacheSatisfies = false;
-        }
+    const existingData =
+      cached && cached.expiresAt > Date.now() ? cached.data : sessionCached ?? null;
+    if (existingData && historySatisfies(existingData, requestedEndDate)) {
+      if (!cached) {
+        mfNavCache.set(code, {
+          expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
+          data: existingData,
+        });
       }
-      if (cacheSatisfies) {
-        if (!cached) {
-          mfNavCache.set(code, {
-            expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS,
-            data: existingData,
-          });
-        }
-        result[code] = existingData;
-        continue;
-      }
+      result[code] = existingData;
+      continue;
     }
     missingCodes.push(code);
   }
@@ -100,17 +95,12 @@ export const fetchBatchMFbySchemeCodes = async (
         }
       }
     }
-    if (requestedEndDate) {
-      for (const code of missingCodes) {
-        if (result[code]?.length) resolvedEndDateAttempts.add(code + '|' + requestedEndDate);
-      }
-    }
     const stillUnresolved = missingCodes.filter((c) => !result[c] || result[c].length === 0);
     if (stillUnresolved.length > 0) {
       await Promise.all(
         stillUnresolved.map(async (code) => {
           try {
-            const navData = await fetchMFbySchemeCode(code);
+            const navData = await fetchMFbySchemeCode(code, requestedEndDate);
             if (Array.isArray(navData) && navData.length > 0) {
               result[code] = navData;
             }
@@ -125,7 +115,7 @@ export const fetchBatchMFbySchemeCodes = async (
     await Promise.all(
       missingCodes.map(async (code) => {
         try {
-          const navData = await fetchMFbySchemeCode(code);
+          const navData = await fetchMFbySchemeCode(code, requestedEndDate);
           result[code] = navData;
         } catch {
           // Ignore individual fetch failure in batch fallback

@@ -1,5 +1,7 @@
 import { MFJSONType, NavType } from '../../types/types';
 import { getMutualFundNavAction, searchMutualFundsAction } from '@/actions/data';
+import { getTodayISO } from '../../utilities/dateGuards';
+import { isNavHistoryFresh, navFreshnessCeiling } from '../../utilities/navCalendar';
 import { CLIENT_NAV_CACHE_TTL_MS, getSessionItem, recordApiUsage, setSessionItem } from './clientStorage';
 export interface MFMetaType {
   fund_house?: string;
@@ -14,6 +16,21 @@ export interface MFDetailsResult {
   data: NavType[];
   meta?: MFMetaType;
 }
+/**
+ * Whether a cached NAV history is good enough to answer a request for
+ * `endDate`, using the same ceiling the server applies.
+ *
+ * The browser previously had no notion of this: entries were keyed by scheme
+ * code alone and trusted for 30 days, so a date change re-served a month-old
+ * history and looked like the date had been ignored. Sharing
+ * `navFreshnessCeiling` with the server means both sides agree on what "fresh"
+ * means — before, each had its own rule and they disagreed.
+ */
+const historySatisfies = (data: NavType[] | undefined, endDate?: string | null): boolean => {
+  if (!data || data.length === 0) return false;
+  const ceiling = navFreshnessCeiling(endDate || getTodayISO());
+  return isNavHistoryFresh(data, ceiling);
+};
 const mfSearchCache = new Map<string, MFJSONType[]>();
 export const mfNavCache = new Map<string, { expiresAt: number; data: NavType[] }>();
 export const mfDetailsCache = new Map<string, { expiresAt: number; data: MFDetailsResult }>();
@@ -53,11 +70,18 @@ export const fetchAllMfs = async (search = '', _signal?: AbortSignal): Promise<M
   mfSearchRequests.set(normalizedSearch, request);
   return request;
 };
-export const fetchMFWithMeta = async (schemeCode: string): Promise<MFDetailsResult> => {
+export const fetchMFWithMeta = async (
+  schemeCode: string,
+  endDate?: string | null
+): Promise<MFDetailsResult> => {
   const cached = mfDetailsCache.get(schemeCode);
-  if (cached && cached.expiresAt > Date.now()) return cached.data;
+  if (cached && cached.expiresAt > Date.now() && historySatisfies(cached.data.data, endDate)) {
+    return cached.data;
+  }
   recordApiUsage();
-  let rawData = await getMutualFundNavAction(schemeCode);
+  // Forwarding the date lets the server lower its own ceiling for a past date
+  // and answer from cache instead of going upstream.
+  let rawData = await getMutualFundNavAction(schemeCode, endDate);
   if (typeof rawData === 'string') {
     try { rawData = JSON.parse(rawData); } catch { /* ignore non-JSON */ }
   }
@@ -71,21 +95,35 @@ export const fetchMFWithMeta = async (schemeCode: string): Promise<MFDetailsResu
   setSessionItem('mf_nav_' + schemeCode, parsed.data);
   return result;
 };
-export const fetchMFbySchemeCode = async (schemeCode: string, _signal?: AbortSignal): Promise<NavType[]> => {
+export const fetchMFbySchemeCode = async (
+  schemeCode: string,
+  endDate?: string | null,
+  _signal?: AbortSignal
+): Promise<NavType[]> => {
   const details = mfDetailsCache.get(schemeCode);
-  if (details && details.expiresAt > Date.now()) return details.data.data;
-  const cached = mfNavCache.get(schemeCode);
-  if (cached && cached.expiresAt > Date.now()) return cached.data;
-  const sessionCached = getSessionItem<NavType[]>('mf_nav_' + schemeCode);
-  if (sessionCached && Array.isArray(sessionCached) && sessionCached.length > 0) {
-    mfNavCache.set(schemeCode, { expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS, data: sessionCached });
-    return sessionCached;
+  if (details && details.expiresAt > Date.now() && historySatisfies(details.data.data, endDate)) {
+    return details.data.data;
   }
-  const pending = mfNavRequests.get(schemeCode);
+  const cached = mfNavCache.get(schemeCode);
+  if (cached && cached.expiresAt > Date.now() && historySatisfies(cached.data, endDate)) {
+    return cached.data;
+  }
+  // `getSessionItem` enforces its own max age, but age was never the problem:
+  // this tier returned any non-empty array regardless of how far it reached.
+  const sessionCached = getSessionItem<NavType[]>('mf_nav_' + schemeCode);
+  if (historySatisfies(sessionCached ?? undefined, endDate)) {
+    const rows = sessionCached as NavType[];
+    mfNavCache.set(schemeCode, { expiresAt: Date.now() + CLIENT_NAV_CACHE_TTL_MS, data: rows });
+    return rows;
+  }
+  // In-flight dedup is keyed by scheme and date: two components asking for
+  // different dates must not share one promise.
+  const requestKey = `${schemeCode}|${endDate ?? ''}`;
+  const pending = mfNavRequests.get(requestKey);
   if (pending) return pending;
   const request = (async (): Promise<NavType[]> => {
     recordApiUsage();
-    let rawData = await getMutualFundNavAction(schemeCode);
+    let rawData = await getMutualFundNavAction(schemeCode, endDate);
     if (typeof rawData === 'string') {
       try { rawData = JSON.parse(rawData); } catch { /* ignore non-JSON */ }
     }
@@ -100,10 +138,10 @@ export const fetchMFbySchemeCode = async (schemeCode: string, _signal?: AbortSig
     setSessionItem('mf_nav_' + schemeCode, data.data);
     return data.data;
   })();
-  mfNavRequests.set(schemeCode, request);
+  mfNavRequests.set(requestKey, request);
   try {
     return await request;
   } finally {
-    mfNavRequests.delete(schemeCode);
+    mfNavRequests.delete(requestKey);
   }
 };

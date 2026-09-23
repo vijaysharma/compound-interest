@@ -89,14 +89,24 @@ export const getDateAsISO = (minusDays = 0, date = new Date()): string => {
   return `${year}-${month}-${day}`;
 };
 /**
- * Convert application NAV date (DD-MM-YYYY) to HTML date input format (YYYY-MM-DD).
+ * Convert a NAV date to HTML date input format (`YYYY-MM-DD`).
+ *
+ * Upstream sends `DD-MM-YYYY`, but rows that have round-tripped through our own
+ * storage can come back already ISO. The year is located by which end holds
+ * four digits rather than by reversing blindly, which silently turned ISO input
+ * into garbage (`2026-09-22` became `22-09-2026`). Returns `''` for anything
+ * unparseable, as callers rely on a string.
  */
 export const navDateToISO = (navDate: string): string => {
+  if (!navDate) return '';
   const parts = navDate.split('-');
   if (parts.length !== 3) {
     return '';
   }
-  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  const [a, b, c] = parts;
+  const [year, month, day] = a.length === 4 ? [a, b, c] : [c, b, a];
+  if (year.length !== 4 || !month || !day) return '';
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 };
 /**
  * Convert HTML date input format (YYYY-MM-DD) to application NAV date (DD-MM-YYYY).
