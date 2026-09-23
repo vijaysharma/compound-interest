@@ -7,7 +7,15 @@ export const ADD_SUB_DATA = [
   { id: 'add', value: 'add', title: 'Add' },
   { id: 'subtract', value: 'subtract', title: 'Subtract' },
 ];
-export const getTodayISO = () => new Date().toISOString().split('T')[0];
+/**
+ * Re-exported from the shared date guards rather than reimplemented.
+ *
+ * This was `new Date().toISOString().split('T')[0]`, which is UTC — so between
+ * 18:30 and midnight IST it reported *yesterday*, and the date calculator
+ * defaulted to the wrong day for exactly the users it is built for. It also
+ * disagreed with the NAV code's `getTodayISO`, which resolves in market time.
+ */
+export { getTodayISO } from '../../utilities/dateGuards';
 export const STORAGE_KEY = 'date_calculator_state';
 export interface SavedDateState {
   mode: DateMode;

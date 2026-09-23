@@ -93,6 +93,46 @@ export async function upstashSet(key: string, value: unknown, ttlSeconds = 3600)
     return false;
   }
 }
+/**
+ * `SET key value NX EX ttl` — claims a key only if it does not already exist.
+ *
+ * The single-flight gates used to be built on `INCR` plus a follow-up `EXPIRE`
+ * that was deliberately not awaited. That had a failure mode with no recovery:
+ * if the `EXPIRE` was lost — a dropped request, a cold-start abort, the function
+ * being frozen right after responding — the counter stayed above 1 forever and
+ * the thing it gated never ran again. A refresh gate that silently becomes
+ * permanent is worse than no gate.
+ *
+ * `SET NX EX` sets the value and its lifetime in one atomic command, so the key
+ * cannot outlive its TTL. Returns `true` only for the caller that took it.
+ */
+export async function upstashSetNX(
+  key: string,
+  value: unknown,
+  ttlSeconds: number
+): Promise<{ ok: boolean; reachable: boolean }> {
+  const cfg = getUpstashConfig();
+  if (!cfg) return { ok: false, reachable: false };
+  try {
+    const res = await fetch(
+      `${cfg.url}/set/${encodeURIComponent(key)}?nx=true&ex=${ttlSeconds}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${cfg.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(value),
+        signal: AbortSignal.timeout(3000),
+      }
+    );
+    if (res.ok) {
+      const json = (await res.json()) as { result?: string | null };
+      // Upstash answers "OK" when the key was set and null when NX rejected it.
+      return { ok: json.result === 'OK', reachable: true };
+    }
+  } catch (err) {
+    console.warn(`[Redis] SET NX failed for key "${key}":`, err);
+  }
+  return { ok: false, reachable: false };
+}
 export async function upstashDel(keys: string[]): Promise<boolean> {
   const cfg = getUpstashConfig();
   if (!cfg || keys.length === 0) return false;

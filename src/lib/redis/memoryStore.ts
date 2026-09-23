@@ -65,3 +65,15 @@ export function memoryIncr(key: string, ttlSeconds?: number): number {
   });
   return next;
 }
+/**
+ * Single-process stand-in for `SET NX EX`. Exact within one process, which is
+ * all the fallback can offer: without Redis there is no shared state to
+ * coordinate across serverless instances, so each gets its own gate.
+ */
+export function memorySetNX(key: string, value: unknown, ttlSeconds: number): boolean {
+  const existing = inMemoryStore.get(key);
+  if (existing && existing.expiresAt > Date.now()) return false;
+  pruneMemoryStore();
+  inMemoryStore.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 });
+  return true;
+}

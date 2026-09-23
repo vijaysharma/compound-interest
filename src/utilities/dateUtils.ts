@@ -104,8 +104,13 @@ export const navDateToISO = (navDate: string): string => {
     return '';
   }
   const [a, b, c] = parts;
+  // Every component must be digits. Without this check a string like
+  // "not-a-date" splits into three parts whose last is four characters long,
+  // so it was taken for a year and returned as "date-0a-not" — which then
+  // compared as a date and silently fell outside every window.
+  if (!/^\d+$/.test(a) || !/^\d+$/.test(b) || !/^\d+$/.test(c)) return '';
   const [year, month, day] = a.length === 4 ? [a, b, c] : [c, b, a];
-  if (year.length !== 4 || !month || !day) return '';
+  if (year.length !== 4) return '';
   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 };
 /**

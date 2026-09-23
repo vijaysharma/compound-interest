@@ -3,6 +3,7 @@ import {
   upstashGet,
   upstashMGet,
   upstashSet,
+  upstashSetNX,
   upstashDel,
   upstashIncr,
 } from './redis/upstashClient';
@@ -10,6 +11,7 @@ import {
   memoryGet,
   memoryMGet,
   memorySet,
+  memorySetNX,
   memoryDel,
   memoryIncr,
 } from './redis/memoryStore';
@@ -55,4 +57,21 @@ export async function redisIncr(key: string, ttlSeconds?: number): Promise<numbe
     return upstashResult;
   }
   return memoryIncr(key, ttlSeconds);
+}
+/**
+ * Claims `key` for `ttlSeconds`, returning `true` only to the first caller.
+ *
+ * Used for the single-flight gates around upstream NAV work. Falls back to a
+ * per-process gate when Redis is unreachable, which is weaker but never blocks
+ * the work outright — a duplicated refresh is recoverable, a refresh that never
+ * happens is not.
+ */
+export async function redisSetIfAbsent(
+  key: string,
+  value: unknown,
+  ttlSeconds: number
+): Promise<boolean> {
+  const upstash = await upstashSetNX(key, value, ttlSeconds);
+  if (upstash.reachable) return upstash.ok;
+  return memorySetNX(key, value, ttlSeconds);
 }

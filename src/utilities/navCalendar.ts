@@ -83,9 +83,12 @@ export function navFreshnessCeiling(endDate: string, instant?: Date): string {
  * holds `{ data: [...] }`) and the browser (which holds `NavType[]`) can share
  * one implementation — they previously each had their own, and disagreed.
  *
- * Allocation-free by design: this runs on every cache probe at every layer, and
- * a twenty-year scheme carries ~5,000 rows. ISO strings compare
- * lexicographically in calendar order, so no `Date` needs to be built.
+ * Cheaper than it was, but not free: `navDateToISO` allocates a `split` array
+ * and padded strings per row, so a ~3,400-row scheme costs several thousand
+ * short-lived objects. Dropping the per-row `Date` construction was the win;
+ * comparing ISO strings works because they sort in calendar order. Callers on a
+ * hot path should cache the result rather than recompute it — `mfNavCache`
+ * stores it next to the payload for exactly that reason.
  */
 export function latestNavDateIn(rows: ReadonlyArray<{ date?: string }> | null | undefined): string | null {
   if (!rows || rows.length === 0) return null;
