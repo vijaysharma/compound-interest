@@ -26,12 +26,25 @@ const Chart = ({
   startDate,
   endDate,
   onPresetChange,
+  markerDate,
+  markerLabel,
 }: ChartProps) => {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const chartTheme = useChartTheme();
   const zoom = useChartZoom(datasets, startDate, endDate, enableZoom, onPresetChange);
   const initialInvestment = Number.isFinite(investmentAmount) && investmentAmount > 0 ? investmentAmount : 0;
-  const chartOptions = useChartOptions(datasets, initialInvestment, dataMode, height, autoHeight, minHeight, zoom.activeDates, chartTheme);
+  const chartOptions = useChartOptions(
+    datasets,
+    initialInvestment,
+    dataMode,
+    height,
+    autoHeight,
+    minHeight,
+    zoom.activeDates,
+    chartTheme,
+    markerDate,
+    markerLabel
+  );
   const targetHeight = getTargetHeight(height, minHeight, chartTheme.isMobile);
   const hasAnyData = datasets.some((d) => d.data && d.data.length > 0);
   const isEmpty = isLoading || (datasets.length > 0 && !hasAnyData) || datasets.length === 0 || zoom.allSortedDates.length === 0 || initialInvestment <= 0 || !chartOptions || !mounted;

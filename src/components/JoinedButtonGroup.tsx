@@ -52,6 +52,7 @@ function JoinedButtonGroup<T = string>({
                 className={`${styles.button} ${getSizeClass()} ${
                   isSelected ? styles.active : ''
                 }`.trim()}
+                title={p.tooltip}
                 onClick={() => updateSelectedValue(p.value)}
               >
                 {p.title}

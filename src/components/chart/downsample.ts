@@ -42,7 +42,16 @@ export const MAX_CHART_POINTS = 600;
 export function selectChartDates(
   activeDates: string[],
   seriesValueMaps: ReadonlyArray<Map<string, number>>,
-  maxPoints: number = MAX_CHART_POINTS
+  maxPoints: number = MAX_CHART_POINTS,
+  /**
+   * Dates that must survive thinning.
+   *
+   * A category-axis cross-line is positioned by category, so ag-charts drops it
+   * without complaint when its date is not among the plotted ones. That is how
+   * the "today" rule marking the end of measured data disappeared at a
+   * hundred-year horizon — the exact case where the reader most needs it.
+   */
+  pinnedDates: ReadonlyArray<string | null | undefined> = []
 ): string[] {
   if (activeDates.length <= maxPoints || maxPoints < 4) return activeDates;
   // Two candidates per bucket, minus the endpoints which are always kept.
@@ -51,6 +60,11 @@ export function selectChartDates(
   // A Set of indices rather than of dates: duplicate dates would collapse into
   // one entry and silently shorten the axis.
   const keep = new Set<number>([0, activeDates.length - 1]);
+  for (const pinned of pinnedDates) {
+    if (!pinned) continue;
+    const index = activeDates.indexOf(pinned);
+    if (index >= 0) keep.add(index);
+  }
   for (let b = 0; b < buckets; b++) {
     const start = Math.floor(b * stride);
     const end = Math.min(Math.floor((b + 1) * stride), activeDates.length);

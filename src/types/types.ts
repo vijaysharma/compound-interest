@@ -33,6 +33,12 @@ export interface ButtonDataType<T = string> {
   id: string;
   value: T;
   title: string;
+  /**
+   * Hover text for the button, when the label alone is not the whole story —
+   * a scenario named "Moderate" that actually means a specific percentile of a
+   * fund's own history, for instance.
+   */
+  tooltip?: string;
 }
 export interface StepAmountType {
   id: string;

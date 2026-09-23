@@ -66,3 +66,23 @@ test('degenerate budgets fall back to the full series', () => {
   const ds = dates(500);
   assert.equal(selectChartDates(ds, [flat(ds)], 2), ds);
 });
+test('a pinned date survives thinning', () => {
+  // The "today" cross-line is positioned by category, so ag-charts silently
+  // drops it when its date is not plotted. That is how the rule marking the end
+  // of measured data vanished at a hundred-year horizon.
+  const ds = dates(3000);
+  const without = selectChartDates(ds, [flat(ds)]);
+  // Pick a date the unpinned pass actually discards, rather than assuming one:
+  // which indices survive depends on where the bucket extremes fall.
+  const dropped = ds.find((d) => !without.includes(d));
+  assert.ok(dropped, 'sanity: thinning discards something');
+  const withPin = selectChartDates(ds, [flat(ds)], MAX_CHART_POINTS, [dropped]);
+  assert.ok(withPin.includes(dropped!), 'the pinned date is kept');
+  assert.ok(withPin.length <= MAX_CHART_POINTS + 1, 'budget still respected');
+});
+test('null and unknown pinned dates are ignored', () => {
+  const ds = dates(2000);
+  const out = selectChartDates(ds, [flat(ds)], MAX_CHART_POINTS, [null, undefined, 'nope']);
+  assert.ok(out.length <= MAX_CHART_POINTS);
+  assert.equal(out[0], ds[0]);
+});
