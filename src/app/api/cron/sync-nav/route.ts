@@ -23,6 +23,21 @@ import {
  * refresh the whole catalogue would exceed the 30s function limit in
  * `vercel.json` and be killed part-way, which is both slower and harder to
  * reason about than converging over several runs.
+ *
+ * ## Once a day, not twice
+ *
+ * The schedule in `vercel.json` is a single daily run at 19:00 UTC (00:30 IST),
+ * just after the publication window. It was briefly two runs a day, which is
+ * rejected on Vercel's Hobby plan — cron schedules there may fire at most once
+ * per day — and an invalid schedule fails the *deployment*, not just the cron,
+ * so nothing reached production at all.
+ *
+ * One run a day is enough because nothing user-facing depends on it: reads are
+ * served from storage and never wait on upstream, and `after()` refreshes a
+ * scheme opportunistically whenever somebody loads a page that uses it. The
+ * cron is the backstop for schemes nobody visits. If the catalogue grows past
+ * what one run can converge — watch `ranOutOfTime` in the response — raise
+ * `REFRESH_BUDGET_MS`, or move to a plan that allows a tighter schedule.
  */
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
