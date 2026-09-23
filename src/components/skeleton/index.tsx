@@ -29,9 +29,25 @@ export const PickerSkeleton = () => (
  *
  * The bar heights are fixed rather than random: a server-rendered random value
  * would differ from the client's and trip hydration.
+ *
+ * `standalone` says whether anything above has already reserved the chart's
+ * box. Inside `Chart`'s `.emptyContainer` it has, and the placeholder must fill
+ * that box exactly; on a route skeleton nothing has, so it supplies its own
+ * height and frame. Getting this wrong is visible: as a non-filling child of a
+ * centring flex container it collapsed to its borders.
  */
-export const ChartSkeleton = ({ label = 'Loading chart' }: { label?: string }) => (
-  <div className={styles.chart} role="status" aria-live="polite">
+export const ChartSkeleton = ({
+  label = 'Loading chart',
+  standalone = false,
+}: {
+  label?: string;
+  standalone?: boolean;
+}) => (
+  <div
+    className={`${styles.chart} ${standalone ? styles.chartStandalone : ''}`.trim()}
+    role="status"
+    aria-live="polite"
+  >
     <span className={styles.srOnly}>{label}</span>
     {[38, 55, 47, 68, 60, 78, 71, 88].map((pct, i) => (
       <Block key={i} className={styles.bar} height={`${pct}%`} />
@@ -71,7 +87,7 @@ export const CalculatorSkeleton = ({
       </div>
       <div className={styles.outputCol}>
         <StatRowSkeleton />
-        {withChart && <ChartSkeleton />}
+        {withChart && <ChartSkeleton standalone />}
       </div>
     </div>
   </div>

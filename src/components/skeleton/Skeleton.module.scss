@@ -119,12 +119,20 @@
 /*
  * The chart placeholder carries the axis furniture, not just a grey box, so the
  * plot area lands where the skeleton said it would.
+ *
+ * `width`/`height` are explicit because this is usually rendered *inside* a
+ * container that has already reserved the chart's box — `Chart`'s
+ * `.emptyContainer`, which centres its child with `justify-content: center`.
+ * Without a width it shrank to its content, and since each bar is `flex: 1`
+ * (basis 0, no content) every bar collapsed to zero and all that remained
+ * on screen were this element's own left and right borders, as two tall
+ * hairlines. Never size this from the children.
  */
 .chart {
   position: relative;
-  min-height: 350px;
+  width: 100%;
+  height: 100%;
   border-radius: $radius-md;
-  border: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
   padding: 1rem 1rem 1.75rem 2.5rem;
   display: flex;
   align-items: flex-end;
@@ -132,8 +140,26 @@
   box-sizing: border-box;
 }
 
+/*
+ * Standalone use: a route skeleton, where no ancestor has reserved a height.
+ *
+ * The height must be *definite*, not a `min-height`. The bars are sized as a
+ * percentage of this box, and a percentage height resolves against the parent's
+ * content height — which is indefinite when it comes from `min-height` inside a
+ * flex column, so every bar resolved to its content height of zero and the
+ * frame drew empty. `height` also cannot live on `.chart` itself, because
+ * nested inside `.emptyContainer` a fixed value would fight that container's
+ * own height (240px on mobile) and overflow the region.
+ */
+.chartStandalone {
+  height: 350px;
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+}
+
 .bar {
-  flex: 1;
+  flex: 1 1 0;
+  /* A floor so a bar can never again degrade into an invisible hairline. */
+  min-width: 3px;
   border-radius: $radius-xs $radius-xs 0 0;
 }
 
