@@ -1,14 +1,10 @@
 import { useState, useEffect, useCallback, FormEvent } from 'react';
 import type { AlertMessage } from './types';
-import {
-  getAISettingsAction,
-  updateAISettingsAction,
-  syncMutualFundsAction,
-  syncIMFAction,
-  syncPPPAction,
-  syncNavAction,
-} from '../../../actions/admin';
+import { getAISettingsAction, updateAISettingsAction } from '../../../actions/admin';
 import type { NavSyncReport } from '../../../actions/admin/navSync';
+import { executeAdminSync } from './adminSyncExecutor';
+const DEFAULT_SYSTEM_PROMPT =
+  'You are an expert Indian Chartered Accountant and Tax Planner. Analyze the user financial numbers, income sources, deductions, capital gains, and dual regime comparison. Provide actionable, structured, prioritized recommendations to legally minimize Indian income tax, optimize Section 80C/80CCD/80D, capital gains harvesting, and recommend the optimal regime.';
 export function useAdminAiSync(
   effectiveToken: string,
   setBusy: (val: string | null) => void,
@@ -19,18 +15,10 @@ export function useAdminAiSync(
   const [aiModel, setAiModel] = useState('gemini-2.5-flash');
   const [aiApiKey, setAiApiKey] = useState('');
   const [aiHasKey, setAiHasKey] = useState(false);
-  const [aiSystemPrompt, setAiSystemPrompt] = useState(
-    'You are an expert Indian Chartered Accountant and Tax Planner. Analyze the user financial numbers, income sources, deductions, capital gains, and dual regime comparison. Provide actionable, structured, prioritized recommendations to legally minimize Indian income tax, optimize Section 80C/80CCD/80D, capital gains harvesting, and recommend the optimal regime.'
-  );
+  const [aiSystemPrompt, setAiSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
   const [imfJson, setImfJson] = useState('');
   const [pppJson, setPppJson] = useState('');
-  /** Comma/space separated scheme codes to target, or blank for "whatever is furthest behind". */
   const [navSchemeCodes, setNavSchemeCodes] = useState('');
-  /**
-   * Kept as state rather than folded into the status message because the point
-   * of a manual run is seeing *what* was fetched and stored, per scheme — a
-   * single "synced N" line is exactly what this is meant to replace.
-   */
   const [navReport, setNavReport] = useState<NavSyncReport | null>(null);
   const fetchAiSettings = useCallback(async () => {
     if (!effectiveToken) return;
@@ -68,9 +56,7 @@ export function useAdminAiSync(
       }
     };
     void init();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [effectiveToken]);
   const handleSaveAiSettings = async (e: FormEvent) => {
     e.preventDefault();
@@ -78,13 +64,7 @@ export function useAdminAiSync(
     setMessage(null);
     try {
       const res = await updateAISettingsAction(
-        {
-          enabled: aiEnabled,
-          provider: aiProvider,
-          model: aiModel,
-          api_key: aiApiKey,
-          system_prompt: aiSystemPrompt,
-        },
+        { enabled: aiEnabled, provider: aiProvider, model: aiModel, api_key: aiApiKey, system_prompt: aiSystemPrompt },
         effectiveToken
       );
       if (!res.success) throw new Error(res.message || 'Failed to save AI settings');
@@ -100,48 +80,9 @@ export function useAdminAiSync(
     setBusy(endpoint);
     setMessage(null);
     try {
-      let synced: number | boolean | undefined;
-      if (endpoint.includes('sync-mutual-funds')) {
-        const res = await syncMutualFundsAction(effectiveToken);
-        synced = res.synced;
-      } else if (endpoint.includes('sync-imf')) {
-        const res = await syncIMFAction(effectiveToken, body);
-        synced = res.synced;
-      } else if (endpoint.includes('sync-ppp')) {
-        const res = await syncPPPAction(effectiveToken, body);
-        synced = res.synced;
-      } else if (endpoint.includes('sync-nav')) {
-        const codes = navSchemeCodes
-          .split(/[\s,]+/)
-          .map((c) => c.trim())
-          .filter(Boolean);
-        const report = await syncNavAction(effectiveToken, codes.length ? { schemeCodes: codes } : undefined);
-        setNavReport(report);
-        const stored = report.schemes.filter((r) => r.outcome === 'stored').length;
-        setMessage({
-          type: 'success',
-          text:
-            `NAV sync: ${stored} of ${report.considered} stored. ` +
-            `Market as of ${report.watermark ?? 'unknown'}` +
-            (report.watermarkAdvanced ? ' (advanced)' : '') +
-            `, ${(report.elapsedMs / 1000).toFixed(1)}s.`,
-        });
-        return;
-      } else {
-        throw new Error('Unknown sync action');
-      }
-      let successText = 'Dataset synced successfully.';
-      if (endpoint.includes('sync-mutual-funds')) {
-        successText = `Mutual funds synced: ${synced}.`;
-      } else if (endpoint.includes('sync-imf')) {
-        successText = 'IMF inflation data synced successfully.';
-      } else if (endpoint.includes('sync-ppp')) {
-        successText =
-          typeof synced === 'number'
-            ? `World Bank PPP synced: ${synced} records.`
-            : 'World Bank PPP data synced successfully.';
-      }
-      setMessage({ type: 'success', text: successText });
+      const result = await executeAdminSync(endpoint, effectiveToken, body, navSchemeCodes);
+      if (result.report) setNavReport(result.report);
+      setMessage({ type: 'success', text: result.messageText });
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Sync failed' });
     } finally {
