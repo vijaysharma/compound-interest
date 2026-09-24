@@ -102,7 +102,11 @@ const StrategyCalculatorView = () => {
           onSettingsChange={patchProjection}
           message={chartMessage}
         />
-        <FinalStatsCard totals={result.totals} />
+        <FinalStatsCard
+          totals={result.totals}
+          projection={projection}
+          settings={projectionSettings}
+        />
       </div>
       <StrategyIssues issues={issues} warnings={result.warnings} navError={error} />
       <div className={styles.columns}>

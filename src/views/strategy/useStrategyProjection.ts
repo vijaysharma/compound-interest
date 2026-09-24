@@ -42,51 +42,7 @@ const EMPTY: StrategyProjection = {
   horizonIso: '',
   notes: [],
 };
-const buildNotes = (
-  config: StrategyConfig,
-  bands: Record<string, RateBand>,
-  settings: ProjectionSettings
-): string[] => {
-  const notes: string[] = [];
-  const projected = buildProjectedConfig(config, settings);
-  if (projected.column1.withdrawals.length === config.column1.withdrawals.length) {
-    notes.push(
-      `No withdrawal period is running on ${config.asOfDate}, so the projection only compounds ` +
-        'the holdings forward and draws nothing. Extend a withdrawal period to project an income.'
-    );
-  }
-  for (const scheme of strategySchemes(config)) {
-    const band = bands[scheme.schemeCode];
-    if (!band) {
-      notes.push(
-        `${scheme.schemeName} has too little published history to derive any forward return, so ` +
-          'its NAV is held flat for the whole horizon and it contributes no growth.'
-      );
-      continue;
-    }
-    if (band.degraded) {
-      notes.push(
-        `${scheme.schemeName} has only ${band.historyYears.toFixed(1)} years of published NAVs — ` +
-          'too short to sample rolling windows, so all three scenarios use its full-period CAGR ' +
-          'and the band is a single line rather than a range.'
-      );
-    }
-    if (settings.horizonYears > band.historyYears) {
-      notes.push(
-        `${scheme.schemeName} is being projected ${settings.horizonYears} years from ` +
-          `${band.historyYears.toFixed(1)} years of history. The further out the horizon runs, ` +
-          'the less the past constrains it.'
-      );
-    }
-  }
-  if (settings.annualIncreasePct <= 0) {
-    notes.push(
-      'The withdrawal is held flat in rupee terms for the whole horizon. Over decades that is a ' +
-        'large real-terms cut; set a yearly increase to hold spending power instead.'
-    );
-  }
-  return notes;
-};
+import { buildNotes } from './projectionNotes';
 /**
  * Runs the strategy forward past its last published NAV.
  *
@@ -121,7 +77,7 @@ export function useStrategyProjection(
     const truncated = new Set<string>();
     const scenarios: ScenarioOutcome[] = keys.map((key) => {
       const rates = scenarioRates(bands, key);
-      const projectedBook = projectedNavBook(config, navBook, rates, horizonIso);
+      const projectedBook = projectedNavBook(config, navBook, rates, horizonIso, key);
       for (const scheme of strategySchemes(config)) {
         const reached = projectedHorizonShortfall(projectedBook, scheme.schemeCode, horizonIso);
         if (reached) truncated.add(`${scheme.schemeName}|${reached}`);
@@ -136,7 +92,7 @@ export function useStrategyProjection(
         terminalValue,
         terminalValueToday: inTodaysRupees(
           terminalValue,
-          settings.annualIncreasePct,
+          settings.inflationPct,
           settings.horizonYears
         ),
         firstShortfallDate: firstShortfall(result, config.asOfDate),

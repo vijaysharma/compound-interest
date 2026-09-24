@@ -7,25 +7,11 @@ interface StrategyLibraryBarProps {
   library: StrategyLibraryApi;
   onReset: () => void;
 }
-/**
- * The open rename box or delete confirmation, tagged with the strategy it was
- * opened for. Comparing that id against the active one is what closes it when
- * the selection moves, so switching strategies mid-rename cannot apply the new
- * name to the wrong entry.
- */
 interface PendingAction {
   mode: 'rename' | 'delete';
   id: string;
   draft: string;
 }
-/**
- * Picker and controls for the saved strategies.
- *
- * Renaming swaps the picker for a text input and deleting takes a second click
- * on a confirm button, rather than either going through `window.prompt` or
- * `window.confirm` — those can be suppressed by the browser, which would leave
- * the action silently impossible.
- */
 export const StrategyLibraryBar = ({ library, onReset }: StrategyLibraryBarProps) => {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const open = pending && pending.id === library.activeId ? pending : null;

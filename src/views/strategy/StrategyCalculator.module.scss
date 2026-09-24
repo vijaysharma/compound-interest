@@ -336,7 +336,7 @@
  */
 .chartControls {
   display: grid;
-  grid-template-columns: minmax(0, 2.15fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.5rem;
   width: 100%;
 
@@ -365,7 +365,135 @@
     margin: 0 0 0.4rem;
     text-align: center;
     line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    position: relative;
+    user-select: auto;
   }
+}
+
+.chartControlTitle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.infoTooltipContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.infoIconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 2px;
+  margin: 0;
+  cursor: pointer;
+  color: $color-text-secondary;
+  border-radius: 50%;
+  transition: color 0.15s ease, background-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    outline: none;
+  }
+}
+
+.infoPopover {
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 100;
+  width: min(340px, 86vw);
+  background: $bg-white;
+  color: $color-text;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, #e2e8f0);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  user-select: text;
+  cursor: default;
+  pointer-events: auto;
+
+  p {
+    margin: 0 0 0.5rem;
+  }
+
+  ul {
+    margin: 0 0 0.5rem;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  li {
+    list-style: disc;
+    line-height: 1.4;
+  }
+}
+
+.infoPopoverCenter {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.infoPopoverRight {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.infoPopoverLeft {
+  left: 0;
+  transform: none;
+}
+
+.infoTitle {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: $color-heading;
+  margin-bottom: 0.35rem;
+}
+
+.infoDesc {
+  color: $color-text-secondary;
+  margin-bottom: 0.6rem;
+}
+
+.infoExample {
+  display: block;
+  margin-top: 0.25rem;
+  padding: 0.3rem 0.5rem;
+  background: color-mix(in srgb, var(--color-primary) 5%, #f8fafc);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  color: $color-text;
+}
+
+.infoFooter {
+  font-size: 0.72rem;
+  color: $color-text-secondary;
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #f1f5f9;
 }
 
 .chartControlWide {
@@ -469,17 +597,61 @@
 
 .statLabel {
   color: $color-text-secondary;
+  flex: 1;
+  min-width: 0;
 }
 
 .statValue {
   font-weight: 700;
   color: $color-heading;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .statStrong {
   font-size: 0.95rem;
   color: $primary;
+}
+
+.statValues {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.statCurrent {
+  font-weight: 600;
+  color: $color-heading;
+  font-variant-numeric: tabular-nums;
+  min-width: 4.8rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.statProjected {
+  font-weight: 700;
+  color: $primary;
+  font-variant-numeric: tabular-nums;
+  min-width: 5.2rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.statStrongProjected {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: $primary;
+}
+
+.statShortfallBadge {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-error);
+  line-height: 1;
+  margin-top: 0.1rem;
 }
 
 .statGroup {
@@ -493,6 +665,44 @@
     padding-top: 0;
     border-top: none;
   }
+}
+
+.statGroupHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.statGroupTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $color-heading;
+  margin: 0;
+}
+
+.statHeaderValues {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statHeaderCurrent {
+  color: $color-text-secondary;
+  min-width: 4.8rem;
+  text-align: right;
+}
+
+.statHeaderProjected {
+  color: $primary;
+  min-width: 5.2rem;
+  text-align: right;
 }
 
 // The headline figure of the whole calculator, given its own surface.
@@ -522,6 +732,50 @@
   font-variant-numeric: tabular-nums;
 }
 
+.personalHeadline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0.1rem 0;
+}
+
+.personalValueBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+
+  .personalValue {
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+}
+
+.personalValueMeta {
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $color-text-secondary;
+}
+
+.personalArrow {
+  color: $primary;
+  font-weight: 800;
+  font-size: 1rem;
+  align-self: center;
+  opacity: 0.6;
+}
+
+.personalValueProjected {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: $primary;
+  font-variant-numeric: tabular-nums;
+}
+
 .personalSplit {
   display: flex;
   flex-wrap: wrap;
@@ -539,6 +793,23 @@
     font-weight: 700;
     color: $color-heading;
   }
+}
+
+.personalSplitItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.personalSplitProjected {
+  color: $color-text-secondary;
+  font-variant-numeric: tabular-nums;
+  margin-left: 0.15rem;
+}
+
+.personalSplitProjectedValue {
+  color: $primary;
+  font-weight: 700;
 }
 
 // The most recent payout, separated from the running totals above it by a rule
@@ -572,6 +843,28 @@
   font-size: 0.95rem;
   font-weight: 800;
   color: $color-heading;
+}
+
+.personalLastLabelProjected {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $primary;
+  margin-top: 0.2rem;
+  width: 100%;
+}
+
+.personalLastValueProjected {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.4rem;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: $primary;
+  width: 100%;
 }
 
 .personalLastMeta {

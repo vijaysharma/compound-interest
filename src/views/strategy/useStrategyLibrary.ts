@@ -14,44 +14,19 @@ import {
   withRenamed,
   withoutStrategy,
   type StrategyLibrary,
-  type StrategySummary,
 } from './library';
 import { createSyncScheduler } from './strategySync';
 import type { StrategyConfig } from './types';
-export interface StrategyLibraryApi {
-  strategies: StrategySummary[];
-  activeId: string;
-  activeName: string;
-  /** False until the saved library has been read, so the picker can stay quiet. */
-  isReady: boolean;
-  canAdd: boolean;
-  canDelete: boolean;
-  selectStrategy: (id: string) => void;
-  addStrategy: () => void;
-  duplicateStrategy: () => void;
-  renameStrategy: (name: string) => void;
-  deleteStrategy: (id: string) => void;
-}
-interface PickerState {
-  strategies: StrategySummary[];
-  activeId: string;
-}
-const EMPTY_PICKER: PickerState = { strategies: [], activeId: '' };
+import {
+  type StrategyLibraryApi,
+  type PickerState,
+  EMPTY_PICKER,
+} from './strategyLibraryTypes';
+export type { StrategyLibraryApi };
 /**
  * The saved strategy library, wired to the live editor config.
- *
- * The active entry is written on every edit — the single-strategy version of
- * this page auto-saved, and replacing that with an explicit save would be a
- * regression. Switching entries therefore never has unsaved work to lose.
- *
- * The library itself lives in a ref rather than in state: it holds a full
- * config per entry, and none of that is rendered. Only the names and the
- * selection are, so only a structural change (add, duplicate, rename, delete,
- * select) re-renders — typing in an amount field persists without one.
- *
- * `onRestore` is read through a ref and the load runs once on mount. Taking it
- * as an effect dependency would re-enter the load on every render, because the
- * callback its caller passes is rebuilt each time.
+ * The active entry is persisted on every edit. The library lives in a ref;
+ * only the picker summary and selection state trigger re-renders.
  */
 export function useStrategyLibrary(
   config: StrategyConfig,
