@@ -12,36 +12,9 @@ import {
 import { resolveFreshnessCeiling } from './navWatermark';
 import { FIRST_FETCH_TIMEOUT_MS, type NavPayload, syncSchemeFromUpstream } from './navSync';
 import { scheduleMaintenance, withResponseMeta } from './mfNavHandler';
-/** Runs `task` over `items` with at most `limit` in flight. */
-async function mapWithConcurrency<T>(
-  items: T[],
-  limit: number,
-  task: (item: T) => Promise<void>
-): Promise<void> {
-  let cursor = 0;
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (cursor < items.length) {
-      const item = items[cursor++];
-      await task(item);
-    }
-  });
-  await Promise.all(workers);
-}
+import { mapWithConcurrency } from './concurrency';
 const latestOf = (payload: NavPayload) =>
   latestNavDateIn(payload.data as Array<{ date?: string }>);
-/**
- * Serves several schemes at once, for the pinned-fund charts.
- *
- * Mirrors the single-fetch path: every scheme is answered from whatever is
- * already stored, and staleness only schedules a refresh for afterwards. The
- * previous version went upstream inline for any scheme behind the ceiling,
- * which with a ten-fund portfolio meant up to ten full-history downloads — each
- * of which was measured taking anywhere between 1.2s and 62s — before the user
- * saw a single data point.
- *
- * Only a scheme with nothing stored at all is fetched inline, because there is
- * nothing else to return for it.
- */
 export async function handleGetBatchMutualFundNav(
   schemeCodesRaw: (string | number)[],
   requestedEndDate?: string | null,
@@ -126,9 +99,6 @@ export async function handleGetBatchMutualFundNav(
       console.warn('[nav] batch DB read failed:', dbErr);
     }
   }
-  // Schemes with nothing stored have to be fetched inline — there is nothing
-  // else to answer with. Pooled so a large cold portfolio cannot open one
-  // upstream connection per fund.
   if (missing.length > 0) {
     await mapWithConcurrency(missing, NAV_BATCH_CONCURRENCY, async (code) => {
       const fetched = await syncSchemeFromUpstream(code, FIRST_FETCH_TIMEOUT_MS, null);
@@ -137,8 +107,6 @@ export async function handleGetBatchMutualFundNav(
   }
   const ceiling = await resolveFreshnessCeiling(
     endDate,
-    // Seed from the newest date across the batch, so a cold Redis still has a
-    // real observation to work from rather than a calendar guess.
     [...found.values()].reduce<string | null>(
       (acc, v) => (v.latest && (!acc || v.latest > acc) ? v.latest : acc),
       null

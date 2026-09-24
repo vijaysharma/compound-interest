@@ -1,14 +1,5 @@
-export function getUpstashConfig() {
-  const rawUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-  const rawToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-  if (!rawUrl || !rawToken) return null;
-  const url = rawUrl.trim().replace(/^["']|["']$/g, '').replace(/\/$/, '');
-  const token = rawToken.trim().replace(/^["']|["']$/g, '');
-  return url && token ? { url, token } : null;
-}
-export function isRedisConfigured(): boolean {
-  return Boolean(getUpstashConfig());
-}
+import { getUpstashConfig, parseRedisJson } from './upstashConfig';
+export { getUpstashConfig, isRedisConfigured } from './upstashConfig';
 export async function upstashGet<T>(key: string): Promise<{ success: boolean; data?: T | null }> {
   const cfg = getUpstashConfig();
   if (!cfg) return { success: false };
@@ -21,15 +12,7 @@ export async function upstashGet<T>(key: string): Promise<{ success: boolean; da
     if (res.ok) {
       const json = (await res.json()) as { result?: string | null };
       if (json.result !== null && json.result !== undefined) {
-        try {
-          let parsed = JSON.parse(json.result);
-          if (typeof parsed === 'string') {
-            try { parsed = JSON.parse(parsed); } catch { /* ignore */ }
-          }
-          return { success: true, data: parsed as T };
-        } catch {
-          return { success: true, data: json.result as unknown as T };
-        }
+        return { success: true, data: parseRedisJson<T>(json.result) };
       }
       return { success: true, data: null };
     }
@@ -52,20 +35,7 @@ export async function upstashMGet<T>(keys: string[]): Promise<Record<string, T |
       const result: Record<string, T | null> = {};
       const jsonList = (await res.json()) as Array<{ result?: string | null }>;
       for (let i = 0; i < keys.length; i++) {
-        const raw = jsonList[i]?.result;
-        if (raw !== null && raw !== undefined) {
-          try {
-            let parsed = JSON.parse(raw);
-            if (typeof parsed === 'string') {
-              try { parsed = JSON.parse(parsed); } catch { /* ignore */ }
-            }
-            result[keys[i]] = parsed as T;
-          } catch {
-            result[keys[i]] = raw as unknown as T;
-          }
-        } else {
-          result[keys[i]] = null;
-        }
+        result[keys[i]] = parseRedisJson<T>(jsonList[i]?.result);
       }
       return result;
     }
@@ -93,19 +63,6 @@ export async function upstashSet(key: string, value: unknown, ttlSeconds = 3600)
     return false;
   }
 }
-/**
- * `SET key value NX EX ttl` — claims a key only if it does not already exist.
- *
- * The single-flight gates used to be built on `INCR` plus a follow-up `EXPIRE`
- * that was deliberately not awaited. That had a failure mode with no recovery:
- * if the `EXPIRE` was lost — a dropped request, a cold-start abort, the function
- * being frozen right after responding — the counter stayed above 1 forever and
- * the thing it gated never ran again. A refresh gate that silently becomes
- * permanent is worse than no gate.
- *
- * `SET NX EX` sets the value and its lifetime in one atomic command, so the key
- * cannot outlive its TTL. Returns `true` only for the caller that took it.
- */
 export async function upstashSetNX(
   key: string,
   value: unknown,
@@ -125,7 +82,6 @@ export async function upstashSetNX(
     );
     if (res.ok) {
       const json = (await res.json()) as { result?: string | null };
-      // Upstash answers "OK" when the key was set and null when NX rejected it.
       return { ok: json.result === 'OK', reachable: true };
     }
   } catch (err) {
