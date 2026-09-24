@@ -1,4 +1,5 @@
 'use client';
+// DO NOT USE THIS COMPONENT AS THIS IS JUST MEANT FOR ROUGH CALCULATION OF PROJECTION AND NOT FOR PRODUCTION USE.
 import React from 'react';
 import { StepUpSelect } from './StrategyFields';
 import { formatRupees } from './money';

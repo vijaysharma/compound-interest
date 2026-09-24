@@ -12,7 +12,6 @@ import { StrategyIssues } from './strategy/StrategyIssues';
 import { Column1Panel } from './strategy/Column1Panel';
 import { Column2Panel } from './strategy/Column2Panel';
 import { Column3Panel } from './strategy/Column3Panel';
-import { ProjectionCard } from './strategy/ProjectionCard';
 import { useStrategyProjection } from './strategy/useStrategyProjection';
 import { StrategyFundModal } from './strategy/StrategyFundModal';
 import { COLUMN_WORDS } from './strategy/labels';
@@ -26,7 +25,6 @@ const StrategyCalculatorView = () => {
   const { navBook, isLoading, error } = useStrategyNav(api.config);
   const { result, issues, blocked, hasNavData } = useStrategyCalculation(api.config, navBook);
   const [picker, setPicker] = useState<PickerTarget>(null);
-  const [showProjection, setShowProjection] = useState(false);
   /*
    * Projection settings are deliberately not part of StrategyConfig: they ask
    * "what if this carried on", which is a question about the strategy rather
@@ -34,8 +32,9 @@ const StrategyCalculatorView = () => {
    * The yearly increase starts at 0, i.e. whatever the configuration already
    * says, and the note under the table points out what that means over decades.
    */
-  const [projectionSettings, setProjectionSettings] =
-    useState<ProjectionSettings>(DEFAULT_PROJECTION_SETTINGS);
+  const [projectionSettings, setProjectionSettings] = useState<ProjectionSettings>(
+    DEFAULT_PROJECTION_SETTINGS
+  );
   const patchProjection = useCallback((patch: Partial<ProjectionSettings>) => {
     setProjectionSettings((prev) => ({ ...prev, ...patch }));
   }, []);
@@ -46,10 +45,8 @@ const StrategyCalculatorView = () => {
     projectionSettings,
     // Gated on the user's own switch as well as on there being data: with the
     // projection off, no extra engine run happens at all.
-    projectionSettings.enabled && !blocked && hasNavData,
+    projectionSettings.enabled && !blocked && hasNavData
     // All three scenarios are only needed for the comparison table, and only
-    // when the projection is on at all.
-    showProjection && projectionSettings.enabled
   );
   const handleToggleFund = (fund: FundRef) => {
     if (picker === 'column1') {
@@ -123,15 +120,6 @@ const StrategyCalculatorView = () => {
         />
         <Column3Panel api={api} result={result} />
       </div>
-      <ProjectionCard
-        config={api.config}
-        projection={projection}
-        settings={projectionSettings}
-        onSettingsChange={patchProjection}
-        shown={showProjection}
-        onToggle={() => setShowProjection((prev) => !prev)}
-        unavailableMessage={chartMessage}
-      />
       <StrategyFundModal
         open={picker !== null}
         onClose={() => setPicker(null)}
