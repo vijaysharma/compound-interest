@@ -1,4 +1,4 @@
-import { ReactElement, SetStateAction } from 'react';
+import { ReactElement, ReactNode, SetStateAction } from 'react';
 export interface DisplayType {
   primaryAmount: number;
   primarySub?: string;
@@ -49,7 +49,7 @@ export interface JoinedButtonType<T = string> {
   data: ButtonDataType<T>[];
   selectedValue?: T;
   updateSelectedValue: (value: T) => void;
-  title?: string;
+  title?: ReactNode;
   sizePrefix?: string;
   className?: string;
   btnClass?: string;
@@ -111,14 +111,8 @@ export interface INFLATION_TYPE {
   World: string;
 }
 export interface PPPDataType {
-  indicator: {
-    id: string;
-    value: string;
-  };
-  country: {
-    id: string;
-    value: string;
-  };
+  indicator: { id: string; value: string };
+  country: { id: string; value: string };
   countryiso3code: string;
   date: string;
   value: number;

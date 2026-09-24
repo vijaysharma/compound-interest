@@ -29,10 +29,7 @@ const SIP = ({ onSelectionChange }: SipProps) => {
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const dates = useMutualFundDates(null, null, '740', false);
-  const pinned = usePinnedFunds([], dates.endDate, dates.duration, (s, e) => {
-    dates.setStartDate(s);
-    dates.setEndDate(e);
-  });
+  const pinned = usePinnedFunds([], dates.endDate, dates.duration, (s, e) => { dates.setStartDate(s); dates.setEndDate(e); });
   const search = useFundSearch('Kotak Arbitrage Fund', isFundSelectorOpen);
   const handleRestore = useCallback((saved: SipSavedState) => {
     search.setSearchKey(saved.searchKey);
@@ -46,9 +43,7 @@ const SIP = ({ onSelectionChange }: SipProps) => {
     setInvestmentStepUp(saved.investmentStepUp);
     setViewChart(saved.viewChart);
     if (saved.pinnedFunds.length > 0) {
-      pinned.setPinnedFunds(
-        saved.pinnedFunds.map((fund, index) => ({ ...fund, color: getChartSeriesColor(index) }))
-      );
+      pinned.setPinnedFunds(saved.pinnedFunds.map((f, i) => ({ ...f, color: getChartSeriesColor(i) })));
     }
     if (saved.startDate) dates.setStartDate(saved.startDate);
     if (saved.endDate) dates.setEndDate(saved.endDate);
@@ -60,9 +55,6 @@ const SIP = ({ onSelectionChange }: SipProps) => {
     startDate: dates.startDate, endDate: dates.endDate, dayOfMonth, investmentStepUp,
   };
   useSipStorage(currentState, handleRestore);
-  // `dates` is a fresh object every render, so keeping it in the dependency list
-  // re-ran this on every render. Aligning only when the NAV series changes is
-  // both sufficient and what the guard inside alignInitialDates expects.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { dates.alignInitialDates(pinned.jsonNavData); }, [pinned.jsonNavData]);
   useEffect(() => {
@@ -74,11 +66,8 @@ const SIP = ({ onSelectionChange }: SipProps) => {
   );
   const handleSelectFund = useCallback((fund: SipFundAnalysis) => {
     setDetailModalFund({
-      ...fund,
-      invAmt: parseFloat(monthlyAmount) || 0,
-      startDate: dates.startDate,
-      endDate: dates.endDate,
-      navData: pinned.pinnedNavData[fund.schemeCode] || [],
+      ...fund, invAmt: parseFloat(monthlyAmount) || 0,
+      startDate: dates.startDate, endDate: dates.endDate, navData: pinned.pinnedNavData[fund.schemeCode] || [],
     });
   }, [dates.startDate, dates.endDate, monthlyAmount, pinned.pinnedNavData]);
   if (search.error.status === 'error' && search.deferredSearchKey.trim()) {
