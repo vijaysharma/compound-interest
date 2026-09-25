@@ -12,6 +12,8 @@ export interface ChartDataset {
    * data of the same standing as the history beside it.
    */
   dashed?: boolean;
+  /** Custom line dash pattern (e.g. [6, 4] or [2, 3]). */
+  lineDash?: number[];
   /** 0–1. Pairs with `dashed` to push a projected series visually back. */
   strokeOpacity?: number;
   /**

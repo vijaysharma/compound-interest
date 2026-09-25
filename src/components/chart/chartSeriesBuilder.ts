@@ -5,6 +5,7 @@ export interface NormalizedDataset {
   color: string;
   valueMap: Map<string, number>;
   dashed: boolean;
+  lineDash?: number[];
   strokeOpacity?: number;
   tooltipNote?: string;
 }
@@ -16,7 +17,11 @@ export const normalizeChartDatasets = (
   datasets.map((dataset) => {
     const validPoints: { date: string; time: number; nav: number }[] = [];
     for (const point of dataset.data) {
-      if (Number.isFinite(point.nav) && point.nav > 0) {
+      const isValid =
+        dataMode === 'value'
+          ? Number.isFinite(point.nav) && point.nav >= 0
+          : Number.isFinite(point.nav) && point.nav > 0;
+      if (isValid) {
         const time = getDateTime(point.date);
         if (Number.isFinite(time)) validPoints.push({ date: point.date, time, nav: point.nav });
       }
@@ -28,6 +33,7 @@ export const normalizeChartDatasets = (
         color: dataset.color,
         valueMap: new Map<string, number>(),
         dashed: dataset.dashed === true,
+        lineDash: dataset.lineDash,
         strokeOpacity: dataset.strokeOpacity,
         tooltipNote: dataset.tooltipNote,
       };
@@ -45,6 +51,7 @@ export const normalizeChartDatasets = (
       color: dataset.color,
       valueMap,
       dashed: dataset.dashed === true,
+      lineDash: dataset.lineDash,
       strokeOpacity: dataset.strokeOpacity,
       tooltipNote: dataset.tooltipNote,
     };
@@ -62,8 +69,13 @@ export const buildChartSeries = (
     yName: dataset.label,
     stroke: dataset.color,
     strokeWidth: chartTheme.isMobile ? 1.5 : 2,
-    ...(dataset.dashed ? { lineDash: chartTheme.isMobile ? [5, 3] : [7, 4] } : {}),
+    ...(dataset.lineDash
+      ? { lineDash: dataset.lineDash }
+      : dataset.dashed
+        ? { lineDash: chartTheme.isMobile ? [5, 3] : [7, 4] }
+        : {}),
     ...(dataset.strokeOpacity !== undefined ? { strokeOpacity: dataset.strokeOpacity } : {}),
+    connectMissingData: true,
     marker: { enabled: false },
     tooltip: {
       showArrow: false,

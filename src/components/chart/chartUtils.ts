@@ -33,7 +33,7 @@ export const getSortedDates = (datasets: ChartDataset[]): string[] => {
   const uniqueDateTimes = new Map<string, number>();
   for (const dataset of datasets) {
     for (const point of dataset.data) {
-      if (Number.isFinite(point.nav) && point.nav > 0) {
+      if (Number.isFinite(point.nav) && point.nav >= 0) {
         const time = getDateTime(point.date);
         if (Number.isFinite(time) && !uniqueDateTimes.has(point.date)) uniqueDateTimes.set(point.date, time);
       }
