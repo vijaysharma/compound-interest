@@ -13,8 +13,8 @@ export const HISTORICAL_SERIES = [
   { key: 'column1Value', label: `${COLUMN_LABELS.core} value`, colorIndex: 0 },
   { key: 'column2Value', label: `${COLUMN_LABELS.growth} value`, colorIndex: 1 },
 ] as const;
-export const COMBINED_COLOR_INDEX = 4;
-export const PROJECTED_STROKE_OPACITY = 0.55;
+export const COMBINED_COLOR_INDEX = 3;
+export const PROJECTED_STROKE_OPACITY = 0.85;
 export const DEFLATED_KEYS = ['column1Value', 'column2Value', 'totalValue'] as const;
 export const buildStrategyDatasets = (
   config: StrategyConfig,
@@ -50,6 +50,7 @@ export const buildStrategyDatasets = (
     label: `${COLUMN_LABELS.core}, proj (${scenarioLabel})`,
     color: getChartSeriesColor(0),
     dashed: true,
+    lineDash: [6, 4],
     strokeOpacity: PROJECTED_STROKE_OPACITY,
     tooltipNote: `Projected · ${scenarioLabel} · ${COLUMN_LABELS.core}`,
     data: [
@@ -61,6 +62,7 @@ export const buildStrategyDatasets = (
     label: `${COLUMN_LABELS.growth}, proj (${scenarioLabel})`,
     color: getChartSeriesColor(1),
     dashed: true,
+    lineDash: [2, 3],
     strokeOpacity: PROJECTED_STROKE_OPACITY,
     tooltipNote: `Projected · ${scenarioLabel} · ${COLUMN_LABELS.growth}`,
     data: [
@@ -72,7 +74,8 @@ export const buildStrategyDatasets = (
     label: `Combined, proj (${scenarioLabel})`,
     color: getChartSeriesColor(COMBINED_COLOR_INDEX),
     dashed: true,
-    strokeOpacity: 0.75,
+    lineDash: [10, 4],
+    strokeOpacity: 0.9,
     tooltipNote: `Projected · ${scenarioLabel} · Combined`,
     data: [
       ...(joinPoint ? [{ date: joinPoint.date, nav: joinPoint.totalValue }] : []),

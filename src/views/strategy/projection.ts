@@ -39,5 +39,7 @@ export {
   horizonDate,
   buildProjectedConfig,
   firstShortfall,
+  firstCoreShortfall,
+  firstGrowthShortfall,
   firstExhausted,
 } from './projectionSchedule';

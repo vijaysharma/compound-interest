@@ -7,6 +7,8 @@ import {
   deriveRateBands,
   firstExhausted,
   firstShortfall,
+  firstCoreShortfall,
+  firstGrowthShortfall,
   horizonDate,
   projectedHorizonShortfall,
   inTodaysRupees,
@@ -96,6 +98,8 @@ export function useStrategyProjection(
           settings.horizonYears
         ),
         firstShortfallDate: firstShortfall(result, config.asOfDate),
+        firstCoreShortfallDate: firstCoreShortfall(result, config.asOfDate),
+        firstGrowthShortfallDate: firstGrowthShortfall(result, config.asOfDate),
         exhaustedDate: firstExhausted(result, config.asOfDate),
       };
     });

@@ -102,8 +102,10 @@ export const PersonalUseCard = ({
                   {projLastToday !== null ? ` · ${formatRupees(projLastToday)} in today's ₹` : ''}
                   {outcome?.exhaustedDate
                     ? ` · Depleted ${outcome.exhaustedDate}`
-                    : outcome?.firstShortfallDate
-                    ? ` · Shortfall from ${outcome.firstShortfallDate}`
+                    : projLast.source === 'core' && outcome?.firstCoreShortfallDate
+                    ? ` · Shortfall from ${outcome.firstCoreShortfallDate}`
+                    : projLast.source === 'growth' && outcome?.firstGrowthShortfallDate
+                    ? ` · Shortfall from ${outcome.firstGrowthShortfallDate}`
                     : ''}
                 </span>
               )}

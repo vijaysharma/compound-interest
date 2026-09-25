@@ -68,7 +68,7 @@ export const extendNavHistory = (
     if (date.getTime() > horizonTime) break;
     const t = month / 12;
     const decay = t <= 20 ? 0 : Math.min(0.5, (t - 20) / 60);
-    const rEff = annualRate * (1 - decay) + 0.095 * decay;
+    const rEff = annualRate > 0.085 ? annualRate * (1 - decay) + 0.095 * decay : annualRate;
     const trend = (1 + rEff) ** t;
     let nav = last.nav * trend;
     if (cyclical && D > 0.005) {

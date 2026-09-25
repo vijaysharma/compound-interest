@@ -78,6 +78,8 @@ export interface ScenarioOutcome {
   terminalValue: number;
   terminalValueToday: number;
   firstShortfallDate: string | null;
+  firstCoreShortfallDate?: string | null;
+  firstGrowthShortfallDate?: string | null;
   exhaustedDate: string | null;
 }
 export const DEFAULT_INFLATION_PCT = 6;

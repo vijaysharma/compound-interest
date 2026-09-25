@@ -37,8 +37,10 @@ export const FinalStatsCard = ({ totals, projection, settings }: FinalStatsCardP
             }${
               isProjecting && outcome?.exhaustedDate
                 ? ` · Depleted on ${outcome.exhaustedDate}`
-                : isProjecting && outcome?.firstShortfallDate
-                ? ` · Shortfall from ${outcome.firstShortfallDate}`
+                : isProjecting && outcome?.firstCoreShortfallDate
+                ? ` · Core shortfall from ${outcome.firstCoreShortfallDate}`
+                : isProjecting && outcome?.firstGrowthShortfallDate
+                ? ` · Growth SWP shortfall from ${outcome.firstGrowthShortfallDate}`
                 : ''
             }`
           : 'Select a fund to value the portfolio.'}

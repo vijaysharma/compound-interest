@@ -82,14 +82,24 @@ export const buildProjectedConfig = (
     column2: config.column2.map((entry) => extendSwp(entry, config.asOfDate, horizonIso)),
   };
 };
-export const firstShortfall = (result: StrategyResult, afterDate: string): string | null => {
+export const firstShortfall = (
+  result: StrategyResult,
+  afterDate: string,
+  kind?: 'c1-withdraw' | 'c2-swp'
+): string | null => {
   for (const transaction of result.transactions) {
-    if (transaction.kind !== 'c1-withdraw' && transaction.kind !== 'c2-swp') continue;
+    if (kind ? transaction.kind !== kind : transaction.kind !== 'c1-withdraw' && transaction.kind !== 'c2-swp') {
+      continue;
+    }
     if (isOnOrBefore(transaction.date, afterDate)) continue;
     if (transaction.settledAmount < transaction.amount - 0.005) return transaction.date;
   }
   return null;
 };
+export const firstCoreShortfall = (result: StrategyResult, afterDate: string): string | null =>
+  firstShortfall(result, afterDate, 'c1-withdraw');
+export const firstGrowthShortfall = (result: StrategyResult, afterDate: string): string | null =>
+  firstShortfall(result, afterDate, 'c2-swp');
 export const firstExhausted = (result: StrategyResult, afterDate: string): string | null => {
   for (const snapshot of result.snapshots) {
     if (isOnOrBefore(snapshot.date, afterDate)) continue;
