@@ -14,6 +14,7 @@ globalRef.document = { documentElement: {} };
 const {
   STRATEGY_LIBRARY_KEY,
   activeConfig,
+  hasStoredLibrary,
   loadLibrary,
   saveLibrary,
   singleEntryLibrary,
@@ -85,4 +86,13 @@ test('entries that no longer parse are dropped, usable ones kept', () => {
     ['Fine']
   );
   assert.equal(loaded.activeId, 'b');
+});
+test('hasStoredLibrary accurately detects presence of saved state', () => {
+  reset();
+  assert.equal(hasStoredLibrary(), false);
+  entries.set(STRATEGY_LIBRARY_KEY, JSON.stringify({ entries: [] }));
+  assert.equal(hasStoredLibrary(), true);
+  reset();
+  entries.set(STRATEGY_STORAGE_KEY, JSON.stringify({}));
+  assert.equal(hasStoredLibrary(), true);
 });

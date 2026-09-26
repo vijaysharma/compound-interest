@@ -107,6 +107,17 @@ export const singleEntryLibrary = (name: string, config: StrategyConfig): Strate
   const entry = createEntry(name, config);
   return libraryWith([entry], entry.id);
 };
+export const hasStoredLibrary = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return Boolean(
+      window.localStorage.getItem(STRATEGY_LIBRARY_KEY) ||
+      window.localStorage.getItem(STRATEGY_STORAGE_KEY)
+    );
+  } catch {
+    return false;
+  }
+};
 export const loadLibrary = (): StrategyLibrary => {
   if (typeof window === 'undefined') return singleEntryLibrary('Strategy 1', createDefaultConfig());
   try {

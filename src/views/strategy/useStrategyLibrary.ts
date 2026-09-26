@@ -4,6 +4,7 @@ import { createDefaultConfig } from './defaults';
 import {
   MAX_SAVED_STRATEGIES,
   activeConfig,
+  hasStoredLibrary,
   loadLibrary,
   saveLibrary,
   summarise,
@@ -36,6 +37,7 @@ export function useStrategyLibrary(
   const [picker, setPicker] = useState<PickerState>(EMPTY_PICKER);
   const [isReady, setIsReady] = useState(false);
   const onRestoreRef = useRef(onRestore);
+  const lastPersistedConfigRef = useRef<string | null>(null);
   /**
    * Adopts the server's reconciled library.
    *
@@ -47,9 +49,11 @@ export function useStrategyLibrary(
     const current = libraryRef.current;
     libraryRef.current = merged;
     saveLibrary(merged);
+    const serverActive = activeConfig(merged);
+    lastPersistedConfigRef.current = JSON.stringify(serverActive);
     setPicker({ strategies: summarise(merged), activeId: merged.activeId });
     if (current && merged.activeId !== current.activeId) {
-      onRestoreRef.current(activeConfig(merged));
+      onRestoreRef.current(serverActive);
     }
   }, []);
   // Built inside the mount effect rather than during render: it closes over
@@ -64,15 +68,22 @@ export function useStrategyLibrary(
     // A frame after mount, so the server-rendered markup and the first client
     // render still match; saved values are applied immediately after.
     const frame = requestAnimationFrame(() => {
+      const hasLocal = hasStoredLibrary();
       const loaded = loadLibrary();
       libraryRef.current = loaded;
+      const initialActive = activeConfig(loaded);
+      lastPersistedConfigRef.current = JSON.stringify(initialActive);
       setPicker({ strategies: summarise(loaded), activeId: loaded.activeId });
-      onRestoreRef.current(activeConfig(loaded));
+      onRestoreRef.current(initialActive);
       setIsReady(true);
-      // Immediately, not debounced: this is the pull that brings in strategies
-      // saved on another device, and waiting seconds to do it would show the
-      // user a stale picker first.
-      syncRef.current?.schedule(loaded, true);
+      if (hasLocal) {
+        // Stored strategies exist locally; sync them with the server.
+        syncRef.current?.schedule(loaded, true);
+      } else {
+        // No local storage yet; do a pure pull to adopt cloud strategies without
+        // uploading a synthetic local fallback.
+        syncRef.current?.pull();
+      }
     });
     return () => {
       cancelAnimationFrame(frame);
@@ -84,6 +95,9 @@ export function useStrategyLibrary(
   useEffect(() => {
     const current = libraryRef.current;
     if (!isReady || !current) return;
+    const serialized = JSON.stringify(config);
+    if (lastPersistedConfigRef.current === serialized) return;
+    lastPersistedConfigRef.current = serialized;
     const next = withActiveConfig(current, config);
     libraryRef.current = next;
     saveLibrary(next);
@@ -102,7 +116,11 @@ export function useStrategyLibrary(
     libraryRef.current = next;
     saveLibrary(next);
     setPicker({ strategies: summarise(next), activeId: next.activeId });
-    if (next.activeId !== current.activeId) onRestoreRef.current(activeConfig(next));
+    if (next.activeId !== current.activeId) {
+      const newActive = activeConfig(next);
+      lastPersistedConfigRef.current = JSON.stringify(newActive);
+      onRestoreRef.current(newActive);
+    }
     // Structural changes — add, rename, delete — are worth pushing promptly,
     // and unlike a config edit they cannot arrive in a burst.
     syncRef.current?.schedule(next, true);

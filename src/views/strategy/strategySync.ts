@@ -118,8 +118,23 @@ export function createSyncScheduler(apply: (library: StrategyLibrary) => void) {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => void run(), immediate ? 0 : SYNC_DEBOUNCE_MS);
   };
+  const pull = async () => {
+    if (inFlight) return;
+    inFlight = true;
+    try {
+      const merged = await syncLibrary({ entries: [], tombstones: [], activeId: '' });
+      if (merged) {
+        pending = null;
+        apply(merged);
+      }
+    } finally {
+      inFlight = false;
+      if (pending) schedule(pending);
+    }
+  };
   return {
     schedule,
+    pull,
     /** Drops any queued sync, for unmount. */
     cancel: () => {
       if (timer) clearTimeout(timer);

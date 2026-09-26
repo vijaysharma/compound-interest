@@ -44,8 +44,22 @@ export async function syncStrategiesAction(
     });
     if (row.is_active) storedActiveId = row.id;
   }
+  const storedIds = new Set(stored.map((s) => s.id));
+  const hasKnownStoredStrategy = incoming.entries.some((e) => storedIds.has(e.id));
+  // If the database already holds saved strategies, do not let an uninitialized client's
+  // unedited default fallback strategy (e.g. "Strategy 1" with no fund picked) be merged in.
+  const effectiveIncomingEntries = incoming.entries.filter((entry) => {
+    if (stored.length > 0 && !hasKnownStoredStrategy) {
+      const config = entry.config as Record<string, unknown> | null;
+      const column1 = config?.column1 as Record<string, unknown> | null;
+      const isDefaultPlaceholder =
+        entry.name === 'Strategy 1' && (!column1?.fund || column1.fund === null);
+      if (isDefaultPlaceholder) return false;
+    }
+    return true;
+  });
   const merged = mergeStrategies(
-    incoming.entries,
+    effectiveIncomingEntries,
     incoming.tombstones,
     stored,
     storedTombstones,
