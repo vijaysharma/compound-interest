@@ -6,7 +6,7 @@ interface InfoTooltipProps {
   align?: 'center' | 'right' | 'left';
   children: React.ReactNode;
 }
-export const InfoTooltip = ({ ariaLabel, align = 'center', children }: InfoTooltipProps) => {
+export const InfoTooltip = ({ align = 'center', children }: InfoTooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
@@ -43,33 +43,26 @@ export const InfoTooltip = ({ ariaLabel, align = 'center', children }: InfoToolt
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <button
-        type="button"
-        className={styles.infoIconButton}
-        aria-label={ariaLabel}
-        aria-expanded={isOpen}
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setIsOpen((prev) => !prev);
         }}
       >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="16" x2="12" y2="12" />
-          <line x1="12" y1="8" x2="12.01" y2="8" />
-        </svg>
-      </button>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
       {isOpen && (
         <div className={`${styles.infoPopover} ${alignClass}`} role="tooltip">
           {children}
