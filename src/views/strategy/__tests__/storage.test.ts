@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseStoredConfig } from '../storage';
 import { getTodayISO } from '../../../utilities/dateGuards';
-import { createDefaultConfig } from '../defaults';
+import { createDefaultConfig, nextId } from '../defaults';
 const TODAY = getTodayISO();
 test('a saved config round-trips through JSON', () => {
   const original = createDefaultConfig('2026-09-18');
@@ -108,12 +108,11 @@ test('ids are reserved so a new item cannot reuse a restored id', () => {
     column2: [{ id: 'c2-9', fund: { schemeCode: '201' } }],
   });
   assert.ok(restored);
-  // createDefaultConfig mints fresh ids from the same counter; they must not
-  // collide with wd-7 or c2-9.
-  const fresh = createDefaultConfig('2026-09-18');
-  const freshIds = fresh.column1.withdrawals.map((period) => period.id);
-  assert.ok(!freshIds.includes('wd-7'), `collision: ${freshIds.join()}`);
-  for (const id of freshIds) {
-    assert.ok(Number(id.split('-').pop()) > 9);
-  }
+  // Fresh items minted from the counter must not collide with wd-7 or c2-9.
+  const nextWd = nextId('wd');
+  const nextC2 = nextId('c2');
+  assert.notEqual(nextWd, 'wd-7');
+  assert.notEqual(nextC2, 'c2-9');
+  assert.ok(Number(nextWd.split('-').pop()) > 9);
+  assert.ok(Number(nextC2.split('-').pop()) > 9);
 });

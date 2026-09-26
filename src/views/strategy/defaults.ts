@@ -4,10 +4,14 @@ import type { Column2FundConfig, FundRef, StrategyConfig, WithdrawalPeriod } fro
 export const MAX_COLUMN2_FUNDS = 8;
 /** Highest yearly withdrawal increase offered in the dropdown. */
 export const MAX_STEP_UP_PCT = 20;
-let idCounter = 0;
+let idCounter = 2;
 export const nextId = (prefix: string): string => {
   idCounter += 1;
   return `${prefix}-${idCounter}`;
+};
+/** Resets the id counter. Used in unit tests. */
+export const resetIdCounterForTests = (start = 2): void => {
+  idCounter = start;
 };
 /**
  * Advances the id counter past a set of existing ids. Called after restoring a
@@ -70,6 +74,7 @@ export const rebalanceAllocations = (funds: Column2FundConfig[]): Column2FundCon
     allocationPct: index === 0 ? even + remainder : even,
   }));
 };
+export const DEFAULT_WITHDRAWAL_IDS = ['wd-1', 'wd-2'] as const;
 export const createDefaultConfig = (asOfDate = getTodayISO()): StrategyConfig => ({
   column1: {
     fund: null,
@@ -77,7 +82,7 @@ export const createDefaultConfig = (asOfDate = getTodayISO()): StrategyConfig =>
     investmentDate: '2018-01-01',
     withdrawals: [
       {
-        id: nextId('wd'),
+        id: DEFAULT_WITHDRAWAL_IDS[0],
         startDate: '2019-01-01',
         endDate: '2019-12-31',
         frequency: 'yearly',
@@ -86,7 +91,7 @@ export const createDefaultConfig = (asOfDate = getTodayISO()): StrategyConfig =>
         annualStepUpPct: 0,
       },
       {
-        id: nextId('wd'),
+        id: DEFAULT_WITHDRAWAL_IDS[1],
         startDate: '2020-01-01',
         endDate: asOfDate,
         frequency: 'yearly',

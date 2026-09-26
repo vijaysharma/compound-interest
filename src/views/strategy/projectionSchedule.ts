@@ -2,7 +2,6 @@ import { addMonths, toISO } from '../../utilities/mutual-fund/mfDateHelpers';
 import { parseAnyDate } from '../../utilities/dateUtils';
 import { MONTHS_PER_INTERVAL, installmentDates, isOnOrBefore, stepUpFactor } from './schedule';
 import { isZeroMoney, roundMoney } from './money';
-import { nextId } from './defaults';
 import type { Column2FundConfig, StrategyConfig, StrategyResult, WithdrawalPeriod } from './types';
 import type { ProjectionSettings } from './projectionProfiles';
 export const isLiveWithdrawal = (period: WithdrawalPeriod, asOfDate: string): boolean => {
@@ -45,7 +44,7 @@ const continuationPeriod = (
   const amount = roundMoney(period.amount * factor);
   if (amount <= 0 || isZeroMoney(amount)) return null;
   return {
-    id: nextId('wd-proj'),
+    id: `wd-proj-${period.id}`,
     startDate: nextDate,
     endDate: horizonIso,
     frequency: period.frequency,
