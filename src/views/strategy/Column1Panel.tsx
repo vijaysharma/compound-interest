@@ -16,7 +16,7 @@ interface Column1PanelProps {
   result: StrategyResult;
   onOpenFundPicker: () => void;
 }
-export const Column1Panel = ({ api, navBook, result, onOpenFundPicker }: Column1PanelProps) => {
+const BaseColumn1Panel = ({ api, navBook, result, onOpenFundPicker }: Column1PanelProps) => {
   const { column1 } = api.config;
   // Only the period being edited is expanded, so the column stays scannable.
   const [openPeriod, setOpenPeriod] = useState<string | null>(
@@ -112,3 +112,4 @@ export const Column1Panel = ({ api, navBook, result, onOpenFundPicker }: Column1
     </section>
   );
 };
+export const Column1Panel = React.memo(BaseColumn1Panel);

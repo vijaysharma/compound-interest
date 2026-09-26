@@ -14,7 +14,7 @@ interface Column2PanelProps {
   result: StrategyResult;
   onOpenFundPicker: () => void;
 }
-export const Column2Panel = ({ api, navBook, result, onOpenFundPicker }: Column2PanelProps) => {
+const BaseColumn2Panel = ({ api, navBook, result, onOpenFundPicker }: Column2PanelProps) => {
   const { config } = api;
   // Only the fund being edited is expanded. A single fund stays open, since
   // there is no list to scan in that case.
@@ -70,3 +70,4 @@ export const Column2Panel = ({ api, navBook, result, onOpenFundPicker }: Column2
     </section>
   );
 };
+export const Column2Panel = React.memo(BaseColumn2Panel);

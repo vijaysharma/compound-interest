@@ -10,7 +10,7 @@ export interface FinalStatsCardProps {
   projection?: StrategyProjection;
   settings?: ProjectionSettings;
 }
-export const FinalStatsCard = ({ totals, projection, settings }: FinalStatsCardProps) => {
+const BaseFinalStatsCard = ({ totals, projection, settings }: FinalStatsCardProps) => {
   const isProjecting = Boolean(settings?.enabled && projection?.isAvailable && projection?.selected);
   const outcome = isProjecting ? projection!.selected : null;
   const projTotals = outcome?.result.totals ?? null;
@@ -91,3 +91,4 @@ export const FinalStatsCard = ({ totals, projection, settings }: FinalStatsCardP
     </section>
   );
 };
+export const FinalStatsCard = React.memo(BaseFinalStatsCard);

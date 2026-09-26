@@ -6,7 +6,9 @@ import {
   DateRangeField,
   FrequencyField,
   PERCENT_STEPS,
+  STEP_UP_OPTIONS,
 } from './StrategyFields';
+import PairedValuePicker from '../../components/PairedValuePicker';
 import { DerivedRow } from './StrategyReadouts';
 import { CollapsibleItem } from './CollapsibleItem';
 import { column2Summary, sipAmountPerInstallment } from './summaries';
@@ -23,7 +25,7 @@ interface Column2FundCardProps {
   open: boolean;
   onToggle: () => void;
 }
-export const Column2FundCard = ({
+const BaseColumn2FundCard = ({
   entry,
   api,
   navBook,
@@ -36,10 +38,11 @@ export const Column2FundCard = ({
   const perInstallment = sipAmountPerInstallment(config, entry.allocationPct);
   const personalUse = roundMoney(Math.max(0, entry.swp.amount - entry.swp.toColumn3));
   const swpId = `swp-${entry.id}`;
+  const stepUpNote = entry.swp.annualStepUpPct && entry.swp.annualStepUpPct > 0 ? ` · +${entry.swp.annualStepUpPct}%/yr` : '';
   const meta =
     `${entry.allocationPct}% · ${formatRupees(perInstallment)}/inst · ` +
     `${formatRupees(summary.value)} now` +
-    (entry.swp.enabled ? ` · SWP ${formatRupees(entry.swp.amount)}` : '');
+    (entry.swp.enabled ? ` · SWP ${formatRupees(entry.swp.amount)}${stepUpNote}` : '');
   const title = (
     <span className={styles.fundName} title={entry.fund.schemeName}>
       <span
@@ -103,18 +106,20 @@ export const Column2FundCard = ({
             value={entry.swp.frequency}
             onChange={(frequency: Frequency) => patchSwp(entry.id, { frequency })}
           />
-          <AmountField
-            title="SWP per instalment"
-            value={entry.swp.amount}
-            onChange={(amount) =>
+          <PairedValuePicker
+            primaryTitle="SWP per instalment"
+            primaryValue={entry.swp.amount}
+            onPrimaryChange={(amount) =>
               patchSwp(entry.id, { amount, toColumn3: Math.min(entry.swp.toColumn3, amount) })
             }
-          />
-          <AmountField
-            title={`Of which to ${COLUMN_WORDS.reinvest}`}
-            value={entry.swp.toColumn3}
-            max={entry.swp.amount}
-            onChange={(toColumn3) => patchSwp(entry.id, { toColumn3 })}
+            secondaryTitle={`Of which to ${COLUMN_WORDS.reinvest}`}
+            secondaryValue={entry.swp.toColumn3}
+            onSecondaryChange={(toColumn3) => patchSwp(entry.id, { toColumn3 })}
+            bridgeId={`swp-step-up-${entry.id}`}
+            bridgeLabel="Yearly increase"
+            bridgeValue={entry.swp.annualStepUpPct ?? 0}
+            bridgeOptions={STEP_UP_OPTIONS}
+            onBridgeChange={(value) => patchSwp(entry.id, { annualStepUpPct: Number(value) })}
           />
           <DerivedRow label="Personal use per instalment" value={personalUse} />
           <DerivedRow label="Withdrawn so far" value={summary.withdrawn} />
@@ -126,3 +131,4 @@ export const Column2FundCard = ({
     </CollapsibleItem>
   );
 };
+export const Column2FundCard = React.memo(BaseColumn2FundCard);

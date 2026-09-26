@@ -15,7 +15,7 @@ const MODE_OPTIONS: { id: string; value: Column3Config['mode']; title: string }[
   { id: 'sweep', value: 'sweep', title: 'Sweep all' },
   { id: 'fixed', value: 'fixed', title: 'Fixed amount' },
 ];
-export const Column3Panel = ({ api, result }: Column3PanelProps) => {
+const BaseColumn3Panel = ({ api, result }: Column3PanelProps) => {
   const { config, patchColumn3 } = api;
   const destination = config.column1.fund;
   const reinvestments = result.transactions.filter((row) => row.kind === 'c3-reinvest');
@@ -72,3 +72,4 @@ export const Column3Panel = ({ api, result }: Column3PanelProps) => {
     </section>
   );
 };
+export const Column3Panel = React.memo(BaseColumn3Panel);

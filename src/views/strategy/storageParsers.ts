@@ -76,6 +76,7 @@ const parseSwp = (value: unknown, sipStartDate: string, today: string): SwpRule 
     amount,
     frequency: asFrequency(raw?.frequency, 'monthly'),
     toColumn3: asMoney(raw?.toColumn3, 0, amount),
+    annualStepUpPct: asMoney(raw?.annualStepUpPct, 0, MAX_STEP_UP_PCT),
   };
 };
 export const parseColumn2Fund = (

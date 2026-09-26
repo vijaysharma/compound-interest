@@ -40,6 +40,7 @@ export const column2Entry = (
     amount: 0,
     frequency: 'monthly',
     toColumn3: 0,
+    annualStepUpPct: 0,
   },
   ...overrides,
 });

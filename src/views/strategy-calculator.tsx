@@ -21,10 +21,14 @@ import styles from './strategy/StrategyCalculator.module.scss';
 type PickerTarget = 'column1' | 'column2' | null;
 const StrategyCalculatorView = () => {
   const api = useStrategyConfig();
+  const deferredConfig = React.useDeferredValue(api.config);
   const library = useStrategyLibrary(api.config, api.restoreConfig);
   const { navBook, isLoading, error } = useStrategyNav(api.config);
-  const { result, issues, blocked, hasNavData } = useStrategyCalculation(api.config, navBook);
+  const { result, issues, blocked, hasNavData } = useStrategyCalculation(deferredConfig, navBook);
   const [picker, setPicker] = useState<PickerTarget>(null);
+  const handleOpenPicker1 = useCallback(() => setPicker('column1'), []);
+  const handleOpenPicker2 = useCallback(() => setPicker('column2'), []);
+  const handleClosePicker = useCallback(() => setPicker(null), []);
   /*
    * Projection settings are deliberately not part of StrategyConfig: they ask
    * "what if this carried on", which is a question about the strategy rather
@@ -39,7 +43,7 @@ const StrategyCalculatorView = () => {
     setProjectionSettings((prev) => ({ ...prev, ...patch }));
   }, []);
   const projection = useStrategyProjection(
-    api.config,
+    deferredConfig,
     navBook,
     result,
     projectionSettings,
@@ -94,7 +98,7 @@ const StrategyCalculatorView = () => {
       </header>
       <div className={styles.topRow}>
         <StrategyChartCard
-          config={api.config}
+          config={deferredConfig}
           result={result}
           isLoading={isLoading}
           projection={projection}
@@ -114,19 +118,19 @@ const StrategyCalculatorView = () => {
           api={api}
           navBook={navBook}
           result={result}
-          onOpenFundPicker={() => setPicker('column1')}
+          onOpenFundPicker={handleOpenPicker1}
         />
         <Column2Panel
           api={api}
           navBook={navBook}
           result={result}
-          onOpenFundPicker={() => setPicker('column2')}
+          onOpenFundPicker={handleOpenPicker2}
         />
         <Column3Panel api={api} result={result} />
       </div>
       <StrategyFundModal
         open={picker !== null}
-        onClose={() => setPicker(null)}
+        onClose={handleClosePicker}
         selected={selectedFunds}
         onToggle={handleToggleFund}
         colorOffset={picker === 'column2' ? 1 : 0}

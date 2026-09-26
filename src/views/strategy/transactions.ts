@@ -84,15 +84,18 @@ const planColumn2Swps = (config: StrategyConfig): PlannedTransaction[] =>
         entry.swp.startDate,
         clampToAsOf(entry.swp.endDate, config.asOfDate),
         entry.swp.frequency
-      ).map<PlannedTransaction>((date) => ({
-        kind: 'c2-swp',
-        date,
-        bucket: 'column2',
-        schemeCode: entry.fund.schemeCode,
-        configId: entry.id,
-        amount: roundMoney(entry.swp.amount),
-        routedOnward: roundMoney(Math.min(entry.swp.toColumn3, entry.swp.amount)),
-      }))
+      ).map<PlannedTransaction>((date, index) => {
+        const factor = stepUpFactor(index, entry.swp.frequency, entry.swp.annualStepUpPct ?? 0);
+        return {
+          kind: 'c2-swp',
+          date,
+          bucket: 'column2',
+          schemeCode: entry.fund.schemeCode,
+          configId: entry.id,
+          amount: roundMoney(entry.swp.amount * factor),
+          routedOnward: roundMoney(Math.min(entry.swp.toColumn3, entry.swp.amount) * factor),
+        };
+      })
     );
 /**
  * Column 3 reinvestments into the Column 1 fund. `amount` is 0 in sweep mode,

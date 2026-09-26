@@ -54,6 +54,7 @@ export const createColumn2Fund = (
     amount: 20000,
     frequency: 'monthly',
     toColumn3: 0,
+    annualStepUpPct: 0,
   },
 });
 /**

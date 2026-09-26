@@ -18,7 +18,7 @@ interface WithdrawalPeriodCardProps {
   onPatch: (id: string, patch: Partial<WithdrawalPeriod>) => void;
   onRemove: (id: string) => void;
 }
-export const WithdrawalPeriodCard = ({
+const BaseWithdrawalPeriodCard = ({
   period,
   index,
   minDate,
@@ -93,3 +93,4 @@ export const WithdrawalPeriodCard = ({
     </CollapsibleItem>
   );
 };
+export const WithdrawalPeriodCard = React.memo(BaseWithdrawalPeriodCard);

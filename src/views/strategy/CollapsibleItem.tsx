@@ -20,7 +20,7 @@ interface CollapsibleItemProps {
  * being edited is expanded, so a column stays short enough to keep its heading
  * and the rest of the list in view.
  */
-export const CollapsibleItem = ({
+const BaseCollapsibleItem = ({
   title,
   meta,
   open,
@@ -61,3 +61,4 @@ export const CollapsibleItem = ({
     </div>
   );
 };
+export const CollapsibleItem = React.memo(BaseCollapsibleItem);

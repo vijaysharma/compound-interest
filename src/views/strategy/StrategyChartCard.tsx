@@ -24,7 +24,7 @@ const PROJECTION_TOGGLE = [
   { id: 'projection-off', value: false, title: 'Off' },
   { id: 'projection-on', value: true, title: 'On' },
 ];
-export const StrategyChartCard = ({
+const BaseStrategyChartCard = ({
   config,
   result,
   projection,
@@ -108,3 +108,4 @@ export const StrategyChartCard = ({
     </section>
   );
 };
+export const StrategyChartCard = React.memo(BaseStrategyChartCard);

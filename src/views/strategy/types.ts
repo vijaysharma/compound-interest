@@ -41,6 +41,7 @@ export interface SwpRule {
   amount: number;
   frequency: Frequency;
   toColumn3: number;
+  annualStepUpPct?: number;
 }
 export interface Column2FundConfig {
   id: string;

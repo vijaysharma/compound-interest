@@ -13,7 +13,7 @@ interface StrategyIssuesProps {
  * Configuration errors, engine warnings and NAV-loading failures, all labelled
  * by text and icon rather than by colour alone.
  */
-export const StrategyIssues = ({ issues, warnings, navError }: StrategyIssuesProps) => {
+const BaseStrategyIssues = ({ issues, warnings, navError }: StrategyIssuesProps) => {
   const rows: ValidationIssue[] = [
     ...(navError ? [{ id: 'nav', message: navError, severity: 'error' as const }] : []),
     ...issues,
@@ -45,3 +45,4 @@ export const StrategyIssues = ({ issues, warnings, navError }: StrategyIssuesPro
     </ul>
   );
 };
+export const StrategyIssues = React.memo(BaseStrategyIssues);
