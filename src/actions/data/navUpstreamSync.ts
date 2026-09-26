@@ -1,12 +1,12 @@
-import { getDb, MF_URL } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { redisSet } from '@/lib/redis';
 import { latestNavDateIn } from '../../utilities/navCalendar';
+import { navDateToISO } from '@/utilities/dateUtils';
 import {
   NAV_CACHE_TTL_SECONDS,
   NAV_IN_MEMORY_TTL_MS,
   mfNavCache,
   navPayloadKey,
-  parseNavPayload,
 } from './constants';
 export type NavPayload = { data: unknown[]; [k: string]: unknown };
 export function rememberPayload(schemeCode: string, payload: NavPayload): void {
@@ -24,43 +24,49 @@ export async function syncSchemeFromUpstream(
 ): Promise<NavPayload | null> {
   let payload: NavPayload | null = null;
   try {
-    const upstream = await fetch(`${MF_URL}/${encodeURIComponent(schemeCode)}`, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    if (!upstream.ok) return null;
-    payload = parseNavPayload(await upstream.json());
+    const { fetchAmfiLatest } = await import('@/lib/amfi/amfiClient');
+    const amfiParsed = await fetchAmfiLatest(timeoutMs);
+    const rows = amfiParsed.byScheme.get(schemeCode);
+    if (rows && rows.length > 0) {
+      const meta = amfiParsed.schemes.get(schemeCode);
+      const { mergeNavSeries } = await import('@/lib/amfi/amfiStorage');
+      const existingRows = (previous?.data as Array<{ date: string; nav: string }>) ?? [];
+      const merged = mergeNavSeries(existingRows, rows);
+      payload = {
+        meta: { scheme_code: schemeCode, scheme_name: meta?.schemeName ?? `Scheme ${schemeCode}`, isin_growth: meta?.isinGrowth ?? null },
+        data: merged,
+      };
+    }
   } catch (err) {
-    console.warn(`[nav] upstream fetch failed for ${schemeCode}:`, err);
-    return null;
+    console.warn(`[amfi] latest fetch failed for ${schemeCode}:`, err);
   }
   if (!payload || !Array.isArray(payload.data) || payload.data.length === 0) return null;
   const isAtLeastAsComplete = !previous || payload.data.length >= previous.data.length;
   if (isAtLeastAsComplete) {
     try {
       const sql = getDb();
-      await sql`
-        INSERT INTO mutual_fund_nav (scheme_code, payload, latest_nav_date, updated_at)
-        VALUES (
-          ${schemeCode},
-          ${JSON.stringify(payload)}::jsonb,
-          ${latestNavDateIn(payload.data as Array<{ date?: string }>)}::date,
-          NOW()
-        )
-        ON CONFLICT (scheme_code) DO UPDATE SET
-          payload = EXCLUDED.payload,
-          latest_nav_date = EXCLUDED.latest_nav_date,
-          updated_at = NOW()
-      `;
+      const navRows = (payload.data as Array<{ date: string; nav: string }>)
+        .map((r) => ({
+          scheme_code: schemeCode,
+          date: navDateToISO(r.date),
+          nav: parseFloat(r.nav),
+        }))
+        .filter((r) => r.date && Number.isFinite(r.nav));
+      if (navRows.length > 0) {
+        await sql`
+          INSERT INTO mutual_fund_nav (scheme_code, date, nav, updated_at)
+          SELECT x.scheme_code, x.date::date, x.nav::numeric, NOW()
+          FROM jsonb_to_recordset(${JSON.stringify(navRows)}::jsonb) AS x(
+            scheme_code VARCHAR(20),
+            date TEXT,
+            nav NUMERIC
+          )
+          ON CONFLICT (scheme_code, date) DO NOTHING
+        `;
+      }
     } catch (dbErr) {
       console.warn(`[nav] DB sync failed for ${schemeCode}:`, dbErr);
     }
-  } else {
-    console.warn(
-      `[nav] upstream payload for ${schemeCode} is shorter than stored ` +
-        `(${payload.data.length} < ${previous?.data.length}); keeping stored history.`
-    );
-    return previous ?? payload;
   }
   rememberPayload(schemeCode, payload);
   return payload;

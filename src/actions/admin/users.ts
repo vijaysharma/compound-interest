@@ -1,5 +1,5 @@
 'use server';
-import { DbUser, ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
+import { ensureTables, getDb, isAuthorizedUser, type DbUser } from '@/lib/db';
 export async function getAdminUsersAction(token?: string | null): Promise<{ users: DbUser[] }> {
   const sql = getDb();
   await ensureTables(sql);

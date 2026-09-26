@@ -1,4 +1,4 @@
-import { Query } from './types';
+import type { Query } from './types';
 export async function applyDataMigrations(sql: Query, schemaVersion: number): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS mutual_fund_schemes (

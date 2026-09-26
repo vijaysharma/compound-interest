@@ -1,21 +1,11 @@
-import { MF_URL } from '@/lib/db';
 import { redisSetIfAbsent } from '@/lib/redis';
 import { navDateToISO } from '../../utilities/dateUtils';
 import { probeIntervalSeconds } from '../../utilities/navBackoff';
 import type { NavWatermark } from './navWatermarkTypes';
+import { fetchAmfiLatest } from '@/lib/amfi/amfiClient';
 const PROBE_GATE_KEY = 'nav:probe:gate';
 const PROBE_SCHEME_CODES = ['118825', '120503', '119551'];
 const PROBE_TIMEOUT_MS = 20_000;
-function latestDateFromUpstream(payload: unknown): string | null {
-  const rows = (payload as { data?: Array<{ date?: string }> } | null)?.data;
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-  let latest = '';
-  for (const row of rows) {
-    const iso = row?.date ? navDateToISO(row.date) : '';
-    if (iso && iso > latest) latest = iso;
-  }
-  return latest || null;
-}
 export async function probeMarketWatermark(
   readWatermark: () => Promise<NavWatermark | null>,
   writeWatermark: (next: NavWatermark) => Promise<void>,
@@ -27,23 +17,20 @@ export async function probeMarketWatermark(
     const claimed = await redisSetIfAbsent(PROBE_GATE_KEY, Date.now(), interval);
     if (!claimed) return { watermark: current, advanced: false, probed: false };
   }
-  const observations = await Promise.all(
-    PROBE_SCHEME_CODES.map(async (code) => {
-      try {
-        const res = await fetch(`${MF_URL}/${encodeURIComponent(code)}/latest`, {
-          headers: { Accept: 'application/json' },
-          signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-        });
-        if (!res.ok) return null;
-        return latestDateFromUpstream(await res.json());
-      } catch {
-        return null;
-      }
-    })
-  );
   let observed = '';
-  for (const date of observations) {
-    if (date && date > observed) observed = date;
+  try {
+    const amfiParsed = await fetchAmfiLatest(PROBE_TIMEOUT_MS);
+    for (const code of PROBE_SCHEME_CODES) {
+      const rows = amfiParsed.byScheme.get(code);
+      if (rows && rows.length > 0) {
+        for (const row of rows) {
+          const iso = navDateToISO(row.date);
+          if (iso && iso > observed) observed = iso;
+        }
+      }
+    }
+  } catch {
+    // AMFI probe fetch failed
   }
   if (!observed) {
     if (current) {

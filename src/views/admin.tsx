@@ -11,6 +11,7 @@ import { AdminAiTab } from '../components/admin/dashboard/AdminAiTab';
 import { useAdminPayments } from '../components/admin/dashboard/useAdminPayments';
 import { useAdminUsers } from '../components/admin/dashboard/useAdminUsers';
 import { useAdminAiSync } from '../components/admin/dashboard/useAdminAiSync';
+import { useAdminNavHistorySync } from '../components/admin/dashboard/useAdminNavHistorySync';
 import styles from './Admin.module.scss';
 const Admin: React.FC = () => {
   const { token: authToken, user } = useAuth();
@@ -22,6 +23,7 @@ const Admin: React.FC = () => {
   const users = useAdminUsers(effectiveToken, setBusy, setMessage);
   const payments = useAdminPayments(effectiveToken, setBusy, setMessage, users.fetchUsers);
   const aiSync = useAdminAiSync(effectiveToken, setBusy, setMessage);
+  const navHistory = useAdminNavHistorySync(effectiveToken, setBusy, setMessage);
   const handleSelectTab = (tab: TabType) => {
     setActiveTab(tab);
     if (tab === 'submissions') void payments.fetchSubmissions();
@@ -89,6 +91,7 @@ const Admin: React.FC = () => {
           navSchemeCodes={aiSync.navSchemeCodes}
           navReport={aiSync.navReport}
           busy={busy}
+          navHistory={navHistory}
           onTokenChange={setToken}
           onImfJsonChange={aiSync.setImfJson}
           onPppJsonChange={aiSync.setPppJson}

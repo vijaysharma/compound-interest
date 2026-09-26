@@ -4,6 +4,7 @@ import {
   isCronAuthorised,
   fetchCronCandidates,
   executeCronWorkers,
+  syncStoredSchemesFromAmfi,
   type CandidateRow,
 } from './cronNavWorker';
 export const dynamic = 'force-dynamic';
@@ -36,9 +37,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
   }
   const deadline = startedAt + REFRESH_BUDGET_MS;
-  const [{ outcomes, ranOutOfTime }, probe] = await Promise.all([
+  const [{ outcomes, ranOutOfTime }, probe, amfiSync] = await Promise.all([
     executeCronWorkers(candidates, deadline),
     probePromise,
+    syncStoredSchemesFromAmfi(),
   ]);
   const latestWatermark = probe.watermark ?? watermark;
   return NextResponse.json({
@@ -47,6 +49,7 @@ export async function GET(request: Request) {
     watermarkAdvanced: probe.advanced,
     noAdvanceCount: latestWatermark.noAdvanceCount,
     candidates: candidates.length,
+    amfiSync,
     ...outcomes,
     ranOutOfTime,
     elapsedMs: Date.now() - startedAt,

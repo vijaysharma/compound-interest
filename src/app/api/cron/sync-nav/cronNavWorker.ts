@@ -24,10 +24,13 @@ export async function fetchCronCandidates(watermarkDate: string, limit: number):
   await ensureTables(getDb());
   const sql = getDb();
   return (await sql`
-    SELECT scheme_code, payload
-    FROM mutual_fund_nav
-    WHERE latest_nav_date IS NULL OR latest_nav_date < ${watermarkDate}::date
-    ORDER BY latest_nav_date ASC NULLS FIRST
+    SELECT t.scheme_code, NULL as payload
+    FROM tracked_schemes t
+    LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code
+    WHERE t.is_active = TRUE
+    GROUP BY t.scheme_code
+    HAVING max(n.date) IS NULL OR max(n.date) < ${watermarkDate}::date
+    ORDER BY max(n.date) ASC NULLS FIRST
     LIMIT ${limit}
   `) as CandidateRow[];
 }
@@ -65,4 +68,16 @@ export async function executeCronWorkers(
   );
   await Promise.all(workers);
   return { outcomes, ranOutOfTime };
+}
+export async function syncStoredSchemesFromAmfi(): Promise<{ amfiTotal: number; updated: number }> {
+  try {
+    const { fetchAmfiLatest } = await import('@/lib/amfi/amfiClient');
+    const { bulkUpsertAmfiSchemes } = await import('@/lib/amfi/amfiBulkStorage');
+    const parsed = await fetchAmfiLatest();
+    const result = await bulkUpsertAmfiSchemes(parsed, 200, 20_000);
+    return { amfiTotal: parsed.byScheme.size, updated: result.totalUpserted };
+  } catch (err) {
+    console.warn('[cron] AMFI sync failed:', err);
+    return { amfiTotal: 0, updated: 0 };
+  }
 }

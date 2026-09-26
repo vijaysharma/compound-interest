@@ -25,19 +25,20 @@ export async function syncNavAction(
   try {
     rows = requested.length
       ? ((await sql`
-          SELECT n.scheme_code, s.scheme_name, n.payload, n.latest_nav_date::text AS latest_nav_date
-          FROM mutual_fund_nav n
-          LEFT JOIN mutual_fund_schemes s USING (scheme_code)
-          WHERE n.scheme_code = ANY(${requested})
+          SELECT t.scheme_code, t.scheme_name, NULL as payload, max(n.date)::text AS latest_nav_date
+          FROM tracked_schemes t
+          LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code
+          WHERE t.scheme_code = ANY(${requested})
+          GROUP BY t.scheme_code, t.scheme_name
         `) as AdminNavCandidateRow[])
       : ((await sql`
-          SELECT n.scheme_code, s.scheme_name, n.payload, n.latest_nav_date::text AS latest_nav_date
-          FROM mutual_fund_nav n
-          LEFT JOIN mutual_fund_schemes s USING (scheme_code)
-          WHERE ${watermark?.date ?? null}::date IS NULL
-             OR n.latest_nav_date IS NULL
-             OR n.latest_nav_date < ${watermark?.date ?? null}::date
-          ORDER BY n.latest_nav_date ASC NULLS FIRST
+          SELECT t.scheme_code, t.scheme_name, NULL as payload, max(n.date)::text AS latest_nav_date
+          FROM tracked_schemes t
+          LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code
+          WHERE t.is_active = TRUE
+          GROUP BY t.scheme_code, t.scheme_name
+          HAVING max(n.date) IS NULL OR max(n.date) < ${watermark?.date ?? null}::date
+          ORDER BY max(n.date) ASC NULLS FIRST
           LIMIT ${MAX_SCHEMES}
         `) as AdminNavCandidateRow[]);
   } catch (dbErr) {

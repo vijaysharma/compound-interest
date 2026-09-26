@@ -10,7 +10,7 @@ import {
   parseNavPayload,
 } from './constants';
 import { resolveFreshnessCeiling } from './navWatermark';
-import { FIRST_FETCH_TIMEOUT_MS, type NavPayload, syncSchemeFromUpstream } from './navSync';
+import type { NavPayload } from './navSync';
 import { scheduleMaintenance, withResponseMeta } from './mfNavHandler';
 import { mapWithConcurrency } from './concurrency';
 const latestOf = (payload: NavPayload) =>
@@ -77,21 +77,30 @@ export async function handleGetBatchMutualFundNav(
     try {
       const sql = getDb();
       const rows = (await sql`
-        SELECT scheme_code, payload, latest_nav_date::text AS latest_nav_date
+        SELECT scheme_code, to_char(date, 'DD-MM-YYYY') as date, nav::text as nav
         FROM mutual_fund_nav WHERE scheme_code = ANY(${missing})
-      `) as Array<{ scheme_code: string; payload: unknown; latest_nav_date: string | null }>;
+        ORDER BY scheme_code, date DESC
+      `) as Array<{ scheme_code: string; date: string; nav: string }>;
       const stillMissing = new Set(missing);
+      const grouped = new Map<string, Array<{ date: string; nav: string }>>();
       for (const row of rows) {
-        const payload = parseNavPayload(row.payload);
-        if (!payload) continue;
-        const latest = row.latest_nav_date ?? latestOf(payload);
-        mfNavCache.set(row.scheme_code, {
+        let list = grouped.get(row.scheme_code);
+        if (!list) {
+          list = [];
+          grouped.set(row.scheme_code, list);
+        }
+        list.push({ date: row.date, nav: row.nav });
+      }
+      for (const [code, series] of grouped.entries()) {
+        const payload: NavPayload = { meta: { scheme_code: code }, data: series };
+        const latest = latestOf(payload);
+        mfNavCache.set(code, {
           expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
           data: payload,
           latest,
         });
-        found.set(row.scheme_code, { payload, latest });
-        stillMissing.delete(row.scheme_code);
+        found.set(code, { payload, latest });
+        stillMissing.delete(code);
       }
       missing.length = 0;
       missing.push(...stillMissing);
@@ -100,9 +109,12 @@ export async function handleGetBatchMutualFundNav(
     }
   }
   if (missing.length > 0) {
+    const { ensureSchemeTrackedAndBackfilled } = await import('@/lib/amfi/autoInclusion');
+    const { readStored } = await import('./navStoredReader');
     await mapWithConcurrency(missing, NAV_BATCH_CONCURRENCY, async (code) => {
-      const fetched = await syncSchemeFromUpstream(code, FIRST_FETCH_TIMEOUT_MS, null);
-      if (fetched) found.set(code, { payload: fetched, latest: latestOf(fetched) });
+      await ensureSchemeTrackedAndBackfilled(code);
+      const stored = await readStored(code);
+      if (stored.payload) found.set(code, { payload: stored.payload, latest: stored.latest ?? latestOf(stored.payload) });
     });
   }
   const ceiling = await resolveFreshnessCeiling(

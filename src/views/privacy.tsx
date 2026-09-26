@@ -84,7 +84,7 @@ const Privacy = () => {
           </p>
           <ul className={styles.list}>
             <li>
-              <strong>AMFI India API</strong> (api.mfapi.in) — for mutual fund NAV history. This
+              <strong>AMFI India (Association of Mutual Funds in India)</strong> (portal.amfiindia.com) — for official mutual fund NAV history. This
               call does not transmit any personal information.
             </li>
             <li>

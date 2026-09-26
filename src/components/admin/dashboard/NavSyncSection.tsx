@@ -24,7 +24,7 @@ export const NavSyncSection: React.FC<NavSyncSectionProps> = ({
   <section className={styles.card}>
     <h2 className={styles.sectionTitle}>NAV Data Sync</h2>
     <p className={styles.sectionDesc}>
-      Fetches NAV history from mfapi.in and stores it. Leave empty to refresh the most stale,
+      Fetches NAV history from official AMFI (amfiindia.com) and stores it. Leave empty to refresh the most stale,
       or list scheme codes to target them directly.
     </p>
     <label className={`${styles.cardLabel} ${styles.mb1}`}>

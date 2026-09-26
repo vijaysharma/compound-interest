@@ -1,5 +1,4 @@
 import { neon } from '@neondatabase/serverless';
-export const MF_URL = 'https://api.mfapi.in/mf';
 export const IMF_URL = 'https://www.imf.org/external/datamapper/api/v1/PCPIPCH/IND/USA/EU/WEOWORLD';
 export const FREE_USAGE_LIMIT = 15;
 export const TRIAL_DURATION_HOURS = 48;

@@ -1,5 +1,5 @@
 'use server';
-import { AISettings, ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
+import { ensureTables, getDb, isAuthorizedUser, type AISettings } from '@/lib/db';
 export async function getAISettingsAction(token?: string | null): Promise<{
   settings: AISettings & { has_api_key: boolean };
 }> {

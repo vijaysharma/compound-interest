@@ -1,7 +1,9 @@
 'use client';
 import React from 'react';
 import type { NavSyncReport } from '../../../actions/admin/navSync';
+import type { useAdminNavHistorySync } from './useAdminNavHistorySync';
 import { NavSyncSection } from './NavSyncSection';
+import { NavHistorySyncSection } from './NavHistorySyncSection';
 import { ExternalDataSyncSections } from './ExternalDataSyncSections';
 import styles from '../../../views/Admin.module.scss';
 export interface AdminSyncTabProps {
@@ -11,6 +13,7 @@ export interface AdminSyncTabProps {
   navSchemeCodes: string;
   navReport: NavSyncReport | null;
   busy: string | null;
+  navHistory: ReturnType<typeof useAdminNavHistorySync>;
   onTokenChange: (val: string) => void;
   onImfJsonChange: (val: string) => void;
   onPppJsonChange: (val: string) => void;
@@ -26,6 +29,7 @@ export const AdminSyncTab: React.FC<AdminSyncTabProps> = React.memo(
     navSchemeCodes,
     navReport,
     busy,
+    navHistory,
     onTokenChange,
     onImfJsonChange,
     onPppJsonChange,
@@ -50,6 +54,21 @@ export const AdminSyncTab: React.FC<AdminSyncTabProps> = React.memo(
         busy={busy}
         onNavSchemeCodesChange={onNavSchemeCodesChange}
         onSync={onSync}
+      />
+      <NavHistorySyncSection
+        fromDate={navHistory.fromDate}
+        toDate={navHistory.toDate}
+        schemeCodes={navHistory.schemeCodes}
+        report={navHistory.report}
+        checkpoint={navHistory.checkpoint}
+        validation={navHistory.validation}
+        busy={busy}
+        onFromDateChange={navHistory.setFromDate}
+        onToDateChange={navHistory.setToDate}
+        onSchemeCodesChange={navHistory.setSchemeCodes}
+        onShift={navHistory.shiftWindow}
+        onLoadNextWindow={navHistory.loadNextWindow}
+        onSync={navHistory.syncHistory}
       />
       <ExternalDataSyncSections
         imfJson={imfJson}

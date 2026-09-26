@@ -1,4 +1,4 @@
-import { Query } from './types';
+import type { Query } from './types';
 export async function applyCoreMigrations(sql: Query): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS users (

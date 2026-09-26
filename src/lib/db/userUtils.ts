@@ -1,4 +1,4 @@
-import { DbUser, FREE_USAGE_LIMIT, Query } from './types';
+import { FREE_USAGE_LIMIT, type DbUser, type Query } from './types';
 import { timingSafeEqual } from './cryptoUtils';
 export function isEmailAdmin(email: string): boolean {
   const adminEmails = (

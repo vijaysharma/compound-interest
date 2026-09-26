@@ -4,7 +4,7 @@ import { isoToUTCDate, utcDateToISO } from './dateGuards';
  * Trimming a NAV history to the window a caller actually needs.
  *
  * A full scheme history measures ~133KB over ~3,400 rows (measured against
- * api.mfapi.in). Every one of those bytes crosses the Upstash REST API, then
+ * official AMFI data). Every one of those bytes crosses the Upstash REST API, then
  * the React server-action payload, then a `JSON.parse` in the browser — per
  * fund, and the charts routinely draw several at once. A two-year window is
  * roughly a fifth of that.

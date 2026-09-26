@@ -21,7 +21,7 @@ export const ExternalDataSyncSections: React.FC<ExternalDataSyncSectionsProps> =
   <>
     <section className={styles.card}>
       <h2 className={styles.sectionTitle}>Mutual Fund Schemes Sync</h2>
-      <p className={styles.sectionDesc}>Fetch and cache the latest scheme list from mfapi.in.</p>
+      <p className={styles.sectionDesc}>Fetch and cache the latest scheme list from official AMFI (amfiindia.com).</p>
       <button
         className={styles.btnPrimarySm}
         type="button"

@@ -6,10 +6,11 @@ This document provides a comprehensive catalog of all **Server Actions**, **Inte
 
 ## 1. Executive Summary & Database Metrics
 
-The application utilizes **Next.js 16 App Router** with zero standard REST API routes (`/api/*`). Instead, all backend operations are executed through Next.js **Server Actions** (`'use server'`).
+The application utilizes **Next.js 16 App Router** combining Server Actions (`'use server'`) for internal UI workflows and native REST API endpoints (`/api/nav`, `/api/nav/:schemeCode`, `/api/cron/sync-nav`) to serve as an independent, high-performance Indian Mutual Fund NAV API provider backed by official AMFI data.
 
 ### Database & Storage Infrastructure:
 * **Primary Database**: **Neon Serverless PostgreSQL** via `@neondatabase/serverless` (connection pooled over HTTPS/WebSockets).
+* **NAV Repository**: Stores 37,000+ scheme directory records in `mutual_fund_schemes` and daily/historical NAV timeseries in `mutual_fund_nav`.
 * **Caching Layer**: **Upstash Redis REST API** (via `UPSTASH_REDIS_REST_URL`) with automatic fallback to high-speed in-memory LRU cache.
 * **Object / Blob Storage**: **Vercel Blob** (`@vercel/blob`) for notes content.
 
@@ -53,10 +54,18 @@ The application utilizes **Next.js 16 App Router** with zero standard REST API r
 | Action Name | Source | Database Tables Used | Description & Purpose |
 | :--- | :---: | :---: | :--- |
 | `searchMutualFundsAction` | **Our DB** (100%) | `mutual_fund_schemes` | Searches Indian mutual fund schemes using PostgreSQL trigram / ILIKE queries on local database. Cached in Upstash Redis and in-memory cache for sub-millisecond response. |
-| `getMutualFundNavAction` | **Hybrid** (Our DB + Upstream API) | `mutual_fund_nav` | Retrieves historical and latest NAV data for a scheme code. Checks in-memory cache -> Upstash Redis -> PostgreSQL `mutual_fund_nav` (2h TTL) -> fetches upstream from `api.mfapi.in` and saves back to DB/Redis asynchronously. |
+| `getMutualFundNavAction` | **Hybrid** (Our DB + Upstream API) | `mutual_fund_nav` | Retrieves historical and latest NAV data for a scheme code. Checks in-memory cache -> Upstash Redis -> PostgreSQL `mutual_fund_nav` (2h TTL) -> fetches upstream from official AMFI (`portal.amfiindia.com`) and saves back to DB/Redis asynchronously. |
 | `getExchangeRatesAction` | **Hybrid** (Our DB + Upstream API) | `inflation_sources` | Provides live fiat exchange rates relative to USD (for Currency Converter and PPP calculators). Checks Redis -> in-memory -> PostgreSQL `inflation_sources` (6h TTL) -> upstream `open.er-api.com` -> fallback static data. |
 | `getPPPDataAction` | **Hybrid** (Our DB + World Bank API) | `inflation_sources` | Fetches Purchasing Power Parity (PPP) international conversion rates. Checks Redis -> in-memory -> PostgreSQL `inflation_sources` -> upstream World Bank API -> fallback static data. |
 | `getIMFInflationAction` | **Hybrid** (Our DB + IMF API) | `inflation_sources` | Fetches global inflation estimates from IMF. Checks Redis -> in-memory -> PostgreSQL `inflation_sources` -> upstream IMF DataMapper API. |
+
+#### REST API Endpoints (NAV Provider)
+
+| Endpoint | Method | Source | Description |
+| :--- | :---: | :---: | :--- |
+| `/api/nav` | `GET` | **Our DB** (100%) | Status and metrics: total schemes directory count, schemes with NAV count, and current market watermark date. |
+| `/api/nav/:schemeCode` | `GET` | **Hybrid** (Our DB + AMFI) | Returns full or filtered NAV time-series (`?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`) and metadata for any scheme code. If not yet in DB, fetches from AMFI and caches automatically. |
+| `/api/cron/sync-nav` | `GET` | **Official AMFI** -> **Our DB** | Scheduled daily cron worker (08:00 IST / 02:30 UTC) that downloads AMFI's master daily file and bulk-upserts schemes and NAVs. |
 
 ---
 
@@ -107,7 +116,7 @@ The application utilizes **Next.js 16 App Router** with zero standard REST API r
 | `updateAISettingsAction` | **Our DB** (100%) | `ai_settings` | Saves AI model, system prompt, and API key into PostgreSQL `ai_settings`. |
 | `calculateShiprocketRatesAction` | **External API** (Shiprocket) | `users` (auth only) | Authenticates with Shiprocket API and calculates freight rate & serviceability for given pickup/delivery pincodes and dimensions. |
 | `getPostcodeDetailsAction` | **External API** (Shiprocket / India Post) | None | Resolves city/state/district for 6-digit Indian pincode via Shiprocket Open API or India Post API. |
-| `syncMutualFundsAction` | **Hybrid** (MF API -> Our DB) | `mutual_fund_schemes` | Downloads entire list of Indian mutual funds (~45,000+ schemes) from `api.mfapi.in` and bulk-inserts into PostgreSQL `mutual_fund_schemes`. |
+| `syncMutualFundsAction` | **Hybrid** (AMFI -> Our DB) | `mutual_fund_schemes` | Downloads entire list of Indian mutual funds from official AMFI (`portal.amfiindia.com`) and bulk-inserts into PostgreSQL `mutual_fund_schemes`. |
 | `syncIMFAction` | **Our DB** (100%) | `inflation_sources` | Stores external IMF inflation dataset directly into PostgreSQL `inflation_sources`. |
 | `syncPPPAction` | **Hybrid** (World Bank -> Our DB) | `inflation_sources` | Downloads latest World Bank PPP data and stores it into PostgreSQL `inflation_sources`. |
 

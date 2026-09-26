@@ -1,7 +1,8 @@
-import { Query } from './types';
+import type { Query } from './types';
 import { applyCoreMigrations } from './coreMigrations';
 import { applyDataMigrations } from './dataMigrations';
-export const SCHEMA_VERSION = 6; // 5: mutual_fund_nav.latest_nav_date, 6: user_strategies
+import { applyTrackedSchemesMigrations } from './trackedSchemesMigrations';
+export const SCHEMA_VERSION = 8; // 8: tracked_schemes & relational mutual_fund_nav
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {
@@ -26,6 +27,7 @@ export async function ensureTables(sql: Query): Promise<void> {
       }
       await applyCoreMigrations(sql);
       await applyDataMigrations(sql, SCHEMA_VERSION);
+      await applyTrackedSchemesMigrations(sql);
       tablesInitialized = true;
     })();
   }

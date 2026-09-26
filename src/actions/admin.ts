@@ -9,6 +9,7 @@ import * as fulfillment from './admin/shiprocketFulfillment';
 import * as postcode from './admin/postcode';
 import * as sync from './admin/sync';
 import * as navSync from './admin/navSync';
+import * as navHistorySync from './admin/navHistorySync';
 export async function getShiprocketAuth(forceRefresh?: boolean) {
   return client.getShiprocketAuth(forceRefresh);
 }
@@ -114,3 +115,13 @@ export async function syncPPPAction(token?: string | null, inputPayload?: unknow
 export async function syncNavAction(token?: string | null, options?: { schemeCodes?: string[] }) {
   return navSync.syncNavAction(token, options);
 }
+export async function syncNavHistoryAction(
+  token: string | null | undefined,
+  options: Parameters<typeof navHistorySync.syncNavHistoryAction>[1]
+) {
+  return navHistorySync.syncNavHistoryAction(token, options);
+}
+export async function getNavHistorySyncStatusAction(token?: string | null) {
+  return navHistorySync.getNavHistorySyncStatusAction(token);
+}
+export type { NavHistorySyncReport, NavHistoryCheckpoint } from './admin/navHistoryTypes';

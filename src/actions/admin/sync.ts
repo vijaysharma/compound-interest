@@ -1,5 +1,5 @@
 'use server';
-import { ensureTables, getDb, isAuthorizedUser, MF_URL } from '@/lib/db';
+import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import { redisSet } from '@/lib/redis';
 const WORLD_BANK_PPP_API =
   'https://api.worldbank.org/v2/country/all/indicator/PA.NUS.PPP?format=json&per_page=300&mrv=1';
@@ -9,31 +9,31 @@ export async function syncMutualFundsAction(token?: string | null): Promise<{ sy
   if (!(await isAuthorizedUser(token, sql))) {
     throw new Error('Unauthorized: Admin access required');
   }
-  const upstream = await fetch(MF_URL, { headers: { Accept: 'application/json' } });
-  if (!upstream.ok) {
-    throw new Error(`MF API returned ${upstream.status}`);
-  }
-  const payload = await upstream.json();
-  if (!Array.isArray(payload)) {
-    throw new Error('MF API returned an invalid list');
+  const { fetchAmfiLatest } = await import('@/lib/amfi/amfiClient');
+  const amfiParsed = await fetchAmfiLatest();
+  const schemesList = Array.from(amfiParsed.schemes.entries()).map(([code, meta]) => ({
+    schemeCode: code,
+    schemeName: meta.schemeName,
+    isinGrowth: meta.isinGrowth ?? null,
+  }));
+  if (schemesList.length === 0) {
+    throw new Error('AMFI returned an invalid scheme list');
   }
   await sql`DELETE FROM mutual_fund_schemes`;
   await sql`
     INSERT INTO mutual_fund_schemes (scheme_code, scheme_name, payload)
     SELECT item->>'schemeCode', item->>'schemeName', item
-    FROM jsonb_array_elements(${JSON.stringify(payload)}::jsonb) AS item
+    FROM jsonb_array_elements(${JSON.stringify(schemesList)}::jsonb) AS item
     WHERE item->>'schemeCode' IS NOT NULL AND item->>'schemeName' IS NOT NULL
     ON CONFLICT (scheme_code) DO UPDATE SET
       scheme_name = EXCLUDED.scheme_name, payload = EXCLUDED.payload, updated_at = NOW()
   `;
-  const compactSchemes = payload
-    .filter((item: { schemeCode?: unknown; schemeName?: unknown }) => item?.schemeCode && item?.schemeName)
-    .map((item: { schemeCode: number | string; schemeName: string }) => ({
-      schemeCode: Number(item.schemeCode),
-      schemeName: String(item.schemeName),
-    }));
+  const compactSchemes = schemesList.map((item) => ({
+    schemeCode: Number(item.schemeCode),
+    schemeName: item.schemeName,
+  }));
   await redisSet('cache:mf:all_schemes', compactSchemes, 86400 * 30).catch(() => {});
-  return { synced: payload.length };
+  return { synced: schemesList.length };
 }
 /**
  * Parameter order matters here: `token` comes first, matching every other admin

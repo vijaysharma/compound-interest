@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { Query } from './db/types';
+import type { Query } from './db/types';
 export * from './db/types';
 export * from './db/cryptoUtils';
 export * from './db/userUtils';

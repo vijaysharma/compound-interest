@@ -37,22 +37,23 @@ export async function readStored(schemeCode: string): Promise<{
   try {
     const sql = getDb();
     const rows = (await sql`
-      SELECT payload, latest_nav_date::text AS latest_nav_date
-      FROM mutual_fund_nav WHERE scheme_code = ${schemeCode}
-    `) as Array<{ payload: unknown; latest_nav_date: string | null }>;
+      SELECT to_char(date, 'DD-MM-YYYY') as date, nav::text as nav
+      FROM mutual_fund_nav
+      WHERE scheme_code = ${schemeCode}
+      ORDER BY date DESC
+    `) as Array<{ date: string; nav: string }>;
     if (rows.length > 0) {
-      const payload = parseNavPayload(rows[0].payload);
-      if (payload) {
-        const latest =
-          rows[0].latest_nav_date ??
-          latestNavDateIn(payload.data as Array<{ date?: string }>);
-        mfNavCache.set(schemeCode, {
-          expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
-          data: payload,
-          latest,
-        });
-        return { payload, latest, fromDb: true };
-      }
+      const payload: NavPayload = {
+        meta: { scheme_code: schemeCode },
+        data: rows,
+      };
+      const latest = latestNavDateIn(rows);
+      mfNavCache.set(schemeCode, {
+        expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,
+        data: payload,
+        latest,
+      });
+      return { payload, latest, fromDb: true };
     }
   } catch (dbErr) {
     console.warn('[nav] DB read failed:', dbErr);
