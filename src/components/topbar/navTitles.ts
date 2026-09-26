@@ -50,6 +50,8 @@ export const NAV_TITLES: Record<string, string> = {
   '/tax/income-tax': 'Income Tax Calculator',
   '/file-itr': 'Upload Form 16 & File ITR',
   '/file-income-tax-return': 'Upload Form 16 & File ITR',
+  '/games': 'Word Path Game',
+  '/games/word-path': 'Word Path Game',
 };
 export const getNavTitle = (pathname: string): string => {
   return NAV_TITLES[pathname] ?? 'Rupee Calculator';

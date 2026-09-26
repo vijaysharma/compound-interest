@@ -1,0 +1,419 @@
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
+.gamePage {
+  width: 100%;
+  max-width: 27rem;
+  margin-inline: auto;
+  padding: 0.75rem 0.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  user-select: none;
+  box-sizing: border-box;
+  @include tablet-up {
+    padding: 1.25rem 1rem 3.5rem;
+    gap: 1.15rem;
+  }
+}
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.diffSelector {
+  display: inline-flex;
+  background: #e2e8f0;
+  padding: 0.2rem;
+  border-radius: $radius-full;
+}
+.diffBtn {
+  @include button-reset;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: $radius-full;
+  color: #64748b;
+  transition: all 0.15s ease;
+  &:hover {
+    color: #1e293b;
+  }
+  &.diffBtnActive {
+    background: #ffffff;
+    color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+.topControls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.timerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: $radius-full;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-variant-numeric: tabular-nums;
+}
+.iconBtn {
+  @include button-reset;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  &:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+}
+.topicBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: $radius-full;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.topicLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+.topicTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+.boardWrapper {
+  position: relative;
+  width: 100%;
+  background: #cbd5e1;
+  border: 3.5px solid #2b2d42;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  touch-action: none;
+}
+.grid {
+  display: grid;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  background: #cbd5e1;
+  gap: 1.5px;
+}
+.svgOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: multiply;
+}
+.tile {
+  @include button-reset;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  cursor: pointer;
+  touch-action: none;
+  transition: background-color 0.15s ease;
+  z-index: 4;
+  box-sizing: border-box;
+  &:focus-visible {
+    outline: 2px solid #2b2d42;
+    outline-offset: -2px;
+    z-index: 10;
+  }
+}
+.tileInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.letter {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #1e293b;
+  line-height: 1;
+  font-family: inherit;
+  z-index: 6;
+  @include tablet-up {
+    font-size: 1.55rem;
+  }
+}
+.letterSmall {
+  font-size: 1.05rem;
+  @include tablet-up {
+    font-size: 1.25rem;
+  }
+}
+.startBadge {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 17px;
+  height: 17px;
+  background: #ffffff;
+  border: 1.5px solid #16a34a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: #16a34a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 7;
+}
+.startRing {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  pointer-events: none;
+  z-index: 5;
+}
+.hintPulse {
+  animation: pulseHighlight 1.2s infinite ease-in-out;
+}
+@keyframes pulseHighlight {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+  }
+  70% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 8px rgba(234, 179, 8, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
+  }
+}
+.tileActiveDrag {
+  opacity: 0.9;
+}
+.tileFocused {
+  box-shadow: inset 0 0 0 2px #2b2d42;
+}
+.wordBank {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+.wordRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.letterChip {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ffffff;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  @include tablet-up {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+  }
+}
+.letterChipUnsolved {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  color: transparent;
+  box-shadow: none;
+}
+.checkMark {
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin-left: 0.35rem;
+  color: #16a34a;
+}
+.actionRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.actionBtn {
+  @include button-reset;
+  padding: 0.85rem;
+  background: #e2e8f0;
+  border-radius: $radius-full;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+  transition: all 0.15s ease;
+  &:hover:not(:disabled) {
+    background: #cbd5e1;
+    color: #1e293b;
+  }
+  &:focus-visible {
+    outline: 2px solid #2b2d42;
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+.accordion {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #ffffff;
+  overflow: hidden;
+}
+.accordionHeader {
+  @include button-reset;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.15rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: left;
+  &:hover {
+    background: #f8fafc;
+  }
+  &:focus-visible {
+    outline: 2px solid #2b2d42;
+    outline-offset: -2px;
+  }
+  svg {
+    color: #475569;
+    font-size: 1.1rem;
+  }
+}
+.accordionBody {
+  padding: 0.2rem 1.15rem 0.95rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #475569;
+  p {
+    margin: 0 0 0.35rem;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  strong {
+    color: #1e293b;
+  }
+}
+.seeResultsBtn {
+  @include button-reset;
+  width: 100%;
+  padding: 0.95rem;
+  background: #333745;
+  color: #ffffff;
+  border-radius: $radius-full;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(51, 55, 69, 0.2);
+  transition: all 0.15s ease;
+  &:hover {
+    background: #232733;
+    transform: translateY(-1px);
+  }
+  &:focus-visible {
+    outline: 2px solid #2b2d42;
+    outline-offset: 2px;
+  }
+}
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+.modalCard {
+  width: 100%;
+  max-width: 24rem;
+  background: #ffffff;
+  border-radius: $radius-xl;
+  padding: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+}
+.modalTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+.modalStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+}
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.statLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.statValue {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: $primary;
+}
+.modalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

@@ -19,6 +19,7 @@ import {
   FiLayers,
   FiPercent,
   FiPieChart,
+  FiPlayCircle,
   FiRepeat,
   FiShield,
   FiTrendingUp,
@@ -87,6 +88,12 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
       { name: 'Unit Converter', href: '/utilities/unit-converter', icon: FiGrid },
       { name: 'Date Calculator', href: '/date-calculator', icon: FiClock, aliases: ['/utilities/date-calculator'] },
       { name: 'Quick Notes', href: '/utilities/quick-notes', icon: FiEdit3, aliases: ['/admin/quick-notes', '/admin/notes', '/notes'], isPro: true },
+    ],
+  },
+  {
+    title: 'Games',
+    items: [
+      { name: 'Word Path', href: '/games/word-path', icon: FiPlayCircle, aliases: ['/games', '/word-path'] },
     ],
   },
   {

@@ -140,4 +140,18 @@ export const SEO_TOOLS_AND_STATIC = {
     canonicalPath: '/login',
     noIndex: true,
   }),
+  wordPath: createPageMetadata({
+    title: 'Word Path Puzzle Game — Snake Path Word Search | Rupee Calculator',
+    description:
+      'Play Word Path, a snake-path word puzzle game. Trace non-overlapping directional tile paths across the grid to uncover all hidden words.',
+    keywords: [
+      'word path game',
+      'word puzzle',
+      'snake word game',
+      'pathwords',
+      'word search game',
+      'grid word puzzle',
+    ],
+    canonicalPath: '/games/word-path',
+  }),
 };
