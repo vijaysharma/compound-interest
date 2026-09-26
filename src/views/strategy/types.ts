@@ -43,6 +43,15 @@ export interface SwpRule {
   toColumn3: number;
   annualStepUpPct?: number;
 }
+export type CascadeInterval = '1 Month' | '1 Quarter' | '6 Months' | '1 Year';
+export interface BulkSwpConfig {
+  swpAmount: number;
+  reinvestmentAmount: number;
+  frequency: Frequency;
+  startDate: string;
+  endDate: string;
+  cascadeInterval: CascadeInterval;
+}
 export interface Column2FundConfig {
   id: string;
   fund: FundRef;

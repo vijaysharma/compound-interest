@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { BulkSwpCard } from './BulkSwpCard';
 import { Column2FundCard } from './Column2FundCard';
 import { DerivedChips } from './StrategyReadouts';
 import { allocationTotal } from './summaries';
@@ -38,6 +39,7 @@ const BaseColumn2Panel = ({ api, navBook, result, onOpenFundPicker }: Column2Pan
           Allocation must total exactly 100% before the strategy can be calculated.
         </p>
       )}
+      <BulkSwpCard config={config} api={api} />
       {config.column2.length === 0 ? (
         <p className={styles.emptyHint}>
           Add four or more funds to spread the money the {COLUMN_WORDS.core} routes here.

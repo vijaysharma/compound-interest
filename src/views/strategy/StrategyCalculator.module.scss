@@ -1217,3 +1217,279 @@
   white-space: nowrap;
   border: 0;
 }
+
+// ── Bulk SWP Controls ────────────────────────────────────────────────────────
+
+.bulkCard {
+  border: 1px solid color-mix(in srgb, $primary 25%, $border-light);
+  border-radius: $radius-md;
+  background: color-mix(in srgb, $primary 2.5%, $bg-white);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.bulkCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.bulkTitleToggle {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: $color-heading;
+
+  &:hover {
+    color: $primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: $primary;
+  }
+}
+
+.bulkSubtitle {
+  font-size: 0.7rem;
+  color: $color-text-secondary;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.bulkFormGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bulkField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.bulkLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.bulkLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: $color-text-secondary;
+}
+
+.bulkInputWrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid $border-light;
+  border-radius: $radius-sm;
+  background: $bg-white;
+  padding: 0 0.45rem;
+
+  &:focus-within {
+    border-color: $primary;
+    outline: 2px solid var(--color-primary);
+    outline-offset: -1px;
+  }
+}
+
+.bulkCurrency {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $color-text-secondary;
+  margin-right: 0.3rem;
+  user-select: none;
+}
+
+.bulkNumericInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.35rem 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: $color-text;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    opacity: 0.7;
+  }
+}
+
+.bulkRowTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+
+  @include mobile-only {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bulkDateInput {
+  width: 100%;
+  border: 1px solid $border-light;
+  border-radius: $radius-sm;
+  background: $bg-white;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $color-text;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}
+
+.syncBadge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-success, #2e7d32);
+  background: color-mix(in srgb, var(--color-success, #2e7d32) 12%, transparent);
+  padding: 0.05rem 0.35rem;
+  border-radius: $radius-full;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.syncButton {
+  @include button-reset;
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: $primary;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: $primary-hover;
+  }
+}
+
+.previewSchedule {
+  border-top: 1px dashed color-mix(in srgb, $primary 20%, $border-light);
+  padding-top: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.previewScheduleHeader {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.previewRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: $radius-xs;
+  background: color-mix(in srgb, $bg-white 80%, $bg-muted);
+}
+
+.previewFundName {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: $color-text;
+  max-width: 52%;
+}
+
+.previewDates {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-variant-numeric: tabular-nums;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.offsetPill {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0 0.3rem;
+  border-radius: $radius-full;
+  background: color-mix(in srgb, $primary 12%, transparent);
+  color: $primary;
+}
+
+.modifiedPill {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0 0.3rem;
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--color-warning, #ed6c02) 15%, transparent);
+  color: var(--color-warning, #ed6c02);
+}
+
+.bulkActionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.bulkSecondaryButton {
+  @include button-reset;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-white;
+  color: $color-text-secondary;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    border-color: $border-purple;
+    color: $primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}

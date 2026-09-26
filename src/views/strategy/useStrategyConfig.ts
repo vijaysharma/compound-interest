@@ -10,8 +10,11 @@ import {
   withPatchedWithdrawal,
   withToggledColumn2Fund,
   withoutWithdrawal,
+  withBulkSwp,
+  withDisabledSwp,
 } from './configMutators';
 import type {
+  BulkSwpConfig,
   Column2FundConfig,
   Column3Config,
   FundRef,
@@ -31,6 +34,8 @@ export interface StrategyConfigApi {
   toggleColumn2Fund: (fund: FundRef) => void;
   patchColumn2: (id: string, patch: Partial<Column2FundConfig>) => void;
   patchSwp: (id: string, patch: Partial<SwpRule>) => void;
+  applyBulkSwp: (params: BulkSwpConfig) => void;
+  disableBulkSwp: () => void;
   patchColumn3: (patch: Partial<Column3Config>) => void;
   /** Replaces the whole config, used when restoring a saved strategy. */
   restoreConfig: (config: StrategyConfig) => void;
@@ -70,6 +75,12 @@ export function useStrategyConfig(): StrategyConfigApi {
   const patchSwp = useCallback((id: string, patch: Partial<SwpRule>) => {
     setConfig((prev) => withPatchedSwp(prev, id, patch));
   }, []);
+  const applyBulkSwp = useCallback((params: BulkSwpConfig) => {
+    setConfig((prev) => withBulkSwp(prev, params));
+  }, []);
+  const disableBulkSwp = useCallback(() => {
+    setConfig((prev) => withDisabledSwp(prev));
+  }, []);
   const patchColumn3 = useCallback((patch: Partial<Column3Config>) => {
     setConfig((prev) => withPatchedColumn3(prev, patch));
   }, []);
@@ -92,6 +103,8 @@ export function useStrategyConfig(): StrategyConfigApi {
     toggleColumn2Fund,
     patchColumn2,
     patchSwp,
+    applyBulkSwp,
+    disableBulkSwp,
     patchColumn3,
     restoreConfig,
     resetConfig,

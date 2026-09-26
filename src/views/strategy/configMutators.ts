@@ -5,7 +5,12 @@ import {
   fundingStartDate,
   rebalanceAllocations,
 } from './defaults';
+import { addMonths, toISO } from '../../utilities/mutual-fund/mfDateHelpers';
+import { parseAnyDate } from '../../utilities/dateUtils';
+import { roundMoney } from './money';
 import type {
+  BulkSwpConfig,
+  CascadeInterval,
   Column1Config,
   Column2FundConfig,
   Column3Config,
@@ -90,6 +95,78 @@ export const withPatchedSwp = (
   column2: config.column2.map((entry) =>
     entry.id === id ? { ...entry, swp: { ...entry.swp, ...patch } } : entry
   ),
+});
+export const CASCADE_INTERVAL_MONTHS: Record<CascadeInterval, number> = {
+  '1 Month': 1,
+  '1 Quarter': 3,
+  '6 Months': 6,
+  '1 Year': 12,
+};
+export const CASCADE_INTERVAL_OPTIONS: { label: string; value: CascadeInterval; months: number }[] = [
+  { label: '1 Month', value: '1 Month', months: 1 },
+  { label: '1 Quarter', value: '1 Quarter', months: 3 },
+  { label: '6 Months', value: '6 Months', months: 6 },
+  { label: '1 Year', value: '1 Year', months: 12 },
+];
+export const cascadeDate = (baseDate: string, monthsOffset: number): string => {
+  if (!baseDate || monthsOffset === 0) return baseDate;
+  const d = parseAnyDate(baseDate);
+  if (!Number.isFinite(d.getTime())) return baseDate;
+  return toISO(addMonths(d, monthsOffset));
+};
+export const withBulkSwp = (
+  config: StrategyConfig,
+  params: BulkSwpConfig
+): StrategyConfig => {
+  const months = CASCADE_INTERVAL_MONTHS[params.cascadeInterval] ?? 3;
+  const swpAmount = roundMoney(Math.max(0, params.swpAmount));
+  const reinvestmentAmount = roundMoney(Math.max(0, Math.min(params.reinvestmentAmount, swpAmount)));
+  return {
+    ...config,
+    column2: config.column2.map((entry, index) => {
+      const offset = index * months;
+      return {
+        ...entry,
+        swp: {
+          ...entry.swp,
+          enabled: true,
+          amount: swpAmount,
+          toColumn3: reinvestmentAmount,
+          frequency: params.frequency,
+          startDate: cascadeDate(params.startDate, offset),
+          endDate: cascadeDate(params.endDate, offset),
+        },
+      };
+    }),
+  };
+};
+export const isFundOverridden = (
+  entry: Column2FundConfig,
+  index: number,
+  params: BulkSwpConfig
+): boolean => {
+  const months = CASCADE_INTERVAL_MONTHS[params.cascadeInterval] ?? 3;
+  const offset = index * months;
+  const expectedStart = cascadeDate(params.startDate, offset);
+  const expectedEnd = cascadeDate(params.endDate, offset);
+  const expectedReinvest = Math.min(params.reinvestmentAmount, params.swpAmount);
+  if (!entry.swp.enabled) return true;
+  if (entry.swp.amount !== params.swpAmount) return true;
+  if (entry.swp.toColumn3 !== expectedReinvest) return true;
+  if (entry.swp.frequency !== params.frequency) return true;
+  if (entry.swp.startDate !== expectedStart) return true;
+  if (entry.swp.endDate !== expectedEnd) return true;
+  return false;
+};
+export const withDisabledSwp = (config: StrategyConfig): StrategyConfig => ({
+  ...config,
+  column2: config.column2.map((entry) => ({
+    ...entry,
+    swp: {
+      ...entry.swp,
+      enabled: false,
+    },
+  })),
 });
 export const withPatchedColumn3 = (
   config: StrategyConfig,
