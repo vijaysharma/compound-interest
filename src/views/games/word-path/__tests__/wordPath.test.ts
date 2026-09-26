@@ -9,7 +9,7 @@ import {
   MEDIUM_BOARD_TECH,
   HARD_BOARD_1,
 } from '../boards';
-import { GENERAL_WORDS_BY_LENGTH } from '../lexicon';
+import { GENERAL_WORDS_BY_LENGTH, THEMED_WORD_SETS } from '../lexicon';
 import type { BoardDefinition } from '../types';
 test('areNeighbors correctly identifies cardinal adjacent cells', () => {
   assert.equal(areNeighbors({ row: 1, col: 2 }, { row: 1, col: 3 }), true);
@@ -152,4 +152,26 @@ test('generateProceduralBoard avoids excluded signatures and produces unique puz
   const board2 = generateProceduralBoard('easy', { excludeSignatures: new Set([sig1]) });
   const sig2 = getBoardSignature(board2);
   assert.notEqual(sig1, sig2, 'Generated board must be distinct from excluded signature');
+});
+test('themed board strictly contains only words from that theme without cross-theme leakage', () => {
+  const opticsBoard = generateProceduralBoard('medium', 'Optics & Visuals');
+  const opticsTheme = THEMED_WORD_SETS.find((t) => t.theme === 'Optics & Visuals')!;
+  const opticsWordSet = new Set(opticsTheme.words);
+  opticsBoard.words.forEach((w) => {
+    assert.ok(
+      opticsWordSet.has(w.word),
+      `Word "${w.word}" in Optics & Visuals board does not belong to the Optics & Visuals theme`
+    );
+    assert.notEqual(w.word, 'KANGAROO', 'KANGAROO must not appear in Optics & Visuals');
+    assert.notEqual(w.word, 'BACKBONE', 'BACKBONE must not appear in Optics & Visuals');
+  });
+  const animalsBoard = generateProceduralBoard('easy', 'Animals & Wildlife');
+  const animalsTheme = THEMED_WORD_SETS.find((t) => t.theme === 'Animals & Wildlife')!;
+  const animalsWordSet = new Set(animalsTheme.words);
+  animalsBoard.words.forEach((w) => {
+    assert.ok(
+      animalsWordSet.has(w.word),
+      `Word "${w.word}" in Animals & Wildlife board does not belong to the Animals theme`
+    );
+  });
 });

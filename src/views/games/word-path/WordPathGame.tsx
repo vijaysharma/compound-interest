@@ -143,68 +143,185 @@ export const WordPathGame: React.FC = () => {
   // Helper to test if a coordinate matches
   const isCoordInPath = (path: Coordinate[], coord: Coordinate) =>
     path.some((c) => c.row === coord.row && c.col === coord.col);
-  // Validate activePath against remaining unsolved words
-  const submitActivePath = useCallback(() => {
-    if (activePath.length < 2) {
+  const validateAndSubmitPath = useCallback(
+    (pathToSubmit: Coordinate[]) => {
+      if (pathToSubmit.length < 2) {
+        setActivePath([]);
+        setIsDragging(false);
+        return false;
+      }
+      const matchedWord = board.words.find((wordSol) => {
+        if (solvedWordIds.has(wordSol.id)) return false;
+        if (wordSol.path.length !== pathToSubmit.length) return false;
+        return wordSol.path.every(
+          (targetCoord, idx) =>
+            targetCoord.row === pathToSubmit[idx].row && targetCoord.col === pathToSubmit[idx].col
+        );
+      });
+      if (matchedWord) {
+        const nextSolved = new Set([...solvedWordIds, matchedWord.id]);
+        setSolvedWordIds(nextSolved);
+        if (nextSolved.size === board.words.length) {
+          setIsTimerRunning(false);
+          setShowResultsModal(true);
+          storePlayedSignature(getBoardSignature(board));
+        }
+        setActivePath([]);
+        setIsDragging(false);
+        return true;
+      }
       setActivePath([]);
       setIsDragging(false);
-      return;
+      return false;
+    },
+    [board, solvedWordIds]
+  );
+  const submitActivePath = useCallback(() => {
+    validateAndSubmitPath(activePath);
+  }, [activePath, validateAndSubmitPath]);
+  const pointerSessionRef = useRef<{
+    startRow: number;
+    startCol: number;
+    hasDragged: boolean;
+    pointerId: number;
+  } | null>(null);
+  const getTileFromPoint = (clientX: number, clientY: number): Coordinate | null => {
+    if (typeof document === 'undefined') return null;
+    const el = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+    if (!el) return null;
+    const tileEl = el.closest<HTMLElement>('[data-tile-coord]');
+    if (!tileEl) return null;
+    const r = Number(tileEl.dataset.row);
+    const c = Number(tileEl.dataset.col);
+    if (isNaN(r) || isNaN(c)) return null;
+    return { row: r, col: c };
+  };
+  const handleTileHover = useCallback(
+    (coord: Coordinate) => {
+      const tile = board.grid[coord.row]?.[coord.col];
+      if (!tile || tile.isWall || !tile.letter) return;
+      if (tile.wordId && solvedWordIds.has(tile.wordId)) return;
+      setActivePath((prev) => {
+        if (prev.length === 0) return [coord];
+        const last = prev[prev.length - 1];
+        if (prev.length >= 2) {
+          const secondLast = prev[prev.length - 2];
+          if (secondLast.row === coord.row && secondLast.col === coord.col) {
+            return prev.slice(0, -1);
+          }
+        }
+        if (areNeighbors(last, coord) && !isCoordInPath(prev, coord)) {
+          return [...prev, coord];
+        }
+        return prev;
+      });
+      setFocusedCell(coord);
+    },
+    [board.grid, solvedWordIds]
+  );
+  const handleTileTap = useCallback(
+    (coord: Coordinate) => {
+      const tile = board.grid[coord.row]?.[coord.col];
+      if (!tile || tile.isWall || !tile.letter) return;
+      if (tile.wordId && solvedWordIds.has(tile.wordId)) return;
+      setActivePath((prev) => {
+        if (prev.length === 0) return [coord];
+        const last = prev[prev.length - 1];
+        if (last.row === coord.row && last.col === coord.col) {
+          if (prev.length >= 2) {
+            requestAnimationFrame(() => validateAndSubmitPath(prev));
+          }
+          return prev;
+        }
+        if (prev.length >= 2) {
+          const secondLast = prev[prev.length - 2];
+          if (secondLast.row === coord.row && secondLast.col === coord.col) {
+            return prev.slice(0, -1);
+          }
+        }
+        if (areNeighbors(last, coord) && !isCoordInPath(prev, coord)) {
+          const next = [...prev, coord];
+          const isMatch = board.words.some(
+            (w) =>
+              !solvedWordIds.has(w.id) &&
+              w.path.length === next.length &&
+              w.path.every((c, i) => c.row === next[i].row && c.col === next[i].col)
+          );
+          if (isMatch) {
+            requestAnimationFrame(() => validateAndSubmitPath(next));
+          }
+          return next;
+        }
+        return [coord];
+      });
+      setFocusedCell(coord);
+    },
+    [board.grid, board.words, solvedWordIds, validateAndSubmitPath]
+  );
+  const handleBoardPointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    const coord = getTileFromPoint(e.clientX, e.clientY);
+    if (!coord) return;
+    const tile = board.grid[coord.row]?.[coord.col];
+    if (!tile || tile.isWall || !tile.letter) return;
+    if (tile.wordId && solvedWordIds.has(tile.wordId)) return;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
     }
-    // Check if activePath matches an unsolved word
-    const matchedWord = board.words.find((wordSol) => {
-      if (solvedWordIds.has(wordSol.id)) return false;
-      if (wordSol.path.length !== activePath.length) return false;
-      // Must match coordinates in forward order
-      return wordSol.path.every(
-        (targetCoord, idx) =>
-          targetCoord.row === activePath[idx].row && targetCoord.col === activePath[idx].col
-      );
+    pointerSessionRef.current = {
+      startRow: coord.row,
+      startCol: coord.col,
+      hasDragged: false,
+      pointerId: e.pointerId,
+    };
+    setActivePath((prev) => {
+      if (prev.length > 0) {
+        const last = prev[prev.length - 1];
+        if (
+          areNeighbors(last, coord) ||
+          (prev.length >= 2 &&
+            prev[prev.length - 2].row === coord.row &&
+            prev[prev.length - 2].col === coord.col)
+        ) {
+          return prev;
+        }
+      }
+      return [coord];
     });
-    if (matchedWord) {
-      const nextSolved = new Set([...solvedWordIds, matchedWord.id]);
-      setSolvedWordIds(nextSolved);
-      if (nextSolved.size === board.words.length) {
-        setIsTimerRunning(false);
-        setShowResultsModal(true);
-        storePlayedSignature(getBoardSignature(board));
-      }
-    }
-    setActivePath([]);
-    setIsDragging(false);
-  }, [activePath, board, solvedWordIds]);
-  // Pointer interactions
-  const handlePointerDown = (tile: Tile) => {
-    if (tile.isWall || !tile.letter) return;
-    if (tile.wordId && solvedWordIds.has(tile.wordId)) return;
-    setIsDragging(true);
-    setActivePath([{ row: tile.row, col: tile.col }]);
-    setFocusedCell({ row: tile.row, col: tile.col });
+    setFocusedCell(coord);
   };
-  const handlePointerEnter = (tile: Tile) => {
-    if (!isDragging || tile.isWall || !tile.letter) return;
-    if (tile.wordId && solvedWordIds.has(tile.wordId)) return;
-    const lastCoord = activePath[activePath.length - 1];
-    if (!lastCoord) return;
-    // Check if user is backtracking
-    if (activePath.length >= 2) {
-      const secondLast = activePath[activePath.length - 2];
-      if (secondLast.row === tile.row && secondLast.col === tile.col) {
-        setActivePath((prev) => prev.slice(0, -1));
-        setFocusedCell({ row: tile.row, col: tile.col });
-        return;
+  const handleBoardPointerMove = (e: React.PointerEvent) => {
+    if (!pointerSessionRef.current) return;
+    const coord = getTileFromPoint(e.clientX, e.clientY);
+    if (!coord) return;
+    const session = pointerSessionRef.current;
+    if (coord.row !== session.startRow || coord.col !== session.startCol) {
+      if (!session.hasDragged) {
+        session.hasDragged = true;
+        setIsDragging(true);
       }
     }
-    // Add next tile if adjacent and not already in path
-    if (areNeighbors(lastCoord, { row: tile.row, col: tile.col })) {
-      if (!isCoordInPath(activePath, { row: tile.row, col: tile.col })) {
-        setActivePath((prev) => [...prev, { row: tile.row, col: tile.col }]);
-        setFocusedCell({ row: tile.row, col: tile.col });
-      }
-    }
+    handleTileHover(coord);
   };
-  const handlePointerUp = () => {
-    if (isDragging) {
-      submitActivePath();
+  const handleBoardPointerUp = (e: React.PointerEvent) => {
+    if (!pointerSessionRef.current) return;
+    const session = pointerSessionRef.current;
+    pointerSessionRef.current = null;
+    try {
+      if ((e.currentTarget as HTMLElement).hasPointerCapture(session.pointerId)) {
+        (e.currentTarget as HTMLElement).releasePointerCapture(session.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+    if (session.hasDragged) {
+      setIsDragging(false);
+      validateAndSubmitPath(activePath);
+    } else {
+      setIsDragging(false);
+      handleTileTap({ row: session.startRow, col: session.startCol });
     }
   };
   // Keyboard Navigation
@@ -343,7 +460,7 @@ export const WordPathGame: React.FC = () => {
   return (
     <div
       className={styles.gamePage}
-      onPointerUp={handlePointerUp}
+      onPointerUp={handleBoardPointerUp}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
@@ -388,7 +505,14 @@ export const WordPathGame: React.FC = () => {
         <span className={styles.topicTitle}>{board.theme || board.title}</span>
       </div>
       {/* Main Grid Card */}
-      <div className={styles.boardWrapper} ref={gridContainerRef}>
+      <div
+        className={styles.boardWrapper}
+        ref={gridContainerRef}
+        onPointerDown={handleBoardPointerDown}
+        onPointerMove={handleBoardPointerMove}
+        onPointerUp={handleBoardPointerUp}
+        onPointerCancel={handleBoardPointerUp}
+      >
         <div
           className={styles.grid}
           style={{
@@ -419,17 +543,15 @@ export const WordPathGame: React.FC = () => {
                 <button
                   key={tile.id}
                   type="button"
+                  data-tile-coord
+                  data-row={tile.row}
+                  data-col={tile.col}
                   className={`${styles.tile} ${
                     isFocused ? styles.tileFocused : ''
                   } ${isSelectedInDrag ? styles.tileActiveDrag : ''}`}
                   style={{
                     backgroundColor: tileBg,
                   }}
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handlePointerDown(tile);
-                  }}
-                  onPointerEnter={() => handlePointerEnter(tile)}
                   aria-label={`Tile ${tile.letter || 'empty'} at row ${tile.row + 1}, column ${
                     tile.col + 1
                   }`}

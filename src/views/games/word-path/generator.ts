@@ -133,15 +133,26 @@ export const generateProceduralBoard = (
   }
   const partitions = PARTITION_OPTIONS[difficulty];
   const totalCells = rows * cols;
-  for (let attempt = 0; attempt < 15; attempt++) {
-    const targetLengths = [
-      ...partitions[Math.floor(Math.random() * partitions.length)],
-    ];
-    // Shuffle target lengths order to produce different path orientations
-    targetLengths.sort(() => Math.random() - 0.5);
+  for (let attempt = 0; attempt < 25; attempt++) {
     const theme =
       preferredTheme ||
       THEMED_WORD_SETS[Math.floor(Math.random() * THEMED_WORD_SETS.length)].theme;
+    const validPartitions = partitions.filter((part) => {
+      const neededCountByLen: Record<number, number> = {};
+      part.forEach((l) => {
+        neededCountByLen[l] = (neededCountByLen[l] || 0) + 1;
+      });
+      return Object.entries(neededCountByLen).every(([lStr, count]) => {
+        const l = Number(lStr);
+        const available = getWordsOfLength(l, theme, excludeWords);
+        return available.length >= count;
+      });
+    });
+    const candidatePartitions = validPartitions.length > 0 ? validPartitions : partitions;
+    const targetLengths = [
+      ...candidatePartitions[Math.floor(Math.random() * candidatePartitions.length)],
+    ];
+    targetLengths.sort(() => Math.random() - 0.5);
     const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
     const getUnvisitedNeighbors = (r: number, c: number): Coordinate[] => {
       const candidates: Coordinate[] = [
@@ -230,38 +241,35 @@ export const generateProceduralBoard = (
         offset += len;
       });
     }
-    // Assign unique words without repetitions within this board
+    // Assign strictly themed words without general fallbacks
     const usedWordsInBoard = new Set<string>();
+    let hasMissingThemedWord = false;
     const wordDefs = generatedPaths.map((path, idx) => {
       const len = path.length;
       const themedPool = getWordsOfLength(len, theme, excludeWords).filter(
         (w) => !usedWordsInBoard.has(w)
       );
-      const generalPool = getWordsOfLength(len, undefined, excludeWords).filter(
-        (w) => !usedWordsInBoard.has(w)
-      );
-      const anyPool = getWordsOfLength(len).filter(
-        (w) => !usedWordsInBoard.has(w)
-      );
-      const pool =
-        themedPool.length > 0
-          ? themedPool
-          : generalPool.length > 0
-            ? generalPool
-            : anyPool;
-      const word =
-        pool[Math.floor(Math.random() * pool.length)] ||
-        `WORD${idx}`.padEnd(len, 'S');
+      if (themedPool.length === 0) {
+        hasMissingThemedWord = true;
+        return {
+          word: `WORD${idx}`.padEnd(len, 'S'),
+          path,
+        };
+      }
+      const word = themedPool[Math.floor(Math.random() * themedPool.length)];
       usedWordsInBoard.add(word);
       return {
         word,
         path,
       };
     });
+    if (hasMissingThemedWord) {
+      continue;
+    }
     const uniqueId = `gen-${difficulty}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     const candidateBoard = buildBoardFromWords(
       uniqueId,
-      `${theme} Puzzle`,
+      theme,
       theme,
       difficulty,
       rows,
@@ -272,7 +280,7 @@ export const generateProceduralBoard = (
     if (
       !excludeSignatures ||
       !excludeSignatures.has(signature) ||
-      attempt === 14
+      attempt === 24
     ) {
       return candidateBoard;
     }
