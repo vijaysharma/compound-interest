@@ -336,7 +336,7 @@
  */
 .chartControls {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.7fr) minmax(0, 0.6fr);
   gap: 0.5rem;
   width: 100%;
 
@@ -400,7 +400,9 @@
   cursor: pointer;
   color: $color-text-secondary;
   border-radius: 50%;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 
   &:hover,
   &:focus-visible {
@@ -420,7 +422,9 @@
   padding: 0.85rem 1rem;
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--color-primary) 20%, #e2e8f0);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.12),
+    0 8px 10px -6px rgba(0, 0, 0, 0.08);
   font-size: 0.76rem;
   line-height: 1.45;
   text-align: left;
