@@ -154,4 +154,31 @@ export const SEO_TOOLS_AND_STATIC = {
     ],
     canonicalPath: '/games/word-path',
   }),
+  sudoku: createPageMetadata({
+    title: 'Sudoku Online — Free Daily Number Puzzle Game | Rupee Calculator',
+    description:
+      'Play free online Sudoku with Easy, Medium, and Hard difficulty levels. Features Pencil Notes, Auto-validation, Undo, Hints, and mobile touch keypad.',
+    keywords: [
+      'sudoku',
+      'online sudoku',
+      'free sudoku',
+      'sudoku puzzle',
+      'daily sudoku',
+      'sudoku game mobile',
+    ],
+    canonicalPath: '/games/sudoku',
+  }),
+  minesweeper: createPageMetadata({
+    title: 'Minesweeper Online — Classic Retro Puzzle Game | Rupee Calculator',
+    description:
+      'Play classic Minesweeper online with authentic C-engine mechanics, first-click safety, flood-fill 0-reveal, and Easy, Medium, and Expert grids.',
+    keywords: [
+      'minesweeper',
+      'classic minesweeper',
+      'minesweeper online',
+      'retro game',
+      'minesweeper free',
+    ],
+    canonicalPath: '/games/minesweeper',
+  }),
 };

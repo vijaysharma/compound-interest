@@ -1,0 +1,316 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: var(--text-color, #1e293b);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 12px;
+}
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--title-color, #0f172a);
+}
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--muted-color, #64748b);
+  margin: 0;
+}
+.timerBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--badge-bg, #f1f5f9);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+.topControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 14px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.difficultySelector {
+  display: flex;
+  background: var(--control-bg, #f1f5f9);
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+}
+.diffBtn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted-color, #64748b);
+  transition: all 0.15s ease;
+  &:hover {
+    color: var(--text-color, #1e293b);
+  }
+}
+.diffBtnActive {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-color, #334155);
+  transition: all 0.15s ease;
+  &:hover:not(:disabled) {
+    background: var(--hover-bg, #f8fafc);
+    border-color: #cbd5e1;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+.boardWrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 480px;
+  background: #ffffff;
+  border: 2px solid #0f172a;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  margin-bottom: 16px;
+  position: relative;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  width: 100%;
+  height: 100%;
+}
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  background: #ffffff;
+  transition: background-color 0.1s ease;
+  touch-action: manipulation;
+  box-sizing: border-box;
+}
+.borderRightThick {
+  border-right: 2px solid #0f172a;
+}
+.borderBottomThick {
+  border-bottom: 2px solid #0f172a;
+}
+.cellGiven {
+  color: #0f172a;
+  font-weight: 700;
+}
+.cellUser {
+  color: #2563eb;
+}
+.cellError {
+  color: #ef4444;
+  background-color: #fee2e2 !important;
+}
+.cellPeer {
+  background-color: #f1f5f9;
+}
+.cellSameNumber {
+  background-color: #e0e7ff;
+}
+.cellSelected {
+  background-color: #bfdbfe !important;
+}
+.notesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.noteItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.5rem, 1.8vw, 0.75rem);
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1;
+}
+.actionToolbar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 14px;
+}
+.toolBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 8px 4px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.15s ease;
+  &:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+.toolBtnActive {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px;
+  width: 100%;
+  max-width: 480px;
+}
+.numBtn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 0;
+  font-size: clamp(1.1rem, 4vw, 1.4rem);
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  touch-action: manipulation;
+  &:hover:not(:disabled) {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+  }
+  &:active:not(:disabled) {
+    background: #cbd5e1;
+    transform: translateY(0);
+  }
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+  }
+}
+.remainingBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #e2e8f0;
+  padding: 1px 4px;
+  border-radius: 10px;
+}
+.modalOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+.modalContent {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 85%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+.modalTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+.modalText {
+  font-size: 0.95rem;
+  color: #475569;
+  margin: 0 0 16px 0;
+}
+.primaryModalBtn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  &:hover {
+    background: #1d4ed8;
+  }
+}

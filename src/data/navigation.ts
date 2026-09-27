@@ -94,6 +94,8 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
     title: 'Games',
     items: [
       { name: 'Word Path', href: '/games/word-path', icon: FiPlayCircle, aliases: ['/games', '/word-path'] },
+      { name: 'Sudoku', href: '/games/sudoku', icon: FiGrid, aliases: ['/sudoku'] },
+      { name: 'Minesweeper', href: '/games/minesweeper', icon: FiZap, aliases: ['/minesweeper'] },
     ],
   },
   {
