@@ -9,7 +9,7 @@ import {
   getNeighbors,
   populateMines,
 } from './engine';
-import { PRESETS } from './types';
+import { getPreset, MOBILE_PRESETS, WEB_PRESETS } from './types';
 import type { Cell, CellState, MinesweeperDifficulty } from './types';
 import styles from './MinesweeperGame.module.scss';
 type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
@@ -24,7 +24,8 @@ interface MagnifierState {
 export const MinesweeperGame: React.FC = () => {
   const [difficulty, setDifficulty] = useState<MinesweeperDifficulty>('easy');
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const config = PRESETS[difficulty];
+  const activePresets = isMobile ? MOBILE_PRESETS : WEB_PRESETS;
+  const config = activePresets[difficulty];
   const [board, setBoard] = useState<Cell[][]>(() => createEmptyBoard(config.rows, config.cols));
   const [gameStatus, setGameStatus] = useState<GameStatus>('idle');
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -41,14 +42,33 @@ export const MinesweeperGame: React.FC = () => {
   const touchActiveRef = useRef<boolean>(false);
   const lastTouchTargetRef = useRef<{ row: number; col: number } | null>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = useRef<boolean>(false);
+  const touchStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const resetGame = useCallback((diff: MinesweeperDifficulty, mobileOverride?: boolean) => {
+    const activeMob = mobileOverride !== undefined ? mobileOverride : (typeof window !== 'undefined' && window.innerWidth < 768);
+    const nextConfig = getPreset(diff, activeMob);
+    setBoard(createEmptyBoard(nextConfig.rows, nextConfig.cols));
+    setGameStatus('idle');
+    setElapsedSeconds(0);
+    setIsFaceSurprised(false);
+    setMagnifier((prev) => ({ ...prev, visible: false }));
+  }, []);
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const nextIsMobile = window.innerWidth < 768;
+      setIsMobile((prev) => {
+        if (prev !== nextIsMobile) {
+          resetGame(difficulty, nextIsMobile);
+          return nextIsMobile;
+        }
+        return prev;
+      });
     };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [difficulty, resetGame]);
   // Timer effect
   useEffect(() => {
     if (gameStatus !== 'playing') return;
@@ -57,14 +77,6 @@ export const MinesweeperGame: React.FC = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [gameStatus]);
-  const resetGame = useCallback((diff: MinesweeperDifficulty) => {
-    const nextConfig = PRESETS[diff];
-    setBoard(createEmptyBoard(nextConfig.rows, nextConfig.cols));
-    setGameStatus('idle');
-    setElapsedSeconds(0);
-    setIsFaceSurprised(false);
-    setMagnifier((prev) => ({ ...prev, visible: false }));
-  }, []);
   const handleDifficultyChange = (nextDiff: MinesweeperDifficulty) => {
     setDifficulty(nextDiff);
     resetGame(nextDiff);
@@ -190,6 +202,8 @@ export const MinesweeperGame: React.FC = () => {
     if (gameStatus === 'won' || gameStatus === 'lost') return;
     touchActiveRef.current = true;
     const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    isLongPressRef.current = false;
     const target = findCellFromPoint(touch.clientX, touch.clientY);
     if (target) {
       lastTouchTargetRef.current = { row: target.row, col: target.col };
@@ -202,11 +216,31 @@ export const MinesweeperGame: React.FC = () => {
         cell: target.cell,
       });
       setIsFaceSurprised(true);
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = setTimeout(() => {
+        isLongPressRef.current = true;
+        toggleFlag(target.row, target.col);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          try {
+            navigator.vibrate(35);
+          } catch {
+            // ignore
+          }
+        }
+      }, 420);
     }
   };
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchActiveRef.current || gameStatus === 'won' || gameStatus === 'lost') return;
     const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+    if (dx > 12 || dy > 12) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    }
     const target = findCellFromPoint(touch.clientX, touch.clientY);
     if (target) {
       lastTouchTargetRef.current = { row: target.row, col: target.col };
@@ -223,8 +257,20 @@ export const MinesweeperGame: React.FC = () => {
     }
   };
   const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
     setIsFaceSurprised(false);
     setMagnifier((prev) => ({ ...prev, visible: false }));
+    if (isLongPressRef.current) {
+      isLongPressRef.current = false;
+      lastTouchTargetRef.current = null;
+      setTimeout(() => {
+        touchActiveRef.current = false;
+      }, 150);
+      return;
+    }
     if (lastTouchTargetRef.current && (gameStatus === 'idle' || gameStatus === 'playing')) {
       const { row, col } = lastTouchTargetRef.current;
       const cell = board[row]?.[col];
@@ -244,6 +290,11 @@ export const MinesweeperGame: React.FC = () => {
     }, 150);
   };
   const handleTouchCancel = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    isLongPressRef.current = false;
     setIsFaceSurprised(false);
     setMagnifier((prev) => ({ ...prev, visible: false }));
     lastTouchTargetRef.current = null;
@@ -298,7 +349,7 @@ export const MinesweeperGame: React.FC = () => {
             className={`${styles.diffBtn} ${difficulty === diff ? styles.diffBtnActive : ''}`}
             onClick={() => handleDifficultyChange(diff)}
           >
-            {PRESETS[diff].label}
+            {activePresets[diff].label}
           </button>
         ))}
       </div>
@@ -324,10 +375,19 @@ export const MinesweeperGame: React.FC = () => {
           <div
             ref={gridContainerRef}
             className={styles.grid}
-            style={{
-              gridTemplateColumns: `repeat(${config.cols}, ${isMobile ? '28px' : '30px'})`,
-              gridTemplateRows: `repeat(${config.rows}, ${isMobile ? '28px' : '30px'})`,
-            }}
+            style={
+              isMobile
+                ? {
+                    gridTemplateColumns: `repeat(${config.cols}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${config.rows}, minmax(0, 1fr))`,
+                    width: '100%',
+                  }
+                : {
+                    gridTemplateColumns: `repeat(${config.cols}, 30px)`,
+                    gridTemplateRows: `repeat(${config.rows}, 30px)`,
+                    width: 'max-content',
+                  }
+            }
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -382,7 +442,7 @@ export const MinesweeperGame: React.FC = () => {
         </button>
       </div>
       <p className={styles.instructions}>
-        Touch and hold to aim with the floating magnifier loupe; release to act. Right-click or toggle Flag mode to mark mines.
+        Tap to dig, long-press to flag. Hold & aim with the floating magnifier loupe; release to act. Toggle button switches tap mode.
       </p>
       {/* Touch Magnifier Loupe Callout */}
       {magnifier.visible && magnifier.cell && (

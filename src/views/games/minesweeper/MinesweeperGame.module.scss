@@ -325,16 +325,21 @@
   }
   .gridScrollWrapper {
     width: 100%;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 2px;
+    padding: 1px;
     border-width: 2px;
-    touch-action: pan-x pan-y;
+    touch-action: pan-y;
+  }
+  .grid {
+    width: 100%;
   }
   .cell {
-    width: 28px;
-    height: 28px;
-    font-size: 0.95rem;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    font-size: clamp(0.7rem, 3.2vw, 1.05rem);
   }
   .mobileControls {
     margin-top: 6px;
