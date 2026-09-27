@@ -581,22 +581,6 @@ export const WordPathGame: React.FC = () => {
                 focusedCell.row === tile.row && focusedCell.col === tile.col;
               const isStartTileHighlighted =
                 highlightedStartWords.has(tile.wordId) && tile.isStart;
-              const showDirectionArrow =
-                Boolean(tile.arrow) &&
-                !solvedWord &&
-                !tile.isEnd &&
-                (difficulty === 'medium' ||
-                  (difficulty === 'hard' && highlightedStartWords.has(tile.wordId)));
-              const arrowChar =
-                tile.arrow === '^'
-                  ? '↑'
-                  : tile.arrow === '>'
-                    ? '→'
-                    : tile.arrow === 'v'
-                      ? '↓'
-                      : tile.arrow === '<'
-                        ? '←'
-                        : '';
               let tileBg = '#ffffff';
               if (tile.isWall || !tile.letter) {
                 tileBg = '#9ca3af';
@@ -633,12 +617,6 @@ export const WordPathGame: React.FC = () => {
                         className={`${styles.startRing} ${styles.hintPulse}`}
                         style={{ borderColor: '#EAB308', borderWidth: '3px' }}
                       />
-                    )}
-                    {/* Directional indicator for Medium or revealed Hint on Hard */}
-                    {showDirectionArrow && arrowChar && (
-                      <span className={styles.directionArrow} aria-hidden="true">
-                        {arrowChar}
-                      </span>
                     )}
                     {/* Letter */}
                     <span
