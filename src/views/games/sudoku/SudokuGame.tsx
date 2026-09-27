@@ -4,6 +4,8 @@ import { FiClock, FiEdit2, FiHelpCircle, FiPause, FiPlay, FiRefreshCw, FiRotateC
 import { PRESET_SUDOKU } from './presets';
 import { generatePuzzle } from './generator';
 import type { SudokuDifficulty, SudokuMove, SudokuState } from './types';
+import { VictoryBanner } from '../common/VictoryBanner';
+import { recordGameScore } from '../common/leaderboardStorage';
 import styles from './SudokuGame.module.scss';
 const STORAGE_KEY = 'rupee_calc_sudoku_state';
 function formatTimer(seconds: number): string {
@@ -24,6 +26,7 @@ export const SudokuGame: React.FC = () => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isComplete, setIsComplete] = useState<boolean>(false);
   const [hintsUsed, setHintsUsed] = useState<number>(0);
+  const [personalBest, setPersonalBest] = useState<boolean>(false);
   // Restore saved state
   useEffect(() => {
     try {
@@ -109,7 +112,22 @@ export const SudokuGame: React.FC = () => {
     setIsPaused(false);
     setIsComplete(false);
     setHintsUsed(0);
+    setPersonalBest(false);
   }, []);
+  const triggerWin = useCallback(
+    (seconds: number) => {
+      setIsComplete(true);
+      const res = recordGameScore({
+        gameId: 'sudoku',
+        gameName: 'Sudoku',
+        difficulty,
+        timeSeconds: seconds,
+        accuracy: '100%',
+      });
+      setPersonalBest(res.isPersonalBest);
+    },
+    [difficulty]
+  );
   const handleCellClick = (r: number, c: number) => {
     if (isPaused) setIsPaused(false);
     setSelectedCell({ row: r, col: c });
@@ -163,10 +181,10 @@ export const SudokuGame: React.FC = () => {
         return copy;
       });
       if (checkCompletion(nextGrid, solutionGrid)) {
-        setIsComplete(true);
+        triggerWin(elapsedSeconds);
       }
     }
-  }, [selectedCell, isPaused, isComplete, initialGrid, grid, notes, isPencilMode, solutionGrid, checkCompletion]);
+  }, [selectedCell, isPaused, isComplete, initialGrid, grid, notes, isPencilMode, solutionGrid, checkCompletion, triggerWin, elapsedSeconds]);
   const handleErase = useCallback(() => {
     if (!selectedCell || isPaused || isComplete) return;
     const { row, col } = selectedCell;
@@ -252,9 +270,9 @@ export const SudokuGame: React.FC = () => {
     setHintsUsed((prev) => prev + 1);
     setSelectedCell({ row: targetR, col: targetC });
     if (checkCompletion(nextGrid, solutionGrid)) {
-      setIsComplete(true);
+      triggerWin(elapsedSeconds);
     }
-  }, [isPaused, isComplete, selectedCell, grid, solutionGrid, checkCompletion]);
+  }, [isPaused, isComplete, selectedCell, grid, solutionGrid, checkCompletion, triggerWin, elapsedSeconds]);
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -400,25 +418,22 @@ export const SudokuGame: React.FC = () => {
             </div>
           </div>
         )}
-        {isComplete && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modalContent}>
-              <h2 className={styles.modalTitle}>🎉 Congratulations!</h2>
-              <p className={styles.modalText}>
-                You solved the {difficulty} puzzle in {formatTimer(elapsedSeconds)} with {hintsUsed}{' '}
-                hints used!
-              </p>
-              <button
-                type="button"
-                className={styles.primaryModalBtn}
-                onClick={() => startNewGame(difficulty)}
-              >
-                Play Again
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+      {isComplete && (
+        <VictoryBanner
+          gameTitle={`Sudoku (${difficulty.toUpperCase()})`}
+          subtitle={`You solved the ${difficulty} puzzle in ${formatTimer(elapsedSeconds)}!`}
+          stats={[
+            { label: 'Time', value: formatTimer(elapsedSeconds) },
+            { label: 'Difficulty', value: difficulty },
+            { label: 'Hints Used', value: hintsUsed },
+          ]}
+          isPersonalBest={personalBest}
+          onPlayAgain={() => startNewGame(difficulty)}
+          playAgainLabel="Play Again"
+          hubHref="/games"
+        />
+      )}
       <div className={styles.actionToolbar}>
         <button
           type="button"

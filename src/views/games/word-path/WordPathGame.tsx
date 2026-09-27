@@ -16,6 +16,8 @@ import type {
 import { areNeighbors, getBoardSignature } from './generator';
 import { generateBoardAsync } from './workerClient';
 import { PRESET_BOARDS } from './boards';
+import { VictoryBanner } from '../common/VictoryBanner';
+import { recordGameScore } from '../common/leaderboardStorage';
 import styles from './WordPathGame.module.scss';
 const DIFFICULTY_CONFIG: Record<
   Difficulty,
@@ -89,6 +91,24 @@ export const WordPathGame: React.FC = () => {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const [showResultsModal, setShowResultsModal] = useState<boolean>(false);
+  const isWon = Boolean(board && board.words.length > 0 && solvedWordIds.size === board.words.length);
+  const [personalBest, setPersonalBest] = useState<boolean>(false);
+  const handleWordPathWin = useCallback(
+    (seconds: number) => {
+      setIsTimerRunning(false);
+      setShowResultsModal(false);
+      storePlayedSignature(getBoardSignature(board));
+      const res = recordGameScore({
+        gameId: 'word-path',
+        gameName: 'Word Path',
+        difficulty,
+        timeSeconds: seconds,
+        score: board.words.length,
+      });
+      setPersonalBest(res.isPersonalBest);
+    },
+    [board, difficulty]
+  );
   const [howToPlayOpen, setHowToPlayOpen] = useState<boolean>(true);
   const [keyboardOpen, setKeyboardOpen] = useState<boolean>(true);
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -114,6 +134,7 @@ export const WordPathGame: React.FC = () => {
       );
       setHintsUsed(0);
       setElapsedSeconds(0);
+      setPersonalBest(false);
       setIsTimerRunning(true);
       setShowResultsModal(false);
     },
@@ -162,9 +183,7 @@ export const WordPathGame: React.FC = () => {
         const nextSolved = new Set([...solvedWordIds, matchedWord.id]);
         setSolvedWordIds(nextSolved);
         if (nextSolved.size === board.words.length) {
-          setIsTimerRunning(false);
-          setShowResultsModal(true);
-          storePlayedSignature(getBoardSignature(board));
+          handleWordPathWin(elapsedSeconds);
         }
         setActivePath([]);
         setIsDragging(false);
@@ -174,7 +193,7 @@ export const WordPathGame: React.FC = () => {
       setIsDragging(false);
       return false;
     },
-    [board, solvedWordIds]
+    [board, solvedWordIds, handleWordPathWin, elapsedSeconds]
   );
   const submitActivePath = useCallback(() => {
     validateAndSubmitPath(activePath);
@@ -423,9 +442,7 @@ export const WordPathGame: React.FC = () => {
     const nextSolved = new Set([...solvedWordIds, targetWord.id]);
     setSolvedWordIds(nextSolved);
     if (nextSolved.size === board.words.length) {
-      setIsTimerRunning(false);
-      setShowResultsModal(true);
-      storePlayedSignature(getBoardSignature(board));
+      handleWordPathWin(elapsedSeconds);
     }
   };
   // SVG Geometry Calculation
@@ -763,23 +780,34 @@ export const WordPathGame: React.FC = () => {
           </div>
         )}
       </div>
-      {/* Bottom Button */}
-      <button
-        type="button"
-        className={styles.seeResultsBtn}
-        onClick={() => setShowResultsModal(true)}
-      >
-        See results
-      </button>
-      {/* Results / Performance Modal */}
-      {showResultsModal && (
+      {isWon && (
+        <VictoryBanner
+          gameTitle={`Word Path (${difficulty.toUpperCase()})`}
+          subtitle={`You discovered all ${board.words.length} words in ${formatTime(elapsedSeconds)}!`}
+          stats={[
+            { label: 'Time', value: formatTime(elapsedSeconds) },
+            { label: 'Words Found', value: `${solvedWordIds.size}/${board.words.length}` },
+            { label: 'Hints Used', value: hintsUsed },
+          ]}
+          isPersonalBest={personalBest}
+          onPlayAgain={handleNextPuzzle}
+          playAgainLabel="Next Puzzle"
+          hubHref="/games"
+        />
+      )}
+      {!isWon && (
+        <button
+          type="button"
+          className={styles.seeResultsBtn}
+          onClick={() => setShowResultsModal(true)}
+        >
+          See results
+        </button>
+      )}
+      {!isWon && showResultsModal && (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <div className={styles.modalCard}>
-            <h2 className={styles.modalTitle}>
-              {solvedWordIds.size === board.words.length
-                ? '🎉 Board Solved!'
-                : 'Puzzle Progress'}
-            </h2>
+            <h2 className={styles.modalTitle}>Puzzle Progress</h2>
             <div className={styles.modalStats}>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Words Found</span>
@@ -805,13 +833,6 @@ export const WordPathGame: React.FC = () => {
               </div>
             </div>
             <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.seeResultsBtn}
-                onClick={handleNextPuzzle}
-              >
-                Next Puzzle
-              </button>
               <button
                 type="button"
                 className={styles.actionBtn}

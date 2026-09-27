@@ -11,6 +11,8 @@ import {
 } from './engine';
 import { getPreset, MOBILE_PRESETS, WEB_PRESETS } from './types';
 import type { Cell, CellState, MinesweeperDifficulty } from './types';
+import { VictoryBanner } from '../common/VictoryBanner';
+import { recordGameScore } from '../common/leaderboardStorage';
 import styles from './MinesweeperGame.module.scss';
 type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
 export const MinesweeperGame: React.FC = () => {
@@ -24,12 +26,13 @@ export const MinesweeperGame: React.FC = () => {
   const [isFlagMode, setIsFlagMode] = useState<boolean>(false);
   const [isFaceSurprised, setIsFaceSurprised] = useState<boolean>(false);
   const [zoom, setZoom] = useState<number>(1.0);
+  const [personalBest, setPersonalBest] = useState<boolean>(false);
   const handleZoomIn = () => setZoom((prev) => Math.min(2.0, Math.round((prev + 0.15) * 100) / 100));
   const handleZoomOut = () => setZoom((prev) => Math.max(0.6, Math.round((prev - 0.15) * 100) / 100));
   const handleZoomReset = () => setZoom(1.0);
   const cellSize = Math.round(30 * zoom);
   const cellFontSize = `${(1.15 * zoom).toFixed(2)}rem`;
-  const touchActiveRef = useRef<boolean>(false);
+  const pointerStartRef = useRef<{ x: number; y: number; r: number; c: number; moved: boolean } | null>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef<boolean>(false);
@@ -78,6 +81,26 @@ export const MinesweeperGame: React.FC = () => {
       );
     });
   }, []);
+  const handleWin = useCallback(
+    (currentBoard: Cell[][]) => {
+      currentBoard.forEach((row) => {
+        row.forEach((cell) => {
+          if (cell.isMine) cell.state = 'flagged';
+        });
+      });
+      setBoard(currentBoard);
+      const res = recordGameScore({
+        gameId: 'minesweeper',
+        gameName: 'Minesweeper',
+        difficulty,
+        timeSeconds: elapsedSeconds,
+        accuracy: '100%',
+      });
+      setPersonalBest(res.isPersonalBest);
+      setGameStatus('won');
+    },
+    [difficulty, elapsedSeconds]
+  );
   const revealCell = useCallback(
     (r: number, c: number) => {
       if (gameStatus === 'won' || gameStatus === 'lost') return;
@@ -107,18 +130,12 @@ export const MinesweeperGame: React.FC = () => {
         target.state = 'revealed';
       }
       if (checkWinCondition(currentBoard, config.rows, config.cols, config.mines)) {
-        currentBoard.forEach((row) => {
-          row.forEach((cell) => {
-            if (cell.isMine) cell.state = 'flagged';
-          });
-        });
-        setBoard(currentBoard);
-        setGameStatus('won');
+        handleWin(currentBoard);
         return;
       }
       setBoard(currentBoard);
     },
-    [board, gameStatus, config]
+    [board, gameStatus, config, handleWin]
   );
   // Chording: clicking a revealed numbered cell
   const handleChord = useCallback(
@@ -155,23 +172,18 @@ export const MinesweeperGame: React.FC = () => {
           return;
         }
         if (checkWinCondition(currentBoard, config.rows, config.cols, config.mines)) {
-          currentBoard.forEach((row) => {
-            row.forEach((cellItem) => {
-              if (cellItem.isMine) cellItem.state = 'flagged';
-            });
-          });
-          setBoard(currentBoard);
-          setGameStatus('won');
+          handleWin(currentBoard);
           return;
         }
         setBoard(currentBoard);
       }
     },
-    [board, gameStatus, config]
+    [board, gameStatus, config, handleWin]
   );
-  const handleTouchStart = (r: number, c: number) => {
+  const handlePointerDown = (e: React.PointerEvent, r: number, c: number) => {
     if (gameStatus === 'won' || gameStatus === 'lost') return;
-    touchActiveRef.current = true;
+    if (e.button !== 0) return;
+    pointerStartRef.current = { x: e.clientX, y: e.clientY, r, c, moved: false };
     isLongPressRef.current = false;
     setIsFaceSurprised(true);
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
@@ -182,12 +194,24 @@ export const MinesweeperGame: React.FC = () => {
         try {
           navigator.vibrate(35);
         } catch {
-          // ignore
+          // ignore vibration error
         }
       }
-    }, 400);
+    }, 350);
   };
-  const handleTouchEnd = (r: number, c: number) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!pointerStartRef.current || pointerStartRef.current.moved) return;
+    const dist = Math.hypot(e.clientX - pointerStartRef.current.x, e.clientY - pointerStartRef.current.y);
+    if (dist > 10) {
+      pointerStartRef.current.moved = true;
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      setIsFaceSurprised(false);
+    }
+  };
+  const handlePointerUp = (e: React.PointerEvent, r: number, c: number) => {
     setIsFaceSurprised(false);
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
@@ -195,51 +219,33 @@ export const MinesweeperGame: React.FC = () => {
     }
     if (isLongPressRef.current) {
       isLongPressRef.current = false;
-      setTimeout(() => {
-        touchActiveRef.current = false;
-      }, 150);
+      pointerStartRef.current = null;
       return;
     }
-    if (gameStatus === 'idle' || gameStatus === 'playing') {
-      const cell = board[r]?.[c];
-      if (cell) {
-        if (cell.state === 'revealed') {
-          handleChord(r, c);
-        } else if (isFlagMode) {
-          toggleFlag(r, c);
-        } else {
-          revealCell(r, c);
+    if (pointerStartRef.current && !pointerStartRef.current.moved) {
+      if (gameStatus === 'idle' || gameStatus === 'playing') {
+        const cell = board[r]?.[c];
+        if (cell) {
+          if (cell.state === 'revealed') {
+            handleChord(r, c);
+          } else if (isFlagMode) {
+            toggleFlag(r, c);
+          } else {
+            revealCell(r, c);
+          }
         }
       }
     }
-    setTimeout(() => {
-      touchActiveRef.current = false;
-    }, 150);
+    pointerStartRef.current = null;
   };
-  const handleTouchCancel = () => {
+  const handlePointerCancel = () => {
     setIsFaceSurprised(false);
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
     isLongPressRef.current = false;
-    setTimeout(() => {
-      touchActiveRef.current = false;
-    }, 150);
-  };
-  const handleCellClick = (r: number, c: number) => {
-    if (touchActiveRef.current) return;
-    const cell = board[r]?.[c];
-    if (!cell) return;
-    if (cell.state === 'revealed') {
-      handleChord(r, c);
-      return;
-    }
-    if (isFlagMode) {
-      toggleFlag(r, c);
-    } else {
-      revealCell(r, c);
-    }
+    pointerStartRef.current = null;
   };
   const handleContextMenu = (e: React.MouseEvent, r: number, c: number) => {
     e.preventDefault();
@@ -310,7 +316,7 @@ export const MinesweeperGame: React.FC = () => {
           </div>
         )}
       </div>
-      <div className={styles.boardCard}>
+      <div className={styles.boardCard} onContextMenu={(e) => e.preventDefault()}>
         <div className={styles.topBar}>
           <div className={styles.counterDisplay} title="Mines remaining">
             {minesLeft.toString().padStart(3, '0')}
@@ -328,7 +334,7 @@ export const MinesweeperGame: React.FC = () => {
             {elapsedSeconds.toString().padStart(3, '0')}
           </div>
         </div>
-        <div className={styles.gridScrollWrapper}>
+        <div className={styles.gridScrollWrapper} onContextMenu={(e) => e.preventDefault()}>
           <div
             ref={gridContainerRef}
             className={styles.grid}
@@ -370,10 +376,10 @@ export const MinesweeperGame: React.FC = () => {
                   <div
                     key={`${r}-${c}`}
                     className={`${styles.cell} ${cellClass} ${numberClass}`}
-                    onTouchStart={() => handleTouchStart(r, c)}
-                    onTouchEnd={() => handleTouchEnd(r, c)}
-                    onTouchCancel={handleTouchCancel}
-                    onClick={() => handleCellClick(r, c)}
+                    onPointerDown={(e) => handlePointerDown(e, r, c)}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={(e) => handlePointerUp(e, r, c)}
+                    onPointerCancel={handlePointerCancel}
                     onContextMenu={(e) => handleContextMenu(e, r, c)}
                   >
                     {content}
@@ -384,6 +390,21 @@ export const MinesweeperGame: React.FC = () => {
           </div>
         </div>
       </div>
+      {gameStatus === 'won' && (
+        <VictoryBanner
+          gameTitle={`Minesweeper (${activePresets[difficulty].label})`}
+          subtitle={`You swept all ${config.mines} hidden mines!`}
+          stats={[
+            { label: 'Time', value: `${elapsedSeconds}s` },
+            { label: 'Difficulty', value: activePresets[difficulty].label },
+            { label: 'Mines', value: config.mines },
+          ]}
+          isPersonalBest={personalBest}
+          onPlayAgain={() => resetGame(difficulty)}
+          playAgainLabel="Play Again"
+          hubHref="/games"
+        />
+      )}
       <div className={styles.mobileControls}>
         <button
           type="button"
