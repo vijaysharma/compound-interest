@@ -181,4 +181,33 @@ export const SEO_TOOLS_AND_STATIC = {
     ],
     canonicalPath: '/games/minesweeper',
   }),
+  slidePuzzle: createPageMetadata({
+    title: '15-Slide Puzzle Online — Classic 4x4 Number Sliding Game | Rupee Calculator',
+    description:
+      'Play the classic 15-number slide puzzle game online. Enjoy mobile-first smooth tile sliding, multi-tile shifts, solvability guarantee, and live move stats.',
+    keywords: [
+      'slide puzzle',
+      '15 puzzle',
+      'number sliding puzzle',
+      '15 puzzle game',
+      'sliding tile puzzle',
+      '4x4 puzzle',
+    ],
+    canonicalPath: '/games/slide-puzzle',
+  }),
+  games: createPageMetadata({
+    title: 'Brain Games & Puzzles Suite — Free Online Games | Rupee Calculator',
+    description:
+      'Play free online brain teasers, number puzzles, and retro classics: Word Path, Sudoku, Minesweeper, and 15-Slide Puzzle with local and global leaderboards.',
+    keywords: [
+      'online games',
+      'free puzzle games',
+      'brain games',
+      'sudoku',
+      'minesweeper',
+      'slide puzzle',
+      'word games',
+    ],
+    canonicalPath: '/games',
+  }),
 };

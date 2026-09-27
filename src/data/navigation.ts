@@ -93,9 +93,11 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
   {
     title: 'Games',
     items: [
-      { name: 'Word Path', href: '/games/word-path', icon: FiPlayCircle, aliases: ['/games', '/word-path'] },
+      { name: 'All Games', href: '/games', icon: FiPlayCircle },
+      { name: 'Word Path', href: '/games/word-path', icon: FiCompass, aliases: ['/word-path'] },
       { name: 'Sudoku', href: '/games/sudoku', icon: FiGrid, aliases: ['/sudoku'] },
       { name: 'Minesweeper', href: '/games/minesweeper', icon: FiZap, aliases: ['/minesweeper'] },
+      { name: 'Slide Puzzle', href: '/games/slide-puzzle', icon: FiBox, aliases: ['/slide-puzzle'] },
     ],
   },
   {

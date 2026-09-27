@@ -1,0 +1,213 @@
+'use client';
+import React, { useEffect, useState } from 'react';
+import Link from '@/navigation';
+import { formatGameTime, getGamePersonalBest, getLeaderboardEntries, LeaderboardEntry } from '../common/leaderboardStorage';
+import styles from './GamesHub.module.scss';
+interface GameMeta {
+  id: LeaderboardEntry['gameId'];
+  title: string;
+  category: string;
+  icon: string;
+  iconBg: string;
+  description: string;
+  href: string;
+}
+const GAMES_LIST: GameMeta[] = [
+  {
+    id: 'word-path',
+    title: 'Word Path',
+    category: 'Word Puzzle',
+    icon: '🔤',
+    iconBg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    description: 'Connect adjacent letters to trace hidden snake-words across responsive letter grids.',
+    href: '/games/word-path',
+  },
+  {
+    id: 'sudoku',
+    title: 'Sudoku',
+    category: 'Logic Grid',
+    icon: '🔢',
+    iconBg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    description: 'Classic 9×9 mathematical puzzle with authentic unique solutions, pencil notes, and auto-check.',
+    href: '/games/sudoku',
+  },
+  {
+    id: 'minesweeper',
+    title: 'Minesweeper',
+    category: 'Retro Classic',
+    icon: '💣',
+    iconBg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    description: 'Uncover safe cells without detonating hidden mines. Features first-click safety, chording, and zoom.',
+    href: '/games/minesweeper',
+  },
+  {
+    id: 'slide-puzzle',
+    title: '15-Slide Puzzle',
+    category: 'Number Slide',
+    icon: '🧩',
+    iconBg: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+    description: 'Arrange scrambled 1 to 15 tiles into numerical order using fluid row & column sliding with solvability guarantee.',
+    href: '/games/slide-puzzle',
+  },
+];
+export const GamesHub: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'games' | 'leaderboard'>('games');
+  const [leaderboardFilter, setLeaderboardFilter] = useState<string>('all');
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [personalBests, setPersonalBests] = useState<Record<string, LeaderboardEntry | null>>({});
+  useEffect(() => {
+    const list = getLeaderboardEntries();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEntries(list);
+    const pbMap: Record<string, LeaderboardEntry | null> = {};
+    for (const g of GAMES_LIST) {
+      pbMap[g.id] = getGamePersonalBest(g.id);
+    }
+    setPersonalBests(pbMap);
+  }, [activeTab]);
+  const filteredEntries = leaderboardFilter === 'all'
+    ? entries
+    : entries.filter((e) => e.gameId === leaderboardFilter);
+  const getMedal = (idx: number) => {
+    if (idx === 0) return '🥇';
+    if (idx === 1) return '🥈';
+    if (idx === 2) return '🥉';
+    return `#${idx + 1}`;
+  };
+  return (
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Brain Games &amp; Puzzles</h1>
+        <p className={styles.subtitle}>
+          Challenge your mind with classic number puzzles, word searches, and logic games with live personal stats.
+        </p>
+      </header>
+      <div className={styles.tabBar} role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'games'}
+          className={`${styles.tabBtn} ${activeTab === 'games' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('games')}
+        >
+          🎮 All Games
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'leaderboard'}
+          className={`${styles.tabBtn} ${activeTab === 'leaderboard' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('leaderboard')}
+        >
+          🏆 Leaderboard
+        </button>
+      </div>
+      {activeTab === 'games' && (
+        <div className={styles.gamesGrid}>
+          {GAMES_LIST.map((game) => {
+            const pb = personalBests[game.id];
+            return (
+              <div key={game.id} className={styles.gameCard}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.iconBadge} style={{ background: game.iconBg }}>
+                    {game.icon}
+                  </div>
+                  <span className={styles.categoryBadge}>{game.category}</span>
+                </div>
+                <h2 className={styles.gameTitle}>{game.title}</h2>
+                <p className={styles.gameDesc}>{game.description}</p>
+                {pb ? (
+                  <div className={styles.bestScoreBadge}>
+                    <span>🌟</span>
+                    <span>Best Time: {formatGameTime(pb.timeSeconds)}</span>
+                  </div>
+                ) : (
+                  <div className={styles.bestScoreBadge} style={{ background: '#f8fafc', borderColor: '#e2e8f0', color: '#64748b' }}>
+                    <span>🎯</span>
+                    <span>Not played yet</span>
+                  </div>
+                )}
+                <div className={styles.cardFooter}>
+                  <Link href={game.href} className={styles.playBtn}>
+                    Play Now →
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {activeTab === 'leaderboard' && (
+        <div className={styles.leaderboardSection}>
+          <div className={styles.filterRow}>
+            <button
+              type="button"
+              className={`${styles.filterBtn} ${leaderboardFilter === 'all' ? styles.filterBtnActive : ''}`}
+              onClick={() => setLeaderboardFilter('all')}
+            >
+              All Games
+            </button>
+            {GAMES_LIST.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                className={`${styles.filterBtn} ${leaderboardFilter === g.id ? styles.filterBtnActive : ''}`}
+                onClick={() => setLeaderboardFilter(g.id)}
+              >
+                {g.title}
+              </button>
+            ))}
+          </div>
+          <div className={styles.tableWrapper}>
+            {filteredEntries.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>No high scores recorded yet for this game.</p>
+                <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                  Play a round to record your fastest completion time!
+                </p>
+              </div>
+            ) : (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th className={styles.th}>Rank</th>
+                    <th className={styles.th}>Game</th>
+                    <th className={styles.th}>Difficulty</th>
+                    <th className={styles.th}>Time</th>
+                    <th className={styles.th}>Score / Moves</th>
+                    <th className={styles.th}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEntries.map((e, idx) => (
+                    <tr key={e.id}>
+                      <td className={styles.td}>
+                        <span className={styles.medal}>{getMedal(idx)}</span>
+                      </td>
+                      <td className={styles.td} style={{ fontWeight: 700 }}>
+                        {e.gameName}
+                      </td>
+                      <td className={styles.td} style={{ textTransform: 'capitalize' }}>
+                        {e.difficulty}
+                      </td>
+                      <td className={styles.td} style={{ fontWeight: 800, color: '#1d4ed8' }}>
+                        {formatGameTime(e.timeSeconds)}
+                      </td>
+                      <td className={styles.td}>
+                        {e.score !== undefined ? e.score : '—'}
+                      </td>
+                      <td className={styles.td} style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                        {new Date(e.completedAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+export default GamesHub;

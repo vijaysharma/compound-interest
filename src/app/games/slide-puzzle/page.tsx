@@ -1,6 +1,6 @@
-import PageComponent from '@/views/games/hub';
+import PageComponent from '@/views/games/slide-puzzle';
 import { SEO_PAGES } from '@/data/seoMetadata';
-export const metadata = SEO_PAGES.games;
+export const metadata = SEO_PAGES.slidePuzzle;
 export default function Page() {
   return <PageComponent />;
 }
