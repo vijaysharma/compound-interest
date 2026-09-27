@@ -13,9 +13,18 @@ import { PRESETS } from './types';
 import type { Cell, CellState, MinesweeperDifficulty } from './types';
 import styles from './MinesweeperGame.module.scss';
 type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
+const getGameConfig = (diff: MinesweeperDifficulty, isMobilePortrait: boolean) => {
+  if (diff === 'hard') {
+    return isMobilePortrait
+      ? { rows: 28, cols: 14, mines: 80, label: 'Expert (14×28)' }
+      : { rows: 14, cols: 28, mines: 80, label: 'Expert (14×28)' };
+  }
+  return PRESETS[diff];
+};
 export const MinesweeperGame: React.FC = () => {
   const [difficulty, setDifficulty] = useState<MinesweeperDifficulty>('easy');
-  const config = PRESETS[difficulty];
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const config = getGameConfig(difficulty, isMobile);
   const [board, setBoard] = useState<Cell[][]>(() => createEmptyBoard(config.rows, config.cols));
   const [gameStatus, setGameStatus] = useState<GameStatus>('idle');
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -23,6 +32,24 @@ export const MinesweeperGame: React.FC = () => {
   const [isFaceSurprised, setIsFaceSurprised] = useState<boolean>(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressRef = useRef<boolean>(false);
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (gameStatus === 'idle') {
+        const nextConfig = getGameConfig(difficulty, mobile);
+        setBoard((prev) => {
+          if (prev.length !== nextConfig.rows || (prev[0] && prev[0].length !== nextConfig.cols)) {
+            return createEmptyBoard(nextConfig.rows, nextConfig.cols);
+          }
+          return prev;
+        });
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [difficulty, gameStatus]);
   // Timer effect
   useEffect(() => {
     if (gameStatus !== 'playing') return;
@@ -31,16 +58,23 @@ export const MinesweeperGame: React.FC = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [gameStatus]);
-  const resetGame = useCallback((diff: MinesweeperDifficulty) => {
-    const nextConfig = PRESETS[diff];
+  const resetGame = useCallback(
+    (diff: MinesweeperDifficulty) => {
+      const nextConfig = getGameConfig(diff, isMobile);
+      setBoard(createEmptyBoard(nextConfig.rows, nextConfig.cols));
+      setGameStatus('idle');
+      setElapsedSeconds(0);
+      setIsFaceSurprised(false);
+    },
+    [isMobile]
+  );
+  const handleDifficultyChange = (nextDiff: MinesweeperDifficulty) => {
+    setDifficulty(nextDiff);
+    const nextConfig = getGameConfig(nextDiff, isMobile);
     setBoard(createEmptyBoard(nextConfig.rows, nextConfig.cols));
     setGameStatus('idle');
     setElapsedSeconds(0);
     setIsFaceSurprised(false);
-  }, []);
-  const handleDifficultyChange = (nextDiff: MinesweeperDifficulty) => {
-    setDifficulty(nextDiff);
-    resetGame(nextDiff);
   };
   const toggleFlag = useCallback((r: number, c: number) => {
     setBoard((prev) => {
@@ -208,7 +242,7 @@ export const MinesweeperGame: React.FC = () => {
             className={`${styles.diffBtn} ${difficulty === diff ? styles.diffBtnActive : ''}`}
             onClick={() => handleDifficultyChange(diff)}
           >
-            {PRESETS[diff].label}
+            {getGameConfig(diff, isMobile).label}
           </button>
         ))}
       </div>
@@ -233,10 +267,18 @@ export const MinesweeperGame: React.FC = () => {
         <div className={styles.gridScrollWrapper}>
           <div
             className={styles.grid}
-            style={{
-              gridTemplateColumns: `repeat(${config.cols}, 30px)`,
-              gridTemplateRows: `repeat(${config.rows}, 30px)`,
-            }}
+            style={
+              isMobile
+                ? {
+                    gridTemplateColumns: `repeat(${config.cols}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${config.rows}, minmax(0, 1fr))`,
+                    width: '100%',
+                  }
+                : {
+                    gridTemplateColumns: `repeat(${config.cols}, 30px)`,
+                    gridTemplateRows: `repeat(${config.rows}, 30px)`,
+                  }
+            }
           >
             {board.map((row, r) =>
               row.map((cell, c) => {
