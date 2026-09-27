@@ -86,7 +86,7 @@ export function floodFillReveal(board: Cell[][], startR: number, startC: number,
         if (!visited.has(key)) {
           visited.add(key);
           const nCell = board[nr][nc];
-          if (nCell.state === 'hidden' || nCell.state === 'question') {
+          if (nCell.state === 'hidden') {
             if (nCell.neighborMines === 0 && !nCell.isMine) {
               queue.push([nr, nc]);
             } else if (!nCell.isMine) {

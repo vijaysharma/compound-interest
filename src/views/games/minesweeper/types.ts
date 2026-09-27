@@ -1,5 +1,5 @@
 export type MinesweeperDifficulty = 'easy' | 'medium' | 'hard';
-export type CellState = 'hidden' | 'revealed' | 'flagged' | 'question';
+export type CellState = 'hidden' | 'revealed' | 'flagged';
 export interface Cell {
   row: number;
   col: number;
