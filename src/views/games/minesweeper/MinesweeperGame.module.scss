@@ -36,13 +36,66 @@
   color: var(--muted-color, #64748b);
   margin: 0;
 }
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
 .difficultySelector {
   display: flex;
   background: var(--control-bg, #f1f5f9);
   padding: 3px;
   border-radius: 8px;
   gap: 2px;
-  margin-bottom: 14px;
+}
+.webZoomControls {
+  display: flex;
+  align-items: center;
+  background: var(--control-bg, #f1f5f9);
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+}
+.zoomBtn {
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted-color, #64748b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  &:hover:not(:disabled) {
+    color: var(--text-color, #1e293b);
+    background: rgba(0, 0, 0, 0.05);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+.zoomResetBtn {
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted-color, #64748b);
+  min-width: 46px;
+  text-align: center;
+  transition: all 0.15s ease;
+  &:hover {
+    color: var(--text-color, #1e293b);
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
 }
 .diffBtn {
   border: none;
@@ -145,13 +198,13 @@
   width: max-content;
 }
 .cell {
-  width: 30px;
-  height: 30px;
+  width: var(--cell-size, 30px);
+  height: var(--cell-size, 30px);
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: var(--cell-font-size, 1.15rem);
   font-weight: 900;
   font-family: Arial, sans-serif;
   cursor: pointer;
@@ -235,9 +288,16 @@
   .subtitle {
     display: none;
   }
-  .difficultySelector {
+  .controlsRow {
     width: 100%;
     margin-bottom: 6px;
+  }
+  .webZoomControls {
+    display: none !important;
+  }
+  .difficultySelector {
+    width: 100%;
+    margin-bottom: 0;
     padding: 2px;
   }
   .diffBtn {
