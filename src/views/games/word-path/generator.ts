@@ -180,7 +180,10 @@ export const generateProceduralBoard = (
     };
     const generatePaths = (): Coordinate[][] | null => {
       const paths: Coordinate[][] = [];
+      let iterations = 0;
+      const startTime = Date.now();
       const recurse = (pathIdx: number): boolean => {
+        if (iterations++ > 5000 || Date.now() - startTime > 100) return false;
         if (pathIdx >= targetLengths.length) {
           return paths.reduce((sum, p) => sum + p.length, 0) === totalCells;
         }
@@ -190,6 +193,7 @@ export const generateProceduralBoard = (
         const currentPath: Coordinate[] = [start];
         visited[start.row][start.col] = true;
         const step = (curr: Coordinate): boolean => {
+          if (iterations++ > 5000 || Date.now() - startTime > 100) return false;
           if (currentPath.length === length) {
             paths.push([...currentPath]);
             if (recurse(pathIdx + 1)) return true;

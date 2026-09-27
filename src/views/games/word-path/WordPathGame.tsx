@@ -13,7 +13,8 @@ import type {
   Difficulty,
   Tile,
 } from './types';
-import { areNeighbors, generateProceduralBoard, getBoardSignature } from './generator';
+import { areNeighbors, getBoardSignature } from './generator';
+import { generateBoardAsync } from './workerClient';
 import { PRESET_BOARDS } from './boards';
 import styles from './WordPathGame.module.scss';
 const DIFFICULTY_CONFIG: Record<
@@ -49,10 +50,10 @@ const storePlayedSignature = (signature: string) => {
     // Ignore storage write error
   }
 };
-const getNextUniqueBoard = (
+const getNextUniqueBoardAsync = async (
   targetDifficulty: Difficulty,
   playedSigs: Set<string>
-): BoardDefinition => {
+): Promise<BoardDefinition> => {
   const presets = PRESET_BOARDS[targetDifficulty] || [];
   const unplayedPreset = presets.find(
     (b) => !playedSigs.has(getBoardSignature(b))
@@ -60,7 +61,7 @@ const getNextUniqueBoard = (
   if (unplayedPreset) {
     return unplayedPreset;
   }
-  return generateProceduralBoard(targetDifficulty, {
+  return generateBoardAsync(targetDifficulty, {
     excludeSignatures: playedSigs,
   });
 };
@@ -71,9 +72,8 @@ export const WordPathGame: React.FC = () => {
     const playedSigs = getStoredPlayedSignatures();
     const defaultSig = getBoardSignature(PRESET_BOARDS.medium[0]);
     if (playedSigs.has(defaultSig)) {
-      const nextBoard = getNextUniqueBoard('medium', playedSigs);
-      storePlayedSignature(getBoardSignature(nextBoard));
-      requestAnimationFrame(() => {
+      void getNextUniqueBoardAsync('medium', playedSigs).then((nextBoard) => {
+        storePlayedSignature(getBoardSignature(nextBoard));
         setBoard(nextBoard);
       });
     } else {
@@ -93,14 +93,14 @@ export const WordPathGame: React.FC = () => {
   const [keyboardOpen, setKeyboardOpen] = useState<boolean>(true);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const loadNextBoard = useCallback(
-    (diff: Difficulty) => {
+    async (diff: Difficulty) => {
       const playedSigs = getStoredPlayedSignatures();
       if (board) {
         const currentSig = getBoardSignature(board);
         playedSigs.add(currentSig);
         storePlayedSignature(currentSig);
       }
-      const nextBoard = getNextUniqueBoard(diff, playedSigs);
+      const nextBoard = await getNextUniqueBoardAsync(diff, playedSigs);
       storePlayedSignature(getBoardSignature(nextBoard));
       setBoard(nextBoard);
       setSolvedWordIds(new Set());
