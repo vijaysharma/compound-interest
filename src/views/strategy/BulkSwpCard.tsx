@@ -52,6 +52,8 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
   const [endDate, setEndDate] = useState<string>(initialEnd);
   const [cascadeInterval, setCascadeInterval] = useState<CascadeInterval>('1 Quarter');
   const [autoSync, setAutoSync] = useState<boolean>(false);
+  const [, startTransition] = React.useTransition();
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentParams: BulkSwpConfig = {
     swpAmount,
     reinvestmentAmount,
@@ -60,6 +62,22 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
     endDate,
     cascadeInterval,
   };
+  const debouncedApply = React.useCallback(
+    (params: BulkSwpConfig) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        startTransition(() => {
+          api.applyBulkSwp(params);
+        });
+      }, 150);
+    },
+    [api]
+  );
+  React.useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
   const handleSwpAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     const num = raw === '' ? 0 : Math.max(0, Number(raw));
@@ -73,7 +91,7 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
       setReinvestmentAmount(num);
     }
     if (autoSync && fundsCount > 0) {
-      api.applyBulkSwp({
+      debouncedApply({
         ...currentParams,
         swpAmount: num,
         reinvestmentAmount: nextReinvest,
@@ -87,7 +105,7 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
     setReinvestmentAmount(capped);
     setIsReinvestmentSynced(capped === swpAmount);
     if (autoSync && fundsCount > 0) {
-      api.applyBulkSwp({
+      debouncedApply({
         ...currentParams,
         reinvestmentAmount: capped,
       });
@@ -97,7 +115,7 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
     setReinvestmentAmount(swpAmount);
     setIsReinvestmentSynced(true);
     if (autoSync && fundsCount > 0) {
-      api.applyBulkSwp({
+      debouncedApply({
         ...currentParams,
         reinvestmentAmount: swpAmount,
       });
@@ -107,7 +125,7 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
     const nextFreq = e.target.value as Frequency;
     setFrequency(nextFreq);
     if (autoSync && fundsCount > 0) {
-      api.applyBulkSwp({
+      debouncedApply({
         ...currentParams,
         frequency: nextFreq,
       });
@@ -122,7 +140,7 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
       setEndDate(nextStart);
     }
     if (autoSync && fundsCount > 0) {
-      api.applyBulkSwp({
+      debouncedApply({
         ...currentParams,
         startDate: nextStart,
         endDate: nextEnd,
@@ -138,7 +156,7 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
       setStartDate(nextEnd);
     }
     if (autoSync && fundsCount > 0) {
-      api.applyBulkSwp({
+      debouncedApply({
         ...currentParams,
         startDate: nextStart,
         endDate: nextEnd,
@@ -149,14 +167,17 @@ const BaseBulkSwpCard = ({ config, api }: BulkSwpCardProps) => {
     const nextInterval = e.target.value as CascadeInterval;
     setCascadeInterval(nextInterval);
     if (autoSync && fundsCount > 0) {
-      api.applyBulkSwp({
+      debouncedApply({
         ...currentParams,
         cascadeInterval: nextInterval,
       });
     }
   };
   const handleApply = () => {
-    api.applyBulkSwp(currentParams);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    startTransition(() => {
+      api.applyBulkSwp(currentParams);
+    });
   };
   const anySwpEnabled = funds.some((entry) => entry.swp.enabled);
   const monthsPerInterval = CASCADE_INTERVAL_MONTHS[cascadeInterval] ?? 3;
