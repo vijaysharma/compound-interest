@@ -457,6 +457,27 @@ export const WordPathGame: React.FC = () => {
     if (sortedLengths.length === 1) return `${sortedLengths[0]}`;
     return `${sortedLengths.slice(0, -1).join(', ')}, and ${sortedLengths[sortedLengths.length - 1]}`;
   }, [board.words]);
+  const activeWordLetters = useMemo(
+    () => activePath.map((c) => board.grid[c.row]?.[c.col]?.letter || ''),
+    [activePath, board.grid]
+  );
+  const activeWord = useMemo(() => activeWordLetters.join(''), [activeWordLetters]);
+  const isTargetWordMatched = useMemo(
+    () =>
+      Boolean(
+        activeWord.length >= 2 &&
+          board.words.some((w) => !solvedWordIds.has(w.id) && w.word === activeWord)
+      ),
+    [activeWord, board.words, solvedWordIds]
+  );
+  const matchesWordLength = useMemo(
+    () =>
+      Boolean(
+        activeWord.length >= 2 &&
+          board.words.some((w) => !solvedWordIds.has(w.id) && w.word.length === activeWord.length)
+      ),
+    [activeWord.length, board.words, solvedWordIds]
+  );
   return (
     <div
       className={styles.gamePage}
@@ -503,6 +524,35 @@ export const WordPathGame: React.FC = () => {
       <div className={styles.topicBanner}>
         <span className={styles.topicLabel}>Topic:</span>
         <span className={styles.topicTitle}>{board.theme || board.title}</span>
+      </div>
+      {/* Live Word Construction Badge */}
+      <div className={styles.liveWordBadgeContainer} aria-live="polite">
+        {activeWord.length > 0 ? (
+          <div
+            className={`${styles.liveWordBadge} ${
+              isTargetWordMatched
+                ? styles.liveWordMatched
+                : matchesWordLength
+                  ? styles.liveWordValidLength
+                  : ''
+            }`}
+          >
+            <span className={styles.liveWordFlow}>
+              {activeWordLetters.map((char, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span className={styles.liveWordArrow}>→</span>}
+                  <span>{char}</span>
+                </React.Fragment>
+              ))}
+            </span>
+            <span className={styles.liveWordFinal}>"{activeWord}"</span>
+            {isTargetWordMatched && <span className={styles.liveWordBadgeCheck}>✓ Match!</span>}
+          </div>
+        ) : (
+          <div className={styles.liveWordPlaceholder}>
+            <span>Swipe across tiles to uncover words</span>
+          </div>
+        )}
       </div>
       {/* Main Grid Card */}
       <div
