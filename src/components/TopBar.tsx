@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from '@/navigation';
 import Link from './PrefetchLink';
-import { FiMenu } from 'react-icons/fi';
+import { FiMenu, FiPlayCircle } from 'react-icons/fi';
 import Logo from './Logo';
 import { useAuth } from '../context/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
@@ -106,6 +106,9 @@ const TopBar = ({ className }: { className?: string }) => {
           </Link>
         </div>
         <div className={styles.rightSection}>
+          <Link to="/games" className={styles.gamesLink} title="Games">
+            <FiPlayCircle size={20} />
+          </Link>
           {mounted && isAuthenticated && user ? (
             <TopBarProfileDropdown
               user={user}

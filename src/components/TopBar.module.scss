@@ -371,6 +371,26 @@
   }
 }
 
+.gamesLink {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-field, 0.375rem);
+  color: var(--color-primary-content);
+  text-decoration: none;
+  transition: background-color $transition-fast;
+  &:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--color-primary-content) 15%,
+      transparent
+    );
+  }
+}
+
 // Drawer styles
 .drawerModal {
   position: fixed;
