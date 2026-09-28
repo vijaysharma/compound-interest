@@ -22,6 +22,7 @@ import { recordGameScore } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
+import { useAntiCheatHints } from '../common/useAntiCheatHints';
 import styles from './WordPathGame.module.scss';
 const DIFFICULTY_CONFIG: Record<
   Difficulty,
@@ -107,13 +108,31 @@ export const WordPathGame: React.FC = () => {
   const [solvedWordIds, setSolvedWordIds] = useState<Set<string>>(new Set());
   const [activePath, setActivePath] = useState<Coordinate[]>([]);
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [focusedCell, setFocusedCell] = useState<Coordinate>({ row: 0, col: 0 });
+  const [focusedCell, setFocusedCell] = useState<Coordinate | null>(null);
   const [highlightedStartWords, setHighlightedStartWords] = useState<Set<string>>(new Set());
-  const [hintsUsed, setHintsUsed] = useState<number>(0);
+  const FONT_SCALES = [1.0, 1.25, 1.5, 1.75];
+  const [fontScaleIndex, setFontScaleIndex] = useState<number>(0);
+  const mobileFontScale = FONT_SCALES[fontScaleIndex];
+  const handleCycleFontScale = () => {
+    setFontScaleIndex((prev) => (prev + 1) % FONT_SCALES.length);
+  };
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const [showResultsModal, setShowResultsModal] = useState<boolean>(false);
   const isWon = Boolean(board && board.words.length > 0 && solvedWordIds.size === board.words.length);
+  const boardSignature = useMemo(() => (board ? getBoardSignature(board) : 'word-path-board'), [board]);
+  const {
+    hintsUsed,
+    canUseHint,
+    consumeHint,
+    hintButtonLabel,
+  } = useAntiCheatHints({
+    gameId: 'word-path',
+    boardId: boardSignature,
+    maxHints: 5,
+    cooldownSeconds: 30,
+    isGameOver: isWon,
+  });
   const [personalBest, setPersonalBest] = useState<boolean>(false);
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
@@ -153,13 +172,8 @@ export const WordPathGame: React.FC = () => {
       setSolvedWordIds(new Set());
       setActivePath([]);
       setIsDragging(false);
-      setFocusedCell({ row: 0, col: 0 });
-      setHighlightedStartWords(
-        diff === 'easy'
-          ? new Set(nextBoard.words.map((w) => w.id))
-          : new Set()
-      );
-      setHintsUsed(0);
+      setFocusedCell(null);
+      setHighlightedStartWords(new Set());
       setElapsedSeconds(0);
       setPersonalBest(false);
       setIsTimerRunning(true);
@@ -261,7 +275,6 @@ export const WordPathGame: React.FC = () => {
         }
         return prev;
       });
-      setFocusedCell(coord);
     },
     [board.grid, solvedWordIds]
   );
@@ -300,7 +313,6 @@ export const WordPathGame: React.FC = () => {
         }
         return [coord];
       });
-      setFocusedCell(coord);
     },
     [board.grid, board.words, solvedWordIds, validateAndSubmitPath]
   );
@@ -336,7 +348,6 @@ export const WordPathGame: React.FC = () => {
       }
       return [coord];
     });
-    setFocusedCell(coord);
   };
   const handleBoardPointerMove = (e: React.PointerEvent) => {
     if (!pointerSessionRef.current) return;
@@ -373,7 +384,7 @@ export const WordPathGame: React.FC = () => {
   // Keyboard Navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      const { row, col } = focusedCell;
+      const { row, col } = focusedCell ?? { row: 0, col: 0 };
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         const nextRow = Math.max(0, row - 1);
@@ -456,9 +467,11 @@ export const WordPathGame: React.FC = () => {
   };
   // Hint button action
   const handleHint = () => {
+    if (!canUseHint) return;
     const unsolvedWords = board.words.filter((w) => !solvedWordIds.has(w.id));
     if (unsolvedWords.length === 0) return;
-    setHintsUsed((prev) => prev + 1);
+    const consumed = consumeHint();
+    if (!consumed) return;
     const targetWord = unsolvedWords[0];
     // Pre-highlight starting tile
     if (!highlightedStartWords.has(targetWord.id)) {
@@ -613,6 +626,7 @@ export const WordPathGame: React.FC = () => {
           style={{
             gridTemplateColumns: `repeat(${board.cols}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${board.rows}, minmax(0, 1fr))`,
+            ['--word-path-scale' as string]: mobileFontScale,
           }}
         >
           {board.grid.flatMap((row) =>
@@ -623,7 +637,7 @@ export const WordPathGame: React.FC = () => {
                 col: tile.col,
               });
               const isFocused =
-                focusedCell.row === tile.row && focusedCell.col === tile.col;
+                Boolean(focusedCell && focusedCell.row === tile.row && focusedCell.col === tile.col);
               const isStartTileHighlighted =
                 highlightedStartWords.has(tile.wordId) && tile.isStart;
               let tileBg = '#ffffff';
@@ -764,9 +778,18 @@ export const WordPathGame: React.FC = () => {
           type="button"
           className={styles.actionBtn}
           onClick={handleHint}
-          disabled={solvedWordIds.size === board.words.length}
+          disabled={!canUseHint || solvedWordIds.size === board.words.length}
         >
-          Hint
+          {hintButtonLabel}
+        </button>
+        <button
+          type="button"
+          className={styles.mobileFontScalerBtn}
+          onClick={handleCycleFontScale}
+          aria-label="Adjust cell font size"
+        >
+          <span>A+</span>
+          <span>{Math.round(mobileFontScale * 100)}%</span>
         </button>
       </div>
       {/* Collapsible Instruction Drawers */}
