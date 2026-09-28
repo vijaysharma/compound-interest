@@ -40,6 +40,7 @@ export const MinesweeperGame: React.FC = () => {
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef<boolean>(false);
+  const lastLongPressTimestampRef = useRef<number>(0);
   const resetGame = useCallback((diff: MinesweeperDifficulty, mobileOverride?: boolean) => {
     const activeMob = mobileOverride !== undefined ? mobileOverride : (typeof window !== 'undefined' && window.innerWidth < 768);
     const nextConfig = getPreset(diff, activeMob);
@@ -201,26 +202,31 @@ export const MinesweeperGame: React.FC = () => {
     },
     [board, gameStatus, config, handleWin]
   );
-  const handlePointerDown = (e: React.PointerEvent, r: number, c: number) => {
-    if (gameStatus === 'won' || gameStatus === 'lost') return;
-    if (e.button !== 0) return;
-    pointerStartRef.current = { x: e.clientX, y: e.clientY, r, c, moved: false };
-    isLongPressRef.current = false;
-    setIsFaceSurprised(true);
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    longPressTimerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      toggleFlag(r, c);
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try {
-          navigator.vibrate(35);
-        } catch {
-          // ignore vibration error
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent, r: number, c: number) => {
+      if (gameStatus === 'won' || gameStatus === 'lost') return;
+      if (e.button !== 0) return;
+      pointerStartRef.current = { x: e.clientX, y: e.clientY, r, c, moved: false };
+      isLongPressRef.current = false;
+      setIsFaceSurprised(true);
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = setTimeout(() => {
+        isLongPressRef.current = true;
+        lastLongPressTimestampRef.current = Date.now();
+        longPressTimerRef.current = null;
+        toggleFlag(r, c);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          try {
+            navigator.vibrate(35);
+          } catch {
+            // ignore vibration error
+          }
         }
-      }
-    }, 350);
-  };
-  const handlePointerMove = (e: React.PointerEvent) => {
+      }, 350);
+    },
+    [gameStatus, toggleFlag]
+  );
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!pointerStartRef.current || pointerStartRef.current.moved) return;
     const dist = Math.hypot(e.clientX - pointerStartRef.current.x, e.clientY - pointerStartRef.current.y);
     if (dist > 10) {
@@ -231,47 +237,79 @@ export const MinesweeperGame: React.FC = () => {
       }
       setIsFaceSurprised(false);
     }
-  };
-  const handlePointerUp = (e: React.PointerEvent, r: number, c: number) => {
+  }, []);
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent, r: number, c: number) => {
+      setIsFaceSurprised(false);
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      if (isLongPressRef.current || Date.now() - lastLongPressTimestampRef.current < 800) {
+        isLongPressRef.current = false;
+        lastLongPressTimestampRef.current = Date.now();
+        pointerStartRef.current = null;
+        return;
+      }
+      if (pointerStartRef.current && !pointerStartRef.current.moved) {
+        if (gameStatus === 'idle' || gameStatus === 'playing') {
+          const cell = board[r]?.[c];
+          if (cell) {
+            if (cell.state === 'revealed') {
+              handleChord(r, c);
+            } else if (isFlagMode) {
+              toggleFlag(r, c);
+            } else {
+              revealCell(r, c);
+            }
+          }
+        }
+      }
+      pointerStartRef.current = null;
+    },
+    [board, gameStatus, handleChord, isFlagMode, revealCell, toggleFlag]
+  );
+  const handlePointerCancel = useCallback(() => {
     setIsFaceSurprised(false);
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
     if (isLongPressRef.current) {
+      lastLongPressTimestampRef.current = Date.now();
       isLongPressRef.current = false;
-      pointerStartRef.current = null;
-      return;
     }
-    if (pointerStartRef.current && !pointerStartRef.current.moved) {
-      if (gameStatus === 'idle' || gameStatus === 'playing') {
-        const cell = board[r]?.[c];
-        if (cell) {
-          if (cell.state === 'revealed') {
-            handleChord(r, c);
-          } else if (isFlagMode) {
-            toggleFlag(r, c);
-          } else {
-            revealCell(r, c);
+    pointerStartRef.current = null;
+  }, []);
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent, r: number, c: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // If long press already executed via timer, suppress duplicate event from Android contextmenu
+      if (Date.now() - lastLongPressTimestampRef.current < 800) {
+        return;
+      }
+      // If long press timer is still active, Android contextmenu fired before the 350ms timer
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+        isLongPressRef.current = true;
+        lastLongPressTimestampRef.current = Date.now();
+        toggleFlag(r, c);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          try {
+            navigator.vibrate(35);
+          } catch {
+            // ignore vibration error
           }
         }
+        return;
       }
-    }
-    pointerStartRef.current = null;
-  };
-  const handlePointerCancel = () => {
-    setIsFaceSurprised(false);
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-    isLongPressRef.current = false;
-    pointerStartRef.current = null;
-  };
-  const handleContextMenu = (e: React.MouseEvent, r: number, c: number) => {
-    e.preventDefault();
-    toggleFlag(r, c);
-  };
+      // Standard desktop right click
+      toggleFlag(r, c);
+    },
+    [toggleFlag]
+  );
   const flaggedCount = getFlaggedCount(board);
   const minesLeft = Math.max(0, config.mines - flaggedCount);
   const faceEmoji =
@@ -403,6 +441,7 @@ export const MinesweeperGame: React.FC = () => {
                     onPointerUp={(e) => handlePointerUp(e, r, c)}
                     onPointerCancel={handlePointerCancel}
                     onContextMenu={(e) => handleContextMenu(e, r, c)}
+                    onClick={(e) => e.preventDefault()}
                   >
                     {content !== null && <span className={styles.cellContent}>{content}</span>}
                   </div>
