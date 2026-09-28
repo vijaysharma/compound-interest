@@ -59,6 +59,47 @@
   box-shadow: 0 24px 48px -12px rgba(244, 63, 94, 0.25), 0 12px 24px -8px rgba(0, 0, 0, 0.15);
 }
 
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(255, 255, 255, 0.75);
+  color: #78350f;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  padding: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: #451a03;
+    transform: scale(1.08);
+    border-color: #f59e0b;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.bannerDefeat .closeBtn {
+  border-color: rgba(244, 63, 94, 0.3);
+  color: #9f1239;
+
+  &:hover {
+    border-color: #f43f5e;
+    color: #4c0519;
+  }
+}
+
 .iconHeader {
   font-size: 3.2rem;
   line-height: 1;

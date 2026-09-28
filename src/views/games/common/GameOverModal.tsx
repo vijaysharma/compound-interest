@@ -4,7 +4,7 @@ import Link from '@/navigation';
 import { ConfettiCanvas } from './ConfettiCanvas';
 import type { ScoreBreakdown } from './scoring';
 import { useAuth } from '@/context/useAuth';
-import { FiUser } from 'react-icons/fi';
+import { FiUser, FiX } from 'react-icons/fi';
 import styles from './GameOverModal.module.scss';
 export interface GameOverModalProps {
   outcome: 'won' | 'lost';
@@ -19,6 +19,7 @@ export interface GameOverModalProps {
   onPlayAgain: () => void;
   playAgainLabel?: string;
   hubHref?: string;
+  onClose?: () => void;
 }
 export const GameOverModal: React.FC<GameOverModalProps> = ({
   outcome,
@@ -33,25 +34,51 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   onPlayAgain,
   playAgainLabel = 'Play Again',
   hubHref = '/games',
+  onClose,
 }) => {
+  const [closed, setClosed] = React.useState(false);
   const { user } = useAuth();
   const isWon = outcome === 'won';
   const effectiveName = playerName || user?.user_alias || user?.name || null;
+  const handleClose = () => {
+    setClosed(true);
+    if (onClose) onClose();
+  };
   useEffect(() => {
+    if (closed) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prev;
     };
-  }, []);
+  }, [closed]);
+  if (closed) return null;
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
   return (
-    <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Game complete summary">
-      <div className={`${styles.bannerContainer} ${!isWon ? styles.bannerDefeat : ''}`}>
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Game complete summary"
+      onClick={handleClose}
+    >
+      <div
+        className={`${styles.bannerContainer} ${!isWon ? styles.bannerDefeat : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className={styles.closeBtn}
+          onClick={handleClose}
+          aria-label="Close summary"
+          title="Close"
+        >
+          <FiX size={20} />
+        </button>
         {isWon && <ConfettiCanvas />}
         <div className={styles.iconHeader}>{isWon ? '🏆' : '💥'}</div>
         <h2 className={`${styles.title} ${!isWon ? styles.titleDefeat : ''}`}>
@@ -117,6 +144,9 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           <Link href={hubHref} className={styles.secondaryBtn}>
             All Games
           </Link>
+          <button type="button" className={styles.secondaryBtn} onClick={handleClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>
