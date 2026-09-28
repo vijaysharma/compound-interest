@@ -404,7 +404,7 @@ export const MinesweeperGame: React.FC = () => {
                     onPointerCancel={handlePointerCancel}
                     onContextMenu={(e) => handleContextMenu(e, r, c)}
                   >
-                    {content}
+                    {content !== null && <span className={styles.cellContent}>{content}</span>}
                   </div>
                 );
               })
