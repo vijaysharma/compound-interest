@@ -1,7 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from '@/navigation';
-import { formatGameTime, getGamePersonalBest, getLeaderboardEntries, LeaderboardEntry } from '../common/leaderboardStorage';
+import {
+  formatGameTime,
+  getGamePersonalBest,
+  getLeaderboardEntries,
+  LeaderboardEntry,
+} from '../common/leaderboardStorage';
+import {
+  getGameLeaderboardAction,
+  getGlobalLeaderboardAction,
+  GlobalLeaderboardRecord,
+  LeaderboardRecord,
+} from '@/actions/gameLeaderboard';
 import styles from './GamesHub.module.scss';
 interface GameMeta {
   id: LeaderboardEntry['gameId'];
@@ -52,22 +63,59 @@ const GAMES_LIST: GameMeta[] = [
 ];
 export const GamesHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'games' | 'leaderboard'>('games');
+  const [leaderboardType, setLeaderboardType] = useState<'global' | 'perGame'>('global');
   const [leaderboardFilter, setLeaderboardFilter] = useState<string>('all');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [dbEntries, setDbEntries] = useState<LeaderboardRecord[]>([]);
+  const [globalRankings, setGlobalRankings] = useState<GlobalLeaderboardRecord[]>([]);
   const [personalBests, setPersonalBests] = useState<Record<string, LeaderboardEntry | null>>({});
+  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState<boolean>(false);
   useEffect(() => {
-    const list = getLeaderboardEntries();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEntries(list);
-    const pbMap: Record<string, LeaderboardEntry | null> = {};
-    for (const g of GAMES_LIST) {
-      pbMap[g.id] = getGamePersonalBest(g.id);
-    }
-    setPersonalBests(pbMap);
+    const id = requestAnimationFrame(() => {
+      const list = getLeaderboardEntries();
+      setEntries(list);
+      const pbMap: Record<string, LeaderboardEntry | null> = {};
+      for (const g of GAMES_LIST) {
+        pbMap[g.id] = getGamePersonalBest(g.id);
+      }
+      setPersonalBests(pbMap);
+    });
+    return () => cancelAnimationFrame(id);
   }, [activeTab]);
-  const filteredEntries = leaderboardFilter === 'all'
-    ? entries
-    : entries.filter((e) => e.gameId === leaderboardFilter);
+  useEffect(() => {
+    if (activeTab !== 'leaderboard') return;
+    let active = true;
+    const frameId = requestAnimationFrame(() => {
+      if (active) setIsLoadingLeaderboard(true);
+    });
+    if (leaderboardType === 'global') {
+      getGlobalLeaderboardAction(25)
+        .then((res) => {
+          if (active) {
+            setGlobalRankings(res);
+            setIsLoadingLeaderboard(false);
+          }
+        })
+        .catch(() => {
+          if (active) setIsLoadingLeaderboard(false);
+        });
+    } else {
+      getGameLeaderboardAction(leaderboardFilter, undefined, 25)
+        .then((res) => {
+          if (active) {
+            setDbEntries(res);
+            setIsLoadingLeaderboard(false);
+          }
+        })
+        .catch(() => {
+          if (active) setIsLoadingLeaderboard(false);
+        });
+    }
+    return () => {
+      active = false;
+      cancelAnimationFrame(frameId);
+    };
+  }, [activeTab, leaderboardType, leaderboardFilter]);
   const getMedal = (idx: number) => {
     if (idx === 0) return '🥇';
     if (idx === 1) return '🥈';
@@ -79,7 +127,7 @@ export const GamesHub: React.FC = () => {
       <header className={styles.header}>
         <h1 className={styles.title}>Brain Games &amp; Puzzles</h1>
         <p className={styles.subtitle}>
-          Challenge your mind with classic number puzzles, word searches, and logic games with live personal stats.
+          Challenge your mind with classic number puzzles, word searches, and logic games with persistent global rankings.
         </p>
       </header>
       <div className={styles.tabBar} role="tablist">
@@ -116,20 +164,18 @@ export const GamesHub: React.FC = () => {
                 </div>
                 <h2 className={styles.gameTitle}>{game.title}</h2>
                 <p className={styles.gameDesc}>{game.description}</p>
-                {pb ? (
+                {pb && (
                   <div className={styles.bestScoreBadge}>
-                    <span>🌟</span>
-                    <span>Best Time: {formatGameTime(pb.timeSeconds)}</span>
-                  </div>
-                ) : (
-                  <div className={styles.bestScoreBadge} style={{ background: '#f8fafc', borderColor: '#e2e8f0', color: '#64748b' }}>
-                    <span>🎯</span>
-                    <span>Not played yet</span>
+                    <span>⭐</span>
+                    <span>
+                      Best: {formatGameTime(pb.timeSeconds)}
+                      {pb.totalPoints !== undefined ? ` • ${pb.totalPoints} pts` : ''}
+                    </span>
                   </div>
                 )}
                 <div className={styles.cardFooter}>
                   <Link href={game.href} className={styles.playBtn}>
-                    Play Now →
+                    Play Now
                   </Link>
                 </div>
               </div>
@@ -139,72 +185,151 @@ export const GamesHub: React.FC = () => {
       )}
       {activeTab === 'leaderboard' && (
         <div className={styles.leaderboardSection}>
-          <div className={styles.filterRow}>
+          <div className={styles.viewToggleRow}>
             <button
               type="button"
-              className={`${styles.filterBtn} ${leaderboardFilter === 'all' ? styles.filterBtnActive : ''}`}
-              onClick={() => setLeaderboardFilter('all')}
+              className={`${styles.viewToggleBtn} ${leaderboardType === 'global' ? styles.viewToggleActive : ''}`}
+              onClick={() => setLeaderboardType('global')}
             >
-              All Games
+              🌐 Global Rankings
             </button>
-            {GAMES_LIST.map((g) => (
+            <button
+              type="button"
+              className={`${styles.viewToggleBtn} ${leaderboardType === 'perGame' ? styles.viewToggleActive : ''}`}
+              onClick={() => setLeaderboardType('perGame')}
+            >
+              🎯 Per-Game Scores
+            </button>
+          </div>
+          {leaderboardType === 'perGame' && (
+            <div className={styles.filterRow}>
               <button
-                key={g.id}
                 type="button"
-                className={`${styles.filterBtn} ${leaderboardFilter === g.id ? styles.filterBtnActive : ''}`}
-                onClick={() => setLeaderboardFilter(g.id)}
+                className={`${styles.filterBtn} ${leaderboardFilter === 'all' ? styles.filterBtnActive : ''}`}
+                onClick={() => setLeaderboardFilter('all')}
               >
-                {g.title}
+                All Games
               </button>
-            ))}
-          </div>
-          <div className={styles.tableWrapper}>
-            {filteredEntries.length === 0 ? (
-              <div className={styles.emptyState}>
-                <p>No high scores recorded yet for this game.</p>
-                <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                  Play a round to record your fastest completion time!
-                </p>
-              </div>
-            ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th className={styles.th}>Rank</th>
-                    <th className={styles.th}>Game</th>
-                    <th className={styles.th}>Difficulty</th>
-                    <th className={styles.th}>Time</th>
-                    <th className={styles.th}>Score / Moves</th>
-                    <th className={styles.th}>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEntries.map((e, idx) => (
-                    <tr key={e.id}>
-                      <td className={styles.td}>
-                        <span className={styles.medal}>{getMedal(idx)}</span>
-                      </td>
-                      <td className={styles.td} style={{ fontWeight: 700 }}>
-                        {e.gameName}
-                      </td>
-                      <td className={styles.td} style={{ textTransform: 'capitalize' }}>
-                        {e.difficulty}
-                      </td>
-                      <td className={styles.td} style={{ fontWeight: 800, color: '#1d4ed8' }}>
-                        {formatGameTime(e.timeSeconds)}
-                      </td>
-                      <td className={styles.td}>
-                        {e.score !== undefined ? e.score : '—'}
-                      </td>
-                      <td className={styles.td} style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        {new Date(e.completedAt).toLocaleDateString()}
-                      </td>
+              {GAMES_LIST.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  className={`${styles.filterBtn} ${leaderboardFilter === g.id ? styles.filterBtnActive : ''}`}
+                  onClick={() => setLeaderboardFilter(g.id)}
+                >
+                  {g.title}
+                </button>
+              ))}
+            </div>
+          )}
+          {isLoadingLeaderboard ? (
+            <div className={styles.emptyState}>
+              <p>Loading leaderboard rankings...</p>
+            </div>
+          ) : leaderboardType === 'global' ? (
+            <div className={styles.tableWrapper}>
+              {globalRankings.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p>No global player records yet.</p>
+                  <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                    Complete any puzzle game to earn points and claim your spot on the podium!
+                  </p>
+                </div>
+              ) : (
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th className={styles.th}>Rank</th>
+                      <th className={styles.th}>Player</th>
+                      <th className={styles.th}>Games Played</th>
+                      <th className={styles.th}>Total Points</th>
+                      <th className={styles.th}>Top Game</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+                  </thead>
+                  <tbody>
+                    {globalRankings.map((r, idx) => (
+                      <tr key={r.userId} className={idx < 3 ? styles.topRow : ''}>
+                        <td className={styles.td}>
+                          <span className={styles.medal}>{getMedal(idx)}</span>
+                        </td>
+                        <td className={styles.td} style={{ fontWeight: 800 }}>
+                          {r.playerName}
+                        </td>
+                        <td className={styles.td}>{r.totalGames}</td>
+                        <td className={styles.td} style={{ fontWeight: 900, color: '#2563eb' }}>
+                          {r.totalPoints.toLocaleString()}
+                        </td>
+                        <td className={styles.td} style={{ textTransform: 'capitalize' }}>
+                          {r.bestGame}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              {(dbEntries.length > 0 ? dbEntries : entries.filter((e) => leaderboardFilter === 'all' || e.gameId === leaderboardFilter)).length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p>No high scores recorded yet for this game.</p>
+                  <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                    Play a round to record your score on the leaderboard!
+                  </p>
+                </div>
+              ) : (
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th className={styles.th}>Rank</th>
+                      <th className={styles.th}>Player</th>
+                      <th className={styles.th}>Game</th>
+                      <th className={styles.th}>Difficulty</th>
+                      <th className={styles.th}>Time</th>
+                      <th className={styles.th}>Points</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(dbEntries.length > 0
+                      ? dbEntries
+                      : entries
+                          .filter((e) => leaderboardFilter === 'all' || e.gameId === leaderboardFilter)
+                          .map((e, idx) => ({
+                            id: e.id,
+                            playerName: 'Player',
+                            gameId: e.gameId,
+                            difficulty: e.difficulty,
+                            timeSeconds: e.timeSeconds,
+                            totalPoints: e.totalPoints ?? (e.score ? e.score * 10 : 500),
+                            rank: idx + 1,
+                          }))
+                    ).map((e, idx) => (
+                      <tr key={e.id} className={idx < 3 ? styles.topRow : ''}>
+                        <td className={styles.td}>
+                          <span className={styles.medal}>{getMedal(idx)}</span>
+                        </td>
+                        <td className={styles.td} style={{ fontWeight: 700 }}>
+                          {(e as LeaderboardRecord).playerName || 'Player'}
+                        </td>
+                        <td className={styles.td} style={{ fontWeight: 700, textTransform: 'capitalize' }}>
+                          {e.gameId}
+                        </td>
+                        <td className={styles.td} style={{ textTransform: 'capitalize' }}>
+                          {e.difficulty}
+                        </td>
+                        <td className={styles.td} style={{ fontWeight: 800, color: '#1d4ed8' }}>
+                          {formatGameTime(e.timeSeconds)}
+                        </td>
+                        <td className={styles.td} style={{ fontWeight: 800, color: '#16a34a' }}>
+                          {e.totalPoints !== undefined ? e.totalPoints.toLocaleString() : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -16,8 +16,12 @@ import type {
 import { areNeighbors, getBoardSignature } from './generator';
 import { generateBoardAsync } from './workerClient';
 import { PRESET_BOARDS } from './boards';
-import { VictoryBanner } from '../common/VictoryBanner';
+import { GameOverModal } from '../common/GameOverModal';
+import { QuitButton, QuitModal } from '../common/QuitModal';
 import { recordGameScore } from '../common/leaderboardStorage';
+import type { ScoreBreakdown } from '../common/scoring';
+import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
+import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 import styles from './WordPathGame.module.scss';
 const DIFFICULTY_CONFIG: Record<
   Difficulty,
@@ -44,10 +48,11 @@ const storePlayedSignature = (signature: string) => {
   try {
     const existing = getStoredPlayedSignatures();
     existing.add(signature);
-    window.localStorage.setItem(
-      STORAGE_KEY_PLAYED,
-      JSON.stringify(Array.from(existing))
-    );
+    const arr = Array.from(existing);
+    window.localStorage.setItem(STORAGE_KEY_PLAYED, JSON.stringify(arr));
+    const token = getAuthToken();
+    const guestId = getOrCreateGuestId();
+    void saveUserAppStateAction(token, guestId, 'games', 'word_path_played', arr);
   } catch {
     // Ignore storage write error
   }
@@ -71,16 +76,33 @@ export const WordPathGame: React.FC = () => {
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [board, setBoard] = useState<BoardDefinition>(PRESET_BOARDS.medium[0]);
   useEffect(() => {
+    let active = true;
+    const token = getAuthToken();
+    const guestId = getOrCreateGuestId();
+    void getUserAppStateAction<string[]>(token, guestId, 'games', 'word_path_played').then((res) => {
+      if (active && res.success && Array.isArray(res.payload)) {
+        try {
+          const combined = new Set([...getStoredPlayedSignatures(), ...res.payload]);
+          window.localStorage.setItem(STORAGE_KEY_PLAYED, JSON.stringify(Array.from(combined)));
+        } catch {
+          // ignore
+        }
+      }
+    });
     const playedSigs = getStoredPlayedSignatures();
     const defaultSig = getBoardSignature(PRESET_BOARDS.medium[0]);
     if (playedSigs.has(defaultSig)) {
       void getNextUniqueBoardAsync('medium', playedSigs).then((nextBoard) => {
+        if (!active) return;
         storePlayedSignature(getBoardSignature(nextBoard));
         setBoard(nextBoard);
       });
     } else {
       storePlayedSignature(defaultSig);
     }
+    return () => {
+      active = false;
+    };
   }, []);
   const [solvedWordIds, setSolvedWordIds] = useState<Set<string>>(new Set());
   const [activePath, setActivePath] = useState<Coordinate[]>([]);
@@ -93,6 +115,8 @@ export const WordPathGame: React.FC = () => {
   const [showResultsModal, setShowResultsModal] = useState<boolean>(false);
   const isWon = Boolean(board && board.words.length > 0 && solvedWordIds.size === board.words.length);
   const [personalBest, setPersonalBest] = useState<boolean>(false);
+  const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
+  const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
   const handleWordPathWin = useCallback(
     (seconds: number) => {
       setIsTimerRunning(false);
@@ -103,11 +127,14 @@ export const WordPathGame: React.FC = () => {
         gameName: 'Word Path',
         difficulty,
         timeSeconds: seconds,
-        score: board.words.length,
+        hintsUsed,
+        accuracy: '100%',
+        outcome: 'won',
       });
       setPersonalBest(res.isPersonalBest);
+      setScoreBreakdown(res.scoreBreakdown);
     },
-    [board, difficulty]
+    [board, difficulty, hintsUsed]
   );
   const [howToPlayOpen, setHowToPlayOpen] = useState<boolean>(true);
   const [keyboardOpen, setKeyboardOpen] = useState<boolean>(true);
@@ -535,6 +562,7 @@ export const WordPathGame: React.FC = () => {
           >
             <FiRefreshCw aria-hidden="true" />
           </button>
+          <QuitButton onClick={() => setShowQuitModal(true)} />
         </div>
       </div>
       {/* Topic Name */}
@@ -781,9 +809,12 @@ export const WordPathGame: React.FC = () => {
         )}
       </div>
       {isWon && (
-        <VictoryBanner
+        <GameOverModal
+          outcome="won"
           gameTitle={`Word Path (${difficulty.toUpperCase()})`}
           subtitle={`You discovered all ${board.words.length} words in ${formatTime(elapsedSeconds)}!`}
+          scoreBreakdown={scoreBreakdown || undefined}
+          timeSeconds={elapsedSeconds}
           stats={[
             { label: 'Time', value: formatTime(elapsedSeconds) },
             { label: 'Words Found', value: `${solvedWordIds.size}/${board.words.length}` },
@@ -795,6 +826,12 @@ export const WordPathGame: React.FC = () => {
           hubHref="/games"
         />
       )}
+      <QuitModal
+        isOpen={showQuitModal}
+        gameTitle="Word Path"
+        onCancel={() => setShowQuitModal(false)}
+        onConfirmQuit={() => setShowQuitModal(false)}
+      />
       {!isWon && (
         <button
           type="button"

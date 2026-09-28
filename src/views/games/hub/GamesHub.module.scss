@@ -161,12 +161,45 @@
   gap: 16px;
   width: 100%;
 }
+.viewToggleRow {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.viewToggleBtn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  &:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+}
+.viewToggleActive {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  &:hover {
+    background: #1d4ed8;
+    color: #ffffff;
+  }
+}
 .filterRow {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
 }
+
 .filterBtn {
   border: 1px solid #cbd5e1;
   background: #ffffff;
@@ -221,9 +254,17 @@
   border-bottom: 1px solid #f1f5f9;
   color: #1e293b;
 }
+.topRow {
+  background: rgba(248, 250, 252, 0.7);
+  font-weight: 600;
+  &:first-child {
+    background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+  }
+}
 .medal {
   font-size: 1.1rem;
 }
+
 .emptyState {
   text-align: center;
   padding: 40px 20px;

@@ -11,8 +11,10 @@ import {
 } from './engine';
 import { getPreset, MOBILE_PRESETS, WEB_PRESETS } from './types';
 import type { Cell, CellState, MinesweeperDifficulty } from './types';
-import { VictoryBanner } from '../common/VictoryBanner';
+import { GameOverModal } from '../common/GameOverModal';
+import { QuitButton, QuitModal } from '../common/QuitModal';
 import { recordGameScore } from '../common/leaderboardStorage';
+import type { ScoreBreakdown } from '../common/scoring';
 import styles from './MinesweeperGame.module.scss';
 type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
 export const MinesweeperGame: React.FC = () => {
@@ -27,6 +29,8 @@ export const MinesweeperGame: React.FC = () => {
   const [isFaceSurprised, setIsFaceSurprised] = useState<boolean>(false);
   const [zoom, setZoom] = useState<number>(1.0);
   const [personalBest, setPersonalBest] = useState<boolean>(false);
+  const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
+  const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
   const handleZoomIn = () => setZoom((prev) => Math.min(2.0, Math.round((prev + 0.15) * 100) / 100));
   const handleZoomOut = () => setZoom((prev) => Math.max(0.6, Math.round((prev - 0.15) * 100) / 100));
   const handleZoomReset = () => setZoom(1.0);
@@ -43,6 +47,7 @@ export const MinesweeperGame: React.FC = () => {
     setGameStatus('idle');
     setElapsedSeconds(0);
     setIsFaceSurprised(false);
+    setScoreBreakdown(null);
   }, []);
   useEffect(() => {
     const handleResize = () => {
@@ -95,9 +100,26 @@ export const MinesweeperGame: React.FC = () => {
         difficulty,
         timeSeconds: elapsedSeconds,
         accuracy: '100%',
+        outcome: 'won',
       });
       setPersonalBest(res.isPersonalBest);
+      setScoreBreakdown(res.scoreBreakdown);
       setGameStatus('won');
+    },
+    [difficulty, elapsedSeconds]
+  );
+  const handleLose = useCallback(
+    (currentBoard: Cell[][]) => {
+      setBoard(currentBoard);
+      const res = recordGameScore({
+        gameId: 'minesweeper',
+        gameName: 'Minesweeper',
+        difficulty,
+        timeSeconds: elapsedSeconds,
+        outcome: 'lost',
+      });
+      setScoreBreakdown(res.scoreBreakdown);
+      setGameStatus('lost');
     },
     [difficulty, elapsedSeconds]
   );
@@ -120,8 +142,7 @@ export const MinesweeperGame: React.FC = () => {
             if (cell.isMine) cell.state = 'revealed';
           });
         });
-        setBoard(currentBoard);
-        setGameStatus('lost');
+        handleLose(currentBoard);
         return;
       }
       if (target.neighborMines === 0) {
@@ -135,7 +156,7 @@ export const MinesweeperGame: React.FC = () => {
       }
       setBoard(currentBoard);
     },
-    [board, gameStatus, config, handleWin]
+    [board, gameStatus, config, handleWin, handleLose]
   );
   // Chording: clicking a revealed numbered cell
   const handleChord = useCallback(
@@ -268,6 +289,7 @@ export const MinesweeperGame: React.FC = () => {
           <h1 className={styles.title}>Minesweeper</h1>
           <p className={styles.subtitle}>Uncover safe tiles without detonating hidden mines</p>
         </div>
+        <QuitButton onClick={() => setShowQuitModal(true)} />
       </header>
       <div className={styles.controlsRow}>
         <div className={styles.difficultySelector} role="radiogroup" aria-label="Difficulty">
@@ -390,10 +412,17 @@ export const MinesweeperGame: React.FC = () => {
           </div>
         </div>
       </div>
-      {gameStatus === 'won' && (
-        <VictoryBanner
+      {(gameStatus === 'won' || gameStatus === 'lost') && (
+        <GameOverModal
+          outcome={gameStatus}
           gameTitle={`Minesweeper (${activePresets[difficulty].label})`}
-          subtitle={`You swept all ${config.mines} hidden mines!`}
+          subtitle={
+            gameStatus === 'won'
+              ? `You swept all ${config.mines} hidden mines!`
+              : 'You detonated a mine! Review your board and try again.'
+          }
+          scoreBreakdown={scoreBreakdown || undefined}
+          timeSeconds={elapsedSeconds}
           stats={[
             { label: 'Time', value: `${elapsedSeconds}s` },
             { label: 'Difficulty', value: activePresets[difficulty].label },
@@ -405,6 +434,12 @@ export const MinesweeperGame: React.FC = () => {
           hubHref="/games"
         />
       )}
+      <QuitModal
+        isOpen={showQuitModal}
+        gameTitle="Minesweeper"
+        onCancel={() => setShowQuitModal(false)}
+        onConfirmQuit={() => setShowQuitModal(false)}
+      />
       <div className={styles.mobileControls}>
         <button
           type="button"

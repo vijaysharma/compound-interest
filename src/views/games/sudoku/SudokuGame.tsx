@@ -4,8 +4,12 @@ import { FiClock, FiEdit2, FiHelpCircle, FiPause, FiPlay, FiRefreshCw, FiRotateC
 import { PRESET_SUDOKU } from './presets';
 import { generatePuzzle } from './generator';
 import type { SudokuDifficulty, SudokuMove, SudokuState } from './types';
-import { VictoryBanner } from '../common/VictoryBanner';
+import { GameOverModal } from '../common/GameOverModal';
+import { QuitButton, QuitModal } from '../common/QuitModal';
 import { recordGameScore } from '../common/leaderboardStorage';
+import type { ScoreBreakdown } from '../common/scoring';
+import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
+import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 import styles from './SudokuGame.module.scss';
 const STORAGE_KEY = 'rupee_calc_sudoku_state';
 function formatTimer(seconds: number): string {
@@ -27,14 +31,18 @@ export const SudokuGame: React.FC = () => {
   const [isComplete, setIsComplete] = useState<boolean>(false);
   const [hintsUsed, setHintsUsed] = useState<number>(0);
   const [personalBest, setPersonalBest] = useState<boolean>(false);
+  const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
+  const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
   // Restore saved state
   useEffect(() => {
+    let active = true;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved: SudokuState = JSON.parse(raw);
         if (saved && saved.grid && saved.solution && saved.initial) {
           requestAnimationFrame(() => {
+            if (!active) return;
             setDifficulty(saved.difficulty || 'easy');
             setInitialGrid(saved.initial);
             setSolutionGrid(saved.solution);
@@ -49,25 +57,51 @@ export const SudokuGame: React.FC = () => {
     } catch {
       // Ignore storage error
     }
+    const token = getAuthToken();
+    const guestId = getOrCreateGuestId();
+    void getUserAppStateAction<SudokuState>(token, guestId, 'games', 'sudoku').then((res) => {
+      if (active && res.success && res.payload) {
+        const saved = res.payload;
+        if (saved.grid && saved.solution && saved.initial) {
+          setDifficulty(saved.difficulty || 'easy');
+          setInitialGrid(saved.initial);
+          setSolutionGrid(saved.solution);
+          setGrid(saved.grid);
+          setNotes(saved.notes || {});
+          setElapsedSeconds(saved.elapsedSeconds || 0);
+          setIsComplete(saved.isComplete || false);
+          setHintsUsed(saved.hintsUsed || 0);
+        }
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, []);
   // Persist state
   useEffect(() => {
+    const stateToSave: SudokuState = {
+      grid,
+      solution: solutionGrid,
+      initial: initialGrid,
+      notes,
+      difficulty,
+      elapsedSeconds,
+      isPaused,
+      isComplete,
+      hintsUsed,
+    };
     try {
-      const stateToSave: SudokuState = {
-        grid,
-        solution: solutionGrid,
-        initial: initialGrid,
-        notes,
-        difficulty,
-        elapsedSeconds,
-        isPaused,
-        isComplete,
-        hintsUsed,
-      };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch {
       // Ignore storage error
     }
+    const timeout = setTimeout(() => {
+      const token = getAuthToken();
+      const guestId = getOrCreateGuestId();
+      void saveUserAppStateAction(token, guestId, 'games', 'sudoku', stateToSave);
+    }, 600);
+    return () => clearTimeout(timeout);
   }, [grid, solutionGrid, initialGrid, notes, difficulty, elapsedSeconds, isPaused, isComplete, hintsUsed]);
   // Timer effect
   useEffect(() => {
@@ -113,6 +147,7 @@ export const SudokuGame: React.FC = () => {
     setIsComplete(false);
     setHintsUsed(0);
     setPersonalBest(false);
+    setScoreBreakdown(null);
   }, []);
   const triggerWin = useCallback(
     (seconds: number) => {
@@ -122,11 +157,14 @@ export const SudokuGame: React.FC = () => {
         gameName: 'Sudoku',
         difficulty,
         timeSeconds: seconds,
+        hintsUsed,
         accuracy: '100%',
+        outcome: 'won',
       });
       setPersonalBest(res.isPersonalBest);
+      setScoreBreakdown(res.scoreBreakdown);
     },
-    [difficulty]
+    [difficulty, hintsUsed]
   );
   const handleCellClick = (r: number, c: number) => {
     if (isPaused) setIsPaused(false);
@@ -316,9 +354,12 @@ export const SudokuGame: React.FC = () => {
           <h1 className={styles.title}>Sudoku</h1>
           <p className={styles.subtitle}>Fill each row, column, and 3×3 box with digits 1–9</p>
         </div>
-        <div className={styles.timerBadge}>
-          <FiClock aria-hidden="true" />
-          <span>{formatTimer(elapsedSeconds)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className={styles.timerBadge}>
+            <FiClock aria-hidden="true" />
+            <span>{formatTimer(elapsedSeconds)}</span>
+          </div>
+          <QuitButton onClick={() => setShowQuitModal(true)} />
         </div>
       </header>
       <div className={styles.topControls}>
@@ -420,9 +461,12 @@ export const SudokuGame: React.FC = () => {
         )}
       </div>
       {isComplete && (
-        <VictoryBanner
+        <GameOverModal
+          outcome="won"
           gameTitle={`Sudoku (${difficulty.toUpperCase()})`}
           subtitle={`You solved the ${difficulty} puzzle in ${formatTimer(elapsedSeconds)}!`}
+          scoreBreakdown={scoreBreakdown || undefined}
+          timeSeconds={elapsedSeconds}
           stats={[
             { label: 'Time', value: formatTimer(elapsedSeconds) },
             { label: 'Difficulty', value: difficulty },
@@ -434,6 +478,12 @@ export const SudokuGame: React.FC = () => {
           hubHref="/games"
         />
       )}
+      <QuitModal
+        isOpen={showQuitModal}
+        gameTitle="Sudoku"
+        onCancel={() => setShowQuitModal(false)}
+        onConfirmQuit={() => setShowQuitModal(false)}
+      />
       <div className={styles.actionToolbar}>
         <button
           type="button"

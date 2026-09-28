@@ -2,8 +2,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FiRefreshCw } from 'react-icons/fi';
 import { canSlide, getShuffledBoard, isSolved, slideInDirection, slideTiles } from './engine';
-import { VictoryBanner } from '../common/VictoryBanner';
+import { GameOverModal } from '../common/GameOverModal';
+import { QuitButton, QuitModal } from '../common/QuitModal';
 import { formatGameTime, recordGameScore } from '../common/leaderboardStorage';
+import type { ScoreBreakdown } from '../common/scoring';
 import styles from './SlidePuzzleGame.module.scss';
 export const SlidePuzzleGame: React.FC = () => {
   const [tiles, setTiles] = useState<number[]>(() => getShuffledBoard());
@@ -12,6 +14,8 @@ export const SlidePuzzleGame: React.FC = () => {
   const [isWon, setIsWon] = useState<boolean>(false);
   const [isStarted, setIsStarted] = useState<boolean>(false);
   const [personalBest, setPersonalBest] = useState<boolean>(false);
+  const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
+  const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const resetGame = useCallback(() => {
     setTiles(getShuffledBoard());
@@ -20,6 +24,7 @@ export const SlidePuzzleGame: React.FC = () => {
     setIsWon(false);
     setIsStarted(false);
     setPersonalBest(false);
+    setScoreBreakdown(null);
   }, []);
   useEffect(() => {
     if (!isStarted || isWon) return;
@@ -43,9 +48,11 @@ export const SlidePuzzleGame: React.FC = () => {
         gameName: '15-Slide Puzzle',
         difficulty: '4x4',
         timeSeconds: elapsedSeconds + 1,
-        score: nextMoves,
+        moves: nextMoves,
+        outcome: 'won',
       });
       setPersonalBest(res.isPersonalBest);
+      setScoreBreakdown(res.scoreBreakdown);
     }
   };
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -77,9 +84,11 @@ export const SlidePuzzleGame: React.FC = () => {
         gameName: '15-Slide Puzzle',
         difficulty: '4x4',
         timeSeconds: elapsedSeconds + 1,
-        score: nextMoves,
+        moves: nextMoves,
+        outcome: 'won',
       });
       setPersonalBest(res.isPersonalBest);
+      setScoreBreakdown(res.scoreBreakdown);
     }
   };
   return (
@@ -89,6 +98,7 @@ export const SlidePuzzleGame: React.FC = () => {
           <h1 className={styles.title}>15-Slide Puzzle</h1>
           <p className={styles.subtitle}>Slide tiles into ascending 1 to 15 sequence</p>
         </div>
+        <QuitButton onClick={() => setShowQuitModal(true)} />
       </header>
       <div className={styles.hudBar}>
         <div className={styles.hudStat}>
@@ -105,9 +115,12 @@ export const SlidePuzzleGame: React.FC = () => {
         </div>
       </div>
       {isWon && (
-        <VictoryBanner
+        <GameOverModal
+          outcome="won"
           gameTitle="15-Slide Puzzle"
           subtitle="You solved the puzzle in numerical order!"
+          scoreBreakdown={scoreBreakdown || undefined}
+          timeSeconds={elapsedSeconds}
           stats={[
             { label: 'Moves', value: moves },
             { label: 'Time', value: formatGameTime(elapsedSeconds) },
@@ -119,6 +132,12 @@ export const SlidePuzzleGame: React.FC = () => {
           hubHref="/games"
         />
       )}
+      <QuitModal
+        isOpen={showQuitModal}
+        gameTitle="15-Slide Puzzle"
+        onCancel={() => setShowQuitModal(false)}
+        onConfirmQuit={() => setShowQuitModal(false)}
+      />
       <div
         className={styles.boardWrapper}
         onPointerDown={handlePointerDown}
