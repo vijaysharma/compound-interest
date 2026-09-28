@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { resolveDateRange } from '../../utilities/dateGuards';
+import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
+import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 import type { SipSavedState, StoredPinnedFund } from './types';
 const STORAGE_KEY = 'mutual_fund_sip_state';
 export const getDefaultSipState = (): SipSavedState => ({
@@ -60,24 +62,39 @@ export function useSipStorage(
 ) {
   const isLoadedRef = useRef(false);
   const onRestoreRef = useRef(onRestore);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     onRestoreRef.current = onRestore;
   }, [onRestore]);
   useEffect(() => {
     if (isLoadedRef.current) return;
-    const id = requestAnimationFrame(() => {
+    const handleRestore = async () => {
+      let saved = loadSavedSipState();
       try {
-        const saved = loadSavedSipState();
-        onRestoreRef.current(saved);
-      } catch (err) {
-        console.warn('Failed to restore SIP state:', err);
-      } finally {
-        isLoadedRef.current = true;
+        const token = getAuthToken();
+        const guestId = getOrCreateGuestId();
+        const serverRes = await getUserAppStateAction<SipSavedState>(
+          token,
+          guestId,
+          'mutual_funds',
+          'sip'
+        );
+        if (serverRes.success && serverRes.payload) {
+          saved = {
+            ...saved,
+            ...serverRes.payload,
+          };
+        }
+      } catch {
+        // Fall back to local saved state
       }
+      onRestoreRef.current(saved);
+      isLoadedRef.current = true;
+    };
+    const id = requestAnimationFrame(() => {
+      void handleRestore();
     });
     return () => cancelAnimationFrame(id);
-    // Restore must run exactly once; the callback is read through a ref so an
-    // unstable `onRestore` identity cannot re-trigger it (infinite render loop).
   }, []);
   useEffect(() => {
     if (!isLoadedRef.current || typeof window === 'undefined') return;
@@ -86,5 +103,14 @@ export function useSipStorage(
     } catch (err) {
       console.warn('Failed to persist SIP state:', err);
     }
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      const token = getAuthToken();
+      const guestId = getOrCreateGuestId();
+      void saveUserAppStateAction(token, guestId, 'mutual_funds', 'sip', currentState);
+    }, 500);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
   }, [currentState]);
 }

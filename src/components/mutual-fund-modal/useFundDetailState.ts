@@ -5,6 +5,8 @@ import { isoDateToNavDate, navDateToISO } from '../../utilities/utility';
 import { getTodayISO, resolveDateRange } from '../../utilities/dateGuards';
 import type { DetailedFundItem, InvestmentType, TaxMode, FundModalState } from './types';
 import { parseDateParts, getPresetStartDateISO, getFundCategory } from './utils';
+import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
+import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 export function useFundDetailState(fund: DetailedFundItem | null): FundModalState & {
   navData: NavType[];
 } {
@@ -37,28 +39,47 @@ export function useFundDetailState(fund: DetailedFundItem | null): FundModalStat
   useEffect(() => {
     if (!fund?.schemeCode || typeof window === 'undefined') return;
     const raw = window.localStorage.getItem('mf_modal_state_' + fund.schemeCode);
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (parsed.investmentType) setInvestmentType(parsed.investmentType);
-      if (parsed.customInvestmentValue) setCustomInvestmentValue(parsed.customInvestmentValue);
-      if (parsed.taxMode) setTaxMode(parsed.taxMode);
-      if (parsed.customStartDateISO) setCustomStartDateISO(parsed.customStartDateISO);
-      if (parsed.customEndDateISO) setCustomEndDateISO(parsed.customEndDateISO);
-      if (parsed.activePreset) setActivePreset(parsed.activePreset);
-    } catch {
-      // Ignore read errors
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (parsed.investmentType) setInvestmentType(parsed.investmentType);
+        if (parsed.customInvestmentValue) setCustomInvestmentValue(parsed.customInvestmentValue);
+        if (parsed.taxMode) setTaxMode(parsed.taxMode);
+        if (parsed.customStartDateISO) setCustomStartDateISO(parsed.customStartDateISO);
+        if (parsed.customEndDateISO) setCustomEndDateISO(parsed.customEndDateISO);
+        if (parsed.activePreset) setActivePreset(parsed.activePreset);
+      } catch {
+        // Ignore read errors
+      }
     }
+    const token = getAuthToken();
+    const guestId = getOrCreateGuestId();
+    void getUserAppStateAction<Record<string, unknown>>(token, guestId, 'mf_modal', fund.schemeCode).then((res) => {
+      if (res.success && res.payload) {
+        const p = res.payload;
+        if (p.investmentType) setInvestmentType(p.investmentType as InvestmentType);
+        if (p.customInvestmentValue) setCustomInvestmentValue(String(p.customInvestmentValue));
+        if (p.taxMode) setTaxMode(p.taxMode as TaxMode);
+        if (p.customStartDateISO) setCustomStartDateISO(String(p.customStartDateISO));
+        if (p.customEndDateISO) setCustomEndDateISO(String(p.customEndDateISO));
+      }
+    });
   }, [fund?.schemeCode]);
   useEffect(() => {
     if (!fund?.schemeCode || typeof window === 'undefined') return;
+    const payload = { investmentType, customInvestmentValue, taxMode, customStartDateISO, customEndDateISO };
     try {
-      const payload = { investmentType, customInvestmentValue, taxMode, customStartDateISO, customEndDateISO };
       window.localStorage.setItem('mf_modal_state_' + fund.schemeCode, JSON.stringify(payload));
     } catch {
       // Ignore write errors
     }
+    const timeout = setTimeout(() => {
+      const token = getAuthToken();
+      const guestId = getOrCreateGuestId();
+      void saveUserAppStateAction(token, guestId, 'mf_modal', fund.schemeCode, payload);
+    }, 600);
+    return () => clearTimeout(timeout);
   }, [fund?.schemeCode, investmentType, customInvestmentValue, taxMode, customStartDateISO, customEndDateISO]);
   useEffect(() => {
     if (!fund?.schemeCode) return;

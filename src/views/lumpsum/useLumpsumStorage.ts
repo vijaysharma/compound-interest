@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import type { LumpsumSavedState, PinnedFund } from '../../components/mutual-fund/types';
 import { resolveDateRange } from '../../utilities/dateGuards';
 import { getChartSeriesColor } from '../../data/chartColors';
+import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
+import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 const STORAGE_KEY = 'mutual_fund_lumpsum_state';
 export const getDefaultLumpsumState = (): LumpsumSavedState => ({
   searchKey: 'Kotak Arbitrage Fund',
@@ -53,13 +55,32 @@ export function useLumpsumStorage(
 ) {
   const isLoadedRef = useRef(false);
   const onRestoreRef = useRef(onRestore);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     onRestoreRef.current = onRestore;
   }, [onRestore]);
   useEffect(() => {
     if (isLoadedRef.current) return;
-    const handleRestore = () => {
-      const saved = loadSavedLumpsumState();
+    const handleRestore = async () => {
+      let saved = loadSavedLumpsumState();
+      try {
+        const token = getAuthToken();
+        const guestId = getOrCreateGuestId();
+        const serverRes = await getUserAppStateAction<LumpsumSavedState>(
+          token,
+          guestId,
+          'mutual_funds',
+          'lumpsum'
+        );
+        if (serverRes.success && serverRes.payload) {
+          saved = {
+            ...saved,
+            ...serverRes.payload,
+          };
+        }
+      } catch {
+        // Fall back to local saved state
+      }
       if (saved.pinnedFunds && saved.pinnedFunds.length > 0) {
         saved.pinnedFunds = saved.pinnedFunds.map((fund, index) => ({
           ...fund,
@@ -69,10 +90,10 @@ export function useLumpsumStorage(
       onRestoreRef.current(saved);
       isLoadedRef.current = true;
     };
-    const id = requestAnimationFrame(handleRestore);
+    const id = requestAnimationFrame(() => {
+      void handleRestore();
+    });
     return () => cancelAnimationFrame(id);
-    // Restore must run exactly once; the callback is read through a ref so an
-    // unstable `onRestore` identity cannot re-trigger it (infinite render loop).
   }, []);
   useEffect(() => {
     if (!isLoadedRef.current || typeof window === 'undefined') return;
@@ -81,5 +102,14 @@ export function useLumpsumStorage(
     } catch (err) {
       console.warn('Failed to persist mutual fund state:', err);
     }
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      const token = getAuthToken();
+      const guestId = getOrCreateGuestId();
+      void saveUserAppStateAction(token, guestId, 'mutual_funds', 'lumpsum', currentState);
+    }, 500);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
   }, [currentState]);
 }
