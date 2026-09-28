@@ -1,0 +1,254 @@
+'use client';
+import React, { useMemo } from 'react';
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ReferenceLine,
+} from 'recharts';
+import type { ProcessedFIIDIIPoint, AdjustmentMode, ViewMode } from '@/lib/fiiDii/fiiDiiCalculations';
+import { FiiDiiTooltip } from './FiiDiiTooltip';
+import styles from './FiiDiiTracker.module.scss';
+interface FiiDiiChartProps {
+  points: ProcessedFIIDIIPoint[];
+  adjustmentMode: AdjustmentMode;
+  viewMode: ViewMode;
+  showNifty: boolean;
+  showSensex: boolean;
+  isLoading?: boolean;
+}
+export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
+  points,
+  adjustmentMode,
+  viewMode,
+  showNifty,
+  showSensex,
+  isLoading,
+}) => {
+  // Format Left Y-Axis ticks
+  const formatLeftAxisTick = (val: number) => {
+    if (val === 0) return '0';
+    const abs = Math.abs(val);
+    const sign = val < 0 ? '-' : '';
+    if (adjustmentMode === 'ppp') {
+      if (abs >= 1000) return `${sign}$${(abs / 1000).toFixed(1)}B`;
+      return `${sign}$${abs.toFixed(0)}M`;
+    }
+    if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(1)}L Cr`;
+    if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(0)}k Cr`;
+    return `${sign}₹${abs.toFixed(0)} Cr`;
+  };
+  // Format Right Y-Axis ticks (Index levels)
+  const formatRightAxisTick = (val: number) => {
+    if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
+    return val.toLocaleString();
+  };
+  // Calculate dynamic Right Y-Axis domain for Index lines
+  const rightAxisDomain = useMemo(() => {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const p of points) {
+      if (showNifty && p.niftyClose && p.niftyClose > 0) {
+        if (p.niftyClose < min) min = p.niftyClose;
+        if (p.niftyClose > max) max = p.niftyClose;
+      }
+      if (showSensex && p.sensexClose && p.sensexClose > 0) {
+        if (p.sensexClose < min) min = p.sensexClose;
+        if (p.sensexClose > max) max = p.sensexClose;
+      }
+    }
+    if (min === Infinity || max === -Infinity) {
+      return ['auto', 'auto'];
+    }
+    const padding = (max - min) * 0.1;
+    return [Math.floor(min - padding), Math.ceil(max + padding)];
+  }, [points, showNifty, showSensex]);
+  // Downsample data if large (>400 points) to keep mobile rendering smooth
+  const chartData = useMemo(() => {
+    if (points.length <= 400) return points;
+    const step = Math.ceil(points.length / 300);
+    const sampled: ProcessedFIIDIIPoint[] = [];
+    for (let i = 0; i < points.length; i += step) {
+      sampled.push(points[i]);
+    }
+    // Always include the latest point
+    if (sampled[sampled.length - 1] !== points[points.length - 1]) {
+      sampled.push(points[points.length - 1]);
+    }
+    return sampled;
+  }, [points]);
+  if (isLoading) {
+    return (
+      <div className={styles.chartPlaceholder}>
+        <div className={styles.spinner} />
+        <p>Crunching institutional flow data & index movements...</p>
+      </div>
+    );
+  }
+  if (points.length === 0) {
+    return (
+      <div className={styles.chartPlaceholder}>
+        <p>No institutional flow records found for the selected timeframe.</p>
+      </div>
+    );
+  }
+  const isCumulative = viewMode === 'cumulative';
+  const hasRightAxis = showNifty || showSensex;
+  return (
+    <div className={styles.chartCard}>
+      <div className={styles.chartHeader}>
+        <div className={styles.chartTitleGroup}>
+          <h3 className={styles.chartMainTitle}>
+            {isCumulative ? 'Cumulative Net Institutional Flow' : 'Daily Net Institutional Flow'}
+          </h3>
+          <span className={styles.chartSubTitle}>
+            {adjustmentMode === 'nominal'
+              ? 'Values in ₹ Crores (Nominal)'
+              : adjustmentMode === 'inflation'
+                ? 'Inflation Adjusted (Base: Latest CPI)'
+                : 'Purchasing Power Parity Adjusted (in $ Million)'}
+            {hasRightAxis && ' • Dual Axis with Stock Index Overlay'}
+          </span>
+        </div>
+      </div>
+      <div className={styles.chartWrapper}>
+        <ResponsiveContainer width="100%" height={400}>
+          <ComposedChart
+            data={chartData}
+            margin={{ top: 12, right: hasRightAxis ? 12 : 6, left: -10, bottom: 6 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
+            <XAxis
+              dataKey="formattedDate"
+              stroke="#94a3b8"
+              fontSize={11}
+              tickLine={false}
+              axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
+              interval="preserveStartEnd"
+              minTickGap={28}
+            />
+            {/* Left Y-Axis: FII / DII Flows */}
+            <YAxis
+              yAxisId="left"
+              stroke="#94a3b8"
+              fontSize={11}
+              tickLine={false}
+              axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
+              tickFormatter={formatLeftAxisTick}
+              width={68}
+            />
+            {/* Right Y-Axis: Stock Indices (Nifty 50 / Sensex) */}
+            {hasRightAxis && (
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                stroke="#64748b"
+                fontSize={11}
+                tickLine={false}
+                axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
+                domain={rightAxisDomain}
+                tickFormatter={formatRightAxisTick}
+                width={52}
+              />
+            )}
+            <ReferenceLine y={0} yAxisId="left" stroke="#cbd5e1" strokeDasharray="4 4" />
+            <Tooltip
+              content={
+                <FiiDiiTooltip
+                  adjustmentMode={adjustmentMode}
+                  viewMode={viewMode}
+                  showNifty={showNifty}
+                  showSensex={showSensex}
+                />
+              }
+              cursor={{ stroke: 'rgba(99, 102, 241, 0.25)', strokeWidth: 1.5 }}
+            />
+            <Legend
+              verticalAlign="top"
+              align="right"
+              iconType="circle"
+              wrapperStyle={{ paddingBottom: 10, fontSize: '0.8rem' }}
+            />
+            {/* Flow Data: Daily Bars vs Cumulative Lines */}
+            {isCumulative ? (
+              <>
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="cumulativeFiiNet"
+                  name="FII Net (Cumulative)"
+                  stroke="#2563eb"
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 5, stroke: '#1d4ed8', strokeWidth: 2 }}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="cumulativeDiiNet"
+                  name="DII Net (Cumulative)"
+                  stroke="#059669"
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 5, stroke: '#047857', strokeWidth: 2 }}
+                />
+              </>
+            ) : (
+              <>
+                <Bar
+                  yAxisId="left"
+                  dataKey="fiiNet"
+                  name="FII Net"
+                  fill="#3b82f6"
+                  radius={[3, 3, 0, 0]}
+                  maxBarSize={14}
+                />
+                <Bar
+                  yAxisId="left"
+                  dataKey="diiNet"
+                  name="DII Net"
+                  fill="#10b981"
+                  radius={[3, 3, 0, 0]}
+                  maxBarSize={14}
+                />
+              </>
+            )}
+            {/* Right Y-Axis Index Overlays */}
+            {showNifty && (
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="niftyClose"
+                name="Nifty 50"
+                stroke="#8b5cf6"
+                strokeWidth={2}
+                strokeDasharray="4 2"
+                dot={false}
+                activeDot={{ r: 4, stroke: '#7c3aed', strokeWidth: 2 }}
+              />
+            )}
+            {showSensex && (
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="sensexClose"
+                name="BSE Sensex"
+                stroke="#f97316"
+                strokeWidth={2}
+                strokeDasharray="3 3"
+                dot={false}
+                activeDot={{ r: 4, stroke: '#ea580c', strokeWidth: 2 }}
+              />
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};

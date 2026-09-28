@@ -79,6 +79,7 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
       { name: 'Currency Converter', href: '/currency-converter', icon: FiGlobe, aliases: ['/utilities/currency-converter', '/economics/currency-converter'] },
       { name: 'PPP Exchange Rate', href: '/ppp-calculator', icon: FiCompass, aliases: ['/economics/ppp-exchange-rate'] },
       { name: 'Inflation Rates', href: '/inflation-calculator', icon: FiZap, aliases: ['/economics/inflation-rates'] },
+      { name: 'FII / DII Tracker', href: '/fii-dii', icon: FiBarChart2, aliases: ['/economics/fii-dii', '/fii-dii-tracker'] },
     ],
   },
   {

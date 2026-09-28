@@ -1,0 +1,548 @@
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
+
+.container {
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0.75rem;
+  box-sizing: border-box;
+
+  @include tablet-up {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+.header {
+  margin-bottom: 1.25rem;
+}
+
+.headerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-primary, #3b82f6) 12%, transparent);
+  color: var(--color-primary, #2563eb);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.mainTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text, #0f172a);
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.02em;
+
+  @include tablet-up {
+    font-size: 1.85rem;
+  }
+}
+
+.subtitle {
+  font-size: 0.88rem;
+  color: var(--color-text-muted, #64748b);
+  margin: 0;
+  line-height: 1.45;
+}
+
+// ----------------------------------------------------
+// Summary Cards Grid
+// ----------------------------------------------------
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+
+  @include tablet-up {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.85rem;
+  }
+}
+
+.summaryCard {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 14px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+}
+
+.cardTitle {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #64748b);
+}
+
+.cardDate,
+.cardTag {
+  font-size: 0.68rem;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.cardValue {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35rem;
+  font-variant-numeric: tabular-nums;
+
+  @include tablet-up {
+    font-size: 1.4rem;
+  }
+}
+
+.cardUnit {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #64748b);
+}
+
+.cardSplitRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.splitLabel {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #64748b);
+  margin-right: 0.25rem;
+}
+
+.splitVal {
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardFooter {
+  margin-top: 0.35rem;
+}
+
+.cardMetaText {
+  font-size: 0.68rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.pillBuy {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.pillSell {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.changeBadge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.pos {
+  color: #059669;
+}
+
+.neg {
+  color: #dc2626;
+}
+
+// ----------------------------------------------------
+// Controls Section
+// ----------------------------------------------------
+.controlsContainer {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 14px;
+  padding: 0.85rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.controlLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #64748b);
+}
+
+.chipsScroll {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.chipBtn {
+  border: 1px solid var(--color-border, #cbd5e1);
+  background: transparent;
+  color: var(--color-text, #334155);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+
+  &:hover {
+    border-color: var(--color-primary, #3b82f6);
+    color: var(--color-primary, #3b82f6);
+  }
+
+  &Active {
+    background: var(--color-primary, #2563eb);
+    border-color: var(--color-primary, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+
+    &:hover {
+      color: #ffffff;
+    }
+  }
+}
+
+.segmentedControl {
+  display: flex;
+  background: var(--color-bg-subtle, #f1f5f9);
+  padding: 3px;
+  border-radius: 10px;
+  gap: 2px;
+  overflow-x: auto;
+}
+
+.segmentBtn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted, #64748b);
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  text-align: center;
+
+  &:hover {
+    color: var(--color-text, #1e293b);
+  }
+
+  &Active {
+    background: var(--color-surface, #ffffff);
+    color: var(--color-primary, #2563eb);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.viewAndOverlaysRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  @include tablet-up {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+}
+
+.togglesRow {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.toggleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--color-text-muted, #64748b);
+  user-select: none;
+  transition: all 0.15s ease;
+
+  &NiftyActive {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+    color: #1d4ed8;
+  }
+
+  &SensexActive {
+    border-color: #ec4899;
+    background: rgba(236, 72, 153, 0.08);
+    color: #be185d;
+  }
+}
+
+.hiddenCheckbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggleDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+// ----------------------------------------------------
+// Chart Card
+// ----------------------------------------------------
+.chartCard {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 1rem 0.65rem 0.85rem 0.35rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.5rem;
+
+  @include tablet-up {
+    padding: 1.25rem 1.25rem 1rem 0.5rem;
+  }
+}
+
+.chartHeader {
+  padding-left: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.chartMainTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-text, #0f172a);
+  margin: 0 0 0.2rem 0;
+}
+
+.chartSubTitle {
+  font-size: 0.76rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.chartWrapper {
+  width: 100%;
+  height: 400px;
+}
+
+.chartPlaceholder {
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.88rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-top-color: var(--color-primary, #3b82f6);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ----------------------------------------------------
+// Tooltip Card
+// ----------------------------------------------------
+.tooltipCard {
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  max-width: 270px;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+.tooltipHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.tooltipDate {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #f8fafc;
+}
+
+.tooltipModeBadge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.25);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.tooltipBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tooltipRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tooltipLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+}
+
+.legendDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotFii {
+  background: #3b82f6;
+}
+
+.dotDii {
+  background: #10b981;
+}
+
+.dotNifty {
+  background: #8b5cf6;
+}
+
+.dotSensex {
+  background: #f97316;
+}
+
+.tooltipValue {
+  font-weight: 800;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltipIndexValue {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltipSubRow {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  padding: 0.15rem 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.tooltipMacroRow {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  padding-top: 0.2rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+// ----------------------------------------------------
+// Skeletons
+// ----------------------------------------------------
+.cardSkeleton {
+  min-height: 80px;
+}
+
+.skeletonLine {
+  width: 60%;
+  height: 12px;
+  background: var(--color-border, #e2e8f0);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonValue {
+  width: 80%;
+  height: 24px;
+  background: var(--color-border, #e2e8f0);
+  border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
