@@ -39,7 +39,7 @@ export async function readStored(schemeCode: string): Promise<{
     const rows = (await sql`
       SELECT to_char(date, 'DD-MM-YYYY') as date, nav::text as nav
       FROM mutual_fund_nav
-      WHERE scheme_code = ${schemeCode}
+      WHERE scheme_code = ${Number(schemeCode)}
       ORDER BY date DESC
     `) as Array<{ date: string; nav: string }>;
     if (rows.length > 0) {

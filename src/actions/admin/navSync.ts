@@ -27,14 +27,14 @@ export async function syncNavAction(
       ? ((await sql`
           SELECT t.scheme_code, t.scheme_name, NULL as payload, max(n.date)::text AS latest_nav_date
           FROM tracked_schemes t
-          LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code
+          LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code::integer
           WHERE t.scheme_code = ANY(${requested})
           GROUP BY t.scheme_code, t.scheme_name
         `) as AdminNavCandidateRow[])
       : ((await sql`
           SELECT t.scheme_code, t.scheme_name, NULL as payload, max(n.date)::text AS latest_nav_date
           FROM tracked_schemes t
-          LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code
+          LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code::integer
           WHERE t.is_active = TRUE
           GROUP BY t.scheme_code, t.scheme_name
           HAVING max(n.date) IS NULL OR max(n.date) < ${watermark?.date ?? null}::date

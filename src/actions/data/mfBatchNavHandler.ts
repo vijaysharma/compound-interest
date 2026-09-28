@@ -76,18 +76,20 @@ export async function handleGetBatchMutualFundNav(
   if (missing.length > 0) {
     try {
       const sql = getDb();
+      const missingNums = missing.map((c) => Number(c));
       const rows = (await sql`
         SELECT scheme_code, to_char(date, 'DD-MM-YYYY') as date, nav::text as nav
-        FROM mutual_fund_nav WHERE scheme_code = ANY(${missing})
+        FROM mutual_fund_nav WHERE scheme_code = ANY(${missingNums})
         ORDER BY scheme_code, date DESC
-      `) as Array<{ scheme_code: string; date: string; nav: string }>;
+      `) as Array<{ scheme_code: string | number; date: string; nav: string }>;
       const stillMissing = new Set(missing);
       const grouped = new Map<string, Array<{ date: string; nav: string }>>();
       for (const row of rows) {
-        let list = grouped.get(row.scheme_code);
+        const codeStr = String(row.scheme_code);
+        let list = grouped.get(codeStr);
         if (!list) {
           list = [];
-          grouped.set(row.scheme_code, list);
+          grouped.set(codeStr, list);
         }
         list.push({ date: row.date, nav: row.nav });
       }

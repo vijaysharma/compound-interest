@@ -22,7 +22,7 @@ export async function syncMutualFundsAction(token?: string | null): Promise<{ sy
   await sql`DELETE FROM mutual_fund_schemes`;
   await sql`
     INSERT INTO mutual_fund_schemes (scheme_code, scheme_name, payload)
-    SELECT item->>'schemeCode', item->>'schemeName', item
+    SELECT (item->>'schemeCode')::integer, item->>'schemeName', item
     FROM jsonb_array_elements(${JSON.stringify(schemesList)}::jsonb) AS item
     WHERE item->>'schemeCode' IS NOT NULL AND item->>'schemeName' IS NOT NULL
     ON CONFLICT (scheme_code) DO UPDATE SET

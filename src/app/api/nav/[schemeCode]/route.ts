@@ -1,6 +1,5 @@
 import { getNavHistory } from '@/lib/amfi/navRepository';
 import { readStored } from '@/actions/data/navStoredReader';
-import { isSchemeTracked } from '@/lib/amfi/trackedSchemes';
 import { ensureSchemeTrackedAndBackfilled } from '@/lib/amfi/autoInclusion';
 import { syncSchemeFromUpstream } from '@/actions/data/navUpstreamSync';
 import { FIRST_FETCH_TIMEOUT_MS } from '@/actions/data/navSync';
@@ -16,10 +15,11 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get('startDate') ?? undefined;
   const endDate = searchParams.get('endDate') ?? undefined;
-  if (!(await isSchemeTracked(cleanCode))) {
-    await ensureSchemeTrackedAndBackfilled(cleanCode);
-  }
   let stored = await readStored(cleanCode);
+  if (!stored.payload) {
+    await ensureSchemeTrackedAndBackfilled(cleanCode);
+    stored = await readStored(cleanCode);
+  }
   if (!stored.payload) {
     const fetched = await syncSchemeFromUpstream(cleanCode, FIRST_FETCH_TIMEOUT_MS, null);
     if (!fetched) {

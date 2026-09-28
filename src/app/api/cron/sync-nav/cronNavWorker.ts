@@ -26,7 +26,7 @@ export async function fetchCronCandidates(watermarkDate: string, limit: number):
   return (await sql`
     SELECT t.scheme_code, NULL as payload
     FROM tracked_schemes t
-    LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code
+    LEFT JOIN mutual_fund_nav n ON n.scheme_code = t.scheme_code::integer
     WHERE t.is_active = TRUE
     GROUP BY t.scheme_code
     HAVING max(n.date) IS NULL OR max(n.date) < ${watermarkDate}::date

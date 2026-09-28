@@ -35,7 +35,7 @@ export async function bulkUpsertAmfiSchemes(
     });
     await sql`
       INSERT INTO mutual_fund_schemes (scheme_code, scheme_name, payload, updated_at)
-      SELECT x.scheme_code, x.scheme_name, x.payload, NOW()
+      SELECT x.scheme_code::integer, x.scheme_name, x.payload, NOW()
       FROM jsonb_to_recordset(${JSON.stringify(schemeBatch)}::jsonb) AS x(
         scheme_code TEXT,
         scheme_name TEXT,
@@ -58,9 +58,9 @@ export async function bulkUpsertAmfiSchemes(
     if (flatRows.length > 0) {
       await sql`
         INSERT INTO mutual_fund_nav (scheme_code, date, nav, updated_at)
-        SELECT x.scheme_code, x.date::date, x.nav::numeric, NOW()
+        SELECT x.scheme_code::integer, x.date::date, x.nav::numeric, NOW()
         FROM jsonb_to_recordset(${JSON.stringify(flatRows)}::jsonb) AS x(
-          scheme_code VARCHAR(20),
+          scheme_code TEXT,
           date TEXT,
           nav NUMERIC
         )

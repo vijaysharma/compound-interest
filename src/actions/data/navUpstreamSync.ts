@@ -55,9 +55,9 @@ export async function syncSchemeFromUpstream(
       if (navRows.length > 0) {
         await sql`
           INSERT INTO mutual_fund_nav (scheme_code, date, nav, updated_at)
-          SELECT x.scheme_code, x.date::date, x.nav::numeric, NOW()
+          SELECT x.scheme_code::integer, x.date::date, x.nav::numeric, NOW()
           FROM jsonb_to_recordset(${JSON.stringify(navRows)}::jsonb) AS x(
-            scheme_code VARCHAR(20),
+            scheme_code TEXT,
             date TEXT,
             nav NUMERIC
           )

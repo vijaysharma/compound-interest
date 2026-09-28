@@ -25,7 +25,12 @@ export async function handleGetMutualFundNav(
     requestedStartDate && ISO_DATE_REGEX.test(requestedStartDate.trim())
       ? requestedStartDate.trim()
       : null;
-  const stored = await readStored(schemeCode);
+  let stored = await readStored(schemeCode);
+  if (!stored.payload) {
+    const { ensureSchemeTrackedAndBackfilled } = await import('@/lib/amfi/autoInclusion');
+    await ensureSchemeTrackedAndBackfilled(schemeCode);
+    stored = await readStored(schemeCode);
+  }
   if (!stored.payload) {
     const fetched = await syncSchemeFromUpstream(schemeCode, FIRST_FETCH_TIMEOUT_MS, null);
     if (!fetched) {

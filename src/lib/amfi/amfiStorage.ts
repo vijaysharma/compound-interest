@@ -45,7 +45,7 @@ export async function upsertSchemeNav(
     const sql = getDb();
     await sql`
       INSERT INTO mutual_fund_schemes (scheme_code, scheme_name, payload, updated_at)
-      VALUES (${schemeCode}, ${schemeName}, ${JSON.stringify(payload.meta)}::jsonb, NOW())
+      VALUES (${Number(schemeCode)}, ${schemeName}, ${JSON.stringify(payload.meta)}::jsonb, NOW())
       ON CONFLICT (scheme_code) DO UPDATE SET scheme_name = EXCLUDED.scheme_name, updated_at = NOW()
     `;
     const navRows = merged.map((r) => ({
@@ -56,9 +56,9 @@ export async function upsertSchemeNav(
     if (navRows.length > 0) {
       await sql`
         INSERT INTO mutual_fund_nav (scheme_code, date, nav, updated_at)
-        SELECT x.scheme_code, x.date::date, x.nav::numeric, NOW()
+        SELECT x.scheme_code::integer, x.date::date, x.nav::numeric, NOW()
         FROM jsonb_to_recordset(${JSON.stringify(navRows)}::jsonb) AS x(
-          scheme_code VARCHAR(20),
+          scheme_code TEXT,
           date TEXT,
           nav NUMERIC
         )
