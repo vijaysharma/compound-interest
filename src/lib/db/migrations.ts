@@ -2,7 +2,8 @@ import type { Query } from './types';
 import { applyCoreMigrations } from './coreMigrations';
 import { applyDataMigrations } from './dataMigrations';
 import { applyTrackedSchemesMigrations } from './trackedSchemesMigrations';
-export const SCHEMA_VERSION = 8; // 8: tracked_schemes & relational mutual_fund_nav
+import { applyStateAndLeaderboardMigrations } from './stateAndLeaderboardMigrations';
+export const SCHEMA_VERSION = 9; // 9: user_app_state & game_leaderboard
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {
@@ -28,6 +29,7 @@ export async function ensureTables(sql: Query): Promise<void> {
       await applyCoreMigrations(sql);
       await applyDataMigrations(sql, SCHEMA_VERSION);
       await applyTrackedSchemesMigrations(sql);
+      await applyStateAndLeaderboardMigrations(sql);
       tablesInitialized = true;
     })();
   }
