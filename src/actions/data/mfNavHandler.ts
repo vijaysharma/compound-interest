@@ -26,7 +26,7 @@ export async function handleGetMutualFundNav(
       ? requestedStartDate.trim()
       : null;
   let stored = await readStored(schemeCode);
-  if (!stored.payload) {
+  if (!stored.payload || (Array.isArray(stored.payload.data) && stored.payload.data.length <= 1)) {
     const { ensureSchemeTrackedAndBackfilled } = await import('@/lib/amfi/autoInclusion');
     await ensureSchemeTrackedAndBackfilled(schemeCode);
     stored = await readStored(schemeCode);

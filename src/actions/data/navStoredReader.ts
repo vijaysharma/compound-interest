@@ -16,7 +16,7 @@ export async function readStored(schemeCode: string): Promise<{
   const cached = mfNavCache.get(schemeCode);
   if (cached && cached.expiresAt > Date.now()) {
     const payload = parseNavPayload(cached.data);
-    if (payload) {
+    if (payload && Array.isArray(payload.data) && payload.data.length > 1) {
       const latest =
         cached.latest !== undefined
           ? cached.latest
@@ -25,7 +25,7 @@ export async function readStored(schemeCode: string): Promise<{
     }
   }
   const redisPayload = parseNavPayload(await redisGet(navPayloadKey(schemeCode)));
-  if (redisPayload) {
+  if (redisPayload && Array.isArray(redisPayload.data) && redisPayload.data.length > 1) {
     const latest = latestNavDateIn(redisPayload.data as Array<{ date?: string }>);
     mfNavCache.set(schemeCode, {
       expiresAt: Date.now() + NAV_IN_MEMORY_TTL_MS,

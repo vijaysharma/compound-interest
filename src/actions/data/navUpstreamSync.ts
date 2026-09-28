@@ -68,6 +68,8 @@ export async function syncSchemeFromUpstream(
       console.warn(`[nav] DB sync failed for ${schemeCode}:`, dbErr);
     }
   }
-  rememberPayload(schemeCode, payload);
+  if (payload.data.length > 1) {
+    rememberPayload(schemeCode, payload);
+  }
   return payload;
 }
