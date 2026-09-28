@@ -29,7 +29,12 @@ const SIP = ({ onSelectionChange }: SipProps) => {
   const [isFundSelectorOpen, setIsFundSelectorOpen] = useState(false);
   const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const dates = useMutualFundDates(null, null, '740', false);
-  const pinned = usePinnedFunds([], dates.endDate, dates.duration, (s, e) => { dates.setStartDate(s); dates.setEndDate(e); });
+  const pinned = usePinnedFunds([], dates.endDate, dates.duration, (s, e) => {
+    if (!dates.startDate && !dates.endDate) {
+      dates.setStartDate(s);
+      dates.setEndDate(e);
+    }
+  });
   const search = useFundSearch('Kotak Arbitrage Fund', isFundSelectorOpen);
   const handleRestore = useCallback((saved: SipSavedState) => {
     search.setSearchKey(saved.searchKey);

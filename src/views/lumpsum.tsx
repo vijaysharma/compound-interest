@@ -26,8 +26,10 @@ const Lumpsum = ({ onSelectionChange }: LumpsumProps) => {
   const [detailModalFund, setDetailModalFund] = useState<DetailedFundItem | null>(null);
   const dates = useMutualFundDates();
   const pinned = usePinnedFunds([], dates.endDate, dates.duration, (s, e) => {
-    dates.setStartDate(s);
-    dates.setEndDate(e);
+    if (!dates.startDate && !dates.endDate) {
+      dates.setStartDate(s);
+      dates.setEndDate(e);
+    }
   });
   const search = useFundSearch('Kotak Arbitrage Fund', isFundSelectorOpen);
   const handleRestore = useCallback((saved: LumpsumSavedState) => {

@@ -118,11 +118,14 @@ export function usePinnedFunds(
       const navData = await fetchMFbySchemeCode(schemeCode);
       setPinnedNavData((prev) => ({ ...prev, [schemeCode]: navData }));
       setJsonNavData(navData);
-      const durationIndex = Math.max(parseInt(duration, 10) || 1, 0);
-      const index = Math.min(durationIndex, navData.length - 1);
-      const start = navData[index];
-      const end = navData[0];
-      if (start && end) onDatesResolved?.(navDateToISO(start.date), navDateToISO(end.date));
+      const isFirst = pinnedFundsRef.current.length <= 1;
+      if (isFirst && onDatesResolved && navData.length > 1) {
+        const durationIndex = Math.max(parseInt(duration, 10) || 1, 0);
+        const index = Math.min(durationIndex, navData.length - 1);
+        const start = navData[index];
+        const end = navData[0];
+        if (start && end) onDatesResolved(navDateToISO(start.date), navDateToISO(end.date));
+      }
     } catch (err) {
       setPinnedFunds((prev) => prev.filter((f) => f.schemeCode !== schemeCode));
       console.error('Failed to pin mutual fund:', err);
