@@ -13,6 +13,9 @@ import {
   GlobalLeaderboardRecord,
   LeaderboardRecord,
 } from '@/actions/gameLeaderboard';
+import { checkAliasAvailabilityAction, updateUserAliasAction } from '@/actions/userAlias';
+import { useAuth } from '@/context/useAuth';
+import { FiCheck, FiEdit2, FiUser } from 'react-icons/fi';
 import styles from './GamesHub.module.scss';
 interface GameMeta {
   id: LeaderboardEntry['gameId'];
@@ -116,6 +119,42 @@ export const GamesHub: React.FC = () => {
       cancelAnimationFrame(frameId);
     };
   }, [activeTab, leaderboardType, leaderboardFilter]);
+  const { user, token, refreshUser } = useAuth();
+  const [aliasInput, setAliasInput] = useState<string>('');
+  const [aliasEditing, setAliasEditing] = useState<boolean>(false);
+  const [aliasChecking, setAliasChecking] = useState<boolean>(false);
+  const [aliasError, setAliasError] = useState<string | null>(null);
+  const [aliasSuccess, setAliasSuccess] = useState<string | null>(null);
+  useEffect(() => {
+    if (user?.user_alias) {
+      const frame = requestAnimationFrame(() => {
+        setAliasInput(user.user_alias || '');
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [user?.user_alias]);
+  const handleSaveAlias = async () => {
+    if (!token) return;
+    const clean = aliasInput.trim();
+    setAliasError(null);
+    setAliasSuccess(null);
+    setAliasChecking(true);
+    const check = await checkAliasAvailabilityAction(clean);
+    if (!check.available) {
+      setAliasError(check.error || 'Alias is unavailable');
+      setAliasChecking(false);
+      return;
+    }
+    const res = await updateUserAliasAction(token, clean);
+    setAliasChecking(false);
+    if (res.success) {
+      setAliasSuccess('Alias saved!');
+      setAliasEditing(false);
+      void refreshUser();
+    } else {
+      setAliasError(res.error || 'Failed to update alias');
+    }
+  };
   const getMedal = (idx: number) => {
     if (idx === 0) return '🥇';
     if (idx === 1) return '🥈';
@@ -129,6 +168,60 @@ export const GamesHub: React.FC = () => {
         <p className={styles.subtitle}>
           Challenge your mind with classic number puzzles, word searches, and logic games with persistent global rankings.
         </p>
+        {user && (
+          <div className={styles.aliasBar}>
+            <div className={styles.aliasInfo}>
+              <FiUser className={styles.aliasIcon} />
+              <span className={styles.aliasLabel}>Player Alias:</span>
+              {!aliasEditing ? (
+                <span className={styles.currentAlias}>
+                  {user.user_alias || user.name || 'Anonymous Player'}
+                </span>
+              ) : (
+                <div className={styles.aliasEditGroup}>
+                  <input
+                    type="text"
+                    value={aliasInput}
+                    onChange={(e) => setAliasInput(e.target.value)}
+                    placeholder="Enter unique alias"
+                    maxLength={24}
+                    className={styles.aliasInput}
+                  />
+                  <button
+                    type="button"
+                    disabled={aliasChecking}
+                    onClick={handleSaveAlias}
+                    className={styles.aliasSaveBtn}
+                  >
+                    <FiCheck /> {aliasChecking ? 'Checking...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAliasEditing(false);
+                      setAliasInput(user.user_alias || '');
+                      setAliasError(null);
+                    }}
+                    className={styles.aliasCancelBtn}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+            {!aliasEditing && (
+              <button
+                type="button"
+                onClick={() => setAliasEditing(true)}
+                className={styles.aliasEditBtn}
+              >
+                <FiEdit2 size={13} /> {user.user_alias ? 'Change Alias' : 'Set Alias'}
+              </button>
+            )}
+            {aliasError && <div className={styles.aliasErrorText}>{aliasError}</div>}
+            {aliasSuccess && <div className={styles.aliasSuccessText}>{aliasSuccess}</div>}
+          </div>
+        )}
       </header>
       <div className={styles.tabBar} role="tablist">
         <button

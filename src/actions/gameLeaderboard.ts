@@ -55,7 +55,8 @@ export async function recordGameScoreAction(
     const user = await getUserFromToken(token, sql);
     if (user?.id) {
       effectiveUserId = `user_${user.id}`;
-      effectivePlayerName = user.name?.trim() || effectivePlayerName;
+      const aliasRows = await sql`SELECT user_alias FROM users WHERE id = ${user.id}` as Array<{ user_alias: string | null }>;
+      effectivePlayerName = aliasRows[0]?.user_alias || user.name?.trim() || effectivePlayerName;
     }
   }
   if (!effectiveUserId && guestId) {

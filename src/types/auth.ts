@@ -11,6 +11,7 @@ export interface AuthUser {
   first_used_at?: string | null;
   trial_expires_at?: string | null;
   isBlocked: boolean;
+  user_alias?: string | null;
   freeLimit: number;
 }
 export interface PaymentSettings {

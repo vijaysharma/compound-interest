@@ -3,7 +3,7 @@ import { applyCoreMigrations } from './coreMigrations';
 import { applyDataMigrations } from './dataMigrations';
 import { applyTrackedSchemesMigrations } from './trackedSchemesMigrations';
 import { applyStateAndLeaderboardMigrations } from './stateAndLeaderboardMigrations';
-export const SCHEMA_VERSION = 9; // 9: user_app_state & game_leaderboard
+export const SCHEMA_VERSION = 10; // 10: user_alias column
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {

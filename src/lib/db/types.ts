@@ -22,6 +22,7 @@ export interface DbUser {
   trial_expires_at?: string | null;
   created_at: string;
   updated_at: string;
+  user_alias?: string | null;
 }
 export interface PaymentSettings {
   id: string;
