@@ -1,0 +1,95 @@
+import { NextResponse } from 'next/server';
+import { getDb, ensureTables } from '@/lib/db';
+import {
+  fetchNSELiveFiiDii,
+  fetchYahooIndexPrices,
+  fetchWorldBankCPI,
+  fetchWorldBankPPP,
+} from '@/lib/fiiDii/fiiDiiFetcher';
+import {
+  upsertInstitutionalFlow,
+  upsertIndexPricesBatch,
+  upsertMacroIndicatorsBatch,
+} from '@/lib/fiiDii/fiiDiiRepository';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
+function isAuthorized(req: Request): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return true;
+  const authHeader = req.headers.get('authorization');
+  if (authHeader === `Bearer ${secret}`) return true;
+  const url = new URL(req.url);
+  return url.searchParams.get('key') === secret;
+}
+export async function GET(req: Request): Promise<NextResponse> {
+  const startedAt = Date.now();
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  }
+  const sql = getDb();
+  await ensureTables(sql);
+  const results: Record<string, unknown> = {};
+  // 1. Fetch & Upsert Today's FII/DII Data
+  try {
+    const liveFlow = await fetchNSELiveFiiDii();
+    if (liveFlow) {
+      await upsertInstitutionalFlow(sql, liveFlow);
+      results.flow = {
+        tradeDate: liveFlow.tradeDate,
+        fiiNetCrores: liveFlow.fiiNetCrores,
+        diiNetCrores: liveFlow.diiNetCrores,
+      };
+    } else {
+      results.flow = { synced: false, message: 'No live flow returned from NSE (market may be closed)' };
+    }
+  } catch (err) {
+    results.flow = { error: err instanceof Error ? err.message : String(err) };
+  }
+  // 2. Fetch & Upsert Recent Index Prices (Nifty 50 and Sensex)
+  try {
+    const [niftyPrices, sensexPrices] = await Promise.all([
+      fetchYahooIndexPrices('^NSEI', '5d'),
+      fetchYahooIndexPrices('^BSESN', '5d'),
+    ]);
+    const [niftyCount, sensexCount] = await Promise.all([
+      upsertIndexPricesBatch(sql, 'NIFTY50', niftyPrices),
+      upsertIndexPricesBatch(sql, 'SENSEX', sensexPrices),
+    ]);
+    results.indices = {
+      niftyCount,
+      sensexCount,
+      latestNifty: niftyPrices[niftyPrices.length - 1],
+      latestSensex: sensexPrices[sensexPrices.length - 1],
+    };
+  } catch (err) {
+    results.indices = { error: err instanceof Error ? err.message : String(err) };
+  }
+  // 3. Ensure Current Year Macro Indicators
+  try {
+    const currentYear = new Date().getFullYear().toString();
+    const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+    const recordDate = `${currentYear}-${currentMonth}-01`;
+    const existingMacro = (await sql`
+      SELECT record_date FROM macro_indicators WHERE record_date = ${recordDate} LIMIT 1
+    `) as Array<{ record_date: string }>;
+    if (existingMacro.length === 0) {
+      const [cpiMap, pppMap] = await Promise.all([
+        fetchWorldBankCPI(),
+        fetchWorldBankPPP(),
+      ]);
+      const cpi = cpiMap[currentYear] || 208.5;
+      const ppp = pppMap[currentYear] || 24.8;
+      await upsertMacroIndicatorsBatch(sql, [{ recordDate, cpiIndex: cpi, pppFactor: ppp }]);
+      results.macro = { updated: true, recordDate, cpi, ppp };
+    } else {
+      results.macro = { updated: false, recordDate, message: 'Already exists' };
+    }
+  } catch (err) {
+    results.macro = { error: err instanceof Error ? err.message : String(err) };
+  }
+  return NextResponse.json({
+    ok: true,
+    results,
+    elapsedMs: Date.now() - startedAt,
+  });
+}

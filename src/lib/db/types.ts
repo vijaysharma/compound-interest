@@ -52,3 +52,22 @@ export interface AISettings {
   system_prompt: string;
   updated_at: string;
 }
+export interface DbInstitutionalFlow {
+  trade_date: string;
+  fii_buy_crores: number | string;
+  fii_sell_crores: number | string;
+  fii_net_crores: number | string;
+  dii_buy_crores: number | string;
+  dii_sell_crores: number | string;
+  dii_net_crores: number | string;
+}
+export interface DbIndexPrice {
+  trade_date: string;
+  index_name: 'NIFTY50' | 'SENSEX';
+  close_price: number | string;
+}
+export interface DbMacroIndicator {
+  record_date: string;
+  cpi_index: number | string;
+  ppp_factor: number | string;
+}

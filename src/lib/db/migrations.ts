@@ -3,7 +3,8 @@ import { applyCoreMigrations } from './coreMigrations';
 import { applyDataMigrations } from './dataMigrations';
 import { applyTrackedSchemesMigrations } from './trackedSchemesMigrations';
 import { applyStateAndLeaderboardMigrations } from './stateAndLeaderboardMigrations';
-export const SCHEMA_VERSION = 10; // 10: user_alias column
+import { applyFiiDiiMigrations } from './fiiDiiMigrations';
+export const SCHEMA_VERSION = 11; // 11: institutional_flows, index_prices, macro_indicators
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {
@@ -30,6 +31,7 @@ export async function ensureTables(sql: Query): Promise<void> {
       await applyDataMigrations(sql, SCHEMA_VERSION);
       await applyTrackedSchemesMigrations(sql);
       await applyStateAndLeaderboardMigrations(sql);
+      await applyFiiDiiMigrations(sql);
       tablesInitialized = true;
     })();
   }
