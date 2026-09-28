@@ -36,6 +36,12 @@ export const MinesweeperGame: React.FC = () => {
   const handleZoomReset = () => setZoom(1.0);
   const cellSize = Math.round(30 * zoom);
   const cellFontSize = `${(1.15 * zoom).toFixed(2)}rem`;
+  const FONT_SCALES = [1.0, 1.25, 1.5, 1.8];
+  const [fontScaleIndex, setFontScaleIndex] = useState<number>(0);
+  const mobileFontScale = FONT_SCALES[fontScaleIndex];
+  const handleCycleFontScale = () => {
+    setFontScaleIndex((prev) => (prev + 1) % FONT_SCALES.length);
+  };
   const pointerStartRef = useRef<{ x: number; y: number; r: number; c: number; moved: boolean } | null>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -245,9 +251,8 @@ export const MinesweeperGame: React.FC = () => {
         clearTimeout(longPressTimerRef.current);
         longPressTimerRef.current = null;
       }
-      if (isLongPressRef.current || Date.now() - lastLongPressTimestampRef.current < 800) {
+      if (isLongPressRef.current) {
         isLongPressRef.current = false;
-        lastLongPressTimestampRef.current = Date.now();
         pointerStartRef.current = null;
         return;
       }
@@ -400,17 +405,19 @@ export const MinesweeperGame: React.FC = () => {
             className={styles.grid}
             style={
               isMobile
-                ? {
+                ? ({
                     gridTemplateColumns: `repeat(${config.cols}, minmax(0, 1fr))`,
                     gridTemplateRows: `repeat(${config.rows}, minmax(0, 1fr))`,
                     width: '100%',
-                  }
+                    '--cell-font-scale': mobileFontScale,
+                  } as React.CSSProperties)
                 : ({
                     gridTemplateColumns: `repeat(${config.cols}, ${cellSize}px)`,
                     gridTemplateRows: `repeat(${config.rows}, ${cellSize}px)`,
                     width: 'max-content',
                     '--cell-size': `${cellSize}px`,
                     '--cell-font-size': cellFontSize,
+                    '--cell-font-scale': 1.0,
                   } as React.CSSProperties)
             }
           >
@@ -487,6 +494,16 @@ export const MinesweeperGame: React.FC = () => {
         >
           <FiFlag />
           <span>{isFlagMode ? 'Flagging Mode: ON' : 'Tap to Dig (Switch to Flag)'}</span>
+        </button>
+        <button
+          type="button"
+          className={styles.mobileFontScalerBtn}
+          onClick={handleCycleFontScale}
+          title="Scale cell font size"
+          aria-label={`Scale cell font size: currently ${Math.round(mobileFontScale * 100)}%`}
+        >
+          <span className={styles.fontScalerIcon}>A+</span>
+          <span>{Math.round(mobileFontScale * 100)}%</span>
         </button>
       </div>
       <p className={styles.instructions}>
