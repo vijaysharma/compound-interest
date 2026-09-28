@@ -47,7 +47,7 @@ export async function handleSignupWithGooglePassword(data: {
     verifiedGooglePicture ||
     `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName || email)}`;
   const existingUsers = (await sql`
-    SELECT id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
+    SELECT id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at, user_alias
     FROM users
     WHERE email = ${email}
   `) as DbUser[];
@@ -66,7 +66,7 @@ export async function handleSignupWithGooglePassword(data: {
           role = ${finalRole},
           updated_at = NOW()
       WHERE email = ${email}
-      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at, user_alias
     `) as DbUser[];
     user = updated[0];
   } else {
@@ -78,7 +78,7 @@ export async function handleSignupWithGooglePassword(data: {
       VALUES (
         ${newId}, ${email}, ${hash}, ${salt}, ${displayName}, ${picture}, 'password', ${verifiedGoogleSub}, ${role}, 0, 15, 'free_trial', NULL, NULL
       )
-      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, password_hash, password_salt, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at, user_alias
     `) as DbUser[];
     user = created[0];
   }

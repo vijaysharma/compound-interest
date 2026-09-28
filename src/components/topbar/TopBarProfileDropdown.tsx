@@ -55,23 +55,28 @@ export function TopBarProfileDropdown({
         title="Account profile & options"
       >
         <div className={styles.userEmailCol}>
-          <span className={styles.userNameText}>{user.name || user.email}</span>
+          <span className={styles.userNameText}>{user.user_alias ? `@${user.user_alias}` : (user.name || user.email)}</span>
         </div>
         {user.picture ? (
           <img
             src={user.picture}
-            alt={user.name || user.email}
+            alt={user.user_alias || user.name || user.email}
             className={styles.userAvatar}
           />
         ) : (
-          <div className={styles.userInitial}>{(user.name || user.email).charAt(0)}</div>
+          <div className={styles.userInitial}>{(user.user_alias || user.name || user.email).charAt(0)}</div>
         )}
       </button>
       {isProfileOpen && (
         <div className={styles.profileDropdown} role="menu">
           <div className={styles.profileDropdownHeader}>
             <div className={styles.profileDropdownInfo}>
-              <span className={styles.profileDropdownName}>{user.name || 'User'}</span>
+              <span className={styles.profileDropdownName}>
+                {user.user_alias ? `@${user.user_alias}` : (user.name || 'User')}
+              </span>
+              {user.user_alias && user.name && (
+                <span className={styles.profileDropdownEmail}>{user.name}</span>
+              )}
               <span className={styles.profileDropdownEmail}>{user.email}</span>
             </div>
             {isAdmin ? (

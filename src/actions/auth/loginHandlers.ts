@@ -20,7 +20,7 @@ export async function handleLoginWithPassword(data: {
   const sql = getDb();
   await ensureTables(sql);
   const rows = (await sql`
-    SELECT id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
+    SELECT id, email, password_hash, password_salt, name, picture, provider, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at, user_alias
     FROM users
     WHERE email = ${email}
   `) as DbUser[];
@@ -72,7 +72,7 @@ export async function handleLoginWithGoogle(authData: {
   await ensureTables(sql);
   const isAdmin = isEmailAdmin(email);
   const existingUsers = (await sql`
-    SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
+    SELECT id, email, name, picture, provider, provider_id, role, api_usage_count, COALESCE(free_limit, 15) as free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at, user_alias
     FROM users
     WHERE email = ${email}
   `) as DbUser[];
@@ -89,7 +89,7 @@ export async function handleLoginWithGoogle(authData: {
           free_limit = COALESCE(free_limit, 15),
           updated_at = NOW()
       WHERE email = ${email}
-      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at, user_alias
     `) as DbUser[];
     user = updated[0];
   } else {
@@ -98,7 +98,7 @@ export async function handleLoginWithGoogle(authData: {
     const created = (await sql`
       INSERT INTO users (id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, first_used_at, trial_expires_at)
       VALUES (${newId}, ${email}, ${name || null}, ${picture || null}, 'google', ${sub || null}, ${role}, 0, 15, 'free_trial', NULL, NULL)
-      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at
+      RETURNING id, email, name, picture, provider, provider_id, role, api_usage_count, free_limit, subscription_status, subscription_expires_at, subscription_plan, first_used_at, trial_expires_at, created_at, updated_at, user_alias
     `) as DbUser[];
     user = created[0];
   }

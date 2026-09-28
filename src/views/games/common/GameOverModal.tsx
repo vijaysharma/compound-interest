@@ -3,6 +3,8 @@ import React, { useEffect } from 'react';
 import Link from '@/navigation';
 import { ConfettiCanvas } from './ConfettiCanvas';
 import type { ScoreBreakdown } from './scoring';
+import { useAuth } from '@/context/useAuth';
+import { FiUser } from 'react-icons/fi';
 import styles from './GameOverModal.module.scss';
 export interface GameOverModalProps {
   outcome: 'won' | 'lost';
@@ -13,6 +15,7 @@ export interface GameOverModalProps {
   stats?: Array<{ label: string; value: string | number }>;
   isPersonalBest?: boolean;
   userRank?: number;
+  playerName?: string;
   onPlayAgain: () => void;
   playAgainLabel?: string;
   hubHref?: string;
@@ -26,11 +29,14 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   stats = [],
   isPersonalBest,
   userRank,
+  playerName,
   onPlayAgain,
   playAgainLabel = 'Play Again',
   hubHref = '/games',
 }) => {
+  const { user } = useAuth();
   const isWon = outcome === 'won';
+  const effectiveName = playerName || user?.user_alias || user?.name || null;
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -51,6 +57,12 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
         <h2 className={`${styles.title} ${!isWon ? styles.titleDefeat : ''}`}>
           {isWon ? 'Victory!' : 'Game Over'}
         </h2>
+        {effectiveName && (
+          <div className={styles.playerBadge}>
+            <FiUser className={styles.playerBadgeIcon} />
+            <span>{effectiveName.startsWith('@') ? effectiveName : `@${effectiveName}`}</span>
+          </div>
+        )}
         <p className={styles.subtitle}>
           {subtitle || (isWon ? `You mastered ${gameTitle}!` : `Better luck next time in ${gameTitle}`)}
         </p>

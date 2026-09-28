@@ -13,7 +13,11 @@ import {
   GlobalLeaderboardRecord,
   LeaderboardRecord,
 } from '@/actions/gameLeaderboard';
-import { checkAliasAvailabilityAction, updateUserAliasAction } from '@/actions/userAlias';
+import {
+  checkAliasAvailabilityAction,
+  getUserAliasAction,
+  updateUserAliasAction,
+} from '@/actions/userAlias';
 import { useAuth } from '@/context/useAuth';
 import { FiCheck, FiEdit2, FiUser } from 'react-icons/fi';
 import styles from './GamesHub.module.scss';
@@ -125,14 +129,25 @@ export const GamesHub: React.FC = () => {
   const [aliasChecking, setAliasChecking] = useState<boolean>(false);
   const [aliasError, setAliasError] = useState<string | null>(null);
   const [aliasSuccess, setAliasSuccess] = useState<string | null>(null);
+  const [optimisticAlias, setOptimisticAlias] = useState<string | null>(null);
   useEffect(() => {
     if (user?.user_alias) {
       const frame = requestAnimationFrame(() => {
         setAliasInput(user.user_alias || '');
+        setOptimisticAlias(user.user_alias || null);
       });
       return () => cancelAnimationFrame(frame);
+    } else if (token) {
+      void getUserAliasAction(token).then((res) => {
+        if (res.alias) {
+          requestAnimationFrame(() => {
+            setAliasInput(res.alias || '');
+            setOptimisticAlias(res.alias || null);
+          });
+        }
+      });
     }
-  }, [user?.user_alias]);
+  }, [user?.user_alias, token]);
   const handleSaveAlias = async () => {
     if (!token) return;
     const clean = aliasInput.trim();
@@ -148,6 +163,7 @@ export const GamesHub: React.FC = () => {
     const res = await updateUserAliasAction(token, clean);
     setAliasChecking(false);
     if (res.success) {
+      setOptimisticAlias(clean);
       setAliasSuccess('Alias saved!');
       setAliasEditing(false);
       void refreshUser();
@@ -175,7 +191,7 @@ export const GamesHub: React.FC = () => {
               <span className={styles.aliasLabel}>Player Alias:</span>
               {!aliasEditing ? (
                 <span className={styles.currentAlias}>
-                  {user.user_alias || user.name || 'Anonymous Player'}
+                  {optimisticAlias ? `@${optimisticAlias}` : (user.user_alias ? `@${user.user_alias}` : (user.name || 'Anonymous Player'))}
                 </span>
               ) : (
                 <div className={styles.aliasEditGroup}>
@@ -199,7 +215,7 @@ export const GamesHub: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setAliasEditing(false);
-                      setAliasInput(user.user_alias || '');
+                      setAliasInput(optimisticAlias || user.user_alias || '');
                       setAliasError(null);
                     }}
                     className={styles.aliasCancelBtn}
@@ -215,7 +231,7 @@ export const GamesHub: React.FC = () => {
                 onClick={() => setAliasEditing(true)}
                 className={styles.aliasEditBtn}
               >
-                <FiEdit2 size={13} /> {user.user_alias ? 'Change Alias' : 'Set Alias'}
+                <FiEdit2 size={13} /> {optimisticAlias || user.user_alias ? 'Change Alias' : 'Set Alias'}
               </button>
             )}
             {aliasError && <div className={styles.aliasErrorText}>{aliasError}</div>}

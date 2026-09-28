@@ -18,7 +18,8 @@ export async function handleGetMe(token?: string | null): Promise<{ user: AuthUs
       u.provider, u.provider_id, u.role, u.api_usage_count,
       COALESCE(u.free_limit, 15) AS free_limit,
       u.subscription_status, u.subscription_expires_at, u.subscription_plan,
-      u.first_used_at, u.trial_expires_at, u.created_at, u.updated_at
+      u.first_used_at, u.trial_expires_at, u.created_at, u.updated_at,
+      u.user_alias
     FROM user_sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.token = ${cleanToken} AND s.expires_at > NOW()

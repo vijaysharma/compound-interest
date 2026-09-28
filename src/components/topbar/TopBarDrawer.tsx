@@ -72,7 +72,13 @@ export function TopBarDrawer({
         </nav>
         {isAuthenticated && user && (
           <div className={styles.drawerFooter}>
-            <p className={styles.userEmailText}>{user.email}</p>
+            {user.user_alias ? (
+              <p className={styles.userEmailText}>
+                <strong>@{user.user_alias}</strong> ({user.email})
+              </p>
+            ) : (
+              <p className={styles.userEmailText}>{user.email}</p>
+            )}
             {user.subscription_status !== 'active' && user.role !== 'admin' && (
               <Link
                 to="/upgrade"

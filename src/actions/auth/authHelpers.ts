@@ -23,6 +23,7 @@ export function mapToAuthUser(user: DbUser): AuthUser {
     first_used_at: user.first_used_at,
     trial_expires_at: user.trial_expires_at,
     isBlocked: isUserBlocked(user),
+    user_alias: user.user_alias ?? null,
   };
 }
 export async function verifyGoogleToken(credential: string): Promise<GoogleTokenInfo | null> {
