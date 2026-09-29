@@ -96,4 +96,95 @@ test('slideInDirection moves adjacent tile in given direction', () => {
   assert.ok(res);
   assert.equal(res.newTiles[6], 7);
   assert.equal(res.newTiles[10], 0);
+  assert.equal(res.moves.length, 1);
+  assert.equal(res.moves[0].directionRelativeToBlank, 'UP');
+  assert.equal(res.moves[0].fromIndex, 10);
+  assert.equal(res.moves[0].toIndex, 6);
+  assert.equal(res.moves[0].tileValue, 7);
+});
+test('directional relative movement tracking records single and multi-tile movements', () => {
+  // Blank at index 5 (row 1, col 1)
+  const board = [
+    1, 2, 3, 4,
+    5, 0, 7, 8,
+    9, 10, 11, 12,
+    13, 14, 15, 16,
+  ];
+  // Tile 2 at index 1 is ABOVE blank (index 5) -> slides DOWN into blank
+  const downRes = slideTiles(board, 1);
+  assert.ok(downRes);
+  assert.equal(downRes.moves.length, 1);
+  assert.equal(downRes.moves[0].directionRelativeToBlank, 'DOWN');
+  assert.equal(downRes.moves[0].fromIndex, 1);
+  assert.equal(downRes.moves[0].toIndex, 5);
+  assert.equal(downRes.moves[0].tileValue, 2);
+  // Tile 10 at index 9 is BELOW blank (index 5) -> slides UP into blank
+  const upRes = slideTiles(board, 9);
+  assert.ok(upRes);
+  assert.equal(upRes.moves.length, 1);
+  assert.equal(upRes.moves[0].directionRelativeToBlank, 'UP');
+  assert.equal(upRes.moves[0].fromIndex, 9);
+  assert.equal(upRes.moves[0].toIndex, 5);
+  assert.equal(upRes.moves[0].tileValue, 10);
+  // Tile 5 at index 4 is LEFT of blank (index 5) -> slides RIGHT into blank
+  const rightRes = slideTiles(board, 4);
+  assert.ok(rightRes);
+  assert.equal(rightRes.moves.length, 1);
+  assert.equal(rightRes.moves[0].directionRelativeToBlank, 'RIGHT');
+  assert.equal(rightRes.moves[0].fromIndex, 4);
+  assert.equal(rightRes.moves[0].toIndex, 5);
+  assert.equal(rightRes.moves[0].tileValue, 5);
+  // Tile 7 at index 6 is RIGHT of blank (index 5) -> slides LEFT into blank
+  const leftRes = slideTiles(board, 6);
+  assert.ok(leftRes);
+  assert.equal(leftRes.moves.length, 1);
+  assert.equal(leftRes.moves[0].directionRelativeToBlank, 'LEFT');
+  assert.equal(leftRes.moves[0].fromIndex, 6);
+  assert.equal(leftRes.moves[0].toIndex, 5);
+  assert.equal(leftRes.moves[0].tileValue, 7);
+});
+test('multi-tile line slide tracks all intermediate movements relative to blank', () => {
+  // Blank at index 0 (row 0, col 0)
+  const board = [
+    0, 2, 3, 4,
+    5, 6, 7, 8,
+    9, 10, 11, 12,
+    13, 14, 15, 16,
+  ];
+  // Click index 3 (row 0, col 3) -> tiles 2, 3, 4 slide LEFT towards blank at 0
+  const lineRes = slideTiles(board, 3);
+  assert.ok(lineRes);
+  assert.equal(lineRes.moves.length, 3);
+  // First tile moving is at index 1 into 0
+  assert.equal(lineRes.moves[0].fromIndex, 1);
+  assert.equal(lineRes.moves[0].toIndex, 0);
+  assert.equal(lineRes.moves[0].directionRelativeToBlank, 'LEFT');
+  assert.equal(lineRes.moves[0].tileValue, 2);
+  // Second tile moving is at index 2 into 1
+  assert.equal(lineRes.moves[1].fromIndex, 2);
+  assert.equal(lineRes.moves[1].toIndex, 1);
+  assert.equal(lineRes.moves[1].directionRelativeToBlank, 'LEFT');
+  assert.equal(lineRes.moves[1].tileValue, 3);
+  // Third tile moving is at index 3 into 2
+  assert.equal(lineRes.moves[2].fromIndex, 3);
+  assert.equal(lineRes.moves[2].toIndex, 2);
+  assert.equal(lineRes.moves[2].directionRelativeToBlank, 'LEFT');
+  assert.equal(lineRes.moves[2].tileValue, 4);
+});
+test('slideTileInDirection slides aligned tiles towards blank and ignores wrong directions', () => {
+  // Blank at index 15 (row 3, col 3)
+  const board = [
+    1, 2, 3, 4,
+    5, 6, 7, 8,
+    9, 10, 11, 12,
+    13, 14, 15, 0,
+  ];
+  // Tile 13 at index 12: blank is to the right. Swiping 'right' should slide
+  const validSwipe = slideInDirection(board, 'right');
+  assert.ok(validSwipe);
+  assert.equal(validSwipe.newTiles[15], 15);
+  // Swiping 'left' from index 12 (away from blank) should not move
+  // Note: slideInDirection('left') checks targetCol = blankCol + 1 = 4 (out of bounds) -> null
+  const invalidSwipe = slideInDirection(board, 'left');
+  assert.equal(invalidSwipe, null);
 });

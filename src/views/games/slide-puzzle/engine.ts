@@ -1,5 +1,27 @@
 export const GRID_SIZE = 4;
 export const TOTAL_TILES = 16;
+export type DirectionRelativeToBlank = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
+export type MoveType = 'TAP' | 'SWIPE';
+export type MovementControlMode = 'tap' | 'swipe' | 'hybrid';
+export interface SlideStep {
+  tileValue: number;
+  fromIndex: number;
+  toIndex: number;
+  directionRelativeToBlank: DirectionRelativeToBlank;
+}
+export interface SlideMove {
+  tileValue: number;
+  fromIndex: number;
+  toIndex: number; // Position of the blank tile before movement
+  directionRelativeToBlank: DirectionRelativeToBlank;
+  moveType: MoveType;
+  timestamp: number;
+}
+export interface SlideResult {
+  newTiles: number[];
+  movedCount: number;
+  moves: SlideStep[];
+}
 export const isSolved = (tiles: number[]): boolean => {
   for (let i = 0; i < TOTAL_TILES - 1; i++) {
     if (tiles[i] !== i + 1) return false;
@@ -68,7 +90,7 @@ export const canSlide = (tiles: number[], clickedIdx: number): boolean => {
 export const slideTiles = (
   tiles: number[],
   clickedIdx: number
-): { newTiles: number[]; movedCount: number } | null => {
+): SlideResult | null => {
   const blankIdx = tiles.indexOf(0);
   if (blankIdx === -1 || clickedIdx === blankIdx) return null;
   const blankRow = Math.floor(blankIdx / GRID_SIZE);
@@ -76,28 +98,79 @@ export const slideTiles = (
   const clickedRow = Math.floor(clickedIdx / GRID_SIZE);
   const clickedCol = clickedIdx % GRID_SIZE;
   const next = [...tiles];
+  const moves: SlideStep[] = [];
   if (blankRow === clickedRow) {
-    const step = clickedCol < blankCol ? -1 : 1;
-    for (let c = blankCol; c !== clickedCol; c += step) {
-      next[blankRow * GRID_SIZE + c] = next[blankRow * GRID_SIZE + (c + step)];
+    if (clickedCol < blankCol) {
+      // Tiles to left of blank shift RIGHT
+      for (let c = blankCol - 1; c >= clickedCol; c--) {
+        const fromIdx = blankRow * GRID_SIZE + c;
+        const toIdx = blankRow * GRID_SIZE + (c + 1);
+        moves.push({
+          tileValue: tiles[fromIdx],
+          fromIndex: fromIdx,
+          toIndex: toIdx,
+          directionRelativeToBlank: 'RIGHT',
+        });
+        next[toIdx] = next[fromIdx];
+      }
+      next[clickedIdx] = 0;
+      return { newTiles: next, movedCount: Math.abs(blankCol - clickedCol), moves };
+    } else {
+      // Tiles to right of blank shift LEFT
+      for (let c = blankCol + 1; c <= clickedCol; c++) {
+        const fromIdx = blankRow * GRID_SIZE + c;
+        const toIdx = blankRow * GRID_SIZE + (c - 1);
+        moves.push({
+          tileValue: tiles[fromIdx],
+          fromIndex: fromIdx,
+          toIndex: toIdx,
+          directionRelativeToBlank: 'LEFT',
+        });
+        next[toIdx] = next[fromIdx];
+      }
+      next[clickedIdx] = 0;
+      return { newTiles: next, movedCount: Math.abs(blankCol - clickedCol), moves };
     }
-    next[clickedIdx] = 0;
-    return { newTiles: next, movedCount: Math.abs(blankCol - clickedCol) };
   }
   if (blankCol === clickedCol) {
-    const step = clickedRow < blankRow ? -1 : 1;
-    for (let r = blankRow; r !== clickedRow; r += step) {
-      next[r * GRID_SIZE + blankCol] = next[(r + step) * GRID_SIZE + blankCol];
+    if (clickedRow < blankRow) {
+      // Tiles above blank shift DOWN
+      for (let r = blankRow - 1; r >= clickedRow; r--) {
+        const fromIdx = r * GRID_SIZE + blankCol;
+        const toIdx = (r + 1) * GRID_SIZE + blankCol;
+        moves.push({
+          tileValue: tiles[fromIdx],
+          fromIndex: fromIdx,
+          toIndex: toIdx,
+          directionRelativeToBlank: 'DOWN',
+        });
+        next[toIdx] = next[fromIdx];
+      }
+      next[clickedIdx] = 0;
+      return { newTiles: next, movedCount: Math.abs(blankRow - clickedRow), moves };
+    } else {
+      // Tiles below blank shift UP
+      for (let r = blankRow + 1; r <= clickedRow; r++) {
+        const fromIdx = r * GRID_SIZE + blankCol;
+        const toIdx = (r - 1) * GRID_SIZE + blankCol;
+        moves.push({
+          tileValue: tiles[fromIdx],
+          fromIndex: fromIdx,
+          toIndex: toIdx,
+          directionRelativeToBlank: 'UP',
+        });
+        next[toIdx] = next[fromIdx];
+      }
+      next[clickedIdx] = 0;
+      return { newTiles: next, movedCount: Math.abs(blankRow - clickedRow), moves };
     }
-    next[clickedIdx] = 0;
-    return { newTiles: next, movedCount: Math.abs(blankRow - clickedRow) };
   }
   return null;
 };
 export const slideInDirection = (
   tiles: number[],
   dir: 'up' | 'down' | 'left' | 'right'
-): { newTiles: number[]; movedCount: number } | null => {
+): SlideResult | null => {
   const blankIdx = tiles.indexOf(0);
   if (blankIdx === -1) return null;
   const blankRow = Math.floor(blankIdx / GRID_SIZE);
@@ -113,4 +186,33 @@ export const slideInDirection = (
   }
   const targetIdx = targetRow * GRID_SIZE + targetCol;
   return slideTiles(tiles, targetIdx);
+};
+export const slideTileInDirection = (
+  tiles: number[],
+  startIdx: number,
+  dir: 'up' | 'down' | 'left' | 'right'
+): SlideResult | null => {
+  const blankIdx = tiles.indexOf(0);
+  if (blankIdx === -1 || startIdx === blankIdx) return null;
+  const blankRow = Math.floor(blankIdx / GRID_SIZE);
+  const blankCol = blankIdx % GRID_SIZE;
+  const startRow = Math.floor(startIdx / GRID_SIZE);
+  const startCol = startIdx % GRID_SIZE;
+  if (startRow === blankRow) {
+    if (blankCol > startCol && dir === 'right') {
+      return slideTiles(tiles, startIdx);
+    }
+    if (blankCol < startCol && dir === 'left') {
+      return slideTiles(tiles, startIdx);
+    }
+  }
+  if (startCol === blankCol) {
+    if (blankRow > startRow && dir === 'down') {
+      return slideTiles(tiles, startIdx);
+    }
+    if (blankRow < startRow && dir === 'up') {
+      return slideTiles(tiles, startIdx);
+    }
+  }
+  return slideInDirection(tiles, dir);
 };

@@ -88,6 +88,77 @@
     transform: scale(0.98);
   }
 }
+.controlModeSection {
+  width: 100%;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.controlModeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+.controlModeLabel {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-color, #64748b);
+}
+.lastMoveBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+}
+.segmentedControl {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  background: #f1f5f9;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  padding: 3px;
+  box-sizing: border-box;
+}
+.segmentBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted-color, #64748b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  &:hover {
+    color: var(--text-color, #0f172a);
+  }
+}
+.segmentBtnActive {
+  background: var(--card-bg, #ffffff);
+  color: #2563eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  &:hover {
+    color: #1d4ed8;
+  }
+}
+.btnIcon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
 .boardWrapper {
   width: 100%;
   max-width: 440px;
@@ -171,7 +242,7 @@
   }
   .hudBar {
     padding: 8px 12px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   .hudValue {
     font-size: 1.1rem;
@@ -179,6 +250,25 @@
   .shuffleBtn {
     padding: 6px 10px;
     font-size: 0.78rem;
+  }
+  .controlModeSection {
+    margin-bottom: 10px;
+    gap: 4px;
+  }
+  .controlModeLabel {
+    font-size: 0.68rem;
+  }
+  .lastMoveBadge {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+  }
+  .segmentBtn {
+    padding: 6px 4px;
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+  .btnIcon {
+    font-size: 0.82rem;
   }
   .boardWrapper {
     padding: 8px;
