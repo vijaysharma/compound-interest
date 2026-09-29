@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
+import dynamic from 'next/dynamic';
 import { getFIIDIIDataAction } from '@/actions/fiiDii';
 import {
   adjustFIIDIIPoints,
@@ -10,11 +11,15 @@ import {
   type FlowInterval,
   type FIIDIIDataResponse,
 } from '@/lib/fiiDii/fiiDiiCalculations';
+import type { ChartType } from './FiiDiiChart';
 import { FiiDiiSummaryCards } from './FiiDiiSummaryCards';
 import { FiiDiiControls } from './FiiDiiControls';
-import { FiiDiiChart, type ChartType } from './FiiDiiChart';
 import { FiiDiiExplanationSection } from './FiiDiiExplanationSection';
 import styles from './FiiDiiTracker.module.scss';
+const FiiDiiChart = dynamic(() => import('./FiiDiiChart').then((m) => ({ default: m.FiiDiiChart })), {
+  ssr: false,
+  loading: () => <div className={styles.chartLoading}>Loading chart…</div>,
+});
 export const FiiDiiTracker: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
   const [interval, setInterval] = useState<FlowInterval>('daily');

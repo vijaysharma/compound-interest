@@ -1015,3 +1015,11 @@
   padding-left: 0.25rem;
 }
 
+.chartLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--color-text-muted, #94a3b8);
+  font-size: 0.875rem;
+}
