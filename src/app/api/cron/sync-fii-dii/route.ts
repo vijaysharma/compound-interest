@@ -5,6 +5,7 @@ import {
   fetchYahooIndexPrices,
   fetchWorldBankCPI,
   fetchWorldBankPPP,
+  getLatestEligibleFiiDiiDate,
 } from '@/lib/fiiDii/fiiDiiFetcher';
 import {
   upsertInstitutionalFlow,
@@ -29,10 +30,11 @@ export async function GET(req: Request): Promise<NextResponse> {
   const sql = getDb();
   await ensureTables(sql);
   const results: Record<string, unknown> = {};
-  // 1. Fetch & Upsert Today's FII/DII Data
+  const maxEligibleDate = getLatestEligibleFiiDiiDate();
+  // 1. Fetch & Upsert Today's Official FII/DII Data
   try {
     const liveFlow = await fetchNSELiveFiiDii();
-    if (liveFlow) {
+    if (liveFlow && liveFlow.tradeDate <= maxEligibleDate) {
       await upsertInstitutionalFlow(sql, liveFlow);
       results.flow = {
         tradeDate: liveFlow.tradeDate,
@@ -40,26 +42,33 @@ export async function GET(req: Request): Promise<NextResponse> {
         diiNetCrores: liveFlow.diiNetCrores,
       };
     } else {
-      results.flow = { synced: false, message: 'No live flow returned from NSE (market may be closed)' };
+      results.flow = {
+        synced: false,
+        message: liveFlow
+          ? `NSE returned date ${liveFlow.tradeDate} which is past eligible cutoff (${maxEligibleDate})`
+          : 'No live flow returned from NSE (market may be open or data not yet published)',
+      };
     }
   } catch (err) {
     results.flow = { error: err instanceof Error ? err.message : String(err) };
   }
-  // 2. Fetch & Upsert Recent Index Prices (Nifty 50 and Sensex)
+  // 2. Fetch & Upsert Recent Index Prices (Nifty 50 and Sensex) clamped to closed days
   try {
     const [niftyPrices, sensexPrices] = await Promise.all([
       fetchYahooIndexPrices('^NSEI', '5d'),
       fetchYahooIndexPrices('^BSESN', '5d'),
     ]);
+    const validNifty = niftyPrices.filter((p) => p.tradeDate <= maxEligibleDate);
+    const validSensex = sensexPrices.filter((p) => p.tradeDate <= maxEligibleDate);
     const [niftyCount, sensexCount] = await Promise.all([
-      upsertIndexPricesBatch(sql, 'NIFTY50', niftyPrices),
-      upsertIndexPricesBatch(sql, 'SENSEX', sensexPrices),
+      upsertIndexPricesBatch(sql, 'NIFTY50', validNifty),
+      upsertIndexPricesBatch(sql, 'SENSEX', validSensex),
     ]);
     results.indices = {
       niftyCount,
       sensexCount,
-      latestNifty: niftyPrices[niftyPrices.length - 1],
-      latestSensex: sensexPrices[sensexPrices.length - 1],
+      latestNifty: validNifty[validNifty.length - 1],
+      latestSensex: validSensex[validSensex.length - 1],
     };
   } catch (err) {
     results.indices = { error: err instanceof Error ? err.message : String(err) };

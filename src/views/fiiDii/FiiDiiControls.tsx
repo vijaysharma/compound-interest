@@ -1,11 +1,19 @@
 'use client';
 import React from 'react';
-import type { AdjustmentMode, ViewMode, Timeframe } from '@/lib/fiiDii/fiiDiiCalculations';
+import type {
+  AdjustmentMode,
+  ViewMode,
+  Timeframe,
+  FlowInterval,
+} from '@/lib/fiiDii/fiiDiiCalculations';
+import { FLOW_INTERVALS } from '@/lib/fiiDii/fiiDiiCalculations';
 import type { ChartType } from './FiiDiiChart';
 import styles from './FiiDiiTracker.module.scss';
 interface FiiDiiControlsProps {
   timeframe: Timeframe;
   setTimeframe: (t: Timeframe) => void;
+  interval?: FlowInterval;
+  setInterval?: (i: FlowInterval) => void;
   adjustmentMode: AdjustmentMode;
   setAdjustmentMode: (m: AdjustmentMode) => void;
   viewMode: ViewMode;
@@ -22,6 +30,8 @@ const TIMEFRAMES: Timeframe[] = ['1M', '3M', '6M', '1Y', '5Y', 'ALL'];
 export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
   timeframe,
   setTimeframe,
+  interval,
+  setInterval,
   adjustmentMode,
   setAdjustmentMode,
   viewMode,
@@ -36,9 +46,28 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
 }) => {
   return (
     <div className={styles.controlsContainer}>
-      {/* 1. Timeframe Chips */}
+      {/* 1. Time Interval Chips (Daily, Weekly, Monthly, Quarterly, Half-Yearly, Yearly) */}
+      {interval && setInterval && (
+        <div className={styles.controlGroup}>
+          <span className={styles.controlLabel}>Time Interval:</span>
+          <div className={styles.chipsScroll}>
+            {FLOW_INTERVALS.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`${styles.chipBtn} ${interval === item.key ? styles.chipBtnActive : ''}`}
+                onClick={() => setInterval(item.key)}
+                disabled={isLoading}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* 2. Timeframe Duration Chips */}
       <div className={styles.controlGroup}>
-        <span className={styles.controlLabel}>Timeframe:</span>
+        <span className={styles.controlLabel}>Duration:</span>
         <div className={styles.chipsScroll}>
           {TIMEFRAMES.map((tf) => {
             const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
@@ -56,7 +85,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
           })}
         </div>
       </div>
-      {/* 2. Adjustment Mode Segmented Control */}
+      {/* 3. Adjustment Mode Segmented Control */}
       <div className={styles.controlGroup}>
         <span className={styles.controlLabel}>Adjustment:</span>
         <div className={styles.segmentedControl}>

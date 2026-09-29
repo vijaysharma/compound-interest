@@ -2,6 +2,15 @@ import type { DbInstitutionalFlow, DbIndexPrice, DbMacroIndicator } from '@/lib/
 export type AdjustmentMode = 'nominal' | 'inflation' | 'ppp';
 export type ViewMode = 'daily' | 'cumulative';
 export type Timeframe = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL' | 'MAX';
+export type FlowInterval = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'halfyearly' | 'yearly';
+export const FLOW_INTERVALS: { key: FlowInterval; label: string }[] = [
+  { key: 'daily', label: 'Daily' },
+  { key: 'weekly', label: 'Weekly' },
+  { key: 'monthly', label: 'Monthly' },
+  { key: 'quarterly', label: 'Quarterly' },
+  { key: 'halfyearly', label: 'Half-Yearly' },
+  { key: 'yearly', label: 'Yearly' },
+];
 export interface ProcessedFIIDIIPoint {
   tradeDate: string; // YYYY-MM-DD
   formattedDate: string; // e.g. "12 Jun '24" or "Jun '24"
@@ -306,4 +315,152 @@ export function getTimeframeStartDate(timeframe: Timeframe, baseDate = new Date(
       return '2007-01-01';
   }
   return d.toISOString().slice(0, 10);
+}
+/**
+ * Aggregates daily ProcessedFIIDIIPoint records into a specified time interval:
+ * - Flows (fiiBuy, fiiSell, fiiNet, diiBuy, diiSell, diiNet, etc.) are summed over the bucket.
+ * - Indices (niftyClose, sensexClose) take the closing price of the final trading day in the bucket.
+ * - Macro indicators (cpi, ppp) take the values of the final trading day in the bucket.
+ * - Cumulative values are recalculated sequentially across the aggregated buckets.
+ */
+export function aggregatePointsByInterval(
+  points: ProcessedFIIDIIPoint[],
+  interval: FlowInterval
+): ProcessedFIIDIIPoint[] {
+  if (interval === 'daily' || points.length === 0) {
+    return points;
+  }
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const getBucketKey = (dateStr: string): { key: string; label: string } => {
+    const [yStr, mStr] = dateStr.split('-');
+    const month = parseInt(mStr, 10);
+    const shortYear = yStr.slice(2);
+    switch (interval) {
+      case 'weekly': {
+        const d = new Date(`${dateStr}T12:00:00Z`);
+        const dayOfWeek = d.getUTCDay();
+        const diffToFriday = 5 - dayOfWeek;
+        const weekEnd = new Date(d.getTime() + diffToFriday * 86400000);
+        const endStr = weekEnd.toISOString().slice(0, 10);
+        const [, em, ed] = endStr.split('-');
+        const endMonthName = monthNames[parseInt(em, 10) - 1];
+        return {
+          key: `W_${endStr}`,
+          label: `${parseInt(ed, 10)} ${endMonthName} '${weekEnd.getUTCFullYear().toString().slice(2)}`,
+        };
+      }
+      case 'monthly': {
+        return {
+          key: `${yStr}-${mStr}`,
+          label: `${monthNames[month - 1]} '${shortYear}`,
+        };
+      }
+      case 'quarterly': {
+        const q = Math.ceil(month / 3);
+        return {
+          key: `${yStr}-Q${q}`,
+          label: `Q${q} '${shortYear}`,
+        };
+      }
+      case 'halfyearly': {
+        const h = month <= 6 ? 1 : 2;
+        return {
+          key: `${yStr}-H${h}`,
+          label: `H${h} '${shortYear}`,
+        };
+      }
+      case 'yearly': {
+        return {
+          key: yStr,
+          label: yStr,
+        };
+      }
+      default:
+        return { key: dateStr, label: dateStr };
+    }
+  };
+  const buckets = new Map<string, {
+    key: string;
+    label: string;
+    tradeDate: string;
+    fiiBuy: number;
+    fiiSell: number;
+    fiiNet: number;
+    diiBuy: number;
+    diiSell: number;
+    diiNet: number;
+    nominalFiiNet: number;
+    nominalDiiNet: number;
+    niftyClose: number | null;
+    sensexClose: number | null;
+    cpi: number;
+    ppp: number;
+  }>();
+  for (const pt of points) {
+    const { key, label } = getBucketKey(pt.tradeDate);
+    const existing = buckets.get(key);
+    if (!existing) {
+      buckets.set(key, {
+        key,
+        label,
+        tradeDate: pt.tradeDate,
+        fiiBuy: pt.fiiBuy,
+        fiiSell: pt.fiiSell,
+        fiiNet: pt.fiiNet,
+        diiBuy: pt.diiBuy,
+        diiSell: pt.diiSell,
+        diiNet: pt.diiNet,
+        nominalFiiNet: pt.nominalFiiNet,
+        nominalDiiNet: pt.nominalDiiNet,
+        niftyClose: pt.niftyClose ?? null,
+        sensexClose: pt.sensexClose ?? null,
+        cpi: pt.cpi ?? 233,
+        ppp: pt.ppp ?? 23.85,
+      });
+    } else {
+      existing.fiiBuy = Math.round((existing.fiiBuy + pt.fiiBuy) * 100) / 100;
+      existing.fiiSell = Math.round((existing.fiiSell + pt.fiiSell) * 100) / 100;
+      existing.fiiNet = Math.round((existing.fiiNet + pt.fiiNet) * 100) / 100;
+      existing.diiBuy = Math.round((existing.diiBuy + pt.diiBuy) * 100) / 100;
+      existing.diiSell = Math.round((existing.diiSell + pt.diiSell) * 100) / 100;
+      existing.diiNet = Math.round((existing.diiNet + pt.diiNet) * 100) / 100;
+      existing.nominalFiiNet = Math.round((existing.nominalFiiNet + pt.nominalFiiNet) * 100) / 100;
+      existing.nominalDiiNet = Math.round((existing.nominalDiiNet + pt.nominalDiiNet) * 100) / 100;
+      if (pt.niftyClose !== null && pt.niftyClose !== undefined) {
+        existing.niftyClose = pt.niftyClose;
+      }
+      if (pt.sensexClose !== null && pt.sensexClose !== undefined) {
+        existing.sensexClose = pt.sensexClose;
+      }
+      existing.tradeDate = pt.tradeDate;
+      existing.cpi = pt.cpi ?? existing.cpi;
+      existing.ppp = pt.ppp ?? existing.ppp;
+    }
+  }
+  let runningFii = 0;
+  let runningDii = 0;
+  const result: ProcessedFIIDIIPoint[] = [];
+  for (const b of buckets.values()) {
+    runningFii += b.fiiNet;
+    runningDii += b.diiNet;
+    result.push({
+      tradeDate: b.tradeDate,
+      formattedDate: b.label,
+      fiiBuy: b.fiiBuy,
+      fiiSell: b.fiiSell,
+      fiiNet: b.fiiNet,
+      diiBuy: b.diiBuy,
+      diiSell: b.diiSell,
+      diiNet: b.diiNet,
+      nominalFiiNet: b.nominalFiiNet,
+      nominalDiiNet: b.nominalDiiNet,
+      cumulativeFiiNet: Math.round(runningFii * 100) / 100,
+      cumulativeDiiNet: Math.round(runningDii * 100) / 100,
+      niftyClose: b.niftyClose,
+      sensexClose: b.sensexClose,
+      cpi: b.cpi,
+      ppp: b.ppp,
+    });
+  }
+  return result;
 }

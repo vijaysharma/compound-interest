@@ -13,7 +13,14 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { FiBarChart2, FiTrendingUp } from 'react-icons/fi';
-import type { ProcessedFIIDIIPoint, AdjustmentMode, ViewMode, Timeframe } from '@/lib/fiiDii/fiiDiiCalculations';
+import type {
+  ProcessedFIIDIIPoint,
+  AdjustmentMode,
+  ViewMode,
+  Timeframe,
+  FlowInterval,
+} from '@/lib/fiiDii/fiiDiiCalculations';
+import { FLOW_INTERVALS } from '@/lib/fiiDii/fiiDiiCalculations';
 import { FiiDiiTooltip } from './FiiDiiTooltip';
 import styles from './FiiDiiTracker.module.scss';
 export type ChartType = 'bar' | 'line';
@@ -25,6 +32,8 @@ interface FiiDiiChartProps {
   onChartTypeChange: (type: ChartType) => void;
   timeframe: Timeframe;
   onTimeframeChange: (t: Timeframe) => void;
+  interval: FlowInterval;
+  onIntervalChange: (i: FlowInterval) => void;
   showNifty: boolean;
   showSensex: boolean;
   isLoading?: boolean;
@@ -38,6 +47,8 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
   onChartTypeChange,
   timeframe,
   onTimeframeChange,
+  interval,
+  onIntervalChange,
   showNifty,
   showSensex,
   isLoading,
@@ -118,9 +129,11 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
         <div className={styles.chartTitleGroup}>
           <div className={styles.chartMainTitleRow}>
             <h3 className={styles.chartMainTitle}>
-              {isCumulative ? 'Cumulative Net Institutional Flow' : 'Daily Net Institutional Flow'}
+              {isCumulative
+                ? 'Cumulative Net Institutional Flow'
+                : `${interval.charAt(0).toUpperCase() + interval.slice(1)} Net Institutional Flow`}
             </h3>
-            {/* B. Chart Type Toggle [ Bar ] | [ Line ] */}
+            {/* Chart Type Toggle [ Bar ] | [ Line ] */}
             <div className={styles.chartTypeControl} role="group" aria-label="Chart representation mode">
               <button
                 type="button"
@@ -153,24 +166,46 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
             {hasRightAxis && ' • Dual Axis with Stock Index Overlay'}
           </span>
         </div>
-        {/* C. Time Interval / Granularity Selectors directly on Chart */}
-        <div className={styles.chartTimeframeBar} role="group" aria-label="Select chart timeframe">
-          <span className={styles.chartTimeframeLabel}>Interval:</span>
-          <div className={styles.chartTimeframeChips}>
-            {TIMEFRAMES.map((tf) => {
-              const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
-              return (
+        {/* Distinct Interval (Frequency) & Duration (Timeframe) Selectors */}
+        <div className={styles.chartControlsRow}>
+          {/* 1. Time Interval: Daily, Weekly, Monthly, Quarterly, Half-Yearly, Yearly */}
+          <div className={styles.chartControlGroup} role="group" aria-label="Select data aggregation interval">
+            <span className={styles.chartControlLabel}>Interval:</span>
+            <div className={styles.chartIntervalChips}>
+              {FLOW_INTERVALS.map((item) => (
                 <button
-                  key={tf}
+                  key={item.key}
                   type="button"
-                  className={`${styles.chartTfChip} ${isActive ? styles.chartTfChipActive : ''}`}
-                  onClick={() => onTimeframeChange(tf)}
+                  className={`${styles.chartIntervalChip} ${interval === item.key ? styles.chartIntervalChipActive : ''}`}
+                  onClick={() => onIntervalChange(item.key)}
                   disabled={isLoading}
+                  title={`Group data by ${item.label}`}
                 >
-                  {tf}
+                  {item.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+          {/* 2. Duration / Timeframe: 1M, 3M, 6M, 1Y, 5Y, ALL */}
+          <div className={styles.chartControlGroup} role="group" aria-label="Select duration timeframe">
+            <span className={styles.chartControlLabel}>Duration:</span>
+            <div className={styles.chartTimeframeChips}>
+              {TIMEFRAMES.map((tf) => {
+                const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
+                return (
+                  <button
+                    key={tf}
+                    type="button"
+                    className={`${styles.chartTfChip} ${isActive ? styles.chartTfChipActive : ''}`}
+                    onClick={() => onTimeframeChange(tf)}
+                    disabled={isLoading}
+                    title={`View past ${tf}`}
+                  >
+                    {tf}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

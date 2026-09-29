@@ -4,6 +4,7 @@ import {
   fetchWorldBankCPI,
   fetchWorldBankPPP,
   fetchNSELiveFiiDii,
+  getLatestEligibleFiiDiiDate,
 } from '../src/lib/fiiDii/fiiDiiFetcher';
 import {
   upsertInstitutionalFlowsBatch,
@@ -179,44 +180,51 @@ async function seedHistory() {
   console.log('--- Starting FII/DII Historical Data Seeding ---');
   const sql = getDb();
   await ensureTables(sql);
+  const maxEligibleDate = getLatestEligibleFiiDiiDate();
+
   // 1. Fetch & Store Index Prices (Nifty 50 and Sensex) from Yahoo Finance (from inception 2007+)
   console.log('Fetching Nifty 50 (^NSEI) from Yahoo Finance (all-time ~2007+)...');
   let niftyPoints: import('../src/lib/fiiDii/fiiDiiFetcher').IndexPricePoint[] = [];
   try {
-    niftyPoints = await fetchYahooIndexPrices('^NSEI', 'max');
-    console.log(`Received ${niftyPoints.length} Nifty 50 daily closing records.`);
+    const rawNifty = await fetchYahooIndexPrices('^NSEI', 'max');
+    niftyPoints = rawNifty.filter((p) => p.tradeDate <= maxEligibleDate);
+    console.log(`Received ${niftyPoints.length} closed Nifty 50 daily records.`);
     const niftyInserted = await upsertIndexPricesBatch(sql, 'NIFTY50', niftyPoints);
     console.log(`Upserted ${niftyInserted} NIFTY50 index price records.`);
   } catch (err) {
     console.warn('Failed to fetch Nifty 50 from Yahoo Finance:', err);
   }
+
   console.log('Fetching BSE Sensex (^BSESN) from Yahoo Finance (all-time ~2007+)...');
   let sensexPoints: import('../src/lib/fiiDii/fiiDiiFetcher').IndexPricePoint[] = [];
   try {
-    sensexPoints = await fetchYahooIndexPrices('^BSESN', 'max');
-    console.log(`Received ${sensexPoints.length} Sensex daily closing records.`);
+    const rawSensex = await fetchYahooIndexPrices('^BSESN', 'max');
+    sensexPoints = rawSensex.filter((p) => p.tradeDate <= maxEligibleDate);
+    console.log(`Received ${sensexPoints.length} closed Sensex daily records.`);
     const sensexInserted = await upsertIndexPricesBatch(sql, 'SENSEX', sensexPoints);
     console.log(`Upserted ${sensexInserted} SENSEX index price records.`);
   } catch (err) {
     console.warn('Failed to fetch Sensex from Yahoo Finance:', err);
   }
+
   // 2. Fetch & Store Macro Indicators (CPI & PPP)
   console.log('Fetching Macro Indicators (CPI & PPP)...');
   const wbCpi = await fetchWorldBankCPI();
   const wbPpp = await fetchWorldBankPPP();
   const macroRecords: Array<{ recordDate: string; cpiIndex: number; pppFactor: number }> = [];
+
   // Generate monthly macro records from 2007 through 2026
   for (let y = 2007; y <= 2026; y++) {
     const yearStr = String(y);
     const annualCpi = wbCpi[yearStr] || BASELINE_MONTHLY_CPI[yearStr] || 200.0;
     const annualPpp = wbPpp[yearStr] || BASELINE_ANNUAL_PPP[yearStr] || 23.85;
+
     for (let m = 1; m <= 12; m++) {
-      // Small monthly inflation drift across each month of the year
       const monthFraction = (m - 1) / 12;
       const nextYearCpi = wbCpi[String(y + 1)] || BASELINE_MONTHLY_CPI[String(y + 1)] || annualCpi * 1.05;
       const monthlyCpi = Math.round((annualCpi + (nextYearCpi - annualCpi) * monthFraction) * 100) / 100;
       const recordDate = `${yearStr}-${String(m).padStart(2, '0')}-01`;
-      if (recordDate <= '2026-12-01') {
+      if (recordDate <= `${maxEligibleDate.slice(0, 7)}-01`) {
         macroRecords.push({
           recordDate,
           cpiIndex: monthlyCpi,
@@ -225,25 +233,28 @@ async function seedHistory() {
       }
     }
   }
+
   const macroInserted = await upsertMacroIndicatorsBatch(sql, macroRecords);
   console.log(`Upserted ${macroInserted} monthly macro indicator records.`);
+
   // 3. Populate Institutional Flows
-  // Use dates from Nifty trading days to ensure 100% calendar alignment
-  const tradingDates = niftyPoints.map((p) => p.tradeDate);
+  // Use dates from closed Nifty trading days to ensure 100% calendar alignment
+  const tradingDates = niftyPoints.map((p) => p.tradeDate).filter((d) => d <= maxEligibleDate);
   console.log(`Seeding institutional flows for ${tradingDates.length} historical trading days...`);
   const flowsBatch: LiveFiiDiiRecord[] = [];
   const niftyMap = new Map(niftyPoints.map((p) => [p.tradeDate, p.closePrice]));
+
   for (const dateStr of tradingDates) {
     const flow = generateRealisticDailyFlow(dateStr, niftyMap.get(dateStr));
     flowsBatch.push(flow);
   }
+
   // Fetch the live NSE day flow to ensure today has the exact official numbers
   try {
     console.log('Fetching live FII/DII from NSE India API...');
     const liveNse = await fetchNSELiveFiiDii();
-    if (liveNse) {
+    if (liveNse && liveNse.tradeDate <= maxEligibleDate) {
       console.log(`Found live NSE data for date ${liveNse.tradeDate}: FII Net = ${liveNse.fiiNetCrores}, DII Net = ${liveNse.diiNetCrores}`);
-      // Replace or prepend the live record
       const existingIdx = flowsBatch.findIndex((f) => f.tradeDate === liveNse.tradeDate);
       if (existingIdx >= 0) {
         flowsBatch[existingIdx] = liveNse;

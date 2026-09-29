@@ -3,9 +3,11 @@ import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import { getFIIDIIDataAction } from '@/actions/fiiDii';
 import {
   adjustFIIDIIPoints,
+  aggregatePointsByInterval,
   type AdjustmentMode,
   type ViewMode,
   type Timeframe,
+  type FlowInterval,
   type FIIDIIDataResponse,
 } from '@/lib/fiiDii/fiiDiiCalculations';
 import { FiiDiiSummaryCards } from './FiiDiiSummaryCards';
@@ -15,6 +17,7 @@ import { FiiDiiExplanationSection } from './FiiDiiExplanationSection';
 import styles from './FiiDiiTracker.module.scss';
 export const FiiDiiTracker: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
+  const [interval, setInterval] = useState<FlowInterval>('daily');
   const [adjustmentMode, setAdjustmentMode] = useState<AdjustmentMode>('nominal');
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
   const [chartType, setChartType] = useState<ChartType>('bar');
@@ -23,19 +26,26 @@ export const FiiDiiTracker: React.FC = () => {
   const [baseData, setBaseData] = useState<FIIDIIDataResponse | null>(null);
   const [isPending, startTransition] = useTransition();
   const [hasLoadedInitially, setHasLoadedInitially] = useState<boolean>(false);
-  // Fetch dataset only when timeframe selection changes
+  const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
+  // When timeframe changes, set sensible default interval if switching to/from ALL
+  const handleTimeframeChange = (newTf: Timeframe) => {
+    setTimeframe(newTf);
+    if ((newTf === 'ALL' || newTf === 'MAX') && interval === 'daily') {
+      setInterval('monthly');
+    }
+  };
   useEffect(() => {
     startTransition(async () => {
       try {
-        const res = await getFIIDIIDataAction({ timeframe });
+        const res = await getFIIDIIDataAction({ timeframe, interval });
         setBaseData(res);
         setHasLoadedInitially(true);
       } catch (err) {
         console.error('Failed to load FII/DII data:', err);
       }
     });
-  }, [timeframe]);
-  // Client-side memoized instant recalculation when switching adjustment or view modes
+  }, [timeframe, interval]);
+  // Client-side memoized instant recalculation when switching adjustment, view modes, or interval
   const displayData = useMemo(() => {
     if (!baseData) return null;
     const { points, summary } = adjustFIIDIIPoints(
@@ -45,19 +55,21 @@ export const FiiDiiTracker: React.FC = () => {
       adjustmentMode,
       viewMode
     );
+    // Instant client-side aggregation by selected interval
+    const aggregatedPoints = aggregatePointsByInterval(points, interval);
     return {
-      points,
+      points: aggregatedPoints,
       summary,
-      isMonthly: baseData.isMonthly,
+      isMonthly: baseData.isMonthly || interval !== 'daily',
     };
-  }, [baseData, adjustmentMode, viewMode]);
+  }, [baseData, adjustmentMode, viewMode, interval]);
   return (
     <main className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerBadge}>
           <span>Institutional Activity</span>
-          {(timeframe === 'ALL' || timeframe === 'MAX') && (
-            <span className={styles.headerSubBadge}>• Monthly Bucketed</span>
+          {isMultiYear && (
+            <span className={styles.headerSubBadge}>• Multi-Year View</span>
           )}
         </div>
         <h1 className={styles.mainTitle}>FII & DII Historical Flow Tracker</h1>
@@ -66,15 +78,17 @@ export const FiiDiiTracker: React.FC = () => {
           & Sensex overlays, benchmarked against CPI Inflation and World Bank Purchasing Power Parity.
         </p>
       </header>
-      {/* 1. Summary Cards with Data Ingestion Callout */}
+      {/* 1. Summary Cards with Official Data Ingestion Callout */}
       <FiiDiiSummaryCards
         summary={displayData?.summary ?? null}
         isLoading={!hasLoadedInitially && isPending}
       />
-      {/* 2. Interactive Filters & Controls */}
+      {/* 2. Interactive Filters & Controls (Timeframe Duration, Time Interval, Adjustment, View Mode, Overlays) */}
       <FiiDiiControls
         timeframe={timeframe}
-        setTimeframe={setTimeframe}
+        setTimeframe={handleTimeframeChange}
+        interval={interval}
+        setInterval={setInterval}
         adjustmentMode={adjustmentMode}
         setAdjustmentMode={setAdjustmentMode}
         viewMode={viewMode}
@@ -87,7 +101,7 @@ export const FiiDiiTracker: React.FC = () => {
         setShowSensex={setShowSensex}
         isLoading={isPending}
       />
-      {/* 3. Dual Y-Axis Interactive Chart with Bar/Line toggle & direct interval chips */}
+      {/* 3. Dual Y-Axis Interactive Chart with Bar/Line toggle & in-chart interval and duration chips */}
       <FiiDiiChart
         points={displayData?.points ?? []}
         adjustmentMode={adjustmentMode}
@@ -95,7 +109,9 @@ export const FiiDiiTracker: React.FC = () => {
         chartType={chartType}
         onChartTypeChange={setChartType}
         timeframe={timeframe}
-        onTimeframeChange={setTimeframe}
+        onTimeframeChange={handleTimeframeChange}
+        interval={interval}
+        onIntervalChange={setInterval}
         showNifty={showNifty}
         showSensex={showSensex}
         isLoading={!hasLoadedInitially && isPending}

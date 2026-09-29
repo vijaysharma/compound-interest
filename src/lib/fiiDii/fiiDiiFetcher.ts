@@ -44,6 +44,41 @@ export function parseNseDate(dateStr: string): string {
   return new Date(trimmed).toISOString().slice(0, 10);
 }
 /**
+ * Returns the latest trading date (YYYY-MM-DD) for which official FII/DII data can be expected.
+ * In IST (UTC+5:30), daily FII/DII reports are published by NSE/BSE only after 18:00 (6:00 PM IST) on weekdays.
+ * If called before 18:00 IST on a weekday, today's market has not closed or published data, so cutoff is yesterday.
+ */
+export function getLatestEligibleFiiDiiDate(now = new Date()): string {
+  const istFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = istFormatter.formatToParts(now);
+  let year = '';
+  let month = '';
+  let day = '';
+  let hour = 0;
+  for (const p of parts) {
+    if (p.type === 'year') year = p.value;
+    if (p.type === 'month') month = p.value;
+    if (p.type === 'day') day = p.value;
+    if (p.type === 'hour') hour = parseInt(p.value, 10);
+  }
+  const dateObj = new Date(`${year}-${month}-${day}T12:00:00Z`);
+  if (hour < 18) {
+    dateObj.setUTCDate(dateObj.getUTCDate() - 1);
+  }
+  const y = dateObj.getUTCFullYear();
+  const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+/**
  * Fetches the latest daily FII/DII net flows from NSE India API.
  */
 export async function fetchNSELiveFiiDii(): Promise<LiveFiiDiiRecord | null> {

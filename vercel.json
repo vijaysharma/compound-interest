@@ -5,6 +5,10 @@
     {
       "path": "/api/cron/sync-nav",
       "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/cron/sync-fii-dii",
+      "schedule": "35 12 * * 1-5"
     }
   ],
   "functions": {
