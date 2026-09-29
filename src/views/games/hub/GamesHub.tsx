@@ -154,7 +154,7 @@ export const GamesHub: React.FC = () => {
     setAliasError(null);
     setAliasSuccess(null);
     setAliasChecking(true);
-    const check = await checkAliasAvailabilityAction(clean);
+    const check = await checkAliasAvailabilityAction(token, clean);
     if (!check.available) {
       setAliasError(check.error || 'Alias is unavailable');
       setAliasChecking(false);

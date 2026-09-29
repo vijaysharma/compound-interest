@@ -31,4 +31,5 @@ export async function applyStateAndLeaderboardMigrations(sql: Query): Promise<vo
   await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_game_points_idx ON game_leaderboard (game_id, total_points DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_user_points_idx ON game_leaderboard (user_id, total_points DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_global_points_idx ON game_leaderboard (total_points DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_pb_idx ON game_leaderboard (user_id, game_id, difficulty, total_points DESC)`;
 }

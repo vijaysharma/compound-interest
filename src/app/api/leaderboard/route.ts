@@ -27,25 +27,6 @@ export async function GET(request: Request) {
     leaderboard: filtered,
   });
 }
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    if (!body || !body.gameId || typeof body.timeSeconds !== 'number') {
-      return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
-    }
-    const newEntry: LeaderboardApiEntry = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      gameId: String(body.gameId),
-      gameName: String(body.gameName || body.gameId),
-      difficulty: String(body.difficulty || 'standard'),
-      timeSeconds: Number(body.timeSeconds),
-      score: body.score !== undefined ? Number(body.score) : undefined,
-      accuracy: body.accuracy ? String(body.accuracy) : undefined,
-      completedAt: new Date().toISOString(),
-    };
-    mockLeaderboard.unshift(newEntry);
-    return NextResponse.json({ success: true, entry: newEntry });
-  } catch {
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
-  }
+export async function POST() {
+  return NextResponse.json({ success: false, error: 'Use server actions for score submission' }, { status: 405 });
 }
