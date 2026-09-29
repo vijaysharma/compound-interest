@@ -5,9 +5,9 @@ import {
   canSlide,
   getShuffledBoard,
   isSolved,
-  slideInDirection,
-  slideTileInDirection,
   slideTiles,
+  GRID_SIZE,
+  TOTAL_TILES,
   type MovementControlMode,
   type SlideMove,
   type SlideResult,
@@ -39,8 +39,15 @@ export const SlidePuzzleGame: React.FC = () => {
     return 'tap';
   });
   const [movementLog, setMovementLog] = useState<SlideMove[]>([]);
-  const pointerStartRef = useRef<{ x: number; y: number; tileIdx: number | null } | null>(null);
+  const tilesRef = useRef(tiles);
+  useEffect(() => {
+    tilesRef.current = tiles;
+  }, [tiles]);
+  const lastPointerTileRef = useRef<number | null>(null);
+  const isPointerDownRef = useRef<boolean>(false);
+  const hasMovedInGestureRef = useRef<boolean>(false);
   const isSwipingRef = useRef<boolean>(false);
+  const boardRef = useRef<HTMLDivElement | null>(null);
   const handleModeChange = (mode: MovementControlMode) => {
     setControlMode(mode);
     try {
@@ -50,7 +57,9 @@ export const SlidePuzzleGame: React.FC = () => {
     }
   };
   const resetGame = useCallback(() => {
-    setTiles(getShuffledBoard());
+    const next = getShuffledBoard();
+    tilesRef.current = next;
+    setTiles(next);
     setMoves(0);
     setElapsedSeconds(0);
     setIsWon(false);
@@ -58,6 +67,9 @@ export const SlidePuzzleGame: React.FC = () => {
     setPersonalBest(false);
     setScoreBreakdown(null);
     setMovementLog([]);
+    lastPointerTileRef.current = null;
+    isPointerDownRef.current = false;
+    hasMovedInGestureRef.current = false;
   }, []);
   useEffect(() => {
     if (!isStarted || isWon) return;
@@ -68,9 +80,9 @@ export const SlidePuzzleGame: React.FC = () => {
   }, [isStarted, isWon]);
   const executeMove = useCallback((result: SlideResult, moveType: 'TAP' | 'SWIPE') => {
     if (!isStarted) setIsStarted(true);
-    const nextMoves = moves + 1;
+    tilesRef.current = result.newTiles;
     setTiles(result.newTiles);
-    setMoves(nextMoves);
+    setMoves((prev) => prev + 1);
     const now = Date.now();
     const newSlideMoves: SlideMove[] = result.moves.map((m) => ({
       ...m,
@@ -80,55 +92,127 @@ export const SlidePuzzleGame: React.FC = () => {
     setMovementLog((prev) => [...prev, ...newSlideMoves]);
     if (isSolved(result.newTiles)) {
       setIsWon(true);
-      const res = recordGameScore({
-        gameId: 'slide-puzzle',
-        gameName: '15-Slide Puzzle',
-        difficulty: '4x4',
-        timeSeconds: elapsedSeconds + 1,
-        moves: nextMoves,
-        outcome: 'won',
+      setMoves((currentMoves) => {
+        const finalMoves = currentMoves + 1;
+        const res = recordGameScore({
+          gameId: 'slide-puzzle',
+          gameName: '15-Slide Puzzle',
+          difficulty: '4x4',
+          timeSeconds: elapsedSeconds + 1,
+          moves: finalMoves,
+          outcome: 'won',
+        });
+        setPersonalBest(res.isPersonalBest);
+        setScoreBreakdown(res.scoreBreakdown);
+        return finalMoves;
       });
-      setPersonalBest(res.isPersonalBest);
-      setScoreBreakdown(res.scoreBreakdown);
     }
-  }, [elapsedSeconds, isStarted, moves]);
+  }, [elapsedSeconds, isStarted]);
+  const getTileIndexFromPoint = useCallback((clientX: number, clientY: number): number | null => {
+    if (typeof document !== 'undefined') {
+      const el = document.elementFromPoint(clientX, clientY);
+      const tileEl = el?.closest('[data-idx]');
+      if (tileEl) {
+        const parsed = parseInt(tileEl.getAttribute('data-idx') || '-1', 10);
+        if (parsed >= 0 && parsed < TOTAL_TILES) return parsed;
+      }
+    }
+    const gridEl = boardRef.current?.querySelector(`.${styles.grid}`) as HTMLElement | null;
+    const target = gridEl || boardRef.current;
+    if (!target) return null;
+    const rect = target.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+      return null;
+    }
+    const col = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor((x / rect.width) * GRID_SIZE)));
+    const row = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor((y / rect.height) * GRID_SIZE)));
+    return row * GRID_SIZE + col;
+  }, []);
+  const handleCellTransition = useCallback((currentIdx: number, isMoveGesture: boolean) => {
+    if (isWon) return;
+    if (controlMode === 'tap' && isMoveGesture) return;
+    const currentTiles = tilesRef.current;
+    const currentBlank = currentTiles.indexOf(0);
+    if (currentBlank === -1) return;
+    const prevIdx = lastPointerTileRef.current;
+    lastPointerTileRef.current = currentIdx;
+    if (prevIdx === null || prevIdx === currentIdx) {
+      return;
+    }
+    // Moving FROM blank INTO adjacent number: swap tile into blank!
+    if (prevIdx === currentBlank) {
+      const blankRow = Math.floor(currentBlank / GRID_SIZE);
+      const blankCol = currentBlank % GRID_SIZE;
+      const targetRow = Math.floor(currentIdx / GRID_SIZE);
+      const targetCol = currentIdx % GRID_SIZE;
+      const isAdjacent =
+        (Math.abs(blankRow - targetRow) === 1 && blankCol === targetCol) ||
+        (Math.abs(blankCol - targetCol) === 1 && blankRow === targetRow);
+      if (isAdjacent) {
+        const result = slideTiles(currentTiles, currentIdx);
+        if (result) {
+          hasMovedInGestureRef.current = true;
+          isSwipingRef.current = true;
+          executeMove(result, 'SWIPE');
+          lastPointerTileRef.current = currentIdx; // now currentIdx is the new blank space!
+        }
+      }
+    }
+  }, [controlMode, executeMove, isWon]);
   const handleTileClick = (idx: number) => {
     if (isWon) return;
     if (controlMode === 'swipe') return; // Taps disabled in swipe mode
-    if (isSwipingRef.current) return; // Prevent double execution in hybrid mode
-    const result = slideTiles(tiles, idx);
+    if (isSwipingRef.current) return; // Prevent click firing after swipe/slide
+    const result = slideTiles(tilesRef.current, idx);
     if (!result) return;
     executeMove(result, 'TAP');
   };
   const handlePointerDown = (e: React.PointerEvent) => {
-    pointerStartRef.current = { x: e.clientX, y: e.clientY, tileIdx: null };
+    if (isWon) return;
+    isPointerDownRef.current = true;
+    hasMovedInGestureRef.current = false;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore unsupported pointer capture
+    }
+    const idx = getTileIndexFromPoint(e.clientX, e.clientY);
+    if (idx !== null) {
+      lastPointerTileRef.current = idx;
+    }
   };
-  const handleTilePointerDown = (e: React.PointerEvent, idx: number) => {
-    e.stopPropagation();
-    pointerStartRef.current = { x: e.clientX, y: e.clientY, tileIdx: idx };
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (isWon) return;
+    const isTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
+    // On touch device, must be sliding with finger down
+    if (isTouch && !isPointerDownRef.current) return;
+    const idx = getTileIndexFromPoint(e.clientX, e.clientY);
+    if (idx !== null) {
+      handleCellTransition(idx, true);
+    }
   };
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (!pointerStartRef.current || isWon) return;
-    const { x: startX, y: startY, tileIdx } = pointerStartRef.current;
-    pointerStartRef.current = null;
-    if (controlMode === 'tap') return; // Swipes disabled in tap mode
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    const minSwipe = 24;
-    if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
-    isSwipingRef.current = true;
-    setTimeout(() => {
-      isSwipingRef.current = false;
-    }, 150);
-    const dir: 'up' | 'down' | 'left' | 'right' =
-      Math.abs(dx) > Math.abs(dy)
-        ? (dx > 0 ? 'right' : 'left')
-        : (dy > 0 ? 'down' : 'up');
-    const result = tileIdx !== null
-      ? slideTileInDirection(tiles, tileIdx, dir)
-      : slideInDirection(tiles, dir);
-    if (!result) return;
-    executeMove(result, 'SWIPE');
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
+    const wasMoved = hasMovedInGestureRef.current;
+    isPointerDownRef.current = false;
+    lastPointerTileRef.current = null;
+    if (wasMoved) {
+      isSwipingRef.current = true;
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 100);
+    }
+    hasMovedInGestureRef.current = false;
+  };
+  const handlePointerLeave = () => {
+    lastPointerTileRef.current = null;
+    isPointerDownRef.current = false;
   };
   const lastMove = movementLog[movementLog.length - 1];
   return (
@@ -186,7 +270,7 @@ export const SlidePuzzleGame: React.FC = () => {
             aria-checked={controlMode === 'swipe'}
           >
             <FiMove className={styles.btnIcon} />
-            <span>Swipe</span>
+            <span>Slide / Hover</span>
           </button>
           <button
             type="button"
@@ -210,7 +294,7 @@ export const SlidePuzzleGame: React.FC = () => {
           stats={[
             { label: 'Moves', value: moves },
             { label: 'Time', value: formatGameTime(elapsedSeconds) },
-            { label: 'Control', value: controlMode.charAt(0).toUpperCase() + controlMode.slice(1) },
+            { label: 'Control', value: controlMode === 'tap' ? 'Tap' : controlMode === 'swipe' ? 'Slide / Hover' : 'Hybrid' },
             { label: 'Logged Slides', value: movementLog.length },
           ]}
           isPersonalBest={personalBest}
@@ -226,14 +310,30 @@ export const SlidePuzzleGame: React.FC = () => {
         onConfirmQuit={() => setShowQuitModal(false)}
       />
       <div
+        ref={boardRef}
         className={styles.boardWrapper}
         onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
       >
         <div className={styles.grid}>
           {tiles.map((val, idx) => {
             if (val === 0) {
-              return <div key="blank" className={`${styles.tile} ${styles.tileEmpty}`} aria-hidden="true" />;
+              return (
+                <div
+                  key="blank"
+                  data-idx={idx}
+                  className={styles.tileEmpty}
+                  onPointerEnter={(e) => {
+                    if (e.pointerType === 'mouse') {
+                      handleCellTransition(idx, true);
+                    }
+                  }}
+                  aria-hidden="true"
+                />
+              );
             }
             const isSlidable = !isWon && canSlide(tiles, idx);
             const isCorrect = val === idx + 1;
@@ -243,9 +343,14 @@ export const SlidePuzzleGame: React.FC = () => {
             return (
               <div
                 key={val}
+                data-idx={idx}
                 className={tileClass}
                 onClick={() => handleTileClick(idx)}
-                onPointerDown={(e) => handleTilePointerDown(e, idx)}
+                onPointerEnter={(e) => {
+                  if (e.pointerType === 'mouse') {
+                    handleCellTransition(idx, true);
+                  }
+                }}
                 role="button"
                 tabIndex={isSlidable ? 0 : -1}
                 aria-label={`Tile ${val}`}
@@ -258,8 +363,8 @@ export const SlidePuzzleGame: React.FC = () => {
       </div>
       <p className={styles.instructions}>
         {controlMode === 'tap' && 'Tap Mode: Tap any highlighted tile in the blank space\'s row or column to slide it.'}
-        {controlMode === 'swipe' && 'Swipe Mode: Swipe on tiles or across the board in the direction of the blank space.'}
-        {controlMode === 'hybrid' && 'Hybrid Mode: Both tap and swipe gestures are active simultaneously for fluid gameplay.'}
+        {controlMode === 'swipe' && 'Slide / Hover Mode: Hover on web or slide on device from the blank to any number to swap them continuously like a snake.'}
+        {controlMode === 'hybrid' && 'Hybrid Mode: Tap tiles or hover/slide continuously from the blank space to speed-solve.'}
       </p>
     </div>
   );

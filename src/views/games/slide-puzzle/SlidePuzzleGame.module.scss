@@ -177,6 +177,9 @@
   gap: 8px;
   width: 100%;
   height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .tile {
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
@@ -191,7 +194,10 @@
   cursor: pointer;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: transform 0.12s ease-out, background-color 0.15s ease, box-shadow 0.15s ease;
-  touch-action: manipulation;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   &:hover {
     background: #f1f5f9;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
@@ -214,11 +220,24 @@
   background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);
 }
 .tileEmpty {
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
   cursor: default;
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  &:hover,
+  &:active,
+  &:focus {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transform: none !important;
+  }
 }
 .instructions {
   font-size: 0.8rem;
