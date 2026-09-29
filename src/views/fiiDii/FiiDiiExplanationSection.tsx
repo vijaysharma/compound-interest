@@ -19,7 +19,7 @@ export const FiiDiiExplanationSection: React.FC = () => {
     <section className={styles.explanationsContainer} aria-label="FII and DII concepts explained">
       <div className={styles.explanationsHeader}>
         <div className={styles.explanationsHeaderTop}>
-          <span className={styles.infoBadge}>💡 Layman Guides</span>
+          <span className={styles.infoBadge}>💡 Layman Guides & Formulas</span>
           <span className={styles.infoSubText}>Tap any section to expand breakdown</span>
         </div>
         <h3 className={styles.explanationsMainTitle}>Understanding Market Movements & Adjustments</h3>
@@ -49,6 +49,21 @@ export const FiiDiiExplanationSection: React.FC = () => {
               {isOpen && (
                 <div className={styles.explanationBody}>
                   <p className={styles.explanationText}>{item.explanation}</p>
+                  {item.formula && (
+                    <div className={styles.formulaBox}>
+                      <span className={styles.formulaLabel}>Calculation Formula:</span>
+                      <code className={styles.formulaCode}>{item.formula}</code>
+                    </div>
+                  )}
+                  {item.steps && item.steps.length > 0 && (
+                    <div className={styles.stepsList}>
+                      {item.steps.map((st, sIdx) => (
+                        <div key={sIdx} className={styles.stepItem}>
+                          {st}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className={styles.explanationTakeaway}>
                     <span className={styles.takeawayTag}>Key Takeaway:</span> {item.keyTakeaway}
                   </div>

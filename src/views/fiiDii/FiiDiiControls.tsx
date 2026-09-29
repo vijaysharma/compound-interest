@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import type { AdjustmentMode, ViewMode, Timeframe } from '@/lib/fiiDii/fiiDiiCalculations';
+import type { ChartType } from './FiiDiiChart';
 import styles from './FiiDiiTracker.module.scss';
 interface FiiDiiControlsProps {
   timeframe: Timeframe;
@@ -9,6 +10,8 @@ interface FiiDiiControlsProps {
   setAdjustmentMode: (m: AdjustmentMode) => void;
   viewMode: ViewMode;
   setViewMode: (v: ViewMode) => void;
+  chartType?: ChartType;
+  setChartType?: (c: ChartType) => void;
   showNifty: boolean;
   setShowNifty: (s: boolean) => void;
   showSensex: boolean;
@@ -23,6 +26,8 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
   setAdjustmentMode,
   viewMode,
   setViewMode,
+  chartType,
+  setChartType,
   showNifty,
   setShowNifty,
   showSensex,
@@ -81,7 +86,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
           </button>
         </div>
       </div>
-      {/* 3. View Mode Switcher + Index Overlays */}
+      {/* 3. View Mode Switcher + Chart Type + Index Overlays */}
       <div className={styles.viewAndOverlaysRow}>
         <div className={styles.controlGroup}>
           <span className={styles.controlLabel}>View:</span>
@@ -104,6 +109,29 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
             </button>
           </div>
         </div>
+        {chartType && setChartType && (
+          <div className={styles.controlGroup}>
+            <span className={styles.controlLabel}>Chart:</span>
+            <div className={styles.segmentedControl}>
+              <button
+                type="button"
+                className={`${styles.segmentBtn} ${chartType === 'bar' ? styles.segmentBtnActive : ''}`}
+                onClick={() => setChartType('bar')}
+                disabled={isLoading}
+              >
+                Bar
+              </button>
+              <button
+                type="button"
+                className={`${styles.segmentBtn} ${chartType === 'line' ? styles.segmentBtnActive : ''}`}
+                onClick={() => setChartType('line')}
+                disabled={isLoading}
+              >
+                Line
+              </button>
+            </div>
+          </div>
+        )}
         <div className={styles.controlGroup}>
           <span className={styles.controlLabel}>Index Overlays:</span>
           <div className={styles.togglesRow}>

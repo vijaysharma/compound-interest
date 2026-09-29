@@ -12,21 +12,32 @@ import {
   Legend,
   ReferenceLine,
 } from 'recharts';
-import type { ProcessedFIIDIIPoint, AdjustmentMode, ViewMode } from '@/lib/fiiDii/fiiDiiCalculations';
+import { FiBarChart2, FiTrendingUp } from 'react-icons/fi';
+import type { ProcessedFIIDIIPoint, AdjustmentMode, ViewMode, Timeframe } from '@/lib/fiiDii/fiiDiiCalculations';
 import { FiiDiiTooltip } from './FiiDiiTooltip';
 import styles from './FiiDiiTracker.module.scss';
+export type ChartType = 'bar' | 'line';
 interface FiiDiiChartProps {
   points: ProcessedFIIDIIPoint[];
   adjustmentMode: AdjustmentMode;
   viewMode: ViewMode;
+  chartType: ChartType;
+  onChartTypeChange: (type: ChartType) => void;
+  timeframe: Timeframe;
+  onTimeframeChange: (t: Timeframe) => void;
   showNifty: boolean;
   showSensex: boolean;
   isLoading?: boolean;
 }
+const TIMEFRAMES: Timeframe[] = ['1M', '3M', '6M', '1Y', '5Y', 'ALL'];
 export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
   points,
   adjustmentMode,
   viewMode,
+  chartType,
+  onChartTypeChange,
+  timeframe,
+  onTimeframeChange,
   showNifty,
   showSensex,
   isLoading,
@@ -100,13 +111,39 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
   }
   const isCumulative = viewMode === 'cumulative';
   const hasRightAxis = showNifty || showSensex;
+  const isLineMode = chartType === 'line' || isCumulative;
   return (
     <div className={styles.chartCard}>
       <div className={styles.chartHeader}>
         <div className={styles.chartTitleGroup}>
-          <h3 className={styles.chartMainTitle}>
-            {isCumulative ? 'Cumulative Net Institutional Flow' : 'Daily Net Institutional Flow'}
-          </h3>
+          <div className={styles.chartMainTitleRow}>
+            <h3 className={styles.chartMainTitle}>
+              {isCumulative ? 'Cumulative Net Institutional Flow' : 'Daily Net Institutional Flow'}
+            </h3>
+            {/* B. Chart Type Toggle [ Bar ] | [ Line ] */}
+            <div className={styles.chartTypeControl} role="group" aria-label="Chart representation mode">
+              <button
+                type="button"
+                className={`${styles.chartTypeBtn} ${chartType === 'bar' ? styles.chartTypeBtnActive : ''}`}
+                onClick={() => onChartTypeChange('bar')}
+                title="View as Bar Chart"
+                aria-pressed={chartType === 'bar'}
+              >
+                <FiBarChart2 size={13} />
+                <span>Bar</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.chartTypeBtn} ${chartType === 'line' ? styles.chartTypeBtnActive : ''}`}
+                onClick={() => onChartTypeChange('line')}
+                title="View as Line Chart"
+                aria-pressed={chartType === 'line'}
+              >
+                <FiTrendingUp size={13} />
+                <span>Line</span>
+              </button>
+            </div>
+          </div>
           <span className={styles.chartSubTitle}>
             {adjustmentMode === 'nominal'
               ? 'Values in ₹ Crores (Nominal)'
@@ -115,6 +152,26 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                 : 'Purchasing Power Parity Adjusted (in $ Million)'}
             {hasRightAxis && ' • Dual Axis with Stock Index Overlay'}
           </span>
+        </div>
+        {/* C. Time Interval / Granularity Selectors directly on Chart */}
+        <div className={styles.chartTimeframeBar} role="group" aria-label="Select chart timeframe">
+          <span className={styles.chartTimeframeLabel}>Interval:</span>
+          <div className={styles.chartTimeframeChips}>
+            {TIMEFRAMES.map((tf) => {
+              const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
+              return (
+                <button
+                  key={tf}
+                  type="button"
+                  className={`${styles.chartTfChip} ${isActive ? styles.chartTfChipActive : ''}`}
+                  onClick={() => onTimeframeChange(tf)}
+                  disabled={isLoading}
+                >
+                  {tf}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
       <div className={styles.chartWrapper}>
@@ -175,14 +232,14 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
               iconType="circle"
               wrapperStyle={{ paddingBottom: 10, fontSize: '0.8rem' }}
             />
-            {/* Flow Data: Daily Bars vs Cumulative Lines */}
-            {isCumulative ? (
+            {/* Flow Data: Toggled between Bar and Line representations */}
+            {isLineMode ? (
               <>
                 <Line
                   yAxisId="left"
                   type="monotone"
-                  dataKey="cumulativeFiiNet"
-                  name="FII Net (Cumulative)"
+                  dataKey={isCumulative ? 'cumulativeFiiNet' : 'fiiNet'}
+                  name={isCumulative ? 'FII Net (Cumulative)' : 'FII Net'}
                   stroke="#2563eb"
                   strokeWidth={2.5}
                   dot={false}
@@ -191,8 +248,8 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                 <Line
                   yAxisId="left"
                   type="monotone"
-                  dataKey="cumulativeDiiNet"
-                  name="DII Net (Cumulative)"
+                  dataKey={isCumulative ? 'cumulativeDiiNet' : 'diiNet'}
+                  name={isCumulative ? 'DII Net (Cumulative)' : 'DII Net'}
                   stroke="#059669"
                   strokeWidth={2.5}
                   dot={false}

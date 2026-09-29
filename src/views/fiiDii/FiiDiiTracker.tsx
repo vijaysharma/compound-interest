@@ -10,13 +10,14 @@ import {
 } from '@/lib/fiiDii/fiiDiiCalculations';
 import { FiiDiiSummaryCards } from './FiiDiiSummaryCards';
 import { FiiDiiControls } from './FiiDiiControls';
-import { FiiDiiChart } from './FiiDiiChart';
+import { FiiDiiChart, type ChartType } from './FiiDiiChart';
 import { FiiDiiExplanationSection } from './FiiDiiExplanationSection';
 import styles from './FiiDiiTracker.module.scss';
 export const FiiDiiTracker: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
   const [adjustmentMode, setAdjustmentMode] = useState<AdjustmentMode>('nominal');
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
+  const [chartType, setChartType] = useState<ChartType>('bar');
   const [showNifty, setShowNifty] = useState<boolean>(true);
   const [showSensex, setShowSensex] = useState<boolean>(false);
   const [baseData, setBaseData] = useState<FIIDIIDataResponse | null>(null);
@@ -65,7 +66,7 @@ export const FiiDiiTracker: React.FC = () => {
           & Sensex overlays, benchmarked against CPI Inflation and World Bank Purchasing Power Parity.
         </p>
       </header>
-      {/* 1. Summary Cards */}
+      {/* 1. Summary Cards with Data Ingestion Callout */}
       <FiiDiiSummaryCards
         summary={displayData?.summary ?? null}
         isLoading={!hasLoadedInitially && isPending}
@@ -78,22 +79,28 @@ export const FiiDiiTracker: React.FC = () => {
         setAdjustmentMode={setAdjustmentMode}
         viewMode={viewMode}
         setViewMode={setViewMode}
+        chartType={chartType}
+        setChartType={setChartType}
         showNifty={showNifty}
         setShowNifty={setShowNifty}
         showSensex={showSensex}
         setShowSensex={setShowSensex}
         isLoading={isPending}
       />
-      {/* 3. Dual Y-Axis Interactive Chart */}
+      {/* 3. Dual Y-Axis Interactive Chart with Bar/Line toggle & direct interval chips */}
       <FiiDiiChart
         points={displayData?.points ?? []}
         adjustmentMode={adjustmentMode}
         viewMode={viewMode}
+        chartType={chartType}
+        onChartTypeChange={setChartType}
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
         showNifty={showNifty}
         showSensex={showSensex}
         isLoading={!hasLoadedInitially && isPending}
       />
-      {/* 4. Layman Guides & Section Explanations */}
+      {/* 4. Layman Guides, Formulas & Section Explanations */}
       <FiiDiiExplanationSection />
     </main>
   );
