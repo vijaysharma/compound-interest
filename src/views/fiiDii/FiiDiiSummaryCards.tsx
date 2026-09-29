@@ -7,6 +7,12 @@ interface FiiDiiSummaryCardsProps {
   summary: FIIDIISummary | null;
   isLoading?: boolean;
 }
+function fmtDate(d: string): string {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${parseInt(day, 10)} ${months[parseInt(m, 10) - 1]} '${y.slice(2)}`;
+}
 export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   summary,
   isLoading,
@@ -29,6 +35,8 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   }
   const {
     latestDate,
+    periodStart,
+    periodEnd,
     latestFiiNet,
     latestDiiNet,
     totalFiiNet,
@@ -48,9 +56,11 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   const toggleInfo = (type: 'fii' | 'dii') => {
     setActiveInfo((prev) => (prev === type ? null : type));
   };
+  const periodLabel = periodStart && periodEnd && periodStart !== periodEnd
+    ? `${fmtDate(periodStart)} – ${fmtDate(periodEnd)}`
+    : fmtDate(latestDate);
   return (
     <div className={styles.summarySection}>
-      {/* A. Official Data Ingestion Transparency Callout Banner */}
       <div className={styles.dataSourceBanner}>
         <div className={styles.dataSourceIcon}>
           <FiCheckCircle size={18} />
@@ -70,7 +80,7 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
         </div>
       </div>
       <div className={styles.summaryGrid}>
-        {/* 1. Latest FII Flow Card */}
+        {/* 1. Latest FII Flow */}
         <div className={styles.summaryCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWithInfo}>
@@ -79,14 +89,14 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
                 type="button"
                 className={styles.infoIconBtn}
                 onClick={() => toggleInfo('fii')}
-                title="View FII ingestion & calculation derivation"
+                title="FII derivation details"
                 aria-label="FII derivation details"
               >
                 <FiInfo size={14} />
               </button>
             </div>
-            <span className={styles.cardDate}>{latestDate}</span>
           </div>
+          <div className={styles.cardDateRange}>{fmtDate(latestDate)}</div>
           <div className={`${styles.cardValue} ${latestFiiNet >= 0 ? styles.pos : styles.neg}`}>
             {formatAmount(latestFiiNet)}{' '}
             <span className={styles.cardUnit}>{unitLabel}</span>
@@ -96,29 +106,18 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
               {latestFiiNet >= 0 ? 'Net Buyers' : 'Net Sellers'}
             </span>
           </div>
-          {/* Interactive Ingestion & Derivation Popover */}
           {activeInfo === 'fii' && (
             <div className={styles.infoPopover}>
               <div className={styles.popoverHeader}>
                 <strong>FII Net Flow Derivation</strong>
-                <button
-                  type="button"
-                  className={styles.popoverCloseBtn}
-                  onClick={() => setActiveInfo(null)}
-                >
-                  ✕
-                </button>
+                <button type="button" className={styles.popoverCloseBtn} onClick={() => setActiveInfo(null)}>✕</button>
               </div>
-              <p className={styles.popoverText}>
-                <strong>Formula:</strong> Net = FII Gross Buy − FII Gross Sell.
-              </p>
-              <p className={styles.popoverSubText}>
-                Source: Ingested directly from official NSE/BSE EOD reports at 6:00 PM IST. Captures all foreign portfolio & institutional market orders.
-              </p>
+              <p className={styles.popoverText}><strong>Formula:</strong> Net = FII Gross Buy − FII Gross Sell.</p>
+              <p className={styles.popoverSubText}>Source: Ingested from official NSE/BSE EOD reports at 6:00 PM IST.</p>
             </div>
           )}
         </div>
-        {/* 2. Latest DII Flow Card */}
+        {/* 2. Latest DII Flow */}
         <div className={styles.summaryCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWithInfo}>
@@ -127,14 +126,14 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
                 type="button"
                 className={styles.infoIconBtn}
                 onClick={() => toggleInfo('dii')}
-                title="View DII ingestion & calculation derivation"
+                title="DII derivation details"
                 aria-label="DII derivation details"
               >
                 <FiInfo size={14} />
               </button>
             </div>
-            <span className={styles.cardDate}>{latestDate}</span>
           </div>
+          <div className={styles.cardDateRange}>{fmtDate(latestDate)}</div>
           <div className={`${styles.cardValue} ${latestDiiNet >= 0 ? styles.pos : styles.neg}`}>
             {formatAmount(latestDiiNet)}{' '}
             <span className={styles.cardUnit}>{unitLabel}</span>
@@ -144,34 +143,24 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
               {latestDiiNet >= 0 ? 'Net Buyers' : 'Net Sellers'}
             </span>
           </div>
-          {/* Interactive Ingestion & Derivation Popover */}
           {activeInfo === 'dii' && (
             <div className={styles.infoPopover}>
               <div className={styles.popoverHeader}>
                 <strong>DII Net Flow Derivation</strong>
-                <button
-                  type="button"
-                  className={styles.popoverCloseBtn}
-                  onClick={() => setActiveInfo(null)}
-                >
-                  ✕
-                </button>
+                <button type="button" className={styles.popoverCloseBtn} onClick={() => setActiveInfo(null)}>✕</button>
               </div>
-              <p className={styles.popoverText}>
-                <strong>Formula:</strong> Net = DII Gross Buy − DII Gross Sell.
-              </p>
-              <p className={styles.popoverSubText}>
-                Source: Includes Indian Mutual Funds, Insurance (LIC), Pension Funds, and Banks. Funded primarily through recurring retail SIP deposits.
-              </p>
+              <p className={styles.popoverText}><strong>Formula:</strong> Net = DII Gross Buy − DII Gross Sell.</p>
+              <p className={styles.popoverSubText}>Includes Mutual Funds, Insurance (LIC), Pension Funds, and Banks.</p>
             </div>
           )}
         </div>
-        {/* 3. Period Total Cumulative Inflows */}
+        {/* 3. Period Net Total */}
         <div className={styles.summaryCard}>
           <div className={styles.cardHeader}>
             <span className={styles.cardTitle}>Period Net Total</span>
             <span className={styles.cardTag}>{summary.totalPeriodDays} buckets</span>
           </div>
+          <div className={styles.cardDateRange}>{periodLabel}</div>
           <div className={styles.cardSplitRow}>
             <div>
               <span className={styles.splitLabel}>FII:</span>
@@ -188,18 +177,19 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
           </div>
           <div className={styles.cardFooter}>
             <span className={styles.cardMetaText}>
-              Net Balance: {(totalFiiNet + totalDiiNet) >= 0 ? '+' : ''}
+              Net: {(totalFiiNet + totalDiiNet) >= 0 ? '+' : ''}
               {(totalFiiNet + totalDiiNet).toLocaleString('en-IN', { maximumFractionDigits: 1 })}{' '}
               {unitLabel}
             </span>
           </div>
         </div>
-        {/* 4. Index Levels */}
+        {/* 4. Index Benchmarks */}
         <div className={styles.summaryCard}>
           <div className={styles.cardHeader}>
             <span className={styles.cardTitle}>Index Benchmarks</span>
             <span className={styles.cardDate}>Closing</span>
           </div>
+          <div className={styles.cardDateRange}>{periodLabel}</div>
           <div className={styles.cardSplitRow}>
             <div>
               <span className={styles.splitLabel}>Nifty 50:</span>

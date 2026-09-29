@@ -5,6 +5,7 @@ import { getLatestEligibleFiiDiiDate } from '@/lib/fiiDii/fiiDiiFetcher';
 import {
   processFIIDIIData,
   getTimeframeStartDate,
+  getFinancialYearRange,
   aggregatePointsByInterval,
   type AdjustmentMode,
   type ViewMode,
@@ -30,10 +31,21 @@ export async function getFIIDIIDataAction(
   const interval: FlowInterval = params.interval || 'daily';
   // Enforce cutoff: today's data is only eligible after 6:00 PM IST (18:00 IST)
   const maxEligibleDate = getLatestEligibleFiiDiiDate();
-  const endDate = params.endDate
+  let endDate = params.endDate
     ? (params.endDate > maxEligibleDate ? maxEligibleDate : params.endDate)
     : maxEligibleDate;
-  const startDate = params.startDate || getTimeframeStartDate(timeframe, new Date(`${endDate}T12:00:00Z`));
+  if (typeof timeframe === 'string' && timeframe.startsWith('FY')) {
+    const fyEnd = getFinancialYearRange(timeframe).end;
+    if (endDate > fyEnd) endDate = fyEnd;
+  }
+  let startDate = params.startDate;
+  if (!startDate) {
+    if (typeof timeframe === 'string' && timeframe.startsWith('FY')) {
+      startDate = getFinancialYearRange(timeframe).start;
+    } else {
+      startDate = getTimeframeStartDate(timeframe, new Date(`${endDate}T12:00:00Z`));
+    }
+  }
   // Determine query strategy
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
   const wantsDailyOrWeekly = interval === 'daily' || interval === 'weekly';

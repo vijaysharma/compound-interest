@@ -1023,3 +1023,147 @@
   color: var(--color-text-muted, #94a3b8);
   font-size: 0.875rem;
 }
+// ----------------------------------------------------
+// Card date range
+// ----------------------------------------------------
+.cardDateRange {
+  font-size: 0.68rem;
+  color: var(--color-text-muted, #94a3b8);
+  margin-bottom: 0.3rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+// ----------------------------------------------------
+// FY Duration row (chips + select)
+// ----------------------------------------------------
+.durationRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.fyDropdownWrap {
+  flex-shrink: 0;
+}
+.fySelect {
+  height: 32px;
+  padding: 0 0.55rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text, #334155);
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  appearance: auto;
+  &:focus {
+    border-color: var(--color-primary, #3b82f6);
+    color: var(--color-primary, #3b82f6);
+  }
+}
+.fySelectActive {
+  border-color: var(--color-primary, #2563eb);
+  color: var(--color-primary, #2563eb);
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 8%, transparent);
+}
+// ----------------------------------------------------
+// Mobile-first responsive overrides
+// ----------------------------------------------------
+@media (max-width: 640px) {
+  .container {
+    padding: 0.5rem;
+  }
+  .mainTitle {
+    font-size: 1.15rem;
+  }
+  .subtitle {
+    font-size: 0.8rem;
+  }
+  .summaryGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .summaryCard {
+    padding: 0.65rem 0.6rem;
+    border-radius: 10px;
+  }
+  .cardTitle {
+    font-size: 0.64rem;
+  }
+  .cardValue {
+    font-size: 0.98rem;
+  }
+  .cardUnit {
+    font-size: 0.62rem;
+  }
+  .splitVal {
+    font-size: 0.78rem;
+  }
+  .splitLabel {
+    font-size: 0.62rem;
+  }
+  .cardMetaText {
+    font-size: 0.6rem;
+  }
+  .dataSourceBanner {
+    padding: 0.55rem 0.65rem;
+    gap: 0.5rem;
+  }
+  .dataSourceTitle {
+    font-size: 0.7rem;
+  }
+  .dataSourceText {
+    font-size: 0.66rem;
+  }
+  .controlsContainer {
+    padding: 0.65rem;
+    border-radius: 10px;
+    gap: 0.65rem;
+  }
+  .controlLabel {
+    font-size: 0.65rem;
+  }
+  .chipBtn {
+    padding: 0.28rem 0.55rem;
+    font-size: 0.72rem;
+  }
+  .segmentBtn {
+    padding: 0.3rem 0.45rem;
+    font-size: 0.72rem;
+  }
+  .viewAndOverlaysRow {
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .fySelect {
+    font-size: 0.72rem;
+  }
+  .chartWrapper {
+    height: 280px;
+  }
+  .chartControlLabel {
+    font-size: 0.6rem;
+    min-width: 40px;
+  }
+  .chartIntervalChip,
+  .chartTfChip {
+    font-size: 0.64rem;
+    padding: 0.18rem 0.4rem;
+  }
+  .chartMainTitle {
+    font-size: 0.88rem;
+  }
+  .infoPopover {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 14px 14px 0 0;
+    z-index: 50;
+    padding: 1rem;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+  }
+}

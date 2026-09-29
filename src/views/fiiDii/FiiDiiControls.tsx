@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useMemo } from 'react';
 import type {
   AdjustmentMode,
   ViewMode,
@@ -26,7 +26,7 @@ interface FiiDiiControlsProps {
   setShowSensex: (s: boolean) => void;
   isLoading?: boolean;
 }
-const TIMEFRAMES: Timeframe[] = ['1M', '3M', '6M', '1Y', '5Y', 'ALL'];
+const QUICK_TFS: Timeframe[] = ['1M', '3M', '6M', '1Y', '5Y', 'ALL'];
 export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
   timeframe,
   setTimeframe,
@@ -44,9 +44,18 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
   setShowSensex,
   isLoading,
 }) => {
+  const fyOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const opts: { value: Timeframe; label: string }[] = [];
+    for (let y = currentYear + 1; y >= 2008; y--) {
+      opts.push({ value: `FY${y}` as Timeframe, label: `FY${y - 1}–${String(y).slice(2)} (Apr–Mar)` });
+    }
+    return opts;
+  }, []);
+  const isFyActive = typeof timeframe === 'string' && timeframe.startsWith('FY');
   return (
     <div className={styles.controlsContainer}>
-      {/* 1. Time Interval Chips (Daily, Weekly, Monthly, Quarterly, Half-Yearly, Yearly) */}
+      {/* 1. Time Interval Chips */}
       {interval && setInterval && (
         <div className={styles.controlGroup}>
           <span className={styles.controlLabel}>Time Interval:</span>
@@ -65,27 +74,47 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
           </div>
         </div>
       )}
-      {/* 2. Timeframe Duration Chips */}
+      {/* 2. Duration: quick chips + FY dropdown */}
       <div className={styles.controlGroup}>
         <span className={styles.controlLabel}>Duration:</span>
-        <div className={styles.chipsScroll}>
-          {TIMEFRAMES.map((tf) => {
-            const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
-            return (
-              <button
-                key={tf}
-                type="button"
-                className={`${styles.chipBtn} ${isActive ? styles.chipBtnActive : ''}`}
-                onClick={() => setTimeframe(tf)}
-                disabled={isLoading}
-              >
-                {tf}
-              </button>
-            );
-          })}
+        <div className={styles.durationRow}>
+          <div className={styles.chipsScroll}>
+            {QUICK_TFS.map((tf) => {
+              const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
+              return (
+                <button
+                  key={tf}
+                  type="button"
+                  className={`${styles.chipBtn} ${isActive ? styles.chipBtnActive : ''}`}
+                  onClick={() => setTimeframe(tf)}
+                  disabled={isLoading}
+                >
+                  {tf}
+                </button>
+              );
+            })}
+          </div>
+          <div className={styles.fyDropdownWrap}>
+            <select
+              className={`${styles.fySelect} ${isFyActive ? styles.fySelectActive : ''}`}
+              value={isFyActive ? String(timeframe) : ''}
+              onChange={(e) => {
+                if (e.target.value) setTimeframe(e.target.value as Timeframe);
+              }}
+              disabled={isLoading}
+              aria-label="Select Financial Year"
+            >
+              <option value="">FY (India)</option>
+              {fyOptions.map((opt) => (
+                <option key={String(opt.value)} value={String(opt.value)}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
-      {/* 3. Adjustment Mode Segmented Control */}
+      {/* 3. Adjustment Mode */}
       <div className={styles.controlGroup}>
         <span className={styles.controlLabel}>Adjustment:</span>
         <div className={styles.segmentedControl}>
@@ -103,7 +132,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
             onClick={() => setAdjustmentMode('inflation')}
             disabled={isLoading}
           >
-            Inflation Adjusted
+            Inflation Adj.
           </button>
           <button
             type="button"
@@ -111,11 +140,11 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
             onClick={() => setAdjustmentMode('ppp')}
             disabled={isLoading}
           >
-            PPP Adjusted
+            PPP Adj.
           </button>
         </div>
       </div>
-      {/* 3. View Mode Switcher + Chart Type + Index Overlays */}
+      {/* 4. View + Chart + Overlays */}
       <div className={styles.viewAndOverlaysRow}>
         <div className={styles.controlGroup}>
           <span className={styles.controlLabel}>View:</span>
@@ -134,7 +163,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
               onClick={() => setViewMode('cumulative')}
               disabled={isLoading}
             >
-              Cumulative Net
+              Cumulative
             </button>
           </div>
         </div>
@@ -162,7 +191,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
           </div>
         )}
         <div className={styles.controlGroup}>
-          <span className={styles.controlLabel}>Index Overlays:</span>
+          <span className={styles.controlLabel}>Overlays:</span>
           <div className={styles.togglesRow}>
             <label className={`${styles.toggleChip} ${showNifty ? styles.toggleChipNiftyActive : ''}`}>
               <input
@@ -182,7 +211,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
                 className={styles.hiddenCheckbox}
               />
               <span className={styles.toggleDot} style={{ background: '#ec4899' }} />
-              <span>BSE Sensex</span>
+              <span>Sensex</span>
             </label>
           </div>
         </div>

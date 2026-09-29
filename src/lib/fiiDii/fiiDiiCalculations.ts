@@ -1,7 +1,7 @@
 import type { DbInstitutionalFlow, DbIndexPrice, DbMacroIndicator } from '@/lib/db';
 export type AdjustmentMode = 'nominal' | 'inflation' | 'ppp';
 export type ViewMode = 'daily' | 'cumulative';
-export type Timeframe = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL' | 'MAX';
+export type Timeframe = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL' | 'MAX' | `FY${number}`;
 export type FlowInterval = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'halfyearly' | 'yearly';
 export const FLOW_INTERVALS: { key: FlowInterval; label: string }[] = [
   { key: 'daily', label: 'Daily' },
@@ -31,6 +31,8 @@ export interface ProcessedFIIDIIPoint {
 }
 export interface FIIDIISummary {
   latestDate: string;
+  periodStart: string;
+  periodEnd: string;
   latestFiiNet: number;
   latestDiiNet: number;
   totalFiiNet: number;
@@ -160,6 +162,8 @@ export function processFIIDIIData(
   const totalPeriodDays = points.length;
   const latestPoint = points[points.length - 1];
   const latestDate = latestPoint ? latestPoint.tradeDate : '';
+  const periodStart = points.length > 0 ? points[0].tradeDate : '';
+  const periodEnd = latestDate;
   const latestFiiNet = latestPoint ? latestPoint.fiiNet : 0;
   const latestDiiNet = latestPoint ? latestPoint.diiNet : 0;
   const totalFiiNet = Math.round(runningFiiNet * 100) / 100;
@@ -190,6 +194,8 @@ export function processFIIDIIData(
     points,
     summary: {
       latestDate,
+      periodStart,
+      periodEnd,
       latestFiiNet,
       latestDiiNet,
       totalFiiNet,
@@ -273,6 +279,8 @@ export function adjustFIIDIIPoints(
     points,
     summary: {
       latestDate: latestPoint ? latestPoint.tradeDate : '',
+      periodStart: points.length > 0 ? points[0].tradeDate : '',
+      periodEnd: latestPoint ? latestPoint.tradeDate : '',
       latestFiiNet: latestPoint ? latestPoint.fiiNet : 0,
       latestDiiNet: latestPoint ? latestPoint.diiNet : 0,
       totalFiiNet: Math.round(runningFiiNet * 100) / 100,
@@ -287,6 +295,17 @@ export function adjustFIIDIIPoints(
       adjustmentMode,
       viewMode,
     },
+  };
+}
+/**
+ * Returns { start, end } for an Indian Financial Year string like "FY2024" (Apr 2023 – Mar 2024).
+ * FY2024 = 1 Apr 2023 to 31 Mar 2024.
+ */
+export function getFinancialYearRange(fy: string): { start: string; end: string } {
+  const year = parseInt(fy.replace('FY', ''), 10);
+  return {
+    start: `${year - 1}-04-01`,
+    end: `${year}-03-31`,
   };
 }
 /**
@@ -313,6 +332,10 @@ export function getTimeframeStartDate(timeframe: Timeframe, baseDate = new Date(
     case 'ALL':
     case 'MAX':
       return '2007-01-01';
+    default:
+      if (typeof timeframe === 'string' && timeframe.startsWith('FY')) {
+        return getFinancialYearRange(timeframe).start;
+      }
   }
   return d.toISOString().slice(0, 10);
 }

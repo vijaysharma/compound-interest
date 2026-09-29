@@ -35,7 +35,10 @@ export const FiiDiiTracker: React.FC = () => {
   // When timeframe changes, set sensible default interval if switching to/from ALL
   const handleTimeframeChange = (newTf: Timeframe) => {
     setTimeframe(newTf);
+    const isFyTf = typeof newTf === 'string' && newTf.startsWith('FY');
     if ((newTf === 'ALL' || newTf === 'MAX') && interval === 'daily') {
+      setInterval('monthly');
+    } else if (isFyTf && interval !== 'daily' && interval !== 'weekly' && interval !== 'monthly') {
       setInterval('monthly');
     }
   };
