@@ -15,6 +15,7 @@ export interface GetFIIDIIDataParams {
   viewMode?: ViewMode;
   startDate?: string;
   endDate?: string;
+  aggregation?: 'daily' | 'monthly';
 }
 export async function getFIIDIIDataAction(
   params: GetFIIDIIDataParams = {}
@@ -24,8 +25,23 @@ export async function getFIIDIIDataAction(
   const viewMode = params.viewMode || 'daily';
   const startDate = params.startDate || getTimeframeStartDate(timeframe);
   const endDate = params.endDate || new Date().toISOString().slice(0, 10);
+  const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
+  const aggregation = params.aggregation || (isMultiYear ? 'monthly' : 'daily');
   const sql = getDb();
   await ensureTables(sql);
-  const { flows, nifty, sensex, macros } = await queryFIIDIIRange(sql, startDate, endDate);
-  return processFIIDIIData(flows, nifty, sensex, macros, adjustmentMode, viewMode);
+  const { flows, nifty, sensex, macros } = await queryFIIDIIRange(
+    sql,
+    startDate,
+    endDate,
+    aggregation
+  );
+  return processFIIDIIData(
+    flows,
+    nifty,
+    sensex,
+    macros,
+    adjustmentMode,
+    viewMode,
+    aggregation === 'monthly'
+  );
 }

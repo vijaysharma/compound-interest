@@ -15,7 +15,7 @@ interface FiiDiiControlsProps {
   setShowSensex: (s: boolean) => void;
   isLoading?: boolean;
 }
-const TIMEFRAMES: Timeframe[] = ['1M', '3M', '6M', '1Y', '5Y', 'MAX'];
+const TIMEFRAMES: Timeframe[] = ['1M', '3M', '6M', '1Y', '5Y', 'ALL'];
 export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
   timeframe,
   setTimeframe,
@@ -35,17 +35,20 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
       <div className={styles.controlGroup}>
         <span className={styles.controlLabel}>Timeframe:</span>
         <div className={styles.chipsScroll}>
-          {TIMEFRAMES.map((tf) => (
-            <button
-              key={tf}
-              type="button"
-              className={`${styles.chipBtn} ${timeframe === tf ? styles.chipBtnActive : ''}`}
-              onClick={() => setTimeframe(tf)}
-              disabled={isLoading}
-            >
-              {tf}
-            </button>
-          ))}
+          {TIMEFRAMES.map((tf) => {
+            const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
+            return (
+              <button
+                key={tf}
+                type="button"
+                className={`${styles.chipBtn} ${isActive ? styles.chipBtnActive : ''}`}
+                onClick={() => setTimeframe(tf)}
+                disabled={isLoading}
+              >
+                {tf}
+              </button>
+            );
+          })}
         </div>
       </div>
       {/* 2. Adjustment Mode Segmented Control */}

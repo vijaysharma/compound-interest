@@ -127,7 +127,10 @@ export async function fetchYahooIndexPrices(
   symbol: '^NSEI' | '^BSESN',
   range = '5y'
 ): Promise<IndexPricePoint[]> {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d`;
+  const isMax = range === 'max' || range === 'all' || range === 'ALL';
+  const url = isMax
+    ? `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=1167609600&period2=${Math.floor(Date.now() / 1000)}&interval=1d`
+    : `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d`;
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (compatible; RupeeCalcBot/1.0)',
@@ -161,7 +164,7 @@ export async function fetchYahooIndexPrices(
  * Fetches annual PPP (INR per international $) from World Bank API.
  */
 export async function fetchWorldBankPPP(): Promise<Record<string, number>> {
-  const url = 'https://api.worldbank.org/v2/country/IND/indicator/PA.NUS.PPP?format=json&date=2015:2026';
+  const url = 'https://api.worldbank.org/v2/country/IND/indicator/PA.NUS.PPP?format=json&date=2007:2026';
   try {
     const res = await fetch(url, { next: { revalidate: 86400 } });
     if (!res.ok) return {};
@@ -184,7 +187,7 @@ export async function fetchWorldBankPPP(): Promise<Record<string, number>> {
  * Fetches annual CPI from World Bank API.
  */
 export async function fetchWorldBankCPI(): Promise<Record<string, number>> {
-  const url = 'https://api.worldbank.org/v2/country/IND/indicator/FP.CPI.TOTL?format=json&date=2015:2026';
+  const url = 'https://api.worldbank.org/v2/country/IND/indicator/FP.CPI.TOTL?format=json&date=2007:2026';
   try {
     const res = await fetch(url, { next: { revalidate: 86400 } });
     if (!res.ok) return {};

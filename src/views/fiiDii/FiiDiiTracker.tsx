@@ -1,15 +1,17 @@
 'use client';
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import { getFIIDIIDataAction } from '@/actions/fiiDii';
-import type {
-  AdjustmentMode,
-  ViewMode,
-  Timeframe,
-  FIIDIIDataResponse,
+import {
+  adjustFIIDIIPoints,
+  type AdjustmentMode,
+  type ViewMode,
+  type Timeframe,
+  type FIIDIIDataResponse,
 } from '@/lib/fiiDii/fiiDiiCalculations';
 import { FiiDiiSummaryCards } from './FiiDiiSummaryCards';
 import { FiiDiiControls } from './FiiDiiControls';
 import { FiiDiiChart } from './FiiDiiChart';
+import { FiiDiiExplanationSection } from './FiiDiiExplanationSection';
 import styles from './FiiDiiTracker.module.scss';
 export const FiiDiiTracker: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
@@ -17,29 +19,45 @@ export const FiiDiiTracker: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
   const [showNifty, setShowNifty] = useState<boolean>(true);
   const [showSensex, setShowSensex] = useState<boolean>(false);
-  const [dataResponse, setDataResponse] = useState<FIIDIIDataResponse | null>(null);
+  const [baseData, setBaseData] = useState<FIIDIIDataResponse | null>(null);
   const [isPending, startTransition] = useTransition();
   const [hasLoadedInitially, setHasLoadedInitially] = useState<boolean>(false);
+  // Fetch dataset only when timeframe selection changes
   useEffect(() => {
     startTransition(async () => {
       try {
-        const res = await getFIIDIIDataAction({
-          timeframe,
-          adjustmentMode,
-          viewMode,
-        });
-        setDataResponse(res);
+        const res = await getFIIDIIDataAction({ timeframe });
+        setBaseData(res);
         setHasLoadedInitially(true);
       } catch (err) {
         console.error('Failed to load FII/DII data:', err);
       }
     });
-  }, [timeframe, adjustmentMode, viewMode]);
+  }, [timeframe]);
+  // Client-side memoized instant recalculation when switching adjustment or view modes
+  const displayData = useMemo(() => {
+    if (!baseData) return null;
+    const { points, summary } = adjustFIIDIIPoints(
+      baseData.points,
+      baseData.summary.cpiLatest,
+      baseData.summary.pppLatest,
+      adjustmentMode,
+      viewMode
+    );
+    return {
+      points,
+      summary,
+      isMonthly: baseData.isMonthly,
+    };
+  }, [baseData, adjustmentMode, viewMode]);
   return (
     <main className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerBadge}>
           <span>Institutional Activity</span>
+          {(timeframe === 'ALL' || timeframe === 'MAX') && (
+            <span className={styles.headerSubBadge}>• Monthly Bucketed</span>
+          )}
         </div>
         <h1 className={styles.mainTitle}>FII & DII Historical Flow Tracker</h1>
         <p className={styles.subtitle}>
@@ -49,7 +67,7 @@ export const FiiDiiTracker: React.FC = () => {
       </header>
       {/* 1. Summary Cards */}
       <FiiDiiSummaryCards
-        summary={dataResponse?.summary ?? null}
+        summary={displayData?.summary ?? null}
         isLoading={!hasLoadedInitially && isPending}
       />
       {/* 2. Interactive Filters & Controls */}
@@ -68,13 +86,15 @@ export const FiiDiiTracker: React.FC = () => {
       />
       {/* 3. Dual Y-Axis Interactive Chart */}
       <FiiDiiChart
-        points={dataResponse?.points ?? []}
+        points={displayData?.points ?? []}
         adjustmentMode={adjustmentMode}
         viewMode={viewMode}
         showNifty={showNifty}
         showSensex={showSensex}
         isLoading={!hasLoadedInitially && isPending}
       />
+      {/* 4. Layman Guides & Section Explanations */}
+      <FiiDiiExplanationSection />
     </main>
   );
 };

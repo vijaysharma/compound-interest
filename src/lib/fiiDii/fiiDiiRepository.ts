@@ -140,20 +140,78 @@ export async function upsertMacroIndicatorsBatch(
   `;
   return chunk.length;
 }
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * Fetches institutional flows, index prices, and macro indicators across a date range.
+ * Supports automated monthly downsampling/aggregation for multi-year queries.
  */
 export async function queryFIIDIIRange(
   sql: Query,
   startDate: string,
-  endDate?: string
+  endDate?: string,
+  aggregation: 'daily' | 'monthly' = 'daily'
 ): Promise<{
   flows: DbInstitutionalFlow[];
   nifty: DbIndexPrice[];
   sensex: DbIndexPrice[];
   macros: DbMacroIndicator[];
 }> {
-  const actualEndDate = endDate || new Date().toISOString().slice(0, 10);
+  const sanitizedStart = DATE_REGEX.test(startDate) ? startDate : '2007-01-01';
+  const sanitizedEnd = endDate && DATE_REGEX.test(endDate) ? endDate : new Date().toISOString().slice(0, 10);
+  if (aggregation === 'monthly') {
+    const flows = (await sql`
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', trade_date), 'YYYY-MM-01') AS trade_date,
+        ROUND(SUM(fii_buy_crores), 2) AS fii_buy_crores,
+        ROUND(SUM(fii_sell_crores), 2) AS fii_sell_crores,
+        ROUND(SUM(fii_net_crores), 2) AS fii_net_crores,
+        ROUND(SUM(dii_buy_crores), 2) AS dii_buy_crores,
+        ROUND(SUM(dii_sell_crores), 2) AS dii_sell_crores,
+        ROUND(SUM(dii_net_crores), 2) AS dii_net_crores
+      FROM institutional_flows
+      WHERE trade_date >= ${sanitizedStart}::date AND trade_date <= ${sanitizedEnd}::date
+      GROUP BY DATE_TRUNC('month', trade_date)
+      ORDER BY trade_date ASC
+    `) as DbInstitutionalFlow[];
+    const nifty = (await sql`
+      SELECT trade_date, index_name, close_price FROM (
+        SELECT
+          TO_CHAR(DATE_TRUNC('month', trade_date), 'YYYY-MM-01') AS trade_date,
+          index_name,
+          close_price,
+          ROW_NUMBER() OVER (
+            PARTITION BY DATE_TRUNC('month', trade_date), index_name
+            ORDER BY trade_date DESC
+          ) AS rn
+        FROM index_prices
+        WHERE index_name = 'NIFTY50'
+          AND trade_date >= ${sanitizedStart}::date AND trade_date <= ${sanitizedEnd}::date
+      ) sub WHERE rn = 1
+      ORDER BY trade_date ASC
+    `) as DbIndexPrice[];
+    const sensex = (await sql`
+      SELECT trade_date, index_name, close_price FROM (
+        SELECT
+          TO_CHAR(DATE_TRUNC('month', trade_date), 'YYYY-MM-01') AS trade_date,
+          index_name,
+          close_price,
+          ROW_NUMBER() OVER (
+            PARTITION BY DATE_TRUNC('month', trade_date), index_name
+            ORDER BY trade_date DESC
+          ) AS rn
+        FROM index_prices
+        WHERE index_name = 'SENSEX'
+          AND trade_date >= ${sanitizedStart}::date AND trade_date <= ${sanitizedEnd}::date
+      ) sub WHERE rn = 1
+      ORDER BY trade_date ASC
+    `) as DbIndexPrice[];
+    const macros = (await sql`
+      SELECT record_date::text, cpi_index, ppp_factor
+      FROM macro_indicators
+      ORDER BY record_date ASC
+    `) as DbMacroIndicator[];
+    return { flows, nifty, sensex, macros };
+  }
   const flows = (await sql`
     SELECT
       trade_date::text,
@@ -164,21 +222,21 @@ export async function queryFIIDIIRange(
       dii_sell_crores,
       dii_net_crores
     FROM institutional_flows
-    WHERE trade_date >= ${startDate}::date AND trade_date <= ${actualEndDate}::date
+    WHERE trade_date >= ${sanitizedStart}::date AND trade_date <= ${sanitizedEnd}::date
     ORDER BY trade_date ASC
   `) as DbInstitutionalFlow[];
   const nifty = (await sql`
     SELECT trade_date::text, index_name, close_price
     FROM index_prices
     WHERE index_name = 'NIFTY50'
-      AND trade_date >= ${startDate}::date AND trade_date <= ${actualEndDate}::date
+      AND trade_date >= ${sanitizedStart}::date AND trade_date <= ${sanitizedEnd}::date
     ORDER BY trade_date ASC
   `) as DbIndexPrice[];
   const sensex = (await sql`
     SELECT trade_date::text, index_name, close_price
     FROM index_prices
     WHERE index_name = 'SENSEX'
-      AND trade_date >= ${startDate}::date AND trade_date <= ${actualEndDate}::date
+      AND trade_date >= ${sanitizedStart}::date AND trade_date <= ${sanitizedEnd}::date
     ORDER BY trade_date ASC
   `) as DbIndexPrice[];
   const macros = (await sql`

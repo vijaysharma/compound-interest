@@ -20,7 +20,7 @@
 .headerBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
   padding: 0.25rem 0.65rem;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--color-primary, #3b82f6) 12%, transparent);
@@ -30,6 +30,14 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
+}
+
+.headerSubBadge {
+  font-size: 0.72rem;
+  color: var(--color-primary, #2563eb);
+  opacity: 0.85;
+  text-transform: none;
+  font-weight: 600;
 }
 
 .mainTitle {
@@ -545,4 +553,163 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
+}
+
+// ----------------------------------------------------
+// Layman Explanations Accordion / InfoCards
+// ----------------------------------------------------
+.explanationsContainer {
+  margin-top: 1.5rem;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 1.15rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  @include tablet-up {
+    padding: 1.5rem;
+  }
+}
+
+.explanationsHeader {
+  margin-bottom: 1rem;
+}
+
+.explanationsHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.infoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #d97706;
+  background: #fef3c7;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+.infoSubText {
+  font-size: 0.74rem;
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.explanationsMainTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text, #0f172a);
+  margin: 0;
+  letter-spacing: -0.01em;
+
+  @include tablet-up {
+    font-size: 1.25rem;
+  }
+}
+
+.explanationsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.explanationCard {
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--color-background, #f8fafc);
+  overflow: hidden;
+  transition: all 0.15s ease;
+
+  &Open {
+    border-color: #cbd5e1;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  }
+}
+
+.explanationSummary {
+  @include button-reset;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  text-align: left;
+  gap: 0.75rem;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary, #3b82f6) 4%, transparent);
+  }
+}
+
+.explanationTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.explanationBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.explanationTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text, #1e293b);
+}
+
+.accordionChevron {
+  font-size: 0.7rem;
+  color: var(--color-text-muted, #64748b);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.explanationBody {
+  padding: 0.25rem 1rem 0.95rem 1rem;
+  border-top: 1px dashed var(--color-border, #e2e8f0);
+}
+
+.explanationText {
+  font-size: 0.84rem;
+  color: var(--color-text, #334155);
+  line-height: 1.5;
+  margin: 0.65rem 0 0.5rem 0;
+}
+
+.explanationTakeaway {
+  font-size: 0.78rem;
+  color: #1e293b;
+  background: #f1f5f9;
+  border-left: 3px solid var(--color-primary, #3b82f6);
+  padding: 0.45rem 0.65rem;
+  border-radius: 0 6px 6px 0;
+  line-height: 1.4;
+}
+
+.takeawayTag {
+  font-weight: 800;
+  color: var(--color-primary, #2563eb);
 }

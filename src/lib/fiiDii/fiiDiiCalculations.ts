@@ -1,16 +1,18 @@
 import type { DbInstitutionalFlow, DbIndexPrice, DbMacroIndicator } from '@/lib/db';
 export type AdjustmentMode = 'nominal' | 'inflation' | 'ppp';
 export type ViewMode = 'daily' | 'cumulative';
-export type Timeframe = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'MAX';
+export type Timeframe = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL' | 'MAX';
 export interface ProcessedFIIDIIPoint {
   tradeDate: string; // YYYY-MM-DD
-  formattedDate: string; // e.g. "12 Jun '24"
+  formattedDate: string; // e.g. "12 Jun '24" or "Jun '24"
   fiiBuy: number;
   fiiSell: number;
   fiiNet: number;
   diiBuy: number;
   diiSell: number;
   diiNet: number;
+  nominalFiiNet: number;
+  nominalDiiNet: number;
   cumulativeFiiNet: number;
   cumulativeDiiNet: number;
   niftyClose?: number | null;
@@ -37,15 +39,19 @@ export interface FIIDIISummary {
 export interface FIIDIIDataResponse {
   points: ProcessedFIIDIIPoint[];
   summary: FIIDIISummary;
+  isMonthly?: boolean;
 }
 /**
- * Formats YYYY-MM-DD into readable short date (e.g. "14 Oct '23")
+ * Formats YYYY-MM-DD into readable short date (e.g. "14 Oct '23" or "Oct '23")
  */
-function formatShortDate(dateStr: string): string {
+export function formatShortDate(dateStr: string, isMonthly = false): string {
   const [y, m, d] = dateStr.split('-');
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthIdx = parseInt(m, 10) - 1;
   const shortYear = y ? y.slice(2) : '';
+  if (isMonthly) {
+    return `${monthNames[monthIdx] || m} '${shortYear}`;
+  }
   return `${parseInt(d, 10)} ${monthNames[monthIdx] || m} '${shortYear}`;
 }
 /**
@@ -80,7 +86,8 @@ export function processFIIDIIData(
   sensex: DbIndexPrice[],
   macros: DbMacroIndicator[],
   adjustmentMode: AdjustmentMode,
-  viewMode: ViewMode
+  viewMode: ViewMode,
+  isMonthly = false
 ): FIIDIIDataResponse {
   // Sort macros by record_date
   const sortedMacros = [...macros].sort((a, b) => a.record_date.localeCompare(b.record_date));
@@ -111,12 +118,10 @@ export function processFIIDIIData(
     let displayFiiNet = nominalFiiNet;
     let displayDiiNet = nominalDiiNet;
     if (adjustmentMode === 'inflation') {
-      // Flow_real = Flow_nominal * (CPI_latest / CPI_trade_date)
       const ratio = cpi > 0 ? cpiLatest / cpi : 1.0;
       displayFiiNet = Math.round(nominalFiiNet * ratio * 100) / 100;
       displayDiiNet = Math.round(nominalDiiNet * ratio * 100) / 100;
     } else if (adjustmentMode === 'ppp') {
-      // Flow_PPP = Flow_nominal / PPP Factor
       const divisor = ppp > 0 ? ppp : 1.0;
       displayFiiNet = Math.round((nominalFiiNet / divisor) * 100) / 100;
       displayDiiNet = Math.round((nominalDiiNet / divisor) * 100) / 100;
@@ -125,13 +130,15 @@ export function processFIIDIIData(
     runningDiiNet += displayDiiNet;
     points.push({
       tradeDate,
-      formattedDate: formatShortDate(tradeDate),
+      formattedDate: formatShortDate(tradeDate, isMonthly),
       fiiBuy,
       fiiSell,
       fiiNet: displayFiiNet,
       diiBuy,
       diiSell,
       diiNet: displayDiiNet,
+      nominalFiiNet,
+      nominalDiiNet,
       cumulativeFiiNet: Math.round(runningFiiNet * 100) / 100,
       cumulativeDiiNet: Math.round(runningDiiNet * 100) / 100,
       niftyClose: niftyMap.get(tradeDate) ?? null,
@@ -148,7 +155,6 @@ export function processFIIDIIData(
   const latestDiiNet = latestPoint ? latestPoint.diiNet : 0;
   const totalFiiNet = Math.round(runningFiiNet * 100) / 100;
   const totalDiiNet = Math.round(runningDiiNet * 100) / 100;
-  // Nifty change
   let latestNifty: number | null = null;
   let niftyPeriodChangePercent: number | null = null;
   const niftyPoints = points.filter((p) => p.niftyClose !== null && p.niftyClose !== undefined);
@@ -160,7 +166,6 @@ export function processFIIDIIData(
       niftyPeriodChangePercent = Math.round(((lastN - firstN) / firstN) * 10000) / 100;
     }
   }
-  // Sensex change
   let latestSensex: number | null = null;
   let sensexPeriodChangePercent: number | null = null;
   const sensexPoints = points.filter((p) => p.sensexClose !== null && p.sensexClose !== undefined);
@@ -181,6 +186,89 @@ export function processFIIDIIData(
       totalFiiNet,
       totalDiiNet,
       totalPeriodDays,
+      latestNifty,
+      niftyPeriodChangePercent,
+      latestSensex,
+      sensexPeriodChangePercent,
+      cpiLatest,
+      pppLatest,
+      adjustmentMode,
+      viewMode,
+    },
+    isMonthly,
+  };
+}
+/**
+ * Instant client-side recalculation without network fetches.
+ */
+export function adjustFIIDIIPoints(
+  basePoints: ProcessedFIIDIIPoint[],
+  cpiLatest: number,
+  pppLatest: number,
+  adjustmentMode: AdjustmentMode,
+  viewMode: ViewMode
+): { points: ProcessedFIIDIIPoint[]; summary: FIIDIISummary } {
+  let runningFiiNet = 0;
+  let runningDiiNet = 0;
+  const points: ProcessedFIIDIIPoint[] = [];
+  for (const p of basePoints) {
+    const nominalFii = p.nominalFiiNet ?? p.fiiNet;
+    const nominalDii = p.nominalDiiNet ?? p.diiNet;
+    const cpi = p.cpi ?? cpiLatest;
+    const ppp = p.ppp ?? pppLatest;
+    let displayFii = nominalFii;
+    let displayDii = nominalDii;
+    if (adjustmentMode === 'inflation') {
+      const ratio = cpi > 0 ? cpiLatest / cpi : 1.0;
+      displayFii = Math.round(nominalFii * ratio * 100) / 100;
+      displayDii = Math.round(nominalDii * ratio * 100) / 100;
+    } else if (adjustmentMode === 'ppp') {
+      const divisor = ppp > 0 ? ppp : 1.0;
+      displayFii = Math.round((nominalFii / divisor) * 100) / 100;
+      displayDii = Math.round((nominalDii / divisor) * 100) / 100;
+    }
+    runningFiiNet += displayFii;
+    runningDiiNet += displayDii;
+    points.push({
+      ...p,
+      fiiNet: displayFii,
+      diiNet: displayDii,
+      cumulativeFiiNet: Math.round(runningFiiNet * 100) / 100,
+      cumulativeDiiNet: Math.round(runningDiiNet * 100) / 100,
+    });
+  }
+  const latestPoint = points[points.length - 1];
+  const niftyPoints = points.filter((pt) => pt.niftyClose !== null && pt.niftyClose !== undefined);
+  let latestNifty: number | null = null;
+  let niftyPeriodChangePercent: number | null = null;
+  if (niftyPoints.length > 0) {
+    const firstN = niftyPoints[0].niftyClose!;
+    const lastN = niftyPoints[niftyPoints.length - 1].niftyClose!;
+    latestNifty = lastN;
+    if (firstN > 0) {
+      niftyPeriodChangePercent = Math.round(((lastN - firstN) / firstN) * 10000) / 100;
+    }
+  }
+  const sensexPoints = points.filter((pt) => pt.sensexClose !== null && pt.sensexClose !== undefined);
+  let latestSensex: number | null = null;
+  let sensexPeriodChangePercent: number | null = null;
+  if (sensexPoints.length > 0) {
+    const firstS = sensexPoints[0].sensexClose!;
+    const lastS = sensexPoints[sensexPoints.length - 1].sensexClose!;
+    latestSensex = lastS;
+    if (firstS > 0) {
+      sensexPeriodChangePercent = Math.round(((lastS - firstS) / firstS) * 10000) / 100;
+    }
+  }
+  return {
+    points,
+    summary: {
+      latestDate: latestPoint ? latestPoint.tradeDate : '',
+      latestFiiNet: latestPoint ? latestPoint.fiiNet : 0,
+      latestDiiNet: latestPoint ? latestPoint.diiNet : 0,
+      totalFiiNet: Math.round(runningFiiNet * 100) / 100,
+      totalDiiNet: Math.round(runningDiiNet * 100) / 100,
+      totalPeriodDays: points.length,
       latestNifty,
       niftyPeriodChangePercent,
       latestSensex,
@@ -213,8 +301,9 @@ export function getTimeframeStartDate(timeframe: Timeframe, baseDate = new Date(
     case '5Y':
       d.setFullYear(d.getFullYear() - 5);
       break;
+    case 'ALL':
     case 'MAX':
-      return '2020-01-01';
+      return '2007-01-01';
   }
   return d.toISOString().slice(0, 10);
 }

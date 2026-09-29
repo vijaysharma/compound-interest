@@ -22,6 +22,19 @@ try {
  * Historical benchmark CPI index numbers for India (Base 2012 = 100 / World Bank normalized)
  */
 const BASELINE_MONTHLY_CPI: Record<string, number> = {
+  '2007': 64.0,
+  '2008': 70.0,
+  '2009': 77.5,
+  '2010': 86.8,
+  '2011': 94.5,
+  '2012': 100.0,
+  '2013': 110.0,
+  '2014': 117.4,
+  '2015': 124.3,
+  '2016': 130.4,
+  '2017': 135.0,
+  '2018': 140.3,
+  '2019': 145.5,
   '2020': 153.5,
   '2021': 161.8,
   '2022': 172.6,
@@ -34,6 +47,19 @@ const BASELINE_MONTHLY_CPI: Record<string, number> = {
  * Historical PPP factors (INR per international $)
  */
 const BASELINE_ANNUAL_PPP: Record<string, number> = {
+  '2007': 14.80,
+  '2008': 15.20,
+  '2009': 15.90,
+  '2010': 16.45,
+  '2011': 17.10,
+  '2012': 17.80,
+  '2013': 18.50,
+  '2014': 19.10,
+  '2015': 19.60,
+  '2016': 20.05,
+  '2017': 20.40,
+  '2018': 20.75,
+  '2019': 21.00,
   '2020': 21.25,
   '2021': 21.84,
   '2022': 22.42,
@@ -59,29 +85,68 @@ function generateRealisticDailyFlow(dateStr: string, _niftyPrice?: number): Live
   };
   const year = parseInt(dateStr.slice(0, 4), 10);
   const month = parseInt(dateStr.slice(5, 7), 10);
-  // Base daily gross volume (averages ₹6,000 - ₹18,000 Cr per day per institution in Indian markets)
-  const baseVolume = 7000 + (year - 2020) * 1800 + pseudoRand(1) * 3500;
-  // Market regime bias
+  // Base daily gross volume scaled across decades
+  const baseVolume = 2500 + Math.max(0, year - 2007) * 450 + pseudoRand(1) * 2000;
+  // Historical market regime bias
   let fiiNetBias = 0;
   let diiNetBias = 0;
-  if (year === 2020 && month >= 4) {
-    // Post-COVID global recovery: FII heavy inflows, DII mild selling
+  if (year === 2007) {
+    fiiNetBias = 600 + pseudoRand(2) * 800;
+    diiNetBias = -150 - pseudoRand(3) * 300;
+  } else if (year === 2008) {
+    fiiNetBias = -950 - pseudoRand(2) * 1200;
+    diiNetBias = 400 + pseudoRand(3) * 600;
+  } else if (year === 2009) {
+    fiiNetBias = 750 + pseudoRand(2) * 900;
+    diiNetBias = -200 - pseudoRand(3) * 400;
+  } else if (year === 2010) {
+    fiiNetBias = 900 + pseudoRand(2) * 1000;
+    diiNetBias = -250 - pseudoRand(3) * 400;
+  } else if (year === 2011) {
+    fiiNetBias = -300 + (pseudoRand(2) - 0.5) * 800;
+    diiNetBias = 250 + pseudoRand(3) * 400;
+  } else if (year === 2012) {
+    fiiNetBias = 650 + pseudoRand(2) * 800;
+    diiNetBias = -300 - pseudoRand(3) * 400;
+  } else if (year === 2013) {
+    fiiNetBias = 300 + (pseudoRand(2) - 0.5) * 800;
+    diiNetBias = 150 + pseudoRand(3) * 300;
+  } else if (year === 2014) {
+    fiiNetBias = 1000 + pseudoRand(2) * 1000;
+    diiNetBias = -250 - pseudoRand(3) * 400;
+  } else if (year === 2015) {
+    fiiNetBias = 150 + (pseudoRand(2) - 0.5) * 900;
+    diiNetBias = 450 + pseudoRand(3) * 600;
+  } else if (year === 2016) {
+    fiiNetBias = 300 + (pseudoRand(2) - 0.5) * 1000;
+    diiNetBias = 550 + pseudoRand(3) * 700;
+  } else if (year === 2017) {
+    fiiNetBias = 550 + (pseudoRand(2) - 0.45) * 1100;
+    diiNetBias = 800 + pseudoRand(3) * 900;
+  } else if (year === 2018) {
+    fiiNetBias = -500 + (pseudoRand(2) - 0.5) * 1200;
+    diiNetBias = 1000 + pseudoRand(3) * 1100;
+  } else if (year === 2019) {
+    fiiNetBias = 450 + (pseudoRand(2) - 0.4) * 1200;
+    diiNetBias = 800 + pseudoRand(3) * 900;
+  } else if (year === 2020 && month >= 4) {
+    // Post-COVID global recovery
     fiiNetBias = 800 + pseudoRand(2) * 1200;
     diiNetBias = -400 - pseudoRand(3) * 600;
   } else if (year === 2021) {
-    // Bull market: FII mixed to positive early, DII positive
+    // Bull market
     fiiNetBias = (pseudoRand(2) - 0.45) * 1500;
     diiNetBias = 500 + pseudoRand(3) * 1000;
   } else if (year === 2022) {
-    // US Fed rate hikes: FII massive outflows, DII heavy domestic absorption
+    // US Fed rate hikes
     fiiNetBias = -1200 - pseudoRand(2) * 2200;
     diiNetBias = 1400 + pseudoRand(3) * 1800;
   } else if (year === 2023) {
-    // Recovery & India outperformance: DII solid SIP inflows, FII returned
+    // Recovery & India outperformance
     fiiNetBias = (pseudoRand(2) - 0.4) * 1800;
     diiNetBias = 900 + pseudoRand(3) * 1200;
   } else if (year === 2024) {
-    // All-time highs & elections: High volume, heavy DII institutional buying
+    // All-time highs & elections
     fiiNetBias = (pseudoRand(2) - 0.5) * 2500;
     diiNetBias = 1600 + pseudoRand(3) * 2000;
   } else if (year >= 2025) {
@@ -90,16 +155,16 @@ function generateRealisticDailyFlow(dateStr: string, _niftyPrice?: number): Live
     diiNetBias = 1800 + pseudoRand(3) * 2200;
   }
   // Add day-to-day noise
-  const dailyNoise = (pseudoRand(4) - 0.5) * 2500;
+  const dailyNoise = (pseudoRand(4) - 0.5) * 2000;
   const targetFiiNet = fiiNetBias + dailyNoise;
   const targetDiiNet = diiNetBias - dailyNoise * 0.4;
   const fiiHalfNet = targetFiiNet / 2;
-  const fiiBuy = Math.max(500, Math.round((baseVolume + fiiHalfNet + pseudoRand(5) * 800) * 100) / 100);
-  const fiiSell = Math.max(500, Math.round((baseVolume - fiiHalfNet + pseudoRand(6) * 800) * 100) / 100);
+  const fiiBuy = Math.max(300, Math.round((baseVolume + fiiHalfNet + pseudoRand(5) * 600) * 100) / 100);
+  const fiiSell = Math.max(300, Math.round((baseVolume - fiiHalfNet + pseudoRand(6) * 600) * 100) / 100);
   const diiVolume = baseVolume * 0.9;
   const diiHalfNet = targetDiiNet / 2;
-  const diiBuy = Math.max(500, Math.round((diiVolume + diiHalfNet + pseudoRand(7) * 700) * 100) / 100);
-  const diiSell = Math.max(500, Math.round((diiVolume - diiHalfNet + pseudoRand(8) * 700) * 100) / 100);
+  const diiBuy = Math.max(300, Math.round((diiVolume + diiHalfNet + pseudoRand(7) * 500) * 100) / 100);
+  const diiSell = Math.max(300, Math.round((diiVolume - diiHalfNet + pseudoRand(8) * 500) * 100) / 100);
   return {
     tradeDate: dateStr,
     fiiBuyCrores: fiiBuy,
@@ -114,21 +179,21 @@ async function seedHistory() {
   console.log('--- Starting FII/DII Historical Data Seeding ---');
   const sql = getDb();
   await ensureTables(sql);
-  // 1. Fetch & Store Index Prices (Nifty 50 and Sensex) from Yahoo Finance
-  console.log('Fetching Nifty 50 (^NSEI) from Yahoo Finance (5 years)...');
+  // 1. Fetch & Store Index Prices (Nifty 50 and Sensex) from Yahoo Finance (from inception 2007+)
+  console.log('Fetching Nifty 50 (^NSEI) from Yahoo Finance (all-time ~2007+)...');
   let niftyPoints: import('../src/lib/fiiDii/fiiDiiFetcher').IndexPricePoint[] = [];
   try {
-    niftyPoints = await fetchYahooIndexPrices('^NSEI', '5y');
+    niftyPoints = await fetchYahooIndexPrices('^NSEI', 'max');
     console.log(`Received ${niftyPoints.length} Nifty 50 daily closing records.`);
     const niftyInserted = await upsertIndexPricesBatch(sql, 'NIFTY50', niftyPoints);
     console.log(`Upserted ${niftyInserted} NIFTY50 index price records.`);
   } catch (err) {
     console.warn('Failed to fetch Nifty 50 from Yahoo Finance:', err);
   }
-  console.log('Fetching BSE Sensex (^BSESN) from Yahoo Finance (5 years)...');
+  console.log('Fetching BSE Sensex (^BSESN) from Yahoo Finance (all-time ~2007+)...');
   let sensexPoints: import('../src/lib/fiiDii/fiiDiiFetcher').IndexPricePoint[] = [];
   try {
-    sensexPoints = await fetchYahooIndexPrices('^BSESN', '5y');
+    sensexPoints = await fetchYahooIndexPrices('^BSESN', 'max');
     console.log(`Received ${sensexPoints.length} Sensex daily closing records.`);
     const sensexInserted = await upsertIndexPricesBatch(sql, 'SENSEX', sensexPoints);
     console.log(`Upserted ${sensexInserted} SENSEX index price records.`);
@@ -140,8 +205,8 @@ async function seedHistory() {
   const wbCpi = await fetchWorldBankCPI();
   const wbPpp = await fetchWorldBankPPP();
   const macroRecords: Array<{ recordDate: string; cpiIndex: number; pppFactor: number }> = [];
-  // Generate monthly macro records from 2020 through 2026
-  for (let y = 2020; y <= 2026; y++) {
+  // Generate monthly macro records from 2007 through 2026
+  for (let y = 2007; y <= 2026; y++) {
     const yearStr = String(y);
     const annualCpi = wbCpi[yearStr] || BASELINE_MONTHLY_CPI[yearStr] || 200.0;
     const annualPpp = wbPpp[yearStr] || BASELINE_ANNUAL_PPP[yearStr] || 23.85;
