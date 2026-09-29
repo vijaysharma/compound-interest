@@ -33,6 +33,10 @@ export interface FIIDIISummary {
   latestDate: string;
   periodStart: string;
   periodEnd: string;
+  /** Always nominal (raw ₹ Cr), unaffected by adjustment mode — use for "Latest" cards */
+  nominalLatestFiiNet: number;
+  /** Always nominal (raw ₹ Cr), unaffected by adjustment mode — use for "Latest" cards */
+  nominalLatestDiiNet: number;
   latestFiiNet: number;
   latestDiiNet: number;
   totalFiiNet: number;
@@ -51,6 +55,8 @@ export interface FIIDIIDataResponse {
   points: ProcessedFIIDIIPoint[];
   summary: FIIDIISummary;
   isMonthly?: boolean;
+  /** Real max trade_date in DB — stable regardless of monthly aggregation rounding to YYYY-MM-01 */
+  actualLatestDate?: string;
 }
 /**
  * Formats YYYY-MM-DD into readable short date (e.g. "14 Oct '23" or "Oct '23")
@@ -98,7 +104,8 @@ export function processFIIDIIData(
   macros: DbMacroIndicator[],
   adjustmentMode: AdjustmentMode,
   viewMode: ViewMode,
-  isMonthly = false
+  isMonthly = false,
+  latestDailyFlow?: DbInstitutionalFlow | null
 ): FIIDIIDataResponse {
   // Sort macros by record_date
   const sortedMacros = [...macros].sort((a, b) => a.record_date.localeCompare(b.record_date));
@@ -161,11 +168,19 @@ export function processFIIDIIData(
   // Summary calculation
   const totalPeriodDays = points.length;
   const latestPoint = points[points.length - 1];
-  const latestDate = latestPoint ? latestPoint.tradeDate : '';
+  const latestDate = latestDailyFlow ? String(latestDailyFlow.trade_date) : (latestPoint ? latestPoint.tradeDate : '');
   const periodStart = points.length > 0 ? points[0].tradeDate : '';
-  const periodEnd = latestDate;
-  const latestFiiNet = latestPoint ? latestPoint.fiiNet : 0;
-  const latestDiiNet = latestPoint ? latestPoint.diiNet : 0;
+  const periodEnd = latestDailyFlow ? String(latestDailyFlow.trade_date) : latestDate;
+  const rawNominalFii = latestDailyFlow
+    ? Number(latestDailyFlow.fii_net_crores)
+    : (latestPoint ? latestPoint.nominalFiiNet : 0);
+  const rawNominalDii = latestDailyFlow
+    ? Number(latestDailyFlow.dii_net_crores)
+    : (latestPoint ? latestPoint.nominalDiiNet : 0);
+  const nominalLatestFiiNet = rawNominalFii;
+  const nominalLatestDiiNet = rawNominalDii;
+  const latestFiiNet = rawNominalFii;
+  const latestDiiNet = rawNominalDii;
   const totalFiiNet = Math.round(runningFiiNet * 100) / 100;
   const totalDiiNet = Math.round(runningDiiNet * 100) / 100;
   let latestNifty: number | null = null;
@@ -196,6 +211,8 @@ export function processFIIDIIData(
       latestDate,
       periodStart,
       periodEnd,
+      nominalLatestFiiNet,
+      nominalLatestDiiNet,
       latestFiiNet,
       latestDiiNet,
       totalFiiNet,
@@ -221,7 +238,8 @@ export function adjustFIIDIIPoints(
   cpiLatest: number,
   pppLatest: number,
   adjustmentMode: AdjustmentMode,
-  viewMode: ViewMode
+  viewMode: ViewMode,
+  baseSummary?: FIIDIISummary | null
 ): { points: ProcessedFIIDIIPoint[]; summary: FIIDIISummary } {
   let runningFiiNet = 0;
   let runningDiiNet = 0;
@@ -275,14 +293,28 @@ export function adjustFIIDIIPoints(
       sensexPeriodChangePercent = Math.round(((lastS - firstS) / firstS) * 10000) / 100;
     }
   }
+  const latestDate = baseSummary?.latestDate ?? (latestPoint ? latestPoint.tradeDate : '');
+  const periodStart = baseSummary?.periodStart ?? (points.length > 0 ? points[0].tradeDate : '');
+  const periodEnd = baseSummary?.periodEnd ?? (latestPoint ? latestPoint.tradeDate : '');
+  const nominalLatestFiiNet = baseSummary?.nominalLatestFiiNet ?? (latestPoint ? (latestPoint.nominalFiiNet ?? latestPoint.fiiNet) : 0);
+  const nominalLatestDiiNet = baseSummary?.nominalLatestDiiNet ?? (latestPoint ? (latestPoint.nominalDiiNet ?? latestPoint.diiNet) : 0);
+  let latestFiiNet = nominalLatestFiiNet;
+  let latestDiiNet = nominalLatestDiiNet;
+  if (adjustmentMode === 'ppp') {
+    const divisor = pppLatest > 0 ? pppLatest : 1.0;
+    latestFiiNet = Math.round((nominalLatestFiiNet / divisor) * 100) / 100;
+    latestDiiNet = Math.round((nominalLatestDiiNet / divisor) * 100) / 100;
+  }
   return {
     points,
     summary: {
-      latestDate: latestPoint ? latestPoint.tradeDate : '',
-      periodStart: points.length > 0 ? points[0].tradeDate : '',
-      periodEnd: latestPoint ? latestPoint.tradeDate : '',
-      latestFiiNet: latestPoint ? latestPoint.fiiNet : 0,
-      latestDiiNet: latestPoint ? latestPoint.diiNet : 0,
+      latestDate,
+      periodStart,
+      periodEnd,
+      nominalLatestFiiNet,
+      nominalLatestDiiNet,
+      latestFiiNet,
+      latestDiiNet,
       totalFiiNet: Math.round(runningFiiNet * 100) / 100,
       totalDiiNet: Math.round(runningDiiNet * 100) / 100,
       totalPeriodDays: points.length,

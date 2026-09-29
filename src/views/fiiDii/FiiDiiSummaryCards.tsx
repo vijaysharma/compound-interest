@@ -5,7 +5,13 @@ import type { FIIDIISummary } from '@/lib/fiiDii/fiiDiiCalculations';
 import styles from './FiiDiiTracker.module.scss';
 interface FiiDiiSummaryCardsProps {
   summary: FIIDIISummary | null;
+  /** Raw server summary — always nominal daily values, unaffected by client adjustment mode */
+  nominalSummary?: FIIDIISummary | null;
+  /** Real max trade_date from DB — stable across monthly aggregation which rounds to YYYY-MM-01 */
+  actualLatestDate?: string;
   isLoading?: boolean;
+  /** Data is being refetched but we already have stale data to show — triggers shimmer */
+  isRefreshing?: boolean;
 }
 function fmtDate(d: string): string {
   if (!d) return '—';
@@ -15,7 +21,10 @@ function fmtDate(d: string): string {
 }
 export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   summary,
+  nominalSummary,
+  actualLatestDate,
   isLoading,
+  isRefreshing,
 }) => {
   const [activeInfo, setActiveInfo] = useState<'fii' | 'dii' | null>(null);
   if (isLoading || !summary) {
@@ -37,8 +46,6 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
     latestDate,
     periodStart,
     periodEnd,
-    latestFiiNet,
-    latestDiiNet,
     totalFiiNet,
     totalDiiNet,
     latestNifty,
@@ -47,6 +54,11 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
     sensexPeriodChangePercent,
     adjustmentMode,
   } = summary;
+  // "Latest" cards always show nominal raw daily flows — stable across adjustment mode switches
+  const latestFiiNet = nominalSummary?.nominalLatestFiiNet ?? summary.nominalLatestFiiNet;
+  const latestDiiNet = nominalSummary?.nominalLatestDiiNet ?? summary.nominalLatestDiiNet;
+  // actualLatestDate is the real DB max trade_date — prevents monthly agg showing "1 Sep" instead of "28 Sep"
+  const latestDateDisplay = actualLatestDate ?? nominalSummary?.latestDate ?? latestDate;
   const unitLabel =
     adjustmentMode === 'ppp' ? '$M (PPP)' : adjustmentMode === 'inflation' ? '₹ Cr (Real)' : '₹ Cr';
   const formatAmount = (num: number) => {
@@ -56,9 +68,11 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   const toggleInfo = (type: 'fii' | 'dii') => {
     setActiveInfo((prev) => (prev === type ? null : type));
   };
-  const periodLabel = periodStart && periodEnd && periodStart !== periodEnd
-    ? `${fmtDate(periodStart)} – ${fmtDate(periodEnd)}`
-    : fmtDate(latestDate);
+  const periodLabel =
+    periodStart && periodEnd && periodStart !== periodEnd
+      ? `${fmtDate(periodStart)} – ${fmtDate(periodEnd)}`
+      : fmtDate(latestDate);
+  const refreshCls = isRefreshing ? ` ${styles.cardRefreshing}` : '';
   return (
     <div className={styles.summarySection}>
       <div className={styles.dataSourceBanner}>
@@ -80,8 +94,8 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
         </div>
       </div>
       <div className={styles.summaryGrid}>
-        {/* 1. Latest FII Flow */}
-        <div className={styles.summaryCard}>
+        {/* 1. Latest FII Flow — always nominal ₹ Cr for last trading day */}
+        <div className={`${styles.summaryCard}${refreshCls}`}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWithInfo}>
               <span className={styles.cardTitle}>Latest FII Net</span>
@@ -95,11 +109,12 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
                 <FiInfo size={14} />
               </button>
             </div>
+            <span className={styles.cardTag}>{fmtDate(latestDateDisplay)}</span>
           </div>
-          <div className={styles.cardDateRange}>{fmtDate(latestDate)}</div>
+          <div className={styles.cardDateRange}>{periodLabel}</div>
           <div className={`${styles.cardValue} ${latestFiiNet >= 0 ? styles.pos : styles.neg}`}>
             {formatAmount(latestFiiNet)}{' '}
-            <span className={styles.cardUnit}>{unitLabel}</span>
+            <span className={styles.cardUnit}>₹ Cr</span>
           </div>
           <div className={styles.cardFooter}>
             <span className={latestFiiNet >= 0 ? styles.pillBuy : styles.pillSell}>
@@ -113,12 +128,12 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
                 <button type="button" className={styles.popoverCloseBtn} onClick={() => setActiveInfo(null)}>✕</button>
               </div>
               <p className={styles.popoverText}><strong>Formula:</strong> Net = FII Gross Buy − FII Gross Sell.</p>
-              <p className={styles.popoverSubText}>Source: Ingested from official NSE/BSE EOD reports at 6:00 PM IST.</p>
+              <p className={styles.popoverSubText}>Always shown as nominal ₹ Cr for the last published trading day, regardless of adjustment mode.</p>
             </div>
           )}
         </div>
-        {/* 2. Latest DII Flow */}
-        <div className={styles.summaryCard}>
+        {/* 2. Latest DII Flow — always nominal ₹ Cr for last trading day */}
+        <div className={`${styles.summaryCard}${refreshCls}`}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWithInfo}>
               <span className={styles.cardTitle}>Latest DII Net</span>
@@ -132,11 +147,12 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
                 <FiInfo size={14} />
               </button>
             </div>
+            <span className={styles.cardTag}>{fmtDate(latestDateDisplay)}</span>
           </div>
-          <div className={styles.cardDateRange}>{fmtDate(latestDate)}</div>
+          <div className={styles.cardDateRange}>{periodLabel}</div>
           <div className={`${styles.cardValue} ${latestDiiNet >= 0 ? styles.pos : styles.neg}`}>
             {formatAmount(latestDiiNet)}{' '}
-            <span className={styles.cardUnit}>{unitLabel}</span>
+            <span className={styles.cardUnit}>₹ Cr</span>
           </div>
           <div className={styles.cardFooter}>
             <span className={latestDiiNet >= 0 ? styles.pillBuy : styles.pillSell}>
@@ -150,12 +166,12 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
                 <button type="button" className={styles.popoverCloseBtn} onClick={() => setActiveInfo(null)}>✕</button>
               </div>
               <p className={styles.popoverText}><strong>Formula:</strong> Net = DII Gross Buy − DII Gross Sell.</p>
-              <p className={styles.popoverSubText}>Includes Mutual Funds, Insurance (LIC), Pension Funds, and Banks.</p>
+              <p className={styles.popoverSubText}>Includes Mutual Funds, Insurance (LIC), Pension Funds, and Banks. Always shown as nominal ₹ Cr.</p>
             </div>
           )}
         </div>
-        {/* 3. Period Net Total */}
-        <div className={styles.summaryCard}>
+        {/* 3. Period Net Total — adjustment-mode aware, changes with duration/mode */}
+        <div className={`${styles.summaryCard}${refreshCls}`}>
           <div className={styles.cardHeader}>
             <span className={styles.cardTitle}>Period Net Total</span>
             <span className={styles.cardTag}>{summary.totalPeriodDays} buckets</span>
@@ -184,7 +200,7 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
           </div>
         </div>
         {/* 4. Index Benchmarks */}
-        <div className={styles.summaryCard}>
+        <div className={`${styles.summaryCard}${refreshCls}`}>
           <div className={styles.cardHeader}>
             <span className={styles.cardTitle}>Index Benchmarks</span>
             <span className={styles.cardDate}>Closing</span>

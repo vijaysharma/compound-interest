@@ -61,7 +61,8 @@ export const FiiDiiTracker: React.FC = () => {
       baseData.summary.cpiLatest,
       baseData.summary.pppLatest,
       adjustmentMode,
-      viewMode
+      viewMode,
+      baseData.summary
     );
     // Instant client-side aggregation by selected interval
     const aggregatedPoints = aggregatePointsByInterval(points, interval);
@@ -89,7 +90,10 @@ export const FiiDiiTracker: React.FC = () => {
       {/* 1. Summary Cards with Official Data Ingestion Callout */}
       <FiiDiiSummaryCards
         summary={displayData?.summary ?? null}
+        nominalSummary={baseData?.summary ?? null}
+        actualLatestDate={baseData?.actualLatestDate}
         isLoading={!hasLoadedInitially && isPending}
+        isRefreshing={hasLoadedInitially && isPending}
       />
       {/* 2. Interactive Filters & Controls (Timeframe Duration, Time Interval, Adjustment, View Mode, Overlays) */}
       <FiiDiiControls
@@ -122,7 +126,7 @@ export const FiiDiiTracker: React.FC = () => {
         onIntervalChange={setInterval}
         showNifty={showNifty}
         showSensex={showSensex}
-        isLoading={!hasLoadedInitially && isPending}
+        isLoading={isPending}
       />
       {/* 4. Layman Guides, Formulas & Section Explanations */}
       <FiiDiiExplanationSection />

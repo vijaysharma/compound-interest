@@ -1,7 +1,15 @@
 'use server';
 import { getDb, ensureTables } from '@/lib/db';
-import { queryFIIDIIRange } from '@/lib/fiiDii/fiiDiiRepository';
-import { getLatestEligibleFiiDiiDate } from '@/lib/fiiDii/fiiDiiFetcher';
+import {
+  queryFIIDIIRange,
+  upsertInstitutionalFlow,
+  upsertIndexPricesBatch,
+} from '@/lib/fiiDii/fiiDiiRepository';
+import {
+  getLatestEligibleFiiDiiDate,
+  fetchNSELiveFiiDii,
+  fetchYahooIndexPrices,
+} from '@/lib/fiiDii/fiiDiiFetcher';
 import {
   processFIIDIIData,
   getTimeframeStartDate,
@@ -52,7 +60,32 @@ export async function getFIIDIIDataAction(
   const aggregation = params.aggregation || (isMultiYear && !wantsDailyOrWeekly ? 'monthly' : 'daily');
   const sql = getDb();
   await ensureTables(sql);
-  const { flows, nifty, sensex, macros } = await queryFIIDIIRange(
+  // Auto-heal: If today's market has published data (>18:00 IST) and DB doesn't have it yet, sync now
+  try {
+    const latestDbRow = (await sql`
+      SELECT trade_date::text FROM institutional_flows ORDER BY trade_date DESC LIMIT 1
+    `) as Array<{ trade_date: string }>;
+    const latestDbDate = latestDbRow[0]?.trade_date;
+    if (latestDbDate && latestDbDate < maxEligibleDate) {
+      const live = await fetchNSELiveFiiDii();
+      if (live && live.tradeDate === maxEligibleDate) {
+        await upsertInstitutionalFlow(sql, live);
+        const [niftyPrices, sensexPrices] = await Promise.all([
+          fetchYahooIndexPrices('^NSEI', '5d'),
+          fetchYahooIndexPrices('^BSESN', '5d'),
+        ]);
+        const validNifty = niftyPrices.filter((p) => p.tradeDate <= maxEligibleDate);
+        const validSensex = sensexPrices.filter((p) => p.tradeDate <= maxEligibleDate);
+        await Promise.all([
+          upsertIndexPricesBatch(sql, 'NIFTY50', validNifty),
+          upsertIndexPricesBatch(sql, 'SENSEX', validSensex),
+        ]);
+      }
+    }
+  } catch (err) {
+    console.warn('[FII/DII] Auto-heal sync error:', err);
+  }
+  const { flows, nifty, sensex, macros, actualLatestDate, latestDailyFlow } = await queryFIIDIIRange(
     sql,
     startDate,
     endDate,
@@ -65,13 +98,15 @@ export async function getFIIDIIDataAction(
     macros,
     adjustmentMode,
     viewMode,
-    aggregation === 'monthly'
+    aggregation === 'monthly',
+    latestDailyFlow
   );
+  const withLatest = { ...processed, actualLatestDate };
   // If a specific interval was requested and not already monthly
   if (interval !== 'daily' && aggregation === 'daily') {
     const aggregatedPoints = aggregatePointsByInterval(processed.points, interval);
     return {
-      ...processed,
+      ...withLatest,
       points: aggregatedPoints,
     };
   }
@@ -79,9 +114,9 @@ export async function getFIIDIIDataAction(
   if (aggregation === 'monthly' && (interval === 'quarterly' || interval === 'halfyearly' || interval === 'yearly')) {
     const aggregatedPoints = aggregatePointsByInterval(processed.points, interval);
     return {
-      ...processed,
+      ...withLatest,
       points: aggregatedPoints,
     };
   }
-  return processed;
+  return withLatest;
 }

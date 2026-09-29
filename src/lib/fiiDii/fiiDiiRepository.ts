@@ -155,11 +155,13 @@ export async function queryFIIDIIRange(
   nifty: DbIndexPrice[];
   sensex: DbIndexPrice[];
   macros: DbMacroIndicator[];
+  actualLatestDate: string;
+  latestDailyFlow: DbInstitutionalFlow | null;
 }> {
   const sanitizedStart = DATE_REGEX.test(startDate) ? startDate : '2007-01-01';
   const sanitizedEnd = endDate && DATE_REGEX.test(endDate) ? endDate : new Date().toISOString().slice(0, 10);
   if (aggregation === 'monthly') {
-    const [flows, nifty, sensex, macros] = (await Promise.all([
+    const [flows, nifty, sensex, macros, latestDailyFlowRows] = (await Promise.all([
       sql`
         SELECT
           TO_CHAR(DATE_TRUNC('month', trade_date), 'YYYY-MM-01') AS trade_date,
@@ -211,8 +213,24 @@ export async function queryFIIDIIRange(
         FROM macro_indicators
         ORDER BY record_date ASC
       `,
-    ])) as [DbInstitutionalFlow[], DbIndexPrice[], DbIndexPrice[], DbMacroIndicator[]];
-    return { flows, nifty, sensex, macros };
+      sql`
+        SELECT
+          trade_date::text,
+          fii_buy_crores,
+          fii_sell_crores,
+          fii_net_crores,
+          dii_buy_crores,
+          dii_sell_crores,
+          dii_net_crores
+        FROM institutional_flows
+        WHERE trade_date <= ${sanitizedEnd}::date
+        ORDER BY trade_date DESC
+        LIMIT 1
+      `,
+    ])) as [DbInstitutionalFlow[], DbIndexPrice[], DbIndexPrice[], DbMacroIndicator[], DbInstitutionalFlow[]];
+    const latestDailyFlow = latestDailyFlowRows[0] ?? null;
+    const actualLatestDate = latestDailyFlow ? String(latestDailyFlow.trade_date) : sanitizedEnd;
+    return { flows, nifty, sensex, macros, actualLatestDate, latestDailyFlow };
   }
   const [flows, nifty, sensex, macros] = (await Promise.all([
     sql`
@@ -248,5 +266,7 @@ export async function queryFIIDIIRange(
       ORDER BY record_date ASC
     `,
   ])) as [DbInstitutionalFlow[], DbIndexPrice[], DbIndexPrice[], DbMacroIndicator[]];
-  return { flows, nifty, sensex, macros };
+  const latestDailyFlow = flows.length > 0 ? flows[flows.length - 1] : null;
+  const actualLatestDate = latestDailyFlow ? String(latestDailyFlow.trade_date) : sanitizedEnd;
+  return { flows, nifty, sensex, macros, actualLatestDate, latestDailyFlow };
 }
