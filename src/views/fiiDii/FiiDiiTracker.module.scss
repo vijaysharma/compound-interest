@@ -3,7 +3,6 @@
 
 .container {
   width: 100%;
-  max-width: 76rem;
   margin: 0 auto;
   padding: 0.75rem;
   box-sizing: border-box;
@@ -23,7 +22,11 @@
   gap: 0.45rem;
   padding: 0.25rem 0.65rem;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--color-primary, #3b82f6) 12%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-primary, #3b82f6) 12%,
+    transparent
+  );
   color: var(--color-primary, #2563eb);
   font-size: 0.75rem;
   font-weight: 700;
@@ -68,7 +71,8 @@
 
 .dataSourceBanner {
   background: color-mix(in srgb, var(--color-primary, #3b82f6) 7%, #ffffff);
-  border: 1px solid color-mix(in srgb, var(--color-primary, #3b82f6) 25%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary, #3b82f6) 25%, transparent);
   border-radius: 12px;
   padding: 0.75rem 0.95rem;
   margin-bottom: 0.85rem;
@@ -633,7 +637,6 @@
   }
 }
 
-
 .chartSubTitle {
   font-size: 0.76rem;
   color: var(--color-text-muted, #64748b);
@@ -811,8 +814,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 // ----------------------------------------------------
@@ -908,7 +916,11 @@
   gap: 0.75rem;
 
   &:hover {
-    background: color-mix(in srgb, var(--color-primary, #3b82f6) 4%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--color-primary, #3b82f6) 4%,
+      transparent
+    );
   }
 }
 
@@ -1056,7 +1068,9 @@
   background: transparent;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
   appearance: auto;
   &:focus {
     border-color: var(--color-primary, #3b82f6);
@@ -1171,14 +1185,18 @@
 // Shimmer / refreshing state
 // ----------------------------------------------------
 @keyframes shimmerSweep {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 .cardRefreshing {
   position: relative;
   overflow: hidden;
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     background: linear-gradient(

@@ -16,10 +16,13 @@ import { FiiDiiSummaryCards } from './FiiDiiSummaryCards';
 import { FiiDiiControls } from './FiiDiiControls';
 import { FiiDiiExplanationSection } from './FiiDiiExplanationSection';
 import styles from './FiiDiiTracker.module.scss';
-const FiiDiiChart = dynamic(() => import('./FiiDiiChart').then((m) => ({ default: m.FiiDiiChart })), {
-  ssr: false,
-  loading: () => <div className={styles.chartLoading}>Loading chart…</div>,
-});
+const FiiDiiChart = dynamic(
+  () => import('./FiiDiiChart').then((m) => ({ default: m.FiiDiiChart })),
+  {
+    ssr: false,
+    loading: () => <div className={styles.chartLoading}>Loading chart…</div>,
+  }
+);
 export const FiiDiiTracker: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
   const [interval, setInterval] = useState<FlowInterval>('daily');
@@ -73,18 +76,17 @@ export const FiiDiiTracker: React.FC = () => {
     };
   }, [baseData, adjustmentMode, viewMode, interval]);
   return (
-    <main className={styles.container}>
+    <main className={` ${styles.container} fii-dii-tracker`}>
       <header className={styles.header}>
         <div className={styles.headerBadge}>
           <span>Institutional Activity</span>
-          {isMultiYear && (
-            <span className={styles.headerSubBadge}>• Multi-Year View</span>
-          )}
+          {isMultiYear && <span className={styles.headerSubBadge}>• Multi-Year View</span>}
         </div>
         <h1 className={styles.mainTitle}>FII & DII Historical Flow Tracker</h1>
         <p className={styles.subtitle}>
-          Analyze daily & cumulative net institutional market activity in India with real-time Nifty 50
-          & Sensex overlays, benchmarked against CPI Inflation and World Bank Purchasing Power Parity.
+          Analyze daily & cumulative net institutional market activity in India with real-time Nifty
+          50 & Sensex overlays, benchmarked against CPI Inflation and World Bank Purchasing Power
+          Parity.
         </p>
       </header>
       {/* 1. Summary Cards with Official Data Ingestion Callout */}
