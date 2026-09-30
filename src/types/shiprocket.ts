@@ -58,6 +58,7 @@ export interface ShiprocketCustomer {
   id: string;
   customer_name: string;
   customer_phone: string;
+  customer_phone_2?: string | null;
   customer_email?: string | null;
   customer_address: string;
   customer_address_2?: string | null;

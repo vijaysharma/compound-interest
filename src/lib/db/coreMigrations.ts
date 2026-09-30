@@ -105,6 +105,7 @@ export async function applyCoreMigrations(sql: Query): Promise<void> {
       id TEXT PRIMARY KEY,
       customer_name TEXT NOT NULL,
       customer_phone TEXT NOT NULL,
+      customer_phone_2 TEXT,
       customer_email TEXT,
       customer_address TEXT NOT NULL,
       customer_address_2 TEXT,
@@ -123,5 +124,19 @@ export async function applyCoreMigrations(sql: Query): Promise<void> {
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS shiprocket_customers_dedup_idx ON shiprocket_customers (dedup_key)`;
   await sql`CREATE INDEX IF NOT EXISTS shiprocket_customers_phone_idx ON shiprocket_customers (customer_phone)`;
   await sql`CREATE INDEX IF NOT EXISTS shiprocket_customers_pincode_idx ON shiprocket_customers (customer_pincode)`;
+  await sql`ALTER TABLE shiprocket_customers ADD COLUMN IF NOT EXISTS customer_phone_2 TEXT`;
   await sql`CREATE INDEX IF NOT EXISTS shiprocket_customers_name_idx ON shiprocket_customers (customer_name)`;
+  // Links each customer to the distinct orders that contributed to them, so repeated
+  // syncs over overlapping periods stay idempotent instead of re-incrementing total_orders.
+  await sql`
+    CREATE TABLE IF NOT EXISTS shiprocket_customer_orders (
+      dedup_key TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      order_id TEXT NOT NULL,
+      order_date TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (dedup_key, account_id, order_id)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS shiprocket_customer_orders_dedup_idx ON shiprocket_customer_orders (dedup_key)`;
 }

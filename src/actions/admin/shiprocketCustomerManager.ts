@@ -19,6 +19,7 @@ export interface SyncCustomersResult {
 export interface CustomerInput {
   customer_name: string;
   customer_phone: string;
+  customer_phone_2?: string;
   customer_email?: string;
   customer_address: string;
   customer_address_2?: string;
@@ -27,10 +28,43 @@ export interface CustomerInput {
   customer_pincode: string;
 }
 /**
+ * Shiprocket substitutes sentinel strings for buyer PII when the API user lacks "Buyer's Details
+ * Access": phone/name come back as "Not Authorized" and phone as "xxxxxxxxxx". Treat these as
+ * absent rather than storing them as real values.
+ */
+function isPiiSentinel(raw?: string | null): boolean {
+  if (!raw) return true;
+  const v = String(raw).trim().toLowerCase();
+  if (!v) return true;
+  return (
+    v === 'not authorized' ||
+    v === 'unauthorized' ||
+    v === 'not available' ||
+    /^x+$/.test(v) ||
+    /^\*+$/.test(v)
+  );
+}
+/**
+ * First candidate that is a usable real value, skipping blanks and PII sentinels.
+ *
+ * The `/orders` list endpoint returns `customer_address: "Not Authorized"` for *every* order when
+ * a date range is supplied, so a plain `a || b || c` chain happily selects that string. Only
+ * `/orders/show` and the unfiltered list return the real street address.
+ */
+function firstReal(...candidates: unknown[]): string {
+  for (const c of candidates) {
+    if (c === null || c === undefined) continue;
+    const v = String(c).trim();
+    if (!v || isPiiSentinel(v)) continue;
+    return v;
+  }
+  return '';
+}
+/**
  * Standardize phone numbers to last 10 digits
  */
 function cleanPhone(rawPhone?: string | null): string {
-  if (!rawPhone) return '';
+  if (!rawPhone || isPiiSentinel(rawPhone)) return '';
   const digits = rawPhone.replace(/\D/g, '');
   if (digits.length >= 10) {
     return digits.slice(-10);
@@ -46,13 +80,81 @@ function cleanPincode(rawPincode?: string | null): string {
   return digits.slice(0, 6);
 }
 /**
- * Compute unique deduplication key: phone + pincode
- * Avoids duplicates while allowing different entries if phone or pincode is different for same customer.
+ * Standardize a customer name for identity comparison: lowercase, punctuation stripped,
+ * whitespace collapsed. "Manisha Choudhury " and "manisha  choudhury" become the same key.
  */
-export async function getCustomerDedupKey(phone: string, pincode: string): Promise<string> {
-  const p = cleanPhone(phone);
-  const pin = cleanPincode(pincode);
-  return `${p}_${pin}`;
+function cleanName(rawName?: string | null): string {
+  if (!rawName || isPiiSentinel(rawName)) return '';
+  return rawName
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+const SR_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/**
+ * `/v1/external/orders` rejects ISO dates: it wants `DD-MMM-YYYY` (e.g. 01-Jan-2024) and replies
+ * "Failed to parse from date" otherwise -- which previously surfaced as an empty result set rather
+ * than an error, silently dropping most of the history.
+ */
+function toOrdersDate(iso?: string | null): string {
+  if (!iso) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim());
+  if (!m) return '';
+  const month = SR_MONTHS[Number(m[2]) - 1];
+  if (!month) return '';
+  return `${m[3]}-${month}-${m[1]}`;
+}
+/** `/v1/external/shipments` wants plain `YYYY-MM-DD` -- the opposite of `/orders`. */
+function toShipmentsDate(iso?: string | null): string {
+  if (!iso) return '';
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(iso.trim());
+  return m ? m[1] : '';
+}
+/**
+ * Parse Shiprocket's list-format date ("10 Aug 2026, 10:38 PM") into `YYYY-MM-DD`.
+ */
+function parseSrListDate(raw?: unknown): string {
+  if (!raw) return '';
+  const m = /^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/.exec(String(raw).trim());
+  if (!m) {
+    const d = new Date(String(raw));
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  }
+  const idx = SR_MONTHS.findIndex((mo) => mo.toLowerCase() === m[2].toLowerCase());
+  if (idx < 0) return '';
+  return `${m[3]}-${String(idx + 1).padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+}
+/**
+ * `/shipments` refuses a window wider than 30 days, so split the requested span into slices.
+ */
+function splitIntoWindows(fromIso: string, toIso: string, days = 29): Array<{ from: string; to: string }> {
+  const out: Array<{ from: string; to: string }> = [];
+  const start = new Date(`${fromIso}T00:00:00Z`);
+  const end = new Date(`${toIso}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return out;
+  let cursor = start;
+  while (cursor <= end) {
+    const sliceEnd = new Date(cursor.getTime() + days * 86400000);
+    const capped = sliceEnd > end ? end : sliceEnd;
+    out.push({ from: cursor.toISOString().slice(0, 10), to: capped.toISOString().slice(0, 10) });
+    cursor = new Date(capped.getTime() + 86400000);
+  }
+  return out;
+}
+/**
+ * Compute the unique deduplication key: normalized name + pincode.
+ *
+ * Shiprocket masks buyer phone numbers in its API (`customer_phone: "xxxxxxxxxx"`), so phone
+ * cannot serve as the identity half of the key. Normalized name stands in for it: repeat orders
+ * from the same person at the same pincode collapse into one record, while a different pincode
+ * -- or a different name -- yields a separate entry.
+ */
+export async function getCustomerDedupKey(name: string, pincode: string): Promise<string> {
+  return buildDedupKey(name, pincode);
+}
+function buildDedupKey(name: string, pincode: string): string {
+  return `${cleanName(name)}_${cleanPincode(pincode)}`;
 }
 /**
  * Helper to ensure a valid auth token for an account, auto-refreshing if expired
@@ -132,6 +234,7 @@ export async function listShiprocketCustomersAction(
       WHERE
         LOWER(customer_name) LIKE ${term}
         OR customer_phone LIKE ${term}
+        OR COALESCE(customer_phone_2, '') LIKE ${term}
         OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
         OR LOWER(customer_address) LIKE ${term}
         OR LOWER(customer_city) LIKE ${term}
@@ -144,6 +247,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -158,6 +262,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -172,6 +277,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -186,6 +292,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -200,6 +307,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -214,6 +322,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -228,6 +337,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -242,6 +352,7 @@ export async function listShiprocketCustomersAction(
         WHERE
           LOWER(customer_name) LIKE ${term}
           OR customer_phone LIKE ${term}
+          OR COALESCE(customer_phone_2, '') LIKE ${term}
           OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
           OR LOWER(customer_address) LIKE ${term}
           OR LOWER(customer_city) LIKE ${term}
@@ -310,6 +421,7 @@ export async function listShiprocketCustomersAction(
       id: r.id,
       customer_name: r.customer_name,
       customer_phone: r.customer_phone,
+      customer_phone_2: r.customer_phone_2 ?? null,
       customer_email: r.customer_email ?? null,
       customer_address: r.customer_address,
       customer_address_2: r.customer_address_2 ?? null,
@@ -343,14 +455,19 @@ export async function saveShiprocketCustomerAction(
   }
   const name = customer.customer_name.trim();
   const phone = cleanPhone(customer.customer_phone);
+  // Drop a secondary number that merely repeats the primary.
+  const phone2Raw = cleanPhone(customer.customer_phone_2);
+  const phone2 = phone2Raw && phone2Raw !== phone ? phone2Raw : null;
   const pincode = cleanPincode(customer.customer_pincode);
   const address = customer.customer_address.trim();
   const city = customer.customer_city.trim();
   const state = customer.customer_state.trim();
-  if (!name || !phone || !pincode || !address) {
-    throw new Error('Name, Phone, Address, and Pincode are mandatory');
+  // Phone is not mandatory: Shiprocket masks buyer phone numbers, so synced records legitimately
+  // have none and must still be editable.
+  if (!name || !pincode || !address) {
+    throw new Error('Name, Address, and Pincode are mandatory');
   }
-  const dedupKey = `${phone}_${pincode}`;
+  const dedupKey = buildDedupKey(name, pincode);
   const email = customer.customer_email?.trim() || null;
   const address2 = customer.customer_address_2?.trim() || null;
   if (customer.id) {
@@ -359,13 +476,28 @@ export async function saveShiprocketCustomerAction(
       SELECT id FROM shiprocket_customers WHERE dedup_key = ${dedupKey} AND id != ${customer.id} LIMIT 1
     `) as Array<{ id: string }>;
     if (existing.length > 0) {
-      throw new Error(`Another customer already exists with phone ${phone} and pincode ${pincode}`);
+      throw new Error(`Another customer already exists with name '${name}' at pincode ${pincode}`);
     }
+    // Editing name or pincode rewrites dedup_key, so move the order links across to keep
+    // total_orders derivable for the edited record.
+    await sql`
+      UPDATE shiprocket_customer_orders o
+      SET dedup_key = ${dedupKey}
+      WHERE o.dedup_key IN (SELECT dedup_key FROM shiprocket_customers WHERE id = ${customer.id})
+        AND o.dedup_key <> ${dedupKey}
+        AND NOT EXISTS (
+          SELECT 1 FROM shiprocket_customer_orders x
+          WHERE x.dedup_key = ${dedupKey}
+            AND x.account_id = o.account_id
+            AND x.order_id = o.order_id
+        )
+    `;
     await sql`
       UPDATE shiprocket_customers
       SET
         customer_name = ${name},
         customer_phone = ${phone},
+        customer_phone_2 = ${phone2},
         customer_email = ${email},
         customer_address = ${address},
         customer_address_2 = ${address2},
@@ -382,16 +514,17 @@ export async function saveShiprocketCustomerAction(
   const id = `cust_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   await sql`
     INSERT INTO shiprocket_customers (
-      id, customer_name, customer_phone, customer_email,
+      id, customer_name, customer_phone, customer_phone_2, customer_email,
       customer_address, customer_address_2, customer_city, customer_state, customer_pincode,
       dedup_key, source_account_ids, total_orders, created_at, updated_at
     ) VALUES (
-      ${id}, ${name}, ${phone}, ${email},
+      ${id}, ${name}, ${phone}, ${phone2}, ${email},
       ${address}, ${address2}, ${city}, ${state}, ${pincode},
       ${dedupKey}, '{}', 1, NOW(), NOW()
     )
     ON CONFLICT (dedup_key) DO UPDATE SET
       customer_name = EXCLUDED.customer_name,
+      customer_phone_2 = COALESCE(EXCLUDED.customer_phone_2, shiprocket_customers.customer_phone_2),
       customer_email = COALESCE(EXCLUDED.customer_email, shiprocket_customers.customer_email),
       customer_address = EXCLUDED.customer_address,
       customer_address_2 = COALESCE(EXCLUDED.customer_address_2, shiprocket_customers.customer_address_2),
@@ -413,6 +546,11 @@ export async function deleteShiprocketCustomerAction(
   if (!(await isAuthorizedUser(token, sql))) {
     throw new Error('Unauthorized: Admin access required');
   }
+  // Clear the order links too, otherwise a later sync would rebuild the count from stale rows.
+  await sql`
+    DELETE FROM shiprocket_customer_orders
+    WHERE dedup_key IN (SELECT dedup_key FROM shiprocket_customers WHERE id = ${customerId})
+  `;
   await sql`DELETE FROM shiprocket_customers WHERE id = ${customerId}`;
   return { success: true, message: 'Customer removed successfully' };
 }
@@ -445,7 +583,10 @@ export async function syncHistoricalCustomersAction(
   let accountsProcessed = 0;
   let totalOrdersSeen = 0;
   const errors: string[] = [];
-  // Helper function to extract any mobile/phone number from an arbitrary record
+  // Helper function to extract the *buyer's* mobile number from an arbitrary record.
+  // Pickup/seller fields are deliberately excluded: they hold the warehouse's own number, which
+  // is identical for every order on an account and would collapse every customer in a pincode
+  // into a single dedup_key.
   const extractPhoneFromObject = (obj: unknown, depth = 0): string => {
     if (!obj || typeof obj !== 'object' || depth > 3) return '';
     const rec = obj as Record<string, unknown>;
@@ -454,14 +595,13 @@ export async function syncHistoricalCustomersAction(
       'customer_phone',
       'customer_mobile',
       'customer_mobile_number',
+      'customer_phone_number',
       'billing_phone',
       'billing_mobile',
       'billing_mobile_number',
       'shipping_phone',
       'shipping_mobile',
       'shipping_mobile_number',
-      'pickup_phone',
-      'pickup_mobile',
       'phone_number',
       'phone',
       'mobile',
@@ -475,8 +615,8 @@ export async function syncHistoricalCustomersAction(
         if (cleaned.length >= 10) return cleaned;
       }
     }
-    // Check nested objects
-    const nestedKeys = ['customer', 'customer_details', 'billing_address', 'shipping_address', 'others', 'pickup_address_detail', 'billing', 'shipping', 'address'];
+    // Check nested objects. `pickup_address*` is omitted for the reason noted above.
+    const nestedKeys = ['customer', 'customer_details', 'billing_address', 'shipping_address', 'others', 'billing', 'shipping', 'address'];
     for (const nKey of nestedKeys) {
       if (rec[nKey] && typeof rec[nKey] === 'object') {
         const nestedPhone = extractPhoneFromObject(rec[nKey], depth + 1);
@@ -496,13 +636,13 @@ export async function syncHistoricalCustomersAction(
   const extractPincodeFromObject = (obj: unknown, depth = 0): string => {
     if (!obj || typeof obj !== 'object' || depth > 3) return '';
     const rec = obj as Record<string, unknown>;
+    // Pickup/seller pincode is excluded for the same reason as the pickup phone: it is the
+    // warehouse's own pincode and is identical across every order on an account.
     const directKeys = [
       'customer_pincode',
       'billing_pincode',
       'shipping_pincode',
-      'pickup_pincode',
       'pincode',
-      'pin_code',
       'zipcode',
       'zip_code',
       'postal_code',
@@ -514,7 +654,7 @@ export async function syncHistoricalCustomersAction(
         if (cleaned.length >= 6) return cleaned;
       }
     }
-    const nestedKeys = ['customer', 'customer_details', 'billing_address', 'shipping_address', 'others', 'pickup_address_detail', 'billing', 'shipping', 'address'];
+    const nestedKeys = ['customer', 'customer_details', 'billing_address', 'shipping_address', 'others', 'billing', 'shipping', 'address'];
     for (const nKey of nestedKeys) {
       if (rec[nKey] && typeof rec[nKey] === 'object') {
         const nestedPin = extractPincodeFromObject(rec[nKey], depth + 1);
@@ -535,6 +675,13 @@ export async function syncHistoricalCustomersAction(
       errors.push(`Account '${acc.account_label}' has invalid or missing credentials.`);
       continue;
     }
+    // A business is identified by its Shiprocket company id, not by the local credential row or
+    // its label: the same company can be registered here twice under different labels/API users,
+    // and attributing by row id would double-count it as two businesses for a customer.
+    const accSourceId = acc.sr_company_id ? String(acc.sr_company_id) : acc.id;
+    // Buyer name/phone on /shipments/{id} require the "Buyer's Details Access" permission on the
+    // API user. Probe once per account and skip the extra request per order when it is denied.
+    let buyerDetailsAllowed: boolean | null = null;
     try {
       let ordersSeenInAccount = 0;
       let skippedOrdersInAccount = 0;
@@ -542,20 +689,29 @@ export async function syncHistoricalCustomersAction(
       const MAX_PAGES_TO_FETCH = 50;
       // Map to deduplicate records seen in this account by unique order identifier or shipment identifier
       const accountRecordsMap = new Map<string, Record<string, unknown>>();
+      // The effective window. A full sync must still send an explicit range: with no dates the
+      // endpoint returns only a handful of recent orders (0-4 per account here), not the history.
+      const effFromIso = (period.from || '2015-01-01').slice(0, 10);
+      const effToIso = (period.to || new Date().toISOString().slice(0, 10)).slice(0, 10);
       // 1. Fetch from /orders with all status variations
       // Shiprocket allows filtering by status or leaving empty, but some accounts have orders only under specific status buckets (e.g. ALL, DELIVERED, CANCELED)
       const statusQueries = ['', '&filter_by=ALL', '&status=ALL', '&filter_by=DELIVERED', '&filter_by=IN%20TRANSIT', '&filter_by=CANCELED', '&filter_by=COMPLETED'];
+      const ordersFrom = toOrdersDate(effFromIso);
+      const ordersTo = toOrdersDate(effToIso);
       for (const statusSuffix of statusQueries) {
         let page = 1;
-        let totalPages = 1;
-        while (page <= totalPages && page <= MAX_PAGES_TO_FETCH) {
+        let barrenPages = 0;
+        // `meta.pagination.total_pages` comes back as 0 on date-filtered queries even when `data`
+        // is populated, so it cannot drive the loop. Page until a request yields no record we
+        // have not already seen, which also terminates when the API repeats a page.
+        while (page <= MAX_PAGES_TO_FETCH) {
           const params = new URLSearchParams();
           params.set('page', String(page));
           params.set('per_page', '100');
-          if (period.from) params.set('from', period.from);
-          if (period.to) params.set('to', period.to);
+          if (ordersFrom) params.set('from', ordersFrom);
+          if (ordersTo) params.set('to', ordersTo);
           const queryString = `${params.toString()}${statusSuffix}`;
-          let ordersRes = await fetch(
+          const ordersRes = await fetch(
             `https://apiv2.shiprocket.in/v1/external/orders?${queryString}`,
             {
               headers: {
@@ -564,121 +720,93 @@ export async function syncHistoricalCustomersAction(
               },
             }
           );
-          let data = ordersRes.ok ? await ordersRes.json().catch(() => ({})) : null;
-          let ordersList = Array.isArray(data?.data) ? (data.data as Record<string, unknown>[]) : [];
-          // Fallback variant 2: if from/to returned empty or error, try from_date / to_date
-          if (ordersList.length === 0 && (period.from || period.to)) {
-            const fallbackParams = new URLSearchParams();
-            fallbackParams.set('page', String(page));
-            fallbackParams.set('per_page', '100');
-            if (period.from) fallbackParams.set('from_date', period.from);
-            if (period.to) fallbackParams.set('to_date', period.to);
-            const fallbackRes = await fetch(
-              `https://apiv2.shiprocket.in/v1/external/orders?${fallbackParams.toString()}${statusSuffix}`,
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${authToken}`,
-                },
-              }
-            );
-            if (fallbackRes.ok) {
-              const fallbackData = await fallbackRes.json().catch(() => ({}));
-              const fallbackList = Array.isArray(fallbackData?.data) ? (fallbackData.data as Record<string, unknown>[]) : [];
-              if (fallbackList.length > 0) {
-                data = fallbackData;
-                ordersList = fallbackList;
-                ordersRes = fallbackRes;
-              }
+          const data = ordersRes.ok ? await ordersRes.json().catch(() => ({})) : null;
+          const ordersList = Array.isArray(data?.data) ? (data.data as Record<string, unknown>[]) : [];
+          if (ordersList.length === 0) break;
+          let added = 0;
+          for (const ord of ordersList) {
+            const idKey = String(ord.id || ord.order_id || ord.channel_order_id || '');
+            if (!idKey) continue;
+            if (!accountRecordsMap.has(idKey)) {
+              accountRecordsMap.set(idKey, ord);
+              added++;
             }
           }
-          // Fallback variant 3: if still 0 records and dates were specified, query without date filter
-          if (ordersList.length === 0 && page === 1 && (period.from || period.to)) {
-            const noDateRes = await fetch(
-              `https://apiv2.shiprocket.in/v1/external/orders?page=1&per_page=100${statusSuffix}`,
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${authToken}`,
-                },
-              }
-            );
-            if (noDateRes.ok) {
-              const noDateData = await noDateRes.json().catch(() => ({}));
-              const noDateList = Array.isArray(noDateData?.data) ? (noDateData.data as Record<string, unknown>[]) : [];
-              if (noDateList.length > 0) {
-                data = noDateData;
-                ordersList = noDateList;
-                ordersRes = noDateRes;
-              }
-            }
-          }
-          if (ordersList.length > 0) {
-            for (const ord of ordersList) {
-              const idKey = String(ord.id || ord.order_id || ord.channel_order_id || Math.random());
-              if (!accountRecordsMap.has(idKey)) {
-                accountRecordsMap.set(idKey, ord);
-              }
-            }
-          }
-          // Detect total pages
-          const metaPagination = data?.meta?.pagination;
-          const metaTotalPages = data?.meta?.total_pages;
-          const directTotalPages = data?.pagination?.total_pages || data?.total_pages;
-          if (metaPagination?.total_pages) {
-            totalPages = Math.max(totalPages, Number(metaPagination.total_pages));
-          } else if (metaTotalPages) {
-            totalPages = Math.max(totalPages, Number(metaTotalPages));
-          } else if (directTotalPages) {
-            totalPages = Math.max(totalPages, Number(directTotalPages));
-          } else if (ordersList.length >= 100) {
-            totalPages = Math.max(totalPages, page + 1);
+          // The date-filtered list repeats rows heavily (one id was observed 5x within 10 rows),
+          // so a single page of pure duplicates does not mean the end of the data. Tolerate a
+          // couple of barren pages before giving up on this status bucket.
+          if (added === 0) {
+            barrenPages++;
+            if (barrenPages >= 3) break;
           } else {
-            break;
+            barrenPages = 0;
           }
           page++;
         }
       }
       // 2. Fetch from /shipments endpoint as well (often captures fulfilled historical shipments)
+      // This endpoint wants `YYYY-MM-DD` -- not the `DD-MMM-YYYY` that /orders requires -- and
+      // rejects any window wider than 30 days, so walk the span in slices.
       try {
-        let shipPage = 1;
-        let shipTotalPages = 1;
-        while (shipPage <= shipTotalPages && shipPage <= MAX_PAGES_TO_FETCH) {
-          const shipParams = new URLSearchParams();
-          shipParams.set('page', String(shipPage));
-          shipParams.set('per_page', '100');
-          if (period.from) shipParams.set('from', period.from);
-          if (period.to) shipParams.set('to', period.to);
-          const shipRes = await fetch(
-            `https://apiv2.shiprocket.in/v1/external/shipments?${shipParams.toString()}`,
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${authToken}`,
-              },
-            }
-          );
-          if (shipRes.ok) {
+        // Sweeping the whole requested span in 30-day slices would mean ~135 requests per account
+        // for a 2015-onwards full sync, nearly all against empty windows. The orders just fetched
+        // carry `created_at`, so start the sweep at the earliest order seen (with a month of
+        // margin) instead. With no orders at all, fall back to the last 12 months.
+        let shipFromIso = effFromIso;
+        const seenDates = Array.from(accountRecordsMap.values())
+          .map((r) => parseSrListDate(r.created_at))
+          .filter((d) => d.length === 10)
+          .sort();
+        if (seenDates.length > 0) {
+          const earliest = new Date(`${seenDates[0]}T00:00:00Z`);
+          earliest.setUTCDate(earliest.getUTCDate() - 30);
+          const margined = earliest.toISOString().slice(0, 10);
+          shipFromIso = margined > effFromIso ? margined : effFromIso;
+        } else if (!period.from) {
+          const yearAgo = new Date();
+          yearAgo.setUTCFullYear(yearAgo.getUTCFullYear() - 1);
+          shipFromIso = yearAgo.toISOString().slice(0, 10);
+        }
+        const windows = splitIntoWindows(shipFromIso, effToIso);
+        for (const win of windows) {
+          let shipPage = 1;
+          let barrenShipPages = 0;
+          while (shipPage <= MAX_PAGES_TO_FETCH) {
+            const shipParams = new URLSearchParams();
+            shipParams.set('page', String(shipPage));
+            shipParams.set('per_page', '100');
+            shipParams.set('from', toShipmentsDate(win.from));
+            shipParams.set('to', toShipmentsDate(win.to));
+            const shipRes = await fetch(
+              `https://apiv2.shiprocket.in/v1/external/shipments?${shipParams.toString()}`,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${authToken}`,
+                },
+              }
+            );
+            if (!shipRes.ok) break;
             const shipData = await shipRes.json().catch(() => ({}));
             const shipList = Array.isArray(shipData?.data) ? (shipData.data as Record<string, unknown>[]) : [];
+            if (shipList.length === 0) break;
+            let added = 0;
             for (const ship of shipList) {
-              const idKey = String(ship.order_id || ship.id || ship.shipment_id || Math.random());
+              const idKey = String(ship.order_id || ship.id || ship.shipment_id || '');
+              if (!idKey) continue;
               if (!accountRecordsMap.has(idKey)) {
                 accountRecordsMap.set(idKey, ship);
+                added++;
               }
             }
-            const sMetaPages = shipData?.meta?.pagination?.total_pages || shipData?.meta?.total_pages || shipData?.total_pages;
-            if (sMetaPages) {
-              shipTotalPages = Math.max(shipTotalPages, Number(sMetaPages));
-            } else if (shipList.length >= 100) {
-              shipTotalPages = Math.max(shipTotalPages, shipPage + 1);
+            if (added === 0) {
+              barrenShipPages++;
+              if (barrenShipPages >= 3) break;
             } else {
-              break;
+              barrenShipPages = 0;
             }
-          } else {
-            break;
+            shipPage++;
           }
-          shipPage++;
         }
       } catch (shipFetchErr) {
         console.warn('Shipments fetch fallback error:', shipFetchErr);
@@ -694,9 +822,15 @@ export async function syncHistoricalCustomersAction(
         let finalPhone = extractPhoneFromObject(order);
         let finalPincode = extractPincodeFromObject(order);
         let resolvedOrder = order;
-        const orderIdToFetch = order.id || order.order_id;
-        // If phone is missing from list view, fetch full order detail via /orders/show/{id}
-        if (!finalPhone && orderIdToFetch) {
+        // Records from /shipments carry the *shipment* id in `id` and the real order id in
+        // `order_id`; /orders/show only accepts the latter, so prefer it. Records from /orders
+        // have no `order_id` and fall back to `id`.
+        const orderIdToFetch = order.order_id || order.id;
+        // /shipments rows carry no address at all, and the date-filtered /orders list returns
+        // `customer_address: "Not Authorized"` for every order -- only /orders/show has the real
+        // street address. So fetch detail unless we already hold a full set of real values.
+        const listAddress = firstReal(order.customer_address, order.billing_address, order.shipping_address);
+        if ((!finalPhone || !finalPincode || !listAddress) && orderIdToFetch) {
           try {
             const detailRes = await fetch(
               `https://apiv2.shiprocket.in/v1/external/orders/show/${orderIdToFetch}`,
@@ -728,90 +862,128 @@ export async function syncHistoricalCustomersAction(
           const resOthers = (resolvedOrder.others || {}) as Record<string, unknown>;
           const resCustomerObj = (resolvedOrder.customer || {}) as Record<string, unknown>;
           // Resolve customer name
-          const finalName = String(
-            resolvedOrder.customer_name ||
-            resolvedOrder.billing_customer_name ||
-            resolvedOrder.shipping_customer_name ||
-            resCustomerObj.name ||
-            resCustomerObj.first_name ||
-            resolvedOrder.billing_name ||
-            resolvedOrder.shipping_name ||
-            resOthers.billing_customer_name ||
-            order.customer_name ||
-            order.billing_customer_name ||
-            order.shipping_customer_name ||
-            customerObj.name ||
-            customerObj.first_name ||
-            'Customer'
-          ).trim();
+          const finalName = firstReal(
+            resolvedOrder.customer_name,
+            resolvedOrder.billing_customer_name,
+            resolvedOrder.shipping_customer_name,
+            resCustomerObj.name,
+            resCustomerObj.first_name,
+            resolvedOrder.billing_name,
+            resolvedOrder.shipping_name,
+            resOthers.billing_customer_name,
+            order.customer_name,
+            order.billing_customer_name,
+            order.shipping_customer_name,
+            customerObj.name,
+            customerObj.first_name
+          ) || 'Customer';
           // Resolve street address
-          const finalRawAddress = String(
-            resolvedOrder.customer_address ||
-            resolvedOrder.billing_address ||
-            resolvedOrder.shipping_address ||
-            resolvedOrder.address ||
-            resCustomerObj.address ||
-            resCustomerObj.billing_address ||
-            resOthers.billing_address ||
-            resOthers.shipping_address ||
-            resOthers.address ||
-            order.customer_address ||
-            order.billing_address ||
-            order.shipping_address ||
-            order.address ||
-            customerObj.address ||
-            customerObj.billing_address ||
-            others.billing_address ||
-            others.shipping_address ||
-            primaryShipment?.address ||
-            ''
-          ).trim();
-          const finalCity = String(
-            resolvedOrder.customer_city ||
-            resolvedOrder.billing_city ||
-            resolvedOrder.shipping_city ||
-            resolvedOrder.city ||
-            resCustomerObj.city ||
-            resOthers.billing_city ||
-            resOthers.shipping_city ||
-            order.customer_city ||
-            order.billing_city ||
-            order.shipping_city ||
-            order.city ||
-            customerObj.city ||
-            '—'
-          ).trim() || '—';
-          const finalState = String(
-            resolvedOrder.customer_state ||
-            resolvedOrder.billing_state ||
-            resolvedOrder.shipping_state ||
-            resolvedOrder.state ||
-            resCustomerObj.state ||
-            resOthers.billing_state ||
-            resOthers.shipping_state ||
-            order.customer_state ||
-            order.billing_state ||
-            order.shipping_state ||
-            order.state ||
-            customerObj.state ||
-            '—'
-          ).trim() || '—';
+          const finalRawAddress = firstReal(
+            resolvedOrder.customer_address,
+            resolvedOrder.billing_address,
+            resolvedOrder.shipping_address,
+            resolvedOrder.address,
+            resCustomerObj.address,
+            resCustomerObj.billing_address,
+            resOthers.billing_address,
+            resOthers.shipping_address,
+            resOthers.address,
+            order.customer_address,
+            order.billing_address,
+            order.shipping_address,
+            order.address,
+            customerObj.address,
+            customerObj.billing_address,
+            others.billing_address,
+            others.shipping_address,
+            primaryShipment?.address
+          );
+          const finalCity = firstReal(
+            resolvedOrder.customer_city,
+            resolvedOrder.billing_city,
+            resolvedOrder.shipping_city,
+            resolvedOrder.city,
+            resCustomerObj.city,
+            resOthers.billing_city,
+            resOthers.shipping_city,
+            order.customer_city,
+            order.billing_city,
+            order.shipping_city,
+            order.city,
+            customerObj.city
+          ) || '—';
+          const finalState = firstReal(
+            resolvedOrder.customer_state,
+            resolvedOrder.billing_state,
+            resolvedOrder.shipping_state,
+            resolvedOrder.state,
+            resCustomerObj.state,
+            resOthers.billing_state,
+            resOthers.shipping_state,
+            order.customer_state,
+            order.billing_state,
+            order.shipping_state,
+            order.state,
+            customerObj.state
+          ) || '—';
           const finalAddress = finalRawAddress || (finalCity !== '—' || finalState !== '—' ? `${finalCity}, ${finalState}` : '');
           const orderIdentifier = String(resolvedOrder.id || resolvedOrder.order_id || resolvedOrder.channel_order_id || order.id || '');
-          // Strictly require at least phone or pincode to construct dedup key
-          if (!finalPhone && !finalPincode) {
+          // /orders/show masks the buyer phone; GET /shipments/{shipment_id} exposes it under
+          // customer_details, but only for API users granted "Buyer's Details Access". Consult it
+          // only while a phone is still missing, and stop after the first denial on this account.
+          const shipmentIdForDetails = order.id || primaryShipment?.id;
+          if (!finalPhone && buyerDetailsAllowed !== false && shipmentIdForDetails) {
+            try {
+              const cdRes = await fetch(
+                `https://apiv2.shiprocket.in/v1/external/shipments/${shipmentIdForDetails}`,
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${authToken}`,
+                  },
+                }
+              );
+              if (cdRes.ok) {
+                const cdData = await cdRes.json().catch(() => ({}));
+                const cdPayload = (cdData?.data ?? cdData) as Record<string, unknown>;
+                const details = (Array.isArray(cdPayload) ? cdPayload[0] : cdPayload)?.customer_details as
+                  | Record<string, unknown>
+                  | undefined;
+                if (details) {
+                  const rawCdPhone = details.phone;
+                  // A sentinel here means the permission is off; record that and stop asking.
+                  if (isPiiSentinel(typeof rawCdPhone === 'string' ? rawCdPhone : null)) {
+                    if (buyerDetailsAllowed === null) buyerDetailsAllowed = false;
+                  } else {
+                    const cdPhone = cleanPhone(String(rawCdPhone ?? ''));
+                    if (cdPhone.length >= 10) {
+                      finalPhone = cdPhone;
+                      buyerDetailsAllowed = true;
+                    }
+                  }
+                }
+              }
+            } catch (cdErr) {
+              console.warn('Shipment customer_details fetch error:', cdErr);
+            }
+          }
+          // Identity is normalized name + pincode, so both must be present to build a key.
+          // 'Customer' is the placeholder the extractor falls back to, not a real name -- treating
+          // it as one would collapse every unnamed order in a pincode into a single record.
+          const normalizedName = cleanName(finalName);
+          if (!normalizedName || normalizedName === 'customer' || !finalPincode) {
             skippedOrdersInAccount++;
             if (skipReasons.length < 3) {
               skipReasons.push(
-                `Order #${orderIdentifier} missing both phone and pincode (available keys: ${Object.keys(resolvedOrder).slice(0, 10).join(', ')})`
+                `Order #${orderIdentifier} missing customer name or pincode (available keys: ${Object.keys(resolvedOrder).slice(0, 10).join(', ')})`
               );
             }
             continue;
           }
-          // Use extracted phone if available; if only pincode was present, fall back to order id identifier
-          const effectivePhone = finalPhone || `sr_${orderIdentifier}`;
-          const effectivePincode = finalPincode || '000000';
-          const dedupKey = `${effectivePhone}_${effectivePincode}`;
+          // Phone is stored when genuinely available but is no longer part of the identity key.
+          const effectivePhone = finalPhone;
+          const effectivePincode = finalPincode;
+          const dedupKey = buildDedupKey(finalName, effectivePincode);
           const rawEmail =
             resolvedOrder.customer_email ||
             resolvedOrder.billing_email ||
@@ -821,46 +993,101 @@ export async function syncHistoricalCustomersAction(
             resOthers.billing_email ||
             order.customer_email ||
             order.billing_email;
-          const email = rawEmail ? String(rawEmail).trim() : null;
-          const rawAddress2 =
-            resolvedOrder.customer_address_2 ||
-            resolvedOrder.billing_address_2 ||
-            resolvedOrder.shipping_address_2 ||
-            order.customer_address_2 ||
-            order.billing_address_2;
-          const address2 = rawAddress2 ? String(rawAddress2).trim() : null;
+          // Shiprocket returns the seller's own address-book email in `customer_email` for these
+          // orders, so discard anything that matches the account or its pickup address rather than
+          // storing the merchant's address as every customer's email.
+          const sellerEmails = new Set(
+            [
+              acc.api_email,
+              acc.contact_email,
+              (resolvedOrder.pickup_address as Record<string, unknown> | undefined)?.email,
+              (resOthers.pickup_address as Record<string, unknown> | undefined)?.email,
+            ]
+              .filter((e): e is string => typeof e === 'string' && e.length > 0)
+              .map((e) => e.toLowerCase().trim())
+          );
+          const candidateEmail = rawEmail ? String(rawEmail).trim() : '';
+          const isSellerOrPlaceholder =
+            !candidateEmail ||
+            sellerEmails.has(candidateEmail.toLowerCase()) ||
+            /@shiprocket\.com$/i.test(candidateEmail) ||
+            candidateEmail.toLowerCase().startsWith('noreply@');
+          const email = isSellerOrPlaceholder ? null : candidateEmail;
+          const address2 = firstReal(
+            resolvedOrder.customer_address_2,
+            resolvedOrder.billing_address_2,
+            resolvedOrder.shipping_address_2,
+            order.customer_address_2,
+            order.billing_address_2
+          ) || null;
+          // Secondary contact number, when the API exposes one that differs from the primary.
+          // Shiprocket carries it as *_alternate_phone; a shipping phone that differs from the
+          // billing/customer phone is also effectively a second contact for the same buyer.
+          const altCandidates: unknown[] = [
+            resolvedOrder.customer_alternate_phone,
+            resolvedOrder.billing_alternate_phone,
+            resolvedOrder.shipping_alternate_phone,
+            resolvedOrder.alternate_phone,
+            resOthers.billing_alternate_phone,
+            resOthers.alternate_phone,
+            resCustomerObj.alternate_phone,
+            order.customer_alternate_phone,
+            order.billing_alternate_phone,
+            others.billing_alternate_phone,
+            resolvedOrder.shipping_phone,
+            order.shipping_phone,
+          ];
+          let altPhone = '';
+          for (const candidate of altCandidates) {
+            if (candidate === null || candidate === undefined) continue;
+            const cleaned = cleanPhone(String(candidate));
+            if (cleaned.length >= 10 && cleaned !== effectivePhone) {
+              altPhone = cleaned;
+              break;
+            }
+          }
+          const effectivePhone2 = altPhone || null;
           const orderId = String(resolvedOrder.id || resolvedOrder.order_id || order.id || '');
           const orderDate = (resolvedOrder.created_at || order.created_at) ? new Date(String(resolvedOrder.created_at || order.created_at)).toISOString() : null;
           const custId = `cust_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
           try {
             await sql`
               INSERT INTO shiprocket_customers (
-                id, customer_name, customer_phone, customer_email,
+                id, customer_name, customer_phone, customer_phone_2, customer_email,
                 customer_address, customer_address_2, customer_city, customer_state, customer_pincode,
                 dedup_key, source_account_ids, total_orders, last_order_id, last_order_date, created_at, updated_at
               ) VALUES (
-                ${custId}, ${finalName}, ${effectivePhone}, ${email},
+                ${custId}, ${finalName}, ${effectivePhone}, ${effectivePhone2}, ${email},
                 ${finalAddress || 'Address on file'}, ${address2}, ${finalCity}, ${finalState}, ${effectivePincode},
-                ${dedupKey}, ARRAY[${acc.id}]::TEXT[], 1, ${orderId}, ${orderDate}, NOW(), NOW()
+                ${dedupKey}, ARRAY[${accSourceId}]::TEXT[], 1, ${orderId}, ${orderDate}, NOW(), NOW()
               )
               ON CONFLICT (dedup_key) DO UPDATE SET
                 customer_name = CASE WHEN EXCLUDED.customer_name != 'Customer' THEN EXCLUDED.customer_name ELSE shiprocket_customers.customer_name END,
-                customer_phone = CASE WHEN EXCLUDED.customer_phone NOT LIKE 'sr_%' THEN EXCLUDED.customer_phone ELSE shiprocket_customers.customer_phone END,
+                customer_phone = CASE WHEN COALESCE(EXCLUDED.customer_phone, '') <> '' THEN EXCLUDED.customer_phone ELSE shiprocket_customers.customer_phone END,
+                customer_phone_2 = COALESCE(EXCLUDED.customer_phone_2, shiprocket_customers.customer_phone_2),
                 customer_email = COALESCE(EXCLUDED.customer_email, shiprocket_customers.customer_email),
                 customer_address = CASE WHEN EXCLUDED.customer_address != 'Address on file' THEN EXCLUDED.customer_address ELSE shiprocket_customers.customer_address END,
                 customer_address_2 = COALESCE(EXCLUDED.customer_address_2, shiprocket_customers.customer_address_2),
                 customer_city = EXCLUDED.customer_city,
                 customer_state = EXCLUDED.customer_state,
                 source_account_ids = CASE
-                  WHEN NOT (${acc.id} = ANY(shiprocket_customers.source_account_ids))
-                  THEN array_append(shiprocket_customers.source_account_ids, ${acc.id})
+                  WHEN NOT (${accSourceId} = ANY(shiprocket_customers.source_account_ids))
+                  THEN array_append(shiprocket_customers.source_account_ids, ${accSourceId})
                   ELSE shiprocket_customers.source_account_ids
                 END,
-                total_orders = shiprocket_customers.total_orders + 1,
                 last_order_id = COALESCE(EXCLUDED.last_order_id, shiprocket_customers.last_order_id),
                 last_order_date = GREATEST(COALESCE(EXCLUDED.last_order_date, '1970-01-01'::timestamptz), COALESCE(shiprocket_customers.last_order_date, '1970-01-01'::timestamptz)),
                 updated_at = NOW()
             `;
+            // Record this order against the customer. The primary key makes re-syncing an
+            // overlapping period a no-op rather than another increment of total_orders.
+            if (orderId) {
+              await sql`
+                INSERT INTO shiprocket_customer_orders (dedup_key, account_id, order_id, order_date)
+                VALUES (${dedupKey}, ${accSourceId}, ${orderId}, ${orderDate})
+                ON CONFLICT (dedup_key, account_id, order_id) DO NOTHING
+              `;
+            }
             totalUpserted++;
           } catch (upsertErr) {
             console.error('Customer upsert error:', upsertErr);
@@ -878,9 +1105,50 @@ export async function syncHistoricalCustomersAction(
       errors.push(`Account '${acc.account_label}': ${msg}`);
     }
   }
+  // Derive total_orders from the distinct linked orders instead of incrementing per pass, so
+  // re-syncing an overlapping period is idempotent.
+  //
+  // A full sync (no date filter) has seen every order, so its derived count is authoritative and
+  // can correct counts in either direction -- including ones inflated by pre-fix syncs. A ranged
+  // sync has only seen a slice, so it may only raise a count, never lower it; otherwise syncing a
+  // single month would clobber a customer's full history with that month's total.
+  const isFullSync = !period.from && !period.to;
+  let countsCorrected = 0;
+  try {
+    const corrected = (await (isFullSync
+      ? sql`
+        UPDATE shiprocket_customers c
+        SET total_orders = GREATEST(1, sub.cnt), updated_at = NOW()
+        FROM (
+          SELECT dedup_key, COUNT(*)::int AS cnt
+          FROM shiprocket_customer_orders
+          GROUP BY dedup_key
+        ) sub
+        WHERE c.dedup_key = sub.dedup_key
+          AND c.total_orders <> GREATEST(1, sub.cnt)
+        RETURNING c.id
+      `
+      : sql`
+        UPDATE shiprocket_customers c
+        SET total_orders = GREATEST(1, sub.cnt), updated_at = NOW()
+        FROM (
+          SELECT dedup_key, COUNT(*)::int AS cnt
+          FROM shiprocket_customer_orders
+          GROUP BY dedup_key
+        ) sub
+        WHERE c.dedup_key = sub.dedup_key
+          AND GREATEST(1, sub.cnt) > c.total_orders
+        RETURNING c.id
+      `)) as Array<{ id: string }>;
+    countsCorrected = corrected.length;
+  } catch (recalcErr) {
+    errors.push(
+      `Order-count recalculation failed: ${recalcErr instanceof Error ? recalcErr.message : String(recalcErr)}`
+    );
+  }
   return {
     success: true,
-    message: `Processed ${accountsProcessed} account(s) (${totalOrdersSeen} orders inspected). Synced/updated ${totalUpserted} customer records.`,
+    message: `Processed ${accountsProcessed} account(s) (${totalOrdersSeen} orders inspected). Synced/updated ${totalUpserted} customer records.${countsCorrected > 0 ? ` Corrected order counts on ${countsCorrected} record(s).` : ''}`,
     totalSynced: totalUpserted,
     accountsProcessed,
     errors: errors.length > 0 ? errors : undefined,

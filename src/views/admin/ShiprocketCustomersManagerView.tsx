@@ -50,6 +50,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [phone2, setPhone2] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [address2, setAddress2] = useState('');
@@ -88,6 +89,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setEditId(null);
     setName('');
     setPhone('');
+    setPhone2('');
     setEmail('');
     setAddress('');
     setAddress2('');
@@ -100,6 +102,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setEditId(cust.id);
     setName(cust.customer_name);
     setPhone(cust.customer_phone);
+    setPhone2(cust.customer_phone_2 || '');
     setEmail(cust.customer_email || '');
     setAddress(cust.customer_address);
     setAddress2(cust.customer_address_2 || '');
@@ -111,8 +114,8 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim() || !address.trim() || !pincode.trim()) {
-      setAlert({ type: 'error', text: 'Name, Phone, Address, and Pincode are required' });
+    if (!name.trim() || !address.trim() || !pincode.trim()) {
+      setAlert({ type: 'error', text: 'Name, Address, and Pincode are required' });
       return;
     }
     setSubmitting(true);
@@ -123,6 +126,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
           id: editId || undefined,
           customer_name: name,
           customer_phone: phone,
+          customer_phone_2: phone2,
           customer_email: email,
           customer_address: address,
           customer_address_2: address2,
@@ -145,7 +149,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     }
   };
   const handleDelete = async (cust: ShiprocketCustomer) => {
-    if (!confirm(`Are you sure you want to delete customer '${cust.customer_name}' (${cust.customer_phone})?`)) return;
+    if (!confirm(`Are you sure you want to delete customer '${cust.customer_name}' (${cust.customer_phone || cust.customer_pincode})?`)) return;
     try {
       const res = await deleteShiprocketCustomerAction(cust.id, token);
       if (res.success) {
@@ -222,7 +226,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             </h1>
           </div>
           <p className={styles.subtitle}>
-            Historical customer directory consolidated across all Shiprocket accounts. Deduplicated by Phone & Pincode.
+            Historical customer directory consolidated across all Shiprocket accounts. Deduplicated by Name & Pincode.
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -319,13 +323,21 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                 />
               </div>
               <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Phone Number *</label>
+                <label className={styles.fieldLabel}>Phone Number</label>
                 <input
                   className={styles.fieldInput}
-                  placeholder="e.g. 9876543210"
+                  placeholder="Not provided by Shiprocket - add manually if known"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  required
+                />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>Alternate Phone Number</label>
+                <input
+                  className={styles.fieldInput}
+                  placeholder="Optional second contact number"
+                  value={phone2}
+                  onChange={(e) => setPhone2(e.target.value)}
                 />
               </div>
               <div className={styles.fieldGroup}>
@@ -415,7 +427,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search by name, phone, email, address, city, pincode..."
+            placeholder="Search by name, phone, alt. phone, email, address, city, pincode..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -473,6 +485,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   <th className={styles.thSortable} onClick={() => handleSortToggle('phone')}>
                     Phone & Email {sortBy === 'phone' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </th>
+                  <th>Alt. Phone</th>
                   <th>Full Address</th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('city')}>
                     City & State {sortBy === 'city' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
@@ -500,13 +513,23 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                     <td>
                       <div className={styles.phoneBadge}>
                         <FiPhone size={13} style={{ color: 'var(--color-primary)' }} />
-                        <span>{cust.customer_phone}</span>
+                        <span>{cust.customer_phone || '—'}</span>
                       </div>
                       {cust.customer_email && (
                         <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
                           <FiMail size={12} style={{ marginRight: 3, verticalAlign: 'middle' }} />
                           {cust.customer_email}
                         </div>
+                      )}
+                    </td>
+                    <td>
+                      {cust.customer_phone_2 ? (
+                        <div className={styles.phoneBadge}>
+                          <FiPhone size={13} style={{ color: 'var(--color-text-secondary)' }} />
+                          <span>{cust.customer_phone_2}</span>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--color-text-secondary)' }}>—</span>
                       )}
                     </td>
                     <td>
