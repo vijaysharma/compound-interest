@@ -101,6 +101,7 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
       { name: 'Sudoku', href: '/games/sudoku', icon: FiGrid, aliases: ['/sudoku'] },
       { name: 'Minesweeper', href: '/games/minesweeper', icon: FiZap, aliases: ['/minesweeper'] },
       { name: 'Slide Puzzle', href: '/games/slide-puzzle', icon: FiBox, aliases: ['/slide-puzzle'] },
+      { name: 'Hitori', href: '/games/hitori', icon: FiGrid, aliases: ['/hitori'] },
     ],
   },
   {

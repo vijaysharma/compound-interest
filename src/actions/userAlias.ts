@@ -34,6 +34,7 @@ export async function updateUserAliasAction(
   if (existing.length > 0) return { success: false, error: 'Alias already taken' };
   try {
     await sql`UPDATE users SET user_alias = ${trimmed}, updated_at = NOW() WHERE id = ${user.id}`;
+    await sql`UPDATE game_leaderboard SET player_name = ${trimmed} WHERE user_id = ${`user_${user.id}`}`;
     return { success: true };
   } catch {
     return { success: false, error: 'Failed to update alias' };

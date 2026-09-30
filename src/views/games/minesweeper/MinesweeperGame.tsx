@@ -13,6 +13,7 @@ import { getPreset, MOBILE_PRESETS, WEB_PRESETS } from './types';
 import type { Cell, CellState, MinesweeperDifficulty } from './types';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
+import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
 import { recordGameScore } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import styles from './MinesweeperGame.module.scss';
@@ -31,6 +32,7 @@ export const MinesweeperGame: React.FC = () => {
   const [personalBest, setPersonalBest] = useState<boolean>(false);
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
+  const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
   const handleZoomIn = () => setZoom((prev) => Math.min(2.0, Math.round((prev + 0.15) * 100) / 100));
   const handleZoomOut = () => setZoom((prev) => Math.max(0.6, Math.round((prev - 0.15) * 100) / 100));
   const handleZoomReset = () => setZoom(1.0);
@@ -332,7 +334,10 @@ export const MinesweeperGame: React.FC = () => {
           <h1 className={styles.title}>Minesweeper</h1>
           <p className={styles.subtitle}>Uncover safe tiles without detonating hidden mines</p>
         </div>
-        <QuitButton onClick={() => setShowQuitModal(true)} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+          <QuitButton onClick={() => setShowQuitModal(true)} />
+        </div>
       </header>
       <div className={styles.controlsRow}>
         <div className={styles.difficultySelector} role="radiogroup" aria-label="Difficulty">
@@ -485,6 +490,29 @@ export const MinesweeperGame: React.FC = () => {
         gameTitle="Minesweeper"
         onCancel={() => setShowQuitModal(false)}
         onConfirmQuit={() => setShowQuitModal(false)}
+      />
+      <HowToPlayModal
+        isOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
+        gameTitle="Minesweeper"
+        objective="Uncover all safe squares without detonating any of the hidden mines on the field."
+        rules={[
+          <><strong>Uncovering Cells:</strong> Clicking or tapping an unrevealed square digs it up.</>,
+          <><strong>Number Clues:</strong> Numbers (1–8) reveal how many mines are located directly in the 8 neighboring cells around that square.</>,
+          <><strong>Zero Clue / Blank:</strong> Opening a square with 0 adjacent mines automatically expands and opens all connected safe squares.</>,
+          <><strong>Flags:</strong> Place flags on suspected mine locations to avoid accidentally detonating them.</>,
+          <><strong>Chording:</strong> Clicking/tapping an already revealed number when all its surrounding flags are placed will instantly reveal all other adjacent cells.</>,
+        ]}
+        controls={{
+          desktop: 'Left-click to reveal/dig. Right-click to place or remove a flag. Click a revealed number to chord.',
+          mobile: 'Tap to dig (or flag if Flag Mode is ON). Long-press to toggle a flag with haptic vibration.',
+          shortcuts: 'Use the smiley face button 🙂 to quickly restart or reset the current board.',
+        }}
+        tips={[
+          'Your very first click is guaranteed 100% safe—mines are only placed after you take your first action.',
+          'If a cell shows "1" and touches only one unrevealed square, that square is guaranteed to be a mine.',
+          'If an uncovered number equals the number of flags already placed around it, chord that number to sweep adjacent cells rapidly.',
+        ]}
       />
       <div className={styles.mobileControls}>
         <button

@@ -195,10 +195,24 @@ export const SEO_TOOLS_AND_STATIC = {
     ],
     canonicalPath: '/games/slide-puzzle',
   }),
+  hitori: createPageMetadata({
+    title: 'Hitori Puzzle Online — Japanese Logic Number Puzzle | Rupee Calculator',
+    description:
+      'Play free Hitori Japanese logic puzzles online. Eliminate duplicates by shading squares with mobile-first controls, error highlighting, auto-circles, and hints.',
+    keywords: [
+      'hitori puzzle',
+      'hitori online',
+      'japanese logic puzzle',
+      'number puzzle',
+      'hitori game',
+      'free puzzle games',
+    ],
+    canonicalPath: '/games/hitori',
+  }),
   games: createPageMetadata({
     title: 'Brain Games & Puzzles Suite — Free Online Games | Rupee Calculator',
     description:
-      'Play free online brain teasers, number puzzles, and retro classics: Word Path, Sudoku, Minesweeper, and 15-Slide Puzzle with local and global leaderboards.',
+      'Play free online brain teasers, number puzzles, and retro classics: Word Path, Sudoku, Minesweeper, Slide Puzzle, and Hitori with local and global leaderboards.',
     keywords: [
       'online games',
       'free puzzle games',
@@ -206,6 +220,7 @@ export const SEO_TOOLS_AND_STATIC = {
       'sudoku',
       'minesweeper',
       'slide puzzle',
+      'hitori puzzle',
       'word games',
     ],
     canonicalPath: '/games',

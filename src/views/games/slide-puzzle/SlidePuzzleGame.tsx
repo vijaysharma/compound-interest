@@ -13,8 +13,10 @@ import {
 } from './engine';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
+import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
 import { formatGameTime, recordGameScore } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
+import { useAuth } from '@/context/useAuth';
 import styles from './SlidePuzzleGame.module.scss';
 // A tracked pointer that has been silent this long has lost its end event, so the next pointerdown
 // takes it over. An active slide emits pointermove continuously, so a genuine second finger (which
@@ -29,6 +31,7 @@ export const SlidePuzzleGame: React.FC = () => {
   const [personalBest, setPersonalBest] = useState<boolean>(false);
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
+  const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
   const [controlMode, setControlMode] = useState<MovementControlMode>(() => {
     if (typeof window === 'undefined') return 'tap';
     try {
@@ -57,6 +60,8 @@ export const SlidePuzzleGame: React.FC = () => {
   // second, re-rendering the whole board once per tick during play.
   const elapsedSecondsRef = useRef<number>(0);
   const isStartedRef = useRef<boolean>(false);
+  const { user } = useAuth();
+  const isCompletedRef = useRef<boolean>(false);
   const movesRef = useRef<number>(0);
   // The id of the pointer currently driving a gesture, or null. A nullable id is self-healing in a
   // way a boolean "is down" latch is not: any up/cancel/capture-loss for that id clears it.
@@ -95,6 +100,7 @@ export const SlidePuzzleGame: React.FC = () => {
     lastSwipeAtRef.current = 0;
     gridRectRef.current = null;
     isStartedRef.current = false;
+    isCompletedRef.current = false;
     movesRef.current = 0;
   }, []);
   useEffect(() => {
@@ -106,6 +112,7 @@ export const SlidePuzzleGame: React.FC = () => {
     return () => clearInterval(timer);
   }, [isStarted, isWon]);
   const executeMove = useCallback((result: SlideResult, moveType: 'TAP' | 'SWIPE') => {
+    if (isCompletedRef.current) return;
     if (!isStartedRef.current) {
       isStartedRef.current = true;
       setIsStarted(true);
@@ -126,20 +133,22 @@ export const SlidePuzzleGame: React.FC = () => {
       timestamp: now,
     }));
     setMovementLog((prev) => [...prev, ...newSlideMoves]);
-    if (isSolved(result.newTiles)) {
+    if (isStartedRef.current && finalMoves >= 5 && isSolved(result.newTiles)) {
+      isCompletedRef.current = true;
       setIsWon(true);
       const res = recordGameScore({
         gameId: 'slide-puzzle',
         gameName: '15-Slide Puzzle',
         difficulty: '4x4',
-        timeSeconds: elapsedSecondsRef.current,
+        timeSeconds: Math.max(1, elapsedSecondsRef.current),
         moves: finalMoves,
         outcome: 'won',
+        playerName: user?.user_alias || user?.name || undefined,
       });
       setPersonalBest(res.isPersonalBest);
       setScoreBreakdown(res.scoreBreakdown);
     }
-  }, []);
+  }, [user]);
   // Resolve the grid's geometry once per gesture. `getBoundingClientRect` is a layout read, so
   // doing it per pointermove (as the old hit-test did) is wasteful on a 120Hz pointer stream.
   const readGridRect = useCallback((): DOMRect | null => {
@@ -294,7 +303,10 @@ export const SlidePuzzleGame: React.FC = () => {
           <h1 className={styles.title}>15-Slide Puzzle</h1>
           <p className={styles.subtitle}>Slide tiles into ascending 1 to 15 sequence</p>
         </div>
-        <QuitButton onClick={() => setShowQuitModal(true)} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+          <QuitButton onClick={() => setShowQuitModal(true)} />
+        </div>
       </header>
       <div className={styles.hudBar}>
         <div className={styles.hudStat}>
@@ -380,6 +392,27 @@ export const SlidePuzzleGame: React.FC = () => {
         gameTitle="15-Slide Puzzle"
         onCancel={() => setShowQuitModal(false)}
         onConfirmQuit={() => setShowQuitModal(false)}
+      />
+      <HowToPlayModal
+        isOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
+        gameTitle="15-Slide Puzzle"
+        objective="Slide the numbered tiles on the 4×4 board until they are ordered from 1 to 15 from left to right, top to bottom, with the empty space in the bottom-right corner."
+        rules={[
+          <><strong>Adjacent Sliding:</strong> Tiles adjacent to the empty slot can be slid into it horizontally or vertically.</>,
+          <><strong>Multi-tile Sliding:</strong> Tapping or sliding a tile in the same row or column as the empty space will push all intervening tiles into the blank space.</>,
+          <><strong>Target Arrangement:</strong> Row 1: 1, 2, 3, 4; Row 2: 5, 6, 7, 8; Row 3: 9, 10, 11, 12; Row 4: 13, 14, 15, [Empty].</>,
+        ]}
+        controls={{
+          desktop: 'Click tiles adjacent to the empty space (or anywhere in its row/col in Tap mode). In Slide mode, drag the blank space or hover.',
+          mobile: 'Tap highlighted slidable tiles, or switch to "Slide" mode to drag tiles directly.',
+          shortcuts: 'Switch modes via the segmented control: Tap, Slide / Hover, or Hybrid.',
+        }}
+        tips={[
+          'Solve row by row from the top: first solve 1, 2, 3, 4, then 5, 6, 7, 8.',
+          'To place the last two tiles in a row (e.g., 3 and 4), place 4 in slot 3 and 3 below it, then cycle them together into place.',
+          'Solve the bottom two rows column by column: pair up 9 & 13, then 10 & 14, leaving the final 2×2 block to cycle.',
+        ]}
       />
       <div
         ref={boardRef}

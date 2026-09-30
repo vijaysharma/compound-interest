@@ -1,5 +1,5 @@
 export interface ScoreCalculationInput {
-  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle';
+  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle' | 'hitori';
   difficulty: string;
   timeSeconds: number;
   outcome: 'won' | 'lost';
@@ -26,6 +26,7 @@ const BASE_SCORES: Record<string, number> = {
   sudoku: 800,
   'word-path': 600,
   'slide-puzzle': 500,
+  hitori: 650,
 };
 const TARGET_TIMES: Record<string, Record<string, number>> = {
   minesweeper: {
@@ -46,6 +47,11 @@ const TARGET_TIMES: Record<string, Record<string, number>> = {
   'slide-puzzle': {
     '4x4': 180,
     standard: 180,
+  },
+  hitori: {
+    easy: 120,
+    medium: 240,
+    hard: 420,
   },
 };
 export function calculateGameScore(input: ScoreCalculationInput): ScoreBreakdown {

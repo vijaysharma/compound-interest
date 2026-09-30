@@ -2,7 +2,7 @@
 import { ensureTables, getDb, getUserFromToken } from '@/lib/db';
 import { calculateGameScore, type ScoreBreakdown } from '@/views/games/common/scoring';
 export interface GameScoreSubmission {
-  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle';
+  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle' | 'hitori';
   gameName: string;
   difficulty: string;
   timeSeconds: number;
@@ -200,16 +200,21 @@ export async function getGlobalLeaderboardAction(limit = 20): Promise<GlobalLead
   const safeLimit = Math.min(50, Math.max(1, limit));
   const rows = (await sql`
     SELECT
-      user_id,
+      COALESCE(
+        NULLIF(CASE WHEN LOWER(TRIM(player_name)) NOT IN ('player', 'guest', 'anonymous', '') THEN LOWER(TRIM(player_name)) END, ''),
+        user_id
+      ) AS agg_key,
+      MAX(user_id) AS user_id,
       MAX(player_name) AS player_name,
       COUNT(*)::int AS total_games,
       SUM(total_points)::int AS total_points,
       MODE() WITHIN GROUP (ORDER BY game_id) AS best_game
     FROM game_leaderboard
-    GROUP BY user_id
+    GROUP BY agg_key
     ORDER BY total_points DESC
     LIMIT ${safeLimit}
   `) as Array<{
+    agg_key: string;
     user_id: string;
     player_name: string;
     total_games: number;

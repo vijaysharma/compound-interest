@@ -16,6 +16,7 @@ const mockLeaderboard: LeaderboardApiEntry[] = [
   { id: '4', gameId: 'sudoku', gameName: 'Sudoku', difficulty: 'medium', timeSeconds: 340, completedAt: '2026-09-27T09:40:00Z' },
   { id: '5', gameId: 'word-path', gameName: 'Word Path', difficulty: 'easy', timeSeconds: 48, score: 5, completedAt: '2026-09-27T10:10:00Z' },
   { id: '6', gameId: 'slide-puzzle', gameName: '15-Slide Puzzle', difficulty: '4x4', timeSeconds: 76, score: 42, completedAt: '2026-09-27T11:20:00Z' },
+  { id: '7', gameId: 'hitori', gameName: 'Hitori', difficulty: 'easy', timeSeconds: 65, completedAt: '2026-09-27T12:00:00Z' },
 ];
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

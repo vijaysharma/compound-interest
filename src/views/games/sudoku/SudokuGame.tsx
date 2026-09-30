@@ -1,11 +1,12 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiClock, FiEdit2, FiHelpCircle, FiPause, FiPlay, FiRefreshCw, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 import { PRESET_SUDOKU } from './presets';
 import { generatePuzzle } from './generator';
 import type { SudokuDifficulty, SudokuMove, SudokuState } from './types';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
+import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
 import { recordGameScore } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
@@ -33,6 +34,11 @@ export const SudokuGame: React.FC = () => {
   const [personalBest, setPersonalBest] = useState<boolean>(false);
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
+  const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
+  const elapsedSecondsRef = useRef<number>(elapsedSeconds);
+  useEffect(() => {
+    elapsedSecondsRef.current = elapsedSeconds;
+  }, [elapsedSeconds]);
   // Restore saved state
   useEffect(() => {
     let active = true;
@@ -78,7 +84,7 @@ export const SudokuGame: React.FC = () => {
       active = false;
     };
   }, []);
-  // Persist state
+  // Persist state (fires on board updates, notes, difficulty, paused/complete; does NOT trigger on timer ticks)
   useEffect(() => {
     const stateToSave: SudokuState = {
       grid,
@@ -86,7 +92,7 @@ export const SudokuGame: React.FC = () => {
       initial: initialGrid,
       notes,
       difficulty,
-      elapsedSeconds,
+      elapsedSeconds: elapsedSecondsRef.current,
       isPaused,
       isComplete,
       hintsUsed,
@@ -102,7 +108,7 @@ export const SudokuGame: React.FC = () => {
       void saveUserAppStateAction(token, guestId, 'games', 'sudoku', stateToSave);
     }, 600);
     return () => clearTimeout(timeout);
-  }, [grid, solutionGrid, initialGrid, notes, difficulty, elapsedSeconds, isPaused, isComplete, hintsUsed]);
+  }, [grid, solutionGrid, initialGrid, notes, difficulty, isPaused, isComplete, hintsUsed]);
   // Timer effect
   useEffect(() => {
     if (isPaused || isComplete) return;
@@ -359,6 +365,7 @@ export const SudokuGame: React.FC = () => {
             <FiClock aria-hidden="true" />
             <span>{formatTimer(elapsedSeconds)}</span>
           </div>
+          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
           <QuitButton onClick={() => setShowQuitModal(true)} />
         </div>
       </header>
@@ -483,6 +490,28 @@ export const SudokuGame: React.FC = () => {
         gameTitle="Sudoku"
         onCancel={() => setShowQuitModal(false)}
         onConfirmQuit={() => setShowQuitModal(false)}
+      />
+      <HowToPlayModal
+        isOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
+        gameTitle="Sudoku"
+        objective="Fill the 9×9 grid so that every row, every column, and every 3×3 box contains all digits from 1 to 9 without repetition."
+        rules={[
+          <><strong>Rows:</strong> Each horizontal row of 9 cells must contain digits 1 through 9 exactly once.</>,
+          <><strong>Columns:</strong> Each vertical column of 9 cells must contain digits 1 through 9 exactly once.</>,
+          <><strong>3×3 Boxes:</strong> Each outlined 3×3 square box must contain digits 1 through 9 exactly once.</>,
+          <><strong>No Guessing Required:</strong> Every valid puzzle has a single unique solution deducible purely by deductive logic.</>,
+        ]}
+        controls={{
+          desktop: 'Click any empty cell, then press digits 1–9 or click keypad buttons. Press Backspace/Delete to erase. Arrow keys navigate.',
+          mobile: 'Tap a cell to select it, then tap a number 1–9 from the bottom keypad to place it.',
+          shortcuts: 'N = Toggle Pencil/Notes mode. Z (Ctrl/Cmd) = Undo move. H = Reveal Hint. Arrow keys = Move selection.',
+        }}
+        tips={[
+          'Use Pencil mode (Notes) to jot down candidates in difficult cells.',
+          'Look for rows, columns, or 3×3 boxes with 7 or 8 cells already filled to find forced numbers immediately.',
+          'The keypad shows badges with remaining placements left for each number.',
+        ]}
       />
       <div className={styles.actionToolbar}>
         <button

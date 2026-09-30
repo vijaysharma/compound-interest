@@ -67,10 +67,18 @@ const GAMES_LIST: GameMeta[] = [
     description: 'Arrange scrambled 1 to 15 tiles into numerical order using fluid row & column sliding with solvability guarantee.',
     href: '/games/slide-puzzle',
   },
+  {
+    id: 'hitori',
+    title: 'Hitori',
+    category: 'Japanese Logic',
+    icon: '⬛',
+    iconBg: 'linear-gradient(135deg, #475569 0%, #1e293b 100%)',
+    description: 'Classic Japanese number puzzle. Shade duplicate numbers so no black cells touch and all white cells remain connected.',
+    href: '/games/hitori',
+  },
 ];
 export const GamesHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'games' | 'leaderboard'>('games');
-  const [leaderboardType, setLeaderboardType] = useState<'global' | 'perGame'>('global');
   const [leaderboardFilter, setLeaderboardFilter] = useState<string>('all');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [dbEntries, setDbEntries] = useState<LeaderboardRecord[]>([]);
@@ -95,34 +103,25 @@ export const GamesHub: React.FC = () => {
     const frameId = requestAnimationFrame(() => {
       if (active) setIsLoadingLeaderboard(true);
     });
-    if (leaderboardType === 'global') {
-      getGlobalLeaderboardAction(25)
-        .then((res) => {
-          if (active) {
-            setGlobalRankings(res);
-            setIsLoadingLeaderboard(false);
-          }
-        })
-        .catch(() => {
-          if (active) setIsLoadingLeaderboard(false);
-        });
-    } else {
-      getGameLeaderboardAction(leaderboardFilter, undefined, 25)
-        .then((res) => {
-          if (active) {
-            setDbEntries(res);
-            setIsLoadingLeaderboard(false);
-          }
-        })
-        .catch(() => {
-          if (active) setIsLoadingLeaderboard(false);
-        });
-    }
+    Promise.all([
+      getGlobalLeaderboardAction(25),
+      getGameLeaderboardAction(leaderboardFilter, undefined, 25),
+    ])
+      .then(([globalRes, dbRes]) => {
+        if (active) {
+          setGlobalRankings(globalRes);
+          setDbEntries(dbRes);
+          setIsLoadingLeaderboard(false);
+        }
+      })
+      .catch(() => {
+        if (active) setIsLoadingLeaderboard(false);
+      });
     return () => {
       active = false;
       cancelAnimationFrame(frameId);
     };
-  }, [activeTab, leaderboardType, leaderboardFilter]);
+  }, [activeTab, leaderboardFilter]);
   const { user, token, refreshUser } = useAuth();
   const [aliasInput, setAliasInput] = useState<string>('');
   const [aliasEditing, setAliasEditing] = useState<boolean>(false);
@@ -294,48 +293,31 @@ export const GamesHub: React.FC = () => {
       )}
       {activeTab === 'leaderboard' && (
         <div className={styles.leaderboardSection}>
-          <div className={styles.viewToggleRow}>
+          <div className={styles.filterRow}>
             <button
               type="button"
-              className={`${styles.viewToggleBtn} ${leaderboardType === 'global' ? styles.viewToggleActive : ''}`}
-              onClick={() => setLeaderboardType('global')}
+              className={`${styles.filterBtn} ${leaderboardFilter === 'all' ? styles.filterBtnActive : ''}`}
+              onClick={() => setLeaderboardFilter('all')}
             >
-              🌐 Global Rankings
+              🌐 Global Overall
             </button>
-            <button
-              type="button"
-              className={`${styles.viewToggleBtn} ${leaderboardType === 'perGame' ? styles.viewToggleActive : ''}`}
-              onClick={() => setLeaderboardType('perGame')}
-            >
-              🎯 Per-Game Scores
-            </button>
-          </div>
-          {leaderboardType === 'perGame' && (
-            <div className={styles.filterRow}>
+            {GAMES_LIST.map((g) => (
               <button
+                key={g.id}
                 type="button"
-                className={`${styles.filterBtn} ${leaderboardFilter === 'all' ? styles.filterBtnActive : ''}`}
-                onClick={() => setLeaderboardFilter('all')}
+                className={`${styles.filterBtn} ${leaderboardFilter === g.id ? styles.filterBtnActive : ''}`}
+                onClick={() => setLeaderboardFilter(g.id)}
               >
-                All Games
+                {g.title}
               </button>
-              {GAMES_LIST.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  className={`${styles.filterBtn} ${leaderboardFilter === g.id ? styles.filterBtnActive : ''}`}
-                  onClick={() => setLeaderboardFilter(g.id)}
-                >
-                  {g.title}
-                </button>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
+
           {isLoadingLeaderboard ? (
             <div className={styles.emptyState}>
               <p>Loading leaderboard rankings...</p>
             </div>
-          ) : leaderboardType === 'global' ? (
+          ) : leaderboardFilter === 'all' ? (
             <div className={styles.tableWrapper}>
               {globalRankings.length === 0 ? (
                 <div className={styles.emptyState}>
@@ -379,7 +361,7 @@ export const GamesHub: React.FC = () => {
             </div>
           ) : (
             <div className={styles.tableWrapper}>
-              {(dbEntries.length > 0 ? dbEntries : entries.filter((e) => leaderboardFilter === 'all' || e.gameId === leaderboardFilter)).length === 0 ? (
+              {(dbEntries.length > 0 ? dbEntries : entries.filter((e) => e.gameId === leaderboardFilter)).length === 0 ? (
                 <div className={styles.emptyState}>
                   <p>No high scores recorded yet for this game.</p>
                   <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
@@ -402,10 +384,10 @@ export const GamesHub: React.FC = () => {
                     {(dbEntries.length > 0
                       ? dbEntries
                       : entries
-                          .filter((e) => leaderboardFilter === 'all' || e.gameId === leaderboardFilter)
+                          .filter((e) => e.gameId === leaderboardFilter)
                           .map((e, idx) => ({
                             id: e.id,
-                            playerName: 'Player',
+                            playerName: e.playerName || 'Player',
                             gameId: e.gameId,
                             difficulty: e.difficulty,
                             timeSeconds: e.timeSeconds,

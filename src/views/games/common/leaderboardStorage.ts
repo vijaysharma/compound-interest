@@ -3,13 +3,14 @@ import { calculateGameScore, type ScoreBreakdown } from './scoring';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 export interface LeaderboardEntry {
   id: string;
-  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle';
+  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle' | 'hitori';
   gameName: string;
   difficulty: string;
   timeSeconds: number;
   score?: number;
   accuracy?: string;
   completedAt: string;
+  playerName?: string;
   isPersonalBest?: boolean;
   totalPoints?: number;
   baseScore?: number;
@@ -96,6 +97,18 @@ export const recordGameScore = (
   // Async sync to server database
   const token = getAuthToken();
   const guestId = getOrCreateGuestId();
+  let clientPlayerName = entry.playerName?.trim();
+  if (!clientPlayerName && typeof window !== 'undefined') {
+    try {
+      const rawUser = window.localStorage.getItem('auth_user');
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        clientPlayerName = u.user_alias || u.name || undefined;
+      }
+    } catch {
+      // Ignore parse error
+    }
+  }
   const submission: GameScoreSubmission = {
     gameId: entry.gameId,
     gameName: entry.gameName,
@@ -105,6 +118,7 @@ export const recordGameScore = (
     hintsUsed: entry.hintsUsed,
     moves: entry.moves,
     accuracy: entry.accuracy,
+    playerName: clientPlayerName,
   };
   void recordGameScoreAction(token, guestId, submission).catch((err) => {
     console.warn('Failed to record game score to database:', err);

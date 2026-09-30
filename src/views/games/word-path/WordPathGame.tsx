@@ -18,6 +18,7 @@ import { generateBoardAsync } from './workerClient';
 import { PRESET_BOARDS } from './boards';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
+import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
 import { recordGameScore } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
@@ -157,6 +158,7 @@ export const WordPathGame: React.FC = () => {
   );
   const [howToPlayOpen, setHowToPlayOpen] = useState<boolean>(true);
   const [keyboardOpen, setKeyboardOpen] = useState<boolean>(true);
+  const [showHowToPlayModal, setShowHowToPlayModal] = useState<boolean>(false);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const loadNextBoard = useCallback(
     async (diff: Difficulty) => {
@@ -575,6 +577,7 @@ export const WordPathGame: React.FC = () => {
           >
             <FiRefreshCw aria-hidden="true" />
           </button>
+          <HowToPlayButton onClick={() => setShowHowToPlayModal(true)} />
           <QuitButton onClick={() => setShowQuitModal(true)} />
         </div>
       </div>
@@ -854,6 +857,26 @@ export const WordPathGame: React.FC = () => {
         gameTitle="Word Path"
         onCancel={() => setShowQuitModal(false)}
         onConfirmQuit={() => setShowQuitModal(false)}
+      />
+      <HowToPlayModal
+        isOpen={showHowToPlayModal}
+        onClose={() => setShowHowToPlayModal(false)}
+        gameTitle="Word Path"
+        objective={`Find all ${board.words.length} hidden words relating to "${board.theme || board.title}" on the letter grid, using every letter tile exactly once.`}
+        rules={[
+          <><strong>Contiguous Paths:</strong> Connect letters horizontally, vertically, or diagonally into valid dictionary words matching the topic.</>,
+          <><strong>No Reuse:</strong> Once a word is locked in, its tiles are marked and used. Every single tile on the board belongs to exactly one target word.</>,
+          <><strong>Theme Alignment:</strong> Every hidden word relates directly to the board's topic shown at the top.</>,
+        ]}
+        controls={{
+          desktop: 'Click or drag across neighboring letters to form a word. Press Enter to submit or Backspace to undo.',
+          mobile: 'Swipe across adjacent letter tiles to trace a path. Tap the first letter of a word to view start hints.',
+          shortcuts: 'Arrow keys: Navigate between cells. Space/Enter: Toggle path selection. Backspace: Erase current word.',
+        }}
+        tips={[
+          'Check the word lengths list below the grid to see target word sizes.',
+          'If you get stuck, use "Shuffle" to view candidate start letters or "Hint" to reveal the first letter of an unsolved word.',
+        ]}
       />
       {!isWon && (
         <button
