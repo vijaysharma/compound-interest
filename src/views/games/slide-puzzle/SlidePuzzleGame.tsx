@@ -7,7 +7,6 @@ import {
   isSolved,
   slideTiles,
   GRID_SIZE,
-  TOTAL_TILES,
   type MovementControlMode,
   type SlideMove,
   type SlideResult,
@@ -17,6 +16,10 @@ import { QuitButton, QuitModal } from '../common/QuitModal';
 import { formatGameTime, recordGameScore } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import styles from './SlidePuzzleGame.module.scss';
+// A tracked pointer that has been silent this long has lost its end event, so the next pointerdown
+// takes it over. An active slide emits pointermove continuously, so a genuine second finger (which
+// lands while the first is still moving) is still rejected rather than hijacking the gesture.
+const STALE_GESTURE_MS = 700;
 export const SlidePuzzleGame: React.FC = () => {
   const [tiles, setTiles] = useState<number[]>(() => getShuffledBoard());
   const [moves, setMoves] = useState<number>(0);
@@ -43,11 +46,30 @@ export const SlidePuzzleGame: React.FC = () => {
   useEffect(() => {
     tilesRef.current = tiles;
   }, [tiles]);
+  useEffect(() => {
+    elapsedSecondsRef.current = elapsedSeconds;
+  }, [elapsedSeconds]);
   const lastPointerTileRef = useRef<number | null>(null);
-  const isPointerDownRef = useRef<boolean>(false);
   const hasMovedInGestureRef = useRef<boolean>(false);
-  const isSwipingRef = useRef<boolean>(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
+  // Mirrors of state that executeMove needs to read. Depending on `elapsedSeconds` directly made
+  // executeMove -- and therefore every tile's onPointerEnter closure -- a new function every
+  // second, re-rendering the whole board once per tick during play.
+  const elapsedSecondsRef = useRef<number>(0);
+  const isStartedRef = useRef<boolean>(false);
+  const movesRef = useRef<number>(0);
+  // The id of the pointer currently driving a gesture, or null. A nullable id is self-healing in a
+  // way a boolean "is down" latch is not: any up/cancel/capture-loss for that id clears it.
+  const activePointerIdRef = useRef<number | null>(null);
+  // Timestamp of the last slide instead of a boolean "is swiping" latch. The old flag was cleared
+  // only by a setTimeout inside pointerup; when iOS never delivered pointerup or pointercancel
+  // (a system gesture taking over mid-slide), it stayed true forever and silently killed every
+  // subsequent tap. A timestamp cannot get stuck.
+  const lastSwipeAtRef = useRef<number>(0);
+  // Last time the tracked pointer was seen, so a stranded pointer id can never lock the board out.
+  const lastPointerActivityAtRef = useRef<number>(0);
+  // Grid geometry captured at gesture start so pointermove needs no layout read.
+  const gridRectRef = useRef<DOMRect | null>(null);
   const handleModeChange = (mode: MovementControlMode) => {
     setControlMode(mode);
     try {
@@ -68,21 +90,35 @@ export const SlidePuzzleGame: React.FC = () => {
     setScoreBreakdown(null);
     setMovementLog([]);
     lastPointerTileRef.current = null;
-    isPointerDownRef.current = false;
     hasMovedInGestureRef.current = false;
+    activePointerIdRef.current = null;
+    lastSwipeAtRef.current = 0;
+    gridRectRef.current = null;
+    isStartedRef.current = false;
+    movesRef.current = 0;
   }, []);
   useEffect(() => {
     if (!isStarted || isWon) return;
     const timer = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
+    // Timer owns elapsed time; the win handler reads it via elapsedSecondsRef.
     return () => clearInterval(timer);
   }, [isStarted, isWon]);
   const executeMove = useCallback((result: SlideResult, moveType: 'TAP' | 'SWIPE') => {
-    if (!isStarted) setIsStarted(true);
+    if (!isStartedRef.current) {
+      isStartedRef.current = true;
+      setIsStarted(true);
+    }
     tilesRef.current = result.newTiles;
+    // Authoritative move count lives in a ref so the winning move can record its score without
+    // running side effects inside a setState updater. React may invoke an updater more than once
+    // (StrictMode double-invokes, and re-renders can replay it), which previously meant
+    // recordGameScore could write to storage twice and called setState mid-updater.
+    movesRef.current += 1;
+    const finalMoves = movesRef.current;
     setTiles(result.newTiles);
-    setMoves((prev) => prev + 1);
+    setMoves(finalMoves);
     const now = Date.now();
     const newSlideMoves: SlideMove[] = result.moves.map((m) => ({
       ...m,
@@ -92,35 +128,35 @@ export const SlidePuzzleGame: React.FC = () => {
     setMovementLog((prev) => [...prev, ...newSlideMoves]);
     if (isSolved(result.newTiles)) {
       setIsWon(true);
-      setMoves((currentMoves) => {
-        const finalMoves = currentMoves + 1;
-        const res = recordGameScore({
-          gameId: 'slide-puzzle',
-          gameName: '15-Slide Puzzle',
-          difficulty: '4x4',
-          timeSeconds: elapsedSeconds + 1,
-          moves: finalMoves,
-          outcome: 'won',
-        });
-        setPersonalBest(res.isPersonalBest);
-        setScoreBreakdown(res.scoreBreakdown);
-        return finalMoves;
+      const res = recordGameScore({
+        gameId: 'slide-puzzle',
+        gameName: '15-Slide Puzzle',
+        difficulty: '4x4',
+        timeSeconds: elapsedSecondsRef.current,
+        moves: finalMoves,
+        outcome: 'won',
       });
+      setPersonalBest(res.isPersonalBest);
+      setScoreBreakdown(res.scoreBreakdown);
     }
-  }, [elapsedSeconds, isStarted]);
-  const getTileIndexFromPoint = useCallback((clientX: number, clientY: number): number | null => {
-    if (typeof document !== 'undefined') {
-      const el = document.elementFromPoint(clientX, clientY);
-      const tileEl = el?.closest('[data-idx]');
-      if (tileEl) {
-        const parsed = parseInt(tileEl.getAttribute('data-idx') || '-1', 10);
-        if (parsed >= 0 && parsed < TOTAL_TILES) return parsed;
-      }
-    }
+  }, []);
+  // Resolve the grid's geometry once per gesture. `getBoundingClientRect` is a layout read, so
+  // doing it per pointermove (as the old hit-test did) is wasteful on a 120Hz pointer stream.
+  const readGridRect = useCallback((): DOMRect | null => {
     const gridEl = boardRef.current?.querySelector(`.${styles.grid}`) as HTMLElement | null;
     const target = gridEl || boardRef.current;
-    if (!target) return null;
-    const rect = target.getBoundingClientRect();
+    return target ? target.getBoundingClientRect() : null;
+  }, []);
+  // Pure geometry, no DOM hit-testing.
+  //
+  // This previously called `document.elementFromPoint(...).closest('[data-idx]')` on every single
+  // pointermove. That forces a synchronous hit-test on the main thread at pointer-event frequency,
+  // and it is also wrong mid-animation: tiles carry a 0.12s transition, so hit-testing during a
+  // slide can resolve to whichever element happens to be under the finger part-way through.
+  // Computing the cell from the cached rect is both cheaper and deterministic.
+  const getTileIndexFromPoint = useCallback((clientX: number, clientY: number): number | null => {
+    const rect = gridRectRef.current ?? readGridRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) return null;
     const x = clientX - rect.left;
     const y = clientY - rect.top;
     if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
@@ -129,7 +165,7 @@ export const SlidePuzzleGame: React.FC = () => {
     const col = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor((x / rect.width) * GRID_SIZE)));
     const row = Math.min(GRID_SIZE - 1, Math.max(0, Math.floor((y / rect.height) * GRID_SIZE)));
     return row * GRID_SIZE + col;
-  }, []);
+  }, [readGridRect]);
   const handleCellTransition = useCallback((currentIdx: number, isMoveGesture: boolean) => {
     if (isWon) return;
     if (controlMode === 'tap' && isMoveGesture) return;
@@ -154,25 +190,58 @@ export const SlidePuzzleGame: React.FC = () => {
         const result = slideTiles(currentTiles, currentIdx);
         if (result) {
           hasMovedInGestureRef.current = true;
-          isSwipingRef.current = true;
+          lastSwipeAtRef.current = Date.now();
           executeMove(result, 'SWIPE');
           lastPointerTileRef.current = currentIdx; // now currentIdx is the new blank space!
         }
       }
     }
   }, [controlMode, executeMove, isWon]);
-  const handleTileClick = (idx: number) => {
+  const handleTileClick = useCallback((idx: number) => {
     if (isWon) return;
     if (controlMode === 'swipe') return; // Taps disabled in swipe mode
-    if (isSwipingRef.current) return; // Prevent click firing after swipe/slide
+    // Suppress the click that trails a slide gesture. Time-based, so it cannot latch on.
+    if (Date.now() - lastSwipeAtRef.current < 150) return;
     const result = slideTiles(tilesRef.current, idx);
     if (!result) return;
     executeMove(result, 'TAP');
-  };
+  }, [controlMode, executeMove, isWon]);
+  const endGesture = useCallback((e?: React.PointerEvent) => {
+    if (e) {
+      try {
+        const el = e.currentTarget as HTMLElement;
+        if (el.hasPointerCapture?.(e.pointerId)) {
+          el.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore unsupported pointer capture
+      }
+    }
+    if (hasMovedInGestureRef.current) {
+      lastSwipeAtRef.current = Date.now();
+    }
+    activePointerIdRef.current = null;
+    lastPointerTileRef.current = null;
+    hasMovedInGestureRef.current = false;
+    gridRectRef.current = null;
+  }, []);
   const handlePointerDown = (e: React.PointerEvent) => {
     if (isWon) return;
-    isPointerDownRef.current = true;
+    // A second finger landing mid-slide would otherwise retarget the gesture. But never reject
+    // indefinitely: if the tracked pointer is stale, its end event was dropped, so take over
+    // rather than leaving the board permanently unresponsive.
+    const now = Date.now();
+    if (
+      activePointerIdRef.current !== null &&
+      activePointerIdRef.current !== e.pointerId &&
+      now - lastPointerActivityAtRef.current < STALE_GESTURE_MS
+    ) {
+      return;
+    }
+    lastPointerActivityAtRef.current = now;
+    activePointerIdRef.current = e.pointerId;
     hasMovedInGestureRef.current = false;
+    gridRectRef.current = readGridRect();
     try {
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     } catch {
@@ -186,33 +255,36 @@ export const SlidePuzzleGame: React.FC = () => {
   const handlePointerMove = (e: React.PointerEvent) => {
     if (isWon) return;
     const isTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
-    // On touch device, must be sliding with finger down
-    if (isTouch && !isPointerDownRef.current) return;
-    const idx = getTileIndexFromPoint(e.clientX, e.clientY);
-    if (idx !== null) {
-      handleCellTransition(idx, true);
+    // On a touch device the finger must be down; a mouse drives this by hover alone.
+    if (isTouch && activePointerIdRef.current !== e.pointerId) return;
+    if (activePointerIdRef.current === e.pointerId) {
+      lastPointerActivityAtRef.current = Date.now();
     }
+    const idx = getTileIndexFromPoint(e.clientX, e.clientY);
+    // Bail before touching any state while the pointer is still inside the same cell. A slide
+    // across one tile produces dozens of pointermove events but only one meaningful transition.
+    if (idx === null || idx === lastPointerTileRef.current) return;
+    handleCellTransition(idx, true);
   };
   const handlePointerUp = (e: React.PointerEvent) => {
-    try {
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // Ignore
-    }
-    const wasMoved = hasMovedInGestureRef.current;
-    isPointerDownRef.current = false;
-    lastPointerTileRef.current = null;
-    if (wasMoved) {
-      isSwipingRef.current = true;
-      setTimeout(() => {
-        isSwipingRef.current = false;
-      }, 100);
-    }
-    hasMovedInGestureRef.current = false;
+    if (activePointerIdRef.current !== null && activePointerIdRef.current !== e.pointerId) return;
+    endGesture(e);
   };
-  const handlePointerLeave = () => {
-    lastPointerTileRef.current = null;
-    isPointerDownRef.current = false;
+  // iOS Safari can revoke an implicit pointer capture mid-gesture (a system edge gesture, or the
+  // node under the finger being reparented). Without this the gesture state was never cleared and
+  // the board stopped responding until reload.
+  const handleLostPointerCapture = (e: React.PointerEvent) => {
+    if (activePointerIdRef.current === e.pointerId) {
+      endGesture();
+    }
+  };
+  const handlePointerLeave = (e: React.PointerEvent) => {
+    // With pointer capture held, a mouse leaving the board still reports through the board, so
+    // only treat this as the end of a hover-driven gesture.
+    if (e.pointerType === 'mouse' && activePointerIdRef.current === null) {
+      lastPointerTileRef.current = null;
+      gridRectRef.current = null;
+    }
   };
   const lastMove = movementLog[movementLog.length - 1];
   return (
@@ -316,14 +388,24 @@ export const SlidePuzzleGame: React.FC = () => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onLostPointerCapture={handleLostPointerCapture}
         onPointerLeave={handlePointerLeave}
       >
         <div className={styles.grid}>
+          {/*
+            Keyed by grid position, not by tile value. Keying by value made React reorder the DOM
+            children on every slide (the element for tile "7" physically moves to a new position in
+            the grid). Reparenting the node sitting under the user's finger makes iOS Safari abandon
+            the pointer stream mid-gesture, which is why sliding worked on desktop and Android but
+            not on iPhone. Keying by position means a slide only rewrites text and className on
+            nodes that never move. Safe here because tile movement is grid reflow -- no transition
+            depends on a tile keeping its DOM identity.
+          */}
           {tiles.map((val, idx) => {
             if (val === 0) {
               return (
                 <div
-                  key="blank"
+                  key={idx}
                   data-idx={idx}
                   className={styles.tileEmpty}
                   onPointerEnter={(e) => {
@@ -342,7 +424,7 @@ export const SlidePuzzleGame: React.FC = () => {
             if (isCorrect) tileClass += ` ${styles.tileCorrect}`;
             return (
               <div
-                key={val}
+                key={idx}
                 data-idx={idx}
                 className={tileClass}
                 onClick={() => handleTileClick(idx)}

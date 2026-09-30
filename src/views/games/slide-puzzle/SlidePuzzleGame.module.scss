@@ -198,9 +198,13 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  &:hover {
-    background: #f1f5f9;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  // Gated on a real hovering pointer. iOS Safari keeps :hover applied to the last-tapped element
+  // until you tap elsewhere, so an ungated rule leaves a tile looking permanently highlighted.
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #f1f5f9;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    }
   }
   &:active {
     transform: scale(0.96);
@@ -210,8 +214,10 @@
   border-color: #93c5fd;
   color: #1d4ed8;
   background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
-  &:hover {
-    background: #dbeafe;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #dbeafe;
+    }
   }
 }
 .tileCorrect {
