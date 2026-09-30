@@ -6,6 +6,7 @@ export const NAV_TITLES: Record<string, string> = {
   '/admin': 'Data administration',
   '/admin/shiprocket': 'Shiprocket Manager',
   '/admin/shiprocket-accounts': 'Shiprocket Accounts',
+  '/admin/shiprocket-customers': 'Shiprocket Customers',
   '/admin/shiprocket-rates': 'Shiprocket Rates',
   '/admin/volumetric-weight': 'Volumetric Weight',
   '/admin/wood-calculator': 'Wood Calculator',

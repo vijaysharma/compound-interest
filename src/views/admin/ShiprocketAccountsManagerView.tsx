@@ -15,6 +15,7 @@ import {
   FiKey,
   FiArrowLeft,
   FiCheck,
+  FiUsers,
 } from 'react-icons/fi';
 import {
   listShiprocketAccountsAction,
@@ -179,6 +180,9 @@ export const ShiprocketAccountsManagerView: React.FC<Props> = ({ token }) => {
           </p>
         </div>
         <div className={styles.headerActions}>
+          <Link href="/admin/shiprocket-customers" className={styles.outlineBtn}>
+            <FiUsers /> Customers Directory
+          </Link>
           <Link href="/admin/shiprocket" className={styles.outlineBtn}>
             <FiArrowLeft /> Back to Dashboard
           </Link>
