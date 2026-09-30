@@ -11,13 +11,16 @@ export async function getShiprocketAccountAction(token?: string | null): Promise
   if (!(await isAuthorizedUser(token, sql))) {
     throw new Error('Unauthorized: Admin access required');
   }
-  const { user } = await getShiprocketAuth();
+  const { user, profile } = await getShiprocketAuth();
   let balance: string | number = '0.00';
   try {
     const balRes = await shiprocketFetch('account/details/wallet-balance');
     if (balRes.ok) {
       const balData = await balRes.json();
       balance = balData?.data?.balance_amount ?? '0.00';
+      if (profile?.id) {
+        await sql`UPDATE shiprocket_accounts SET balance = ${Number(balance)}, updated_at = NOW() WHERE id = ${profile.id}`.catch(() => {});
+      }
     }
   } catch (err) {
     console.warn('Failed to fetch wallet balance:', err);
@@ -46,6 +49,7 @@ export async function getShiprocketAccountAction(token?: string | null): Promise
     success: true,
     account: {
       user: (user as ShiprocketAccountData['user']) || null,
+      profile: profile || null,
       balance,
       pickupLocations,
       channels,

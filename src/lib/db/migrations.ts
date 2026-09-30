@@ -4,7 +4,7 @@ import { applyDataMigrations } from './dataMigrations';
 import { applyTrackedSchemesMigrations } from './trackedSchemesMigrations';
 import { applyStateAndLeaderboardMigrations } from './stateAndLeaderboardMigrations';
 import { applyFiiDiiMigrations } from './fiiDiiMigrations';
-export const SCHEMA_VERSION = 11; // 11: institutional_flows, index_prices, macro_indicators
+export const SCHEMA_VERSION = 14; // 14: shiprocket_customers table for multi-account customer sync and deduplication
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {

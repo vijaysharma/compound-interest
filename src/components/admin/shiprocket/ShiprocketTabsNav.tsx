@@ -36,7 +36,7 @@ export const ShiprocketTabsNav: React.FC<ShiprocketTabsNavProps> = React.memo(
         className={`${styles.tabBtn} ${activeTab === 'company' ? styles.tabActive : ''}`}
         onClick={() => onSelectTab('company')}
       >
-        <FiMapPin /> Company Profile
+        <FiMapPin /> Company & Accounts
       </button>
     </div>
   )

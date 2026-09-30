@@ -4,6 +4,8 @@ export const NAV_TITLES: Record<string, string> = {
   '/demo/value-picker': 'ValuePicker Preview',
   '/login': 'Sign In',
   '/admin': 'Data administration',
+  '/admin/shiprocket': 'Shiprocket Manager',
+  '/admin/shiprocket-accounts': 'Shiprocket Accounts',
   '/admin/shiprocket-rates': 'Shiprocket Rates',
   '/admin/volumetric-weight': 'Volumetric Weight',
   '/admin/wood-calculator': 'Wood Calculator',

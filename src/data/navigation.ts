@@ -21,6 +21,7 @@ import {
   FiPieChart,
   FiPlayCircle,
   FiRepeat,
+  FiServer,
   FiShield,
   FiTrendingUp,
   FiTruck,
@@ -115,6 +116,7 @@ export const ADMIN_SECTION: NavigationSection = {
   items: [
     { name: 'Data administration', href: '/admin', icon: FiDatabase },
     { name: 'Shiprocket Manager', href: '/admin/shiprocket', icon: FiTruck, aliases: ['/admin/shiprocket-manager'] },
+    { name: 'Shiprocket Accounts', href: '/admin/shiprocket-accounts', icon: FiServer },
     { name: 'Shiprocket Rates', href: '/admin/shiprocket-rates', icon: FiTruck },
     { name: 'Volumetric Weight', href: '/admin/volumetric-weight', icon: FiBox },
     { name: 'Wood Calculator', href: '/admin/wood-calculator', icon: FiLayers },

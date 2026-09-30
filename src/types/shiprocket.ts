@@ -35,8 +35,46 @@ export interface ShiprocketChannel {
   base_channel_code?: string;
   status?: number;
 }
+export interface ShiprocketAccountProfile {
+  id: string;
+  account_label: string;
+  company_name: string;
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string;
+  api_email: string;
+  auth_token?: string | null;
+  token_expires_at?: string | null;
+  sr_user_id?: number | null;
+  sr_company_id?: number | null;
+  sr_first_name?: string | null;
+  sr_last_name?: string | null;
+  is_active: boolean;
+  balance?: number | string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+export interface ShiprocketCustomer {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string | null;
+  customer_address: string;
+  customer_address_2?: string | null;
+  customer_city: string;
+  customer_state: string;
+  customer_pincode: string;
+  dedup_key: string;
+  source_account_ids?: string[];
+  total_orders: number;
+  last_order_id?: string | null;
+  last_order_date?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
 export interface ShiprocketAccountData {
   user: ShiprocketUser | null;
+  profile?: ShiprocketAccountProfile | null;
   balance: number | string;
   pickupLocations: ShiprocketPickupLocation[];
   channels?: ShiprocketChannel[];

@@ -124,4 +124,55 @@ export async function syncNavHistoryAction(
 export async function getNavHistorySyncStatusAction(token?: string | null) {
   return navHistorySync.getNavHistorySyncStatusAction(token);
 }
+export async function listShiprocketAccountsAction(token?: string | null) {
+  const { listShiprocketAccountsAction: fn } = await import('./admin/shiprocketAccountManager');
+  return fn(token);
+}
+export async function switchActiveShiprocketAccountAction(accountId: string, token?: string | null) {
+  const { switchActiveShiprocketAccountAction: fn } = await import('./admin/shiprocketAccountManager');
+  return fn(accountId, token);
+}
+export async function saveShiprocketAccountAction(
+  input: Parameters<typeof import('./admin/shiprocketAccountManager').saveShiprocketAccountAction>[0],
+  token?: string | null
+) {
+  const { saveShiprocketAccountAction: fn } = await import('./admin/shiprocketAccountManager');
+  return fn(input, token);
+}
+export async function deleteShiprocketAccountAction(accountId: string, token?: string | null) {
+  const { deleteShiprocketAccountAction: fn } = await import('./admin/shiprocketAccountManager');
+  return fn(accountId, token);
+}
+export async function updateShiprocketAccountAction(
+  input: Parameters<typeof import('./admin/shiprocketAccountManager').updateShiprocketAccountAction>[0],
+  token?: string | null
+) {
+  const { updateShiprocketAccountAction: fn } = await import('./admin/shiprocketAccountManager');
+  return fn(input, token);
+}
+export async function listShiprocketCustomersAction(
+  options?: Parameters<typeof import('./admin/shiprocketCustomerManager').listShiprocketCustomersAction>[0],
+  token?: string | null
+) {
+  const { listShiprocketCustomersAction: fn } = await import('./admin/shiprocketCustomerManager');
+  return fn(options, token);
+}
+export async function saveShiprocketCustomerAction(
+  customer: Parameters<typeof import('./admin/shiprocketCustomerManager').saveShiprocketCustomerAction>[0],
+  token?: string | null
+) {
+  const { saveShiprocketCustomerAction: fn } = await import('./admin/shiprocketCustomerManager');
+  return fn(customer, token);
+}
+export async function deleteShiprocketCustomerAction(customerId: string, token?: string | null) {
+  const { deleteShiprocketCustomerAction: fn } = await import('./admin/shiprocketCustomerManager');
+  return fn(customerId, token);
+}
+export async function syncHistoricalCustomersAction(
+  period: Parameters<typeof import('./admin/shiprocketCustomerManager').syncHistoricalCustomersAction>[0],
+  token?: string | null
+) {
+  const { syncHistoricalCustomersAction: fn } = await import('./admin/shiprocketCustomerManager');
+  return fn(period, token);
+}
 export type { NavHistorySyncReport, NavHistoryCheckpoint } from './admin/navHistoryTypes';

@@ -11,6 +11,11 @@ export interface ShiprocketShipmentsTabProps {
   searchQuery: string;
   loadingOrders: boolean;
   actionBusy: string | null;
+  orderDateFrom?: string;
+  orderDateTo?: string;
+  onSetOrderDateFrom?: (val: string) => void;
+  onSetOrderDateTo?: (val: string) => void;
+  onApplyDateFilter?: (from?: string, to?: string) => void;
   stats: {
     pending: number;
     inTransit: number;
@@ -29,6 +34,11 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
     searchQuery,
     loadingOrders,
     actionBusy,
+    orderDateFrom = '',
+    orderDateTo = '',
+    onSetOrderDateFrom,
+    onSetOrderDateTo,
+    onApplyDateFilter,
     stats,
     actions,
     onSetStatusFilter,
@@ -69,15 +79,57 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
             Cancelled
           </button>
         </div>
-        <div className={styles.searchBox}>
-          <FiSearch className={styles.searchIcon} />
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Search order, customer, AWB..."
-            value={searchQuery}
-            onChange={(e) => onSetSearchQuery(e.target.value)}
-          />
+        <div className={styles.filterRight}>
+          <div className={styles.dateFilterGroup}>
+            <span className={styles.dateInputLabel}>From:</span>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={orderDateFrom}
+              onChange={(e) => {
+                const val = e.target.value;
+                onSetOrderDateFrom?.(val);
+                onApplyDateFilter?.(val, orderDateTo);
+              }}
+              title="Filter historical orders from date"
+            />
+            <span className={styles.dateInputLabel}>To:</span>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={orderDateTo}
+              onChange={(e) => {
+                const val = e.target.value;
+                onSetOrderDateTo?.(val);
+                onApplyDateFilter?.(orderDateFrom, val);
+              }}
+              title="Filter historical orders to date"
+            />
+            {(orderDateFrom || orderDateTo) && (
+              <button
+                type="button"
+                className={styles.outlineBtn}
+                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                onClick={() => {
+                  onSetOrderDateFrom?.('');
+                  onSetOrderDateTo?.('');
+                  onApplyDateFilter?.('', '');
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className={styles.searchBox}>
+            <FiSearch className={styles.searchIcon} />
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Search order, customer, AWB..."
+              value={searchQuery}
+              onChange={(e) => onSetSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
       {loadingOrders ? (

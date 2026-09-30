@@ -1,5 +1,6 @@
 import type {
   ShiprocketAccountData,
+  ShiprocketAccountProfile,
   ShiprocketOrder,
   ShiprocketStatementItem,
   ShiprocketTrackingData,
@@ -25,6 +26,7 @@ export interface OrderItemActionHandlers {
 }
 export type {
   ShiprocketAccountData,
+  ShiprocketAccountProfile,
   ShiprocketOrder,
   ShiprocketStatementItem,
   ShiprocketTrackingData,

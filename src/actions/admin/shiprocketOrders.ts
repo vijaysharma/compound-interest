@@ -3,7 +3,15 @@ import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import type { ShiprocketOrder, ShiprocketTrackingData } from '@/types/shiprocket';
 import { shiprocketFetch } from './shiprocketClient';
 export async function getShiprocketOrdersAction(
-  options: { page?: number; per_page?: number; search?: string; sort?: string; filter_by?: string } = {},
+  options: {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    sort?: string;
+    filter_by?: string;
+    from?: string;
+    to?: string;
+  } = {},
   token?: string | null
 ): Promise<{
   success: boolean;
@@ -21,6 +29,8 @@ export async function getShiprocketOrdersAction(
   if (options.search) params.set('search', options.search.trim());
   if (options.sort) params.set('sort', options.sort);
   if (options.filter_by) params.set('filter_by', options.filter_by);
+  if (options.from) params.set('from', options.from);
+  if (options.to) params.set('to', options.to);
   const endpoint = `orders${params.toString() ? `?${params.toString()}` : ''}`;
   const res = await shiprocketFetch(endpoint);
   const data = await res.json();

@@ -41,6 +41,8 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
     <div className={styles.dashboard}>
       <ShiprocketHeader
         account={data.account}
+        accountsList={data.accountsList}
+        onSwitchAccount={data.handleSwitchAccount}
         loading={data.loadingAccount || data.loadingOrders || data.loadingStatement}
         onRefreshAll={data.fetchAll}
         onNewShipment={() => {
@@ -76,6 +78,11 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           searchQuery={filter.searchQuery}
           loadingOrders={data.loadingOrders}
           actionBusy={data.actionBusy}
+          orderDateFrom={data.orderDateFrom}
+          orderDateTo={data.orderDateTo}
+          onSetOrderDateFrom={data.setOrderDateFrom}
+          onSetOrderDateTo={data.setOrderDateTo}
+          onApplyDateFilter={(from, to) => data.fetchOrders(from, to)}
           stats={filter.stats}
           actions={itemActions}
           onSetStatusFilter={filter.setStatusFilter}
@@ -119,7 +126,14 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           onRefreshStatement={data.fetchStatement}
         />
       )}
-      {activeTab === 'company' && <ShiprocketCompanyTab account={data.account} />}
+      {activeTab === 'company' && (
+        <ShiprocketCompanyTab
+          account={data.account}
+          accountsList={data.accountsList}
+          onSwitchAccount={data.handleSwitchAccount}
+          onDeleteAccount={data.handleDeleteAccount}
+        />
+      )}
       {modals.trackingModalAwb && (
         <ShiprocketTrackingModal
           awb={modals.trackingModalAwb}
