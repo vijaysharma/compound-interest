@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -53,6 +53,17 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
   showSensex,
   isLoading,
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Format Left Y-Axis ticks
   const formatLeftAxisTick = (val: number) => {
     if (val === 0) return '0';
@@ -213,27 +224,31 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
         <ResponsiveContainer width="100%" height={400}>
           <ComposedChart
             data={chartData}
-            margin={{ top: 12, right: hasRightAxis ? 12 : 6, left: -10, bottom: 6 }}
+            margin={
+              isMobile
+                ? { top: 10, right: hasRightAxis ? 4 : 0, left: -18, bottom: 4 }
+                : { top: 12, right: hasRightAxis ? 12 : 6, left: -10, bottom: 6 }
+            }
           >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
             <XAxis
               dataKey="formattedDate"
               stroke="#94a3b8"
-              fontSize={11}
+              fontSize={isMobile ? 10 : 11}
               tickLine={false}
               axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
               interval="preserveStartEnd"
-              minTickGap={28}
+              minTickGap={isMobile ? 36 : 28}
             />
             {/* Left Y-Axis: FII / DII Flows */}
             <YAxis
               yAxisId="left"
               stroke="#94a3b8"
-              fontSize={11}
+              fontSize={isMobile ? 10 : 11}
               tickLine={false}
               axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
               tickFormatter={formatLeftAxisTick}
-              width={68}
+              width={isMobile ? 54 : 68}
             />
             {/* Right Y-Axis: Stock Indices (Nifty 50 / Sensex) */}
             {hasRightAxis && (
@@ -241,12 +256,12 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                 yAxisId="right"
                 orientation="right"
                 stroke="#64748b"
-                fontSize={11}
+                fontSize={isMobile ? 10 : 11}
                 tickLine={false}
                 axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
                 domain={rightAxisDomain}
                 tickFormatter={formatRightAxisTick}
-                width={52}
+                width={isMobile ? 42 : 52}
               />
             )}
             <ReferenceLine y={0} yAxisId="left" stroke="#cbd5e1" strokeDasharray="4 4" />
