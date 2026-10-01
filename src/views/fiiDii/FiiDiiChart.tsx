@@ -221,7 +221,7 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
         </div>
       </div>
       <div className={styles.chartWrapper}>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
             margin={
