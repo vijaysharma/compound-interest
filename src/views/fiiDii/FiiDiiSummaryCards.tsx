@@ -125,7 +125,7 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
             </div>
             <span className={styles.cardTag}>{fmtDate(latestDateDisplay)}</span>
           </div>
-          {/* <div className={styles.cardDateRange}>{periodLabel}</div> */}
+          <div className={styles.cardDateRange}>Last Trading Session</div>
           <div className={`${styles.cardValue} ${latestFiiNet >= 0 ? styles.pos : styles.neg}`}>
             {formatAmount(latestFiiNet)} <span className={styles.cardUnit}>₹ Cr</span>
           </div>
@@ -173,7 +173,7 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
             </div>
             <span className={styles.cardTag}>{fmtDate(latestDateDisplay)}</span>
           </div>
-          {/* <div className={styles.cardDateRange}>{periodLabel}</div> */}
+          <div className={styles.cardDateRange}>Last Trading Session</div>
           <div className={`${styles.cardValue} ${latestDiiNet >= 0 ? styles.pos : styles.neg}`}>
             {formatAmount(latestDiiNet)} <span className={styles.cardUnit}>₹ Cr</span>
           </div>

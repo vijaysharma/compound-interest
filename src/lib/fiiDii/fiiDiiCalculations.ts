@@ -1,7 +1,7 @@
 import type { DbInstitutionalFlow, DbIndexPrice, DbMacroIndicator } from '@/lib/db';
 export type AdjustmentMode = 'nominal' | 'inflation' | 'ppp';
 export type ViewMode = 'daily' | 'cumulative';
-export type Timeframe = '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL' | 'MAX' | `FY${number}`;
+export type Timeframe = '1W' | '1M' | '3M' | '6M' | '1Y' | '5Y' | 'ALL' | 'MAX' | `FY${number}`;
 export type FlowInterval = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'halfyearly' | 'yearly';
 export const FLOW_INTERVALS: { key: FlowInterval; label: string }[] = [
   { key: 'daily', label: 'Daily' },
@@ -11,6 +11,34 @@ export const FLOW_INTERVALS: { key: FlowInterval; label: string }[] = [
   { key: 'halfyearly', label: 'Half-Yearly' },
   { key: 'yearly', label: 'Yearly' },
 ];
+
+/**
+ * Returns whether a given aggregation interval is logical / permitted for the selected timeframe.
+ * If timeframe duration is shorter than the interval, it returns false.
+ */
+export function isIntervalAllowedForTimeframe(interval: FlowInterval, timeframe: Timeframe): boolean {
+  if (interval === 'daily') return true;
+  if (timeframe === '1W') {
+    return false; // Only daily makes sense for 1 week
+  }
+  if (timeframe === '1M') {
+    return interval === 'weekly';
+  }
+  if (timeframe === '3M') {
+    return interval === 'weekly' || interval === 'monthly';
+  }
+  if (timeframe === '6M') {
+    return interval === 'weekly' || interval === 'monthly' || interval === 'quarterly';
+  }
+  if (timeframe === '1Y') {
+    return interval !== 'yearly';
+  }
+  // 5Y, ALL, MAX, or FY (1 year)
+  if (typeof timeframe === 'string' && timeframe.startsWith('FY')) {
+    return interval !== 'yearly';
+  }
+  return true;
+}
 export interface ProcessedFIIDIIPoint {
   tradeDate: string; // YYYY-MM-DD
   formattedDate: string; // e.g. "12 Jun '24" or "Jun '24"
@@ -346,6 +374,9 @@ export function getFinancialYearRange(fy: string): { start: string; end: string 
 export function getTimeframeStartDate(timeframe: Timeframe, baseDate = new Date()): string {
   const d = new Date(baseDate.getTime());
   switch (timeframe) {
+    case '1W':
+      d.setDate(d.getDate() - 7);
+      break;
     case '1M':
       d.setMonth(d.getMonth() - 1);
       break;

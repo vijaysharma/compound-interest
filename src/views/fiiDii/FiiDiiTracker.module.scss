@@ -157,6 +157,9 @@
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  min-width: 0;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .cardHeader {
@@ -164,12 +167,15 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.35rem;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
 .cardTitleWithInfo {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .infoIconBtn {
@@ -245,23 +251,41 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-text-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardDate,
 .cardTag {
   font-size: 0.68rem;
   color: var(--color-text-muted, #94a3b8);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cardDateRange {
+  font-size: 0.68rem;
+  color: var(--color-text-muted, #94a3b8);
+  margin-bottom: 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 1rem;
 }
 
 .cardValue {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 0.35rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   @include tablet-up {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
   }
 }
 
@@ -273,30 +297,59 @@
 
 .cardSplitRow {
   display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
   margin: 0.25rem 0;
+  min-width: 0;
+
+  @include tablet-up {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+
+    @include tablet-up {
+      justify-content: flex-start;
+    }
+  }
 }
 
 .splitLabel {
   font-size: 0.72rem;
   color: var(--color-text-muted, #64748b);
   margin-right: 0.25rem;
+  white-space: nowrap;
 }
 
 .splitVal {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .cardFooter {
   margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  min-height: 1.4rem;
+  min-width: 0;
 }
 
 .cardMetaText {
   font-size: 0.68rem;
   color: var(--color-text-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pillBuy {
@@ -384,7 +437,7 @@
   transition: all 0.15s ease;
   touch-action: manipulation;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--color-primary, #3b82f6);
     color: var(--color-primary, #3b82f6);
   }
@@ -397,6 +450,20 @@
 
     &:hover {
       color: #ffffff;
+    }
+  }
+
+  &:disabled,
+  &Disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    border-color: var(--color-border, #e2e8f0);
+    color: var(--color-text-muted, #94a3b8);
+    background: transparent;
+
+    &:hover {
+      border-color: var(--color-border, #e2e8f0);
+      color: var(--color-text-muted, #94a3b8);
     }
   }
 }
@@ -412,6 +479,10 @@
 
 .segmentBtn {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   border: none;
   background: transparent;
   color: var(--color-text-muted, #64748b);
@@ -434,6 +505,36 @@
     color: var(--color-primary, #2563eb);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
+}
+
+.segmentInfoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted, #94a3b8);
+  opacity: 0.75;
+  transition: opacity 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+    color: var(--color-primary, #2563eb);
+  }
+}
+
+.adjModeTooltipWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.adjExplanationCard {
+  background: #f8fafc;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #475569);
+  line-height: 1.4;
+  margin-top: 0.25rem;
 }
 
 .viewAndOverlaysRow {
@@ -468,16 +569,28 @@
   user-select: none;
   transition: all 0.15s ease;
 
-  &NiftyActive {
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.08);
+  &FiiActive {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
     color: #1d4ed8;
   }
 
+  &DiiActive {
+    border-color: #059669;
+    background: rgba(5, 150, 105, 0.08);
+    color: #047857;
+  }
+
+  &NiftyActive {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.08);
+    color: #6d28d9;
+  }
+
   &SensexActive {
-    border-color: #ec4899;
-    background: rgba(236, 72, 153, 0.08);
-    color: #be185d;
+    border-color: #f97316;
+    background: rgba(249, 115, 22, 0.08);
+    color: #c2410c;
   }
 }
 
@@ -646,10 +759,72 @@
 
 .chartWrapper {
   width: 100%;
-  height: 400px;
-  min-height: 400px;
+  height: 380px;
+  min-height: 380px;
   min-width: 0;
   position: relative;
+}
+
+.chartHoverInfo {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--color-bg-subtle, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
+.chartHoverHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chartHoverDate {
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: var(--color-text, #0f172a);
+}
+
+.chartHoverStats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.chartHoverItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chartHoverLabel {
+  color: var(--color-text-muted, #64748b);
+  font-weight: 600;
+}
+
+.chartHoverVal {
+  font-weight: 800;
+}
+
+.chartHoverEmpty {
+  font-size: 0.74rem;
+  color: var(--color-text-muted, #94a3b8);
+  font-style: italic;
 }
 
 .chartPlaceholder {
