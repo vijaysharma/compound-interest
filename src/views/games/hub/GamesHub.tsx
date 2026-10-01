@@ -76,6 +76,15 @@ const GAMES_LIST: GameMeta[] = [
     description: 'Classic Japanese number puzzle. Shade duplicate numbers so no black cells touch and all white cells remain connected.',
     href: '/games/hitori',
   },
+  {
+    id: 'tango',
+    title: 'Tango (Binairo)',
+    category: 'Binary Logic',
+    icon: '⚪',
+    iconBg: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
+    description: 'Fill the grid with primary and light circles following equal, cross, and 3-in-a-row deduction rules.',
+    href: '/games/tango',
+  },
 ];
 export const GamesHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'games' | 'leaderboard'>('games');

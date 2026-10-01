@@ -209,6 +209,20 @@ export const SEO_TOOLS_AND_STATIC = {
     ],
     canonicalPath: '/games/hitori',
   }),
+  tango: createPageMetadata({
+    title: 'Tango (Binairo / Takuzu) Online — Free Binary Logic Puzzle | Rupee Calculator',
+    description:
+      'Play Tango (Binairo / Takuzu) online. Fill the grid with primary and light circles using deduction rules: equal (=), cross (×), and no 3 in a row. 6×6, 8×8, and 10×10 difficulty tiers.',
+    keywords: [
+      'tango game',
+      'binairo puzzle',
+      'takuzu online',
+      'binary puzzle',
+      'tango logic game',
+      'circles puzzle',
+    ],
+    canonicalPath: '/games/tango',
+  }),
   games: createPageMetadata({
     title: 'Brain Games & Puzzles Suite — Free Online Games | Rupee Calculator',
     description:

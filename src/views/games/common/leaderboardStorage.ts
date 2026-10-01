@@ -3,7 +3,7 @@ import { calculateGameScore, type ScoreBreakdown } from './scoring';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 export interface LeaderboardEntry {
   id: string;
-  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle' | 'hitori';
+  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle' | 'hitori' | 'tango';
   gameName: string;
   difficulty: string;
   timeSeconds: number;

@@ -2,7 +2,7 @@
 import { ensureTables, getDb, getUserFromToken } from '@/lib/db';
 import { calculateGameScore, type ScoreBreakdown } from '@/views/games/common/scoring';
 export interface GameScoreSubmission {
-  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle' | 'hitori';
+  gameId: 'minesweeper' | 'sudoku' | 'word-path' | 'slide-puzzle' | 'hitori' | 'tango';
   gameName: string;
   difficulty: string;
   timeSeconds: number;
