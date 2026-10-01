@@ -18,6 +18,7 @@ import {
   FiChevronRight,
   FiPackage,
   FiCalendar,
+  FiX,
 } from 'react-icons/fi';
 import {
   listShiprocketCustomersAction,
@@ -110,7 +111,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setState(cust.customer_state);
     setPincode(cust.customer_pincode);
     setShowForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,15 +237,11 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             type="button"
             className={styles.primaryBtn}
             onClick={() => {
-              if (showForm && !editId) {
-                setShowForm(false);
-              } else {
-                resetForm();
-                setShowForm(true);
-              }
+              resetForm();
+              setShowForm(true);
             }}
           >
-            <FiPlus /> {showForm && !editId ? 'Close Form' : 'Add Customer'}
+            <FiPlus /> Add Customer
           </button>
         </div>
       </header>
@@ -306,118 +302,140 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         </div>
       </div>
       {showForm && (
-        <div className={styles.formCard}>
-          <div className={styles.formSectionTitle}>
-            <FiUsers /> {editId ? 'Edit Customer Details' : 'Add New Customer Record'}
-          </div>
-          <form onSubmit={handleSubmit}>
-            <div className={styles.formGrid3}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Customer Name *</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="e.g. Ramesh Kumar"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
+        <div
+          className={styles.modalBackdrop}
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !submitting) {
+              resetForm();
+            }
+          }}
+        >
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div className={styles.formSectionTitle} style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}>
+                <FiUsers /> {editId ? 'Edit Customer Details' : 'Add New Customer Record'}
               </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Phone Number</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="Not provided by Shiprocket - add manually if known"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Alternate Phone Number</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="Optional second contact number"
-                  value={phone2}
-                  onChange={(e) => setPhone2(e.target.value)}
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Email Address</label>
-                <input
-                  className={styles.fieldInput}
-                  type="email"
-                  placeholder="e.g. ramesh@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className={styles.formGrid2}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Full Street Address *</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="Flat / Building, Street, Area"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Address Line 2 / Landmark</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="Near Metro Station"
-                  value={address2}
-                  onChange={(e) => setAddress2(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className={styles.formGrid3}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>City *</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="Mumbai"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>State *</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="Maharashtra"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  required
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Pincode *</label>
-                <input
-                  className={styles.fieldInput}
-                  placeholder="400001"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1rem' }}>
-              <button type="submit" className={styles.primaryBtn} disabled={submitting}>
-                {submitting ? 'Saving...' : editId ? 'Update Customer' : 'Save Customer'}
-              </button>
               <button
                 type="button"
-                className={styles.outlineBtn}
+                className={styles.modalCloseBtn}
                 onClick={resetForm}
                 disabled={submitting}
+                aria-label="Close modal"
               >
-                Cancel
+                <FiX size={18} />
               </button>
             </div>
-          </form>
+            <form onSubmit={handleSubmit}>
+              <div className={styles.formGrid3}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Customer Name *</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="e.g. Ramesh Kumar"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Phone Number</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="Not provided by Shiprocket - add manually if known"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Alternate Phone Number</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="Optional second contact number"
+                    value={phone2}
+                    onChange={(e) => setPhone2(e.target.value)}
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Email Address</label>
+                  <input
+                    className={styles.fieldInput}
+                    type="email"
+                    placeholder="e.g. ramesh@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className={styles.formGrid2}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Full Street Address *</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="Flat / Building, Street, Area"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Address Line 2 / Landmark</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="Near Metro Station"
+                    value={address2}
+                    onChange={(e) => setAddress2(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className={styles.formGrid3}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>City *</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="Mumbai"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>State *</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="Maharashtra"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Pincode *</label>
+                  <input
+                    className={styles.fieldInput}
+                    placeholder="400001"
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className={styles.modalActions}>
+                <button type="submit" className={styles.primaryBtn} disabled={submitting}>
+                  {submitting ? 'Saving...' : editId ? 'Update Customer' : 'Save Customer'}
+                </button>
+                <button
+                  type="button"
+                  className={styles.outlineBtn}
+                  onClick={resetForm}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
       {/* Filter and Search Bar */}
