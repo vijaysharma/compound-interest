@@ -17,30 +17,39 @@ import type {
   ProcessedFIIDIIPoint,
   AdjustmentMode,
   ViewMode,
+  Timeframe,
+  FlowInterval,
 } from '@/lib/fiiDii/fiiDiiCalculations';
+import { FLOW_INTERVALS, isIntervalAllowedForTimeframe } from '@/lib/fiiDii/fiiDiiCalculations';
 import styles from './FiiDiiTracker.module.scss';
-
 export type ChartType = 'bar' | 'line';
-
+const QUICK_TFS: Timeframe[] = ['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'];
 interface FiiDiiChartProps {
   points: ProcessedFIIDIIPoint[];
   adjustmentMode: AdjustmentMode;
   viewMode: ViewMode;
   chartType: ChartType;
   onChartTypeChange: (type: ChartType) => void;
+  timeframe: Timeframe;
+  onTimeframeChange: (t: Timeframe) => void;
+  interval: FlowInterval;
+  onIntervalChange: (i: FlowInterval) => void;
   showFii: boolean;
   showDii: boolean;
   showNifty: boolean;
   showSensex: boolean;
   isLoading?: boolean;
 }
-
 export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
   points,
   adjustmentMode,
   viewMode,
   chartType,
   onChartTypeChange,
+  timeframe,
+  onTimeframeChange,
+  interval,
+  onIntervalChange,
   showFii,
   showDii,
   showNifty,
@@ -49,7 +58,6 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
 }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [activeHoverPoint, setActiveHoverPoint] = useState<ProcessedFIIDIIPoint | null>(null);
-
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -58,7 +66,6 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
   // Format Left Y-Axis ticks
   const formatLeftAxisTick = (val: number) => {
     if (val === 0) return '0';
@@ -72,13 +79,11 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
     if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(0)}k Cr`;
     return `${sign}₹${abs.toFixed(0)} Cr`;
   };
-
   // Format Right Y-Axis ticks (Index levels)
   const formatRightAxisTick = (val: number) => {
     if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
     return val.toLocaleString();
   };
-
   // Calculate dynamic Right Y-Axis domain for Index lines
   const rightAxisDomain = useMemo(() => {
     let min = Infinity;
@@ -99,7 +104,6 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
     const padding = (max - min) * 0.1;
     return [Math.floor(min - padding), Math.ceil(max + padding)];
   }, [points, showNifty, showSensex]);
-
   // Downsample data if large (>400 points) to keep mobile rendering smooth
   const chartData = useMemo(() => {
     if (points.length <= 400) return points;
@@ -114,10 +118,20 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
     }
     return sampled;
   }, [points]);
-
+  const fyOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const opts: { value: Timeframe; label: string }[] = [];
+    for (let y = currentYear + 1; y >= 2008; y--) {
+      opts.push({
+        value: `FY${y}` as Timeframe,
+        label: `FY${y - 1}–${String(y).slice(2)} (Apr–Mar)`,
+      });
+    }
+    return opts;
+  }, []);
   // Default active point to the latest point if none hovered
-  const displayedPoint = activeHoverPoint || (chartData.length > 0 ? chartData[chartData.length - 1] : null);
-
+  const displayedPoint =
+    activeHoverPoint || (chartData.length > 0 ? chartData[chartData.length - 1] : null);
   if (isLoading) {
     return (
       <div className={styles.chartPlaceholder}>
@@ -126,7 +140,6 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
       </div>
     );
   }
-
   if (points.length === 0) {
     return (
       <div className={styles.chartPlaceholder}>
@@ -134,33 +147,28 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
       </div>
     );
   }
-
   const isCumulative = viewMode === 'cumulative';
   const hasRightAxis = showNifty || showSensex;
   const isLineMode = chartType === 'line' || isCumulative;
-
   const unitLabel =
     adjustmentMode === 'ppp' ? '$M (PPP)' : adjustmentMode === 'inflation' ? '₹ Cr (Real)' : '₹ Cr';
-
   const formatAmount = (num: number) => {
     const prefix = num > 0 ? '+' : '';
     return `${prefix}${num.toLocaleString('en-IN', { maximumFractionDigits: 1 })}`;
   };
-
   const currentFiiVal = displayedPoint
     ? isCumulative
       ? displayedPoint.cumulativeFiiNet
       : displayedPoint.fiiNet
     : 0;
-
   const currentDiiVal = displayedPoint
     ? isCumulative
       ? displayedPoint.cumulativeDiiNet
       : displayedPoint.diiNet
     : 0;
-
+  const isFyActive = typeof timeframe === 'string' && timeframe.startsWith('FY');
   return (
-    <div className={styles.chartCard}>
+    <>
       <div className={styles.chartHeader}>
         <div className={styles.chartTitleGroup}>
           <div className={styles.chartMainTitleRow}>
@@ -168,7 +176,11 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
               {isCumulative ? 'Cumulative Net Institutional Flow' : 'Net Institutional Flow'}
             </h3>
             {/* Chart Type Toggle [ Bar ] | [ Line ] */}
-            <div className={styles.chartTypeControl} role="group" aria-label="Chart representation mode">
+            <div
+              className={styles.chartTypeControl}
+              role="group"
+              aria-label="Chart representation mode"
+            >
               <button
                 type="button"
                 className={`${styles.chartTypeBtn} ${chartType === 'bar' ? styles.chartTypeBtnActive : ''}`}
@@ -200,16 +212,99 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
             {hasRightAxis && ' • Dual Axis with Stock Index Overlay'}
           </span>
         </div>
+        {/* Time Interval & Duration Controls placed directly at the top of the graph */}
+        <div className={styles.chartControlsRow}>
+          {/* Time Interval Chips */}
+          <div
+            className={styles.chartControlGroup}
+            role="group"
+            aria-label="Select data aggregation interval"
+          >
+            <span className={styles.chartControlLabel}>Interval:</span>
+            <div className={styles.chartIntervalChips}>
+              {FLOW_INTERVALS.map((item) => {
+                const isAllowed = isIntervalAllowedForTimeframe(item.key, timeframe);
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={`${styles.chartIntervalChip} ${interval === item.key ? styles.chartIntervalChipActive : ''}`}
+                    onClick={() => onIntervalChange(item.key)}
+                    disabled={isLoading || !isAllowed}
+                    title={
+                      !isAllowed
+                        ? `Interval '${item.label}' is longer than the selected duration (${timeframe})`
+                        : `Group flows by ${item.label}`
+                    }
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Duration Chips + FY dropdown */}
+          <div
+            className={styles.chartControlGroup}
+            role="group"
+            aria-label="Select duration timeframe"
+          >
+            <span className={styles.chartControlLabel}>Duration:</span>
+            <div className={styles.chartTimeframeChips}>
+              {QUICK_TFS.map((tf) => {
+                const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
+                return (
+                  <button
+                    key={tf}
+                    type="button"
+                    className={`${styles.chartTfChip} ${isActive ? styles.chartTfChipActive : ''}`}
+                    onClick={() => onTimeframeChange(tf)}
+                    disabled={isLoading}
+                    title={`View past ${tf}`}
+                  >
+                    {tf}
+                  </button>
+                );
+              })}
+              <div className={styles.fyDropdownWrap}>
+                <select
+                  className={`${styles.fySelect} ${isFyActive ? styles.fySelectActive : ''}`}
+                  value={isFyActive ? String(timeframe) : ''}
+                  onChange={(e) => {
+                    if (e.target.value) onTimeframeChange(e.target.value as Timeframe);
+                  }}
+                  disabled={isLoading}
+                  aria-label="Select Financial Year"
+                >
+                  <option value="">FY (India)</option>
+                  {fyOptions.map((opt) => (
+                    <option key={String(opt.value)} value={String(opt.value)}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
       <div className={styles.chartWrapper}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
-            onMouseMove={(state: any) => {
-              if (state && state.activePayload && state.activePayload.length > 0) {
-                const pt = state.activePayload[0].payload as ProcessedFIIDIIPoint;
+            onMouseMove={(state) => {
+              const payloadState = state as unknown as {
+                activePayload?: Array<{ payload: ProcessedFIIDIIPoint }>;
+              };
+              if (payloadState?.activePayload && payloadState.activePayload.length > 0) {
+                const pt = payloadState.activePayload[0].payload;
                 if (pt) setActiveHoverPoint(pt);
+              } else if (
+                state?.activeIndex !== undefined &&
+                typeof state.activeIndex === 'number' &&
+                chartData[state.activeIndex]
+              ) {
+                setActiveHoverPoint(chartData[state.activeIndex]);
               }
             }}
             onMouseLeave={() => {
@@ -221,7 +316,11 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                 : { top: 12, right: hasRightAxis ? 12 : 6, left: -10, bottom: 6 }
             }
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(148, 163, 184, 0.2)"
+              vertical={false}
+            />
             <XAxis
               dataKey="formattedDate"
               stroke="#94a3b8"
@@ -256,20 +355,17 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
               />
             )}
             <ReferenceLine y={0} yAxisId="left" stroke="#cbd5e1" strokeDasharray="4 4" />
-            
             {/* Retain native crosshair cursor line without rendering floating box over canvas */}
             <Tooltip
               content={() => null}
               cursor={{ stroke: 'rgba(99, 102, 241, 0.25)', strokeWidth: 1.5 }}
             />
-
             <Legend
               verticalAlign="top"
               align="right"
               iconType="circle"
               wrapperStyle={{ paddingBottom: 10, fontSize: '0.8rem' }}
             />
-
             {/* Flow Data: Toggled between Bar and Line representations */}
             {isLineMode ? (
               <>
@@ -322,7 +418,6 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                 )}
               </>
             )}
-
             {/* Right Y-Axis Index Overlays */}
             {showNifty && (
               <Line
@@ -353,7 +448,6 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-
       {/* Popover / Point Details placed cleanly below the chart so canvas is never obscured */}
       <div className={styles.chartHoverInfo} aria-live="polite">
         {displayedPoint ? (
@@ -367,55 +461,57 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                 <span style={{ fontSize: '0.68rem', color: '#64748b' }}>(Latest Session)</span>
               )}
             </div>
-
             <div className={styles.chartHoverStats}>
               {showFii && (
                 <div className={styles.chartHoverItem}>
                   <span className={`${styles.legendDot} ${styles.dotFii}`} />
                   <span className={styles.chartHoverLabel}>FII Net:</span>
-                  <span className={`${styles.chartHoverVal} ${currentFiiVal >= 0 ? styles.pos : styles.neg}`}>
+                  <span
+                    className={`${styles.chartHoverVal} ${currentFiiVal >= 0 ? styles.pos : styles.neg}`}
+                  >
                     {formatAmount(currentFiiVal)} {unitLabel}
                   </span>
                 </div>
               )}
-
               {showDii && (
                 <div className={styles.chartHoverItem}>
                   <span className={`${styles.legendDot} ${styles.dotDii}`} />
                   <span className={styles.chartHoverLabel}>DII Net:</span>
-                  <span className={`${styles.chartHoverVal} ${currentDiiVal >= 0 ? styles.pos : styles.neg}`}>
+                  <span
+                    className={`${styles.chartHoverVal} ${currentDiiVal >= 0 ? styles.pos : styles.neg}`}
+                  >
                     {formatAmount(currentDiiVal)} {unitLabel}
                   </span>
                 </div>
               )}
-
               {showNifty && displayedPoint.niftyClose && (
                 <div className={styles.chartHoverItem}>
                   <span className={`${styles.legendDot} ${styles.dotNifty}`} />
                   <span className={styles.chartHoverLabel}>Nifty 50:</span>
                   <span className={styles.chartHoverVal}>
-                    {displayedPoint.niftyClose.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                    {displayedPoint.niftyClose.toLocaleString('en-IN', {
+                      maximumFractionDigits: 1,
+                    })}
                   </span>
                 </div>
               )}
-
               {showSensex && displayedPoint.sensexClose && (
                 <div className={styles.chartHoverItem}>
                   <span className={`${styles.legendDot} ${styles.dotSensex}`} />
                   <span className={styles.chartHoverLabel}>Sensex:</span>
                   <span className={styles.chartHoverVal}>
-                    {displayedPoint.sensexClose.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                    {displayedPoint.sensexClose.toLocaleString('en-IN', {
+                      maximumFractionDigits: 1,
+                    })}
                   </span>
                 </div>
               )}
-
               {adjustmentMode === 'inflation' && displayedPoint.cpi && (
                 <div className={styles.chartHoverItem}>
                   <span className={styles.chartHoverLabel}>CPI:</span>
                   <span className={styles.chartHoverVal}>{displayedPoint.cpi}</span>
                 </div>
               )}
-
               {adjustmentMode === 'ppp' && displayedPoint.ppp && (
                 <div className={styles.chartHoverItem}>
                   <span className={styles.chartHoverLabel}>PPP:</span>
@@ -425,9 +521,11 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
             </div>
           </>
         ) : (
-          <span className={styles.chartHoverEmpty}>Hover over any bar or point to inspect exact flows.</span>
+          <span className={styles.chartHoverEmpty}>
+            Hover over any bar or point to inspect exact flows.
+          </span>
         )}
       </div>
-    </div>
+    </>
   );
 };

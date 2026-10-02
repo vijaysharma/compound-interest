@@ -38,7 +38,6 @@ export const FiiDiiTracker: React.FC = () => {
   const [isPending, startTransition] = useTransition();
   const [hasLoadedInitially, setHasLoadedInitially] = useState<boolean>(false);
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
-
   // Safe handler to ensure at least one of FII or DII remains active
   const handleToggleFii = (val: boolean) => {
     if (!val && !showDii) return; // Keep at least one active
@@ -48,7 +47,6 @@ export const FiiDiiTracker: React.FC = () => {
     if (!val && !showFii) return; // Keep at least one active
     setShowDii(val);
   };
-
   // When timeframe changes, validate interval and set sensible defaults
   const handleTimeframeChange = (newTf: Timeframe) => {
     setTimeframe(newTf);
@@ -116,12 +114,8 @@ export const FiiDiiTracker: React.FC = () => {
         isLoading={!hasLoadedInitially && isPending}
         isRefreshing={hasLoadedInitially && isPending}
       />
-      {/* 2. Interactive Filters & Controls (Timeframe Duration, Time Interval, Adjustment, View Mode, Overlays) */}
+      {/* 2. Interactive Filters & Controls (Adjustment, View Mode, Overlays) */}
       <FiiDiiControls
-        timeframe={timeframe}
-        setTimeframe={handleTimeframeChange}
-        interval={interval}
-        setInterval={setInterval}
         adjustmentMode={adjustmentMode}
         setAdjustmentMode={setAdjustmentMode}
         viewMode={viewMode}
@@ -138,13 +132,17 @@ export const FiiDiiTracker: React.FC = () => {
         setShowSensex={setShowSensex}
         isLoading={isPending}
       />
-      {/* 3. Dual Y-Axis Interactive Chart with Bar/Line toggle */}
+      {/* 3. Dual Y-Axis Interactive Chart with Bar/Line toggle & in-graph top controls for Time Interval & Duration */}
       <FiiDiiChart
         points={displayData?.points ?? []}
         adjustmentMode={adjustmentMode}
         viewMode={viewMode}
         chartType={chartType}
         onChartTypeChange={setChartType}
+        timeframe={timeframe}
+        onTimeframeChange={handleTimeframeChange}
+        interval={interval}
+        onIntervalChange={setInterval}
         showFii={showFii}
         showDii={showDii}
         showNifty={showNifty}

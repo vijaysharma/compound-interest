@@ -22,7 +22,9 @@ export const FiiDiiExplanationSection: React.FC = () => {
           <span className={styles.infoBadge}>💡 Layman Guides & Formulas</span>
           <span className={styles.infoSubText}>Tap any section to expand breakdown</span>
         </div>
-        <h3 className={styles.explanationsMainTitle}>Understanding Market Movements & Adjustments</h3>
+        <h3 className={styles.explanationsMainTitle}>
+          Understanding Market Movements & Adjustments
+        </h3>
       </div>
       <div className={styles.explanationsGrid}>
         {FII_DII_EXPLANATIONS.map((item: FiiDiiSectionExplanation) => {
