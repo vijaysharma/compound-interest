@@ -87,6 +87,18 @@ button, [role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
+// Immediate press feedback for in-app links while the route change is in flight
+// (attribute set by the shared Link, cleared when the navigation progress bar completes).
+a[data-nav-pending] {
+  opacity: 0.65;
+  cursor: progress;
+  transition: opacity 80ms ease-out;
+}
+
+a {
+  touch-action: manipulation;
+}
+
 .noscriptContainer {
   font-family: system-ui, sans-serif;
   max-width: 800px;

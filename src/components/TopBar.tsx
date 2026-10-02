@@ -106,7 +106,7 @@ const TopBar = ({ className }: { className?: string }) => {
           </Link>
         </div>
         <div className={styles.rightSection}>
-          <Link to="/games" className={styles.gamesLink} title="Games">
+          <Link to="/games" prefetch={null} className={styles.gamesLink} title="Games" aria-label="Games">
             <FiPlayCircle size={20} />
           </Link>
           {mounted && isAuthenticated && user ? (

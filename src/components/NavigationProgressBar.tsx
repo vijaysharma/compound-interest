@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from '@/navigation';
+import { clearPendingLinks, useLocation } from '@/navigation';
 import styles from './NavigationProgressBar.module.scss';
 export const NAV_START_EVENT = 'app:nav-start';
 export const NAV_STOP_EVENT = 'app:nav-stop';
@@ -33,6 +33,7 @@ export function NavigationProgressBar() {
       clearTimeout(safetyTimerRef.current);
       safetyTimerRef.current = null;
     }
+    clearPendingLinks();
     if (stateRef.current === 'idle') return;
     stateRef.current = 'completing';
     setProgress(100);
