@@ -6,7 +6,7 @@ import {
   SCENARIO_BUTTON_LABELS,
   SCENARIO_KEYS,
 } from './projection';
-import { InfoTooltip } from './InfoTooltip';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import styles from './StrategyCalculator.module.scss';
 /**
  * The projection header and control row above the portfolio chart.

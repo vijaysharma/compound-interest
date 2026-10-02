@@ -1,6 +1,7 @@
 'use client';
-import React, { useState } from 'react';
-import { FiInfo, FiClock, FiCheckCircle } from 'react-icons/fi';
+import React from 'react';
+import { FiClock, FiCheckCircle } from 'react-icons/fi';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import type { FIIDIISummary } from '@/lib/fiiDii/fiiDiiCalculations';
 import styles from './FiiDiiTracker.module.scss';
 interface FiiDiiSummaryCardsProps {
@@ -39,7 +40,6 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   isLoading,
   isRefreshing,
 }) => {
-  const [activeInfo, setActiveInfo] = useState<'fii' | 'dii' | null>(null);
   if (isLoading || !summary) {
     return (
       <div className={styles.summarySection}>
@@ -78,9 +78,6 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
     const prefix = num > 0 ? '+' : '';
     return `${prefix}${num.toLocaleString('en-IN', { maximumFractionDigits: 1 })}`;
   };
-  const toggleInfo = (type: 'fii' | 'dii') => {
-    setActiveInfo((prev) => (prev === type ? null : type));
-  };
   const periodLabel =
     periodStart && periodEnd && periodStart !== periodEnd
       ? `${fmtDate(periodStart)} – ${fmtDate(periodEnd)}`
@@ -113,15 +110,18 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWithInfo}>
               <span className={styles.cardTitle}>Latest FII Net</span>
-              <button
-                type="button"
-                className={styles.infoIconBtn}
-                onClick={() => toggleInfo('fii')}
-                title="FII derivation details"
-                aria-label="FII derivation details"
-              >
-                <FiInfo size={14} />
-              </button>
+              <InfoTooltip ariaLabel="FII derivation details" align="left" iconSize={14}>
+                <p>
+                  <strong>FII Net Flow Derivation</strong>
+                </p>
+                <p>
+                  <strong>Formula:</strong> Net = FII Gross Buy − FII Gross Sell.
+                </p>
+                <p>
+                  Always shown as nominal ₹ Cr for the last published trading day, regardless of
+                  adjustment mode.
+                </p>
+              </InfoTooltip>
             </div>
             <span className={styles.cardTag}>{fmtDate(latestDateDisplay)}</span>
           </div>
@@ -134,42 +134,24 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
               {latestFiiNet >= 0 ? 'Net Buyers' : 'Net Sellers'}
             </span>
           </div>
-          {activeInfo === 'fii' && (
-            <div className={styles.infoPopover}>
-              <div className={styles.popoverHeader}>
-                <strong>FII Net Flow Derivation</strong>
-                <button
-                  type="button"
-                  className={styles.popoverCloseBtn}
-                  onClick={() => setActiveInfo(null)}
-                >
-                  ✕
-                </button>
-              </div>
-              <p className={styles.popoverText}>
-                <strong>Formula:</strong> Net = FII Gross Buy − FII Gross Sell.
-              </p>
-              <p className={styles.popoverSubText}>
-                Always shown as nominal ₹ Cr for the last published trading day, regardless of
-                adjustment mode.
-              </p>
-            </div>
-          )}
         </div>
         {/* 2. Latest DII Flow — always nominal ₹ Cr for last trading day */}
         <div className={`${styles.summaryCard}${refreshCls}`}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleWithInfo}>
               <span className={styles.cardTitle}>Latest DII Net</span>
-              <button
-                type="button"
-                className={styles.infoIconBtn}
-                onClick={() => toggleInfo('dii')}
-                title="DII derivation details"
-                aria-label="DII derivation details"
-              >
-                <FiInfo size={14} />
-              </button>
+              <InfoTooltip ariaLabel="DII derivation details" align="left" iconSize={14}>
+                <p>
+                  <strong>DII Net Flow Derivation</strong>
+                </p>
+                <p>
+                  <strong>Formula:</strong> Net = DII Gross Buy − DII Gross Sell.
+                </p>
+                <p>
+                  Includes Mutual Funds, Insurance (LIC), Pension Funds, and Banks. Always shown as
+                  nominal ₹ Cr.
+                </p>
+              </InfoTooltip>
             </div>
             <span className={styles.cardTag}>{fmtDate(latestDateDisplay)}</span>
           </div>
@@ -182,27 +164,6 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
               {latestDiiNet >= 0 ? 'Net Buyers' : 'Net Sellers'}
             </span>
           </div>
-          {activeInfo === 'dii' && (
-            <div className={styles.infoPopover}>
-              <div className={styles.popoverHeader}>
-                <strong>DII Net Flow Derivation</strong>
-                <button
-                  type="button"
-                  className={styles.popoverCloseBtn}
-                  onClick={() => setActiveInfo(null)}
-                >
-                  ✕
-                </button>
-              </div>
-              <p className={styles.popoverText}>
-                <strong>Formula:</strong> Net = DII Gross Buy − DII Gross Sell.
-              </p>
-              <p className={styles.popoverSubText}>
-                Includes Mutual Funds, Insurance (LIC), Pension Funds, and Banks. Always shown as
-                nominal ₹ Cr.
-              </p>
-            </div>
-          )}
         </div>
         {/* 3. Period Net Total — adjustment-mode aware, changes with duration/mode */}
         <div className={`${styles.summaryCard}${refreshCls}`}>

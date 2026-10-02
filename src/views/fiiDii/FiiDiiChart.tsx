@@ -11,8 +11,9 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  useActiveTooltipDataPoints,
 } from 'recharts';
-import { FiBarChart2, FiTrendingUp } from 'react-icons/fi';
+import { FiBarChart2, FiChevronDown, FiTrendingUp } from 'react-icons/fi';
 import type {
   ProcessedFIIDIIPoint,
   AdjustmentMode,
@@ -24,6 +25,19 @@ import { FLOW_INTERVALS, isIntervalAllowedForTimeframe } from '@/lib/fiiDii/fiiD
 import styles from './FiiDiiTracker.module.scss';
 export type ChartType = 'bar' | 'line';
 const QUICK_TFS: Timeframe[] = ['1W', '1M', '3M', '6M', '1Y', '5Y', 'ALL'];
+// Reads the hovered/touched bucket straight from the chart's tooltip state (mouse and
+// touch alike) so the details strip below the chart tracks the crosshair exactly.
+const ActivePointReporter = ({
+  onChange,
+}: {
+  onChange: (point: ProcessedFIIDIIPoint | null) => void;
+}) => {
+  const point = useActiveTooltipDataPoints<ProcessedFIIDIIPoint>()?.[0] ?? null;
+  useEffect(() => {
+    onChange(point);
+  }, [point, onChange]);
+  return null;
+};
 interface FiiDiiChartProps {
   points: ProcessedFIIDIIPoint[];
   adjustmentMode: AdjustmentMode;
@@ -168,7 +182,7 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
     : 0;
   const isFyActive = typeof timeframe === 'string' && timeframe.startsWith('FY');
   return (
-    <>
+    <div className={styles.chartCard}>
       <div className={styles.chartHeader}>
         <div className={styles.chartTitleGroup}>
           <div className={styles.chartMainTitleRow}>
@@ -214,7 +228,7 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
         </div>
         {/* Time Interval & Duration Controls placed directly at the top of the graph */}
         <div className={styles.chartControlsRow}>
-          {/* Time Interval Chips */}
+          {/* 1. Time Interval Chips */}
           <div
             className={styles.chartControlGroup}
             role="group"
@@ -224,6 +238,14 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
             <div className={styles.chartIntervalChips}>
               {FLOW_INTERVALS.map((item) => {
                 const isAllowed = isIntervalAllowedForTimeframe(item.key, timeframe);
+                const abbrMap: Record<FlowInterval, string> = {
+                  daily: 'Daily',
+                  weekly: 'Wk',
+                  monthly: 'Mo',
+                  quarterly: 'Qtr',
+                  halfyearly: '6M',
+                  yearly: 'Yr',
+                };
                 return (
                   <button
                     key={item.key}
@@ -237,13 +259,14 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                         : `Group flows by ${item.label}`
                     }
                   >
-                    {item.label}
+                    <span className={styles.chipTextFull}>{item.label}</span>
+                    <span className={styles.chipTextAbbr}>{abbrMap[item.key]}</span>
                   </button>
                 );
               })}
             </div>
           </div>
-          {/* Duration Chips + FY dropdown */}
+          {/* 2. Duration Chips */}
           <div
             className={styles.chartControlGroup}
             role="group"
@@ -266,24 +289,34 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                   </button>
                 );
               })}
-              <div className={styles.fyDropdownWrap}>
-                <select
-                  className={`${styles.fySelect} ${isFyActive ? styles.fySelectActive : ''}`}
-                  value={isFyActive ? String(timeframe) : ''}
-                  onChange={(e) => {
-                    if (e.target.value) onTimeframeChange(e.target.value as Timeframe);
-                  }}
-                  disabled={isLoading}
-                  aria-label="Select Financial Year"
-                >
-                  <option value="">FY (India)</option>
-                  {fyOptions.map((opt) => (
-                    <option key={String(opt.value)} value={String(opt.value)}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            </div>
+          </div>
+          {/* 3. FY Dropdown on dedicated row on mobile / responsive wrap */}
+          <div className={styles.fyDropdownRow}>
+            <span className={styles.fyRowLabel}>Financial Year:</span>
+            {/* Native select stays transparent on top (16px, so iOS won't zoom on focus);
+                the visible label underneath uses the chip type scale. */}
+            <div className={`${styles.fyDropdownWrap} ${isFyActive ? styles.fySelectActive : ''}`}>
+              <span className={styles.fySelectLabel} aria-hidden="true">
+                {fyOptions.find((opt) => opt.value === timeframe)?.label ?? 'Select FY (Apr–Mar)'}
+              </span>
+              <FiChevronDown size={12} aria-hidden="true" />
+              <select
+                className={styles.fySelect}
+                value={isFyActive ? String(timeframe) : ''}
+                onChange={(e) => {
+                  if (e.target.value) onTimeframeChange(e.target.value as Timeframe);
+                }}
+                disabled={isLoading}
+                aria-label="Select Financial Year"
+              >
+                <option value="">Select Indian FY (Apr–Mar)</option>
+                {fyOptions.map((opt) => (
+                  <option key={String(opt.value)} value={String(opt.value)}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -292,27 +325,9 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
-            onMouseMove={(state) => {
-              const payloadState = state as unknown as {
-                activePayload?: Array<{ payload: ProcessedFIIDIIPoint }>;
-              };
-              if (payloadState?.activePayload && payloadState.activePayload.length > 0) {
-                const pt = payloadState.activePayload[0].payload;
-                if (pt) setActiveHoverPoint(pt);
-              } else if (
-                state?.activeIndex !== undefined &&
-                typeof state.activeIndex === 'number' &&
-                chartData[state.activeIndex]
-              ) {
-                setActiveHoverPoint(chartData[state.activeIndex]);
-              }
-            }}
-            onMouseLeave={() => {
-              setActiveHoverPoint(null);
-            }}
             margin={
               isMobile
-                ? { top: 10, right: hasRightAxis ? 4 : 0, left: -18, bottom: 4 }
+                ? { top: 10, right: hasRightAxis ? 4 : 0, left: -4, bottom: 4 }
                 : { top: 12, right: hasRightAxis ? 12 : 6, left: -10, bottom: 6 }
             }
           >
@@ -355,10 +370,10 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
               />
             )}
             <ReferenceLine y={0} yAxisId="left" stroke="#cbd5e1" strokeDasharray="4 4" />
-            {/* Retain native crosshair cursor line without rendering floating box over canvas */}
+            <ActivePointReporter onChange={setActiveHoverPoint} />
             <Tooltip
               content={() => null}
-              cursor={{ stroke: 'rgba(99, 102, 241, 0.25)', strokeWidth: 1.5 }}
+              cursor={{ stroke: 'rgba(99, 102, 241, 0.35)', strokeWidth: 1.5 }}
             />
             <Legend
               verticalAlign="top"
@@ -526,6 +541,6 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
           </span>
         )}
       </div>
-    </>
+    </div>
   );
 };

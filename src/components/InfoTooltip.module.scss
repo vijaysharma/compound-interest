@@ -1,0 +1,70 @@
+@use "../styles/variables" as *;
+
+.infoTooltipContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+  padding: 2px;
+  border-radius: 50%;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    outline: none;
+  }
+}
+
+// Rendered in a portal with fixed coordinates computed from the trigger, so it
+// is never clipped by overflow containers and always stays inside the viewport.
+.infoPopover {
+  position: fixed;
+  z-index: 1000;
+  width: min(340px, calc(100vw - 24px));
+  box-sizing: border-box;
+  background: $bg-white;
+  color: $color-text;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, #e2e8f0);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.12),
+    0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  white-space: normal;
+  user-select: text;
+  cursor: default;
+
+  p {
+    margin: 0 0 0.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul {
+    margin: 0 0 0.5rem;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  li {
+    list-style: disc;
+    line-height: 1.4;
+  }
+}

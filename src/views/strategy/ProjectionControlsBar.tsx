@@ -1,6 +1,6 @@
 import React from 'react';
 import JoinedButtonGroup from '../../components/JoinedButtonGroup';
-import { InfoTooltip } from './InfoTooltip';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import {
   HORIZON_PRESETS,
   SCENARIO_BLURBS,

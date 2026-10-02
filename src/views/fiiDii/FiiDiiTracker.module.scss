@@ -178,73 +178,6 @@
   min-width: 0;
 }
 
-.infoIconBtn {
-  @include button-reset;
-  color: var(--color-text-muted, #94a3b8);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 2px;
-  border-radius: 4px;
-  transition: color 0.15s ease;
-
-  &:hover {
-    color: var(--color-primary, #3b82f6);
-  }
-}
-
-.infoPopover {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 20;
-  background: #ffffff;
-  border: 1px solid var(--color-border, #cbd5e1);
-  border-radius: 10px;
-  padding: 0.65rem 0.75rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  animation: modalSlideIn 0.2s ease-out;
-}
-
-.popoverHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.74rem;
-  color: #0f172a;
-  margin-bottom: 0.3rem;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 0.25rem;
-}
-
-.popoverCloseBtn {
-  @include button-reset;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 2px 4px;
-
-  &:hover {
-    color: #0f172a;
-  }
-}
-
-.popoverText {
-  font-size: 0.72rem;
-  color: #334155;
-  margin: 0 0 0.3rem 0;
-  line-height: 1.35;
-}
-
-.popoverSubText {
-  font-size: 0.68rem;
-  color: #64748b;
-  margin: 0;
-  line-height: 1.35;
-}
-
 .cardTitle {
   font-size: 0.74rem;
   font-weight: 700;
@@ -466,6 +399,16 @@
   overflow-x: auto;
 }
 
+.adjSegmentedControl {
+  display: flex;
+  background: var(--color-bg-subtle, #f1f5f9);
+  padding: 3px;
+  border-radius: 10px;
+  gap: 2px;
+  position: relative;
+  overflow: visible;
+}
+
 .segmentBtn {
   flex: 1;
   display: inline-flex;
@@ -484,6 +427,7 @@
   transition: all 0.15s ease;
   touch-action: manipulation;
   text-align: center;
+  position: relative;
 
   &:hover {
     color: var(--color-text, #1e293b);
@@ -493,61 +437,6 @@
     background: var(--color-surface, #ffffff);
     color: var(--color-primary, #2563eb);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  }
-}
-
-.segmentInfoIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted, #94a3b8);
-  opacity: 0.85;
-  transition:
-    opacity 0.15s ease,
-    color 0.15s ease;
-  position: relative;
-
-  &:hover {
-    opacity: 1;
-    color: var(--color-primary, #2563eb);
-  }
-}
-
-.adjModeTooltipContainer {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.adjTooltipPopover {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
-  width: min(280px, 80vw);
-  background: #0f172a;
-  color: #f8fafc;
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.72rem;
-  font-weight: 500;
-  line-height: 1.4;
-  text-align: left;
-  white-space: normal;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
-  animation: modalSlideIn 0.15s ease-out;
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent #0f172a transparent;
   }
 }
 
@@ -562,6 +451,26 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 1.25rem;
+  }
+}
+
+.viewAndChartRow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+
+  @include tablet-up {
+    width: auto;
+    gap: 1.25rem;
+  }
+
+  .controlGroup {
+    flex: 1;
+
+    @include tablet-up {
+      flex: initial;
+    }
   }
 }
 
@@ -781,6 +690,29 @@
   }
 }
 
+.chipTextFull {
+  display: inline;
+}
+
+.chipTextAbbr {
+  display: none;
+}
+
+.fyDropdownRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.fyRowLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #94a3b8);
+  min-width: 52px;
+}
+
 .chartSubTitle {
   font-size: 0.76rem;
   color: var(--color-text-muted, #64748b);
@@ -888,36 +820,8 @@
 }
 
 // ----------------------------------------------------
-// Tooltip Card
+// Legend dots & mode badge
 // ----------------------------------------------------
-.tooltipCard {
-  background: rgba(15, 23, 42, 0.95);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 0.75rem 0.9rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(8px);
-  max-width: 270px;
-  font-size: 0.8rem;
-  pointer-events: none;
-}
-
-.tooltipHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  padding-bottom: 0.35rem;
-  margin-bottom: 0.5rem;
-}
-
-.tooltipDate {
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: #f8fafc;
-}
-
 .tooltipModeBadge {
   font-size: 0.65rem;
   font-weight: 800;
@@ -925,27 +829,6 @@
   background: rgba(59, 130, 246, 0.25);
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
-}
-
-.tooltipBody {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.tooltipRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.tooltipLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: #cbd5e1;
-  font-size: 0.78rem;
 }
 
 .legendDot {
@@ -969,33 +852,6 @@
 
 .dotSensex {
   background: #f97316;
-}
-
-.tooltipValue {
-  font-weight: 800;
-  font-size: 0.82rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.tooltipIndexValue {
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: #f8fafc;
-  font-variant-numeric: tabular-nums;
-}
-
-.tooltipSubRow {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  padding: 0.15rem 0;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
-}
-
-.tooltipMacroRow {
-  font-size: 0.68rem;
-  color: #94a3b8;
-  padding-top: 0.2rem;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 // ----------------------------------------------------
@@ -1255,32 +1111,56 @@
   flex-wrap: wrap;
 }
 .fyDropdownWrap {
-  flex-shrink: 0;
-}
-.fySelect {
-  height: 32px;
-  padding: 0 0.55rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.22rem 0.5rem;
   border: 1px solid var(--color-border, #cbd5e1);
-  border-radius: 9999px;
-  font-size: 0.78rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 700;
+  line-height: 1.2;
   color: var(--color-text, #334155);
-  background: transparent;
-  cursor: pointer;
-  outline: none;
+  background: var(--color-surface, #ffffff);
   transition:
     border-color 0.15s ease,
     color 0.15s ease;
-  appearance: auto;
-  &:focus {
+
+  &:hover,
+  &:focus-within {
     border-color: var(--color-primary, #3b82f6);
     color: var(--color-primary, #3b82f6);
+  }
+
+  &:has(.fySelect:disabled) {
+    opacity: 0.38;
+  }
+}
+.fySelectLabel {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fySelect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
   }
 }
 .fySelectActive {
   border-color: var(--color-primary, #2563eb);
   color: var(--color-primary, #2563eb);
-  background: color-mix(in srgb, var(--color-primary, #2563eb) 8%, transparent);
+  background: color-mix(in srgb, var(--color-primary, #2563eb) 8%, #ffffff);
 }
 // ----------------------------------------------------
 // Mobile-first responsive overrides
@@ -1346,11 +1226,45 @@
     flex-direction: column;
     gap: 0.65rem;
   }
-  .fySelect {
-    font-size: 0.72rem;
+  .viewAndChartRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .chipTextFull {
+    display: none;
+  }
+  .chipTextAbbr {
+    display: inline;
+  }
+  .fyDropdownRow {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    margin-top: 0.15rem;
+  }
+  .fyRowLabel {
+    font-size: 0.62rem;
+    min-width: 44px;
+    flex-shrink: 0;
+  }
+  .fyDropdownWrap {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.45rem;
+  }
+  .chartCard {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 1rem;
   }
   .chartHeader {
-    padding: 0 0.25rem;
+    padding: 0;
     gap: 0.75rem;
   }
   .chartMainTitleRow {
@@ -1394,17 +1308,6 @@
   .chartSubTitle {
     font-size: 0.7rem;
     line-height: 1.35;
-  }
-  .infoPopover {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    border-radius: 14px 14px 0 0;
-    z-index: 50;
-    padding: 1rem;
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
   }
 }
 // ----------------------------------------------------
