@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo, useTransition } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { getFIIDIIDataAction } from '@/actions/fiiDii';
 import {
@@ -35,8 +35,12 @@ export const FiiDiiTracker: React.FC = () => {
   const [showNifty, setShowNifty] = useState<boolean>(true);
   const [showSensex, setShowSensex] = useState<boolean>(false);
   const [baseData, setBaseData] = useState<FIIDIIDataResponse | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const [hasLoadedInitially, setHasLoadedInitially] = useState<boolean>(false);
+  // Key of the request whose response is currently in `baseData`; pending while it lags the
+  // selected timeframe/interval.
+  const requestKey = `${timeframe}|${interval}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const isPending = loadedKey !== requestKey;
+  const hasLoadedInitially = baseData !== null;
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
   // Safe handler to ensure at least one of FII or DII remains active
   const handleToggleFii = (val: boolean) => {
@@ -62,16 +66,25 @@ export const FiiDiiTracker: React.FC = () => {
       setInterval('monthly');
     }
   };
+  // Deliberately not wrapped in startTransition: React entangles pending async transitions, so
+  // a slow fetch held there would block every <Link> navigation until it resolved.
   useEffect(() => {
-    startTransition(async () => {
-      try {
-        const res = await getFIIDIIDataAction({ timeframe, interval });
+    let cancelled = false;
+    const key = `${timeframe}|${interval}`;
+    getFIIDIIDataAction({ timeframe, interval })
+      .then((res) => {
+        if (cancelled) return;
         setBaseData(res);
-        setHasLoadedInitially(true);
-      } catch (err) {
+        setLoadedKey(key);
+      })
+      .catch((err) => {
+        if (cancelled) return;
         console.error('Failed to load FII/DII data:', err);
-      }
-    });
+        setLoadedKey(key);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [timeframe, interval]);
   // Client-side memoized instant recalculation when switching adjustment, view modes, or interval
   const displayData = useMemo(() => {
