@@ -270,11 +270,12 @@
 }
 
 .cardFooter {
-  margin-top: 0.35rem;
+  margin-top: 0;
   display: flex;
   align-items: center;
   min-height: 1.4rem;
   min-width: 0;
+  font-weight: 700;
 }
 
 .cardMetaText {
@@ -535,18 +536,9 @@
 // Chart Card
 // ----------------------------------------------------
 .chartCard {
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border, #e2e8f0);
-  border-radius: 16px;
-  padding: 1rem 0.65rem 0.85rem 0.35rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   margin-bottom: 1.5rem;
   overflow: hidden;
   position: relative;
-
-  @include tablet-up {
-    padding: 1.25rem 1.25rem 1rem 0.5rem;
-  }
 }
 
 .chartHeader {
@@ -729,8 +721,9 @@
 .chartHoverInfo {
   margin-top: 0.75rem;
   padding: 0.65rem 0.85rem;
-  background: var(--color-bg-subtle, #f8fafc);
-  border: 1px solid var(--color-border, #e2e8f0);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary) 12%, var(--color-bg));
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -740,7 +733,6 @@
   @include tablet-up {
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.75rem;
   }
@@ -825,12 +817,15 @@
 .tooltipModeBadge {
   font-size: 0.65rem;
   font-weight: 800;
-  color: #93c5fd;
-  background: rgba(59, 130, 246, 0.25);
+  color: var(--color-primary-content);
+  background: var(--color-primary);
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
 }
-
+.chartHoverPoint {
+  font-size: 0.68rem;
+  color: var(--color-text-muted, #64748b);
+}
 .legendDot {
   width: 7px;
   height: 7px;
@@ -1180,7 +1175,7 @@
     gap: 0.5rem;
   }
   .summaryCard {
-    padding: 0.65rem 0.6rem;
+    padding: 0.5rem;
     border-radius: 10px;
   }
   .cardTitle {

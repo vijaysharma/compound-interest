@@ -471,9 +471,9 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
               <span className={styles.chartHoverDate}>{displayedPoint.formattedDate}</span>
               <span className={styles.tooltipModeBadge}>{adjustmentMode.toUpperCase()}</span>
               {activeHoverPoint ? (
-                <span style={{ fontSize: '0.68rem', color: '#64748b' }}>(Hovered)</span>
+                <span className={styles.chartHoverPoint}>(Hovered)</span>
               ) : (
-                <span style={{ fontSize: '0.68rem', color: '#64748b' }}>(Latest Session)</span>
+                <span className={styles.chartHoverPoint}>(Latest Session)</span>
               )}
             </div>
             <div className={styles.chartHoverStats}>

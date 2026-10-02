@@ -1,6 +1,5 @@
 'use client';
 import React from 'react';
-import { FiClock, FiCheckCircle } from 'react-icons/fi';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import type { FIIDIISummary } from '@/lib/fiiDii/fiiDiiCalculations';
 import styles from './FiiDiiTracker.module.scss';
@@ -85,25 +84,6 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   const refreshCls = isRefreshing ? ` ${styles.cardRefreshing}` : '';
   return (
     <div className={styles.summarySection}>
-      <div className={styles.dataSourceBanner}>
-        <div className={styles.dataSourceIcon}>
-          <FiCheckCircle size={18} />
-        </div>
-        <div className={styles.dataSourceContent}>
-          <div className={styles.dataSourceHeader}>
-            <span className={styles.dataSourceTitle}>Official Exchange Data Ingestion</span>
-            <span className={styles.dataSourceTag}>
-              <FiClock size={12} />
-              <span>Daily at 6:00 PM IST</span>
-            </span>
-          </div>
-          <p className={styles.dataSourceText}>
-            Daily net data is ingested directly from official NSE/BSE end-of-day settlement reports
-            (published each weekday at 6:00 PM IST). Values represent settled institutional
-            transactions.
-          </p>
-        </div>
-      </div>
       <div className={styles.summaryGrid}>
         {/* 1. Latest FII Flow — always nominal ₹ Cr for last trading day */}
         <div className={`${styles.summaryCard}${refreshCls}`}>
@@ -172,20 +152,20 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
             <span className={styles.cardTag}>{summary.totalPeriodDays} buckets</span>
           </div>
           <div className={styles.cardDateRange}>{periodLabel}</div>
-          <div className={styles.cardSplitRow}>
-            <div>
-              <span className={styles.splitLabel}>FII:</span>
-              <span className={`${styles.splitVal} ${totalFiiNet >= 0 ? styles.pos : styles.neg}`}>
-                {formatAmount(totalFiiNet)}
-              </span>
-            </div>
-            <div>
-              <span className={styles.splitLabel}>DII:</span>
-              <span className={`${styles.splitVal} ${totalDiiNet >= 0 ? styles.pos : styles.neg}`}>
-                {formatAmount(totalDiiNet)}
-              </span>
-            </div>
+          {/* <div className={styles.cardSplitRow}> */}
+          <div>
+            <span className={styles.splitLabel}>FII:</span>
+            <span className={`${styles.splitVal} ${totalFiiNet >= 0 ? styles.pos : styles.neg}`}>
+              {formatAmount(totalFiiNet)}
+            </span>
           </div>
+          <div>
+            <span className={styles.splitLabel}>DII:</span>
+            <span className={`${styles.splitVal} ${totalDiiNet >= 0 ? styles.pos : styles.neg}`}>
+              {formatAmount(totalDiiNet)}
+            </span>
+          </div>
+          {/* </div> */}
           <div className={styles.cardFooter}>
             <span className={styles.cardMetaText}>
               Net: {totalFiiNet + totalDiiNet >= 0 ? '+' : ''}
@@ -203,35 +183,34 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
             <span className={styles.cardDate}>Closing</span>
           </div>
           <div className={styles.cardDateRange}>{periodLabel}</div>
-          <div className={styles.cardSplitRow}>
-            <div>
-              <span className={styles.splitLabel}>Nifty 50:</span>
-              <span className={styles.splitVal}>
-                {latestNifty ? latestNifty.toLocaleString('en-IN') : '—'}
+          {/* <div className={styles.cardSplitRow}> */}
+          <div>
+            <span className={styles.splitLabel}>Nifty 50:</span>
+            <span className={styles.splitVal}>
+              {latestNifty ? latestNifty.toLocaleString('en-IN') : '—'}
+            </span>
+            {niftyPeriodChangePercent !== null && (
+              <span
+                className={`${styles.changeBadge} ${niftyPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
+              >
+                {niftyPeriodChangePercent >= 0 ? '▲' : '▼'} {Math.abs(niftyPeriodChangePercent)}%
               </span>
-              {niftyPeriodChangePercent !== null && (
-                <span
-                  className={`${styles.changeBadge} ${niftyPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
-                >
-                  {niftyPeriodChangePercent >= 0 ? '▲' : '▼'} {Math.abs(niftyPeriodChangePercent)}%
-                </span>
-              )}
-            </div>
-            <div>
-              <span className={styles.splitLabel}>Sensex:</span>
-              <span className={styles.splitVal}>
-                {latestSensex ? latestSensex.toLocaleString('en-IN') : '—'}
-              </span>
-              {sensexPeriodChangePercent !== null && (
-                <span
-                  className={`${styles.changeBadge} ${sensexPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
-                >
-                  {sensexPeriodChangePercent >= 0 ? '▲' : '▼'} {Math.abs(sensexPeriodChangePercent)}
-                  %
-                </span>
-              )}
-            </div>
+            )}
           </div>
+          <div>
+            <span className={styles.splitLabel}>Sensex:</span>
+            <span className={styles.splitVal}>
+              {latestSensex ? latestSensex.toLocaleString('en-IN') : '—'}
+            </span>
+            {sensexPeriodChangePercent !== null && (
+              <span
+                className={`${styles.changeBadge} ${sensexPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
+              >
+                {sensexPeriodChangePercent >= 0 ? '▲' : '▼'} {Math.abs(sensexPeriodChangePercent)}%
+              </span>
+            )}
+          </div>
+          {/* </div> */}
           <div className={styles.cardFooter}>
             <span className={styles.cardMetaText}>
               CPI: {summary.cpiLatest} | PPP: ₹{summary.pppLatest}/$
