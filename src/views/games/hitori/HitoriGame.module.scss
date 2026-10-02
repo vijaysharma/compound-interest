@@ -270,6 +270,18 @@
   z-index: 1;
 }
 
+/* 8x8 and larger: slightly smaller numerals and ring so dense boards stay legible */
+.gridDense {
+  .cell {
+    font-size: clamp(1.05rem, 4.6vw, 1.6rem);
+    border-radius: 6px;
+  }
+
+  .circleRing {
+    inset: 3px;
+  }
+}
+
 .actionBar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -438,13 +450,22 @@
   margin-bottom: 4px;
 }
 
+/*
+ * Mobile: at a 360px viewport (4px app gutter) an 8x8 board gets ~36.5px cells:
+ * 352 - 2*8 container - 2*(6+1) card - 2*(2+2) grid border/padding - 7*3 gaps = 293 / 8.
+ */
 @media (max-width: 480px) {
   .container {
-    padding: 12px 10px;
+    padding: 12px 8px;
+  }
+
+  .boardCard {
+    padding: 6px;
+    border-radius: 12px;
   }
 
   .grid {
-    gap: 4px;
+    gap: 3px;
     padding: 2px;
   }
 

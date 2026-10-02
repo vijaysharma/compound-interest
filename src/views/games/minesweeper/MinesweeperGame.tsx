@@ -135,8 +135,9 @@ export const MinesweeperGame: React.FC = () => {
   const revealCell = useCallback(
     (r: number, c: number) => {
       if (gameStatus === 'won' || gameStatus === 'lost') return;
+      if (board[r]?.[c]?.state !== 'hidden') return;
       const currentBoard = board.map((row) => row.map((cell) => ({ ...cell })));
-      // First click safety: populate mines now
+      // First click safety: populate mines now (only on a real dig, never on a flagged cell)
       if (gameStatus === 'idle') {
         populateMines(currentBoard, config.rows, config.cols, config.mines, r, c);
         setGameStatus('playing');
@@ -197,8 +198,7 @@ export const MinesweeperGame: React.FC = () => {
               if (cellItem.isMine) cellItem.state = 'revealed';
             });
           });
-          setBoard(currentBoard);
-          setGameStatus('lost');
+          handleLose(currentBoard);
           return;
         }
         if (checkWinCondition(currentBoard, config.rows, config.cols, config.mines)) {
@@ -208,7 +208,7 @@ export const MinesweeperGame: React.FC = () => {
         setBoard(currentBoard);
       }
     },
-    [board, gameStatus, config, handleWin]
+    [board, gameStatus, config, handleWin, handleLose]
   );
   const handlePointerDown = useCallback(
     (e: React.PointerEvent, r: number, c: number) => {
@@ -334,7 +334,7 @@ export const MinesweeperGame: React.FC = () => {
           <h1 className={styles.title}>Minesweeper</h1>
           <p className={styles.subtitle}>Uncover safe tiles without detonating hidden mines</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className={styles.headerActions}>
           <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
           <QuitButton onClick={() => setShowQuitModal(true)} />
         </div>
@@ -345,6 +345,8 @@ export const MinesweeperGame: React.FC = () => {
             <button
               key={diff}
               type="button"
+              role="radio"
+              aria-checked={difficulty === diff}
               className={`${styles.diffBtn} ${difficulty === diff ? styles.diffBtnActive : ''}`}
               onClick={() => handleDifficultyChange(diff)}
             >
@@ -408,6 +410,8 @@ export const MinesweeperGame: React.FC = () => {
           <div
             ref={gridContainerRef}
             className={styles.grid}
+            role="group"
+            aria-label={`Minefield, ${config.rows} rows by ${config.cols} columns`}
             style={
               isMobile
                 ? ({
@@ -448,6 +452,18 @@ export const MinesweeperGame: React.FC = () => {
                   <div
                     key={`${r}-${c}`}
                     className={`${styles.cell} ${cellClass} ${numberClass}`}
+                    role="button"
+                    aria-label={`Row ${r + 1}, column ${c + 1}: ${
+                      cell.state === 'flagged'
+                        ? 'flagged'
+                        : cell.state === 'hidden'
+                          ? 'hidden'
+                          : cell.isMine
+                            ? 'mine'
+                            : cell.neighborMines > 0
+                              ? `${cell.neighborMines} adjacent mines`
+                              : 'clear'
+                    }`}
                     onPointerDown={(e) => handlePointerDown(e, r, c)}
                     onPointerMove={handlePointerMove}
                     onPointerUp={(e) => handlePointerUp(e, r, c)}
@@ -519,20 +535,23 @@ export const MinesweeperGame: React.FC = () => {
           type="button"
           className={`${styles.modeToggleBtn} ${isFlagMode ? styles.modeToggleActive : ''}`}
           onClick={() => setIsFlagMode(!isFlagMode)}
+          aria-pressed={isFlagMode}
         >
           <FiFlag />
           <span>{isFlagMode ? 'Flagging Mode: ON' : 'Tap to Dig (Switch to Flag)'}</span>
         </button>
-        <button
-          type="button"
-          className={styles.mobileFontScalerBtn}
-          onClick={handleCycleFontScale}
-          title="Scale cell font size"
-          aria-label={`Scale cell font size: currently ${Math.round(mobileFontScale * 100)}%`}
-        >
-          <span className={styles.fontScalerIcon}>A+</span>
-          <span>{Math.round(mobileFontScale * 100)}%</span>
-        </button>
+        {isMobile && (
+          <button
+            type="button"
+            className={styles.mobileFontScalerBtn}
+            onClick={handleCycleFontScale}
+            title="Scale cell font size"
+            aria-label={`Scale cell font size: currently ${Math.round(mobileFontScale * 100)}%`}
+          >
+            <span className={styles.fontScalerIcon}>A+</span>
+            <span>{Math.round(mobileFontScale * 100)}%</span>
+          </button>
+        )}
       </div>
       <p className={styles.instructions}>
         Tap to dig. Long-press or toggle Flag mode to mark mines. Tap revealed numbers to chord.

@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from '@/navigation';
 import {
   formatGameTime,
@@ -94,6 +95,12 @@ export const GamesHub: React.FC = () => {
   const [globalRankings, setGlobalRankings] = useState<GlobalLeaderboardRecord[]>([]);
   const [personalBests, setPersonalBests] = useState<Record<string, LeaderboardEntry | null>>({});
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState<boolean>(false);
+  const router = useRouter();
+  // The hub exists to launch a game: warm all six (small, static) game routes up front so
+  // "Play Now" lands instantly even for cards still below the fold on a phone.
+  useEffect(() => {
+    for (const g of GAMES_LIST) router.prefetch(g.href);
+  }, [router]);
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       const list = getLeaderboardEntries();
@@ -321,7 +328,6 @@ export const GamesHub: React.FC = () => {
               </button>
             ))}
           </div>
-
           {isLoadingLeaderboard ? (
             <div className={styles.emptyState}>
               <p>Loading leaderboard rankings...</p>

@@ -3,7 +3,12 @@ import { generateProceduralBoard, type GenerateOptions } from './generator';
 import type { WorkerRequest, WorkerResponse } from './wordPath.worker';
 let workerInstance: Worker | null = null;
 let reqCounter = 0;
-const pendingMap = new Map<number, (board: BoardDefinition) => void>();
+interface PendingRequest {
+  resolve: (board: BoardDefinition) => void;
+  difficulty: Difficulty;
+  options?: GenerateOptions;
+}
+const pendingMap = new Map<number, PendingRequest>();
 function getWorker(): Worker | null {
   if (typeof window === 'undefined') return null;
   if (!workerInstance && typeof Worker !== 'undefined') {
@@ -11,14 +16,11 @@ function getWorker(): Worker | null {
       workerInstance = new Worker(new URL('./wordPath.worker.ts', import.meta.url));
       workerInstance.onmessage = (e: MessageEvent<WorkerResponse>) => {
         const { id, success, board } = e.data;
-        const resolve = pendingMap.get(id);
-        if (resolve) {
+        const pending = pendingMap.get(id);
+        if (pending) {
           pendingMap.delete(id);
-          if (success && board) {
-            resolve(board);
-          } else {
-            resolve(generateProceduralBoard('medium'));
-          }
+          // A failed worker run falls back to the requested difficulty, never a fixed one.
+          pending.resolve(success && board ? board : generateProceduralBoard(pending.difficulty, pending.options));
         }
       };
       workerInstance.onerror = () => {
@@ -40,7 +42,7 @@ export async function generateBoardAsync(
   }
   const id = ++reqCounter;
   return new Promise<BoardDefinition>((resolve) => {
-    pendingMap.set(id, resolve);
+    pendingMap.set(id, { resolve, difficulty, options });
     const req: WorkerRequest = { id, difficulty, options };
     worker.postMessage(req);
     setTimeout(() => {

@@ -42,11 +42,14 @@ export const SudokuGame: React.FC = () => {
   // Restore saved state
   useEffect(() => {
     let active = true;
+    let restoredLocal = false;
+    let restoredRemote = false;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved: SudokuState = JSON.parse(raw);
         if (saved && saved.grid && saved.solution && saved.initial) {
+          restoredLocal = true;
           requestAnimationFrame(() => {
             if (!active) return;
             setDifficulty(saved.difficulty || 'easy');
@@ -63,12 +66,23 @@ export const SudokuGame: React.FC = () => {
     } catch {
       // Ignore storage error
     }
+    if (!restoredLocal) {
+      // The preset only keeps the server render deterministic; new players get a freshly generated board.
+      requestAnimationFrame(() => {
+        if (!active || restoredRemote) return;
+        const fresh = generatePuzzle('easy');
+        setInitialGrid(fresh.initial);
+        setSolutionGrid(fresh.solution);
+        setGrid(fresh.initial.map((r) => [...r]));
+      });
+    }
     const token = getAuthToken();
     const guestId = getOrCreateGuestId();
     void getUserAppStateAction<SudokuState>(token, guestId, 'games', 'sudoku').then((res) => {
       if (active && res.success && res.payload) {
         const saved = res.payload;
         if (saved.grid && saved.solution && saved.initial) {
+          restoredRemote = true;
           setDifficulty(saved.difficulty || 'easy');
           setInitialGrid(saved.initial);
           setSolutionGrid(saved.solution);
@@ -360,7 +374,7 @@ export const SudokuGame: React.FC = () => {
           <h1 className={styles.title}>Sudoku</h1>
           <p className={styles.subtitle}>Fill each row, column, and 3×3 box with digits 1–9</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className={styles.headerActions}>
           <div className={styles.timerBadge}>
             <FiClock aria-hidden="true" />
             <span>{formatTimer(elapsedSeconds)}</span>
@@ -375,6 +389,8 @@ export const SudokuGame: React.FC = () => {
             <button
               key={diff}
               type="button"
+              role="radio"
+              aria-checked={difficulty === diff}
               className={`${styles.diffBtn} ${difficulty === diff ? styles.diffBtnActive : ''}`}
               onClick={() => startNewGame(diff)}
             >
@@ -382,12 +398,13 @@ export const SudokuGame: React.FC = () => {
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div className={styles.topActions}>
           <button
             type="button"
             className={styles.actionBtn}
             onClick={() => setIsPaused(!isPaused)}
             title={isPaused ? 'Resume game' : 'Pause game'}
+            aria-label={isPaused ? 'Resume game' : 'Pause game'}
           >
             {isPaused ? <FiPlay /> : <FiPause />}
             <span>{isPaused ? 'Resume' : 'Pause'}</span>
@@ -404,7 +421,7 @@ export const SudokuGame: React.FC = () => {
         </div>
       </div>
       <div className={styles.boardWrapper}>
-        <div className={styles.grid}>
+        <div className={styles.grid} role="group" aria-label="Sudoku board">
           {grid.map((row, r) =>
             row.map((val, c) => {
               const isGiven = initialGrid[r][c] !== 0;
@@ -434,6 +451,9 @@ export const SudokuGame: React.FC = () => {
                     ${hasError ? styles.cellError : ''}
                   `}
                   onClick={() => handleCellClick(r, c)}
+                  role="button"
+                  aria-pressed={isSelected}
+                  aria-label={`Row ${r + 1}, column ${c + 1}: ${val !== 0 ? `${val}${isGiven ? ' (given)' : ''}` : 'empty'}`}
                 >
                   {val !== 0 ? (
                     val
@@ -563,9 +583,10 @@ export const SudokuGame: React.FC = () => {
               className={styles.numBtn}
               onClick={() => handleNumberInput(num)}
               disabled={remaining === 0 && !isPencilMode}
+              aria-label={`${isPencilMode ? 'Toggle note' : 'Enter'} ${num}, ${remaining} remaining`}
             >
               <span>{num}</span>
-              <span className={styles.remainingBadge}>{remaining}</span>
+              <span className={styles.remainingBadge} aria-hidden="true">{remaining}</span>
             </button>
           );
         })}

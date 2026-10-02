@@ -4,7 +4,6 @@ import type {
   TangoValidationResult,
   TangoViolation,
 } from './types';
-
 export function validateTango(
   grid: TangoCellVal[][],
   preset: TangoPreset
@@ -12,7 +11,6 @@ export function validateTango(
   const size = preset.size;
   const violations: TangoViolation[] = [];
   const maxPerLine = size / 2;
-
   // 1. Check No 3-in-a-row horizontally
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size - 2; c++) {
@@ -30,7 +28,6 @@ export function validateTango(
       }
     }
   }
-
   // Check No 3-in-a-row vertically
   for (let c = 0; c < size; c++) {
     for (let r = 0; r < size - 2; r++) {
@@ -48,7 +45,6 @@ export function validateTango(
       }
     }
   }
-
   // 2. Count limit per row & column
   for (let r = 0; r < size; r++) {
     let count1 = 0;
@@ -72,7 +68,6 @@ export function validateTango(
       });
     }
   }
-
   for (let c = 0; c < size; c++) {
     let count1 = 0;
     let count2 = 0;
@@ -95,7 +90,6 @@ export function validateTango(
       });
     }
   }
-
   // 3. Equality and Cross signs
   for (const h of preset.horizontalSigns) {
     const left = grid[h.row][h.col];
@@ -122,7 +116,6 @@ export function validateTango(
       }
     }
   }
-
   for (const v of preset.verticalSigns) {
     const top = grid[v.row][v.col];
     const bottom = grid[v.row + 1][v.col];
@@ -148,7 +141,6 @@ export function validateTango(
       }
     }
   }
-
   // 4. Full completion check
   let isFull = true;
   for (let r = 0; r < size; r++) {
@@ -160,7 +152,6 @@ export function validateTango(
     }
     if (!isFull) break;
   }
-
   // 5. Unique rows and columns (when full)
   if (isFull) {
     const rowStrs = grid.map((r) => r.join(''));
@@ -180,7 +171,6 @@ export function validateTango(
         seenRows.set(str, r);
       }
     });
-
     const colStrs = Array.from({ length: size }, (_, c) =>
       grid.map((r) => r[c]).join('')
     );
@@ -201,17 +191,14 @@ export function validateTango(
       }
     });
   }
-
   const isValid = violations.length === 0;
   const isComplete = isFull && isValid;
-
   return {
     isValid,
     isComplete,
     violations,
   };
 }
-
 export function getTangoHint(
   grid: TangoCellVal[][],
   preset: TangoPreset
@@ -223,7 +210,6 @@ export function getTangoHint(
 } | null {
   const size = preset.size;
   const maxPerLine = size / 2;
-
   // 1. Two consecutive identical cells -> next must be opposite
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size - 1; c++) {
@@ -250,7 +236,6 @@ export function getTangoHint(
       }
     }
   }
-
   // Vertical two consecutive
   for (let c = 0; c < size; c++) {
     for (let r = 0; r < size - 1; r++) {
@@ -277,7 +262,6 @@ export function getTangoHint(
       }
     }
   }
-
   // 2. Sandwich: A _ A -> middle must be B
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size - 2; c++) {
@@ -293,7 +277,6 @@ export function getTangoHint(
       }
     }
   }
-
   for (let c = 0; c < size; c++) {
     for (let r = 0; r < size - 2; r++) {
       const v = grid[r][c];
@@ -308,7 +291,6 @@ export function getTangoHint(
       }
     }
   }
-
   // 3. Equality signs
   for (const h of preset.horizontalSigns) {
     const left = grid[h.row][h.col];
@@ -332,7 +314,6 @@ export function getTangoHint(
       };
     }
   }
-
   for (const v of preset.verticalSigns) {
     const top = grid[v.row][v.col];
     const bottom = grid[v.row + 1][v.col];
@@ -355,7 +336,6 @@ export function getTangoHint(
       };
     }
   }
-
   // 4. Line count reached
   for (let r = 0; r < size; r++) {
     let count1 = 0;
@@ -389,7 +369,6 @@ export function getTangoHint(
       }
     }
   }
-
   for (let c = 0; c < size; c++) {
     let count1 = 0;
     let count2 = 0;
@@ -422,7 +401,6 @@ export function getTangoHint(
       }
     }
   }
-
   // 5. Fallback: solution cell
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
@@ -437,6 +415,5 @@ export function getTangoHint(
       }
     }
   }
-
   return null;
 }

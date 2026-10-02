@@ -8,8 +8,9 @@ import {
   FiCheckCircle,
   FiSliders,
 } from 'react-icons/fi';
-import { HITORI_PRESETS } from './presets';
 import { getHint, validateHitori } from './engine';
+import type { HitoriPuzzle } from './generator';
+import { createHitoriPuzzle, parseStoredPuzzle, presetPuzzle } from './puzzleSource';
 import type { CellState, HitoriDifficulty, HitoriMove } from './types';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
@@ -21,19 +22,22 @@ import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 import styles from './HitoriGame.module.scss';
 const STORAGE_KEY = 'rupee_calc_hitori_state';
 type TapMode = 'cycle' | 'shade' | 'circle';
+const DIFFICULTIES: readonly HitoriDifficulty[] = ['easy', 'medium', 'hard'];
 interface SavedHitoriState {
   difficulty: HitoriDifficulty;
-  puzzleIndex: number;
+  /** Generated (or fallback preset) puzzle being played. */
+  puzzle?: HitoriPuzzle;
+  /** Legacy saves (before procedural generation) referenced a preset by index. */
+  puzzleIndex?: number;
   cellStates: CellState[];
   elapsedSeconds: number;
   hintsUsed: number;
   isComplete: boolean;
 }
 export const HitoriGame: React.FC = () => {
-  const [difficulty, setDifficulty] = useState<HitoriDifficulty>('easy');
-  const [puzzleIndex, setPuzzleIndex] = useState<number>(0);
-  const presetsList = HITORI_PRESETS[difficulty];
-  const activePreset = presetsList[puzzleIndex % presetsList.length];
+  // Deterministic preset for the server render; replaced by a generated puzzle on mount.
+  const [activePreset, setActivePreset] = useState<HitoriPuzzle>(() => presetPuzzle('easy'));
+  const difficulty = activePreset.difficulty;
   const size = activePreset.size;
   const [cellStates, setCellStates] = useState<CellState[]>(() =>
     Array(activePreset.size * activePreset.size).fill('unmarked')
@@ -100,27 +104,51 @@ export const HitoriGame: React.FC = () => {
     return () => clearInterval(interval);
   }, [isStarted, isComplete]);
   // Restore saved state
+  const applySaved = useCallback((saved: SavedHitoriState) => {
+    const savedDiff: HitoriDifficulty = DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : 'easy';
+    const restoredPuzzle =
+      parseStoredPuzzle(saved.puzzle, savedDiff) ??
+      (saved.puzzle ? null : presetPuzzle(savedDiff, saved.puzzleIndex || 0));
+    if (!restoredPuzzle || saved.cellStates.length !== restoredPuzzle.size * restoredPuzzle.size) {
+      const fresh = createHitoriPuzzle(savedDiff);
+      setActivePreset(fresh);
+      setCellStates(Array(fresh.size * fresh.size).fill('unmarked'));
+      setElapsedSeconds(0);
+      setHintsUsed(0);
+      setIsComplete(false);
+      setIsStarted(false);
+      return;
+    }
+    setActivePreset(restoredPuzzle);
+    setCellStates(saved.cellStates);
+    setElapsedSeconds(saved.elapsedSeconds || 0);
+    setHintsUsed(saved.hintsUsed || 0);
+    setIsComplete(saved.isComplete || false);
+    setIsStarted((saved.elapsedSeconds || 0) > 0);
+  }, []);
   useEffect(() => {
     let active = true;
+    let restored = false;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved: SavedHitoriState = JSON.parse(raw);
-        if (saved && saved.difficulty && Array.isArray(saved.cellStates)) {
+        restored = Boolean(saved && saved.difficulty && Array.isArray(saved.cellStates));
+        if (restored) {
           requestAnimationFrame(() => {
             if (!active) return;
-            setDifficulty(saved.difficulty);
-            setPuzzleIndex(saved.puzzleIndex || 0);
-            setCellStates(saved.cellStates);
-            setElapsedSeconds(saved.elapsedSeconds || 0);
-            setHintsUsed(saved.hintsUsed || 0);
-            setIsComplete(saved.isComplete || false);
-            setIsStarted((saved.elapsedSeconds || 0) > 0);
+            applySaved(saved);
           });
         }
       }
     } catch {
       // Ignore parse errors
+    }
+    if (!restored) {
+      requestAnimationFrame(() => {
+        if (!active) return;
+        setActivePreset(createHitoriPuzzle('easy'));
+      });
     }
     const token = getAuthToken();
     const guestId = getOrCreateGuestId();
@@ -128,25 +156,19 @@ export const HitoriGame: React.FC = () => {
       if (active && res.success && res.payload) {
         const saved = res.payload;
         if (saved.difficulty && Array.isArray(saved.cellStates)) {
-          setDifficulty(saved.difficulty);
-          setPuzzleIndex(saved.puzzleIndex || 0);
-          setCellStates(saved.cellStates);
-          setElapsedSeconds(saved.elapsedSeconds || 0);
-          setHintsUsed(saved.hintsUsed || 0);
-          setIsComplete(saved.isComplete || false);
-          setIsStarted((saved.elapsedSeconds || 0) > 0);
+          applySaved(saved);
         }
       }
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [applySaved]);
   // Save state (persists only on board changes, hints, or completion - avoiding timer POST loop)
   useEffect(() => {
     const stateToSave: SavedHitoriState = {
       difficulty,
-      puzzleIndex,
+      puzzle: activePreset,
       cellStates,
       elapsedSeconds: elapsedSecondsRef.current,
       hintsUsed,
@@ -163,17 +185,13 @@ export const HitoriGame: React.FC = () => {
       void saveUserAppStateAction(token, guestId, 'games', 'hitori', stateToSave);
     }, 600);
     return () => clearTimeout(timeout);
-  }, [difficulty, puzzleIndex, cellStates, hintsUsed, isComplete]);
-  // Reset game
+  }, [difficulty, activePreset, cellStates, hintsUsed, isComplete]);
+  // Start (or restart) a puzzle with a clean board
   const resetGame = useCallback(
-    (newDiff?: HitoriDifficulty, newPuzzleIdx?: number) => {
-      const targetDiff = newDiff ?? difficulty;
-      const targetList = HITORI_PRESETS[targetDiff];
-      const targetIdx = (newPuzzleIdx ?? puzzleIndex) % targetList.length;
-      const preset = targetList[targetIdx];
-      setDifficulty(targetDiff);
-      setPuzzleIndex(targetIdx);
-      setCellStates(Array(preset.size * preset.size).fill('unmarked'));
+    (nextPuzzle?: HitoriPuzzle) => {
+      const target = nextPuzzle ?? activePreset;
+      setActivePreset(target);
+      setCellStates(Array(target.size * target.size).fill('unmarked'));
       setHistory([]);
       setElapsedSeconds(0);
       setIsStarted(false);
@@ -183,15 +201,14 @@ export const HitoriGame: React.FC = () => {
       setScoreBreakdown(null);
       setActiveHint(null);
     },
-    [difficulty, puzzleIndex]
+    [activePreset]
   );
   const handleDifficultyChange = (newDiff: HitoriDifficulty) => {
     if (newDiff === difficulty) return;
-    resetGame(newDiff, 0);
+    resetGame(createHitoriPuzzle(newDiff));
   };
   const handleNextPuzzle = () => {
-    const nextIdx = (puzzleIndex + 1) % presetsList.length;
-    resetGame(difficulty, nextIdx);
+    resetGame(createHitoriPuzzle(difficulty));
   };
   // Cell Click / Interaction
   const handleCellClick = (r: number, c: number) => {
@@ -333,7 +350,7 @@ export const HitoriGame: React.FC = () => {
       {/* Top controls */}
       <div className={styles.topControls}>
         <div className={styles.difficultySelector} role="tablist" aria-label="Difficulty">
-          {(['easy', 'medium', 'hard'] as const).map((d) => (
+          {DIFFICULTIES.map((d) => (
             <button
               key={d}
               type="button"
@@ -349,10 +366,10 @@ export const HitoriGame: React.FC = () => {
             type="button"
             className={styles.puzzleBtn}
             onClick={handleNextPuzzle}
-            title="Next Puzzle in this category"
+            title="Generate a new puzzle at this difficulty"
           >
             <FiRefreshCw size={13} />
-            <span>Puzzle #{puzzleIndex + 1}</span>
+            <span>New {size}×{size} Puzzle</span>
           </button>
         </div>
       </div>
@@ -400,7 +417,7 @@ export const HitoriGame: React.FC = () => {
       <div className={styles.boardCard}>
         <div className={styles.gridContainer}>
           <div
-            className={styles.grid}
+            className={`${styles.grid} ${size >= 8 ? styles.gridDense : ''}`}
             style={{
               gridTemplateColumns: `repeat(${size}, 1fr)`,
               gridTemplateRows: `repeat(${size}, 1fr)`,

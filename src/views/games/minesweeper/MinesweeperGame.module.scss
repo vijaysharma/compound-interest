@@ -17,9 +17,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   width: 100%;
   max-width: 540px;
   margin-bottom: 12px;
+}
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 .titleGroup {
   display: flex;
@@ -101,8 +109,10 @@
 .diffBtn {
   border: none;
   background: transparent;
+  min-height: 36px;
   padding: 6px 14px;
   font-size: 0.82rem;
+  touch-action: manipulation;
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
@@ -266,6 +276,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-height: 40px;
   padding: 8px 16px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
@@ -319,8 +330,9 @@
   }
   .diffBtn {
     flex: 1;
+    min-height: 40px;
     padding: 6px 2px;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     text-align: center;
   }
   .boardCard {
@@ -383,16 +395,18 @@
     flex-wrap: wrap;
   }
   .modeToggleBtn {
+    min-height: 44px;
     padding: 5px 12px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
   .mobileFontScalerBtn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
+    min-height: 44px;
     padding: 5px 12px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 800;
     border-radius: 8px;
     background: #e2e8f0;
@@ -409,7 +423,7 @@
     font-weight: 900;
   }
   .instructions {
-    font-size: 0.7rem;
+    font-size: 0.78rem;
     margin-top: 4px;
     padding: 0 4px;
   }

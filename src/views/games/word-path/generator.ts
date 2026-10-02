@@ -178,6 +178,36 @@ export const generateProceduralBoard = (
       }
       return null;
     };
+    // After a path completes, every enclosed pocket of unvisited cells must be fillable by some
+    // subset of the remaining word lengths; otherwise the search is already doomed, so prune.
+    const remainingRegionsFillable = (fromPathIdx: number): boolean => {
+      const remaining = targetLengths.slice(fromPathIdx);
+      const reachable = new Set<number>([0]);
+      for (const len of remaining) {
+        for (const sum of [...reachable]) reachable.add(sum + len);
+      }
+      const seen = Array.from({ length: rows }, () => Array(cols).fill(false));
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (visited[r][c] || seen[r][c]) continue;
+          let size = 0;
+          const stack: Coordinate[] = [{ row: r, col: c }];
+          seen[r][c] = true;
+          while (stack.length > 0) {
+            const cur = stack.pop()!;
+            size++;
+            for (const n of getUnvisitedNeighbors(cur.row, cur.col)) {
+              if (!seen[n.row][n.col]) {
+                seen[n.row][n.col] = true;
+                stack.push(n);
+              }
+            }
+          }
+          if (!reachable.has(size)) return false;
+        }
+      }
+      return true;
+    };
     const generatePaths = (): Coordinate[][] | null => {
       const paths: Coordinate[][] = [];
       let iterations = 0;
@@ -195,6 +225,7 @@ export const generateProceduralBoard = (
         const step = (curr: Coordinate): boolean => {
           if (iterations++ > 5000 || Date.now() - startTime > 100) return false;
           if (currentPath.length === length) {
+            if (!remainingRegionsFillable(pathIdx + 1)) return false;
             paths.push([...currentPath]);
             if (recurse(pathIdx + 1)) return true;
             paths.pop();
@@ -227,6 +258,11 @@ export const generateProceduralBoard = (
       if (generatedPaths && generatedPaths.length === targetLengths.length) {
         break;
       }
+    }
+    // A serpentine layout reads like plain rows of text, so prefer a fresh attempt (new partition)
+    // and only fall back to it on the final attempt.
+    if ((!generatedPaths || generatedPaths.length !== targetLengths.length) && attempt < 24) {
+      continue;
     }
     // Fallback: randomized serpentine partition
     if (!generatedPaths || generatedPaths.length !== targetLengths.length) {

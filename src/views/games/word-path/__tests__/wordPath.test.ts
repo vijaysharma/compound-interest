@@ -175,3 +175,53 @@ test('themed board strictly contains only words from that theme without cross-th
     );
   });
 });
+const isSerpentineLayout = (board: BoardDefinition): boolean =>
+  board.words.every((w) =>
+    w.path.every((p, j) => {
+      if (j === 0) return true;
+      const prev = w.path[j - 1];
+      if (p.row === prev.row) return true;
+      return p.col === prev.col && (p.col === 0 || p.col === board.cols - 1);
+    })
+  );
+test('procedural boards are valid, traceable, repeat-free and non-degenerate across many runs', () => {
+  const lexicon = new Set(THEMED_WORD_SETS.flatMap((set) => set.words));
+  (['easy', 'medium', 'hard'] as const).forEach((diff) => {
+    const sigs = new Set<string>();
+    let serpentine = 0;
+    const start = performance.now();
+    for (let i = 0; i < 100; i++) {
+      const board = generateProceduralBoard(diff);
+      const covered = new Set<string>();
+      const words = new Set<string>();
+      board.words.forEach((w) => {
+        assert.equal(words.has(w.word), false, `duplicate word ${w.word}`);
+        words.add(w.word);
+        assert.equal(lexicon.has(w.word), true, `${w.word} not in themed lexicon`);
+        assert.equal(w.path.length, w.word.length);
+        w.path.forEach((p, j) => {
+          if (j > 0) assert.equal(areNeighbors(w.path[j - 1], p), true, `${w.word} path is not traceable`);
+          const key = `${p.row}-${p.col}`;
+          assert.equal(covered.has(key), false, 'overlapping paths');
+          covered.add(key);
+          assert.equal(board.grid[p.row][p.col].letter, w.word[j]);
+        });
+      });
+      assert.equal(covered.size, board.rows * board.cols);
+      if (isSerpentineLayout(board)) serpentine++;
+      sigs.add(getBoardSignature(board));
+    }
+    const avgMs = (performance.now() - start) / 100;
+    assert.ok(sigs.size >= 90, `${diff}: only ${sigs.size}/100 distinct word sets`);
+    assert.ok(serpentine <= 3, `${diff}: ${serpentine} boards fell back to a serpentine layout`);
+    assert.ok(avgMs < 50, `${diff}: average generation ${avgMs.toFixed(1)}ms`);
+  });
+});
+test('difficulty tiers scale grid size and word count', () => {
+  const easy = generateProceduralBoard('easy');
+  const medium = generateProceduralBoard('medium');
+  const hard = generateProceduralBoard('hard');
+  assert.ok(easy.rows * easy.cols < medium.rows * medium.cols);
+  assert.ok(medium.rows * medium.cols < hard.rows * hard.cols);
+  assert.ok(easy.words.length < hard.words.length);
+});

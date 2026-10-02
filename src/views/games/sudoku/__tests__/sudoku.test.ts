@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generatePuzzle } from '../generator';
+import { CLUE_BANDS, countSolutions, generatePuzzle, gradePuzzle, hasUniqueSolution, solveSudoku } from '../generator';
 import { PRESET_SUDOKU } from '../presets';
 test('generatePuzzle produces 9x9 grid with valid clue counts for each difficulty', () => {
   const easy = generatePuzzle('easy');
@@ -40,5 +40,51 @@ test('PRESET_SUDOKU contains valid solutions where each row, column, and 3x3 blo
         assert.equal(boxDigits.size, 9);
       }
     }
+  });
+});
+const DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+const clueCount = (grid: number[][]) => grid.flat().filter(Boolean).length;
+test('generated puzzles have exactly one solution that matches the returned solution', () => {
+  DIFFICULTIES.forEach((diff) => {
+    for (let i = 0; i < 25; i++) {
+      const { initial, solution } = generatePuzzle(diff);
+      assert.equal(hasUniqueSolution(initial), true, `${diff} puzzle is not unique`);
+      const solved = initial.map((row) => [...row]);
+      assert.equal(solveSudoku(solved), true);
+      assert.deepEqual(solved, solution);
+      initial.flat().forEach((v, idx) => {
+        if (v) assert.equal(v, solution.flat()[idx]);
+      });
+    }
+  });
+});
+test('countSolutions detects multiple solutions and leaves the grid untouched', () => {
+  const empty = Array.from({ length: 9 }, () => Array(9).fill(0));
+  assert.equal(countSolutions(empty, { val: 0 }, 2), 2);
+  assert.equal(empty.flat().every((v) => v === 0), true);
+  assert.equal(hasUniqueSolution(PRESET_SUDOKU.hard.initial), true);
+});
+test('difficulty levels use separated clue bands and logical grades', () => {
+  DIFFICULTIES.forEach((diff) => {
+    for (let i = 0; i < 30; i++) {
+      const { initial } = generatePuzzle(diff);
+      const clues = clueCount(initial);
+      assert.ok(clues >= CLUE_BANDS[diff].min && clues <= CLUE_BANDS[diff].max, `${diff} clues ${clues}`);
+      const grade = gradePuzzle(initial);
+      if (diff === 'easy') assert.equal(grade, 1, 'easy puzzles must be solvable with singles only');
+      if (diff === 'hard') assert.ok(grade >= 2, 'hard puzzles must need more than singles');
+    }
+  });
+  assert.ok(CLUE_BANDS.easy.min > CLUE_BANDS.medium.max);
+  assert.ok(CLUE_BANDS.medium.min > CLUE_BANDS.hard.max);
+});
+test('generated puzzles are distinct across many sessions and generate quickly', () => {
+  DIFFICULTIES.forEach((diff) => {
+    const seen = new Set<string>();
+    const start = performance.now();
+    for (let i = 0; i < 100; i++) seen.add(generatePuzzle(diff).initial.flat().join(''));
+    const avgMs = (performance.now() - start) / 100;
+    assert.equal(seen.size, 100, `${diff} produced repeated puzzles`);
+    assert.ok(avgMs < 50, `${diff} average generation ${avgMs.toFixed(1)}ms`);
   });
 });

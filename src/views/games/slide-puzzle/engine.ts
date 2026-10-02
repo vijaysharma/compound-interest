@@ -48,33 +48,42 @@ export const isSolvable = (tiles: number[]): boolean => {
   const inversions = countInversions(tiles);
   return (inversions + blankRowFromBottom) % 2 === 1;
 };
-export const getShuffledBoard = (): number[] => {
+/** Sum of each tile's grid distance from its solved position (blank excluded). */
+export const manhattanDistance = (tiles: number[]): number => {
+  let total = 0;
+  for (let i = 0; i < tiles.length; i++) {
+    const val = tiles[i];
+    if (val === 0) continue;
+    const target = val - 1;
+    total += Math.abs(Math.floor(i / GRID_SIZE) - Math.floor(target / GRID_SIZE)) + Math.abs((i % GRID_SIZE) - (target % GRID_SIZE));
+  }
+  return total;
+};
+/**
+ * Lower bound on scramble quality. A uniformly random solvable 4x4 board averages a Manhattan
+ * distance of ~37 (optimal solutions ~52 moves); anything under this would feel nearly solved.
+ */
+export const MIN_SCRAMBLE_DISTANCE = 24;
+/** Deterministic solvable scramble for the server render; replaced by a random one on mount. */
+export const INITIAL_BOARD: readonly number[] = [12, 1, 10, 2, 7, 11, 4, 14, 5, 0, 9, 15, 8, 13, 6, 3];
+const randomPermutation = (): number[] => {
   const tiles = Array.from({ length: TOTAL_TILES }, (_, i) => (i === TOTAL_TILES - 1 ? 0 : i + 1));
   for (let i = tiles.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
   }
   if (!isSolvable(tiles)) {
-    let firstNonZero = -1;
-    let secondNonZero = -1;
-    for (let i = 0; i < tiles.length; i++) {
-      if (tiles[i] !== 0) {
-        if (firstNonZero === -1) {
-          firstNonZero = i;
-        } else if (secondNonZero === -1) {
-          secondNonZero = i;
-          break;
-        }
-      }
-    }
-    if (firstNonZero !== -1 && secondNonZero !== -1) {
-      [tiles[firstNonZero], tiles[secondNonZero]] = [tiles[secondNonZero], tiles[firstNonZero]];
-    }
+    // Swapping any two numbered tiles flips inversion parity, turning an unsolvable board solvable.
+    const a = tiles.findIndex((t) => t !== 0);
+    const b = tiles.findIndex((t, i) => i > a && t !== 0);
+    [tiles[a], tiles[b]] = [tiles[b], tiles[a]];
   }
-  if (isSolved(tiles)) {
-    const blankIdx = tiles.indexOf(0);
-    const swapTarget = blankIdx === 15 ? 14 : 15;
-    [tiles[blankIdx], tiles[swapTarget]] = [tiles[swapTarget], tiles[blankIdx]];
+  return tiles;
+};
+export const getShuffledBoard = (): number[] => {
+  let tiles = randomPermutation();
+  for (let attempt = 0; attempt < 50 && (isSolved(tiles) || manhattanDistance(tiles) < MIN_SCRAMBLE_DISTANCE); attempt++) {
+    tiles = randomPermutation();
   }
   return tiles;
 };

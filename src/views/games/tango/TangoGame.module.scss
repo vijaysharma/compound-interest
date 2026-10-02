@@ -1,3 +1,4 @@
+@use "../../../styles/mixins" as *;
 .container {
   display: flex;
   flex-direction: column;
@@ -12,74 +13,89 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  @include mobile-md {
+    padding: 12px 10px;
+  }
 }
-
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
   margin-bottom: 12px;
 }
-
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
 .titleGroup {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
-
 .title {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
   color: var(--title-color, #0f172a);
+  @include mobile-md {
+    font-size: 1.3rem;
+  }
 }
-
 .subtitle {
-  font-size: 0.85rem;
-  color: var(--muted-color, #64748b);
+  font-size: 0.9rem;
+  color: var(--muted-color, #475569);
   margin: 0;
 }
-
 .hudBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
   background: var(--card-bg, #ffffff);
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 12px;
-  padding: 10px 16px;
+  padding: 10px 14px;
   box-sizing: border-box;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
-
 .hudStat {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
-
 .hudLabel {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--muted-color, #64748b);
+  color: var(--muted-color, #475569);
   font-weight: 600;
 }
-
 .hudValue {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-color, #0f172a);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  @include mobile-md {
+    font-size: 1rem;
+  }
 }
-
+.capitalize {
+  text-transform: capitalize;
+}
 .timerBadge {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   background: var(--badge-bg, #f1f5f9);
@@ -87,150 +103,185 @@
   border-radius: 20px;
   border: 1px solid var(--border-color, #e2e8f0);
   color: #0f172a;
+  flex-shrink: 0;
 }
-
 .topControls {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   gap: 8px;
   flex-wrap: wrap;
 }
-
 .difficultySelector {
   display: flex;
+  flex: 1 1 240px;
   background: var(--control-bg, #f1f5f9);
   padding: 3px;
-  border-radius: 8px;
+  border-radius: 10px;
   gap: 2px;
 }
-
 .diffBtn {
+  flex: 1;
+  min-height: 44px;
   border: none;
   background: transparent;
-  padding: 6px 12px;
-  font-size: 0.8rem;
+  padding: 6px 10px;
+  font-size: 0.95rem;
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  color: var(--muted-color, #64748b);
-  transition: all 0.15s ease;
+  color: #475569;
+  transition: background-color 0.15s ease, color 0.15s ease;
   touch-action: manipulation;
-
-  &:hover {
-    color: var(--text-color, #1e293b);
+  @media (hover: hover) {
+    &:hover {
+      color: #0f172a;
+    }
+  }
+  &:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 1px;
   }
 }
-
 .diffBtnActive {
   background: #ffffff;
-  color: #2563eb;
+  color: #1d4ed8;
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
-
-.puzzleSwitcher {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .puzzleBtn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  flex: 0 1 auto;
+  gap: 6px;
+  min-height: 44px;
   background: var(--card-bg, #ffffff);
   border: 1px solid var(--border-color, #cbd5e1);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #334155;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   touch-action: manipulation;
-
-  &:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
+  @media (hover: hover) {
+    &:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+  }
+  &:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 1px;
+  }
+  @include mobile-md {
+    flex: 1 1 100%;
   }
 }
-
 .boardCard {
   width: 100%;
   background: var(--card-bg, #ffffff);
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 16px;
-  padding: 16px;
+  padding: 12px;
   box-sizing: border-box;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   position: relative;
-  overflow: hidden;
+  @include mobile-md {
+    padding: 6px;
+    border-radius: 12px;
+  }
 }
-
 .gridContainer {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  max-width: 480px;
+  width: min(100%, 440px);
   position: relative;
+  container-type: inline-size;
 }
-
 .grid {
   display: grid;
   width: 100%;
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
   background: #f8fafc;
-  border: 2px solid #cbd5e1;
+  border: 2px solid #64748b;
   border-radius: 12px;
   position: relative;
   overflow: hidden;
+  touch-action: manipulation;
 }
-
+.generating {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+}
 .cell {
+  appearance: none;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-radius: 0;
   cursor: pointer;
   touch-action: manipulation;
   transition: background-color 0.12s ease;
   box-sizing: border-box;
-  padding: 4px;
-
-  &:hover {
-    background: #f1f5f9;
+  @media (hover: hover) {
+    &:hover {
+      background: #f1f5f9;
+    }
+  }
+  &:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: -3px;
+    z-index: 4;
   }
 }
-
+// Given (locked) cells: clearly darker surface than playable cells.
 .cellFixed {
   cursor: default;
-  background: #fafafa;
+  background: #e2e8f0;
+  @media (hover: hover) {
+    &:hover {
+      background: #e2e8f0;
+    }
+  }
 }
-
 .cellConflict {
   background: #fee2e2 !important;
+  box-shadow: inset 0 0 0 3px #dc2626;
 }
-
 .cellHinted {
-  outline: 3px solid #f59e0b;
-  outline-offset: -3px;
+  outline: 4px solid #d97706;
+  outline-offset: -4px;
   z-index: 5;
   animation: pulseHint 1s infinite alternate;
 }
-
 @keyframes pulseHint {
   from {
     background-color: #ffffff;
@@ -239,122 +290,131 @@
     background-color: #fef3c7;
   }
 }
-
+@media (prefers-reduced-motion: reduce) {
+  .cellHinted {
+    animation: none;
+    background-color: #fef3c7;
+  }
+}
 /* Circles */
-.circlePrimary {
-  width: 78%;
-  height: 78%;
-  border-radius: 50%;
-  background: #2563eb;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
-  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
+.circlePrimary,
 .circleLight {
-  width: 78%;
-  height: 78%;
+  display: block;
+  width: 70%;
+  height: 70%;
   border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
-  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-sizing: border-box;
+  pointer-events: none;
 }
-
+.circlePrimary {
+  background: #2563eb;
+  border: 2px solid #1e40af;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+}
+.circleLight {
+  background: #fbbf24;
+  border: 2px solid #b45309;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+}
+// Given circles get an inner ring so they read as locked even without colour cues.
 .circleFixed {
-  opacity: 0.95;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.55);
 }
-
-/* Constraint Signs */
-.hSign {
+/* Constraint Signs: pill ~44% of a cell (clamped 22-34px), glyph ~78% of the pill. */
+.sign {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 2px solid #334155;
+  border-radius: 999px;
+  color: #0f172a;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+}
+.hSign,
+.vSign {
   position: absolute;
+  z-index: 10;
+  width: clamp(22px, calc(100cqi / var(--tango-size, 6) * 0.44), 34px);
+  height: clamp(22px, calc(100cqi / var(--tango-size, 6) * 0.44), 34px);
+}
+.hSign {
   top: 50%;
   right: 0;
   transform: translate(50%, -50%);
-  z-index: 10;
-  width: 18px;
-  height: 18px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1;
-  color: #475569;
-  pointer-events: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
-
 .vSign {
-  position: absolute;
   bottom: 0;
   left: 50%;
   transform: translate(-50%, 50%);
-  z-index: 10;
-  width: 18px;
-  height: 18px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1;
-  color: #475569;
-  pointer-events: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
-
-/* Action Controls (Undo, Hint, Reset) */
+.signGlyph {
+  width: 78%;
+  height: 78%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+.ruleSign {
+  width: 22px;
+  height: 22px;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+/* Action Controls (Undo, Hint) */
 .actionRow {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   max-width: 480px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-
 .actionBtn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-height: 48px;
   background: #e2e8f0;
   border: none;
   border-radius: 12px;
   padding: 10px 14px;
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: #334155;
+  color: #1e293b;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
   touch-action: manipulation;
-
-  &:hover:not(:disabled) {
-    background: #cbd5e1;
-    color: #0f172a;
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: #cbd5e1;
+      color: #0f172a;
+    }
   }
-
+  &:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+  }
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 }
-
 .hintBtn {
-  background: color-mix(in srgb, var(--color-primary, #3b82f6) 15%, transparent);
+  background: #dbeafe;
   color: #1d4ed8;
-
-  &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--color-primary, #3b82f6) 25%, transparent);
-    color: #1e40af;
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: #bfdbfe;
+      color: #1e40af;
+    }
   }
 }
-
 /* Tap mode toggle bar */
 .modeSelector {
   display: flex;
@@ -362,72 +422,101 @@
   padding: 4px;
   border-radius: 12px;
   gap: 4px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   width: 100%;
   max-width: 480px;
+  box-sizing: border-box;
 }
-
 .modeBtn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-height: 44px;
   border: none;
   background: transparent;
-  padding: 8px 12px;
-  font-size: 0.84rem;
+  padding: 8px 6px;
+  font-size: 0.95rem;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  color: #64748b;
-  transition: all 0.15s ease;
+  color: #475569;
+  transition: background-color 0.15s ease, color 0.15s ease;
   touch-action: manipulation;
-
-  &:hover {
-    color: #1e293b;
+  @media (hover: hover) {
+    &:hover {
+      color: #1e293b;
+    }
+  }
+  &:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 1px;
   }
 }
-
 .modeBtnActive {
   background: #ffffff;
   color: #0f172a;
   font-weight: 700;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
-
-.modeCirclePrimary {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #2563eb;
-}
-
+.modeCirclePrimary,
 .modeCircleLight {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #f59e0b;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
-
+.modeCirclePrimary {
+  background: #2563eb;
+  border: 2px solid #1e40af;
+}
+.modeCircleLight {
+  background: #fbbf24;
+  border: 2px solid #b45309;
+}
 /* Hint Banner */
 .hintBanner {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   width: 100%;
   max-width: 480px;
   background: #fef3c7;
-  border: 1px solid #fde68a;
+  border: 1px solid #f59e0b;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   box-sizing: border-box;
-  margin-bottom: 14px;
-  color: #92400e;
-  font-size: 0.84rem;
+  margin-bottom: 12px;
+  color: #78350f;
+  font-size: 0.92rem;
   line-height: 1.4;
 }
-
+.hintIcon {
+  flex-shrink: 0;
+}
+.hintText {
+  flex: 1 1 180px;
+}
+.hintApplyBtn {
+  min-height: 44px;
+  min-width: 72px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #b45309;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  &:focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+}
 /* Rules / How to play accordion */
 .rulesAccordion {
   width: 100%;
@@ -437,30 +526,29 @@
   border-radius: 12px;
   box-sizing: border-box;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-
 .rulesHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  min-height: 48px;
   padding: 12px 16px;
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
   text-align: left;
+  touch-action: manipulation;
 }
-
 .rulesContent {
   padding: 0 16px 14px;
-  font-size: 0.82rem;
-  line-height: 1.5;
-  color: #475569;
-
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #334155;
   ul {
     margin: 0;
     padding-left: 18px;
@@ -469,31 +557,42 @@
     gap: 6px;
   }
 }
-
-.ruleCirclePrimary {
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #2563eb;
-  vertical-align: middle;
-  margin: 0 2px;
-}
-
+.ruleCirclePrimary,
 .ruleCircleLight {
   display: inline-block;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #f59e0b;
   vertical-align: middle;
   margin: 0 2px;
+  box-sizing: border-box;
 }
-
+.ruleCirclePrimary {
+  background: #2563eb;
+  border: 2px solid #1e40af;
+}
+.ruleCircleLight {
+  background: #fbbf24;
+  border: 2px solid #b45309;
+}
+.progressMessage {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
 /* Bottom Results Button */
 .resultsBtn {
   width: 100%;
   max-width: 480px;
+  min-height: 48px;
   background: #2563eb;
   color: #ffffff;
   border: none;
@@ -502,15 +601,20 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-
-  &:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
+  touch-action: manipulation;
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: #1d4ed8;
+    }
   }
-
-  &:active {
-    transform: translateY(0);
+  &:focus-visible {
+    outline: 3px solid #0f172a;
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }

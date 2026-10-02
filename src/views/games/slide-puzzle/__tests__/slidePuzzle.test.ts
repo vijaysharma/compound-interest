@@ -4,7 +4,10 @@ import {
   canSlide,
   countInversions,
   getShuffledBoard,
+  INITIAL_BOARD,
   isSolvable,
+  manhattanDistance,
+  MIN_SCRAMBLE_DISTANCE,
   isSolved,
   slideInDirection,
   slideTiles,
@@ -187,4 +190,39 @@ test('slideTileInDirection slides aligned tiles towards blank and ignores wrong 
   // Note: slideInDirection('left') checks targetCol = blankCol + 1 = 4 (out of bounds) -> null
   const invalidSwipe = slideInDirection(board, 'left');
   assert.equal(invalidSwipe, null);
+});
+test('isSolvable agrees with boards reached by real moves from the solved state', () => {
+  const dirs = ['up', 'down', 'left', 'right'] as const;
+  for (let trial = 0; trial < 50; trial++) {
+    let tiles = Array.from({ length: 16 }, (_, i) => (i === 15 ? 0 : i + 1));
+    for (let step = 0; step < 200; step++) {
+      const result = slideInDirection(tiles, dirs[Math.floor(Math.random() * 4)]);
+      if (result) tiles = result.newTiles;
+    }
+    assert.equal(isSolvable(tiles), true);
+    const swapped = [...tiles];
+    const a = swapped.findIndex((t) => t !== 0);
+    const b = swapped.findIndex((t, i) => i > a && t !== 0);
+    [swapped[a], swapped[b]] = [swapped[b], swapped[a]];
+    assert.equal(isSolvable(swapped), false);
+  }
+});
+test('shuffles are well scrambled, distinct, and fast', () => {
+  const seen = new Set<string>();
+  const start = performance.now();
+  for (let i = 0; i < 500; i++) {
+    const board = getShuffledBoard();
+    assert.equal(isSolvable(board), true);
+    assert.ok(manhattanDistance(board) >= MIN_SCRAMBLE_DISTANCE, `near-solved board ${board.join(',')}`);
+    seen.add(board.join(','));
+  }
+  assert.equal(seen.size, 500);
+  assert.ok((performance.now() - start) / 500 < 5);
+});
+test('the server-render INITIAL_BOARD is a valid solvable scramble', () => {
+  const board = [...INITIAL_BOARD];
+  assert.equal(new Set(board).size, 16);
+  assert.equal(isSolvable(board), true);
+  assert.equal(isSolved(board), false);
+  assert.ok(manhattanDistance(board) >= MIN_SCRAMBLE_DISTANCE);
 });

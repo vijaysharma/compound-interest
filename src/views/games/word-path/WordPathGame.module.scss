@@ -17,6 +17,7 @@
 }
 .topBar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
@@ -29,8 +30,10 @@
 }
 .diffBtn {
   @include button-reset;
+  min-height: 34px;
   padding: 0.25rem 0.65rem;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
+  touch-action: manipulation;
   font-weight: 700;
   border-radius: $radius-full;
   color: #64748b;
@@ -64,8 +67,9 @@
 }
 .iconBtn {
   @include button-reset;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  touch-action: manipulation;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -374,7 +378,9 @@
 .actionBtn {
   @include button-reset;
   flex: 1;
+  min-height: 44px;
   padding: 0.85rem;
+  touch-action: manipulation;
   background: #e2e8f0;
   border-radius: $radius-full;
   font-size: 0.95rem;
@@ -382,9 +388,11 @@
   color: #475569;
   text-align: center;
   transition: all 0.15s ease;
-  &:hover:not(:disabled) {
-    background: #cbd5e1;
-    color: #1e293b;
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: #cbd5e1;
+      color: #1e293b;
+    }
   }
   &:focus-visible {
     outline: 2px solid #2b2d42;
@@ -539,4 +547,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+@media (max-width: 400px) {
+  // On narrow phones a long word's arrow trail overflows the fixed-height badge; the final word
+  // alone is enough feedback.
+  .liveWordFlow {
+    display: none;
+  }
+  .topControls {
+    margin-left: auto;
+  }
 }

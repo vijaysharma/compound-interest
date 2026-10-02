@@ -549,11 +549,13 @@ export const WordPathGame: React.FC = () => {
     >
       {/* Top Header / Bar */}
       <div className={styles.topBar}>
-        <div className={styles.diffSelector}>
+        <div className={styles.diffSelector} role="radiogroup" aria-label="Difficulty">
           {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
             <button
               key={d}
               type="button"
+              role="radio"
+              aria-checked={difficulty === d}
               className={`${styles.diffBtn} ${
                 difficulty === d ? styles.diffBtnActive : ''
               }`}

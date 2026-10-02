@@ -4,6 +4,7 @@ import { FiRefreshCw, FiMousePointer, FiMove, FiLayers } from 'react-icons/fi';
 import {
   canSlide,
   getShuffledBoard,
+  INITIAL_BOARD,
   isSolved,
   slideTiles,
   GRID_SIZE,
@@ -23,7 +24,9 @@ import styles from './SlidePuzzleGame.module.scss';
 // lands while the first is still moving) is still rejected rather than hijacking the gesture.
 const STALE_GESTURE_MS = 700;
 export const SlidePuzzleGame: React.FC = () => {
-  const [tiles, setTiles] = useState<number[]>(() => getShuffledBoard());
+  // Server and first client render share a fixed scramble so hydration matches; a random board is
+  // dealt right after mount.
+  const [tiles, setTiles] = useState<number[]>(() => [...INITIAL_BOARD]);
   const [moves, setMoves] = useState<number>(0);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isWon, setIsWon] = useState<boolean>(false);
@@ -32,18 +35,7 @@ export const SlidePuzzleGame: React.FC = () => {
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
   const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
-  const [controlMode, setControlMode] = useState<MovementControlMode>(() => {
-    if (typeof window === 'undefined') return 'tap';
-    try {
-      const saved = localStorage.getItem('slide_puzzle_control_mode') as MovementControlMode | null;
-      if (saved && (saved === 'tap' || saved === 'swipe' || saved === 'hybrid')) {
-        return saved;
-      }
-    } catch {
-      // Storage unavailable in SSR or private mode
-    }
-    return 'tap';
-  });
+  const [controlMode, setControlMode] = useState<MovementControlMode>('tap');
   const [movementLog, setMovementLog] = useState<SlideMove[]>([]);
   const tilesRef = useRef(tiles);
   useEffect(() => {
@@ -102,6 +94,24 @@ export const SlidePuzzleGame: React.FC = () => {
     isStartedRef.current = false;
     isCompletedRef.current = false;
     movesRef.current = 0;
+  }, []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (!isStartedRef.current) {
+        const next = getShuffledBoard();
+        tilesRef.current = next;
+        setTiles(next);
+      }
+      try {
+        const saved = localStorage.getItem('slide_puzzle_control_mode');
+        if (saved === 'tap' || saved === 'swipe' || saved === 'hybrid') {
+          setControlMode(saved);
+        }
+      } catch {
+        // Storage unavailable in private mode
+      }
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
   useEffect(() => {
     if (!isStarted || isWon) return;
@@ -303,7 +313,7 @@ export const SlidePuzzleGame: React.FC = () => {
           <h1 className={styles.title}>15-Slide Puzzle</h1>
           <p className={styles.subtitle}>Slide tiles into ascending 1 to 15 sequence</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className={styles.headerActions}>
           <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
           <QuitButton onClick={() => setShowQuitModal(true)} />
         </div>
@@ -424,7 +434,7 @@ export const SlidePuzzleGame: React.FC = () => {
         onLostPointerCapture={handleLostPointerCapture}
         onPointerLeave={handlePointerLeave}
       >
-        <div className={styles.grid}>
+        <div className={styles.grid} role="group" aria-label="Puzzle board">
           {/*
             Keyed by grid position, not by tile value. Keying by value made React reorder the DOM
             children on every slide (the element for tile "7" physically moves to a new position in
@@ -461,6 +471,14 @@ export const SlidePuzzleGame: React.FC = () => {
                 data-idx={idx}
                 className={tileClass}
                 onClick={() => handleTileClick(idx)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (controlMode === 'swipe' || isWon) return;
+                    const result = slideTiles(tilesRef.current, idx);
+                    if (result) executeMove(result, 'TAP');
+                  }
+                }}
                 onPointerEnter={(e) => {
                   if (e.pointerType === 'mouse') {
                     handleCellTransition(idx, true);
@@ -468,7 +486,7 @@ export const SlidePuzzleGame: React.FC = () => {
                 }}
                 role="button"
                 tabIndex={isSlidable ? 0 : -1}
-                aria-label={`Tile ${val}`}
+                aria-label={`Tile ${val}${isSlidable ? ', can slide' : ''}`}
               >
                 {val}
               </div>

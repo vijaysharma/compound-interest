@@ -17,8 +17,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
   margin-bottom: 14px;
+}
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 .titleGroup {
   display: flex;
@@ -74,6 +81,7 @@
   color: #334155;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
+  min-height: 40px;
   padding: 8px 14px;
   font-size: 0.85rem;
   font-weight: 700;
@@ -136,6 +144,7 @@
   background: transparent;
   border: none;
   border-radius: 8px;
+  min-height: 40px;
   padding: 8px 10px;
   font-size: 0.82rem;
   font-weight: 700;
@@ -281,15 +290,16 @@
     gap: 4px;
   }
   .controlModeLabel {
-    font-size: 0.68rem;
+    font-size: 0.7rem;
   }
   .lastMoveBadge {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     padding: 1px 6px;
   }
   .segmentBtn {
+    min-height: 40px;
     padding: 6px 4px;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     gap: 4px;
   }
   .btnIcon {
@@ -307,7 +317,7 @@
     font-size: 1.3rem;
   }
   .instructions {
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     margin-top: 10px;
   }
 }

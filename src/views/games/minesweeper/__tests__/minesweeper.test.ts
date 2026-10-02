@@ -85,3 +85,64 @@ test('getPreset selects responsive grid presets for web and mobile', () => {
   assert.equal(mobHard.cols, 14);
   assert.equal(mobHard.rows, 20);
 });
+const DIFFS = ['easy', 'medium', 'hard'] as const;
+const layoutKey = (board: ReturnType<typeof createEmptyBoard>) =>
+  board.flat().map((cell) => (cell.isMine ? '1' : '0')).join('');
+test('every preset places the exact mine count with a safe 3x3 opening anywhere, including corners', () => {
+  [false, true].forEach((isMobile) => {
+    DIFFS.forEach((diff) => {
+      const { rows, cols, mines } = getPreset(diff, isMobile);
+      const clicks: [number, number][] = [[0, 0], [rows - 1, cols - 1], [0, cols - 1], [Math.floor(rows / 2), Math.floor(cols / 2)]];
+      for (const [r, c] of clicks) {
+        for (let i = 0; i < 20; i++) {
+          const board = createEmptyBoard(rows, cols);
+          populateMines(board, rows, cols, mines, r, c);
+          assert.equal(board.flat().filter((cell) => cell.isMine).length, mines);
+          assert.equal(board[r][c].isMine, false);
+          assert.equal(board[r][c].neighborMines, 0, 'first click must open a cascade');
+          for (const [nr, nc] of getNeighbors(r, c, rows, cols)) assert.equal(board[nr][nc].isMine, false);
+          board.flat().forEach((cell) => {
+            if (cell.isMine) return;
+            const expected = getNeighbors(cell.row, cell.col, rows, cols).filter(([nr, nc]) => board[nr][nc].isMine).length;
+            assert.equal(cell.neighborMines, expected);
+          });
+        }
+      }
+    });
+  });
+});
+test('mine density rises with difficulty on both web and mobile presets', () => {
+  [false, true].forEach((isMobile) => {
+    const density = DIFFS.map((diff) => {
+      const { rows, cols, mines } = getPreset(diff, isMobile);
+      return mines / (rows * cols);
+    });
+    assert.ok(density[0] < density[1] && density[1] < density[2], `densities ${density.join(', ')}`);
+  });
+});
+test('mine layouts are distinct across many games and populate quickly', () => {
+  DIFFS.forEach((diff) => {
+    const { rows, cols, mines } = getPreset(diff, false);
+    const seen = new Set<string>();
+    const start = performance.now();
+    for (let i = 0; i < 200; i++) {
+      const board = createEmptyBoard(rows, cols);
+      populateMines(board, rows, cols, mines, 0, 0);
+      seen.add(layoutKey(board));
+    }
+    const avgMs = (performance.now() - start) / 200;
+    assert.equal(seen.size, 200);
+    assert.ok(avgMs < 20, `${diff} average populate ${avgMs.toFixed(2)}ms`);
+  });
+});
+test('floodFillReveal never reveals a mine and stops at numbered borders', () => {
+  const { rows, cols, mines } = getPreset('hard', false);
+  for (let i = 0; i < 20; i++) {
+    const board = createEmptyBoard(rows, cols);
+    populateMines(board, rows, cols, mines, 5, 5);
+    floodFillReveal(board, 5, 5, rows, cols);
+    board.flat().forEach((cell) => {
+      if (cell.isMine) assert.equal(cell.state, 'hidden');
+    });
+  }
+});
