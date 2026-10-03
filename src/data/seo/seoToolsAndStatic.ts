@@ -223,18 +223,34 @@ export const SEO_TOOLS_AND_STATIC = {
     ],
     canonicalPath: '/games/tango',
   }),
+  queens: createPageMetadata({
+    title: 'Queens Puzzle Online — Free Daily Logic Crown Puzzle | Rupee Calculator',
+    description:
+      'Play free Queens logic puzzles online. Place exactly one Queen in every row, column, and colored region without Queens touching diagonally. Procedurally generated unique solutions.',
+    keywords: [
+      'queens puzzle',
+      'queens game online',
+      'crown logic puzzle',
+      'linkedin queens game',
+      'daily queens puzzle',
+      'grid logic puzzle',
+    ],
+    canonicalPath: '/games/queens',
+  }),
   games: createPageMetadata({
     title: 'Brain Games & Puzzles Suite — Free Online Games | Rupee Calculator',
     description:
-      'Play free online brain teasers, number puzzles, and retro classics: Word Path, Sudoku, Minesweeper, Slide Puzzle, and Hitori with local and global leaderboards.',
+      'Play free online brain teasers, number puzzles, and retro classics: Queens, Word Path, Sudoku, Minesweeper, Slide Puzzle, Hitori, and Tango with local and global leaderboards.',
     keywords: [
       'online games',
       'free puzzle games',
       'brain games',
+      'queens puzzle',
       'sudoku',
       'minesweeper',
       'slide puzzle',
       'hitori puzzle',
+      'tango game',
       'word games',
     ],
     canonicalPath: '/games',

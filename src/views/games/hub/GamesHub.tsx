@@ -86,6 +86,15 @@ const GAMES_LIST: GameMeta[] = [
     description: 'Fill the grid with primary and light circles following equal, cross, and 3-in-a-row deduction rules.',
     href: '/games/tango',
   },
+  {
+    id: 'queens',
+    title: 'Queens',
+    category: 'Crown Logic',
+    icon: '👑',
+    iconBg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    description: 'Place exactly one Queen in every row, column, and colored region without Queens touching diagonally.',
+    href: '/games/queens',
+  },
 ];
 export const GamesHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'games' | 'leaderboard'>('games');
