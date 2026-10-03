@@ -56,7 +56,7 @@ export function PpfScheduleTable({
                             row.isHistorical ? styles.rateBadgeHistorical : styles.rateBadgeProjected
                           }`}
                         >
-                          {row.interestRate}% {row.isHistorical ? 'Historical' : 'Projected'}
+                          {row.interestRate}% {row.isActualHistory ? 'Actual History' : row.isHistorical ? 'Historical' : 'Projected'}
                         </span>
                       </td>
                       <td>{currencySymbol}{row.openingBalance.toLocaleString('en-IN')}</td>

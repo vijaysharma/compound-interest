@@ -1,6 +1,17 @@
 export type PPFFrequency = 'monthly' | 'yearly';
 export type PPFDepositTiming = 'before_5th' | 'after_5th';
 export type PPFExtensionMode = 'with_contribution' | 'without_contribution';
+export type PPFFutureMode = 'continue' | 'stop';
+
+export interface PpfInvestmentRecord {
+  id: string;
+  investmentDate: string; // YYYY-MM-DD
+  amount: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface PPFMonthDetail {
   monthIndex: number; // 0 for April, 11 for March
   monthName: string; // e.g. "April", "May", ...
@@ -9,6 +20,7 @@ export interface PPFMonthDetail {
   monthlyInterest: number;
   closingBalance: number;
 }
+
 export interface PPFYearDetail {
   yearNumber: number; // 1, 2, ... 15, 16 ...
   startYear: number; // e.g. 2024
@@ -21,7 +33,9 @@ export interface PPFYearDetail {
   totalInterest: number;
   closingBalance: number;
   months: PPFMonthDetail[];
+  isActualHistory?: boolean;
 }
+
 export interface PPFCalculationInput {
   depositAmount: number; // Amount per installment (monthly or yearly)
   frequency: PPFFrequency; // 'monthly' | 'yearly'
@@ -31,7 +45,11 @@ export interface PPFCalculationInput {
   extensionMode: PPFExtensionMode; // 'with_contribution' | 'without_contribution'
   projectedRate?: number; // For future years (default 7.1%)
   depositMonthIndex?: number; // For yearly frequency: 0 for April (default), 11 for March
+  history?: PpfInvestmentRecord[]; // Real investment entries
+  asOfDate?: string; // Reference date for current balance (defaults to today)
+  futureContributionMode?: PPFFutureMode; // continue with depositAmount or stop contributions
 }
+
 export interface PPFCalculationResult {
   totalInvested: number;
   totalInterest: number;
@@ -40,4 +58,11 @@ export interface PPFCalculationResult {
   maturityYear: number;
   maturityFyLabel: string;
   yearlyBreakdown: PPFYearDetail[];
+  hasHistory: boolean;
+  currentBalance: number;
+  investedToDate: number;
+  interestEarnedToDate: number;
+  historyEntryCount: number;
+  openingFyStart: number;
 }
+

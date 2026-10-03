@@ -16,7 +16,9 @@ export function PpfSummaryCol({
   return (
     <div className={styles.summaryCol}>
       <div className={styles.resultHeroCard}>
-        <div className={styles.resultHeroLabel}>Total Maturity Value</div>
+        <div className={styles.resultHeroLabel}>
+          {ppfResult.hasHistory ? 'Projected Maturity Value' : 'Total Maturity Value'}
+        </div>
         <div className={styles.resultHeroAmount}>
           {currencySymbol}{ppfResult.maturityAmount.toLocaleString('en-IN')}
         </div>
@@ -25,27 +27,57 @@ export function PpfSummaryCol({
         </div>
       </div>
       <div className={styles.statsGrid}>
-        <div className={styles.statBox}>
-          <div className={styles.statLabel}>Total Invested</div>
-          <div className={styles.statValue}>
-            {currencySymbol}{ppfResult.totalInvested.toLocaleString('en-IN')}
-          </div>
-        </div>
-        <div className={styles.statBox}>
-          <div className={styles.statLabel}>Total Interest Earned</div>
-          <div className={`${styles.statValue} ${styles.statValueGain}`}>
-            +{currencySymbol}{ppfResult.totalInterest.toLocaleString('en-IN')}
-          </div>
-        </div>
-        <div className={styles.statBox}>
-          <div className={styles.statLabel}>Account Tenure</div>
-          <div className={styles.statValue}>{ppfResult.tenureYears} Years</div>
-        </div>
-        <div className={styles.statBox}>
-          <div className={styles.statLabel}>Maturity Financial Year</div>
-          <div className={styles.statValue}>FY {ppfResult.maturityFyLabel}</div>
-        </div>
+        {ppfResult.hasHistory ? (
+          <>
+            <div className={styles.statBox} style={{ borderLeft: '3px solid var(--color-primary)' }}>
+              <div className={styles.statLabel}>Current PPF Balance</div>
+              <div className={styles.statValue}>
+                {currencySymbol}{ppfResult.currentBalance.toLocaleString('en-IN')}
+              </div>
+            </div>
+            <div className={styles.statBox}>
+              <div className={styles.statLabel}>Invested To Date</div>
+              <div className={styles.statValue}>
+                {currencySymbol}{ppfResult.investedToDate.toLocaleString('en-IN')}
+              </div>
+            </div>
+            <div className={styles.statBox}>
+              <div className={styles.statLabel}>Interest Credited To Date</div>
+              <div className={`${styles.statValue} ${styles.statValueGain}`}>
+                +{currencySymbol}{ppfResult.interestEarnedToDate.toLocaleString('en-IN')}
+              </div>
+            </div>
+            <div className={styles.statBox}>
+              <div className={styles.statLabel}>Maturity Financial Year</div>
+              <div className={styles.statValue}>FY {ppfResult.maturityFyLabel}</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={styles.statBox}>
+              <div className={styles.statLabel}>Total Invested</div>
+              <div className={styles.statValue}>
+                {currencySymbol}{ppfResult.totalInvested.toLocaleString('en-IN')}
+              </div>
+            </div>
+            <div className={styles.statBox}>
+              <div className={styles.statLabel}>Total Interest Earned</div>
+              <div className={`${styles.statValue} ${styles.statValueGain}`}>
+                +{currencySymbol}{ppfResult.totalInterest.toLocaleString('en-IN')}
+              </div>
+            </div>
+            <div className={styles.statBox}>
+              <div className={styles.statLabel}>Account Tenure</div>
+              <div className={styles.statValue}>{ppfResult.tenureYears} Years</div>
+            </div>
+            <div className={styles.statBox}>
+              <div className={styles.statLabel}>Maturity Financial Year</div>
+              <div className={styles.statValue}>FY {ppfResult.maturityFyLabel}</div>
+            </div>
+          </>
+        )}
       </div>
+
       <section className={styles.card}>
         <div className={styles.badgeEee}>
           <FiAward /> 100% Tax-Free (EEE Status)

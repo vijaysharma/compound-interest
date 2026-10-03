@@ -6,6 +6,7 @@ import { ppfSchema } from '../data/seo/ppfData';
 import { usePpfState } from './ppf/usePpfState';
 import { PpfInputs } from './ppf/PpfInputs';
 import { PpfSummaryCol } from './ppf/PpfSummaryCol';
+import { PpfHistoryManager } from './ppf/PpfHistoryManager';
 import { PpfScheduleTable } from './ppf/PpfScheduleTable';
 import { PpfContent } from './ppf/PpfContent';
 import styles from './PpfCalculator.module.scss';
@@ -23,6 +24,17 @@ const PpfCalculator: React.FC = () => {
     investedPercent,
     gainsPercent,
     wealthMultiplier,
+    investments,
+    futureContributionMode,
+    setFutureContributionMode,
+    addInvestment,
+    editInvestment,
+    deleteInvestment,
+    importInvestments,
+    clearAllInvestments,
+    isSaving,
+    syncStatus,
+    statusMessage,
   } = usePpfState();
   return (
     <main className={styles.container}>
@@ -68,6 +80,20 @@ const PpfCalculator: React.FC = () => {
           wealthMultiplier={wealthMultiplier}
         />
       </div>
+      <PpfHistoryManager
+        investments={investments}
+        ppfResult={ppfResult}
+        futureContributionMode={futureContributionMode}
+        setFutureContributionMode={setFutureContributionMode}
+        addInvestment={addInvestment}
+        editInvestment={editInvestment}
+        deleteInvestment={deleteInvestment}
+        importInvestments={importInvestments}
+        clearAllInvestments={clearAllInvestments}
+        isSaving={isSaving}
+        syncStatus={syncStatus}
+        statusMessage={statusMessage}
+      />
       <PpfScheduleTable
         yearlyBreakdown={ppfResult.yearlyBreakdown}
         expandedYear={expandedYear}
@@ -77,4 +103,5 @@ const PpfCalculator: React.FC = () => {
     </main>
   );
 };
+
 export default PpfCalculator;
