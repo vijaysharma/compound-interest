@@ -2,6 +2,16 @@
 import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import type { ShiprocketOrder, ShiprocketTrackingData } from '@/types/shiprocket';
 import { shiprocketFetch } from './shiprocketClient';
+const SR_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function toOrdersDate(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr.trim());
+  if (!m) return dateStr.trim();
+  const month = SR_MONTHS[Number(m[2]) - 1];
+  if (!month) return dateStr.trim();
+  return `${m[3]}-${month}-${m[1]}`;
+}
+
 export async function getShiprocketOrdersAction(
   options: {
     page?: number;
@@ -29,8 +39,8 @@ export async function getShiprocketOrdersAction(
   if (options.search) params.set('search', options.search.trim());
   if (options.sort) params.set('sort', options.sort);
   if (options.filter_by) params.set('filter_by', options.filter_by);
-  if (options.from) params.set('from', options.from);
-  if (options.to) params.set('to', options.to);
+  if (options.from) params.set('from', toOrdersDate(options.from));
+  if (options.to) params.set('to', toOrdersDate(options.to));
   const endpoint = `orders${params.toString() ? `?${params.toString()}` : ''}`;
   const res = await shiprocketFetch(endpoint);
   const data = await res.json();

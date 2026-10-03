@@ -81,7 +81,7 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
         </div>
         <div className={styles.filterRight}>
           <div className={styles.dateFilterGroup}>
-            <div>
+            <div className={styles.dateFilterItem}>
               <span className={styles.dateInputLabel}>From:</span>
               <input
                 type="date"
@@ -95,7 +95,7 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
                 title="Filter historical orders from date"
               />
             </div>
-            <div>
+            <div className={styles.dateFilterItem}>
               <span className={styles.dateInputLabel}>To:</span>
               <input
                 type="date"
@@ -112,8 +112,7 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
             {(orderDateFrom || orderDateTo) && (
               <button
                 type="button"
-                className={styles.outlineBtn}
-                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                className={`${styles.outlineBtn} ${styles.dateClearBtn}`}
                 onClick={() => {
                   onSetOrderDateFrom?.('');
                   onSetOrderDateTo?.('');

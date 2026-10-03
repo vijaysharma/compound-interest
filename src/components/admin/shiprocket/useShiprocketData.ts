@@ -17,6 +17,23 @@ import type {
   AlertMessage,
 } from './types';
 import { useShiprocketActions } from './useShiprocketActions';
+const SR_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function parseOrderDateToIso(raw?: unknown): string {
+  if (!raw) return '';
+  const str = String(raw).trim();
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(str);
+  if (isoMatch) return isoMatch[0];
+  const srMatch = /^(\d{1,2})[- \s]+([A-Za-z]{3})[- \s]+(\d{4})/.exec(str);
+  if (srMatch) {
+    const idx = SR_MONTHS.findIndex((mo) => mo.toLowerCase() === srMatch[2].toLowerCase());
+    if (idx >= 0) {
+      return `${srMatch[3]}-${String(idx + 1).padStart(2, '0')}-${srMatch[1].padStart(2, '0')}`;
+    }
+  }
+  const d = new Date(str);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+}
+
 export function useShiprocketData(token: string) {
   const [account, setAccount] = useState<ShiprocketAccountData | null>(null);
   const [accountsList, setAccountsList] = useState<ShiprocketAccountProfile[]>([]);
@@ -57,6 +74,8 @@ export function useShiprocketData(token: string) {
     try {
       const fromParam = customFrom !== undefined ? customFrom : orderDateFrom;
       const toParam = customTo !== undefined ? customTo : orderDateTo;
+      if (customFrom !== undefined) setOrderDateFrom(customFrom);
+      if (customTo !== undefined) setOrderDateTo(customTo);
       const res = await getShiprocketOrdersAction(
         {
           per_page: 50,
@@ -67,6 +86,16 @@ export function useShiprocketData(token: string) {
       );
       if (res.success && res.orders) {
         setOrders(res.orders);
+        if (customFrom === undefined && customTo === undefined && !orderDateFrom && !orderDateTo && res.orders.length > 0) {
+          const dates = res.orders
+            .map((o) => parseOrderDateToIso(o.created_at))
+            .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+            .sort();
+          if (dates.length > 0) {
+            setOrderDateFrom(dates[0]);
+            setOrderDateTo(dates[dates.length - 1]);
+          }
+        }
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to load Shiprocket orders';
