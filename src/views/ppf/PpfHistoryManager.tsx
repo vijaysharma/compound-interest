@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState } from 'react';
 import {
   FiPlus,
@@ -12,24 +11,37 @@ import {
   FiDatabase,
 } from 'react-icons/fi';
 import { getCurrencySymbol } from '../../utilities/currency';
-import type { PPFCalculationResult, PpfInvestmentRecord, PPFFutureMode } from '../../utilities/ppfCalculations';
+import type {
+  PPFCalculationResult,
+  PpfInvestmentRecord,
+  PPFFutureMode,
+} from '../../utilities/ppfCalculations';
 import styles from '../PpfCalculator.module.scss';
-
 interface PpfHistoryManagerProps {
   investments: PpfInvestmentRecord[];
   ppfResult: PPFCalculationResult;
   futureContributionMode: PPFFutureMode;
   setFutureContributionMode: React.Dispatch<React.SetStateAction<PPFFutureMode>>;
-  addInvestment: (entry: { investmentDate: string; amount: number; notes?: string }) => Promise<void>;
-  editInvestment: (entry: { id: string; investmentDate: string; amount: number; notes?: string }) => Promise<void>;
+  addInvestment: (entry: {
+    investmentDate: string;
+    amount: number;
+    notes?: string;
+  }) => Promise<void>;
+  editInvestment: (entry: {
+    id: string;
+    investmentDate: string;
+    amount: number;
+    notes?: string;
+  }) => Promise<void>;
   deleteInvestment: (id: string) => Promise<void>;
-  importInvestments: (entries: Array<{ investmentDate: string; amount: number; notes?: string }>) => Promise<void>;
+  importInvestments: (
+    entries: Array<{ investmentDate: string; amount: number; notes?: string }>
+  ) => Promise<void>;
   clearAllInvestments: () => Promise<void>;
   isSaving: boolean;
   syncStatus: 'synced' | 'saving' | 'offline' | 'error';
   statusMessage?: string;
 }
-
 export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
   investments,
   ppfResult,
@@ -46,38 +58,31 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
 }) => {
   const currencySymbol = getCurrencySymbol('en-IN', 'INR');
   const todayStr = new Date().toISOString().slice(0, 10);
-
   const [date, setDate] = useState<string>(todayStr);
   const [amount, setAmount] = useState<string>('150000');
   const [notes, setNotes] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
-
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDate, setEditDate] = useState<string>('');
   const [editAmount, setEditAmount] = useState<string>('');
   const [editNotes, setEditNotes] = useState<string>('');
-
   // Bulk import state
   const [showImport, setShowImport] = useState<boolean>(false);
   const [importText, setImportText] = useState<string>('');
   const [importFeedback, setImportFeedback] = useState<string | null>(null);
-
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-
     const numAmount = Number(amount.replace(/[^0-9]/g, ''));
     if (!numAmount || numAmount <= 0) {
       setFormError('Please enter a valid deposit amount');
       return;
     }
-
     if (!date) {
       setFormError('Please select a valid date');
       return;
     }
-
     try {
       await addInvestment({
         investmentDate: date,
@@ -89,18 +94,15 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
       setFormError(err instanceof Error ? err.message : 'Failed to save entry');
     }
   };
-
   const startEditing = (record: PpfInvestmentRecord) => {
     setEditingId(record.id);
     setEditDate(record.investmentDate);
     setEditAmount(String(record.amount));
     setEditNotes(record.notes || '');
   };
-
   const handleEditSave = async (id: string) => {
     const numAmount = Number(editAmount.replace(/[^0-9]/g, ''));
     if (!numAmount || numAmount <= 0) return;
-
     try {
       await editInvestment({
         id,
@@ -113,14 +115,11 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
       // Handled in hook
     }
   };
-
   const handleBulkImport = async () => {
     setImportFeedback(null);
     if (!importText.trim()) return;
-
     const lines = importText.split('\n');
     const parsed: Array<{ investmentDate: string; amount: number; notes?: string }> = [];
-
     for (const rawLine of lines) {
       const line = rawLine.trim();
       if (!line) continue;
@@ -139,18 +138,17 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
         }
       }
     }
-
     if (parsed.length === 0) {
-      setImportFeedback('No valid lines parsed. Expected format: YYYY-MM-DD, amount, optional notes');
+      setImportFeedback(
+        'No valid lines parsed. Expected format: YYYY-MM-DD, amount, optional notes'
+      );
       return;
     }
-
     await importInvestments(parsed);
     setImportText('');
     setShowImport(false);
     setImportFeedback(`Imported ${parsed.length} entries successfully`);
   };
-
   return (
     <section className={styles.historySection}>
       <div className={styles.historyTopBar}>
@@ -162,17 +160,21 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
             )}
           </h2>
           <p className={styles.historySub}>
-            Record real past deposits to calculate official interest using 5th-of-the-month rules and real historical rates.
+            Record real past deposits to calculate official interest using 5th-of-the-month rules
+            and real historical rates.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className={styles.syncBadge} title={statusMessage || 'All changes saved to database'}>
+          <span
+            className={styles.syncBadge}
+            title={statusMessage || 'All changes saved to database'}
+          >
             <FiCloud />
             {syncStatus === 'saving'
               ? 'Saving to DB...'
               : syncStatus === 'synced'
-              ? 'Synced to Database'
-              : 'Local Offline Cache'}
+                ? 'Synced to Database'
+                : 'Local Offline Cache'}
           </span>
           <button
             type="button"
@@ -183,35 +185,39 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
           </button>
         </div>
       </div>
-
       {/* Summary stats for actual historical portfolio */}
       {investments.length > 0 && (
         <div className={styles.historyStatsGrid}>
           <div className={styles.historyStatBox}>
             <div className={styles.historyStatLabel}>Current PPF Balance</div>
             <div className={styles.historyStatVal}>
-              {currencySymbol}{ppfResult.currentBalance.toLocaleString('en-IN')}
+              {currencySymbol}
+              {ppfResult.currentBalance.toLocaleString('en-IN')}
             </div>
           </div>
           <div className={styles.historyStatBox}>
             <div className={styles.historyStatLabel}>Total Invested To Date</div>
             <div className={styles.historyStatVal}>
-              {currencySymbol}{ppfResult.investedToDate.toLocaleString('en-IN')}
+              {currencySymbol}
+              {ppfResult.investedToDate.toLocaleString('en-IN')}
             </div>
           </div>
           <div className={styles.historyStatBox}>
             <div className={styles.historyStatLabel}>Total Interest Credited</div>
             <div className={`${styles.historyStatVal} ${styles.interestCell}`}>
-              +{currencySymbol}{ppfResult.interestEarnedToDate.toLocaleString('en-IN')}
+              +{currencySymbol}
+              {ppfResult.interestEarnedToDate.toLocaleString('en-IN')}
             </div>
           </div>
           <div className={styles.historyStatBox}>
             <div className={styles.historyStatLabel}>Opening Financial Year</div>
-            <div className={styles.historyStatVal}>FY {ppfResult.openingFyStart}-{String((ppfResult.openingFyStart + 1) % 100).padStart(2, '0')}</div>
+            <div className={styles.historyStatVal}>
+              FY {ppfResult.openingFyStart}-
+              {String((ppfResult.openingFyStart + 1) % 100).padStart(2, '0')}
+            </div>
           </div>
         </div>
       )}
-
       {/* Bulk CSV / Text Import */}
       {showImport && (
         <div className={styles.importBox}>
@@ -219,7 +225,8 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
             Paste Investment Records (One deposit per line)
           </div>
           <div style={{ fontSize: '0.75rem', opacity: 0.75, marginBottom: '0.5rem' }}>
-            Format: <code>YYYY-MM-DD, Amount, Notes</code> (e.g. <code>2022-04-03, 150000, SBI NetBanking</code>)
+            Format: <code>YYYY-MM-DD, Amount, Notes</code> (e.g.{' '}
+            <code>2022-04-03, 150000, SBI NetBanking</code>)
           </div>
           <textarea
             className={styles.importTextarea}
@@ -228,7 +235,9 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
             onChange={(e) => setImportText(e.target.value)}
           />
           {importFeedback && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
+            <div
+              style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}
+            >
               {importFeedback}
             </div>
           )}
@@ -251,7 +260,6 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
           </div>
         </div>
       )}
-
       {/* Add New Investment Record Form */}
       <form className={styles.historyForm} onSubmit={handleAddSubmit}>
         <div className={styles.formFieldsRow}>
@@ -268,7 +276,6 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
               required
             />
           </div>
-
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor="ppf-amount-input">
               Deposit Amount (₹)
@@ -282,31 +289,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
               placeholder="e.g. 150000"
               required
             />
-            <div className={styles.quickChips}>
-              <button
-                type="button"
-                className={styles.chipBtn}
-                onClick={() => setAmount('50000')}
-              >
-                ₹50K
-              </button>
-              <button
-                type="button"
-                className={styles.chipBtn}
-                onClick={() => setAmount('100000')}
-              >
-                ₹1 Lakh
-              </button>
-              <button
-                type="button"
-                className={styles.chipBtn}
-                onClick={() => setAmount('150000')}
-              >
-                ₹1.5 Lakh
-              </button>
-            </div>
           </div>
-
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor="ppf-notes-input">
               Notes / Bank (Optional)
@@ -320,32 +303,26 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
               placeholder="e.g. Post Office, SBI transfer"
             />
           </div>
-
           <div>
-            <button
-              type="submit"
-              className={styles.addBtn}
-              disabled={isSaving}
-            >
+            <button type="submit" className={styles.addBtn} disabled={isSaving}>
               <FiPlus /> Add Record
             </button>
           </div>
         </div>
-
         {formError && (
           <div style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.5rem' }}>
             {formError}
           </div>
         )}
       </form>
-
       {/* Future Projections Selector */}
       {investments.length > 0 && (
         <div className={styles.projectionToggleSection}>
           <div>
             <strong>Future Contributions After History:</strong>
             <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-              Choose whether forward projections assume ongoing deposits or let the current balance compound on its own.
+              Choose whether forward projections assume ongoing deposits or let the current balance
+              compound on its own.
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -370,7 +347,6 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
           </div>
         </div>
       )}
-
       {/* Investment Records Table */}
       {investments.length > 0 && (
         <div className={styles.historyTableWrapper}>
@@ -389,7 +365,6 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                 const isEditing = editingId === entry.id;
                 const dayNum = parseInt(entry.investmentDate.slice(8, 10), 10);
                 const isEarly = dayNum <= 5;
-
                 if (isEditing) {
                   return (
                     <tr key={entry.id}>
@@ -413,7 +388,9 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                       </td>
                       <td>
                         <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-                          {parseInt(editDate.slice(8, 10), 10) <= 5 ? 'Earns Month Interest' : 'Next Month'}
+                          {parseInt(editDate.slice(8, 10), 10) <= 5
+                            ? 'Earns Month Interest'
+                            : 'Next Month'}
                         </span>
                       </td>
                       <td>
@@ -426,7 +403,10 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                         />
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <div className={styles.actionBtnGroup} style={{ justifyContent: 'flex-end' }}>
+                        <div
+                          className={styles.actionBtnGroup}
+                          style={{ justifyContent: 'flex-end' }}
+                        >
                           <button
                             type="button"
                             className={styles.actionIconBtn}
@@ -448,14 +428,14 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                     </tr>
                   );
                 }
-
                 return (
                   <tr key={entry.id}>
                     <td>
                       <strong>{entry.investmentDate}</strong>
                     </td>
                     <td>
-                      {currencySymbol}{entry.amount.toLocaleString('en-IN')}
+                      {currencySymbol}
+                      {entry.amount.toLocaleString('en-IN')}
                     </td>
                     <td>
                       <span
@@ -498,14 +478,15 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
           </table>
         </div>
       )}
-
       {investments.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
           <button
             type="button"
             className={`${styles.secondaryBtn} ${styles.dangerBtn}`}
             onClick={() => {
-              if (window.confirm('Are you sure you want to clear all historical investment records?')) {
+              if (
+                window.confirm('Are you sure you want to clear all historical investment records?')
+              ) {
                 void clearAllInvestments();
               }
             }}
