@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
-import { FiDollarSign, FiExternalLink, FiPackage, FiTruck, FiCheckCircle } from 'react-icons/fi';
+import { FiExternalLink, FiPackage, FiTruck, FiCheckCircle } from 'react-icons/fi';
 import styles from '../ShiprocketDashboard.module.scss';
+import { FaIndianRupeeSign } from 'react-icons/fa6';
 export interface ShiprocketStatsProps {
   balance?: string | number;
   stats: {
@@ -15,12 +16,10 @@ export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ bal
   <div className={styles.overviewGrid}>
     <div className={`${styles.statCard} ${styles.statCardHighlight}`}>
       <div className={styles.statLabel}>
-        <span>Shiprocket Balance</span>
-        <FiDollarSign className={styles.statIcon} />
+        <FaIndianRupeeSign className={styles.statIcon} />
+        <span>Balance</span>
       </div>
-      <div className={styles.statValue}>
-        ₹{balance ?? '0.00'}
-      </div>
+      <div className={styles.statValue}>{balance ?? '0.00'}</div>
       <div className={styles.statSubtext}>
         <a
           href="https://app.shiprocket.in/billing/recharge"
@@ -28,14 +27,14 @@ export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ bal
           rel="noopener noreferrer"
           className={styles.rechargeLink}
         >
-          Recharge on Shiprocket <FiExternalLink />
+          Recharge <FiExternalLink />
         </a>
       </div>
     </div>
     <div className={styles.statCard}>
       <div className={styles.statLabel}>
-        <span>Total Shipments</span>
         <FiPackage className={styles.statIcon} />
+        <span>Total Shipments</span>
       </div>
       <div className={styles.statValue}>{stats.total}</div>
       <div className={styles.statSubtext}>
@@ -44,8 +43,8 @@ export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ bal
     </div>
     <div className={styles.statCard}>
       <div className={styles.statLabel}>
-        <span>In Transit</span>
         <FiTruck className={styles.statIcon} />
+        <span>In Transit</span>
       </div>
       <div className={styles.statValue}>{stats.inTransit}</div>
       <div className={styles.statSubtext}>
@@ -54,8 +53,8 @@ export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ bal
     </div>
     <div className={styles.statCard}>
       <div className={styles.statLabel}>
-        <span>Delivered</span>
         <FiCheckCircle className={styles.statIcon} />
+        <span>Delivered</span>
       </div>
       <div className={styles.statValue}>{stats.delivered}</div>
       <div className={styles.statSubtext}>

@@ -53,11 +53,11 @@ export const ShiprocketHistoryTab: React.FC<ShiprocketHistoryTabProps> = React.m
             <tbody>
               {statement.map((item, idx) => (
                 <tr key={idx}>
-                  <td>{item.date || item.created_at || '—'}</td>
-                  <td>
+                  <td data-label="Date">{item.date || item.created_at || '—'}</td>
+                  <td data-label="Description" data-wide>
                     <strong>{item.description || item.action || 'Transaction'}</strong>
                   </td>
-                  <td>
+                  <td data-label="Order / AWB" data-wide>
                     {item.order_id || item.awb_code ? (
                       <div>
                         {item.order_id && <span>Order: #{item.order_id} </span>}
@@ -67,14 +67,14 @@ export const ShiprocketHistoryTab: React.FC<ShiprocketHistoryTabProps> = React.m
                       '—'
                     )}
                   </td>
-                  <td>{item.charged_weight || item.applied_weight || '—'}</td>
-                  <td className={item.debit_amount ? styles.debitVal : ''}>
+                  <td data-label="Weight">{item.charged_weight || item.applied_weight || '—'}</td>
+                  <td data-label="Debit" className={item.debit_amount ? styles.debitVal : ''}>
                     {item.debit_amount ? `-₹${item.debit_amount}` : '—'}
                   </td>
-                  <td className={item.credit_amount ? styles.creditVal : ''}>
+                  <td data-label="Credit" className={item.credit_amount ? styles.creditVal : ''}>
                     {item.credit_amount ? `+₹${item.credit_amount}` : '—'}
                   </td>
-                  <td>
+                  <td data-label="Balance">
                     <strong>₹{item.balance_amount || '—'}</strong>
                   </td>
                 </tr>

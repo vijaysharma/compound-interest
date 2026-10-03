@@ -81,30 +81,34 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
         </div>
         <div className={styles.filterRight}>
           <div className={styles.dateFilterGroup}>
-            <span className={styles.dateInputLabel}>From:</span>
-            <input
-              type="date"
-              className={styles.dateInput}
-              value={orderDateFrom}
-              onChange={(e) => {
-                const val = e.target.value;
-                onSetOrderDateFrom?.(val);
-                onApplyDateFilter?.(val, orderDateTo);
-              }}
-              title="Filter historical orders from date"
-            />
-            <span className={styles.dateInputLabel}>To:</span>
-            <input
-              type="date"
-              className={styles.dateInput}
-              value={orderDateTo}
-              onChange={(e) => {
-                const val = e.target.value;
-                onSetOrderDateTo?.(val);
-                onApplyDateFilter?.(orderDateFrom, val);
-              }}
-              title="Filter historical orders to date"
-            />
+            <div>
+              <span className={styles.dateInputLabel}>From:</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={orderDateFrom}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  onSetOrderDateFrom?.(val);
+                  onApplyDateFilter?.(val, orderDateTo);
+                }}
+                title="Filter historical orders from date"
+              />
+            </div>
+            <div>
+              <span className={styles.dateInputLabel}>To:</span>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={orderDateTo}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  onSetOrderDateTo?.(val);
+                  onApplyDateFilter?.(orderDateFrom, val);
+                }}
+                title="Filter historical orders to date"
+              />
+            </div>
             {(orderDateFrom || orderDateTo) && (
               <button
                 type="button"

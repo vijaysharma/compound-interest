@@ -25,6 +25,8 @@ export const ShiprocketHeader: React.FC<ShiprocketHeaderProps> = React.memo(
             {account?.user?.company_id && (
               <span className={styles.companyBadge}>Company #{account.user.company_id}</span>
             )}
+          </div>
+          <div className={styles.accountSelectContainer}>
             {accountsList.length > 0 && onSwitchAccount && (
               <div className={styles.accountSelectWrapper}>
                 <FiServer size={14} style={{ color: 'var(--color-primary)' }} />
@@ -50,6 +52,19 @@ export const ShiprocketHeader: React.FC<ShiprocketHeaderProps> = React.memo(
                 </select>
               </div>
             )}
+            <div className={styles.headerActions}>
+              <button
+                className={styles.outlineBtn}
+                onClick={onRefreshAll}
+                disabled={loading}
+                title="Refresh All Data"
+              >
+                <FiRefreshCw className={loading ? styles.spinner : ''} />
+              </button>
+              <button className={styles.primaryBtn} onClick={onNewShipment}>
+                <FiPlus />
+              </button>
+            </div>
           </div>
           <p className={styles.userSubtext}>
             <span>
@@ -73,19 +88,6 @@ export const ShiprocketHeader: React.FC<ShiprocketHeaderProps> = React.memo(
               </span>
             )}
           </p>
-        </div>
-        <div className={styles.headerActions}>
-          <button
-            className={styles.outlineBtn}
-            onClick={onRefreshAll}
-            disabled={loading}
-            title="Refresh All Data"
-          >
-            <FiRefreshCw className={loading ? styles.spinner : ''} /> Refresh
-          </button>
-          <button className={styles.primaryBtn} onClick={onNewShipment}>
-            <FiPlus /> New Shipment
-          </button>
         </div>
       </div>
     );

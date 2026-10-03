@@ -12,7 +12,8 @@ export interface ShiprocketShipmentCardProps {
 const getStatusClass = (status: string) => {
   const s = status.toUpperCase();
   if (s.includes('DELIVERED')) return styles.statusGreen;
-  if (s.includes('TRANSIT') || s.includes('OUT FOR') || s.includes('SHIPPED')) return styles.statusBlue;
+  if (s.includes('TRANSIT') || s.includes('OUT FOR') || s.includes('SHIPPED'))
+    return styles.statusBlue;
   if (s.includes('CANCEL') || s.includes('RTO')) return styles.statusRed;
   return styles.statusYellow;
 };
@@ -29,16 +30,16 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
         <div className={styles.orderHeader}>
           <div className={styles.orderMeta}>
             <span className={styles.orderIdBadge}>#{order.id}</span>
-            {order.channel_order_id && (
+            {/* {order.channel_order_id && (
               <span className={styles.channelBadge}>{order.channel_order_id}</span>
-            )}
+            )} */}
             <span className={styles.orderDate}>
               {order.created_at ? new Date(order.created_at).toLocaleString() : ''}
             </span>
+            <span className={`${styles.statusBadge} ${getStatusClass(order.status || '')}`}>
+              {order.status || 'PROCESSING'}
+            </span>
           </div>
-          <span className={`${styles.statusBadge} ${getStatusClass(order.status || '')}`}>
-            {order.status || 'PROCESSING'}
-          </span>
         </div>
         <div className={styles.orderBody}>
           <div>
@@ -59,28 +60,27 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
             <div className={styles.shipmentDetails}>
               <div>
                 <strong>Courier:</strong> {courier || 'Unassigned'}
+                {awb ? (
+                  <div className={styles.awbCode}>
+                    <span>AWB: {awb}</span>
+                    <button
+                      className={styles.copyBtn}
+                      onClick={() => actions.onCopyAwb(awb)}
+                      title="Copy AWB"
+                    >
+                      <FiCopy />
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.awbPending}>AWB Pending</div>
+                )}
               </div>
-              {awb ? (
-                <div className={styles.awbCode}>
-                  <span>AWB: {awb}</span>
-                  <button
-                    className={styles.copyBtn}
-                    onClick={() => actions.onCopyAwb(awb)}
-                    title="Copy AWB"
-                  >
-                    <FiCopy />
-                  </button>
-                </div>
-              ) : (
-                <div className={styles.awbPending}>
-                  AWB Pending
-                </div>
-              )}
               <div>
                 <strong>Pickup:</strong> {order.pickup_location || 'Default'}
               </div>
               <div>
-                <strong>Weight:</strong> {primaryShipment?.weight || order.others?.weight || '0.5'} kg
+                <strong>Weight:</strong> {primaryShipment?.weight || order.others?.weight || '0.5'}{' '}
+                kg
               </div>
             </div>
           </div>
@@ -99,9 +99,7 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
             </div>
             <div className={styles.orderTotal}>
               ₹{order.total || '0'}
-              <span className={styles.paymentBadge}>
-                {order.payment_method || 'Prepaid'}
-              </span>
+              <span className={styles.paymentBadge}>{order.payment_method || 'Prepaid'}</span>
             </div>
           </div>
         </div>
