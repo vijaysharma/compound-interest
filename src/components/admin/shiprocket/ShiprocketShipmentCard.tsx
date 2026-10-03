@@ -76,9 +76,7 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
                 )}
               </div>
               <div>
-                <strong>Pickup:</strong> {order.pickup_location || 'Default'}
-              </div>
-              <div>
+                <strong>Pickup:</strong> {order.pickup_location || 'Default'}{' '}
                 <strong>Weight:</strong> {primaryShipment?.weight || order.others?.weight || '0.5'}{' '}
                 kg
               </div>
@@ -90,7 +88,7 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
               {order.products && order.products.length > 0 ? (
                 order.products.map((p, idx) => (
                   <div key={idx}>
-                    • {p.name} (x{p.quantity || 1})
+                    {p.name} (x{p.quantity || 1})
                   </div>
                 ))
               ) : (

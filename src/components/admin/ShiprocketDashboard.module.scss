@@ -473,11 +473,11 @@
 .customerName {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-heading);
+  color: var(--color-primary);
 }
 .customerAddress {
   font-size: 0.8125rem;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   line-height: 1.4;
   margin-top: 0.2rem;
 }
@@ -498,7 +498,7 @@
 .copyBtn {
   background: none;
   border: none;
-  color: var(--color-text-secondary);
+  color: var(--color-primary);
   cursor: pointer;
   padding: 0.1rem;
   display: inline-flex;
@@ -515,7 +515,7 @@
 .orderTotal {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--color-heading);
+  color: var(--color-primary);
   margin-top: 0.35rem;
 }
 .paymentBadge {
@@ -524,8 +524,8 @@
   font-weight: 600;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
   margin-left: 0.4rem;
 }
 .orderFooter {
@@ -1313,7 +1313,7 @@
   }
   .orderFooter {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.5rem;
   }
   .actionBtn {
@@ -1321,12 +1321,9 @@
     min-height: 44px;
     font-size: 0.8rem;
     touch-action: manipulation;
-    &.actionDanger {
-      grid-column: 1 / -1;
-    }
   }
   .awbCode {
-    margin-left: 0.25rem;
+    margin-left: 0.5rem;
   }
   .copyBtn {
     min-width: 36px;
