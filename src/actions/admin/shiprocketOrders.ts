@@ -2,6 +2,12 @@
 import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import type { ShiprocketOrder, ShiprocketTrackingData } from '@/types/shiprocket';
 import { shiprocketFetch } from './shiprocketClient';
+import {
+  withShiprocketCache,
+  invalidateShiprocketOrdersCache,
+  SR_CACHE_TTL,
+} from '@/lib/shiprocketCache';
+
 const SR_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function toOrdersDate(dateStr?: string | null): string {
   if (!dateStr) return '';
@@ -33,25 +39,30 @@ export async function getShiprocketOrdersAction(
   if (!(await isAuthorizedUser(token, sql))) {
     throw new Error('Unauthorized: Admin access required');
   }
-  const params = new URLSearchParams();
-  if (options.page) params.set('page', String(options.page));
-  if (options.per_page) params.set('per_page', String(options.per_page));
-  if (options.search) params.set('search', options.search.trim());
-  if (options.sort) params.set('sort', options.sort);
-  if (options.filter_by) params.set('filter_by', options.filter_by);
-  if (options.from) params.set('from', toOrdersDate(options.from));
-  if (options.to) params.set('to', toOrdersDate(options.to));
-  const endpoint = `orders${params.toString() ? `?${params.toString()}` : ''}`;
-  const res = await shiprocketFetch(endpoint);
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.message || `Failed to fetch orders: HTTP ${res.status}`);
-  }
-  return {
-    success: true,
-    orders: Array.isArray(data?.data) ? (data.data as ShiprocketOrder[]) : [],
-    meta: data?.meta,
-  };
+
+  const cacheKey = `sr:orders:${options.page || 1}:${options.per_page || 15}:${options.search?.trim() || ''}:${options.sort || ''}:${options.filter_by || ''}:${options.from || ''}:${options.to || ''}`;
+
+  return withShiprocketCache(cacheKey, SR_CACHE_TTL.ORDERS_LIST, async () => {
+    const params = new URLSearchParams();
+    if (options.page) params.set('page', String(options.page));
+    if (options.per_page) params.set('per_page', String(options.per_page));
+    if (options.search) params.set('search', options.search.trim());
+    if (options.sort) params.set('sort', options.sort);
+    if (options.filter_by) params.set('filter_by', options.filter_by);
+    if (options.from) params.set('from', toOrdersDate(options.from));
+    if (options.to) params.set('to', toOrdersDate(options.to));
+    const endpoint = `orders${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await shiprocketFetch(endpoint);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || `Failed to fetch orders: HTTP ${res.status}`);
+    }
+    return {
+      success: true,
+      orders: Array.isArray(data?.data) ? (data.data as ShiprocketOrder[]) : [],
+      meta: data?.meta,
+    };
+  });
 }
 export async function getShiprocketTrackingAction(
   awb: string,
@@ -66,16 +77,22 @@ export async function getShiprocketTrackingAction(
   if (!cleanAwb) {
     throw new Error('AWB code is required for tracking');
   }
-  const res = await shiprocketFetch(`courier/track/awb/${encodeURIComponent(cleanAwb)}`);
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.message || `Failed to fetch tracking: HTTP ${res.status}`);
-  }
-  return {
-    success: true,
-    tracking: (data?.tracking_data as ShiprocketTrackingData) || null,
-  };
+
+  const cacheKey = `sr:track:${cleanAwb}`;
+
+  return withShiprocketCache(cacheKey, SR_CACHE_TTL.TRACKING, async () => {
+    const res = await shiprocketFetch(`courier/track/awb/${encodeURIComponent(cleanAwb)}`);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || `Failed to fetch tracking: HTTP ${res.status}`);
+    }
+    return {
+      success: true,
+      tracking: (data?.tracking_data as ShiprocketTrackingData) || null,
+    };
+  });
 }
+
 export async function createShiprocketOrderAction(
   payload: Record<string, unknown>,
   token?: string | null
@@ -128,6 +145,7 @@ export async function createShiprocketOrderAction(
   if (!res.ok || data.status_code === 400 || data.status_code === 422) {
     throw new Error(data?.message || JSON.stringify(data));
   }
+  await invalidateShiprocketOrdersCache();
   return { success: true, data };
 }
 export async function cancelShiprocketOrderAction(
@@ -145,6 +163,9 @@ export async function cancelShiprocketOrderAction(
       body: JSON.stringify({ awbs: payload.awbs }),
     });
     const data = await res.json();
+    if (res.ok) {
+      await invalidateShiprocketOrdersCache();
+    }
     return { success: res.ok, message: (data as { message?: string })?.message || 'Cancellation request sent', data };
   }
   if (payload.order_ids && payload.order_ids.length > 0) {
@@ -153,7 +174,11 @@ export async function cancelShiprocketOrderAction(
       body: JSON.stringify({ ids: payload.order_ids.map(Number) }),
     });
     const data = await res.json();
+    if (res.ok) {
+      await invalidateShiprocketOrdersCache();
+    }
     return { success: res.ok, message: (data as { message?: string })?.message || 'Cancellation request sent', data };
   }
   throw new Error('Order IDs or AWBs required for cancellation');
 }
+

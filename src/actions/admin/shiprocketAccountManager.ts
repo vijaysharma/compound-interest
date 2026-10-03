@@ -3,6 +3,11 @@ import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import type { DbShiprocketAccount } from '@/lib/db/types';
 import type { ShiprocketAccountProfile } from '@/types/shiprocket';
 import { invalidateShiprocketAuthCache } from './shiprocketClient';
+import {
+  withShiprocketCache,
+  invalidateShiprocketAccountsCache,
+  SR_CACHE_TTL,
+} from '@/lib/shiprocketCache';
 export interface CreateShiprocketAccountInput {
   account_label: string;
   company_name: string;
@@ -33,64 +38,71 @@ export async function listShiprocketAccountsAction(
   if (!(await isAuthorizedUser(token, sql))) {
     throw new Error('Unauthorized: Admin access required');
   }
-  const rows = (await sql`
-    SELECT
-      id, account_label, company_name, contact_name, contact_phone, contact_email,
-      api_email, auth_token, token_expires_at, sr_user_id, sr_company_id,
-      sr_first_name, sr_last_name, is_active, balance, created_at, updated_at
-    FROM shiprocket_accounts
-    ORDER BY is_active DESC, updated_at DESC
-  `) as Array<DbShiprocketAccount>;
-  const accounts: ShiprocketAccountProfile[] = rows.map((r) => ({
-    id: r.id,
-    account_label: r.account_label,
-    company_name: r.company_name,
-    contact_name: r.contact_name,
-    contact_phone: r.contact_phone,
-    contact_email: r.contact_email,
-    api_email: r.api_email,
-    auth_token: r.auth_token,
-    token_expires_at: r.token_expires_at,
-    sr_user_id: r.sr_user_id,
-    sr_company_id: r.sr_company_id,
-    sr_first_name: r.sr_first_name,
-    sr_last_name: r.sr_last_name,
-    is_active: Boolean(r.is_active),
-    balance: r.balance !== undefined && r.balance !== null ? Number(r.balance) : 0,
-    created_at: r.created_at,
-    updated_at: r.updated_at,
-  }));
-  // Fetch live wallet balance for accounts with valid tokens
-  const now = Date.now();
-  await Promise.all(
-    accounts.map(async (acc) => {
-      if (!acc.auth_token) return;
-      const expiry = acc.token_expires_at ? new Date(acc.token_expires_at).getTime() : 0;
-      if (expiry <= now) return;
-      try {
-        const balRes = await fetch('https://apiv2.shiprocket.in/v1/external/account/details/wallet-balance', {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${acc.auth_token}`,
-          },
-        });
-        if (balRes.ok) {
-          const balData = await balRes.json();
-          const balAmount = balData?.data?.balance_amount;
-          if (balAmount !== undefined && balAmount !== null) {
-            acc.balance = Number(balAmount);
-            await sql`UPDATE shiprocket_accounts SET balance = ${Number(balAmount)}, updated_at = NOW() WHERE id = ${acc.id}`.catch(() => {});
+
+  return withShiprocketCache(
+    'sr:acc:list',
+    SR_CACHE_TTL.ACCOUNTS_LIST,
+    async () => {
+      const rows = (await sql`
+        SELECT
+          id, account_label, company_name, contact_name, contact_phone, contact_email,
+          api_email, auth_token, token_expires_at, sr_user_id, sr_company_id,
+          sr_first_name, sr_last_name, is_active, balance, created_at, updated_at
+        FROM shiprocket_accounts
+        ORDER BY is_active DESC, updated_at DESC
+      `) as Array<DbShiprocketAccount>;
+      const accounts: ShiprocketAccountProfile[] = rows.map((r) => ({
+        id: r.id,
+        account_label: r.account_label,
+        company_name: r.company_name,
+        contact_name: r.contact_name,
+        contact_phone: r.contact_phone,
+        contact_email: r.contact_email,
+        api_email: r.api_email,
+        auth_token: r.auth_token,
+        token_expires_at: r.token_expires_at,
+        sr_user_id: r.sr_user_id,
+        sr_company_id: r.sr_company_id,
+        sr_first_name: r.sr_first_name,
+        sr_last_name: r.sr_last_name,
+        is_active: Boolean(r.is_active),
+        balance: r.balance !== undefined && r.balance !== null ? Number(r.balance) : 0,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+      }));
+      // Fetch live wallet balance for accounts with valid tokens
+      const now = Date.now();
+      await Promise.all(
+        accounts.map(async (acc) => {
+          if (!acc.auth_token) return;
+          const expiry = acc.token_expires_at ? new Date(acc.token_expires_at).getTime() : 0;
+          if (expiry <= now) return;
+          try {
+            const balRes = await fetch('https://apiv2.shiprocket.in/v1/external/account/details/wallet-balance', {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${acc.auth_token}`,
+              },
+            });
+            if (balRes.ok) {
+              const balData = await balRes.json();
+              const balAmount = balData?.data?.balance_amount;
+              if (balAmount !== undefined && balAmount !== null) {
+                acc.balance = Number(balAmount);
+                await sql`UPDATE shiprocket_accounts SET balance = ${Number(balAmount)}, updated_at = NOW() WHERE id = ${acc.id}`.catch(() => {});
+              }
+            }
+          } catch (balErr) {
+            console.warn(`Failed to fetch wallet balance for account ${acc.id}:`, balErr);
           }
-        }
-      } catch (balErr) {
-        console.warn(`Failed to fetch wallet balance for account ${acc.id}:`, balErr);
-      }
-    })
+        })
+      );
+      return {
+        success: true,
+        accounts,
+      };
+    }
   );
-  return {
-    success: true,
-    accounts,
-  };
 }
 export async function switchActiveShiprocketAccountAction(
   accountId: string,
@@ -110,11 +122,13 @@ export async function switchActiveShiprocketAccountAction(
   await sql`UPDATE shiprocket_accounts SET is_active = false`;
   await sql`UPDATE shiprocket_accounts SET is_active = true, updated_at = NOW() WHERE id = ${accountId}`;
   await invalidateShiprocketAuthCache();
+  await invalidateShiprocketAccountsCache();
   return {
     success: true,
     message: `Active account switched to ${existing[0].account_label || accountId}`,
   };
 }
+
 export async function saveShiprocketAccountAction(
   input: CreateShiprocketAccountInput,
   token?: string | null
@@ -200,11 +214,13 @@ export async function saveShiprocketAccountAction(
   if (shouldBeActive) {
     await invalidateShiprocketAuthCache();
   }
+  await invalidateShiprocketAccountsCache();
   return {
     success: true,
     accountId: id,
     message: 'Shiprocket account successfully created and verified',
   };
+
 }
 export async function deleteShiprocketAccountAction(
   accountId: string,
@@ -232,6 +248,7 @@ export async function deleteShiprocketAccountAction(
     }
     await invalidateShiprocketAuthCache();
   }
+  await invalidateShiprocketAccountsCache();
   return {
     success: true,
     message: 'Shiprocket account removed',
@@ -315,8 +332,10 @@ export async function updateShiprocketAccountAction(
     WHERE id = ${input.id}
   `;
   await invalidateShiprocketAuthCache();
+  await invalidateShiprocketAccountsCache();
   return {
     success: true,
     message: 'Shiprocket account details updated successfully',
   };
 }
+

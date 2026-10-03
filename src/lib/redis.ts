@@ -5,6 +5,7 @@ import {
   upstashSet,
   upstashSetNX,
   upstashDel,
+  upstashDelPattern,
   upstashIncr,
 } from './redis/upstashClient';
 import {
@@ -13,8 +14,10 @@ import {
   memorySet,
   memorySetNX,
   memoryDel,
+  memoryDelPattern,
   memoryIncr,
 } from './redis/memoryStore';
+
 export { isRedisConfigured };
 export async function redisGet<T>(key: string): Promise<T | null> {
   const upstash = await upstashGet<T>(key);
@@ -51,6 +54,14 @@ export async function redisDel(key: string | string[]): Promise<boolean> {
   memoryDel(keys);
   return true;
 }
+
+export async function redisDelPattern(pattern: string): Promise<boolean> {
+  if (!pattern) return true;
+  await upstashDelPattern(pattern);
+  memoryDelPattern(pattern);
+  return true;
+}
+
 export async function redisIncr(key: string, ttlSeconds?: number): Promise<number> {
   const upstashResult = await upstashIncr(key, ttlSeconds);
   if (typeof upstashResult === 'number') {

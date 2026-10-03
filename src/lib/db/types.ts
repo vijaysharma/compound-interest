@@ -110,3 +110,29 @@ export interface DbShiprocketCustomer {
   created_at: string;
   updated_at: string;
 }
+
+export interface DbPpfInvestment {
+  id: string;
+  user_id?: string | null;
+  guest_id?: string | null;
+  investment_date: string;
+  amount: number | string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbPpfPreferences {
+  id: string;
+  user_id?: string | null;
+  guest_id?: string | null;
+  frequency?: string | null;
+  deposit_amount?: number | string | null;
+  deposit_timing?: string | null;
+  start_year?: number | null;
+  extension_blocks?: number | null;
+  extension_mode?: string | null;
+  projected_rate?: number | string | null;
+  updated_at: string;
+}
+

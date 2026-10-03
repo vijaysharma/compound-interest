@@ -139,4 +139,40 @@ export async function applyCoreMigrations(sql: Query): Promise<void> {
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS shiprocket_customer_orders_dedup_idx ON shiprocket_customer_orders (dedup_key)`;
+
+  // PPF Actual Investment Records
+  await sql`
+    CREATE TABLE IF NOT EXISTS ppf_investments (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      guest_id TEXT,
+      investment_date DATE NOT NULL,
+      amount NUMERIC NOT NULL,
+      notes TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS ppf_investments_user_date_idx ON ppf_investments (user_id, investment_date)`;
+  await sql`CREATE INDEX IF NOT EXISTS ppf_investments_guest_date_idx ON ppf_investments (guest_id, investment_date)`;
+
+  // PPF User / Guest Calculator Preferences
+  await sql`
+    CREATE TABLE IF NOT EXISTS ppf_preferences (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+      guest_id TEXT,
+      frequency TEXT DEFAULT 'yearly',
+      deposit_amount NUMERIC DEFAULT 150000,
+      deposit_timing TEXT DEFAULT 'before_5th',
+      start_year INT DEFAULT 2025,
+      extension_blocks INT DEFAULT 0,
+      extension_mode TEXT DEFAULT 'with_contribution',
+      projected_rate NUMERIC DEFAULT 7.1,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS ppf_preferences_user_idx ON ppf_preferences (user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS ppf_preferences_guest_idx ON ppf_preferences (guest_id)`;
 }
+

@@ -4,7 +4,7 @@ import { applyDataMigrations } from './dataMigrations';
 import { applyTrackedSchemesMigrations } from './trackedSchemesMigrations';
 import { applyStateAndLeaderboardMigrations } from './stateAndLeaderboardMigrations';
 import { applyFiiDiiMigrations } from './fiiDiiMigrations';
-export const SCHEMA_VERSION = 16; // 16: shiprocket_customers.customer_phone_2 for a secondary contact number
+export const SCHEMA_VERSION = 17; // 17: PPF actual investment history and user preferences tables
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {

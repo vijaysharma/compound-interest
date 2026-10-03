@@ -55,6 +55,15 @@ export function memoryDel(keys: string[]): void {
     inMemoryStore.delete(k);
   }
 }
+export function memoryDelPattern(pattern: string): void {
+  const regex = new RegExp('^' + pattern.replace(/[*]/g, '.*') + '$');
+  for (const k of inMemoryStore.keys()) {
+    if (regex.test(k)) {
+      inMemoryStore.delete(k);
+    }
+  }
+}
+
 export function memoryIncr(key: string, ttlSeconds?: number): number {
   const cached = inMemoryStore.get(key);
   const current = typeof cached?.value === 'number' ? cached.value : 0;

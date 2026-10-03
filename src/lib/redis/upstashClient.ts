@@ -105,6 +105,27 @@ export async function upstashDel(keys: string[]): Promise<boolean> {
     return false;
   }
 }
+export async function upstashDelPattern(pattern: string): Promise<boolean> {
+  const cfg = getUpstashConfig();
+  if (!cfg) return false;
+  try {
+    const res = await fetch(`${cfg.url}/keys/${encodeURIComponent(pattern)}`, {
+      headers: { Authorization: `Bearer ${cfg.token}` },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { result?: string[] };
+      if (Array.isArray(json.result) && json.result.length > 0) {
+        return await upstashDel(json.result);
+      }
+      return true;
+    }
+  } catch (err) {
+    console.warn(`[Redis] DEL pattern failed for "${pattern}":`, err);
+  }
+  return false;
+}
+
 export async function upstashIncr(key: string, ttlSeconds?: number): Promise<number | null> {
   const cfg = getUpstashConfig();
   if (!cfg) return null;

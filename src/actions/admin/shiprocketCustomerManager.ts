@@ -2,6 +2,12 @@
 import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import type { DbShiprocketAccount, DbShiprocketCustomer } from '@/lib/db/types';
 import type { ShiprocketCustomer } from '@/types/shiprocket';
+import {
+  withShiprocketCache,
+  invalidateShiprocketCustomersCache,
+  SR_CACHE_TTL,
+} from '@/lib/shiprocketCache';
+
 export interface CustomerFilterOptions {
   search?: string;
   sortBy?: 'name' | 'phone' | 'city' | 'state' | 'pincode' | 'orders' | 'updated_at' | 'created_at';
@@ -224,10 +230,15 @@ export async function listShiprocketCustomersAction(
   const offset = (page - 1) * perPage;
   const sortCol = options.sortBy || 'updated_at';
   const sortDir = options.sortOrder === 'asc' ? 'ASC' : 'DESC';
-  let rows: DbShiprocketCustomer[];
-  let countResult: Array<{ count: number }>;
-  if (search) {
-    const term = `%${search}%`;
+
+  const cacheKey = `sr:cust:list:${page}:${perPage}:${search}:${sortCol}:${sortDir}`;
+
+  return withShiprocketCache(cacheKey, SR_CACHE_TTL.CUSTOMERS_LIST, async () => {
+    let rows: DbShiprocketCustomer[];
+    let countResult: Array<{ count: number }>;
+    if (search) {
+      const term = `%${search}%`;
+
     countResult = (await sql`
       SELECT count(*)::int as count
       FROM shiprocket_customers
@@ -440,7 +451,9 @@ export async function listShiprocketCustomersAction(
     page,
     perPage,
   };
+  });
 }
+
 /**
  * Save or update a single customer record manually (CRUD)
  */
@@ -532,6 +545,7 @@ export async function saveShiprocketCustomerAction(
       customer_state = EXCLUDED.customer_state,
       updated_at = NOW()
   `;
+  await invalidateShiprocketCustomersCache();
   return { success: true, id, message: 'Customer saved successfully' };
 }
 /**
@@ -552,8 +566,10 @@ export async function deleteShiprocketCustomerAction(
     WHERE dedup_key IN (SELECT dedup_key FROM shiprocket_customers WHERE id = ${customerId})
   `;
   await sql`DELETE FROM shiprocket_customers WHERE id = ${customerId}`;
+  await invalidateShiprocketCustomersCache();
   return { success: true, message: 'Customer removed successfully' };
 }
+
 /**
  * Sync Historical Customers Across All Accounts
  * Iterates through all configured Shiprocket accounts, pulls historical orders for the selected period,
@@ -1146,6 +1162,7 @@ export async function syncHistoricalCustomersAction(
       `Order-count recalculation failed: ${recalcErr instanceof Error ? recalcErr.message : String(recalcErr)}`
     );
   }
+  await invalidateShiprocketCustomersCache();
   return {
     success: true,
     message: `Processed ${accountsProcessed} account(s) (${totalOrdersSeen} orders inspected). Synced/updated ${totalUpserted} customer records.${countsCorrected > 0 ? ` Corrected order counts on ${countsCorrected} record(s).` : ''}`,
@@ -1154,3 +1171,4 @@ export async function syncHistoricalCustomersAction(
     errors: errors.length > 0 ? errors : undefined,
   };
 }
+
