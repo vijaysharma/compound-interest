@@ -259,45 +259,53 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             <span>Sync Historical Customers Across Accounts</span>
           </div>
           <div className={styles.syncControls}>
-            <span className={styles.syncDateLabel}>
-              <FiCalendar style={{ marginRight: 4 }} />
-              From:
-            </span>
-            <input
-              type="date"
-              className={styles.syncDateInput}
-              value={syncFrom}
-              onChange={(e) => setSyncFrom(e.target.value)}
-              disabled={syncing}
-            />
-            <span className={styles.syncDateLabel}>To:</span>
-            <input
-              type="date"
-              className={styles.syncDateInput}
-              value={syncTo}
-              onChange={(e) => setSyncTo(e.target.value)}
-              disabled={syncing}
-            />
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={handleSyncHistorical}
-              disabled={syncing}
-              title="Sync orders matching the selected date range"
-            >
-              <FiRefreshCw className={syncing ? styles.spinner : ''} />
-              {syncing ? 'Syncing...' : 'Sync Range'}
-            </button>
-            <button
-              type="button"
-              className={styles.outlineBtn}
-              onClick={handleSyncAll}
-              disabled={syncing}
-              title="Fetch all available historical orders without date boundaries"
-            >
-              <FiRefreshCw className={syncing ? styles.spinner : ''} />
-              Sync All
-            </button>
+            <div className={styles.syncDatesGroup}>
+              <div className={styles.syncDateItem}>
+                <span className={styles.syncDateLabel}>
+                  <FiCalendar style={{ marginRight: 4 }} />
+                  From:
+                </span>
+                <input
+                  type="date"
+                  className={styles.syncDateInput}
+                  value={syncFrom}
+                  onChange={(e) => setSyncFrom(e.target.value)}
+                  disabled={syncing}
+                />
+              </div>
+              <div className={styles.syncDateItem}>
+                <span className={styles.syncDateLabel}>To:</span>
+                <input
+                  type="date"
+                  className={styles.syncDateInput}
+                  value={syncTo}
+                  onChange={(e) => setSyncTo(e.target.value)}
+                  disabled={syncing}
+                />
+              </div>
+            </div>
+            <div className={styles.syncBtnsGroup}>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                onClick={handleSyncHistorical}
+                disabled={syncing}
+                title="Sync orders matching the selected date range"
+              >
+                <FiRefreshCw className={syncing ? styles.spinner : ''} />
+                {syncing ? 'Syncing...' : 'Sync Range'}
+              </button>
+              <button
+                type="button"
+                className={styles.outlineBtn}
+                onClick={handleSyncAll}
+                disabled={syncing}
+                title="Fetch all available historical orders without date boundaries"
+              >
+                <FiRefreshCw className={syncing ? styles.spinner : ''} />
+                Sync All
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -493,7 +501,8 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         </div>
       ) : (
         <>
-          <div className={styles.tableWrapper}>
+          {/* Desktop Table View */}
+          <div className={styles.desktopTableWrapper}>
             <table className={styles.dataTable}>
               <thead>
                 <tr>
@@ -597,6 +606,95 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className={styles.mobileCardsList}>
+            {customers.map((cust) => (
+              <div key={cust.id} className={styles.customerCard}>
+                <div className={styles.customerHeader}>
+                  <div className={styles.customerMeta}>
+                    <span className={styles.customerName}>{cust.customer_name}</span>
+                    {cust.last_order_id && (
+                      <span className={styles.orderIdBadge}>#{cust.last_order_id}</span>
+                    )}
+                  </div>
+                  <span className={styles.ordersCountBadge}>
+                    <FiPackage size={12} />
+                    <span>
+                      {cust.total_orders} {cust.total_orders === 1 ? 'Order' : 'Orders'}
+                    </span>
+                  </span>
+                </div>
+
+                <div className={styles.customerBody}>
+                  <div>
+                    <div className={styles.colTitle}>Contact Information</div>
+                    <div className={styles.contactRow}>
+                      <FiPhone size={13} className={styles.contactIcon} />
+                      {cust.customer_phone ? (
+                        <a href={`tel:${cust.customer_phone}`} className={styles.contactLink}>
+                          {cust.customer_phone}
+                        </a>
+                      ) : (
+                        <span className={styles.mutedText}>No phone registered</span>
+                      )}
+                    </div>
+                    {cust.customer_phone_2 && (
+                      <div className={styles.contactRow}>
+                        <FiPhone size={13} className={styles.contactIconMuted} />
+                        <a href={`tel:${cust.customer_phone_2}`} className={styles.contactLink}>
+                          {cust.customer_phone_2} <span className={styles.altBadge}>Alt</span>
+                        </a>
+                      </div>
+                    )}
+                    {cust.customer_email && (
+                      <div className={styles.contactRow}>
+                        <FiMail size={13} className={styles.contactIcon} />
+                        <a href={`mailto:${cust.customer_email}`} className={styles.contactLink}>
+                          {cust.customer_email}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className={styles.colTitle}>Address & Location</div>
+                    <div className={styles.customerAddress}>
+                      {cust.customer_address}
+                      {cust.customer_address_2 ? `, ${cust.customer_address_2}` : ''}
+                    </div>
+                    <div className={styles.locationBadgeRow}>
+                      <span className={styles.cityStatePincode}>
+                        <FiMapPin size={12} />
+                        <span>
+                          {cust.customer_city}, {cust.customer_state} - {cust.customer_pincode}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.customerFooter}>
+                  <button
+                    type="button"
+                    className={styles.actionBtn}
+                    onClick={() => handleEdit(cust)}
+                    title="Edit Customer"
+                  >
+                    <FiEdit2 /> Edit
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.actionBtn} ${styles.actionDanger}`}
+                    onClick={() => handleDelete(cust)}
+                    title="Delete Customer"
+                  >
+                    <FiTrash2 /> Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
           {/* Pagination Controls */}
           <div className={styles.paginationRow}>

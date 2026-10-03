@@ -176,6 +176,26 @@
   flex-wrap: wrap;
 }
 
+.syncDatesGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.syncDateItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.syncBtnsGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .syncDateLabel {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -265,6 +285,7 @@
   }
 }
 
+.desktopTableWrapper,
 .tableWrapper {
   overflow-x: auto;
   border: 1px solid var(--color-border);
@@ -272,6 +293,155 @@
   background: var(--color-bg);
   margin-bottom: 1.25rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.mobileCardsList {
+  display: none;
+}
+
+.customerCard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 1.125rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.customerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 0.75rem;
+}
+
+.customerMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.orderIdBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  background: var(--color-bg-secondary);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.customerBody {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+  @include tablet-up {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.colTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.contactRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  margin-bottom: 0.2rem;
+}
+
+.contactLink {
+  color: var(--color-text);
+  text-decoration: none;
+  font-weight: 500;
+  &:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+}
+
+.contactIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.contactIconMuted {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.altBadge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  margin-left: 0.25rem;
+}
+
+.mutedText {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.locationBadgeRow {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.customerFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  &.actionDanger {
+    color: var(--color-error);
+    border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+    &:hover {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    }
+  }
 }
 
 .dataTable {
@@ -585,5 +755,283 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+// ----------------------------------------------------
+// Phones (< 640px): one-handed, no sideways scrolling, 44px touch targets
+// Matches /admin/shiprocket mobile design language
+// ----------------------------------------------------
+@include mobile-only {
+  .container {
+    padding: 0.25rem 0 2rem;
+  }
+
+  .header {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .subtitle {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .headerActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .primaryBtn,
+  .outlineBtn {
+    justify-content: center;
+    min-height: 44px;
+    touch-action: manipulation;
+    width: 100%;
+  }
+
+  .alertSuccess,
+  .alertError {
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .syncCard {
+    padding: 1rem 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .syncHeaderRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .syncTitle {
+    font-size: 0.95rem;
+  }
+
+  .syncControls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .syncDatesGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .syncDateItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .syncDateLabel {
+    font-size: 0.75rem;
+  }
+
+  .syncDateInput {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    box-sizing: border-box;
+  }
+
+  .syncBtnsGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+
+    .primaryBtn,
+    .outlineBtn {
+      justify-content: center;
+      min-height: 44px;
+      font-size: 0.8rem;
+      touch-action: manipulation;
+    }
+  }
+
+  .filterBar {
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .searchBox {
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .searchInput {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+  }
+
+  .filterControlsRight {
+    width: 100%;
+  }
+
+  .sortSelect {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+  }
+
+  .desktopTableWrapper {
+    display: none;
+  }
+
+  .mobileCardsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 1rem;
+  }
+
+  .customerCard {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.75rem;
+    &:first-child {
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--color-border);
+    }
+  }
+
+  .customerHeader {
+    border-bottom: none;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0;
+  }
+
+  .customerName {
+    color: var(--color-primary);
+  }
+
+  .customerBody {
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .customerFooter {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .actionBtn {
+    justify-content: center;
+    min-height: 44px;
+    font-size: 0.8rem;
+    touch-action: manipulation;
+  }
+
+  .modalBackdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modalCard {
+    max-height: 88vh;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    padding: 1rem 0.85rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    animation: modalSlideUp 0.2s ease-out;
+  }
+
+  .modalHeader {
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .modalCloseBtn {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+
+  .fieldInput {
+    height: 44px;
+  }
+
+  .modalActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+
+    .primaryBtn,
+    .outlineBtn {
+      justify-content: center;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+  }
+
+  .paginationRow {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+  }
+
+  .paginationBtns {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+
+    .outlineBtn {
+      min-height: 44px;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+  }
+
+  .emptyBox {
+    padding: 2.5rem 1rem;
+    margin-bottom: 1rem;
+
+    .primaryBtn {
+      min-height: 44px;
+      justify-content: center;
+      width: 100%;
+      touch-action: manipulation;
+    }
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
