@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from '@/navigation';
+import { startNavigationProgress, useLocation, useNavigate } from '@/navigation';
 import Link from './PrefetchLink';
 import { FiMenu, FiPlayCircle } from 'react-icons/fi';
 import Logo from './Logo';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAVIGATION_SECTIONS, ADMIN_SECTION } from '@/data/navigation';
 import { useScrollLock, forceUnlockScroll } from '../utilities/useScrollLock';
+import { MENU_INTENT_ATTR } from '@/navigation/prehydrationFeedback';
 import { getNavTitle } from './topbar/navTitles';
 import { TopBarProfileDropdown } from './topbar/TopBarProfileDropdown';
 import { TopBarDrawer } from './topbar/TopBarDrawer';
@@ -50,6 +51,14 @@ const TopBar = ({ className }: { className?: string }) => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    // A menu tap made before hydration was recorded by the inline script; honour it now. Only the
+    // mobile drawer is opened here: it's idempotent if React also replays the tap, a desktop
+    // sidebar toggle would not be.
+    const root = document.documentElement;
+    if (root.hasAttribute(MENU_INTENT_ATTR)) {
+      root.removeAttribute(MENU_INTENT_ATTR);
+      if (window.innerWidth < 768) setIsMenuOpen(true);
+    }
   }, []);
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -60,6 +69,8 @@ const TopBar = ({ className }: { className?: string }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isMenuOpen]);
   const handleLogout = async () => {
+    // logout() awaits a server round-trip before we can navigate; show feedback for it now.
+    if (pathname !== '/') startNavigationProgress();
     try {
       localStorage.removeItem('last_visited_route');
       sessionStorage.setItem('stay_on_home', 'true');

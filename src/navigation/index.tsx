@@ -149,7 +149,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
             const targetClean = target.split('#')[0];
             if (targetClean && targetClean !== currentPath) {
               e.currentTarget.setAttribute(NAV_PENDING_ATTR, '');
-              startNavigationProgress();
+              startNavigationProgress(true);
             }
           }
           onPointerDown?.(e);

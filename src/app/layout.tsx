@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import '@/index.scss';
 import AppClientLayout from '@/components/AppClientLayout';
 import { rootMetadata, rootViewport, jsonLdData } from '@/data/rootMetadata';
+import { PREHYDRATION_NAV_SCRIPT } from '@/navigation/prehydrationFeedback';
 export const metadata: Metadata = rootMetadata;
 export const viewport: Viewport = rootViewport;
 export default function RootLayout({
@@ -12,6 +13,7 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" data-theme="fantasy" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: PREHYDRATION_NAV_SCRIPT }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}

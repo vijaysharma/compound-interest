@@ -95,6 +95,39 @@ a[data-nav-pending] {
   transition: opacity 80ms ease-out;
 }
 
+// Pre-hydration navigation bar: a link clicked before React has hydrated gets no feedback from
+// NavigationProgressBar, so the inline script in the root layout sets this attribute instead
+// (see navigation/prehydrationFeedback.ts). Same look as the React bar, which takes over on mount.
+html[data-nav-intent] {
+  cursor: progress;
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3.5px;
+    z-index: 999999;
+    pointer-events: none;
+    transform-origin: left;
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 50%, var(--color-accent) 100%);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 90%, transparent);
+    animation: navIntentProgress 8s cubic-bezier(0.1, 0.6, 0.3, 1) forwards;
+  }
+}
+
+// Pre-hydration tap on the mobile menu button: TopBar opens the drawer once it mounts.
+html[data-menu-intent] [aria-controls="navigation-drawer"] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+@keyframes navIntentProgress {
+  from { transform: scaleX(0.28); }
+  to { transform: scaleX(0.92); }
+}
+
 a {
   touch-action: manipulation;
 }

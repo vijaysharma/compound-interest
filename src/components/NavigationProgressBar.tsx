@@ -1,12 +1,26 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { clearPendingLinks, useLocation } from '@/navigation';
+import { NAV_INTENT_ATTR } from '@/navigation/prehydrationFeedback';
 import styles from './NavigationProgressBar.module.scss';
+declare global {
+  interface Window {
+    /** Set once this bar is listening; the pre-hydration inline script stops handling clicks. */
+    __navHydrated?: boolean;
+  }
+}
+const clearPrehydrationIntent = () => document.documentElement.removeAttribute(NAV_INTENT_ATTR);
 export const NAV_START_EVENT = 'app:nav-start';
 export const NAV_STOP_EVENT = 'app:nav-stop';
-export const startNavigationProgress = () => {
+// Backstops for a bar whose navigation never lands. A press may turn into a scroll or drag, so it
+// gets a short one; a click / navigate() always ends in a route change or document load, so its
+// backstop only has to outlast a slow network (a 2s-RTT route can take >6s to commit).
+const PRESS_BACKSTOP_MS = 6000;
+const NAVIGATION_BACKSTOP_MS = 20000;
+/** `pressOnly` for pointerdown-time feedback that may not become a navigation. */
+export const startNavigationProgress = (pressOnly = false) => {
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(NAV_START_EVENT));
+    window.dispatchEvent(new CustomEvent(NAV_START_EVENT, { detail: { pressOnly } }));
   }
 };
 export const stopNavigationProgress = () => {
@@ -20,6 +34,11 @@ export function NavigationProgressBar() {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const safetyTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const safetyDeadlineRef = useRef(0);
+  // The link under a press that hasn't been confirmed by a click yet, and whether the current
+  // run has been confirmed (click, navigate(), back/forward) — a confirmed run is never cancelled.
+  const pressedAnchorRef = useRef<HTMLAnchorElement | null>(null);
+  const confirmedRef = useRef(false);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const resetTimerRef = useRef<NodeJS.Timeout | null>(null);
   const stateRef = useRef<'idle' | 'loading' | 'completing'>('idle');
@@ -34,6 +53,8 @@ export function NavigationProgressBar() {
       safetyTimerRef.current = null;
     }
     clearPendingLinks();
+    clearPrehydrationIntent();
+    confirmedRef.current = false;
     if (stateRef.current === 'idle') return;
     stateRef.current = 'completing';
     setProgress(100);
@@ -45,12 +66,24 @@ export function NavigationProgressBar() {
       }, 200);
     }, 180);
   }, []);
-  const start = useCallback(() => {
+  const start = useCallback((pressOnly = false) => {
+    const backstopMs = pressOnly ? PRESS_BACKSTOP_MS : NAVIGATION_BACKSTOP_MS;
+    if (!pressOnly) confirmedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
-    if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    // A press then its click both call start(); the later, shorter backstop must not cut the
+    // confirmed navigation's one short.
+    const deadline = Date.now() + backstopMs;
+    if (stateRef.current !== 'loading' || deadline > safetyDeadlineRef.current) {
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+      safetyDeadlineRef.current = deadline;
+      safetyTimerRef.current = setTimeout(() => {
+        done();
+      }, backstopMs);
+    }
     stateRef.current = 'loading';
+    clearPrehydrationIntent();
     setVisible(true);
     setProgress((prev) => (prev > 0 && prev < 90 ? prev : 28));
     timerRef.current = setInterval(() => {
@@ -62,9 +95,6 @@ export function NavigationProgressBar() {
         return prev;
       });
     }, 120);
-    safetyTimerRef.current = setTimeout(() => {
-      done();
-    }, 6000);
   }, [done]);
   useEffect(() => {
     const currentRoute = pathname + search;
@@ -76,7 +106,7 @@ export function NavigationProgressBar() {
     }
   }, [pathname, search, done]);
   useEffect(() => {
-    const handleStart = () => start();
+    const handleStart = (e: Event) => start(Boolean((e as CustomEvent<{ pressOnly?: boolean }>).detail?.pressOnly));
     const handleStop = () => done();
     const handlePopState = () => start();
     const handlePointerAction = (e: MouseEvent | PointerEvent) => {
@@ -96,22 +126,41 @@ export function NavigationProgressBar() {
         ) {
           return;
         }
-        start();
+        if (e.type === 'pointerdown') pressedAnchorRef.current = anchor;
+        start(e.type !== 'click');
       } catch {
         // ignore malformed URLs
       }
+    };
+    // A press that becomes a scroll (pointercancel) or is released off the link won't navigate:
+    // drop its feedback now instead of leaving a bar up until the press backstop.
+    const handlePressEnd = (e: PointerEvent) => {
+      const pressed = pressedAnchorRef.current;
+      pressedAnchorRef.current = null;
+      if (!pressed || confirmedRef.current) return;
+      if (e.type === 'pointerup' && pressed.contains(e.target as Node)) return;
+      done();
     };
     window.addEventListener(NAV_START_EVENT, handleStart);
     window.addEventListener(NAV_STOP_EVENT, handleStop);
     window.addEventListener('popstate', handlePopState);
     document.addEventListener('pointerdown', handlePointerAction, { capture: true, passive: true });
     document.addEventListener('click', handlePointerAction, { capture: true });
+    document.addEventListener('pointerup', handlePressEnd, { capture: true, passive: true });
+    document.addEventListener('pointercancel', handlePressEnd, { capture: true, passive: true });
+    // Take over a click the inline pre-hydration script caught; React replays that click once
+    // hydrated, so the navigation itself still runs through Link as usual.
+    window.__navHydrated = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (document.documentElement.hasAttribute(NAV_INTENT_ATTR)) start(true);
     return () => {
       window.removeEventListener(NAV_START_EVENT, handleStart);
       window.removeEventListener(NAV_STOP_EVENT, handleStop);
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('pointerdown', handlePointerAction, { capture: true });
       document.removeEventListener('click', handlePointerAction, { capture: true });
+      document.removeEventListener('pointerup', handlePressEnd, { capture: true });
+      document.removeEventListener('pointercancel', handlePressEnd, { capture: true });
       if (timerRef.current) clearInterval(timerRef.current);
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
