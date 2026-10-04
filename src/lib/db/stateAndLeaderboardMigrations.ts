@@ -32,4 +32,19 @@ export async function applyStateAndLeaderboardMigrations(sql: Query): Promise<vo
   await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_user_points_idx ON game_leaderboard (user_id, total_points DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_global_points_idx ON game_leaderboard (total_points DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_pb_idx ON game_leaderboard (user_id, game_id, difficulty, total_points DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS game_leaderboard_user_recent_idx ON game_leaderboard (user_id, created_at DESC)`;
+  // One row per game the server has seen start. A score is only accepted against an unconsumed
+  // session owned by the submitter, so the server knows the real elapsed time and a result can't
+  // be replayed or fabricated without a session.
+  await sql`
+    CREATE TABLE IF NOT EXISTS game_sessions (
+      id TEXT PRIMARY KEY,
+      owner_id VARCHAR(64) NOT NULL,
+      game_id VARCHAR(32) NOT NULL,
+      ip_hash VARCHAR(64),
+      started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      consumed_at TIMESTAMPTZ
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS game_sessions_started_idx ON game_sessions (started_at)`;
 }

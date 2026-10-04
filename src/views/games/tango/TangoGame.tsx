@@ -16,7 +16,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
-import { formatGameTime, recordGameScore } from '../common/leaderboardStorage';
+import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
@@ -92,6 +92,7 @@ const SignGlyph: React.FC<{ sign: '=' | 'x' }> = ({ sign }) => (
   </svg>
 );
 export const TangoGame: React.FC = () => {
+  useGameSession('tango');
   const [difficulty, setDifficulty] = useState<TangoDifficulty>('easy');
   const [puzzle, setPuzzle] = useState<TangoPreset | null>(null);
   const size = puzzle?.size ?? TANGO_SIZE;

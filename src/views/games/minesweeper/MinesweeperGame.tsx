@@ -23,11 +23,12 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
-import { recordGameScore } from '../common/leaderboardStorage';
+import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import styles from './MinesweeperGame.module.scss';
 type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
 export const MinesweeperGame: React.FC = () => {
+  useGameSession('minesweeper');
   const [difficulty, setDifficulty] = useState<MinesweeperDifficulty>('easy');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const activePresets = isMobile ? MOBILE_PRESETS : WEB_PRESETS;

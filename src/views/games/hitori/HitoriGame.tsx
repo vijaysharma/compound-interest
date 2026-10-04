@@ -19,7 +19,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
-import { formatGameTime, recordGameScore } from '../common/leaderboardStorage';
+import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
@@ -39,6 +39,7 @@ interface SavedHitoriState {
   isComplete: boolean;
 }
 export const HitoriGame: React.FC = () => {
+  useGameSession('hitori');
   // Deterministic preset for the server render; replaced by a generated puzzle on mount.
   const [activePreset, setActivePreset] = useState<HitoriPuzzle>(() => presetPuzzle('easy'));
   const difficulty = activePreset.difficulty;

@@ -1,4 +1,9 @@
-import { recordGameScoreAction, type GameScoreSubmission } from '@/actions/gameLeaderboard';
+import { useEffect } from 'react';
+import {
+  recordGameScoreAction,
+  startGameSessionAction,
+  type GameScoreSubmission,
+} from '@/actions/gameLeaderboard';
 import { calculateGameScore, type ScoreBreakdown } from './scoring';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
 export interface LeaderboardEntry {
@@ -21,6 +26,29 @@ export interface LeaderboardEntry {
   outcome?: 'won' | 'lost';
 }
 const STORAGE_KEY = 'rupee_games_leaderboard_v1';
+type GameId = LeaderboardEntry['gameId'];
+interface PendingSession {
+  token: string | null;
+  guestId: string;
+  sessionId: Promise<string | null>;
+}
+// The server only ranks a result submitted against a session it opened, so it can measure the real
+// elapsed time. One is opened when a game page mounts and again after each result (play again).
+const pendingSessions = new Map<GameId, PendingSession>();
+const openGameSession = (gameId: GameId): void => {
+  const token = getAuthToken();
+  const guestId = getOrCreateGuestId();
+  const sessionId = startGameSessionAction(token, guestId, gameId)
+    .then((res) => (res.success && res.sessionId ? res.sessionId : null))
+    .catch(() => null);
+  pendingSessions.set(gameId, { token, guestId, sessionId });
+};
+/** Call once in each game component so its results can be ranked on the server leaderboard. */
+export const useGameSession = (gameId: GameId): void => {
+  useEffect(() => {
+    openGameSession(gameId);
+  }, [gameId]);
+};
 export const formatGameTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -95,9 +123,10 @@ export const recordGameScore = (
       // Ignore write errors
     }
   }
-  // Async sync to server database
-  const token = getAuthToken();
-  const guestId = getOrCreateGuestId();
+  // Async sync to server database, against the session opened for this game. Without one (the
+  // game didn't call useGameSession) the result stays local only.
+  const session = pendingSessions.get(entry.gameId);
+  if (session) openGameSession(entry.gameId);
   let clientPlayerName = entry.playerName?.trim();
   if (!clientPlayerName && typeof window !== 'undefined') {
     try {
@@ -121,9 +150,16 @@ export const recordGameScore = (
     accuracy: entry.accuracy,
     playerName: clientPlayerName,
   };
-  void recordGameScoreAction(token, guestId, submission).catch((err) => {
-    console.warn('Failed to record game score to database:', err);
-  });
+  if (session) {
+    void session.sessionId
+      .then((sessionId) => {
+        if (!sessionId) return undefined;
+        return recordGameScoreAction(session.token, session.guestId, { ...submission, sessionId });
+      })
+      .catch((err) => {
+        console.warn('Failed to record game score to database:', err);
+      });
+  }
   return {
     isPersonalBest,
     bestTime: isPersonalBest ? entry.timeSeconds : prevBest?.timeSeconds ?? entry.timeSeconds,

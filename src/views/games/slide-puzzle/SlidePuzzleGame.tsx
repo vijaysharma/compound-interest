@@ -25,7 +25,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
-import { formatGameTime, recordGameScore } from '../common/leaderboardStorage';
+import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { useAuth } from '@/context/useAuth';
 import styles from './SlidePuzzleGame.module.scss';
@@ -34,6 +34,7 @@ import styles from './SlidePuzzleGame.module.scss';
 // lands while the first is still moving) is still rejected rather than hijacking the gesture.
 const STALE_GESTURE_MS = 700;
 export const SlidePuzzleGame: React.FC = () => {
+  useGameSession('slide-puzzle');
   // Server and first client render share a fixed scramble so hydration matches; a random board is
   // dealt right after mount.
   const [tiles, setTiles] = useState<number[]>(() => [...INITIAL_BOARD]);

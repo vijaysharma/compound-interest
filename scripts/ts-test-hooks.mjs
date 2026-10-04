@@ -22,8 +22,10 @@ registerHooks({
     try {
       return nextResolve(specifier, context);
     } catch (error) {
-      if (specifier === 'next/server') {
-        return nextResolve('next/server.js', context);
+      // next's subpath entry points (next/server, next/headers, ...) are .js files without an
+      // exports map entry Node's ESM resolver understands.
+      if (/^next\/[a-z-]+$/.test(specifier)) {
+        return nextResolve(`${specifier}.js`, context);
       }
       if (specifier.startsWith('@/')) {
         const sub = specifier.slice(2);

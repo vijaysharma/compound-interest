@@ -28,7 +28,7 @@ import { GameOverModal } from '../common/GameOverModal';
 import { HowToPlayModal } from '../common/HowToPlayModal';
 import { QuitModal } from '../common/QuitModal';
 import { ConfettiCanvas } from '../common/ConfettiCanvas';
-import { formatGameTime, recordGameScore } from '../common/leaderboardStorage';
+import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
@@ -71,6 +71,7 @@ const saveStatsToStorage = (stats: QueensStats) => {
 };
 
 export const QueensGame: React.FC = () => {
+  useGameSession('queens');
   // Puzzle & Grid state
   const [puzzle, setPuzzle] = useState<QueensPuzzle | null>(null);
   const [grid, setGrid] = useState<CellState[][]>([]);

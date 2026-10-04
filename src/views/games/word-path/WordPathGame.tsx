@@ -27,7 +27,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
-import { recordGameScore } from '../common/leaderboardStorage';
+import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
@@ -83,6 +83,7 @@ const getNextUniqueBoardAsync = async (
   });
 };
 export const WordPathGame: React.FC = () => {
+  useGameSession('word-path');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [board, setBoard] = useState<BoardDefinition>(PRESET_BOARDS.medium[0]);
   useEffect(() => {
