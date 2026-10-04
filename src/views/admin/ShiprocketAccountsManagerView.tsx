@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import Link from '@/navigation';
 import {
   FiServer,
   FiPlus,
@@ -288,7 +288,7 @@ export const ShiprocketAccountsManagerView: React.FC<Props> = ({ token }) => {
                 />
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1rem' }}>
+            <div className={styles.formButtonRow}>
               <button type="submit" className={styles.primaryBtn} disabled={submitting}>
                 {submitting ? 'Verifying & Saving...' : editId ? 'Update Account' : 'Verify & Save Account'}
               </button>
@@ -305,12 +305,12 @@ export const ShiprocketAccountsManagerView: React.FC<Props> = ({ token }) => {
         </div>
       )}
       {loading && accounts.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
+        <div className={styles.emptyBox}>
           Loading Shiprocket accounts...
         </div>
       ) : accounts.length === 0 ? (
         <div className={styles.emptyBox}>
-          <FiServer size={36} style={{ color: 'var(--color-primary)' }} />
+          <FiServer size={36} className={styles.emptyIcon} />
           <div className={styles.emptyTitle}>No Shiprocket Accounts Configured in Database</div>
           <p className={styles.emptyDesc}>
             Add your first API user account above. The credentials will be verified against Shiprocket, and the
@@ -330,7 +330,7 @@ export const ShiprocketAccountsManagerView: React.FC<Props> = ({ token }) => {
               <div className={styles.accountCardTop}>
                 <div>
                   <h3 className={styles.accountLabel}>{acc.account_label}</h3>
-                  <div style={{ marginTop: '0.35rem' }}>
+                  <div className={styles.contactInfoWrapper}>
                     <span className={styles.balanceBadge}>
                       Balance: ₹{Number(acc.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
@@ -377,7 +377,7 @@ export const ShiprocketAccountsManagerView: React.FC<Props> = ({ token }) => {
                   </div>
                 )}
                 {acc.token_expires_at && (
-                  <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: 'var(--color-text-secondary)' }}>
+                  <div className={styles.syncMeta}>
                     Token Expires: {new Date(acc.token_expires_at).toLocaleDateString()} (Auto-renews)
                   </div>
                 )}

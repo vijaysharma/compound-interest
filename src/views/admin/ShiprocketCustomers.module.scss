@@ -1034,3 +1034,57 @@
     transform: translateY(0);
   }
 }
+
+.calendarIcon {
+  margin-right: 4px;
+}
+
+.formSectionFlat {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.tableThRight,
+.tableTdRight {
+  text-align: right;
+}
+
+.contactSecondary {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.primaryIcon {
+  color: var(--color-primary);
+}
+
+.emailLink {
+  color: inherit;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.emailIcon {
+  margin-right: 3px;
+  vertical-align: middle;
+}
+
+.secondaryIcon {
+  color: var(--color-text-secondary);
+}
+
+.emptyDash {
+  color: var(--color-text-secondary);
+}
+
+.actionBtnsRowEnd {
+  justify-content: flex-end;
+}
+
+.paginationCurrentPage {
+  font-weight: 600;
+  padding: 0 0.5rem;
+}

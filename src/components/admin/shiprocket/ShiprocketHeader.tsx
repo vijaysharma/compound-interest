@@ -29,7 +29,7 @@ export const ShiprocketHeader: React.FC<ShiprocketHeaderProps> = React.memo(
           <div className={styles.accountSelectContainer}>
             {accountsList.length > 0 && onSwitchAccount && (
               <div className={styles.accountSelectWrapper}>
-                <FiServer size={14} style={{ color: 'var(--color-primary)' }} />
+                <FiServer size={14} className={styles.selectServerIcon} />
                 <select
                   className={styles.accountSelect}
                   value={activeAccountId}

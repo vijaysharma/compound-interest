@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { FiSend, FiX, FiChevronRight } from 'react-icons/fi';
+import { FiSend, FiX, FiChevronRight, FiStar } from 'react-icons/fi';
 import type { ShiprocketOrder, ShiprocketCourierRate } from './types';
 import styles from '../ShiprocketDashboard.module.scss';
 export interface ShiprocketCourierModalProps {
@@ -74,7 +74,9 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                     <div className={styles.courierInfo}>
                       <span className={styles.courierName}>{c.courier_name}</span>
                       <span className={styles.courierEtd}>Estimated Delivery: {c.etd || '2-4 days'}</span>
-                      <span className={styles.courierRating}>★ {c.rating || '4.0'}</span>
+                      <span className={styles.courierRating}>
+                        <FiStar aria-hidden="true" /> {c.rating || '4.0'}
+                      </span>
                     </div>
                     <div className={styles.courierRight}>
                       <span className={styles.courierPrice}>₹{c.rate}</span>

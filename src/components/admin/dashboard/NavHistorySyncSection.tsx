@@ -39,7 +39,7 @@ export const NavHistorySyncSection: React.FC<NavHistorySyncSectionProps> = ({
       : null;
   return (
     <section className={styles.card}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+      <div className={styles.cardHeaderBetween}>
         <div>
           <h2 className={styles.sectionTitle}>AMFI Historical NAV Sync (90-Day Interval)</h2>
           <p className={styles.sectionDesc}>
@@ -50,7 +50,7 @@ export const NavHistorySyncSection: React.FC<NavHistorySyncSectionProps> = ({
           {validation.days} days {validation.isValid ? '(Valid 90-day block)' : '(Max 90 days)'}
         </span>
       </div>
-      <div className={styles.formGrid} style={{ marginTop: '0.75rem', gap: '0.75rem' }}>
+      <div className={`${styles.formGrid} ${styles.formGridCompact}`}>
         <label className={styles.cardLabel}>
           <span className={styles.label}>Start Date (From)</span>
           <input className={styles.input} type="date" value={fromDate} onChange={(e) => onFromDateChange(e.target.value)} />
@@ -60,7 +60,7 @@ export const NavHistorySyncSection: React.FC<NavHistorySyncSectionProps> = ({
           <input className={styles.input} type="date" value={toDate} onChange={(e) => onToDateChange(e.target.value)} />
         </label>
       </div>
-      <label className={`${styles.cardLabel} ${styles.mb1}`} style={{ marginTop: '0.5rem' }}>
+      <label className={`${styles.cardLabel} ${styles.mb1} ${styles.cardLabelSpaced}`}>
         <span className={styles.label}>Target Scheme Codes (Optional - leave blank for all funds)</span>
         <input
           className={`${styles.input} ${styles.inputMono}`}
@@ -70,8 +70,8 @@ export const NavHistorySyncSection: React.FC<NavHistorySyncSectionProps> = ({
           placeholder="120503, 122639 — blank to sync all mutual funds in India"
         />
       </label>
-      {validation.error && <p className={styles.sectionDesc} style={{ color: 'var(--color-error)' }}>{validation.error}</p>}
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.5rem' }}>
+      {validation.error && <p className={`${styles.sectionDesc} ${styles.validationErrorText}`}>{validation.error}</p>}
+      <div className={styles.actionsRowSpaced}>
         <button className={styles.btnPrimarySm} type="button" disabled={busy !== null || !validation.isValid} onClick={() => onSync()}>
           {isBusy ? 'Fetching & Storing AMFI History...' : 'Sync 90-Day History'}
         </button>
@@ -83,20 +83,20 @@ export const NavHistorySyncSection: React.FC<NavHistorySyncSectionProps> = ({
         </button>
       </div>
       {report && (
-        <div style={{ marginTop: '1rem', padding: '0.85rem', background: 'var(--color-bg-secondary)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <strong style={{ fontSize: '0.875rem' }}>Sync Result: {report.fromAmfi} to {report.toAmfi}</strong>
+        <div className={styles.syncReportBox}>
+          <div className={styles.syncReportHeader}>
+            <strong className={styles.syncReportTitle}>Sync Result: {report.fromAmfi} to {report.toAmfi}</strong>
             <span className={`${styles.badge} ${styles.badgeSuccess}`}>Completed in {(report.elapsedMs / 1000).toFixed(1)}s</span>
           </div>
-          <p className={styles.sectionDesc} style={{ margin: '0 0 0.5rem 0' }}>
+          <p className={`${styles.sectionDesc} ${styles.syncDescText}`}>
             Merged <strong>{report.schemesUpdated.toLocaleString()}</strong> of <strong>{report.totalSchemes.toLocaleString()}</strong> schemes
             ({report.totalRecords.toLocaleString()} daily records in AMFI 90-day file).
             {report.hasMoreSchemes && ' (35s execution budget reached for this run; click Sync again to continue window, or advance).'}
           </p>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', background: 'rgba(99, 102, 241, 0.08)', padding: '0.6rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Ready for next sync:</span>
-            <span className={styles.inputMono} style={{ fontSize: '0.8125rem' }}>{report.nextFromAmfi} → {report.nextToAmfi}</span>
-            <button className={styles.btnSecondarySm} type="button" disabled={busy !== null} onClick={onLoadNextWindow} style={{ marginLeft: 'auto' }}>
+          <div className={styles.nextSyncBox}>
+            <span className={styles.nextSyncLabel}>Ready for next sync:</span>
+            <span className={`${styles.inputMono} ${styles.nextSyncMono}`}>{report.nextFromAmfi} → {report.nextToAmfi}</span>
+            <button className={`${styles.btnSecondarySm} ${styles.nextSyncLoadBtn}`} type="button" disabled={busy !== null} onClick={onLoadNextWindow}>
               Load Next Window
             </button>
             <button className={styles.btnPrimarySm} type="button" disabled={busy !== null} onClick={() => onSync(report.nextFromDate, report.nextToDate)}>
@@ -106,7 +106,7 @@ export const NavHistorySyncSection: React.FC<NavHistorySyncSectionProps> = ({
         </div>
       )}
       {!report && nextTarget && (
-        <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: 'var(--color-bg-secondary)', borderRadius: '6px', fontSize: '0.8125rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div className={styles.checkpointBox}>
           <span>Last sync checkpoint recorded. Ready for interval: <strong>{nextTarget.fromAmfi} → {nextTarget.toAmfi}</strong></span>
           <button className={styles.btnSecondarySm} type="button" disabled={busy !== null} onClick={onLoadNextWindow}>
             Load Next Window

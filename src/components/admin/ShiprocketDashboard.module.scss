@@ -1494,3 +1494,24 @@
     padding: 0.35rem 0.75rem;
   }
 }
+
+.inlineIcon {
+  display: inline;
+  margin-right: 4px;
+}
+
+.formSectionTitleFlush {
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+.activeAccountText {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.selectServerIcon {
+  color: var(--color-primary);
+}

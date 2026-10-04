@@ -406,3 +406,23 @@
   line-height: 1.5;
   margin: 0;
 }
+
+.formButtonRow {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.emptyIcon {
+  color: var(--color-primary);
+}
+
+.contactInfoWrapper {
+  margin-top: 0.35rem;
+}
+
+.syncMeta {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  color: var(--color-text-secondary);
+}

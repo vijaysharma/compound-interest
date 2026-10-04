@@ -40,21 +40,21 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
             <div>
               <label className={styles.fieldLabel}>Contact / User Name</label>
               <div className={styles.valueHighlight}>
-                <FiUser style={{ display: 'inline', marginRight: 4 }} />
+                <FiUser className={styles.inlineIcon} />
                 {profile?.contact_name || '—'}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>Phone Number</label>
               <div className={styles.valueHighlight}>
-                <FiPhone style={{ display: 'inline', marginRight: 4 }} />
+                <FiPhone className={styles.inlineIcon} />
                 {profile?.contact_phone || '—'}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>Contact Email</label>
               <div className={styles.valueHighlight}>
-                <FiMail style={{ display: 'inline', marginRight: 4 }} />
+                <FiMail className={styles.inlineIcon} />
                 {profile?.contact_email || '—'}
               </div>
             </div>
@@ -89,7 +89,7 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
               <label className={styles.fieldLabel}>Token Storage</label>
               <div className={styles.valueHighlight}>
                 <span className={`${styles.statusBadge} ${styles.statusGreen}`}>
-                  <FiKey style={{ marginRight: 4 }} />
+                  <FiKey className={styles.inlineIcon} />
                   {profile ? 'Database Token' : 'Environment Token'}
                 </span>
               </div>
@@ -104,7 +104,7 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
         {/* 3. Multi-Account Management Section */}
         <div className={styles.formCard}>
           <div className={styles.accountCardHeader}>
-            <div className={styles.formSectionTitle} style={{ margin: 0, border: 'none', padding: 0 }}>
+            <div className={`${styles.formSectionTitle} ${styles.formSectionTitleFlush}`}>
               <FiServer /> Configured Shiprocket Accounts ({accountsList.length})
             </div>
           </div>
@@ -154,7 +154,7 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
                         <FiToggleRight /> Set Active
                       </button>
                     ) : (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 600 }}>
+                      <span className={styles.activeAccountText}>
                         Currently in use
                       </span>
                     )}

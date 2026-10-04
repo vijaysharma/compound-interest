@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import Link from '@/navigation';
 import {
   FiUsers,
   FiRefreshCw,
@@ -16,6 +16,8 @@ import {
   FiMail,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronUp,
+  FiChevronDown,
   FiPackage,
   FiCalendar,
   FiX,
@@ -282,7 +284,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             <div className={styles.syncDatesGroup}>
               <div className={styles.syncDateItem}>
                 <span className={styles.syncDateLabel}>
-                  <FiCalendar style={{ marginRight: 4 }} />
+                  <FiCalendar className={styles.calendarIcon} />
                   From:
                 </span>
                 <input
@@ -343,8 +345,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
           <div className={styles.modalCard}>
             <div className={styles.modalHeader}>
               <div
-                className={styles.formSectionTitle}
-                style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}
+                className={`${styles.formSectionTitle} ${styles.formSectionFlat}`}
               >
                 <FiUsers /> {editId ? 'Edit Customer Details' : 'Add New Customer Record'}
               </div>
@@ -506,12 +507,12 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         </div>
       </div>
       {loading && customers.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-secondary)' }}>
+        <div className={styles.emptyBox}>
           Loading customers...
         </div>
       ) : customers.length === 0 ? (
         <div className={styles.emptyBox}>
-          <FiUsers size={36} style={{ color: 'var(--color-primary)' }} />
+          <FiUsers size={36} className={styles.primaryIcon} />
           <div className={styles.emptyTitle}>No Customers Found</div>
           <p className={styles.emptyDesc}>
             {search
@@ -530,23 +531,23 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
               <thead>
                 <tr>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('name')}>
-                    Customer Name {sortBy === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                    Customer Name {sortBy === 'name' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
                   </th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('phone')}>
-                    Phone & Email {sortBy === 'phone' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                    Phone & Email {sortBy === 'phone' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
                   </th>
                   <th>Alt. Phone</th>
                   <th>Full Address</th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('city')}>
-                    City & State {sortBy === 'city' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                    City & State {sortBy === 'city' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
                   </th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('pincode')}>
-                    Pincode {sortBy === 'pincode' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                    Pincode {sortBy === 'pincode' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
                   </th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('orders')}>
-                    Orders {sortBy === 'orders' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                    Orders {sortBy === 'orders' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
                   </th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th className={styles.tableThRight}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -555,25 +556,19 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                     <td>
                       <div className={styles.custName}>{cust.customer_name}</div>
                       {cust.last_order_id && (
-                        <div style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>
+                        <div className={styles.contactSecondary}>
                           Last Order: #{cust.last_order_id}
                         </div>
                       )}
                     </td>
                     <td>
                       <div className={styles.phoneBadge}>
-                        <FiPhone size={13} style={{ color: 'var(--color-primary)' }} />
+                        <FiPhone size={13} className={styles.primaryIcon} />
                         <span>{cust.customer_phone || '—'}</span>
                       </div>
                       {cust.customer_email && (
-                        <div
-                          style={{
-                            fontSize: '0.75rem',
-                            color: 'var(--color-text-secondary)',
-                            marginTop: '0.2rem',
-                          }}
-                        >
-                          <FiMail size={12} style={{ marginRight: 3, verticalAlign: 'middle' }} />
+                        <div className={styles.contactSecondary}>
+                          <FiMail size={12} className={styles.emailIcon} />
                           {cust.customer_email}
                         </div>
                       )}
@@ -581,11 +576,11 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                     <td>
                       {cust.customer_phone_2 ? (
                         <div className={styles.phoneBadge}>
-                          <FiPhone size={13} style={{ color: 'var(--color-text-secondary)' }} />
+                          <FiPhone size={13} className={styles.secondaryIcon} />
                           <span>{cust.customer_phone_2}</span>
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--color-text-secondary)' }}>—</span>
+                        <span className={styles.emptyDash}>—</span>
                       )}
                     </td>
                     <td>
@@ -611,8 +606,8 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                         <span>{cust.total_orders}</span>
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div className={styles.actionBtnsRow} style={{ justifyContent: 'flex-end' }}>
+                    <td className={styles.tableTdRight}>
+                      <div className={`${styles.actionBtnsRow} ${styles.actionBtnsRowEnd}`}>
                         <button
                           type="button"
                           className={styles.editBtnSmall}
@@ -736,7 +731,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
               >
                 <FiChevronLeft /> Previous
               </button>
-              <span style={{ fontWeight: 600, padding: '0 0.5rem' }}>
+              <span className={styles.paginationCurrentPage}>
                 Page {page} of {totalPages}
               </span>
               <button
