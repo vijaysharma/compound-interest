@@ -258,6 +258,8 @@
 
 .board {
   display: grid;
+  grid-template-columns: repeat(var(--board-size, 6), 1fr);
+  grid-template-rows: repeat(var(--board-size, 6), 1fr);
   width: 100%;
   max-width: 480px;
   border-radius: 10px;
@@ -283,6 +285,12 @@
   font-family: inherit;
   transition: transform 0.08s ease, filter 0.15s ease;
   padding: 0;
+  background-color: var(--cell-bg, transparent);
+  border-top: var(--border-top, 1px solid rgba(0, 0, 0, 0.08));
+  border-bottom: var(--border-bottom, 1px solid rgba(0, 0, 0, 0.08));
+  border-left: var(--border-left, 1px solid rgba(0, 0, 0, 0.08));
+  border-right: var(--border-right, 1px solid rgba(0, 0, 0, 0.08));
+  outline: var(--cell-outline, none);
 
   &:active {
     transform: scale(0.96);
@@ -417,4 +425,76 @@
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-3px); }
   40%, 80% { transform: translateX(3px); }
+}
+
+.hintTextWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hintCloseBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  border-radius: 4px;
+}
+
+.statsModalContent {
+  width: 100%;
+  max-width: 420px;
+}
+
+.statsModalTitle {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.statVal {
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.statValSuccess {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.statLbl {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.statsCloseBtn {
+  width: 100%;
+  justify-content: center;
 }

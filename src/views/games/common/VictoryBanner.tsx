@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Link from '@/navigation';
+import { FiAward, FiStar } from 'react-icons/fi';
 import { ConfettiCanvas } from './ConfettiCanvas';
 import styles from './VictoryBanner.module.scss';
 export interface VictoryStat {
@@ -28,12 +29,14 @@ export const VictoryBanner: React.FC<VictoryBannerProps> = ({
   return (
     <div className={styles.bannerContainer} role="region" aria-label="Game complete celebration">
       <ConfettiCanvas />
-      <div className={styles.trophyIcon}>🏆</div>
+      <div className={styles.trophyIcon}>
+        <FiAward size={48} />
+      </div>
       <h2 className={styles.title}>Victory!</h2>
       <p className={styles.subtitle}>{subtitle || `You completed ${gameTitle}!`}</p>
       {isPersonalBest && (
         <div className={styles.personalBestBadge}>
-          <span>🌟</span>
+          <FiStar size={14} />
           <span>New Personal Best!</span>
         </div>
       )}

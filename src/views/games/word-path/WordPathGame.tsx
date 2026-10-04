@@ -6,7 +6,14 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { FiChevronDown, FiChevronUp, FiClock, FiRefreshCw } from 'react-icons/fi';
+import {
+  FiCheck,
+  FiChevronDown,
+  FiChevronUp,
+  FiClock,
+  FiRefreshCw,
+  FiArrowRight,
+} from 'react-icons/fi';
 import type {
   BoardDefinition,
   Coordinate,
@@ -16,6 +23,7 @@ import type {
 import { areNeighbors, getBoardSignature } from './generator';
 import { generateBoardAsync } from './workerClient';
 import { PRESET_BOARDS } from './boards';
+import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
@@ -538,15 +546,24 @@ export const WordPathGame: React.FC = () => {
     [activeWord.length, board.words, solvedWordIds]
   );
   return (
-    <div
+    <GameShell
       className={styles.gamePage}
       onPointerUp={handleBoardPointerUp}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
       aria-label="Word Path Puzzle Game"
-      suppressHydrationWarning
     >
+      <GameShell.Header
+        title="Word Path"
+        subtitle={`Topic: ${board.theme || board.title}`}
+        actions={
+          <div className={styles.topControls}>
+            <HowToPlayButton onClick={() => setShowHowToPlayModal(true)} />
+            <QuitButton onClick={() => setShowQuitModal(true)} />
+          </div>
+        }
+      />
       {/* Top Header / Bar */}
       <div className={styles.topBar}>
         <div className={styles.diffSelector} role="radiogroup" aria-label="Difficulty">
@@ -579,14 +596,7 @@ export const WordPathGame: React.FC = () => {
           >
             <FiRefreshCw aria-hidden="true" />
           </button>
-          <HowToPlayButton onClick={() => setShowHowToPlayModal(true)} />
-          <QuitButton onClick={() => setShowQuitModal(true)} />
         </div>
-      </div>
-      {/* Topic Name */}
-      <div className={styles.topicBanner}>
-        <span className={styles.topicLabel}>Topic:</span>
-        <span className={styles.topicTitle}>{board.theme || board.title}</span>
       </div>
       {/* Live Word Construction Badge */}
       <div className={styles.liveWordBadgeContainer} aria-live="polite">
@@ -603,13 +613,21 @@ export const WordPathGame: React.FC = () => {
             <span className={styles.liveWordFlow}>
               {activeWordLetters.map((char, i) => (
                 <React.Fragment key={i}>
-                  {i > 0 && <span className={styles.liveWordArrow}>→</span>}
+                  {i > 0 && (
+                    <span className={styles.liveWordArrow}>
+                      <FiArrowRight aria-hidden="true" />
+                    </span>
+                  )}
                   <span>{char}</span>
                 </React.Fragment>
               ))}
             </span>
             <span className={styles.liveWordFinal}>"{activeWord}"</span>
-            {isTargetWordMatched && <span className={styles.liveWordBadgeCheck}>✓ Match!</span>}
+            {isTargetWordMatched && (
+              <span className={styles.liveWordBadgeCheck}>
+                <FiCheck aria-hidden="true" /> Match!
+              </span>
+            )}
           </div>
         ) : (
           <div className={styles.liveWordPlaceholder}>
@@ -628,11 +646,13 @@ export const WordPathGame: React.FC = () => {
       >
         <div
           className={styles.grid}
-          style={{
-            gridTemplateColumns: `repeat(${board.cols}, minmax(0, 1fr))`,
-            gridTemplateRows: `repeat(${board.rows}, minmax(0, 1fr))`,
-            ['--word-path-scale' as string]: mobileFontScale,
-          }}
+          style={
+            {
+              '--board-cols': board.cols,
+              '--board-rows': board.rows,
+              '--word-path-scale': mobileFontScale,
+            } as React.CSSProperties
+          }
         >
           {board.grid.flatMap((row) =>
             row.map((tile) => {
@@ -663,9 +683,7 @@ export const WordPathGame: React.FC = () => {
                   className={`${styles.tile} ${
                     isFocused ? styles.tileFocused : ''
                   } ${isSelectedInDrag ? styles.tileActiveDrag : ''}`}
-                  style={{
-                    backgroundColor: tileBg,
-                  }}
+                  style={{ '--tile-bg': tileBg } as React.CSSProperties}
                   aria-label={`Tile ${tile.letter || 'empty'} at row ${tile.row + 1}, column ${
                     tile.col + 1
                   }`}
@@ -673,13 +691,14 @@ export const WordPathGame: React.FC = () => {
                   <div className={styles.tileInner}>
                     {/* Start tile badge with checkmark on solved */}
                     {tile.isStart && solvedWord && (
-                      <div className={styles.startBadge}>✓</div>
+                      <div className={styles.startBadge}>
+                        <FiCheck aria-hidden="true" />
+                      </div>
                     )}
                     {/* Pre-highlighted starting tile badge on Easy or Hint */}
                     {tile.isStart && !solvedWord && isStartTileHighlighted && (
                       <div
-                        className={`${styles.startRing} ${styles.hintPulse}`}
-                        style={{ borderColor: '#EAB308', borderWidth: '3px' }}
+                        className={`${styles.startRing} ${styles.startRingHint} ${styles.hintPulse}`}
                       />
                     )}
                     {/* Letter */}
@@ -757,14 +776,20 @@ export const WordPathGame: React.FC = () => {
                   className={`${styles.letterChip} ${
                     isSolved ? '' : styles.letterChipUnsolved
                   }`}
-                  style={{
-                    backgroundColor: isSolved ? wordSol.themeColor.primary : undefined,
-                  }}
+                  style={
+                    isSolved
+                      ? ({ '--chip-bg': wordSol.themeColor.primary } as React.CSSProperties)
+                      : undefined
+                  }
                 >
                   {isSolved ? letter : ''}
                 </span>
               ))}
-              {isSolved && <span className={styles.checkMark}>✓</span>}
+              {isSolved && (
+                <span className={styles.checkMark}>
+                  <FiCheck aria-hidden="true" />
+                </span>
+              )}
             </div>
           );
         })}
@@ -929,7 +954,7 @@ export const WordPathGame: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </GameShell>
   );
 };
 export default WordPathGame;

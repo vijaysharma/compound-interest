@@ -7,11 +7,15 @@ import {
   FiRotateCcw,
   FiCheckCircle,
   FiSliders,
+  FiAlertTriangle,
+  FiSquare,
+  FiCircle,
 } from 'react-icons/fi';
 import { getHint, validateHitori } from './engine';
 import type { HitoriPuzzle } from './generator';
 import { createHitoriPuzzle, parseStoredPuzzle, presetPuzzle } from './puzzleSource';
 import type { CellState, HitoriDifficulty, HitoriMove } from './types';
+import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
@@ -319,22 +323,22 @@ export const HitoriGame: React.FC = () => {
     }
   };
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Hitori</h1>
-          <p className={styles.subtitle}>Eliminate duplicate numbers by shading cells</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
-          <QuitButton onClick={() => setShowQuitModal(true)} />
-        </div>
-      </header>
+    <GameShell className={styles.container}>
+      <GameShell.Header
+        title="Hitori"
+        subtitle="Eliminate duplicate numbers by shading cells"
+        actions={
+          <div className={styles.headerActions}>
+            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+            <QuitButton onClick={() => setShowQuitModal(true)} />
+          </div>
+        }
+      />
       {/* HUD stats */}
       <div className={styles.hudBar}>
         <div className={styles.hudStat}>
           <span className={styles.hudLabel}>Difficulty</span>
-          <span className={styles.hudValue} style={{ textTransform: 'capitalize' }}>
+          <span className={`${styles.hudValue} ${styles.hudValueCapitalize}`}>
             {difficulty}
           </span>
         </div>
@@ -342,7 +346,7 @@ export const HitoriGame: React.FC = () => {
           <FiClock size={16} />
           <span>{formatGameTime(elapsedSeconds)}</span>
         </div>
-        <div className={styles.hudStat} style={{ textAlign: 'right' }}>
+        <div className={`${styles.hudStat} ${styles.hudStatRight}`}>
           <span className={styles.hudLabel}>Hints</span>
           <span className={styles.hudValue}>{hintsUsed}</span>
         </div>
@@ -389,28 +393,31 @@ export const HitoriGame: React.FC = () => {
             className={`${styles.modeBtn} ${tapMode === 'shade' ? styles.modeBtnActive : ''}`}
             onClick={() => setTapMode('shade')}
           >
-            ⬛ Shade
+            <span className={styles.modeIconSquare} aria-hidden="true" />
+            <span>Shade</span>
           </button>
           <button
             type="button"
             className={`${styles.modeBtn} ${tapMode === 'circle' ? styles.modeBtnActive : ''}`}
             onClick={() => setTapMode('circle')}
           >
-            🟢 Circle
+            <span className={styles.modeIconCircle} aria-hidden="true" />
+            <span>Circle</span>
           </button>
         </div>
       </div>
       {/* Hint Banner if active */}
       {activeHint && (
         <div className={styles.hintBanner}>
-          <FiHelpCircle size={18} style={{ flexShrink: 0 }} />
+          <FiHelpCircle size={18} className={styles.hintIcon} />
           <span>{activeHint.explanation}</span>
         </div>
       )}
       {/* Violations notice */}
       {validation.violations.length > 0 && isStarted && (
         <div className={`${styles.statusMessage} ${styles.warningStatus}`}>
-          <span>⚠️ {validation.violations[0].message}</span>
+          <FiAlertTriangle className={styles.warningIcon} />
+          <span>{validation.violations[0].message}</span>
         </div>
       )}
       {/* Board Card */}
@@ -418,10 +425,7 @@ export const HitoriGame: React.FC = () => {
         <div className={styles.gridContainer}>
           <div
             className={`${styles.grid} ${size >= 8 ? styles.gridDense : ''}`}
-            style={{
-              gridTemplateColumns: `repeat(${size}, 1fr)`,
-              gridTemplateRows: `repeat(${size}, 1fr)`,
-            }}
+            style={{ '--hitori-size': size } as React.CSSProperties}
           >
             {activePreset.grid.map((row, r) =>
               row.map((val, c) => {
@@ -549,7 +553,7 @@ export const HitoriGame: React.FC = () => {
         ]}
         controls={{
           desktop: 'Click to cycle cell states (Unmarked → Shaded → Circled). Right-click directly circles a confirmed cell.',
-          mobile: 'Use the Tap Action bar above the grid to select "Cycle", "⬛ Shade", or "🟢 Circle", then tap tiles on the board.',
+          mobile: 'Use the Tap Action bar above the grid to select "Cycle", "Shade", or "Circle", then tap tiles on the board.',
           shortcuts: 'Use "Auto-Circle" to automatically circle all neighbors of black cells, or "Hint" for logic guidance.',
         }}
         tips={[
@@ -558,7 +562,7 @@ export const HitoriGame: React.FC = () => {
           'Whenever you shade a cell black, immediately circle its four orthogonal neighbors, because black cells cannot touch.',
         ]}
       />
-    </div>
+    </GameShell>
   );
 };
 export default HitoriGame;

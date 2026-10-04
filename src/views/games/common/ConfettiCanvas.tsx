@@ -13,6 +13,8 @@ interface Particle {
   opacity: number;
 }
 const CONFETTI_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#eab308'];
+import styles from './ConfettiCanvas.module.scss';
+
 export const ConfettiCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
@@ -77,19 +79,5 @@ export const ConfettiCanvas: React.FC = () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, []);
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: 10,
-        overflow: 'hidden',
-      }}
-    />
-  );
+  return <canvas ref={canvasRef} className={styles.canvas} />;
 };

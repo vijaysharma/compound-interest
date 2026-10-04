@@ -1,6 +1,16 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
-import { FiX, FiHelpCircle } from 'react-icons/fi';
+import {
+  FiX,
+  FiHelpCircle,
+  FiTarget,
+  FiFileText,
+  FiPlay,
+  FiMonitor,
+  FiSmartphone,
+  FiCommand,
+  FiInfo,
+} from 'react-icons/fi';
 import styles from './HowToPlayModal.module.scss';
 
 export interface HowToPlaySection {
@@ -76,12 +86,18 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
 
         <div className={styles.content}>
           <section className={styles.section}>
-            <h3 className={styles.sectionHeading}>🎯 Objective</h3>
+            <h3 className={styles.sectionHeading}>
+              <FiTarget className={styles.headingIcon} />
+              <span>Objective</span>
+            </h3>
             <p className={styles.objectiveText}>{objective}</p>
           </section>
 
           <section className={styles.section}>
-            <h3 className={styles.sectionHeading}>📜 Rules</h3>
+            <h3 className={styles.sectionHeading}>
+              <FiFileText className={styles.headingIcon} />
+              <span>Rules</span>
+            </h3>
             <ul className={styles.list}>
               {rules.map((rule, idx) => (
                 <li key={idx} className={styles.listItem}>
@@ -92,23 +108,35 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           </section>
 
           <section className={styles.section}>
-            <h3 className={styles.sectionHeading}>🎮 Controls</h3>
+            <h3 className={styles.sectionHeading}>
+              <FiPlay className={styles.headingIcon} />
+              <span>Controls</span>
+            </h3>
             <div className={styles.controlsGrid}>
               {controls.desktop && (
                 <div className={styles.controlBox}>
-                  <span className={styles.controlBoxLabel}>💻 Desktop</span>
+                  <span className={styles.controlBoxLabel}>
+                    <FiMonitor />
+                    <span>Desktop</span>
+                  </span>
                   <p className={styles.controlBoxDesc}>{controls.desktop}</p>
                 </div>
               )}
               {controls.mobile && (
                 <div className={styles.controlBox}>
-                  <span className={styles.controlBoxLabel}>📱 Mobile / Touch</span>
+                  <span className={styles.controlBoxLabel}>
+                    <FiSmartphone />
+                    <span>Mobile / Touch</span>
+                  </span>
                   <p className={styles.controlBoxDesc}>{controls.mobile}</p>
                 </div>
               )}
               {controls.shortcuts && (
                 <div className={styles.controlBox}>
-                  <span className={styles.controlBoxLabel}>⌨️ Shortcuts</span>
+                  <span className={styles.controlBoxLabel}>
+                    <FiCommand />
+                    <span>Shortcuts</span>
+                  </span>
                   <p className={styles.controlBoxDesc}>{controls.shortcuts}</p>
                 </div>
               )}
@@ -117,7 +145,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
 
           {tips && tips.length > 0 && (
             <section className={styles.section}>
-              <h3 className={styles.sectionHeading}>💡 Tips & Strategies</h3>
+              <h3 className={styles.sectionHeading}>
+                <FiInfo className={styles.headingIcon} />
+                <span>Tips &amp; Strategies</span>
+              </h3>
               <ul className={styles.list}>
                 {tips.map((tip, idx) => (
                   <li key={idx} className={styles.listItem}>

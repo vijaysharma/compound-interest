@@ -103,6 +103,7 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
       { name: 'Slide Puzzle', href: '/games/slide-puzzle', icon: FiBox, aliases: ['/slide-puzzle'] },
       { name: 'Hitori', href: '/games/hitori', icon: FiGrid, aliases: ['/hitori'] },
       { name: 'Tango', href: '/games/tango', icon: FiGrid, aliases: ['/tango', '/binairo'] },
+      { name: 'Queens', href: '/games/queens', icon: FiAward, aliases: ['/queens'] },
     ],
   },
   {

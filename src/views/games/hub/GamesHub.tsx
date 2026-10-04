@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from '@/navigation';
+import { useAuth } from '@/context/useAuth';
 import {
   formatGameTime,
   getGamePersonalBest,
@@ -19,14 +20,25 @@ import {
   getUserAliasAction,
   updateUserAliasAction,
 } from '@/actions/userAlias';
-import { useAuth } from '@/context/useAuth';
-import { FiCheck, FiEdit2, FiUser } from 'react-icons/fi';
+import {
+  FiAward,
+  FiBox,
+  FiCheck,
+  FiCompass,
+  FiEdit2,
+  FiGlobe,
+  FiGrid,
+  FiPlay,
+  FiStar,
+  FiUser,
+  FiZap,
+} from 'react-icons/fi';
 import styles from './GamesHub.module.scss';
 interface GameMeta {
   id: LeaderboardEntry['gameId'];
   title: string;
   category: string;
-  icon: string;
+  icon: React.ElementType;
   iconBg: string;
   description: string;
   href: string;
@@ -36,7 +48,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'word-path',
     title: 'Word Path',
     category: 'Word Puzzle',
-    icon: '🔤',
+    icon: FiCompass,
     iconBg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
     description: 'Connect adjacent letters to trace hidden snake-words across responsive letter grids.',
     href: '/games/word-path',
@@ -45,7 +57,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'sudoku',
     title: 'Sudoku',
     category: 'Logic Grid',
-    icon: '🔢',
+    icon: FiGrid,
     iconBg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
     description: 'Classic 9×9 mathematical puzzle with authentic unique solutions, pencil notes, and auto-check.',
     href: '/games/sudoku',
@@ -54,7 +66,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'minesweeper',
     title: 'Minesweeper',
     category: 'Retro Classic',
-    icon: '💣',
+    icon: FiZap,
     iconBg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
     description: 'Uncover safe cells without detonating hidden mines. Features first-click safety, chording, and zoom.',
     href: '/games/minesweeper',
@@ -63,7 +75,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'slide-puzzle',
     title: '15-Slide Puzzle',
     category: 'Number Slide',
-    icon: '🧩',
+    icon: FiBox,
     iconBg: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
     description: 'Arrange scrambled 1 to 15 tiles into numerical order using fluid row & column sliding with solvability guarantee.',
     href: '/games/slide-puzzle',
@@ -72,7 +84,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'hitori',
     title: 'Hitori',
     category: 'Japanese Logic',
-    icon: '⬛',
+    icon: FiGrid,
     iconBg: 'linear-gradient(135deg, #475569 0%, #1e293b 100%)',
     description: 'Classic Japanese number puzzle. Shade duplicate numbers so no black cells touch and all white cells remain connected.',
     href: '/games/hitori',
@@ -81,7 +93,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'tango',
     title: 'Tango (Binairo)',
     category: 'Binary Logic',
-    icon: '⚪',
+    icon: FiGrid,
     iconBg: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
     description: 'Fill the grid with primary and light circles following equal, cross, and 3-in-a-row deduction rules.',
     href: '/games/tango',
@@ -90,7 +102,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'queens',
     title: 'Queens',
     category: 'Crown Logic',
-    icon: '👑',
+    icon: FiAward,
     iconBg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
     description: 'Place exactly one Queen in every row, column, and colored region without Queens touching diagonally.',
     href: '/games/queens',
@@ -196,9 +208,9 @@ export const GamesHub: React.FC = () => {
     }
   };
   const getMedal = (idx: number) => {
-    if (idx === 0) return '🥇';
-    if (idx === 1) return '🥈';
-    if (idx === 2) return '🥉';
+    if (idx === 0) return <FiAward aria-label="1st Place" />;
+    if (idx === 1) return <FiAward aria-label="2nd Place" />;
+    if (idx === 2) return <FiAward aria-label="3rd Place" />;
     return `#${idx + 1}`;
   };
   return (
@@ -271,7 +283,7 @@ export const GamesHub: React.FC = () => {
           className={`${styles.tabBtn} ${activeTab === 'games' ? styles.tabBtnActive : ''}`}
           onClick={() => setActiveTab('games')}
         >
-          🎮 All Games
+          <FiPlay aria-hidden="true" /> All Games
         </button>
         <button
           type="button"
@@ -280,18 +292,22 @@ export const GamesHub: React.FC = () => {
           className={`${styles.tabBtn} ${activeTab === 'leaderboard' ? styles.tabBtnActive : ''}`}
           onClick={() => setActiveTab('leaderboard')}
         >
-          🏆 Leaderboard
+          <FiAward aria-hidden="true" /> Leaderboard
         </button>
       </div>
       {activeTab === 'games' && (
         <div className={styles.gamesGrid}>
           {GAMES_LIST.map((game) => {
             const pb = personalBests[game.id];
+            const GameIcon = game.icon;
             return (
               <div key={game.id} className={styles.gameCard}>
                 <div className={styles.cardHeader}>
-                  <div className={styles.iconBadge} style={{ background: game.iconBg }}>
-                    {game.icon}
+                  <div
+                    className={styles.iconBadge}
+                    style={{ '--icon-bg': game.iconBg } as React.CSSProperties}
+                  >
+                    <GameIcon size={20} aria-hidden="true" />
                   </div>
                   <span className={styles.categoryBadge}>{game.category}</span>
                 </div>
@@ -299,7 +315,7 @@ export const GamesHub: React.FC = () => {
                 <p className={styles.gameDesc}>{game.description}</p>
                 {pb && (
                   <div className={styles.bestScoreBadge}>
-                    <span>⭐</span>
+                    <FiStar aria-hidden="true" />
                     <span>
                       Best: {formatGameTime(pb.timeSeconds)}
                       {pb.totalPoints !== undefined ? ` • ${pb.totalPoints} pts` : ''}
@@ -324,7 +340,7 @@ export const GamesHub: React.FC = () => {
               className={`${styles.filterBtn} ${leaderboardFilter === 'all' ? styles.filterBtnActive : ''}`}
               onClick={() => setLeaderboardFilter('all')}
             >
-              🌐 Global Overall
+              <FiGlobe aria-hidden="true" /> Global Overall
             </button>
             {GAMES_LIST.map((g) => (
               <button
@@ -346,7 +362,7 @@ export const GamesHub: React.FC = () => {
               {globalRankings.length === 0 ? (
                 <div className={styles.emptyState}>
                   <p>No global player records yet.</p>
-                  <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                  <p className={styles.emptySubtext}>
                     Complete any puzzle game to earn points and claim your spot on the podium!
                   </p>
                 </div>
@@ -367,14 +383,14 @@ export const GamesHub: React.FC = () => {
                         <td className={styles.td}>
                           <span className={styles.medal}>{getMedal(idx)}</span>
                         </td>
-                        <td className={styles.td} style={{ fontWeight: 800 }}>
+                        <td className={`${styles.td} ${styles.tdBold}`}>
                           {r.playerName}
                         </td>
                         <td className={styles.td}>{r.totalGames}</td>
-                        <td className={styles.td} style={{ fontWeight: 900, color: '#2563eb' }}>
+                        <td className={`${styles.td} ${styles.tdRankFirst}`}>
                           {r.totalPoints.toLocaleString()}
                         </td>
-                        <td className={styles.td} style={{ textTransform: 'capitalize' }}>
+                        <td className={`${styles.td} ${styles.tdCapitalize}`}>
                           {r.bestGame}
                         </td>
                       </tr>
@@ -388,7 +404,7 @@ export const GamesHub: React.FC = () => {
               {(dbEntries.length > 0 ? dbEntries : entries.filter((e) => e.gameId === leaderboardFilter)).length === 0 ? (
                 <div className={styles.emptyState}>
                   <p>No high scores recorded yet for this game.</p>
-                  <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                  <p className={styles.emptySubtext}>
                     Play a round to record your score on the leaderboard!
                   </p>
                 </div>
@@ -423,19 +439,19 @@ export const GamesHub: React.FC = () => {
                         <td className={styles.td}>
                           <span className={styles.medal}>{getMedal(idx)}</span>
                         </td>
-                        <td className={styles.td} style={{ fontWeight: 700 }}>
+                        <td className={`${styles.td} ${styles.tdSemiBold}`}>
                           {(e as LeaderboardRecord).playerName || 'Player'}
                         </td>
-                        <td className={styles.td} style={{ fontWeight: 700, textTransform: 'capitalize' }}>
+                        <td className={`${styles.td} ${styles.tdSemiBold} ${styles.tdCapitalize}`}>
                           {e.gameId}
                         </td>
-                        <td className={styles.td} style={{ textTransform: 'capitalize' }}>
+                        <td className={`${styles.td} ${styles.tdCapitalize}`}>
                           {e.difficulty}
                         </td>
-                        <td className={styles.td} style={{ fontWeight: 800, color: '#1d4ed8' }}>
+                        <td className={`${styles.td} ${styles.tdTime}`}>
                           {formatGameTime(e.timeSeconds)}
                         </td>
-                        <td className={styles.td} style={{ fontWeight: 800, color: '#16a34a' }}>
+                        <td className={`${styles.td} ${styles.tdPoints}`}>
                           {e.totalPoints !== undefined ? e.totalPoints.toLocaleString() : '—'}
                         </td>
                       </tr>

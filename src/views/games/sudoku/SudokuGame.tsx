@@ -4,6 +4,7 @@ import { FiClock, FiEdit2, FiHelpCircle, FiPause, FiPlay, FiRefreshCw, FiRotateC
 import { PRESET_SUDOKU } from './presets';
 import { generatePuzzle } from './generator';
 import type { SudokuDifficulty, SudokuMove, SudokuState } from './types';
+import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
@@ -368,21 +369,21 @@ export const SudokuGame: React.FC = () => {
   }, [isPaused, handleNumberInput, handleErase, handleUndo, handleHint]);
   const activeValue = selectedCell ? grid[selectedCell.row]?.[selectedCell.col] : null;
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Sudoku</h1>
-          <p className={styles.subtitle}>Fill each row, column, and 3×3 box with digits 1–9</p>
-        </div>
-        <div className={styles.headerActions}>
-          <div className={styles.timerBadge}>
-            <FiClock aria-hidden="true" />
-            <span>{formatTimer(elapsedSeconds)}</span>
+    <GameShell className={styles.container}>
+      <GameShell.Header
+        title="Sudoku"
+        subtitle="Fill each row, column, and 3×3 box with digits 1–9"
+        actions={
+          <div className={styles.headerActions}>
+            <div className={styles.timerBadge}>
+              <FiClock aria-hidden="true" />
+              <span>{formatTimer(elapsedSeconds)}</span>
+            </div>
+            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+            <QuitButton onClick={() => setShowQuitModal(true)} />
           </div>
-          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
-          <QuitButton onClick={() => setShowQuitModal(true)} />
-        </div>
-      </header>
+        }
+      />
       <div className={styles.topControls}>
         <div className={styles.difficultySelector} role="radiogroup" aria-label="Difficulty">
           {(['easy', 'medium', 'hard'] as SudokuDifficulty[]).map((diff) => (
@@ -591,6 +592,6 @@ export const SudokuGame: React.FC = () => {
           );
         })}
       </div>
-    </div>
+    </GameShell>
   );
 };

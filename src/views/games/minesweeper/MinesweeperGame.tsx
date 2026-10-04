@@ -1,6 +1,14 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FiFlag, FiZoomIn, FiZoomOut } from 'react-icons/fi';
+import {
+  FiFlag,
+  FiZoomIn,
+  FiZoomOut,
+  FiSmile,
+  FiFrown,
+  FiAward,
+  FiAlertCircle,
+} from 'react-icons/fi';
 import {
   checkWinCondition,
   createEmptyBoard,
@@ -11,6 +19,7 @@ import {
 } from './engine';
 import { getPreset, MOBILE_PRESETS, WEB_PRESETS } from './types';
 import type { Cell, CellState, MinesweeperDifficulty } from './types';
+import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
@@ -319,26 +328,28 @@ export const MinesweeperGame: React.FC = () => {
   );
   const flaggedCount = getFlaggedCount(board);
   const minesLeft = Math.max(0, config.mines - flaggedCount);
-  const faceEmoji =
-    gameStatus === 'lost'
-      ? '😵'
-      : gameStatus === 'won'
-        ? '😎'
-        : isFaceSurprised
-          ? '😮'
-          : '🙂';
+  const faceIcon =
+    gameStatus === 'lost' ? (
+      <FiFrown size={20} />
+    ) : gameStatus === 'won' ? (
+      <FiAward size={20} />
+    ) : isFaceSurprised ? (
+      <FiAlertCircle size={20} />
+    ) : (
+      <FiSmile size={20} />
+    );
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Minesweeper</h1>
-          <p className={styles.subtitle}>Uncover safe tiles without detonating hidden mines</p>
-        </div>
-        <div className={styles.headerActions}>
-          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
-          <QuitButton onClick={() => setShowQuitModal(true)} />
-        </div>
-      </header>
+    <GameShell className={styles.container}>
+      <GameShell.Header
+        title="Minesweeper"
+        subtitle="Uncover safe tiles without detonating hidden mines"
+        actions={
+          <div className={styles.headerActions}>
+            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+            <QuitButton onClick={() => setShowQuitModal(true)} />
+          </div>
+        }
+      />
       <div className={styles.controlsRow}>
         <div className={styles.difficultySelector} role="radiogroup" aria-label="Difficulty">
           {(['easy', 'medium', 'hard'] as MinesweeperDifficulty[]).map((diff) => (
@@ -400,7 +411,7 @@ export const MinesweeperGame: React.FC = () => {
             title="Reset game"
             aria-label="Reset game"
           >
-            {faceEmoji}
+            {faceIcon}
           </button>
           <div className={styles.counterDisplay} title="Elapsed time">
             {elapsedSeconds.toString().padStart(3, '0')}
@@ -436,7 +447,7 @@ export const MinesweeperGame: React.FC = () => {
                 let cellClass = styles.cellHidden;
                 if (cell.state === 'revealed') {
                   if (cell.isMine) {
-                    content = '💣';
+                    content = <FiAlertCircle size={16} aria-label="Mine" />;
                     cellClass = cell.exploded ? styles.cellMineExploded : styles.cellRevealed;
                   } else {
                     cellClass = styles.cellRevealed;
@@ -445,7 +456,7 @@ export const MinesweeperGame: React.FC = () => {
                     }
                   }
                 } else if (cell.state === 'flagged') {
-                  content = '🚩';
+                  content = <FiFlag size={14} aria-label="Flagged" />;
                 }
                 const numberClass = cell.neighborMines > 0 && cell.state === 'revealed' && !cell.isMine ? styles[`n${cell.neighborMines}`] : '';
                 return (
@@ -522,7 +533,7 @@ export const MinesweeperGame: React.FC = () => {
         controls={{
           desktop: 'Left-click to reveal/dig. Right-click to place or remove a flag. Click a revealed number to chord.',
           mobile: 'Tap to dig (or flag if Flag Mode is ON). Long-press to toggle a flag with haptic vibration.',
-          shortcuts: 'Use the smiley face button 🙂 to quickly restart or reset the current board.',
+          shortcuts: 'Use the reset face button to quickly restart or reset the current board.',
         }}
         tips={[
           'Your very first click is guaranteed 100% safe—mines are only placed after you take your first action.',
@@ -556,6 +567,6 @@ export const MinesweeperGame: React.FC = () => {
       <p className={styles.instructions}>
         Tap to dig. Long-press or toggle Flag mode to mark mines. Tap revealed numbers to chord.
       </p>
-    </div>
+    </GameShell>
   );
 };

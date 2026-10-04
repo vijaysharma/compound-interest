@@ -1,6 +1,15 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FiRefreshCw, FiMousePointer, FiMove, FiLayers } from 'react-icons/fi';
+import {
+  FiRefreshCw,
+  FiMousePointer,
+  FiMove,
+  FiLayers,
+  FiArrowUp,
+  FiArrowDown,
+  FiArrowLeft,
+  FiArrowRight,
+} from 'react-icons/fi';
 import {
   canSlide,
   getShuffledBoard,
@@ -12,6 +21,7 @@ import {
   type SlideMove,
   type SlideResult,
 } from './engine';
+import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
@@ -307,17 +317,17 @@ export const SlidePuzzleGame: React.FC = () => {
   };
   const lastMove = movementLog[movementLog.length - 1];
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h1 className={styles.title}>15-Slide Puzzle</h1>
-          <p className={styles.subtitle}>Slide tiles into ascending 1 to 15 sequence</p>
-        </div>
-        <div className={styles.headerActions}>
-          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
-          <QuitButton onClick={() => setShowQuitModal(true)} />
-        </div>
-      </header>
+    <GameShell className={styles.container}>
+      <GameShell.Header
+        title="15-Slide Puzzle"
+        subtitle="Slide tiles into ascending 1 to 15 sequence"
+        actions={
+          <div className={styles.headerActions}>
+            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+            <QuitButton onClick={() => setShowQuitModal(true)} />
+          </div>
+        }
+      />
       <div className={styles.hudBar}>
         <div className={styles.hudStat}>
           <span className={styles.hudLabel}>Moves</span>
@@ -327,7 +337,7 @@ export const SlidePuzzleGame: React.FC = () => {
           <FiRefreshCw size={14} />
           <span>New Game</span>
         </button>
-        <div className={styles.hudStat} style={{ textAlign: 'right' }}>
+        <div className={`${styles.hudStat} ${styles.hudStatRight}`}>
           <span className={styles.hudLabel}>Time</span>
           <span className={styles.hudValue}>{formatGameTime(elapsedSeconds)}</span>
         </div>
@@ -337,11 +347,17 @@ export const SlidePuzzleGame: React.FC = () => {
           <span className={styles.controlModeLabel}>Control Mode:</span>
           {lastMove && (
             <span className={styles.lastMoveBadge}>
-              Last: Tile {lastMove.tileValue} {
-                lastMove.directionRelativeToBlank === 'UP' ? '↑' :
-                lastMove.directionRelativeToBlank === 'DOWN' ? '↓' :
-                lastMove.directionRelativeToBlank === 'LEFT' ? '←' : '→'
-              } ({lastMove.moveType})
+              Last: Tile {lastMove.tileValue}{' '}
+              {lastMove.directionRelativeToBlank === 'UP' ? (
+                <FiArrowUp aria-hidden="true" />
+              ) : lastMove.directionRelativeToBlank === 'DOWN' ? (
+                <FiArrowDown aria-hidden="true" />
+              ) : lastMove.directionRelativeToBlank === 'LEFT' ? (
+                <FiArrowLeft aria-hidden="true" />
+              ) : (
+                <FiArrowRight aria-hidden="true" />
+              )}{' '}
+              ({lastMove.moveType})
             </span>
           )}
         </div>
@@ -499,6 +515,6 @@ export const SlidePuzzleGame: React.FC = () => {
         {controlMode === 'swipe' && 'Slide / Hover Mode: Hover on web or slide on device from the blank to any number to swap them continuously like a snake.'}
         {controlMode === 'hybrid' && 'Hybrid Mode: Tap tiles or hover/slide continuously from the blank space to speed-solve.'}
       </p>
-    </div>
+    </GameShell>
   );
 };

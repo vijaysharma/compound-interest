@@ -4,7 +4,7 @@ import Link from '@/navigation';
 import { ConfettiCanvas } from './ConfettiCanvas';
 import type { ScoreBreakdown } from './scoring';
 import { useAuth } from '@/context/useAuth';
-import { FiUser, FiX } from 'react-icons/fi';
+import { FiUser, FiX, FiAward, FiAlertCircle, FiStar } from 'react-icons/fi';
 import styles from './GameOverModal.module.scss';
 export interface GameOverModalProps {
   outcome: 'won' | 'lost';
@@ -80,7 +80,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           <FiX size={20} />
         </button>
         {isWon && <ConfettiCanvas />}
-        <div className={styles.iconHeader}>{isWon ? '🏆' : '💥'}</div>
+        <div className={styles.iconHeader}>{isWon ? <FiAward size={48} /> : <FiAlertCircle size={48} />}</div>
         <h2 className={`${styles.title} ${!isWon ? styles.titleDefeat : ''}`}>
           {isWon ? 'Victory!' : 'Game Over'}
         </h2>
@@ -95,7 +95,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
         </p>
         {isWon && isPersonalBest && (
           <div className={styles.personalBestBadge}>
-            <span>🌟</span>
+            <FiStar className={styles.starIcon} size={15} />
             <span>New Personal Best!</span>
           </div>
         )}

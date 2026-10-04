@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Link from '@/navigation';
-import { FiLogOut } from 'react-icons/fi';
+import { FiLogOut, FiPause } from 'react-icons/fi';
 import styles from './QuitModal.module.scss';
 export interface QuitModalProps {
   isOpen: boolean;
@@ -21,7 +21,9 @@ export const QuitModal: React.FC<QuitModalProps> = ({
   return (
     <div className={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="quit-modal-title">
       <div className={styles.modal}>
-        <div className={styles.icon}>⏸️</div>
+        <div className={styles.icon}>
+          <FiPause size={32} />
+        </div>
         <h3 id="quit-modal-title" className={styles.title}>Game Paused</h3>
         <p className={styles.message}>
           Are you sure you want to quit {gameTitle}? Any unsaved progress will be forfeited.

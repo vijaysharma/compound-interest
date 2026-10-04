@@ -182,8 +182,51 @@
   aspect-ratio: 1 / 1;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hudValueCapitalize {
+  text-transform: capitalize;
+}
+
+.hudStatRight {
+  text-align: right;
+}
+
+.hintIcon {
+  flex-shrink: 0;
+}
+
+.warningIcon {
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.modeIconSquare {
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  border-radius: 2px;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.modeIconCircle {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
 .grid {
   display: grid;
+  grid-template-columns: repeat(var(--hitori-size, 5), 1fr);
+  grid-template-rows: repeat(var(--hitori-size, 5), 1fr);
   gap: 6px;
   width: 100%;
   height: 100%;

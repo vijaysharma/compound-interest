@@ -1,5 +1,6 @@
 import type { Position, QueensPuzzle } from './types';
 import { isUniqueSolution } from './solver';
+import { QUEENS_PRESETS, type QueensPreset } from './presets';
 
 /**
  * Deterministic PRNG (Mulberry32)
@@ -69,8 +70,8 @@ export function generateValidQueenPlacement(size: number, rng: () => number): Po
 }
 
 /**
- * Partitions the N x N grid into N connected, organic, balanced regions
- * with each region initially seeded at one queen's position.
+ * Partitions the N x N grid into N connected, natural regions with varying sizes
+ * (some small/constrained to provide logical deduction anchors).
  */
 export function growBalancedRegions(
   size: number,
@@ -79,20 +80,39 @@ export function growBalancedRegions(
 ): number[][] {
   const regions: number[][] = Array.from({ length: size }, () => new Array(size).fill(-1));
   const regionSizes = new Array(size).fill(0);
+
+  // Allocate varied target sizes: half the regions smaller (2-3 cells), rest larger
+  const targetSizes = new Array(size).fill(0);
+  let totalAssigned = 0;
+  const numSmall = Math.max(1, Math.floor(size / 2));
+  for (let i = 0; i < numSmall; i++) {
+    targetSizes[i] = Math.floor(rng() * 2) + 2; // 2 or 3 cells
+    totalAssigned += targetSizes[i];
+  }
+  const remainingCells = size * size - totalAssigned;
+  const avg = Math.floor(remainingCells / (size - numSmall));
+  for (let i = numSmall; i < size; i++) {
+    targetSizes[i] = avg;
+    totalAssigned += avg;
+  }
+  targetSizes[size - 1] += size * size - totalAssigned;
+
+  // Shuffle target sizes
+  shuffle(targetSizes, rng);
+
   const frontiers: Position[][] = Array.from({ length: size }, () => []);
+  const deltas = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ];
 
   // Seed each region with its queen
   queenPositions.forEach((pos, regId) => {
     regions[pos.r][pos.c] = regId;
     regionSizes[regId] = 1;
 
-    // Add unassigned orthogonal neighbors
-    const deltas = [
-      [-1, 0],
-      [1, 0],
-      [0, -1],
-      [0, 1],
-    ];
     for (const [dr, dc] of deltas) {
       const nr = pos.r + dr;
       const nc = pos.c + dc;
@@ -103,26 +123,24 @@ export function growBalancedRegions(
   });
 
   let remaining = size * size - size;
-  const deltas = [
-    [-1, 0],
-    [1, 0],
-    [0, -1],
-    [0, 1],
-  ];
 
   while (remaining > 0) {
-    // Collect regions that can expand
     const activeRegions: number[] = [];
     for (let reg = 0; reg < size; reg++) {
-      // Filter frontier cells that are still unassigned
       frontiers[reg] = frontiers[reg].filter((p) => regions[p.r][p.c] === -1);
-      if (frontiers[reg].length > 0) {
+      if (frontiers[reg].length > 0 && regionSizes[reg] < targetSizes[reg]) {
         activeRegions.push(reg);
       }
     }
 
     if (activeRegions.length === 0) {
-      // Emergency fill: if any cell was isolated, assign to an adjacent region
+      for (let reg = 0; reg < size; reg++) {
+        if (frontiers[reg].length > 0) activeRegions.push(reg);
+      }
+    }
+
+    if (activeRegions.length === 0) {
+      // Emergency fill: assign unassigned cells to any adjacent region
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
           if (regions[r][c] === -1) {
@@ -142,14 +160,7 @@ export function growBalancedRegions(
       break;
     }
 
-    // Sort active regions by size ascending (smallest regions expand first for balance)
-    activeRegions.sort((a, b) => regionSizes[a] - regionSizes[b]);
-
-    // Pick among the smallest active regions
-    const pickCount = Math.min(3, activeRegions.length);
-    const chosenReg = activeRegions[Math.floor(rng() * pickCount)];
-
-    // Pick a random unassigned frontier cell
+    const chosenReg = activeRegions[Math.floor(rng() * activeRegions.length)];
     const frontier = frontiers[chosenReg];
     const pickIdx = Math.floor(rng() * frontier.length);
     const cell = frontier.splice(pickIdx, 1)[0];
@@ -159,7 +170,6 @@ export function growBalancedRegions(
       regionSizes[chosenReg]++;
       remaining--;
 
-      // Add newly exposed neighbors to chosenReg's frontier
       for (const [dr, dc] of deltas) {
         const nr = cell.r + dr;
         const nc = cell.c + dc;
@@ -173,14 +183,53 @@ export function growBalancedRegions(
   return regions;
 }
 
+/**
+ * Applies dihedral symmetry (D4) and region color permutation to a verified preset.
+ * Guarantees isomorphic uniqueness in <0.1ms.
+ */
+function transformPreset(
+  preset: QueensPreset,
+  size: number,
+  rng: () => number
+): { regions: number[][]; solution: Position[] } {
+  const symmetry = Math.floor(rng() * 8);
+  const perm = Array.from({ length: size }, (_, i) => i);
+  shuffle(perm, rng);
+
+  const mapCoord = (r: number, c: number): Position => {
+    switch (symmetry) {
+      case 0: return { r, c };
+      case 1: return { r: c, c: size - 1 - r };
+      case 2: return { r: size - 1 - r, c: size - 1 - c };
+      case 3: return { r: size - 1 - c, c: r };
+      case 4: return { r: size - 1 - r, c };
+      case 5: return { r, c: size - 1 - c };
+      case 6: return { r: c, c: r };
+      case 7: return { r: size - 1 - c, c: size - 1 - r };
+      default: return { r, c };
+    }
+  };
+
+  const newRegions = Array.from({ length: size }, () => new Array(size).fill(0));
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const mapped = mapCoord(r, c);
+      newRegions[mapped.r][mapped.c] = perm[preset.regions[r][c]];
+    }
+  }
+
+  const newSolution = preset.solution.map((pos) => mapCoord(pos.r, pos.c));
+  return { regions: newRegions, solution: newSolution };
+}
+
 const SUPPORTED_SIZES = [6, 7, 8, 9, 10];
 
 /**
- * Procedurally generates a verified uniquely-solvable Queens puzzle.
- * - Chooses random size from 6x6 to 10x10 if not specified.
- * - Generates valid Queen placements.
- * - Grows natural connected regions.
- * - Solves and validates for uniqueness.
+ * Fast, non-blocking procedural Queens puzzle generator:
+ * 1. Attempts dynamic procedural generation for up to 25 attempts (~5-10ms).
+ * 2. If not found within bounded attempts, instantiates an isomorphic transformed preset
+ *    (random dihedral rotation/reflection + color permutation) with 100% uniqueness guarantee.
+ * 3. Never freezes or blocks the main thread.
  */
 export function generateQueensPuzzle(options: {
   seed?: string;
@@ -188,14 +237,14 @@ export function generateQueensPuzzle(options: {
   maxAttempts?: number;
 } = {}): QueensPuzzle {
   const seed = options.seed || `queens_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const maxAttempts = options.maxAttempts || 80;
+  const maxAttempts = Math.min(options.maxAttempts ?? 25, 40);
   const rng = createRng(seed);
 
-  // If size not specified, randomly pick from 6, 7, 8, 9, 10
   const size = options.size && SUPPORTED_SIZES.includes(options.size)
     ? options.size
     : SUPPORTED_SIZES[Math.floor(rng() * SUPPORTED_SIZES.length)];
 
+  // Fast procedural generation attempt
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const attemptSeed = `${seed}_att_${attempt}`;
     const attemptRng = createRng(attemptSeed);
@@ -205,7 +254,6 @@ export function generateQueensPuzzle(options: {
 
     const regions = growBalancedRegions(size, queenPositions, attemptRng);
 
-    // Verify all cells are assigned
     let allAssigned = true;
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
@@ -218,7 +266,6 @@ export function generateQueensPuzzle(options: {
     }
     if (!allAssigned) continue;
 
-    // Verify UNIQUE solution
     if (isUniqueSolution(size, regions)) {
       return {
         id: `qp_${seed}_${size}`,
@@ -231,26 +278,20 @@ export function generateQueensPuzzle(options: {
     }
   }
 
-  // Fallback safe generation with guaranteed uniqueness
-  let fallbackAttempt = 0;
-  while (true) {
-    const fbRng = createRng(`fb_${seed}_${fallbackAttempt}`);
-    const fbQueens = generateValidQueenPlacement(size, fbRng);
-    if (fbQueens) {
-      const fbRegions = growBalancedRegions(size, fbQueens, fbRng);
-      if (isUniqueSolution(size, fbRegions)) {
-        return {
-          id: `qp_${seed}_fb_${fallbackAttempt}`,
-          size,
-          regions: fbRegions,
-          solution: fbQueens,
-          seed,
-          createdAt: new Date().toISOString(),
-        };
-      }
-    }
-    fallbackAttempt++;
-  }
+  // Instant isomorphic fallback using verified presets
+  const presetsForSize = QUEENS_PRESETS[size] || QUEENS_PRESETS[6];
+  const presetIndex = Math.floor(rng() * presetsForSize.length);
+  const basePreset = presetsForSize[presetIndex];
+  const { regions: fbRegions, solution: fbSolution } = transformPreset(basePreset, size, rng);
+
+  return {
+    id: `qp_${seed}_iso_${presetIndex}`,
+    size,
+    regions: fbRegions,
+    solution: fbSolution,
+    seed,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 /**

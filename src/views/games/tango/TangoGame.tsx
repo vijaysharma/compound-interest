@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  FiAward,
   FiClock,
   FiHelpCircle,
   FiRotateCcw,
@@ -11,6 +12,7 @@ import {
 import { getTangoHint, validateTango } from './engine';
 import { TANGO_SIZE, generateTangoPuzzle } from './generator';
 import type { TangoCellVal, TangoDifficulty, TangoMove, TangoPreset } from './types';
+import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
@@ -362,18 +364,18 @@ export const TangoGame: React.FC = () => {
     );
   };
   return (
-    <div className={styles.container}>
+    <GameShell className={styles.container}>
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h1 className={styles.title}>Tango (Binairo)</h1>
-          <p className={styles.subtitle}>Fill the grid with primary & light circles</p>
-        </div>
-        <div className={styles.headerActions}>
-          <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
-          <QuitButton onClick={() => setShowQuitModal(true)} />
-        </div>
-      </header>
+      <GameShell.Header
+        title="Tango (Binairo)"
+        subtitle="Fill the grid with primary & light circles"
+        actions={
+          <div className={styles.headerActions}>
+            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+            <QuitButton onClick={() => setShowQuitModal(true)} />
+          </div>
+        }
+      />
       {/* HUD Bar */}
       <div className={styles.hudBar}>
         <div className={styles.hudStat}>
@@ -436,11 +438,6 @@ export const TangoGame: React.FC = () => {
             role="group"
             aria-label={`Tango board, ${size} by ${size}`}
             aria-busy={!isReady}
-            style={{
-              gridTemplateColumns: `repeat(${size}, 1fr)`,
-              gridTemplateRows: `repeat(${size}, 1fr)`,
-              ['--tango-size' as string]: size,
-            }}
           >
             {!isReady && <div className={styles.generating}>Generating puzzle…</div>}
             {isReady &&
@@ -606,7 +603,13 @@ export const TangoGame: React.FC = () => {
       )}
       {/* See Results / Completion Button */}
       <button type="button" className={styles.resultsBtn} onClick={handleCheckProgress} disabled={!isReady}>
-        {validation.isComplete ? '🎉 View Victory Results' : 'Check Progress'}
+        {validation.isComplete ? (
+          <>
+            <FiAward aria-hidden="true" /> View Victory Results
+          </>
+        ) : (
+          'Check Progress'
+        )}
       </button>
       {/* Game Over Modal */}
       {isComplete && (
@@ -660,7 +663,7 @@ export const TangoGame: React.FC = () => {
         gameTitle="Tango"
         hubHref="/games"
       />
-    </div>
+    </GameShell>
   );
 };
 export default TangoGame;

@@ -10,6 +10,8 @@ import {
   FiAward,
   FiCheckCircle,
   FiInfo,
+  FiX,
+  FiLogOut,
 } from 'react-icons/fi';
 import {
   applyCellAction,
@@ -21,6 +23,7 @@ import {
 import { generateQueensPuzzle } from './generator';
 import { generateQueensHint } from './solver';
 import type { CellState, Position, QueensHint, QueensMove, QueensPuzzle, QueensStats } from './types';
+import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { HowToPlayModal } from '../common/HowToPlayModal';
 import { QuitModal } from '../common/QuitModal';
@@ -438,42 +441,46 @@ export const QueensGame: React.FC = () => {
   }, [activeHint]);
 
   return (
-    <div className={styles.container}>
+    <GameShell className={styles.container}>
       {isWon && <ConfettiCanvas />}
 
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h1 className={styles.title}>
-            <span className={styles.crownBadge} role="img" aria-label="Queen Crown">👑</span>
-            Queens Puzzle
-          </h1>
-          <p className={styles.subtitle}>
-            One queen per row, column, & region • No touching
-          </p>
-        </div>
-
-        <div className={styles.headerActions}>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            onClick={() => setShowStatsModal(true)}
-            title="Statistics"
-            aria-label="View Statistics"
-          >
-            <FiAward size={18} />
-          </button>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            onClick={() => setShowHowToPlay(true)}
-            title="How to Play"
-            aria-label="How to Play"
-          >
-            <FiHelpCircle size={18} />
-          </button>
-        </div>
-      </header>
+      <GameShell.Header
+        title="Queens Puzzle"
+        subtitle="One queen per row, column, & region • No touching"
+        icon={<FiAward className={styles.crownBadge} aria-hidden="true" />}
+        actions={
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={() => setShowStatsModal(true)}
+              title="Statistics"
+              aria-label="View Statistics"
+            >
+              <FiAward size={18} />
+            </button>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={() => setShowHowToPlay(true)}
+              title="How to Play"
+              aria-label="How to Play"
+            >
+              <FiHelpCircle size={18} />
+            </button>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={() => setShowQuitModal(true)}
+              title="Exit Game"
+              aria-label="Exit Game"
+            >
+              <FiLogOut size={18} />
+            </button>
+          </div>
+        }
+      />
 
       {/* HUD Info Bar */}
       <div className={styles.hudBar}>
@@ -515,7 +522,7 @@ export const QueensGame: React.FC = () => {
             onClick={() => setInputMode('auto')}
             title="Single tap for X, double tap for Queen"
           >
-            Auto (1x✕, 2x👑)
+            Auto Mode
           </button>
           <button
             type="button"
@@ -523,7 +530,8 @@ export const QueensGame: React.FC = () => {
             onClick={() => setInputMode('queen')}
             title="Tap to place Queen"
           >
-            👑 Queen
+            <FiAward size={14} />
+            <span>Queen</span>
           </button>
           <button
             type="button"
@@ -531,7 +539,8 @@ export const QueensGame: React.FC = () => {
             onClick={() => setInputMode('x')}
             title="Tap to place X marker"
           >
-            ✕ X-Mark
+            <FiX size={14} />
+            <span>X-Mark</span>
           </button>
         </div>
 
@@ -563,7 +572,8 @@ export const QueensGame: React.FC = () => {
             disabled={isWon || !puzzle}
             title="Hint (H)"
           >
-            💡 Hint {hintsUsed > 0 ? `(${hintsUsed})` : ''}
+            <FiHelpCircle size={15} />
+            <span>Hint {hintsUsed > 0 ? `(${hintsUsed})` : ''}</span>
           </button>
         </div>
       </div>
@@ -571,16 +581,17 @@ export const QueensGame: React.FC = () => {
       {/* Active Hint Banner */}
       {activeHint && (
         <div className={styles.hintBanner} role="status">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className={styles.hintTextWrap}>
             <FiInfo size={16} />
             <span>{activeHint.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setActiveHint(null)}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+            className={styles.hintCloseBtn}
+            aria-label="Dismiss hint"
           >
-            ✕
+            <FiX size={16} />
           </button>
         </div>
       )}
@@ -590,10 +601,7 @@ export const QueensGame: React.FC = () => {
         {puzzle && (
           <div
             className={styles.board}
-            style={{
-              gridTemplateColumns: `repeat(${size}, 1fr)`,
-              gridTemplateRows: `repeat(${size}, 1fr)`,
-            }}
+            style={{ '--board-size': size } as React.CSSProperties}
             role="grid"
             aria-label="Queens Puzzle Board"
           >
@@ -618,24 +626,20 @@ export const QueensGame: React.FC = () => {
                       ${isHint ? styles.hintCell : ''}
                     `}
                     style={{
-                      backgroundColor: theme.bgLight,
-                      borderTop: borders.top ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
-                      borderBottom: borders.bottom ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
-                      borderLeft: borders.left ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
-                      borderRight: borders.right ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
-                      outline: isFocused ? '2px solid #3b82f6' : 'none',
-                    }}
+                      '--cell-bg': theme.bgLight,
+                      '--border-top': borders.top ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
+                      '--border-bottom': borders.bottom ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
+                      '--border-left': borders.left ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
+                      '--border-right': borders.right ? `3px solid ${theme.borderLight}` : '1px solid rgba(0, 0, 0, 0.08)',
+                      '--cell-outline': isFocused ? '2px solid #3b82f6' : 'none',
+                    } as React.CSSProperties}
                     onClick={() => handleCellTap(r, c)}
                   >
                     {cellVal === 'queen' && (
-                      <span className={styles.queenIcon} role="img" aria-label="Queen">
-                        👑
-                      </span>
+                      <FiAward className={styles.queenIcon} aria-label="Queen" />
                     )}
                     {cellVal === 'x' && (
-                      <span className={styles.xMarker} aria-hidden="true">
-                        ✕
-                      </span>
+                      <FiX className={styles.xMarker} aria-hidden="true" />
                     )}
                   </button>
                 );
@@ -655,7 +659,7 @@ export const QueensGame: React.FC = () => {
           <li>Queens <strong>cannot touch each other</strong>, even diagonally (must have at least one empty square between them).</li>
         </ul>
         <div className={styles.tipBox}>
-          <strong>Controls Tip:</strong> Single tap to place an <strong>✕</strong> on impossible squares. Double tap (or switch to Queen mode) to crown a Queen 👑.
+          <strong>Controls Tip:</strong> Single tap to place an X marker on impossible squares. Double tap (or switch to Queen mode) to place a Queen.
         </div>
       </section>
 
@@ -701,39 +705,41 @@ export const QueensGame: React.FC = () => {
           'Start by placing X marks around placed Queens: all 8 neighboring squares are immediately invalid.',
           'When a region has only 1 available square remaining, a Queen must go there!',
           'If a row or column only has 1 spot left, place the Queen immediately.',
-          'Use the 💡 Hint button anytime you are stuck to get a non-destructive logical deduction.',
+          'Use the Hint button anytime you are stuck to get a non-destructive logical deduction.',
         ]}
       />
 
       {/* Statistics Modal */}
       {showStatsModal && (
         <div className="modalOverlay" onClick={() => setShowStatsModal(false)}>
-          <div className="modalContent" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 800 }}>👑 Queens Statistics</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{stats.gamesPlayed}</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Played</div>
+          <div className={`modalContent ${styles.statsModalContent}`} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.statsModalTitle}>
+              <FiAward size={20} />
+              <span>Queens Statistics</span>
+            </h2>
+            <div className={styles.statsGrid}>
+              <div className={styles.statCard}>
+                <div className={styles.statVal}>{stats.gamesPlayed}</div>
+                <div className={styles.statLbl}>Played</div>
               </div>
-              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981' }}>{stats.gamesWon}</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Won</div>
+              <div className={styles.statCard}>
+                <div className={`${styles.statVal} ${styles.statValSuccess}`}>{stats.gamesWon}</div>
+                <div className={styles.statLbl}>Won</div>
               </div>
-              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>
+              <div className={styles.statCard}>
+                <div className={styles.statVal}>
                   {stats.bestTime > 0 ? formatGameTime(stats.bestTime) : '--:--'}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Best Time</div>
+                <div className={styles.statLbl}>Best Time</div>
               </div>
-              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{stats.currentStreak} 🔥</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>Current Streak</div>
+              <div className={styles.statCard}>
+                <div className={styles.statVal}>{stats.currentStreak}</div>
+                <div className={styles.statLbl}>Current Streak</div>
               </div>
             </div>
             <button
               type="button"
-              className={`${styles.actionBtn} ${styles.primaryActionBtn}`}
-              style={{ width: '100%', justifyContent: 'center' }}
+              className={`${styles.actionBtn} ${styles.primaryActionBtn} ${styles.statsCloseBtn}`}
               onClick={() => setShowStatsModal(false)}
             >
               Close
@@ -749,7 +755,7 @@ export const QueensGame: React.FC = () => {
         gameTitle="Queens Puzzle"
         hubHref="/games"
       />
-    </div>
+    </GameShell>
   );
 };
 
