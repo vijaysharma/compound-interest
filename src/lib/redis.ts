@@ -20,11 +20,18 @@ import {
 
 export { isRedisConfigured };
 export async function redisGet<T>(key: string): Promise<T | null> {
+  const mem = memoryGet<T>(key);
+  if (mem !== null && mem !== undefined) {
+    return mem;
+  }
   const upstash = await upstashGet<T>(key);
   if (upstash.success) {
+    if (upstash.data !== null && upstash.data !== undefined) {
+      memorySet(key, upstash.data);
+    }
     return upstash.data ?? null;
   }
-  return memoryGet<T>(key);
+  return null;
 }
 export async function redisMGet<T>(keys: string[]): Promise<Record<string, T | null>> {
   if (!keys || keys.length === 0) return {};
@@ -39,12 +46,9 @@ export async function redisSet(
   value: unknown,
   ttlSeconds = 3600
 ): Promise<boolean> {
-  const upstashOk = await upstashSet(key, value, ttlSeconds);
-  if (!upstashOk) {
-    memorySet(key, value, ttlSeconds);
-  } else {
-    memorySet(key, value, ttlSeconds);
-  }
+  // Always update in-memory store synchronously so immediate local reads are never stale
+  memorySet(key, value, ttlSeconds);
+  await upstashSet(key, value, ttlSeconds);
   return true;
 }
 export async function redisDel(key: string | string[]): Promise<boolean> {
