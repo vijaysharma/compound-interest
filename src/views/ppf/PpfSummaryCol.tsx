@@ -33,7 +33,7 @@ export function PpfSummaryCol({
       <div className={styles.statsGrid}>
         {ppfResult.hasHistory ? (
           <>
-            <div className={styles.statBox} style={{ borderLeft: '3px solid var(--color-primary)' }}>
+            <div className={`${styles.statBox} ${styles.statBoxPrimary}`}>
               <div className={styles.statLabel}>Current PPF Balance</div>
               <div className={styles.statValue}>
                 {currencySymbol}{ppfResult.currentBalance.toLocaleString('en-IN')}

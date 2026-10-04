@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiArrowRight } from 'react-icons/fi';
 import { formatRupees } from './money';
 import { COLUMN_LABELS } from './labels';
 import { inTodaysRupees } from './projectionDeflate';
@@ -33,7 +34,9 @@ export const PersonalUseCard = ({
             <span className={styles.personalValueMeta}>Current</span>
             <span className={styles.personalValue}>{formatRupees(totals.totalPersonalWithdrawals)}</span>
           </div>
-          <span className={styles.personalArrow} aria-hidden="true">→</span>
+          <span className={styles.personalArrow} aria-hidden="true">
+            <FiArrowRight />
+          </span>
           <div className={styles.personalValueBlock}>
             <span className={styles.personalValueMeta}>Projected ({settings?.horizonYears}y)</span>
             <span className={styles.personalValueProjected}>
@@ -51,7 +54,8 @@ export const PersonalUseCard = ({
             {formatRupees(totals.personalFromColumn1)}
             {isProjecting && projTotals && (
               <span className={styles.personalSplitProjected}>
-                {' → '}
+                {' '}
+                <FiArrowRight aria-hidden="true" />{' '}
                 <strong className={styles.personalSplitProjectedValue}>
                   {formatRupees(projTotals.personalFromColumn1)}
                 </strong>
@@ -65,7 +69,8 @@ export const PersonalUseCard = ({
             {formatRupees(totals.personalFromColumn2)}
             {isProjecting && projTotals && (
               <span className={styles.personalSplitProjected}>
-                {' → '}
+                {' '}
+                <FiArrowRight aria-hidden="true" />{' '}
                 <strong className={styles.personalSplitProjectedValue}>
                   {formatRupees(projTotals.personalFromColumn2)}
                 </strong>

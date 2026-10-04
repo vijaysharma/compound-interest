@@ -26,7 +26,7 @@ export const FundModalTaxSection: React.FC<FundModalTaxSectionProps> = React.mem
     <div className={styles.taxSection}>
       <div className={styles.taxHeader}>
         <h3 className={styles.taxTitle}>
-          <span>🇮🇳 Actual Post-Tax In-Hand Returns (Finance Act 2024)</span>
+          <span>Actual Post-Tax In-Hand Returns (Finance Act 2024)</span>
         </h3>
         <div className={styles.taxToggles}>
           <button

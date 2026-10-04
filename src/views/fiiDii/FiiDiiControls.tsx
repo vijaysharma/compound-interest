@@ -143,7 +143,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
               onChange={(e) => setShowFii(e.target.checked)}
               className={styles.hiddenCheckbox}
             />
-            <span className={styles.toggleDot} style={{ background: '#2563eb' }} />
+            <span className={`${styles.toggleDot} ${styles.toggleDotFii}`} />
             <span>FII Net</span>
           </label>
           {/* DII Series Toggle */}
@@ -154,7 +154,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
               onChange={(e) => setShowDii(e.target.checked)}
               className={styles.hiddenCheckbox}
             />
-            <span className={styles.toggleDot} style={{ background: '#059669' }} />
+            <span className={`${styles.toggleDot} ${styles.toggleDotDii}`} />
             <span>DII Net</span>
           </label>
           {/* Nifty 50 Overlay */}
@@ -167,7 +167,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
               onChange={(e) => setShowNifty(e.target.checked)}
               className={styles.hiddenCheckbox}
             />
-            <span className={styles.toggleDot} style={{ background: '#8b5cf6' }} />
+            <span className={`${styles.toggleDot} ${styles.toggleDotNifty}`} />
             <span>Nifty 50</span>
           </label>
           {/* Sensex Overlay */}
@@ -180,7 +180,7 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
               onChange={(e) => setShowSensex(e.target.checked)}
               className={styles.hiddenCheckbox}
             />
-            <span className={styles.toggleDot} style={{ background: '#f97316' }} />
+            <span className={`${styles.toggleDot} ${styles.toggleDotSensex}`} />
             <span>Sensex</span>
           </label>
         </div>

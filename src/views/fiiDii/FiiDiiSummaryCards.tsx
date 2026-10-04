@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import type { FIIDIISummary } from '@/lib/fiiDii/fiiDiiCalculations';
 import styles from './FiiDiiTracker.module.scss';
@@ -193,7 +194,12 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
               <span
                 className={`${styles.changeBadge} ${niftyPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
               >
-                {niftyPeriodChangePercent >= 0 ? '▲' : '▼'} {Math.abs(niftyPeriodChangePercent)}%
+                {niftyPeriodChangePercent >= 0 ? (
+                  <FiTrendingUp aria-hidden="true" />
+                ) : (
+                  <FiTrendingDown aria-hidden="true" />
+                )}{' '}
+                {Math.abs(niftyPeriodChangePercent)}%
               </span>
             )}
           </div>
@@ -206,7 +212,12 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
               <span
                 className={`${styles.changeBadge} ${sensexPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
               >
-                {sensexPeriodChangePercent >= 0 ? '▲' : '▼'} {Math.abs(sensexPeriodChangePercent)}%
+                {sensexPeriodChangePercent >= 0 ? (
+                  <FiTrendingUp aria-hidden="true" />
+                ) : (
+                  <FiTrendingDown aria-hidden="true" />
+                )}{' '}
+                {Math.abs(sensexPeriodChangePercent)}%
               </span>
             )}
           </div>

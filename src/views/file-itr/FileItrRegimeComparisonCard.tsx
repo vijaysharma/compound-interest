@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiLayers } from 'react-icons/fi';
+import { FiCheck, FiLayers } from 'react-icons/fi';
 import { Form16ExtractedData } from './types';
 import { TaxComparisonResult } from '../../utilities/incomeTaxCalculations';
 import styles from '../FileItr.module.scss';
@@ -40,7 +40,12 @@ export const FileItrRegimeComparisonCard: React.FC<FileItrRegimeComparisonCardPr
               isNewOptimal ? styles.regimeTagRecommended : ''
             }`}
           >
-            New Regime {isNewOptimal ? '★ Optimal Choice' : ''}
+            New Regime{' '}
+            {isNewOptimal && (
+              <>
+                <FiCheck aria-hidden="true" /> Optimal Choice
+              </>
+            )}
           </span>
           <div className={styles.regimeTaxAmount}>
             ₹{Math.round(taxComparison.newRegime.totalTaxPayable).toLocaleString('en-IN')}
@@ -81,7 +86,12 @@ export const FileItrRegimeComparisonCard: React.FC<FileItrRegimeComparisonCardPr
               isOldOptimal ? styles.regimeTagRecommended : ''
             }`}
           >
-            Old Regime {isOldOptimal ? '★ Optimal Choice' : ''}
+            Old Regime{' '}
+            {isOldOptimal && (
+              <>
+                <FiCheck aria-hidden="true" /> Optimal Choice
+              </>
+            )}
           </span>
           <div className={styles.regimeTaxAmount}>
             ₹{Math.round(taxComparison.oldRegime.totalTaxPayable).toLocaleString('en-IN')}

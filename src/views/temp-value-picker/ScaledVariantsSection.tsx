@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiArrowRight } from 'react-icons/fi';
 import ValuePicker from '../../components/ValuePicker';
 import PairedPicker from '../../components/PairedPicker';
 import DateRangePicker from '../../components/DateRangePicker';
@@ -116,7 +117,7 @@ export const ScaledVariantsSection: React.FC<ScaledVariantsSectionProps> = ({
             targetOptions={TARGET_OPTIONS}
           />
           <div className={styles.variationResultText}>
-            Selected Route: {demoSource} ➔ {demoTarget}
+            Selected Route: {demoSource} <FiArrowRight aria-hidden="true" /> {demoTarget}
           </div>
         </div>
         {/* Case 4: Dual Date Range */}

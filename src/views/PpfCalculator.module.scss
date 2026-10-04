@@ -262,6 +262,10 @@
   padding: 0.75rem;
 }
 
+.statBoxPrimary {
+  border-left: 3px solid var(--color-primary);
+}
+
 .statLabel {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -799,4 +803,83 @@
     align-items: center;
     justify-content: space-between;
   }
+}
+
+.historyHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.importTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.importSubtitle {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-bottom: 0.5rem;
+}
+
+.importFeedback {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.formErrorMessage {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.projectionDesc {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.thActions,
+.tdActions {
+  text-align: right;
+}
+
+.actionBtnGroupRight {
+  justify-content: flex-end;
+}
+
+.editInputCompact {
+  height: 30px;
+}
+
+.editInputAmount {
+  height: 30px;
+  width: 110px;
+}
+
+.editEligibilityText {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.rateBadgeEarly {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+}
+
+.rateBadgeLate {
+  background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: var(--color-warning);
+}
+
+.clearAllRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
 }

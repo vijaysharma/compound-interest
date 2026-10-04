@@ -2,6 +2,7 @@
 import SEOHead from '../components/SEOHead';
 import Breadcrumb from '../components/Breadcrumb';
 import { privacySchema } from '../data/seo/privacySchema';
+import { FiLock } from 'react-icons/fi';
 import styles from './StaticDocPage.module.scss';
 const Privacy = () => {
   const lastUpdated = 'August 31, 2026';
@@ -22,7 +23,9 @@ const Privacy = () => {
       <div className={styles.docBody}>
         {/* TL;DR */}
         <div className={styles.calloutSuccess}>
-          <p className={styles.calloutTitle}>🔒 TL;DR — Our Privacy Guarantee</p>
+          <p className={styles.calloutTitle}>
+            <FiLock aria-hidden="true" /> TL;DR — Our Privacy Guarantee
+          </p>
           <p className={styles.calloutText}>
             <strong>Rupee Calculator collects zero personal or financial data.</strong> Every
             calculation — SIP returns, EMI schedules, FD maturity values, and PPP conversions — runs

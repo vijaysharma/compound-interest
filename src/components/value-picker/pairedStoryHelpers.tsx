@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Meta } from '@storybook/nextjs';
 import PairedValuePicker, { type PairedValuePickerProps } from '../PairedValuePicker';
+import styles from '../PairedValuePicker.module.scss';
 export const STEP_UP_OPTIONS = Array.from({ length: 21 }, (_, pct) => ({ label: `${pct}%`, value: pct }));
 export const pairedPickerArgTypes: Meta<typeof PairedValuePicker>['argTypes'] = {
   primaryTitle: { description: 'Heading over the left field.' },
@@ -47,7 +48,7 @@ export const Controlled = ({
   const [secondary, setSecondary] = useState(initialSecondary);
   const [bridge, setBridge] = useState(initialBridge ?? '');
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className={styles.storyStack}>
       <PairedValuePicker
         {...rest}
         primaryValue={primary}
@@ -66,17 +67,7 @@ export const Controlled = ({
           onBridgeChange?.(next);
         }}
       />
-      <pre
-        style={{
-          margin: 0,
-          padding: '0.4rem 0.6rem',
-          borderRadius: 6,
-          background: 'var(--color-bg-tertiary)',
-          fontSize: 11,
-          lineHeight: 1.6,
-          color: 'var(--color-text-secondary)',
-        }}
-      >
+      <pre className={styles.storyPre}>
         {`committed state
   primary   : ${primary.toLocaleString('en-IN')}
   secondary : ${secondary.toLocaleString('en-IN')}${rest.bridgeOptions ? `\n  bridge    : ${bridge}` : ''}

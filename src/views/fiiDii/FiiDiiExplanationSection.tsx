@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { FiChevronDown, FiHelpCircle } from 'react-icons/fi';
 import { FII_DII_EXPLANATIONS, type FiiDiiSectionExplanation } from './fiiDiiExplanations';
 import styles from './FiiDiiTracker.module.scss';
 export const FiiDiiExplanationSection: React.FC = () => {
@@ -19,7 +20,9 @@ export const FiiDiiExplanationSection: React.FC = () => {
     <section className={styles.explanationsContainer} aria-label="FII and DII concepts explained">
       <div className={styles.explanationsHeader}>
         <div className={styles.explanationsHeaderTop}>
-          <span className={styles.infoBadge}>💡 Layman Guides & Formulas</span>
+          <span className={styles.infoBadge}>
+            <FiHelpCircle aria-hidden="true" /> Layman Guides & Formulas
+          </span>
           <span className={styles.infoSubText}>Tap any section to expand breakdown</span>
         </div>
         <h3 className={styles.explanationsMainTitle}>
@@ -45,7 +48,7 @@ export const FiiDiiExplanationSection: React.FC = () => {
                   <span className={styles.explanationTitle}>{item.title}</span>
                 </div>
                 <span className={`${styles.accordionChevron} ${isOpen ? styles.chevronOpen : ''}`}>
-                  ▼
+                  <FiChevronDown aria-hidden="true" />
                 </span>
               </button>
               {isOpen && (

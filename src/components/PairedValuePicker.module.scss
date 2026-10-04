@@ -416,12 +416,26 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   }
 }
 
-// Pinned scales, for preview frames that imitate a viewport they are not in.
-// No `container-type`, so nothing here reacts to the column's own width.
 .layoutMobile {
   @include tier-compact;
 }
 
 .layoutDesktop {
   @include tier-roomy;
+}
+
+.storyStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.storyPre {
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background: var(--color-bg-tertiary);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
 }

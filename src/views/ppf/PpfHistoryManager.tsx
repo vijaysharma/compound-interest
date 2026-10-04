@@ -164,7 +164,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
             and real historical rates.
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className={styles.historyHeaderActions}>
           <span
             className={styles.syncBadge}
             title={statusMessage || 'All changes saved to database'}
@@ -221,10 +221,10 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
       {/* Bulk CSV / Text Import */}
       {showImport && (
         <div className={styles.importBox}>
-          <div style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+          <div className={styles.importTitle}>
             Paste Investment Records (One deposit per line)
           </div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.75, marginBottom: '0.5rem' }}>
+          <div className={styles.importSubtitle}>
             Format: <code>YYYY-MM-DD, Amount, Notes</code> (e.g.{' '}
             <code>2022-04-03, 150000, SBI NetBanking</code>)
           </div>
@@ -235,13 +235,11 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
             onChange={(e) => setImportText(e.target.value)}
           />
           {importFeedback && (
-            <div
-              style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}
-            >
+            <div className={styles.importFeedback}>
               {importFeedback}
             </div>
           )}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className={styles.buttonRow}>
             <button
               type="button"
               className={styles.addBtn}
@@ -310,7 +308,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
           </div>
         </div>
         {formError && (
-          <div style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          <div className={styles.formErrorMessage}>
             {formError}
           </div>
         )}
@@ -320,12 +318,12 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
         <div className={styles.projectionToggleSection}>
           <div>
             <strong>Future Contributions After History:</strong>
-            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+            <div className={styles.projectionDesc}>
               Choose whether forward projections assume ongoing deposits or let the current balance
               compound on its own.
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className={styles.buttonRow}>
             <button
               type="button"
               className={`${styles.secondaryBtn} ${
@@ -357,7 +355,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                 <th>Amount (₹)</th>
                 <th>Interest Eligibility</th>
                 <th>Notes</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th className={styles.thActions}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -371,8 +369,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                       <td>
                         <input
                           type="date"
-                          className={styles.historyInput}
-                          style={{ height: '30px' }}
+                          className={`${styles.historyInput} ${styles.editInputCompact}`}
                           value={editDate}
                           onChange={(e) => setEditDate(e.target.value)}
                         />
@@ -380,14 +377,13 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                       <td>
                         <input
                           type="text"
-                          className={styles.historyInput}
-                          style={{ height: '30px', width: '110px' }}
+                          className={`${styles.historyInput} ${styles.editInputAmount}`}
                           value={editAmount}
                           onChange={(e) => setEditAmount(e.target.value)}
                         />
                       </td>
                       <td>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                        <span className={styles.editEligibilityText}>
                           {parseInt(editDate.slice(8, 10), 10) <= 5
                             ? 'Earns Month Interest'
                             : 'Next Month'}
@@ -396,16 +392,14 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                       <td>
                         <input
                           type="text"
-                          className={styles.historyInput}
-                          style={{ height: '30px' }}
+                          className={`${styles.historyInput} ${styles.editInputCompact}`}
                           value={editNotes}
                           onChange={(e) => setEditNotes(e.target.value)}
                         />
                       </td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td className={styles.tdActions}>
                         <div
-                          className={styles.actionBtnGroup}
-                          style={{ justifyContent: 'flex-end' }}
+                          className={`${styles.actionBtnGroup} ${styles.actionBtnGroupRight}`}
                         >
                           <button
                             type="button"
@@ -439,20 +433,16 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                     </td>
                     <td>
                       <span
-                        className={styles.rateBadge}
-                        style={{
-                          background: isEarly
-                            ? 'color-mix(in srgb, var(--color-success) 15%, transparent)'
-                            : 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
-                          color: isEarly ? 'var(--color-success)' : 'var(--color-warning)',
-                        }}
+                        className={`${styles.rateBadge} ${
+                          isEarly ? styles.rateBadgeEarly : styles.rateBadgeLate
+                        }`}
                       >
                         {isEarly ? 'On/Before 5th (Full Month)' : 'After 5th (Next Month)'}
                       </span>
                     </td>
                     <td>{entry.notes || '-'}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div className={styles.actionBtnGroup} style={{ justifyContent: 'flex-end' }}>
+                    <td className={styles.tdActions}>
+                      <div className={`${styles.actionBtnGroup} ${styles.actionBtnGroupRight}`}>
                         <button
                           type="button"
                           className={styles.actionIconBtn}
@@ -479,7 +469,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
         </div>
       )}
       {investments.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+        <div className={styles.clearAllRow}>
           <button
             type="button"
             className={`${styles.secondaryBtn} ${styles.dangerBtn}`}

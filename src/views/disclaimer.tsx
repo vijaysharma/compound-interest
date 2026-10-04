@@ -2,6 +2,7 @@
 import SEOHead from '../components/SEOHead';
 import Breadcrumb from '../components/Breadcrumb';
 import { Link } from '@/navigation';
+import { FiAlertTriangle } from 'react-icons/fi';
 import styles from './StaticDocPage.module.scss';
 const disclaimerSchema = {
   '@context': 'https://schema.org',
@@ -42,7 +43,9 @@ const Disclaimer = () => {
       <div className={styles.docBody}>
         {/* Key Disclaimer Box */}
         <div className={styles.calloutWarning}>
-          <p className={styles.calloutTitle}>⚠️ Important: Educational Purpose Only</p>
+          <p className={styles.calloutTitle}>
+            <FiAlertTriangle aria-hidden="true" /> Important: Educational Purpose Only
+          </p>
           <p className={styles.calloutText}>
             All calculators, projections, and financial models on Rupee Calculator are provided
             solely for <strong>educational and informational purposes</strong>. They do not

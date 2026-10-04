@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiAward, FiCheckCircle } from 'react-icons/fi';
+import { FiAlertTriangle, FiAward, FiCheckCircle } from 'react-icons/fi';
 import convertToWords, { getCurrencySymbol } from '../../utilities/currency';
 import type { NPSCalculationResult } from '../../utilities/npsCalculations';
 import styles from '../NpsCalculator.module.scss';
@@ -21,7 +21,10 @@ export function NpsSummaryCol({ npsResult, retirementAge }: NpsSummaryColProps) 
       )}
       {npsResult.isPremature && !npsResult.isSmallCorpus && (
         <div className={styles.prematureNotice}>
-          <strong>⚠️ Premature Exit (Retirement before Age 60):</strong> Under PFRDA regulations, exit prior to age 60 mandates a minimum <strong>80% annuity investment</strong> and a maximum 20% lump sum withdrawal.
+          <strong>
+            <FiAlertTriangle aria-hidden="true" /> Premature Exit (Retirement before Age 60):
+          </strong>{' '}
+          Under PFRDA regulations, exit prior to age 60 mandates a minimum <strong>80% annuity investment</strong> and a maximum 20% lump sum withdrawal.
         </div>
       )}
       <div className={styles.heroPensionCard}>

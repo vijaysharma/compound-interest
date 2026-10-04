@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiAlertCircle, FiCheckCircle, FiInfo } from 'react-icons/fi';
 import { Form16ExtractedData } from './types';
 import { RegimeTaxResult, TaxComparisonResult } from '../../utilities/incomeTaxCalculations';
 import styles from '../FileItr.module.scss';
@@ -30,11 +31,19 @@ export const FileItrHeroBanner: React.FC<FileItrHeroBannerProps> = ({
             isRefundDue ? styles.tagRefund : isBalanceTaxPayable ? styles.tagPayable : styles.tagPrimary
           }`}
         >
-          {isRefundDue
-            ? '🟢 Income Tax Refund Due'
-            : isBalanceTaxPayable
-              ? '🔴 Balance Tax Payable'
-              : '⚪ Nil Return / Zero Balance'}
+          {isRefundDue ? (
+            <>
+              <FiCheckCircle aria-hidden="true" /> Income Tax Refund Due
+            </>
+          ) : isBalanceTaxPayable ? (
+            <>
+              <FiAlertCircle aria-hidden="true" /> Balance Tax Payable
+            </>
+          ) : (
+            <>
+              <FiInfo aria-hidden="true" /> Nil Return / Zero Balance
+            </>
+          )}
         </div>
         <h2 className={styles.heroTitle}>
           ₹{Math.abs(Math.round(refundDifference)).toLocaleString('en-IN')}

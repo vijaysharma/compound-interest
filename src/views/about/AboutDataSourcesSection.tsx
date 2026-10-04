@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiDatabase, FiGlobe } from 'react-icons/fi';
+import { FiDatabase, FiExternalLink, FiGlobe } from 'react-icons/fi';
 import { DATA_SOURCES } from '../../data/seo/aboutData';
 import styles from '../StaticDocPage.module.scss';
 export const AboutDataSourcesSection: React.FC = () => {
@@ -20,7 +20,7 @@ export const AboutDataSourcesSection: React.FC = () => {
                   rel="noopener noreferrer"
                   className={styles.sourceLink}
                 >
-                  {src.name} ↗
+                  {src.name} <FiExternalLink aria-hidden="true" />
                 </a>
                 <p className={styles.sourceUsage}>{src.usage}</p>
               </div>
