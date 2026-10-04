@@ -19,19 +19,19 @@ import {
 } from './redis/memoryStore';
 
 export { isRedisConfigured };
+/**
+ * Upstash is the source of truth whenever it answers; the in-process store is only a fallback for
+ * when it is unconfigured or unreachable. Serving the in-process copy first went stale across
+ * serverless instances: an invalidation clears Upstash and the memory of the one instance that
+ * ran it, so every other warm instance kept returning the old value (and a read-through copy was
+ * held for the default hour rather than the key's own TTL).
+ */
 export async function redisGet<T>(key: string): Promise<T | null> {
-  const mem = memoryGet<T>(key);
-  if (mem !== null && mem !== undefined) {
-    return mem;
-  }
   const upstash = await upstashGet<T>(key);
   if (upstash.success) {
-    if (upstash.data !== null && upstash.data !== undefined) {
-      memorySet(key, upstash.data);
-    }
     return upstash.data ?? null;
   }
-  return null;
+  return memoryGet<T>(key);
 }
 export async function redisMGet<T>(keys: string[]): Promise<Record<string, T | null>> {
   if (!keys || keys.length === 0) return {};

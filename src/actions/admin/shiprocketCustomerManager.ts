@@ -521,6 +521,8 @@ export async function saveShiprocketCustomerAction(
         updated_at = NOW()
       WHERE id = ${customer.id}
     `;
+    // Without this the cached list keeps serving the pre-edit row (e.g. the old phone number).
+    await invalidateShiprocketCustomersCache();
     return { success: true, id: customer.id, message: 'Customer details updated successfully' };
   }
   // Insert or update on dedup_key conflict

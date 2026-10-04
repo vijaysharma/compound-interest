@@ -113,4 +113,32 @@ describe('Shiprocket Redis Caching & Invalidation Layer', () => {
       assert.strictEqual(memoryGet('other:prefix:three'), 'value3');
     });
   });
+  describe('redisGet with Upstash reachable', () => {
+    // Another serverless instance's view: its in-process copy predates an invalidation that only
+    // reached Upstash. Upstash must win, or edits (e.g. a customer's new phone) never show up.
+    it('returns the Upstash value instead of a stale in-process copy', async (t) => {
+      t.mock.method(globalThis, 'fetch', async () =>
+        new Response(JSON.stringify({ result: JSON.stringify({ phone: '9999999999' }) }), { status: 200 })
+      );
+      process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.test';
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+      t.after(() => {
+        delete process.env.UPSTASH_REDIS_REST_URL;
+        delete process.env.UPSTASH_REDIS_REST_TOKEN;
+      });
+      memorySet('sr:cust:list:stale', { phone: '1111111111' }, 3600);
+      assert.deepStrictEqual(await redisGet('sr:cust:list:stale'), { phone: '9999999999' });
+    });
+    it('treats an Upstash miss as a miss even if this instance still holds a copy', async (t) => {
+      t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ result: null }), { status: 200 }));
+      process.env.UPSTASH_REDIS_REST_URL = 'https://upstash.test';
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+      t.after(() => {
+        delete process.env.UPSTASH_REDIS_REST_URL;
+        delete process.env.UPSTASH_REDIS_REST_TOKEN;
+      });
+      memorySet('sr:cust:list:deleted', { phone: '1111111111' }, 3600);
+      assert.strictEqual(await redisGet('sr:cust:list:deleted'), null);
+    });
+  });
 });

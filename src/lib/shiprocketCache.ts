@@ -76,9 +76,10 @@ export async function withShiprocketCache<T>(
   // 2. Fetch fresh data
   const fresh = await fetcher();
 
-  // 3. Populate cache in background (non-blocking)
+  // 3. Populate cache before returning: reads go to Upstash first, so a write still in flight
+  // would make the next request (on any instance) miss and refetch. Failures stay best-effort.
   if (fresh !== null && fresh !== undefined) {
-    redisSet(key, fresh, ttlSeconds).catch(() => {});
+    await redisSet(key, fresh, ttlSeconds).catch(() => {});
   }
 
   return fresh;
