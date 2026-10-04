@@ -55,6 +55,9 @@ const WebSidebar: React.FC = () => {
                   } ${
                     isCollapsed ? styles.navItemCollapsed : styles.navItemExpanded
                   }`}
+                  onPointerDown={() => {
+                    if (pathname !== item.href) setPendingPath(item.href);
+                  }}
                   onClick={() => {
                     if (pathname !== item.href) setPendingPath(item.href);
                   }}

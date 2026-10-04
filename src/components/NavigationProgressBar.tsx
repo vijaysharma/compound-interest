@@ -79,7 +79,7 @@ export function NavigationProgressBar() {
     const handleStart = () => start();
     const handleStop = () => done();
     const handlePopState = () => start();
-    const handleClick = (e: MouseEvent) => {
+    const handlePointerAction = (e: MouseEvent | PointerEvent) => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       if (e.defaultPrevented) return;
       const anchor = (e.target as HTMLElement)?.closest('a');
@@ -104,12 +104,14 @@ export function NavigationProgressBar() {
     window.addEventListener(NAV_START_EVENT, handleStart);
     window.addEventListener(NAV_STOP_EVENT, handleStop);
     window.addEventListener('popstate', handlePopState);
-    document.addEventListener('click', handleClick, { capture: true });
+    document.addEventListener('pointerdown', handlePointerAction, { capture: true, passive: true });
+    document.addEventListener('click', handlePointerAction, { capture: true });
     return () => {
       window.removeEventListener(NAV_START_EVENT, handleStart);
       window.removeEventListener(NAV_STOP_EVENT, handleStop);
       window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('click', handleClick, { capture: true });
+      document.removeEventListener('pointerdown', handlePointerAction, { capture: true });
+      document.removeEventListener('click', handlePointerAction, { capture: true });
       if (timerRef.current) clearInterval(timerRef.current);
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);

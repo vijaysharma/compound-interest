@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiCheck, FiRefreshCw } from 'react-icons/fi';
 import { DiagnosticResult } from './errorData';
 import styles from './ErrorPage.module.scss';
 interface ErrorDiagnosticsTabProps {
@@ -50,21 +51,21 @@ export const ErrorDiagnosticsTab: React.FC<ErrorDiagnosticsTabProps> = ({
       </div>
       <div className={styles.checklist}>
         <div className={styles.checklistItem}>
-          <span>✓</span>
+          <FiCheck aria-hidden="true" />
           <span>Security sandbox verified — no user financial numbers transmitted outward</span>
         </div>
         <div className={styles.checklistItem}>
-          <span>✓</span>
+          <FiCheck aria-hidden="true" />
           <span>IndexedDB and local calculation cache ready for immediate restore</span>
         </div>
         <div className={styles.checklistItem}>
-          <span>✓</span>
+          <FiCheck aria-hidden="true" />
           <span>No unhandled network memory leaks detected in the active thread</span>
         </div>
       </div>
       <div className={styles.rerunContainer}>
         <button type="button" onClick={onRerun} className={styles.rerunBtn}>
-          🔄 Re-run System Self-Test
+          <FiRefreshCw aria-hidden="true" /> Re-run System Self-Test
         </button>
       </div>
     </div>

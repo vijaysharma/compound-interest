@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { FiRefreshCw } from 'react-icons/fi';
 import Link from '@/navigation';
 import { ERROR_CALCULATORS } from './errorData';
 import styles from './ErrorPage.module.scss';
@@ -22,7 +23,13 @@ export const ErrorRecoveryTab: React.FC<ErrorRecoveryTabProps> = ({ isRetrying, 
           disabled={isRetrying}
           className={styles.retryBtn}
         >
-          {isRetrying ? 'Refreshing Calculation...' : '🔄 Resume & Try Again'}
+          {isRetrying ? (
+            'Refreshing Calculation...'
+          ) : (
+            <>
+              <FiRefreshCw aria-hidden="true" /> Resume &amp; Try Again
+            </>
+          )}
         </button>
         <Link href="/" className={styles.homeLink}>
           Explore All Calculators
@@ -45,15 +52,20 @@ export const ErrorRecoveryTab: React.FC<ErrorRecoveryTabProps> = ({ isRetrying, 
           </div>
         </div>
         <div className={styles.calcsGrid}>
-          {filteredCalcs.map((calc) => (
-            <Link key={calc.href} href={calc.href} className={styles.calcCard}>
-              <span className={styles.calcIcon}>{calc.icon}</span>
-              <div>
-                <div className={styles.calcTitle}>{calc.title}</div>
-                <div className={styles.calcDesc}>{calc.desc}</div>
-              </div>
-            </Link>
-          ))}
+          {filteredCalcs.map((calc) => {
+            const CalcIcon = calc.icon;
+            return (
+              <Link key={calc.href} href={calc.href} className={styles.calcCard}>
+                <span className={styles.calcIcon}>
+                  <CalcIcon aria-hidden="true" />
+                </span>
+                <div>
+                  <div className={styles.calcTitle}>{calc.title}</div>
+                  <div className={styles.calcDesc}>{calc.desc}</div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

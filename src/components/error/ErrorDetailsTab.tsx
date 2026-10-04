@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiCheck, FiClipboard } from 'react-icons/fi';
 import styles from './ErrorPage.module.scss';
 interface ErrorDetailsTabProps {
   error: Error & { digest?: string };
@@ -26,7 +27,15 @@ export const ErrorDetailsTab: React.FC<ErrorDetailsTabProps> = ({ error, copied,
         </details>
       )}
       <button type="button" onClick={onCopy} className={styles.copyBtn}>
-        {copied ? '✓ Diagnostic Report Copied' : '📋 Copy Diagnostic Report'}
+        {copied ? (
+          <>
+            <FiCheck aria-hidden="true" /> Diagnostic Report Copied
+          </>
+        ) : (
+          <>
+            <FiClipboard aria-hidden="true" /> Copy Diagnostic Report
+          </>
+        )}
       </button>
     </div>
   );

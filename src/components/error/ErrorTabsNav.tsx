@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiActivity, FiFileText, FiZap } from 'react-icons/fi';
 import styles from './ErrorPage.module.scss';
 export type ErrorTabKey = 'recovery' | 'diagnostics' | 'details';
 interface ErrorTabsNavProps {
@@ -13,21 +14,21 @@ export const ErrorTabsNav: React.FC<ErrorTabsNavProps> = ({ activeTab, onTabChan
         onClick={() => onTabChange('recovery')}
         className={`${styles.tabBtn} ${activeTab === 'recovery' ? styles.tabActive : ''}`}
       >
-        ⚡ Quick Recovery
+        <FiZap aria-hidden="true" /> Quick Recovery
       </button>
       <button
         type="button"
         onClick={() => onTabChange('diagnostics')}
         className={`${styles.tabBtn} ${activeTab === 'diagnostics' ? styles.tabActive : ''}`}
       >
-        🩺 Live Diagnostics
+        <FiActivity aria-hidden="true" /> Live Diagnostics
       </button>
       <button
         type="button"
         onClick={() => onTabChange('details')}
         className={`${styles.tabBtn} ${activeTab === 'details' ? styles.tabActive : ''}`}
       >
-        📋 Technical Details
+        <FiFileText aria-hidden="true" /> Technical Details
       </button>
     </div>
   );

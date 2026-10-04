@@ -149,6 +149,13 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         }}
         onPointerDown={(e) => {
           prefetchOnIntent();
+          if (!e.defaultPrevented && e.button === 0 && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+            const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+            const targetClean = target.split('#')[0];
+            if (targetClean && targetClean !== currentPath) {
+              e.currentTarget.setAttribute(NAV_PENDING_ATTR, '');
+            }
+          }
           onPointerDown?.(e);
         }}
         onTouchStart={(e) => {
