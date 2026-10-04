@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiBold, FiItalic, FiUnderline } from 'react-icons/fi';
+import { FiBold, FiItalic, FiUnderline, FiX } from 'react-icons/fi';
 import { BsTypeStrikethrough } from 'react-icons/bs';
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from './constants';
 import styles from '../NotesEditor.module.scss';
@@ -69,7 +69,7 @@ export const EditorMobilePalettePopup: React.FC<EditorMobilePalettePopupProps> =
             }}
             title={c.label}
           >
-            {c.value === 'transparent' ? '✕' : ''}
+            {c.value === 'transparent' ? <FiX size={12} /> : null}
           </button>
         ))}
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiCheck } from 'react-icons/fi';
 import { FONT_SIZES } from './constants';
 import styles from '../NotesEditor.module.scss';
 interface EditorMobileFormatPopupProps {
@@ -82,7 +83,7 @@ export const EditorMobileFormatPopup: React.FC<EditorMobileFormatPopupProps> = (
               }}
             >
               <span>{fs.label}</span>
-              {isActive && <span className={styles.activeCheck}>✓</span>}
+              {isActive && <FiCheck className={styles.activeCheck} />}
             </button>
           </li>
         );

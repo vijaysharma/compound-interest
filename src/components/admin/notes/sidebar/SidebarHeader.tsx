@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { FiFolder, FiX } from 'react-icons/fi';
+import { FiFolder, FiX, FiFileText } from 'react-icons/fi';
 import { BsCloudArrowUp } from 'react-icons/bs';
 import styles from '../NotesSidebar.module.scss';
 interface SidebarHeaderProps {
@@ -20,7 +20,11 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
     <div className={styles.header}>
       <div className={styles.headerLeft}>
         <div className={styles.logoBox}>
-          {isMobileScreen ? <FiFolder size={20} className={styles.primaryIcon} /> : '📝'}
+          {isMobileScreen ? (
+            <FiFolder size={20} className={styles.primaryIcon} />
+          ) : (
+            <FiFileText size={20} className={styles.primaryIcon} />
+          )}
         </div>
         <div>
           <span className={styles.title}>

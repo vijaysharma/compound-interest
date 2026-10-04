@@ -1,5 +1,6 @@
 import React from 'react';
 import { BsPalette } from 'react-icons/bs';
+import { FiChevronDown, FiCheck, FiX } from 'react-icons/fi';
 import { FONT_SIZES, TEXT_COLORS, HIGHLIGHT_COLORS } from './constants';
 import { DropdownType } from './types';
 import styles from '../NotesEditor.module.scss';
@@ -31,7 +32,7 @@ export const EditorFontAndColorDropdowns: React.FC<EditorFontAndColorDropdownsPr
           title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
         >
           <span>{FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Size'}</span>
-          <span className={styles.arrowDownSmall}>▼</span>
+          <FiChevronDown className={styles.arrowDownSmall} />
         </button>
         {isFontSizeOpen && (
           <ul className={`${styles.dropdownMenu} ${styles.alignLeft} ${styles.dropdownWidth9}`}>
@@ -52,7 +53,7 @@ export const EditorFontAndColorDropdowns: React.FC<EditorFontAndColorDropdownsPr
                     }}
                   >
                     <span>{fs.label}</span>
-                    {isActive && <span className={styles.activeCheck}>✓</span>}
+                    {isActive && <FiCheck className={styles.activeCheck} />}
                   </button>
                 </li>
               );
@@ -108,7 +109,7 @@ export const EditorFontAndColorDropdowns: React.FC<EditorFontAndColorDropdownsPr
                   }}
                   title={c.label}
                 >
-                  {c.value === 'transparent' ? '✕' : ''}
+                  {c.value === 'transparent' ? <FiX size={12} /> : null}
                 </button>
               ))}
             </div>

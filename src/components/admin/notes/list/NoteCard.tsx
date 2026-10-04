@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { FiFolder } from 'react-icons/fi';
 import { BsPinFill, BsLockFill } from 'react-icons/bs';
 import {
   Note,
@@ -81,7 +82,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             className={styles.folderBadge}
             title="Click to move folder"
           >
-            📁 {displayFolder}
+            <FiFolder aria-hidden="true" /> {displayFolder}
           </button>
         )}
         {noteTags.map((t) => (
