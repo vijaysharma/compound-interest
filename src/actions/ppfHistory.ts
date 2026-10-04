@@ -88,7 +88,7 @@ export async function getPpfDataAction(
 
   let investmentRows: Array<{
     id: string;
-    investment_date: string | Date;
+    investment_date: string;
     amount: number | string;
     notes: string | null;
     created_at: string;
@@ -103,32 +103,33 @@ export async function getPpfDataAction(
     extension_blocks: number;
     extension_mode: string;
     projected_rate: number | string;
+    future_contribution_mode?: string;
   }> = [];
 
   if (owner.userId) {
     investmentRows = (await sql`
-      SELECT id, investment_date, amount, notes, created_at, updated_at
+      SELECT id, investment_date::text as investment_date, amount, notes, created_at, updated_at
       FROM ppf_investments
       WHERE user_id = ${owner.userId}
       ORDER BY investment_date ASC, created_at ASC
     `) as typeof investmentRows;
 
     prefRows = (await sql`
-      SELECT frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate
+      SELECT frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate, future_contribution_mode
       FROM ppf_preferences
       WHERE user_id = ${owner.userId}
       LIMIT 1
     `) as typeof prefRows;
   } else if (owner.guestId) {
     investmentRows = (await sql`
-      SELECT id, investment_date, amount, notes, created_at, updated_at
+      SELECT id, investment_date::text as investment_date, amount, notes, created_at, updated_at
       FROM ppf_investments
       WHERE guest_id = ${owner.guestId}
       ORDER BY investment_date ASC, created_at ASC
     `) as typeof investmentRows;
 
     prefRows = (await sql`
-      SELECT frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate
+      SELECT frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate, future_contribution_mode
       FROM ppf_preferences
       WHERE guest_id = ${owner.guestId}
       LIMIT 1
@@ -136,12 +137,9 @@ export async function getPpfDataAction(
   }
 
   const investments: PpfInvestmentRecord[] = investmentRows.map((r) => {
-    let dateStr = '';
-    if (r.investment_date instanceof Date) {
-      dateStr = r.investment_date.toISOString().slice(0, 10);
-    } else {
-      dateStr = String(r.investment_date).slice(0, 10);
-    }
+    const rawStr = String(r.investment_date || '').trim();
+    // Normalize to YYYY-MM-DD
+    const dateStr = rawStr.slice(0, 10);
     return {
       id: r.id,
       investmentDate: dateStr,
@@ -163,6 +161,7 @@ export async function getPpfDataAction(
       extensionBlocks: Number(p.extension_blocks) || 0,
       extensionMode: p.extension_mode === 'without_contribution' ? 'without_contribution' : 'with_contribution',
       projectedRate: Number(p.projected_rate) || 7.1,
+      futureContributionMode: p.future_contribution_mode === 'stop' ? 'stop' : 'continue',
     };
   }
 
@@ -343,11 +342,12 @@ export async function savePpfPreferencesAction(
   const blocks = Number(prefs.extensionBlocks) || 0;
   const extMode = prefs.extensionMode === 'without_contribution' ? 'without_contribution' : 'with_contribution';
   const rate = Number(prefs.projectedRate) || 7.1;
+  const futMode = prefs.futureContributionMode === 'stop' ? 'stop' : 'continue';
 
   if (owner.userId) {
     await sql`
-      INSERT INTO ppf_preferences (id, user_id, guest_id, frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate, updated_at)
-      VALUES (${id}, ${owner.userId}, NULL, ${freq}, ${amount}, ${timing}, ${startYr}, ${blocks}, ${extMode}, ${rate}, NOW())
+      INSERT INTO ppf_preferences (id, user_id, guest_id, frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate, future_contribution_mode, updated_at)
+      VALUES (${id}, ${owner.userId}, NULL, ${freq}, ${amount}, ${timing}, ${startYr}, ${blocks}, ${extMode}, ${rate}, ${futMode}, NOW())
       ON CONFLICT (id) DO UPDATE SET
         frequency = EXCLUDED.frequency,
         deposit_amount = EXCLUDED.deposit_amount,
@@ -356,12 +356,13 @@ export async function savePpfPreferencesAction(
         extension_blocks = EXCLUDED.extension_blocks,
         extension_mode = EXCLUDED.extension_mode,
         projected_rate = EXCLUDED.projected_rate,
+        future_contribution_mode = EXCLUDED.future_contribution_mode,
         updated_at = NOW()
     `;
   } else {
     await sql`
-      INSERT INTO ppf_preferences (id, user_id, guest_id, frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate, updated_at)
-      VALUES (${id}, NULL, ${owner.guestId}, ${freq}, ${amount}, ${timing}, ${startYr}, ${blocks}, ${extMode}, ${rate}, NOW())
+      INSERT INTO ppf_preferences (id, user_id, guest_id, frequency, deposit_amount, deposit_timing, start_year, extension_blocks, extension_mode, projected_rate, future_contribution_mode, updated_at)
+      VALUES (${id}, NULL, ${owner.guestId}, ${freq}, ${amount}, ${timing}, ${startYr}, ${blocks}, ${extMode}, ${rate}, ${futMode}, NOW())
       ON CONFLICT (id) DO UPDATE SET
         frequency = EXCLUDED.frequency,
         deposit_amount = EXCLUDED.deposit_amount,
@@ -370,6 +371,7 @@ export async function savePpfPreferencesAction(
         extension_blocks = EXCLUDED.extension_blocks,
         extension_mode = EXCLUDED.extension_mode,
         projected_rate = EXCLUDED.projected_rate,
+        future_contribution_mode = EXCLUDED.future_contribution_mode,
         updated_at = NOW()
     `;
   }

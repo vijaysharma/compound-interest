@@ -169,9 +169,11 @@ export async function applyCoreMigrations(sql: Query): Promise<void> {
       extension_blocks INT DEFAULT 0,
       extension_mode TEXT DEFAULT 'with_contribution',
       projected_rate NUMERIC DEFAULT 7.1,
+      future_contribution_mode TEXT DEFAULT 'continue',
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE ppf_preferences ADD COLUMN IF NOT EXISTS future_contribution_mode TEXT DEFAULT 'continue'`;
   await sql`CREATE INDEX IF NOT EXISTS ppf_preferences_user_idx ON ppf_preferences (user_id)`;
   await sql`CREATE INDEX IF NOT EXISTS ppf_preferences_guest_idx ON ppf_preferences (guest_id)`;
 }

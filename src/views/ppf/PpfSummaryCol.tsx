@@ -9,6 +9,10 @@ interface PpfSummaryColProps {
   gainsPercent: number;
   wealthMultiplier: string;
 }
+const formatMaturityDate = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+};
 export function PpfSummaryCol({
   ppfResult, investedPercent, gainsPercent, wealthMultiplier,
 }: PpfSummaryColProps) {
@@ -48,8 +52,9 @@ export function PpfSummaryCol({
               </div>
             </div>
             <div className={styles.statBox}>
-              <div className={styles.statLabel}>Maturity Financial Year</div>
-              <div className={styles.statValue}>FY {ppfResult.maturityFyLabel}</div>
+              <div className={styles.statLabel}>Maturity Date</div>
+              <div className={styles.statValue}>{formatMaturityDate(ppfResult.maturityDate)}</div>
+              <div className={styles.statLabel}>End of FY {ppfResult.maturityFyLabel}</div>
             </div>
           </>
         ) : (
@@ -69,15 +74,18 @@ export function PpfSummaryCol({
             <div className={styles.statBox}>
               <div className={styles.statLabel}>Account Tenure</div>
               <div className={styles.statValue}>{ppfResult.tenureYears} Years</div>
+              <div className={styles.statLabel}>
+                After opening FY · {ppfResult.depositYears} deposit years
+              </div>
             </div>
             <div className={styles.statBox}>
-              <div className={styles.statLabel}>Maturity Financial Year</div>
-              <div className={styles.statValue}>FY {ppfResult.maturityFyLabel}</div>
+              <div className={styles.statLabel}>Maturity Date</div>
+              <div className={styles.statValue}>{formatMaturityDate(ppfResult.maturityDate)}</div>
+              <div className={styles.statLabel}>End of FY {ppfResult.maturityFyLabel}</div>
             </div>
           </>
         )}
       </div>
-
       <section className={styles.card}>
         <div className={styles.badgeEee}>
           <FiAward /> 100% Tax-Free (EEE Status)

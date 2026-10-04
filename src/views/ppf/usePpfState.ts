@@ -69,7 +69,11 @@ export function usePpfState() {
       try {
         const parsed = JSON.parse(cachedInv);
         if (Array.isArray(parsed)) {
-          setInvestments(parsed);
+          const sanitized = parsed.map((item) => ({
+            ...item,
+            investmentDate: String(item.investmentDate || '').slice(0, 10),
+          }));
+          setInvestments(sanitized);
         }
       } catch {
         // Ignore JSON error

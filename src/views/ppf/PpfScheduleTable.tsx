@@ -48,19 +48,31 @@ export function PpfScheduleTable({
                       <td>
                         <strong>Yr {row.yearNumber}</strong>
                         {row.isExtensionYear && <span className={styles.extBadge}>(Ext)</span>}
+                        {row.yearNumber === 1 && <span className={styles.extBadge}>(Opening)</span>}
+                        {row.isMaturityYear && <span className={styles.extBadge}>(Maturity)</span>}
                       </td>
-                      <td>FY {row.fyLabel}</td>
+                      <td>
+                        FY {row.fyLabel}
+                        {row.isMaturityYear && <div>Matures 31 Mar {row.startYear + 1}</div>}
+                      </td>
                       <td>
                         <span
                           className={`${styles.rateBadge} ${
                             row.isHistorical ? styles.rateBadgeHistorical : styles.rateBadgeProjected
                           }`}
                         >
-                          {row.interestRate}% {row.isActualHistory ? 'Actual History' : row.isHistorical ? 'Historical' : 'Projected'}
+                          {row.rateLabel ? `${row.rateLabel}%` : `${row.interestRate}%`} {row.isActualHistory ? 'Actual History' : row.isHistorical ? 'Historical' : 'Projected'}
                         </span>
                       </td>
                       <td>{currencySymbol}{row.openingBalance.toLocaleString('en-IN')}</td>
-                      <td>{currencySymbol}{row.annualDeposit.toLocaleString('en-IN')}</td>
+                      <td>
+                        {currencySymbol}{row.annualDeposit.toLocaleString('en-IN')}
+                        {!!row.excessDeposit && (
+                          <div title="Deposits above ₹1.5 lakh in a financial year are not accepted and earn no interest">
+                            +{currencySymbol}{row.excessDeposit.toLocaleString('en-IN')} over limit
+                          </div>
+                        )}
+                      </td>
                       <td className={styles.interestCell}>
                         +{currencySymbol}{row.totalInterest.toLocaleString('en-IN')}
                       </td>
@@ -86,7 +98,7 @@ export function PpfScheduleTable({
                         <td colSpan={8} className={styles.monthExpandCell}>
                           <div className={styles.monthTableWrapper}>
                             <div className={styles.monthTableHeading}>
-                              Month-by-Month Interest Breakdown for FY {row.fyLabel} (Rate: {row.interestRate}%)
+                              Month-by-Month Interest Breakdown for FY {row.fyLabel} (Rate: {row.rateLabel ? `${row.rateLabel}% by quarter` : `${row.interestRate}%`})
                             </div>
                             <table className={styles.monthTable}>
                               <thead>

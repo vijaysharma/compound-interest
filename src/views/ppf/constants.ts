@@ -13,8 +13,16 @@ export const PPF_STEPS_MONTHLY = [
   { id: 'm4', value: '1000', title: '₹1K' },
   { id: 'm5', value: '500', title: '₹500' },
 ];
+const today = new Date();
+const CURRENT_FY_START = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
+const fyLabel = (y: number) => `FY ${y}-${String((y + 1) % 100).padStart(2, '0')}`;
+const lastRateYear = HISTORICAL_PPF_RATES[HISTORICAL_PPF_RATES.length - 1].startYear;
 export const PPF_START_YEAR_OPTIONS = [
-  ...HISTORICAL_PPF_RATES.map((r) => ({ year: r.startYear, label: `FY ${r.fyLabel}` })),
-  { year: 2026, label: 'FY 2026-27 (Upcoming)' },
-  { year: 2027, label: 'FY 2027-28 (Future)' },
+  ...HISTORICAL_PPF_RATES.map((r) => ({
+    year: r.startYear,
+    label: r.startYear === CURRENT_FY_START ? `${fyLabel(r.startYear)} (Current)` : `FY ${r.fyLabel}`,
+  })),
+  ...[CURRENT_FY_START, CURRENT_FY_START + 1]
+    .filter((y) => y > lastRateYear)
+    .map((y) => ({ year: y, label: `${fyLabel(y)} (${y === CURRENT_FY_START ? 'Current' : 'Next'})` })),
 ];
