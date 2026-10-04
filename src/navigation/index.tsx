@@ -127,11 +127,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
       const targetClean = target.split('#')[0];
       if (!targetClean || targetClean === currentPath) return;
-      // A second tap while this navigation is in flight would only queue a duplicate push.
-      if (e.currentTarget.hasAttribute(NAV_PENDING_ATTR)) {
-        e.preventDefault();
-        return;
-      }
       e.currentTarget.setAttribute(NAV_PENDING_ATTR, '');
       startNavigationProgress();
     };
@@ -154,6 +149,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
             const targetClean = target.split('#')[0];
             if (targetClean && targetClean !== currentPath) {
               e.currentTarget.setAttribute(NAV_PENDING_ATTR, '');
+              startNavigationProgress();
             }
           }
           onPointerDown?.(e);
