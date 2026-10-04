@@ -42,7 +42,9 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const [syncTo, setSyncTo] = useState(() => new Date().toISOString().slice(0, 10));
   // Filter & pagination state
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'phone' | 'city' | 'state' | 'pincode' | 'orders' | 'updated_at' | 'created_at'>('updated_at');
+  const [sortBy, setSortBy] = useState<
+    'name' | 'phone' | 'city' | 'state' | 'pincode' | 'orders' | 'updated_at' | 'created_at'
+  >('updated_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
   const perPage = 25;
@@ -149,7 +151,12 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     }
   };
   const handleDelete = async (cust: ShiprocketCustomer) => {
-    if (!confirm(`Are you sure you want to delete customer '${cust.customer_name}' (${cust.customer_phone || cust.customer_pincode})?`)) return;
+    if (
+      !confirm(
+        `Are you sure you want to delete customer '${cust.customer_name}' (${cust.customer_phone || cust.customer_pincode})?`
+      )
+    )
+      return;
     try {
       const res = await deleteShiprocketCustomerAction(cust.id, token);
       if (res.success) {
@@ -173,9 +180,15 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         token
       );
       if (res.success) {
-        const errorText = res.errors && res.errors.length > 0 ? ` (Warnings: ${res.errors.join('; ')})` : '';
+        const errorText =
+          res.errors && res.errors.length > 0 ? ` (Warnings: ${res.errors.join('; ')})` : '';
         setAlert({
-          type: res.totalSynced > 0 ? 'success' : res.errors && res.errors.length > 0 ? 'error' : 'success',
+          type:
+            res.totalSynced > 0
+              ? 'success'
+              : res.errors && res.errors.length > 0
+                ? 'error'
+                : 'success',
           text: `${res.message}${errorText}`,
         });
         fetchCustomers();
@@ -193,9 +206,15 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     try {
       const res = await syncHistoricalCustomersAction({}, token);
       if (res.success) {
-        const errorText = res.errors && res.errors.length > 0 ? ` (Warnings: ${res.errors.join('; ')})` : '';
+        const errorText =
+          res.errors && res.errors.length > 0 ? ` (Warnings: ${res.errors.join('; ')})` : '';
         setAlert({
-          type: res.totalSynced > 0 ? 'success' : res.errors && res.errors.length > 0 ? 'error' : 'success',
+          type:
+            res.totalSynced > 0
+              ? 'success'
+              : res.errors && res.errors.length > 0
+                ? 'error'
+                : 'success',
           text: `${res.message}${errorText}`,
         });
         fetchCustomers();
@@ -226,7 +245,8 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             </h1>
           </div>
           <p className={styles.subtitle}>
-            Historical customer directory consolidated across all Shiprocket accounts. Deduplicated by Name & Pincode.
+            Historical customer directory consolidated across all Shiprocket accounts. Deduplicated
+            by Name & Pincode.
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -322,7 +342,10 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         >
           <div className={styles.modalCard}>
             <div className={styles.modalHeader}>
-              <div className={styles.formSectionTitle} style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}>
+              <div
+                className={styles.formSectionTitle}
+                style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}
+              >
                 <FiUsers /> {editId ? 'Edit Customer Details' : 'Add New Customer Record'}
               </div>
               <button
@@ -543,7 +566,13 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                         <span>{cust.customer_phone || '—'}</span>
                       </div>
                       {cust.customer_email && (
-                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.2rem' }}>
+                        <div
+                          style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--color-text-secondary)',
+                            marginTop: '0.2rem',
+                          }}
+                        >
                           <FiMail size={12} style={{ marginRight: 3, verticalAlign: 'middle' }} />
                           {cust.customer_email}
                         </div>
@@ -607,7 +636,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
               </tbody>
             </table>
           </div>
-
           {/* Mobile Cards View */}
           <div className={styles.mobileCardsList}>
             {customers.map((cust) => (
@@ -626,7 +654,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                     </span>
                   </span>
                 </div>
-
                 <div className={styles.customerBody}>
                   <div>
                     <div className={styles.colTitle}>Contact Information</div>
@@ -657,7 +684,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                       </div>
                     )}
                   </div>
-
                   <div>
                     <div className={styles.colTitle}>Address & Location</div>
                     <div className={styles.customerAddress}>
@@ -674,7 +700,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                     </div>
                   </div>
                 </div>
-
                 <div className={styles.customerFooter}>
                   <button
                     type="button"

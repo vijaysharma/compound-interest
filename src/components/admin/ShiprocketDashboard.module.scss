@@ -2,7 +2,6 @@
 @use "../../styles/mixins" as *;
 .dashboard {
   width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
   padding: 0.5rem 0.25rem 2.5rem;
   @include tablet-up {

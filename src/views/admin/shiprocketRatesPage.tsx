@@ -7,7 +7,7 @@ import styles from './AdminPage.module.scss';
 const ShiprocketRatesPage: React.FC = () => {
   const { token } = useAuth();
   return (
-    <main className={styles.container}>
+    <main className={`${styles.container} shiprocket-container`}>
       <SEOHead
         title="Shiprocket Rates | Admin"
         description="Shiprocket Rates for Admin"

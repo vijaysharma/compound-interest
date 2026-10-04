@@ -1,8 +1,7 @@
-@use '../../styles/mixins' as *;
+@use "../../styles/mixins" as *;
 
 .container {
   width: 100%;
-  max-width: 56rem;
   margin-inline: auto;
 }
 

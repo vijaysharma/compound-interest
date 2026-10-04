@@ -1,9 +1,8 @@
-@use '../../styles/variables' as *;
-@use '../../styles/mixins' as *;
+@use "../../styles/variables" as *;
+@use "../../styles/mixins" as *;
 
 .container {
   width: 100%;
-  max-width: 1300px;
   margin: 0 auto;
   padding: 0.5rem 0.25rem 2.5rem;
   @include tablet-up {
