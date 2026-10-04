@@ -9,6 +9,7 @@ import {
   FiX,
   FiCloud,
   FiDatabase,
+  FiTrendingUp,
 } from 'react-icons/fi';
 import { getCurrencySymbol } from '../../utilities/currency';
 import type {
@@ -41,6 +42,8 @@ interface PpfHistoryManagerProps {
   isSaving: boolean;
   syncStatus: 'synced' | 'saving' | 'offline' | 'error';
   statusMessage?: string;
+  isModal?: boolean;
+  onSwitchToMf?: () => void;
 }
 export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
   investments,
@@ -55,6 +58,8 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
   isSaving,
   syncStatus,
   statusMessage,
+  isModal = false,
+  onSwitchToMf,
 }) => {
   const currencySymbol = getCurrencySymbol('en-IN', 'INR');
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -150,32 +155,53 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
     setImportFeedback(`Imported ${parsed.length} entries successfully`);
   };
   return (
-    <section className={styles.historySection}>
+    <section className={isModal ? `${styles.historySection} ${styles.historySectionModal}` : styles.historySection}>
       <div className={styles.historyTopBar}>
         <div>
-          <h2 className={styles.historyTitle}>
-            <FiDatabase /> Actual PPF Investment History &amp; Passbook
-            {investments.length > 0 && (
-              <span className={styles.historyBadge}>{investments.length} Deposits</span>
-            )}
-          </h2>
-          <p className={styles.historySub}>
-            Record real past deposits to calculate official interest using 5th-of-the-month rules
-            and real historical rates.
-          </p>
+          {!isModal ? (
+            <>
+              <h2 className={styles.historyTitle}>
+                <FiDatabase /> Actual PPF Investment History &amp; Passbook
+                {investments.length > 0 && (
+                  <span className={styles.historyBadge}>{investments.length} Deposits</span>
+                )}
+              </h2>
+              <p className={styles.historySub}>
+                Record real past deposits to calculate official interest using 5th-of-the-month rules
+                and real historical rates.
+              </p>
+            </>
+          ) : (
+            <p className={styles.historySub} style={{ margin: 0 }}>
+              Record real past deposits to compute exact interest under RBI 5th-of-the-month rules
+              and declared historical rates.
+            </p>
+          )}
         </div>
         <div className={styles.historyHeaderActions}>
-          <span
-            className={styles.syncBadge}
-            title={statusMessage || 'All changes saved to database'}
-          >
-            <FiCloud />
-            {syncStatus === 'saving'
-              ? 'Saving to DB...'
-              : syncStatus === 'synced'
-                ? 'Synced to Database'
-                : 'Local Offline Cache'}
-          </span>
+          {onSwitchToMf && (
+            <button
+              type="button"
+              className={styles.secondaryBtn}
+              onClick={onSwitchToMf}
+              title="Compare same deposits with mutual fund real outcome"
+            >
+              <FiTrendingUp /> Compare with Mutual Funds
+            </button>
+          )}
+          {!isModal && (
+            <span
+              className={styles.syncBadge}
+              title={statusMessage || 'All changes saved to database'}
+            >
+              <FiCloud />
+              {syncStatus === 'saving'
+                ? 'Saving to DB...'
+                : syncStatus === 'synced'
+                  ? 'Synced to Database'
+                  : 'Local Offline Cache'}
+            </span>
+          )}
           <button
             type="button"
             className={styles.secondaryBtn}

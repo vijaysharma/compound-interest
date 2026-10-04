@@ -6,11 +6,24 @@ import { ppfSchema } from '../data/seo/ppfData';
 import { usePpfState } from './ppf/usePpfState';
 import { PpfInputs } from './ppf/PpfInputs';
 import { PpfSummaryCol } from './ppf/PpfSummaryCol';
-import { PpfHistoryManager } from './ppf/PpfHistoryManager';
+import { PpfHistoryModal } from './ppf/PpfHistoryModal';
 import { PpfScheduleTable } from './ppf/PpfScheduleTable';
 import { PpfContent } from './ppf/PpfContent';
 import styles from './PpfCalculator.module.scss';
 const PpfCalculator: React.FC = () => {
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = React.useState<boolean>(false);
+  const [historyModalTab, setHistoryModalTab] = React.useState<'passbook' | 'mf-compare'>('passbook');
+
+  const handleOpenPassbookModal = () => {
+    setHistoryModalTab('passbook');
+    setIsHistoryModalOpen(true);
+  };
+
+  const handleOpenMfComparison = () => {
+    setHistoryModalTab('mf-compare');
+    setIsHistoryModalOpen(true);
+  };
+
   const {
     frequency,
     setFrequency,
@@ -88,25 +101,33 @@ const PpfCalculator: React.FC = () => {
           wealthMultiplier={wealthMultiplier}
         />
       </div>
-      <PpfHistoryManager
-        investments={investments}
-        ppfResult={ppfResult}
-        futureContributionMode={futureContributionMode}
-        setFutureContributionMode={setFutureContributionMode}
-        addInvestment={addInvestment}
-        editInvestment={editInvestment}
-        deleteInvestment={deleteInvestment}
-        importInvestments={importInvestments}
-        clearAllInvestments={clearAllInvestments}
-        isSaving={isSaving}
-        syncStatus={syncStatus}
-        statusMessage={statusMessage}
-      />
       <PpfScheduleTable
         yearlyBreakdown={ppfResult.yearlyBreakdown}
         expandedYear={expandedYear}
         setExpandedYear={setExpandedYear}
+        onOpenPassbookModal={handleOpenPassbookModal}
+        onOpenMfComparison={handleOpenMfComparison}
+        investmentsCount={investments.length}
       />
+      {isHistoryModalOpen && (
+        <PpfHistoryModal
+          isOpen={isHistoryModalOpen}
+          onClose={() => setIsHistoryModalOpen(false)}
+          initialTab={historyModalTab}
+          investments={investments}
+          ppfResult={ppfResult}
+          futureContributionMode={futureContributionMode}
+          setFutureContributionMode={setFutureContributionMode}
+          addInvestment={addInvestment}
+          editInvestment={editInvestment}
+          deleteInvestment={deleteInvestment}
+          importInvestments={importInvestments}
+          clearAllInvestments={clearAllInvestments}
+          isSaving={isSaving}
+          syncStatus={syncStatus}
+          statusMessage={statusMessage}
+        />
+      )}
       <PpfContent />
     </main>
   );

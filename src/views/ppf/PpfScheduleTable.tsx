@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiDatabase, FiTrendingUp } from 'react-icons/fi';
 import { getCurrencySymbol } from '../../utilities/currency';
 import type { PPFYearDetail } from '../../utilities/ppfCalculations';
 import styles from '../PpfCalculator.module.scss';
@@ -7,9 +7,17 @@ interface PpfScheduleTableProps {
   yearlyBreakdown: PPFYearDetail[];
   expandedYear: number | null;
   setExpandedYear: React.Dispatch<React.SetStateAction<number | null>>;
+  onOpenPassbookModal?: () => void;
+  onOpenMfComparison?: () => void;
+  investmentsCount?: number;
 }
 export function PpfScheduleTable({
-  yearlyBreakdown, expandedYear, setExpandedYear,
+  yearlyBreakdown,
+  expandedYear,
+  setExpandedYear,
+  onOpenPassbookModal,
+  onOpenMfComparison,
+  investmentsCount = 0,
 }: PpfScheduleTableProps) {
   const currencySymbol = getCurrencySymbol('en-IN', 'INR');
   return (
@@ -24,6 +32,33 @@ export function PpfScheduleTable({
               Shows actual historical rates declared by the Ministry of Finance vs forward projected rates.
             </p>
           </div>
+          {onOpenPassbookModal && (
+            <div className={styles.scheduleActions}>
+              <button
+                type="button"
+                className={styles.passbookOpenBtn}
+                onClick={onOpenPassbookModal}
+                title="Open Actual PPF Passbook & CRUD modal"
+              >
+                <FiDatabase />
+                <span>Actual Passbook &amp; History</span>
+                {investmentsCount > 0 && (
+                  <span className={styles.historyBadge}>{investmentsCount} Deposits</span>
+                )}
+              </button>
+              {onOpenMfComparison && (
+                <button
+                  type="button"
+                  className={styles.compareMfBtn}
+                  onClick={onOpenMfComparison}
+                  title="Compare real outcomes if invested in Mutual Funds"
+                >
+                  <FiTrendingUp />
+                  <span>Real MF Outcome</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
