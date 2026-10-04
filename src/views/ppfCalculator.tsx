@@ -12,14 +12,22 @@ import { PpfContent } from './ppf/PpfContent';
 import styles from './PpfCalculator.module.scss';
 const PpfCalculator: React.FC = () => {
   const {
-    frequency, setFrequency,
-    depositAmount, setDepositAmount,
-    depositTiming, setDepositTiming,
-    startYear, setStartYear,
-    extensionBlocks, setExtensionBlocks,
-    extensionMode, setExtensionMode,
-    projectedRate, setProjectedRate,
-    expandedYear, setExpandedYear,
+    frequency,
+    setFrequency,
+    depositAmount,
+    setDepositAmount,
+    depositTiming,
+    setDepositTiming,
+    startYear,
+    setStartYear,
+    extensionBlocks,
+    setExtensionBlocks,
+    extensionMode,
+    setExtensionMode,
+    projectedRate,
+    setProjectedRate,
+    expandedYear,
+    setExpandedYear,
     ppfResult,
     investedPercent,
     gainsPercent,
@@ -103,5 +111,4 @@ const PpfCalculator: React.FC = () => {
     </main>
   );
 };
-
 export default PpfCalculator;
