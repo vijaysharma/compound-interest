@@ -395,7 +395,7 @@
 .drawerModal {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: $z-app-chrome + 1;
   display: flex;
   touch-action: none;
 }

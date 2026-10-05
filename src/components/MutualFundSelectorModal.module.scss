@@ -4,6 +4,7 @@
 .dialogOverlay {
   position: fixed;
   inset: 0;
+  @include below-app-chrome;
   z-index: 50;
   display: flex;
   align-items: center;

@@ -1,5 +1,14 @@
 @use "./variables" as *;
 
+// Page-level modal overlay: starts below the top bar (48px mobile, 64px tablet+) so the
+// navigation above it stays visible and tappable while the dialog is open.
+@mixin below-app-chrome {
+  top: 48px;
+  @media (min-width: #{$bp-tablet}) {
+    top: 64px;
+  }
+}
+
 // Responsive breakpoints
 @mixin mobile-sm {
   @media (max-width: #{$bp-mobile-sm - 1px}) {

@@ -20,7 +20,7 @@
     transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: sticky;
     top: 64px;
-    z-index: 30;
+    z-index: $z-app-chrome;
     user-select: none;
     box-sizing: border-box;
     overflow: hidden;

@@ -91,3 +91,7 @@ $v-gap-xs:  0.25rem;  // 4px  - between tightly coupled elements
 $v-gap-sm:  0.5rem;   // 8px  - between fields in a form stack
 $v-gap-md:  0.75rem;  // 12px - between sections
 $v-gap-lg:  1.25rem;  // 20px - between major sections (desktop: 2rem)
+
+// App chrome (top bar, sidebar, drawer) stays above page modals, which top out at 9999,
+// so navigation is never blocked by an open dialog.
+$z-app-chrome: 10000;
