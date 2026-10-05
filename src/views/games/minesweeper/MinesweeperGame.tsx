@@ -26,6 +26,7 @@ import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
 import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import styles from './MinesweeperGame.module.scss';
+const LONG_PRESS_MS = 350;
 type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
 export const MinesweeperGame: React.FC = () => {
   useGameSession('minesweeper');
@@ -54,7 +55,7 @@ export const MinesweeperGame: React.FC = () => {
   const handleCycleFontScale = () => {
     setFontScaleIndex((prev) => (prev + 1) % FONT_SCALES.length);
   };
-  const pointerStartRef = useRef<{ x: number; y: number; r: number; c: number; moved: boolean } | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number; r: number; c: number; moved: boolean; at: number } | null>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef<boolean>(false);
@@ -224,7 +225,7 @@ export const MinesweeperGame: React.FC = () => {
     (e: React.PointerEvent, r: number, c: number) => {
       if (gameStatus === 'won' || gameStatus === 'lost') return;
       if (e.button !== 0) return;
-      pointerStartRef.current = { x: e.clientX, y: e.clientY, r, c, moved: false };
+      pointerStartRef.current = { x: e.clientX, y: e.clientY, r, c, moved: false, at: Date.now() };
       isLongPressRef.current = false;
       setIsFaceSurprised(true);
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
@@ -240,7 +241,7 @@ export const MinesweeperGame: React.FC = () => {
             // ignore vibration error
           }
         }
-      }, 350);
+      }, LONG_PRESS_MS);
     },
     [gameStatus, toggleFlag]
   );
@@ -268,7 +269,13 @@ export const MinesweeperGame: React.FC = () => {
         pointerStartRef.current = null;
         return;
       }
-      if (pointerStartRef.current && !pointerStartRef.current.moved) {
+      // Browsers run input events ahead of timers, so on a busy phone the release can arrive
+      // before the long-press timer fires; judge the hold by its actual duration as well.
+      const heldLong = pointerStartRef.current && Date.now() - pointerStartRef.current.at >= LONG_PRESS_MS;
+      if (heldLong && !pointerStartRef.current?.moved) {
+        lastLongPressTimestampRef.current = Date.now();
+        toggleFlag(r, c);
+      } else if (pointerStartRef.current && !pointerStartRef.current.moved) {
         if (gameStatus === 'idle' || gameStatus === 'playing') {
           const cell = board[r]?.[c];
           if (cell) {

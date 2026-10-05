@@ -151,11 +151,13 @@ export async function recordGameScoreAction(
     return { success: false, reason: 'rate_limited' };
   }
   if (outcome === 'won') {
-    const [{ wins }] = (await sql`
-      SELECT COUNT(*)::int AS wins FROM game_leaderboard
-      WHERE user_id = ${player.ownerId} AND outcome = 'won' AND created_at > NOW() - INTERVAL '1 day'
-    `) as Array<{ wins: number }>;
-    if (wins >= SUBMISSION_LIMITS.winsPerDay) return { success: false, reason: 'daily_limit' };
+    // Count verified sessions, not leaderboard rows: rows written before session checks existed
+    // must not lock a player out (product decision: no account is blocked for past abuse).
+    const [{ results }] = (await sql`
+      SELECT COUNT(*)::int AS results FROM game_sessions
+      WHERE owner_id = ${player.ownerId} AND consumed_at > NOW() - INTERVAL '1 day'
+    `) as Array<{ results: number }>;
+    if (results > SUBMISSION_LIMITS.winsPerDay) return { success: false, reason: 'daily_limit' };
   }
   const effectiveUserId = player.ownerId;
   const clientName = typeof submission.playerName === 'string' ? submission.playerName.trim() : '';

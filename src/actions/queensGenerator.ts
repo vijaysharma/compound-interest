@@ -3,7 +3,7 @@
 import { generateQueensPuzzle, generateDailyQueensPuzzle } from '@/views/games/queens/generator';
 import type { QueensPuzzle } from '@/views/games/queens/types';
 import { redisIncr } from '@/lib/redis';
-
+const QUEENS_SIZE = 7;
 /**
  * Server action to generate a fresh, unique, procedural Queens puzzle.
  */
@@ -24,16 +24,14 @@ export async function generateQueensPuzzleAction(options: {
       if (count > 60) {
         return {
           success: false,
-          puzzle: generateQueensPuzzle({ size: 6 }), // fallback
+          puzzle: generateQueensPuzzle({ size: QUEENS_SIZE }), // fallback
           error: 'Rate limit exceeded. Please wait a moment before generating more puzzles.',
         };
       }
     }
 
-    const puzzle = generateQueensPuzzle({
-      seed: options.seed,
-      size: options.size,
-    });
+    // Board is fixed at 7×7; any requested size is ignored.
+    const puzzle = generateQueensPuzzle({ seed: options.seed, size: QUEENS_SIZE });
 
     return {
       success: true,
@@ -42,7 +40,7 @@ export async function generateQueensPuzzleAction(options: {
   } catch (err: unknown) {
     console.error('Failed to generate Queens puzzle server-side:', err);
     // Graceful deterministic fallback
-    const fallback = generateQueensPuzzle({ size: 6 });
+    const fallback = generateQueensPuzzle({ size: QUEENS_SIZE });
     return {
       success: true,
       puzzle: fallback,

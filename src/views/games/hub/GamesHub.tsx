@@ -31,8 +31,8 @@ import {
   FiPlay,
   FiStar,
   FiUser,
-  FiZap,
 } from 'react-icons/fi';
+import { LuBomb } from 'react-icons/lu';
 import styles from './GamesHub.module.scss';
 interface GameMeta {
   id: LeaderboardEntry['gameId'];
@@ -66,7 +66,7 @@ const GAMES_LIST: GameMeta[] = [
     id: 'minesweeper',
     title: 'Minesweeper',
     category: 'Retro Classic',
-    icon: FiZap,
+    icon: LuBomb,
     iconBg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
     description: 'Uncover safe cells without detonating hidden mines. Features first-click safety, chording, and zoom.',
     href: '/games/minesweeper',

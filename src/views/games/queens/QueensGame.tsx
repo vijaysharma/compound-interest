@@ -21,7 +21,7 @@ import {
   REGION_THEMES,
 } from './engine';
 import { generateQueensPuzzle } from './generator';
-import { generateQueensHint } from './solver';
+import { generateQueensHint, isUniqueSolution } from './solver';
 import type { CellState, Position, QueensHint, QueensMove, QueensPuzzle, QueensStats } from './types';
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
@@ -37,7 +37,10 @@ import styles from './QueensGame.module.scss';
 
 const STORAGE_KEY = 'rupee_calc_queens_saved_game_v1';
 const STATS_KEY = 'rupee_calc_queens_stats_v1';
-const BOARD_SIZES = [6, 7, 8, 9, 10];
+const QUEENS_SIZE = 7;
+// Older saves may hold boards from earlier generators; only resume solvable 7×7 ones.
+const isPlayablePuzzle = (p: QueensPuzzle) =>
+  p.size === QUEENS_SIZE && p.regions?.length === QUEENS_SIZE && isUniqueSolution(p.size, p.regions);
 
 interface SavedGameState {
   puzzle: QueensPuzzle;
@@ -102,7 +105,7 @@ export const QueensGame: React.FC = () => {
   const elapsedSecondsRef = useRef<number>(0);
   elapsedSecondsRef.current = elapsedSeconds;
 
-  const size = puzzle?.size ?? 6;
+  const size = puzzle?.size ?? QUEENS_SIZE;
 
   // Board evaluation
   const evaluation = useMemo(() => {
@@ -164,7 +167,7 @@ export const QueensGame: React.FC = () => {
   }, [evaluation.isWon, isWon, isStarted, puzzle, hintsUsed, movesCount]);
 
   // Create/generate a fresh procedural puzzle
-  const generateNewPuzzle = useCallback(async (forcedSize?: number) => {
+  const generateNewPuzzle = useCallback(async () => {
     setIsGenerating(true);
     setActiveHint(null);
     setIsWon(false);
@@ -175,7 +178,7 @@ export const QueensGame: React.FC = () => {
     setHistory([]);
     setRedoStack([]);
 
-    const targetSize = forcedSize || BOARD_SIZES[Math.floor(Math.random() * BOARD_SIZES.length)];
+    const targetSize = QUEENS_SIZE;
 
     try {
       const serverRes = await generateQueensPuzzleAction({ size: targetSize });
@@ -201,7 +204,7 @@ export const QueensGame: React.FC = () => {
 
     const restore = (saved: SavedGameState) => {
       if (!saved || !saved.puzzle || !Array.isArray(saved.grid)) return false;
-      if (saved.grid.length !== saved.puzzle.size) return false;
+      if (saved.grid.length !== saved.puzzle.size || !isPlayablePuzzle(saved.puzzle)) return false;
       setPuzzle(saved.puzzle);
       setGrid(saved.grid);
       setElapsedSeconds(saved.elapsedSeconds || 0);

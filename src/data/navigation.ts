@@ -29,6 +29,7 @@ import {
   FiUsers,
   FiZap,
 } from 'react-icons/fi';
+import { LuBomb } from 'react-icons/lu';
 export interface NavigationItem {
   name: string;
   href: string;
@@ -99,7 +100,7 @@ export const NAVIGATION_SECTIONS: NavigationSection[] = [
       { name: 'All Games', href: '/games', icon: FiPlayCircle },
       { name: 'Word Path', href: '/games/word-path', icon: FiCompass, aliases: ['/word-path'] },
       { name: 'Sudoku', href: '/games/sudoku', icon: FiGrid, aliases: ['/sudoku'] },
-      { name: 'Minesweeper', href: '/games/minesweeper', icon: FiZap, aliases: ['/minesweeper'] },
+      { name: 'Minesweeper', href: '/games/minesweeper', icon: LuBomb, aliases: ['/minesweeper'] },
       { name: 'Slide Puzzle', href: '/games/slide-puzzle', icon: FiBox, aliases: ['/slide-puzzle'] },
       { name: 'Hitori', href: '/games/hitori', icon: FiGrid, aliases: ['/hitori'] },
       { name: 'Tango', href: '/games/tango', icon: FiGrid, aliases: ['/tango', '/binairo'] },

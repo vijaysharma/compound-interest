@@ -299,5 +299,5 @@ export function generateQueensPuzzle(options: {
  */
 export function generateDailyQueensPuzzle(dateStr: string = new Date().toISOString().slice(0, 10)): QueensPuzzle {
   const dailySeed = `daily_queens_${dateStr}`;
-  return generateQueensPuzzle({ seed: dailySeed });
+  return generateQueensPuzzle({ seed: dailySeed, size: 7 });
 }
