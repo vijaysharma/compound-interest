@@ -1,0 +1,99 @@
+{
+  "verifiedAt": "2026-10-05",
+  "status": "source-derived-inventory",
+  "application": {
+    "name": "Rupee Calculator",
+    "framework": "Next.js App Router",
+    "version": "16.3.x from package range ^16.3.4",
+    "productionDeployment": "Vercel declared; live state NOT VERIFIED"
+  },
+  "domains": [
+    {
+      "name": "Financial calculations",
+      "location": "src/utilities/**; src/views/**",
+      "criticality": "high",
+      "tests": "partial"
+    },
+    {
+      "name": "External financial data",
+      "location": "src/actions/data/**; src/lib/amfi/**; src/lib/fiiDii/**",
+      "criticality": "high",
+      "tests": "partial"
+    },
+    {
+      "name": "Authentication and subscriptions",
+      "location": "src/actions/auth/**; src/actions/payments/**",
+      "criticality": "high",
+      "tests": "gaps found"
+    },
+    {
+      "name": "Tax AI",
+      "location": "src/actions/taxAi.ts; src/actions/tax-ai/**",
+      "criticality": "high",
+      "tests": "not found"
+    },
+    {
+      "name": "Admin and Shiprocket",
+      "location": "src/actions/admin/**; src/views/admin/**",
+      "criticality": "high",
+      "tests": "partial"
+    },
+    {
+      "name": "Quick Notes",
+      "location": "src/actions/notes/**; src/components/admin/notes/**",
+      "criticality": "medium",
+      "tests": "not found"
+    },
+    {
+      "name": "Games",
+      "location": "src/views/games/**; src/actions/gameLeaderboard.ts",
+      "criticality": "medium",
+      "tests": "present"
+    },
+    {
+      "name": "Web shell/design",
+      "location": "src/app/**; src/components/**; src/styles/**",
+      "criticality": "medium",
+      "tests": "Storybook and unit tests; browser checks absent"
+    }
+  ],
+  "platformServices": [
+    {
+      "name": "PostgreSQL",
+      "provider": "Neon via @neondatabase/serverless",
+      "source": "DATABASE_URL",
+      "state": "production config UNKNOWN"
+    },
+    {
+      "name": "Cache",
+      "provider": "Upstash REST with memory fallback",
+      "source": "UPSTASH_REDIS_REST_URL/TOKEN or KV aliases",
+      "state": "optional in code"
+    },
+    {
+      "name": "Object storage",
+      "provider": "Vercel Blob",
+      "source": "BLOB_READ_WRITE_TOKEN",
+      "state": "optional in code"
+    },
+    {
+      "name": "Scheduled work",
+      "provider": "Vercel Cron declarations",
+      "source": "vercel.json",
+      "state": "two schedules declared; runtime NOT VERIFIED"
+    }
+  ],
+  "inventories": {
+    "routes": "route-inventory.json",
+    "httpApi": "api-inventory.json",
+    "actions": "../SERVER_ACTIONS_INVENTORY.md",
+    "database": "database-inventory.json",
+    "environment": "environment-inventory.json",
+    "financialCalculations": "financial-calculation-inventory.json",
+    "dataSources": "data-source-inventory.json",
+    "ai": "ai-system-inventory.json",
+    "risks": "risk-inventory.json",
+    "technicalDebt": "technical-debt-inventory.json"
+  },
+  "owners": "UNKNOWN"
+}

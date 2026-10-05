@@ -1,0 +1,41 @@
+{
+  "verifiedAt": "2026-10-05",
+  "packageManager": "npm",
+  "dependencies": {
+    "@neondatabase/serverless": {
+      "version": "^1.1.0",
+      "purpose": "Neon PostgreSQL client"
+    },
+    "@vercel/blob": {
+      "version": "^2.8.0",
+      "purpose": "Blob storage for note workflows"
+    },
+    "ag-charts-react": { "version": "^14.1.0", "purpose": "Charts" },
+    "ag-charts-types": { "version": "^14.1.0", "purpose": "Chart types" },
+    "next": { "version": "^16.3.4", "purpose": "App Router/runtime/build" },
+    "react": { "version": "^19.2.8", "purpose": "UI runtime" },
+    "react-dom": { "version": "^19.2.8", "purpose": "DOM renderer" },
+    "react-icons": { "version": "^5.7.0", "purpose": "Icon components" },
+    "recharts": { "version": "^3.10.1", "purpose": "Chart components" },
+    "to-words": { "version": "^6.0.0", "purpose": "Number-to-words formatting" }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/nextjs": "^10.6.0",
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
+    "sass": "^1.104.0",
+    "storybook": "^10.6.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.68.0"
+  },
+  "alternatives": "NOT EVALUATED; no upgrade/replacement recommendations made",
+  "vulnerability_scan": "NOT FOUND in repository CI; not run during inventory"
+}

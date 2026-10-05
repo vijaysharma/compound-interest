@@ -1,0 +1,65 @@
+{
+  "verifiedAt": "2026-10-05",
+  "risks": [
+    {
+      "id": "R-01",
+      "level": "CRITICAL",
+      "area": "privacy/legal",
+      "status": "open"
+    },
+    {
+      "id": "R-02",
+      "level": "HIGH",
+      "area": "unauthenticated admin NAV sync",
+      "status": "source-verified; production exposure unknown"
+    },
+    {
+      "id": "R-03",
+      "level": "HIGH",
+      "area": "payment plan/order binding",
+      "status": "potential defect"
+    },
+    {
+      "id": "R-04",
+      "level": "HIGH",
+      "area": "hardcoded financial rules without provenance",
+      "status": "open; expert review needed"
+    },
+    {
+      "id": "R-05",
+      "level": "HIGH",
+      "area": "AI advice/privacy",
+      "status": "open"
+    },
+    {
+      "id": "R-06",
+      "level": "MEDIUM-HIGH",
+      "area": "migration completion/version ordering",
+      "status": "conditional source risk"
+    },
+    {
+      "id": "R-07",
+      "level": "HIGH",
+      "area": "legacy NAV table rebuild",
+      "status": "live-schema confirmation required"
+    },
+    {
+      "id": "R-08",
+      "level": "HIGH",
+      "area": "localStorage bearer/XSS",
+      "status": "open"
+    },
+    {
+      "id": "R-09",
+      "level": "HIGH",
+      "area": "ignored local credential material",
+      "status": "validity unknown; human review"
+    },
+    {
+      "id": "R-10",
+      "level": "HIGH",
+      "area": "operations and recovery",
+      "status": "owner/procedures unknown"
+    }
+  ]
+}

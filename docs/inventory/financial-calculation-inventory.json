@@ -1,0 +1,132 @@
+{
+  "verifiedAt": "2026-10-05",
+  "calculations": [
+    {
+      "id": "compound-interest",
+      "module": "src/utilities/utility.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "home-sip-simulator",
+      "module": "src/views/home/HomeWealthSimulator.tsx",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "fixed-rate-sip",
+      "module": "src/views/fixed-rate-sip/useFixedRateSip.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "fixed-rate-swp",
+      "module": "src/views/fixed-rate-swp/useFixedRateSwp.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "mutual-fund-sip",
+      "module": "src/utilities/mutual-fund/sipCalculations.ts",
+      "tests": "NAV tests; no direct formula test identified",
+      "status": "implemented"
+    },
+    {
+      "id": "mutual-fund-swp",
+      "module": "src/utilities/mutual-fund/swpCalculations.ts",
+      "tests": "strategy/NAV tests; no direct formula test identified",
+      "status": "implemented"
+    },
+    {
+      "id": "xirr",
+      "module": "src/utilities/mutual-fund/xirrCalculation.ts",
+      "tests": "not identified",
+      "status": "implemented; numerical-risk audit"
+    },
+    {
+      "id": "emi-amortization",
+      "module": "src/views/emi/calculateBaseEmi.ts; calculateAmortization.ts",
+      "tests": "not identified",
+      "status": "implemented; zero-rate potential defect"
+    },
+    {
+      "id": "fd",
+      "module": "src/views/fd/useFdCalculations.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "rd",
+      "module": "src/views/rd/useRdCalculations.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "ppf",
+      "module": "src/utilities/ppfCalculations.ts; src/data/ppfRates.ts",
+      "tests": "src/utilities/__tests__/ppfCalculations.test.ts",
+      "status": "implemented; legal-source review needed"
+    },
+    {
+      "id": "ppf-mutual-fund-comparison",
+      "module": "src/utilities/ppfMutualFundComparison.ts",
+      "tests": "src/utilities/__tests__/ppfMutualFundComparison.test.ts",
+      "status": "implemented"
+    },
+    {
+      "id": "nps",
+      "module": "src/utilities/npsCalculations.ts",
+      "tests": "not identified",
+      "status": "implemented; regulatory review needed"
+    },
+    {
+      "id": "income-tax",
+      "module": "src/utilities/income-tax/**",
+      "tests": "not identified",
+      "status": "implemented; legal review needed"
+    },
+    {
+      "id": "inflation",
+      "module": "src/utilities/inflationUtils.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "ppp",
+      "module": "src/views/ppp/pppUtils.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "currency-conversion",
+      "module": "src/views/currency-converter/; src/actions/data/exchangeRatesHandler.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "fii-dii-adjustment",
+      "module": "src/lib/fiiDii/fiiDiiCalculations.ts",
+      "tests": "not identified",
+      "status": "implemented"
+    },
+    {
+      "id": "historical-mutual-fund-strategy",
+      "module": "src/views/strategy/engine.ts and modules",
+      "tests": "many strategy tests",
+      "status": "implemented"
+    },
+    {
+      "id": "forward-strategy-projection",
+      "module": "src/views/strategy/projection*",
+      "tests": "strategy projection tests",
+      "status": "implemented; assumptions lack linked provenance"
+    },
+    {
+      "id": "property-tax",
+      "module": "src/views/property-tax/**",
+      "tests": "not identified",
+      "status": "implementation exists; formula detail/legal verification incomplete"
+    }
+  ],
+  "dedicatedFireEngine": "NOT FOUND"
+}

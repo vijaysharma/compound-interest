@@ -1,0 +1,150 @@
+{
+  "verifiedAt": "2026-10-05",
+  "secretValuesIncluded": false,
+  "variables": [
+    {
+      "name": "DATABASE_URL",
+      "sensitive": true,
+      "consumer": "src/lib/db.ts",
+      "requiredness": "required for database paths"
+    },
+    {
+      "name": "ADMIN_SYNC_TOKEN",
+      "sensitive": true,
+      "consumer": "src/lib/db/userUtils.ts",
+      "requiredness": "optional admin alternative"
+    },
+    {
+      "name": "ADMIN_EMAILS",
+      "sensitive": true,
+      "consumer": "src/lib/db/userUtils.ts",
+      "requiredness": "optional allowlist"
+    },
+    {
+      "name": "NEXT_PUBLIC_ALLOWED_EMAIL",
+      "sensitive": false,
+      "consumer": "auth/admin allowlist fallback",
+      "requiredness": "legacy optional"
+    },
+    {
+      "name": "VITE_ALLOWED_EMAIL",
+      "sensitive": false,
+      "consumer": "auth/admin allowlist fallback",
+      "requiredness": "legacy optional"
+    },
+    {
+      "name": "NEXT_PUBLIC_VITE_ALLOWED_EMAIL",
+      "sensitive": false,
+      "consumer": "Google registration",
+      "requiredness": "legacy optional"
+    },
+    {
+      "name": "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+      "sensitive": false,
+      "consumer": "Google Identity Services",
+      "requiredness": "optional for Google login"
+    },
+    {
+      "name": "NEXT_PUBLIC_VITE_GOOGLE_CLIENT_ID",
+      "sensitive": false,
+      "consumer": "Google Identity Services fallback",
+      "requiredness": "legacy optional"
+    },
+    {
+      "name": "CRON_SECRET",
+      "sensitive": true,
+      "consumer": "cron route handlers",
+      "requiredness": "required for protected cron paths"
+    },
+    {
+      "name": "UPSTASH_REDIS_REST_URL",
+      "sensitive": false,
+      "consumer": "Redis config",
+      "requiredness": "optional with KV alias"
+    },
+    {
+      "name": "UPSTASH_REDIS_REST_TOKEN",
+      "sensitive": true,
+      "consumer": "Redis config",
+      "requiredness": "optional with KV alias"
+    },
+    {
+      "name": "KV_REST_API_URL",
+      "sensitive": false,
+      "consumer": "legacy Redis config",
+      "requiredness": "optional alias"
+    },
+    {
+      "name": "KV_REST_API_TOKEN",
+      "sensitive": true,
+      "consumer": "legacy Redis config",
+      "requiredness": "optional alias"
+    },
+    {
+      "name": "BLOB_READ_WRITE_TOKEN",
+      "sensitive": true,
+      "consumer": "src/lib/blob.ts",
+      "requiredness": "optional Blob operations"
+    },
+    {
+      "name": "GEMINI_API_KEY",
+      "sensitive": true,
+      "consumer": "Tax AI",
+      "requiredness": "optional if DB key absent"
+    },
+    {
+      "name": "GOOGLE_API_KEY",
+      "sensitive": true,
+      "consumer": "Tax AI fallback",
+      "requiredness": "optional"
+    },
+    {
+      "name": "RAZORPAY_KEY_ID",
+      "sensitive": false,
+      "consumer": "Razorpay order action",
+      "requiredness": "required with secret for payments"
+    },
+    {
+      "name": "NEXT_PUBLIC_RAZORPAY_KEY_ID",
+      "sensitive": false,
+      "consumer": "Razorpay key fallback",
+      "requiredness": "optional public alias"
+    },
+    {
+      "name": "VITE_RAZORPAY_KEY_ID",
+      "sensitive": false,
+      "consumer": "Razorpay legacy fallback",
+      "requiredness": "optional legacy alias"
+    },
+    {
+      "name": "RAZORPAY_KEY_SECRET",
+      "sensitive": true,
+      "consumer": "Razorpay order/signature actions",
+      "requiredness": "required for payments"
+    },
+    {
+      "name": "SHIPROCKET_EMAIL",
+      "sensitive": true,
+      "consumer": "Shiprocket client fallback",
+      "requiredness": "optional"
+    },
+    {
+      "name": "SHIPROCKET_PASSWORD",
+      "sensitive": true,
+      "consumer": "Shiprocket client",
+      "requiredness": "optional with aliases/DB credentials"
+    },
+    {
+      "name": "SHIPROCKET_API_TOKEN",
+      "sensitive": true,
+      "consumer": "Shiprocket client fallback",
+      "requiredness": "optional legacy alias"
+    },
+    {
+      "name": "SHIPROCKET_TOKEN",
+      "sensitive": true,
+      "consumer": "Shiprocket client fallback",
+      "requiredness": "optional"
+    }
+  ]
+}

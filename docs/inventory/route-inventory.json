@@ -1,0 +1,228 @@
+{
+  "status": "source-inventory",
+  "verifiedAt": "2026-10-05",
+  "source": "src/app/**/page.tsx",
+  "pageFileCount": 48,
+  "routes": [
+    { "path": "/", "file": "src/app/page.tsx", "domain": "home" },
+    { "path": "/about", "file": "src/app/about/page.tsx", "domain": "trust" },
+    { "path": "/admin", "file": "src/app/admin/page.tsx", "domain": "admin" },
+    {
+      "path": "/admin/shiprocket",
+      "file": "src/app/admin/shiprocket/page.tsx",
+      "domain": "shiprocket-admin"
+    },
+    {
+      "path": "/admin/shiprocket-accounts",
+      "file": "src/app/admin/shiprocket-accounts/page.tsx",
+      "domain": "shiprocket-admin"
+    },
+    {
+      "path": "/admin/shiprocket-customers",
+      "file": "src/app/admin/shiprocket-customers/page.tsx",
+      "domain": "shiprocket-admin"
+    },
+    {
+      "path": "/admin/shiprocket-rates",
+      "file": "src/app/admin/shiprocket-rates/page.tsx",
+      "domain": "shiprocket-admin"
+    },
+    {
+      "path": "/admin/volumetric-weight",
+      "file": "src/app/admin/volumetric-weight/page.tsx",
+      "domain": "admin-tool"
+    },
+    {
+      "path": "/admin/wood-calculator",
+      "file": "src/app/admin/wood-calculator/page.tsx",
+      "domain": "admin-tool"
+    },
+    {
+      "path": "/calculator",
+      "file": "src/app/calculator/page.tsx",
+      "domain": "utility"
+    },
+    {
+      "path": "/currency-converter",
+      "file": "src/app/currency-converter/page.tsx",
+      "domain": "economic-tool"
+    },
+    {
+      "path": "/date-calculator",
+      "file": "src/app/date-calculator/page.tsx",
+      "domain": "utility"
+    },
+    {
+      "path": "/demo/value-picker",
+      "file": "src/app/demo/value-picker/page.tsx",
+      "domain": "demo"
+    },
+    {
+      "path": "/disclaimer",
+      "file": "src/app/disclaimer/page.tsx",
+      "domain": "legal-content"
+    },
+    {
+      "path": "/emi-calculator",
+      "file": "src/app/emi-calculator/page.tsx",
+      "domain": "loan"
+    },
+    {
+      "path": "/fd-calculator",
+      "file": "src/app/fd-calculator/page.tsx",
+      "domain": "deposit"
+    },
+    {
+      "path": "/fii-dii",
+      "file": "src/app/fii-dii/page.tsx",
+      "domain": "market-data"
+    },
+    {
+      "path": "/file-itr",
+      "file": "src/app/file-itr/page.tsx",
+      "domain": "tax-content"
+    },
+    { "path": "/games", "file": "src/app/games/page.tsx", "domain": "games" },
+    {
+      "path": "/games/hitori",
+      "file": "src/app/games/hitori/page.tsx",
+      "domain": "games"
+    },
+    {
+      "path": "/games/minesweeper",
+      "file": "src/app/games/minesweeper/page.tsx",
+      "domain": "games"
+    },
+    {
+      "path": "/games/queens",
+      "file": "src/app/games/queens/page.tsx",
+      "domain": "games"
+    },
+    {
+      "path": "/games/slide-puzzle",
+      "file": "src/app/games/slide-puzzle/page.tsx",
+      "domain": "games"
+    },
+    {
+      "path": "/games/sudoku",
+      "file": "src/app/games/sudoku/page.tsx",
+      "domain": "games"
+    },
+    {
+      "path": "/games/tango",
+      "file": "src/app/games/tango/page.tsx",
+      "domain": "games"
+    },
+    {
+      "path": "/games/word-path",
+      "file": "src/app/games/word-path/page.tsx",
+      "domain": "games"
+    },
+    {
+      "path": "/income-tax-calculator",
+      "file": "src/app/income-tax-calculator/page.tsx",
+      "domain": "tax"
+    },
+    {
+      "path": "/inflation-calculator",
+      "file": "src/app/inflation-calculator/page.tsx",
+      "domain": "economic-tool"
+    },
+    { "path": "/login", "file": "src/app/login/page.tsx", "domain": "auth" },
+    {
+      "path": "/mutual-funds/lumpsum",
+      "file": "src/app/mutual-funds/lumpsum/page.tsx",
+      "domain": "mutual-funds"
+    },
+    {
+      "path": "/mutual-funds/sip",
+      "file": "src/app/mutual-funds/sip/page.tsx",
+      "domain": "mutual-funds"
+    },
+    {
+      "path": "/mutual-funds/strategy",
+      "file": "src/app/mutual-funds/strategy/page.tsx",
+      "domain": "mutual-funds"
+    },
+    {
+      "path": "/mutual-funds/swp",
+      "file": "src/app/mutual-funds/swp/page.tsx",
+      "domain": "mutual-funds"
+    },
+    {
+      "path": "/nps-calculator",
+      "file": "src/app/nps-calculator/page.tsx",
+      "domain": "retirement"
+    },
+    {
+      "path": "/ppf-calculator",
+      "file": "src/app/ppf-calculator/page.tsx",
+      "domain": "retirement/deposit"
+    },
+    {
+      "path": "/ppp-calculator",
+      "file": "src/app/ppp-calculator/page.tsx",
+      "domain": "economic-tool"
+    },
+    {
+      "path": "/privacy",
+      "file": "src/app/privacy/page.tsx",
+      "domain": "legal-content"
+    },
+    {
+      "path": "/property-tax-calculator",
+      "file": "src/app/property-tax-calculator/page.tsx",
+      "domain": "tax"
+    },
+    {
+      "path": "/rd-calculator",
+      "file": "src/app/rd-calculator/page.tsx",
+      "domain": "deposit"
+    },
+    {
+      "path": "/sip-calculator",
+      "file": "src/app/sip-calculator/page.tsx",
+      "domain": "investment"
+    },
+    {
+      "path": "/strategy-calculator",
+      "file": "src/app/strategy-calculator/page.tsx",
+      "domain": "investment-strategy"
+    },
+    {
+      "path": "/swp-calculator",
+      "file": "src/app/swp-calculator/page.tsx",
+      "domain": "investment"
+    },
+    {
+      "path": "/temp-value-picker",
+      "file": "src/app/temp-value-picker/page.tsx",
+      "domain": "demo/tool"
+    },
+    {
+      "path": "/upgrade",
+      "file": "src/app/upgrade/page.tsx",
+      "domain": "payments"
+    },
+    {
+      "path": "/utilities/calculator",
+      "file": "src/app/utilities/calculator/page.tsx",
+      "domain": "utility"
+    },
+    {
+      "path": "/utilities/date-calculator",
+      "file": "src/app/utilities/date-calculator/page.tsx",
+      "domain": "utility"
+    },
+    {
+      "path": "/utilities/quick-notes",
+      "file": "src/app/utilities/quick-notes/page.tsx",
+      "domain": "notes"
+    },
+    {
+      "path": "/utilities/unit-converter",
+      "file": "src/app/utilities/unit-converter/page.tsx",
+      "domain": "utility"
+    }
+  ]
+}

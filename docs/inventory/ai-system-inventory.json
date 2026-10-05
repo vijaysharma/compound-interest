@@ -1,0 +1,26 @@
+{
+  "verifiedAt": "2026-10-05",
+  "systems": [
+    {
+      "name": "Tax strategy advice",
+      "provider": "Google Gemini",
+      "defaultModel": "gemini-2.5-flash",
+      "configStore": "ai_settings table",
+      "keyEnvironmentNames": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
+      "requestInputs": [
+        "financialSummary supplied by client",
+        "userQuestion supplied by client",
+        "admin-configured system prompt"
+      ],
+      "output": "free-text advice string",
+      "timeoutMs": 25000,
+      "maxOutputTokens": 1500,
+      "responseSchemaValidation": false,
+      "sourceCitationValidation": false,
+      "testsFound": false,
+      "privacyReview": "required"
+    }
+  ],
+  "otherAIProviders": "NOT FOUND",
+  "productionConfiguration": "UNKNOWN"
+}

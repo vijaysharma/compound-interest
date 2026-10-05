@@ -1,0 +1,68 @@
+{
+  "verifiedAt": "2026-10-05",
+  "routeFileCount": 7,
+  "routes": [
+    {
+      "path": "/api/nav",
+      "methods": ["GET"],
+      "auth": "public",
+      "source": "src/app/api/nav/route.ts",
+      "purpose": "NAV service status/counts/watermark"
+    },
+    {
+      "path": "/api/nav/{schemeCode}",
+      "methods": ["GET"],
+      "auth": "public",
+      "source": "src/app/api/nav/[schemeCode]/route.ts",
+      "purpose": "NAV history, optional date filters"
+    },
+    {
+      "path": "/api/admin/sync-nav",
+      "methods": ["GET", "POST"],
+      "auth": "none visible in handler",
+      "source": "src/app/api/admin/sync-nav/route.ts",
+      "purpose": "Single-day NAV sync; security finding SEC-01"
+    },
+    {
+      "path": "/api/cron/sync-nav",
+      "methods": ["GET"],
+      "auth": "Bearer CRON_SECRET, timing-safe",
+      "source": "src/app/api/cron/sync-nav/route.ts",
+      "purpose": "Tracked scheme NAV refresh"
+    },
+    {
+      "path": "/api/cron/sync-daily-nav",
+      "methods": ["GET"],
+      "auth": "Bearer CRON_SECRET",
+      "source": "src/app/api/cron/sync-daily-nav/route.ts",
+      "purpose": "Tracked single-day NAV sync"
+    },
+    {
+      "path": "/api/cron/sync-fii-dii",
+      "methods": ["GET"],
+      "auth": "Bearer CRON_SECRET or query key",
+      "source": "src/app/api/cron/sync-fii-dii/route.ts",
+      "purpose": "FII/DII, indices, macro ingestion"
+    },
+    {
+      "path": "/api/leaderboard",
+      "methods": ["GET", "POST"],
+      "auth": "public",
+      "source": "src/app/api/leaderboard/route.ts",
+      "purpose": "Mock GET; POST returns 405; real scoring is server actions"
+    }
+  ],
+  "serverActionModules": [
+    "src/actions/auth.ts",
+    "src/actions/data.ts",
+    "src/actions/taxAi.ts",
+    "src/actions/payments.ts",
+    "src/actions/admin.ts",
+    "src/actions/notes.ts",
+    "src/actions/fiiDii.ts",
+    "src/actions/getFIIDIIDataAction.ts",
+    "src/actions/ppfHistory.ts",
+    "src/actions/strategyPersistence.ts",
+    "src/actions/gameLeaderboard.ts"
+  ]
+}

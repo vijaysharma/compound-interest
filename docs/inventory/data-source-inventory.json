@@ -1,0 +1,103 @@
+{
+  "verifiedAt": "2026-10-05",
+  "sources": [
+    {
+      "name": "AMFI",
+      "kind": "official mutual fund NAV feed",
+      "code": "src/lib/amfi/amfiClient.ts; src/lib/amfi/amfiSingleDayFetcher.ts",
+      "freshness": "market-day; cached/refreshed"
+    },
+    {
+      "name": "MFAPI",
+      "kind": "NAV fallback/auto-inclusion",
+      "code": "src/lib/amfi/autoInclusion.ts",
+      "freshness": "on demand"
+    },
+    {
+      "name": "World Bank PPP",
+      "kind": "PPP indicator PA.NUS.PPP",
+      "code": "src/actions/data/constants.ts; src/lib/fiiDii/fiiDiiFetcher.ts",
+      "freshness": "annual; DB/cache/defaults"
+    },
+    {
+      "name": "World Bank CPI",
+      "kind": "CPI level/rate indicators",
+      "code": "src/data/api/inflationApi.ts; src/lib/fiiDii/fiiDiiFetcher.ts",
+      "freshness": "annual/reference"
+    },
+    {
+      "name": "IMF DataMapper",
+      "kind": "PCPIPCH inflation series",
+      "code": "src/lib/db/types.ts; src/actions/data/macroDataHandler.ts",
+      "freshness": "annual/reference; DB age not checked in action"
+    },
+    {
+      "name": "Open ER",
+      "kind": "USD-base exchange rates",
+      "code": "src/actions/data/constants.ts; exchangeRatesHandler.ts",
+      "freshness": "24h DB TTL; Redis 6h"
+    },
+    {
+      "name": "NSE India",
+      "kind": "FII/DII daily flows",
+      "code": "src/lib/fiiDii/fiiDiiFetcher.ts",
+      "freshness": "weekday cron"
+    },
+    {
+      "name": "Yahoo Finance",
+      "kind": "Nifty/Sensex index closes",
+      "code": "src/lib/fiiDii/fiiDiiFetcher.ts",
+      "freshness": "1h fetch revalidation"
+    },
+    {
+      "name": "Shiprocket",
+      "kind": "orders/accounts/rates/fulfillment/postcode",
+      "code": "src/actions/admin/shiprocket*.ts",
+      "freshness": "on demand"
+    },
+    {
+      "name": "India Post",
+      "kind": "pincode details",
+      "code": "Shiprocket admin rate flow",
+      "freshness": "on demand"
+    },
+    {
+      "name": "Google OAuth",
+      "kind": "ID-token info verification",
+      "code": "src/actions/auth/authHelpers.ts",
+      "freshness": "per login"
+    },
+    {
+      "name": "Google Gemini",
+      "kind": "tax advice generation",
+      "code": "src/actions/tax-ai/geminiPrompt.ts",
+      "freshness": "per request"
+    },
+    {
+      "name": "Razorpay",
+      "kind": "order creation/checkout/signature",
+      "code": "src/actions/payments/",
+      "freshness": "per payment"
+    },
+    {
+      "name": "Vercel Blob",
+      "kind": "note body storage",
+      "code": "src/lib/blob.ts",
+      "freshness": "on demand"
+    },
+    {
+      "name": "Dicebear",
+      "kind": "fallback initials avatar",
+      "code": "src/actions/auth/loginHandlers.ts",
+      "freshness": "URL-based"
+    },
+    {
+      "name": "Google Analytics 4",
+      "kind": "optional custom events",
+      "code": "src/utilities/analytics.ts",
+      "freshness": "event-time; deployment tag UNKNOWN"
+    }
+  ],
+  "provider_terms_reviewed": false,
+  "live_data_verified": false
+}

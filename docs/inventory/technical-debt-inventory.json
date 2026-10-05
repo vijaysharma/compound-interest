@@ -1,0 +1,85 @@
+{
+  "verifiedAt": "2026-10-05",
+  "items": [
+    {
+      "id": "TD-001",
+      "severity": "high",
+      "location": "src/app/api/admin/sync-nav/route.ts",
+      "type": "security defect candidate"
+    },
+    {
+      "id": "TD-002",
+      "severity": "critical",
+      "location": "src/views/privacy.tsx",
+      "type": "privacy/legal gap"
+    },
+    {
+      "id": "TD-003",
+      "severity": "high",
+      "location": "src/utilities/income-tax/**; src/data/ppfRates.ts; src/utilities/npsCalculations.ts",
+      "type": "financial provenance/correctness verification"
+    },
+    {
+      "id": "TD-004",
+      "severity": "high",
+      "location": "src/actions/payments/razorpayVerify.ts",
+      "type": "payment plan binding potential defect"
+    },
+    {
+      "id": "TD-005",
+      "severity": "high",
+      "location": "src/lib/db/migrations.ts; src/lib/db/dataMigrations.ts; src/lib/db/trackedSchemesMigrations.ts",
+      "type": "migration integrity and data-loss risk"
+    },
+    {
+      "id": "TD-006",
+      "severity": "high",
+      "location": "financial utilities/tests",
+      "type": "financial test gaps"
+    },
+    {
+      "id": "TD-007",
+      "severity": "high",
+      "location": "repository CI/operations",
+      "type": "observability and recovery gaps"
+    },
+    {
+      "id": "TD-008",
+      "severity": "high",
+      "location": "db/schema.sql; APIS_AND_ACTIONS.md; PERFORMANCE_AND_SECURITY_REPORT.md",
+      "type": "documentation drift"
+    },
+    {
+      "id": "TD-009",
+      "severity": "medium",
+      "location": "src/utilities/clientSession.ts",
+      "type": "localStorage bearer lifecycle review"
+    },
+    {
+      "id": "TD-010",
+      "severity": "high",
+      "location": "src/actions/taxAi.ts; src/actions/tax-ai/geminiPrompt.ts",
+      "type": "AI governance gap"
+    },
+    {
+      "id": "TD-011",
+      "severity": "medium",
+      "location": "src/app/sitemap.ts; public/sitemap.xml; src/app/robots.ts",
+      "type": "SEO source-of-truth gap"
+    },
+    {
+      "id": "TD-012",
+      "severity": "low",
+      "location": "src/**/* VITE_* environment aliases",
+      "type": "legacy configuration debt"
+    },
+    {
+      "id": "TD-013",
+      "severity": "medium",
+      "location": "src/app/api/leaderboard/route.ts",
+      "type": "mock endpoint/API contract gap"
+    }
+  ],
+  "effort": "UNKNOWN",
+  "owners": "UNASSIGNED"
+}

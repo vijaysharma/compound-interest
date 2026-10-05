@@ -1,0 +1,131 @@
+{
+  "verifiedAt": "2026-10-05",
+  "schemaVersion": 18,
+  "schemaSource": "src/lib/db/*Migrations.ts",
+  "staticSchemaSnapshotComplete": false,
+  "tables": [
+    {
+      "name": "users",
+      "primaryKey": ["id"],
+      "sensitivity": "personal/auth/subscription"
+    },
+    {
+      "name": "user_sessions",
+      "primaryKey": ["token"],
+      "foreignKeys": ["user_id -> users.id ON DELETE CASCADE"],
+      "sensitivity": "credential"
+    },
+    {
+      "name": "payment_settings",
+      "primaryKey": ["id"],
+      "sensitivity": "payment configuration"
+    },
+    {
+      "name": "payment_submissions",
+      "primaryKey": ["id"],
+      "foreignKeys": ["user_id -> users.id ON DELETE CASCADE"],
+      "sensitivity": "financial/personal"
+    },
+    {
+      "name": "mutual_fund_schemes",
+      "primaryKey": ["scheme_code"],
+      "sensitivity": "reference data"
+    },
+    {
+      "name": "mutual_fund_nav",
+      "primaryKey": ["scheme_code", "date"],
+      "sensitivity": "market data",
+      "note": "tracked migration recreates this normalized shape; verify live DB"
+    },
+    {
+      "name": "tracked_schemes",
+      "primaryKey": ["scheme_code"],
+      "sensitivity": "operations/reference"
+    },
+    {
+      "name": "inflation_sources",
+      "primaryKey": ["source"],
+      "sensitivity": "external dataset cache"
+    },
+    {
+      "name": "user_strategies",
+      "primaryKey": ["user_id", "id"],
+      "foreignKeys": ["user_id -> users.id ON DELETE CASCADE"],
+      "sensitivity": "financial preferences"
+    },
+    {
+      "name": "admin_notes",
+      "primaryKey": ["id"],
+      "sensitivity": "personal/free text"
+    },
+    {
+      "name": "ai_settings",
+      "primaryKey": ["id"],
+      "sensitivity": "AI secret/prompt"
+    },
+    {
+      "name": "schema_meta",
+      "primaryKey": ["id"],
+      "sensitivity": "operations"
+    },
+    {
+      "name": "user_app_state",
+      "primaryKey": ["user_id", "namespace", "state_key"],
+      "sensitivity": "user state"
+    },
+    {
+      "name": "game_leaderboard",
+      "primaryKey": ["id"],
+      "sensitivity": "pseudonymous gameplay"
+    },
+    {
+      "name": "game_sessions",
+      "primaryKey": ["id"],
+      "sensitivity": "pseudonymous security metadata"
+    },
+    {
+      "name": "shiprocket_accounts",
+      "primaryKey": ["id"],
+      "sensitivity": "credentials/contact"
+    },
+    {
+      "name": "shiprocket_customers",
+      "primaryKey": ["id"],
+      "unique": ["dedup_key"],
+      "sensitivity": "third-party PII"
+    },
+    {
+      "name": "shiprocket_customer_orders",
+      "primaryKey": ["dedup_key", "account_id", "order_id"],
+      "sensitivity": "order/customer linkage"
+    },
+    {
+      "name": "ppf_investments",
+      "primaryKey": ["id"],
+      "foreignKeys": ["user_id -> users.id ON DELETE CASCADE"],
+      "sensitivity": "financial"
+    },
+    {
+      "name": "ppf_preferences",
+      "primaryKey": ["id"],
+      "foreignKeys": ["user_id -> users.id ON DELETE CASCADE"],
+      "sensitivity": "financial preferences"
+    },
+    {
+      "name": "institutional_flows",
+      "primaryKey": ["trade_date"],
+      "sensitivity": "market data"
+    },
+    {
+      "name": "index_prices",
+      "primaryKey": ["trade_date", "index_name"],
+      "sensitivity": "market data"
+    },
+    {
+      "name": "macro_indicators",
+      "primaryKey": ["record_date"],
+      "sensitivity": "macro reference data"
+    }
+  ],
+  "migrationRisk": "schema_meta is updated inside applyDataMigrations before later migration modules complete; inspect live version and schema before deployment recovery"
+}
