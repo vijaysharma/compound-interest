@@ -27,6 +27,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
@@ -84,6 +85,7 @@ const getNextUniqueBoardAsync = async (
 };
 export const WordPathGame: React.FC = () => {
   useGameSession('word-path');
+  const fontScale = useGameFontScale('word-path');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [board, setBoard] = useState<BoardDefinition>(PRESET_BOARDS.medium[0]);
   useEffect(() => {
@@ -120,12 +122,6 @@ export const WordPathGame: React.FC = () => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [focusedCell, setFocusedCell] = useState<Coordinate | null>(null);
   const [highlightedStartWords, setHighlightedStartWords] = useState<Set<string>>(new Set());
-  const FONT_SCALES = [1.0, 1.25, 1.5, 1.75];
-  const [fontScaleIndex, setFontScaleIndex] = useState<number>(FONT_SCALES.length - 1);
-  const mobileFontScale = FONT_SCALES[fontScaleIndex];
-  const handleCycleFontScale = () => {
-    setFontScaleIndex((prev) => (prev + 1) % FONT_SCALES.length);
-  };
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const [showResultsModal, setShowResultsModal] = useState<boolean>(false);
@@ -549,6 +545,7 @@ export const WordPathGame: React.FC = () => {
   return (
     <GameShell
       className={styles.gamePage}
+      style={fontScale.style}
       onPointerUp={handleBoardPointerUp}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -560,6 +557,7 @@ export const WordPathGame: React.FC = () => {
         subtitle={`Topic: ${board.theme || board.title}`}
         actions={
           <div className={styles.topControls}>
+            <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
             <HowToPlayButton onClick={() => setShowHowToPlayModal(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
           </div>
@@ -651,7 +649,6 @@ export const WordPathGame: React.FC = () => {
             {
               '--board-cols': board.cols,
               '--board-rows': board.rows,
-              '--word-path-scale': mobileFontScale,
             } as React.CSSProperties
           }
         >
@@ -812,15 +809,6 @@ export const WordPathGame: React.FC = () => {
           disabled={!canUseHint || solvedWordIds.size === board.words.length}
         >
           {hintButtonLabel}
-        </button>
-        <button
-          type="button"
-          className={styles.mobileFontScalerBtn}
-          onClick={handleCycleFontScale}
-          aria-label="Adjust cell font size"
-        >
-          <span>A+</span>
-          <span>{Math.round(mobileFontScale * 100)}%</span>
         </button>
       </div>
       {/* Collapsible Instruction Drawers */}

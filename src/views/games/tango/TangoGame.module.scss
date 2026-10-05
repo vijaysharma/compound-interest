@@ -302,8 +302,9 @@
 .circlePrimary,
 .circleLight {
   display: block;
-  width: 70%;
-  height: 70%;
+  // Text-size control scales the symbols: 55% → 82% of the cell (largest is the default).
+  width: calc(55% * var(--game-font-scale, 1));
+  height: calc(55% * var(--game-font-scale, 1));
   border-radius: 50%;
   box-sizing: border-box;
   pointer-events: none;

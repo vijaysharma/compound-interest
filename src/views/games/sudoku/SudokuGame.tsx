@@ -8,6 +8,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
@@ -21,6 +22,7 @@ function formatTimer(seconds: number): string {
 }
 export const SudokuGame: React.FC = () => {
   useGameSession('sudoku');
+  const fontScale = useGameFontScale('sudoku');
   const [difficulty, setDifficulty] = useState<SudokuDifficulty>('easy');
   const [initialGrid, setInitialGrid] = useState<number[][]>(PRESET_SUDOKU.easy.initial);
   const [solutionGrid, setSolutionGrid] = useState<number[][]>(PRESET_SUDOKU.easy.solution);
@@ -370,7 +372,7 @@ export const SudokuGame: React.FC = () => {
   }, [isPaused, handleNumberInput, handleErase, handleUndo, handleHint]);
   const activeValue = selectedCell ? grid[selectedCell.row]?.[selectedCell.col] : null;
   return (
-    <GameShell className={styles.container}>
+    <GameShell className={styles.container} style={fontScale.style}>
       <GameShell.Header
         title="Sudoku"
         subtitle="Fill each row, column, and 3×3 box with digits 1–9"
@@ -380,6 +382,7 @@ export const SudokuGame: React.FC = () => {
               <FiClock aria-hidden="true" />
               <span>{formatTimer(elapsedSeconds)}</span>
             </div>
+            <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
             <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
           </div>

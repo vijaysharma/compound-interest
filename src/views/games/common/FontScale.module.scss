@@ -1,0 +1,27 @@
+// Matches HowToPlayButton's trigger so it sits naturally in each game's header actions.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  &:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+}
+.glyph {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  small {
+    font-size: 0.7em;
+  }
+}

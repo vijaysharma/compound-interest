@@ -224,7 +224,7 @@
   align-items: center;
   justify-content: center;
   // Shrinks with the larger board dimension; 4×4 keeps its original size.
-  font-size: calc(1.5rem * 4 / max(4, var(--cols, 4), var(--rows, 4)));
+  font-size: calc(1.5rem * 4 / max(4, var(--cols, 4), var(--rows, 4)) * var(--game-font-scale, 1));
   font-weight: 800;
   color: #000;
   cursor: pointer;
@@ -316,7 +316,7 @@
     font-size: 0.82rem;
   }
   .tile {
-    font-size: calc(1.3rem * 4 / max(4, var(--cols, 4), var(--rows, 4)));
+    font-size: calc(1.3rem * 4 / max(4, var(--cols, 4), var(--rows, 4)) * var(--game-font-scale, 1));
   }
   .instructions {
     font-size: 0.78rem;

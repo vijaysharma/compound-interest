@@ -247,7 +247,7 @@
   border-radius: 8px;
   background: #ffffff;
   border: 1.5px solid #cbd5e1;
-  font-size: clamp(1.2rem, 5vw, 1.8rem);
+  font-size: calc(clamp(1.2rem, 5vw, 1.8rem) * var(--game-font-scale, 1));
   font-weight: 800;
   color: #0f172a;
   cursor: pointer;
@@ -316,7 +316,7 @@
 /* 8x8 and larger: slightly smaller numerals and ring so dense boards stay legible */
 .gridDense {
   .cell {
-    font-size: clamp(1.05rem, 4.6vw, 1.6rem);
+    font-size: calc(clamp(1.05rem, 4.6vw, 1.6rem) * var(--game-font-scale, 1));
     border-radius: 6px;
   }
 

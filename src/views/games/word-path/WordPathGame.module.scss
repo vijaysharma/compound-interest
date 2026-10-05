@@ -257,7 +257,7 @@
   pointer-events: none;
 }
 .letter {
-  font-size: calc(clamp(1.15rem, 5vw, 1.45rem) * var(--word-path-scale, 1));
+  font-size: calc(clamp(1.15rem, 5vw, 1.45rem) * var(--game-font-scale, 1));
   font-weight: 900;
   color: #1e293b;
   line-height: 1;
@@ -267,16 +267,16 @@
   user-select: none;
   -webkit-user-select: none;
   @include tablet-up {
-    font-size: 1.55rem;
+    font-size: calc(1.55rem * var(--game-font-scale, 1));
   }
 }
 .letterSmall {
-  font-size: calc(clamp(0.9rem, 3.8vw, 1.15rem) * var(--word-path-scale, 1));
+  font-size: calc(clamp(0.9rem, 3.8vw, 1.15rem) * var(--game-font-scale, 1));
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
   @include tablet-up {
-    font-size: 1.25rem;
+    font-size: calc(1.25rem * var(--game-font-scale, 1));
   }
 }
 .startBadge {
@@ -408,28 +408,6 @@
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-}
-.mobileFontScalerBtn {
-  display: none;
-  @media (max-width: 768px) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 0.85rem 1rem;
-    font-size: 0.88rem;
-    font-weight: 800;
-    border-radius: $radius-full;
-    background: #f1f5f9;
-    border: 1.5px solid #cbd5e1;
-    color: #1e293b;
-    cursor: pointer;
-    touch-action: manipulation;
-    white-space: nowrap;
-    &:active {
-      transform: scale(0.96);
-    }
   }
 }
 .accordion {

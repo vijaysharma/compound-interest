@@ -26,6 +26,7 @@ import type { CellState, Position, QueensHint, QueensMove, QueensPuzzle, QueensS
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { HowToPlayModal } from '../common/HowToPlayModal';
+import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { QuitModal } from '../common/QuitModal';
 import { ConfettiCanvas } from '../common/ConfettiCanvas';
 import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
@@ -74,6 +75,7 @@ const saveStatsToStorage = (stats: QueensStats) => {
 
 export const QueensGame: React.FC = () => {
   useGameSession('queens');
+  const fontScale = useGameFontScale('queens');
   // Puzzle & Grid state
   const [puzzle, setPuzzle] = useState<QueensPuzzle | null>(null);
   const [grid, setGrid] = useState<CellState[][]>([]);
@@ -402,7 +404,7 @@ export const QueensGame: React.FC = () => {
   }, [activeHint]);
 
   return (
-    <GameShell className={styles.container}>
+    <GameShell className={styles.container} style={fontScale.style}>
       {isWon && <ConfettiCanvas />}
 
       {/* Header */}
@@ -412,6 +414,7 @@ export const QueensGame: React.FC = () => {
         icon={<FiAward className={styles.crownBadge} aria-hidden="true" />}
         actions={
           <div className={styles.headerActions}>
+            <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
             <button
               type="button"
               className={styles.iconBtn}

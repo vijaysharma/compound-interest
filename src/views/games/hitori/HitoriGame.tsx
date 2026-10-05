@@ -19,6 +19,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
@@ -40,6 +41,7 @@ interface SavedHitoriState {
 }
 export const HitoriGame: React.FC = () => {
   useGameSession('hitori');
+  const fontScale = useGameFontScale('hitori');
   // Deterministic preset for the server render; replaced by a generated puzzle on mount.
   const [activePreset, setActivePreset] = useState<HitoriPuzzle>(() => presetPuzzle('easy'));
   const difficulty = activePreset.difficulty;
@@ -324,12 +326,13 @@ export const HitoriGame: React.FC = () => {
     }
   };
   return (
-    <GameShell className={styles.container}>
+    <GameShell className={styles.container} style={fontScale.style}>
       <GameShell.Header
         title="Hitori"
         subtitle="Eliminate duplicate numbers by shading cells"
         actions={
           <div className={styles.headerActions}>
+            <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
             <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
           </div>

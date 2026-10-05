@@ -16,6 +16,7 @@ import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
@@ -93,6 +94,7 @@ const SignGlyph: React.FC<{ sign: '=' | 'x' }> = ({ sign }) => (
 );
 export const TangoGame: React.FC = () => {
   useGameSession('tango');
+  const fontScale = useGameFontScale('tango');
   const [difficulty, setDifficulty] = useState<TangoDifficulty>('easy');
   const [puzzle, setPuzzle] = useState<TangoPreset | null>(null);
   const size = puzzle?.size ?? TANGO_SIZE;
@@ -365,13 +367,14 @@ export const TangoGame: React.FC = () => {
     );
   };
   return (
-    <GameShell className={styles.container}>
+    <GameShell className={styles.container} style={fontScale.style}>
       {/* Header */}
       <GameShell.Header
         title="Tango (Binairo)"
         subtitle="Fill the grid with primary & light circles"
         actions={
           <div className={styles.headerActions}>
+            <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
             <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
           </div>
