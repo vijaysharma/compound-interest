@@ -121,7 +121,7 @@ export const WordPathGame: React.FC = () => {
   const [focusedCell, setFocusedCell] = useState<Coordinate | null>(null);
   const [highlightedStartWords, setHighlightedStartWords] = useState<Set<string>>(new Set());
   const FONT_SCALES = [1.0, 1.25, 1.5, 1.75];
-  const [fontScaleIndex, setFontScaleIndex] = useState<number>(0);
+  const [fontScaleIndex, setFontScaleIndex] = useState<number>(FONT_SCALES.length - 1);
   const mobileFontScale = FONT_SCALES[fontScaleIndex];
   const handleCycleFontScale = () => {
     setFontScaleIndex((prev) => (prev + 1) % FONT_SCALES.length);

@@ -1,7 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  FiFlag,
   FiZoomIn,
   FiZoomOut,
   FiSmile,
@@ -25,6 +24,7 @@ import { QuitButton, QuitModal } from '../common/QuitModal';
 import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
 import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
+import { FlagIcon, MineIcon } from './icons';
 import styles from './MinesweeperGame.module.scss';
 const LONG_PRESS_MS = 350;
 type GameStatus = 'idle' | 'playing' | 'won' | 'lost';
@@ -50,7 +50,7 @@ export const MinesweeperGame: React.FC = () => {
   const cellSize = Math.round(30 * zoom);
   const cellFontSize = `${(1.15 * zoom).toFixed(2)}rem`;
   const FONT_SCALES = [1.0, 1.25, 1.5, 1.8];
-  const [fontScaleIndex, setFontScaleIndex] = useState<number>(0);
+  const [fontScaleIndex, setFontScaleIndex] = useState<number>(FONT_SCALES.length - 1);
   const mobileFontScale = FONT_SCALES[fontScaleIndex];
   const handleCycleFontScale = () => {
     setFontScaleIndex((prev) => (prev + 1) % FONT_SCALES.length);
@@ -455,7 +455,7 @@ export const MinesweeperGame: React.FC = () => {
                 let cellClass = styles.cellHidden;
                 if (cell.state === 'revealed') {
                   if (cell.isMine) {
-                    content = <FiAlertCircle size={16} aria-label="Mine" />;
+                    content = <MineIcon size="1.5em" aria-label="Mine" />;
                     cellClass = cell.exploded ? styles.cellMineExploded : styles.cellRevealed;
                   } else {
                     cellClass = styles.cellRevealed;
@@ -464,7 +464,7 @@ export const MinesweeperGame: React.FC = () => {
                     }
                   }
                 } else if (cell.state === 'flagged') {
-                  content = <FiFlag size={14} aria-label="Flagged" />;
+                  content = <FlagIcon size="1.5em" aria-label="Flagged" />;
                 }
                 const numberClass = cell.neighborMines > 0 && cell.state === 'revealed' && !cell.isMine ? styles[`n${cell.neighborMines}`] : '';
                 return (
@@ -556,7 +556,7 @@ export const MinesweeperGame: React.FC = () => {
           onClick={() => setIsFlagMode(!isFlagMode)}
           aria-pressed={isFlagMode}
         >
-          <FiFlag />
+          <FlagIcon size="1.25em" />
           <span>{isFlagMode ? 'Flagging Mode: ON' : 'Tap to Dig (Switch to Flag)'}</span>
         </button>
         {isMobile && (

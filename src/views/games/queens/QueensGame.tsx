@@ -32,7 +32,6 @@ import { formatGameTime, recordGameScore, useGameSession } from '../common/leade
 import type { ScoreBreakdown } from '../common/scoring';
 import { getUserAppStateAction, saveUserAppStateAction } from '@/actions/userAppState';
 import { getAuthToken, getOrCreateGuestId } from '@/utilities/clientSession';
-import { generateQueensPuzzleAction } from '@/actions/queensGenerator';
 import styles from './QueensGame.module.scss';
 
 const STORAGE_KEY = 'rupee_calc_queens_saved_game_v1';
@@ -88,7 +87,6 @@ export const QueensGame: React.FC = () => {
   const [hintsUsed, setHintsUsed] = useState<number>(0);
   const [movesCount, setMovesCount] = useState<number>(0);
   const [activeHint, setActiveHint] = useState<QueensHint | null>(null);
-  const [inputMode, setInputMode] = useState<'auto' | 'queen' | 'x'>('auto');
   const [focusedCell, setFocusedCell] = useState<Position>({ r: 0, c: 0 });
 
   // Modals & Results
@@ -98,10 +96,9 @@ export const QueensGame: React.FC = () => {
   const [personalBest, setPersonalBest] = useState<boolean>(false);
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
   const [stats, setStats] = useState<QueensStats>(loadSavedStats);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  // Until the cloud save has been read, don't overwrite it with the placeholder board.
+  const cloudCheckedRef = useRef(false);
 
-  // Double tap tracking for mobile
-  const lastTapRef = useRef<{ r: number; c: number; time: number } | null>(null);
   const elapsedSecondsRef = useRef<number>(0);
   elapsedSecondsRef.current = elapsedSeconds;
 
@@ -166,9 +163,9 @@ export const QueensGame: React.FC = () => {
     }
   }, [evaluation.isWon, isWon, isStarted, puzzle, hintsUsed, movesCount]);
 
-  // Create/generate a fresh procedural puzzle
-  const generateNewPuzzle = useCallback(async () => {
-    setIsGenerating(true);
+  // Generated on the device: a 7×7 board takes milliseconds, while a server round-trip left the
+  // board blank (or the button spinning) for seconds.
+  const generateNewPuzzle = useCallback(() => {
     setActiveHint(null);
     setIsWon(false);
     setIsStarted(false);
@@ -177,25 +174,9 @@ export const QueensGame: React.FC = () => {
     setMovesCount(0);
     setHistory([]);
     setRedoStack([]);
-
-    const targetSize = QUEENS_SIZE;
-
-    try {
-      const serverRes = await generateQueensPuzzleAction({ size: targetSize });
-      if (serverRes.success && serverRes.puzzle) {
-        setPuzzle(serverRes.puzzle);
-        setGrid(createInitialGrid(serverRes.puzzle.size));
-        setIsGenerating(false);
-        return;
-      }
-    } catch {
-      // Fallback to client generator if server action is offline
-    }
-
-    const localPuzzle = generateQueensPuzzle({ size: targetSize });
+    const localPuzzle = generateQueensPuzzle({ size: QUEENS_SIZE });
     setPuzzle(localPuzzle);
     setGrid(createInitialGrid(localPuzzle.size));
-    setIsGenerating(false);
   }, []);
 
   // Initial load: restore persisted state or generate fresh
@@ -230,6 +211,8 @@ export const QueensGame: React.FC = () => {
             if (active && res.success && res.payload && res.payload.elapsedSeconds > parsed.elapsedSeconds) {
               restore(res.payload);
             }
+          }).finally(() => {
+            cloudCheckedRef.current = true;
           });
           return;
         }
@@ -238,17 +221,19 @@ export const QueensGame: React.FC = () => {
       // fallback
     }
 
-    // Cloud fetch
+    // Nothing saved locally: show a board now, then resume an unfinished cloud game if there is one.
+    generateNewPuzzle();
     const token = getAuthToken();
     const guestId = getOrCreateGuestId();
-    void getUserAppStateAction<SavedGameState>(token, guestId, 'games', 'queens').then((res) => {
-      if (active && res.success && res.payload && restore(res.payload)) {
-        return;
-      }
-      if (active) {
-        void generateNewPuzzle();
-      }
-    });
+    void getUserAppStateAction<SavedGameState>(token, guestId, 'games', 'queens')
+      .then((res) => {
+        if (active && res.success && res.payload && !res.payload.isWon && res.payload.elapsedSeconds > 0) {
+          restore(res.payload);
+        }
+      })
+      .finally(() => {
+        cloudCheckedRef.current = true;
+      });
 
     return () => {
       active = false;
@@ -257,7 +242,7 @@ export const QueensGame: React.FC = () => {
 
   // Persist state on mutations
   useEffect(() => {
-    if (!puzzle || grid.length !== puzzle.size || isGenerating) return;
+    if (!puzzle || grid.length !== puzzle.size) return;
 
     const stateToSave: SavedGameState = {
       puzzle,
@@ -274,6 +259,7 @@ export const QueensGame: React.FC = () => {
       // ignore
     }
 
+    if (!cloudCheckedRef.current) return;
     const timeout = setTimeout(() => {
       const token = getAuthToken();
       const guestId = getOrCreateGuestId();
@@ -281,46 +267,17 @@ export const QueensGame: React.FC = () => {
     }, 600);
 
     return () => clearTimeout(timeout);
-  }, [puzzle, grid, hintsUsed, movesCount, isWon, isGenerating]);
+  }, [puzzle, grid, hintsUsed, movesCount, isWon]);
 
   // Core cell interaction
   const handleCellTap = (r: number, c: number) => {
     if (isWon || !puzzle) return;
     if (!isStarted) setIsStarted(true);
 
+    // Tap always toggles a queen; X marks remain available from the keyboard (X / Space).
     const prevVal = grid[r][c];
-    let nextVal: CellState = 'empty';
-
-    if (inputMode === 'queen') {
-      nextVal = prevVal === 'queen' ? 'empty' : 'queen';
-    } else if (inputMode === 'x') {
-      nextVal = prevVal === 'x' ? 'empty' : 'x';
-    } else {
-      // Auto mode: single click toggles X; fast double click toggles Queen
-      const now = Date.now();
-      const last = lastTapRef.current;
-
-      if (last && last.r === r && last.c === c && now - last.time < 300) {
-        // Double tap!
-        lastTapRef.current = null;
-        nextVal = prevVal === 'queen' ? 'empty' : 'queen';
-      } else {
-        lastTapRef.current = { r, c, time: now };
-        // Single tap: toggle X or clear Queen
-        if (prevVal === 'empty') nextVal = 'x';
-        else if (prevVal === 'x') nextVal = 'empty';
-        else if (prevVal === 'queen') nextVal = 'empty';
-      }
-    }
-
-    if (prevVal === nextVal) return;
-
-    const nextGrid = applyCellAction(
-      grid,
-      r,
-      c,
-      inputMode === 'queen' ? 'toggle_queen' : inputMode === 'x' ? 'toggle_x' : nextVal === 'queen' ? 'toggle_queen' : 'toggle_x'
-    );
+    const nextVal: CellState = prevVal === 'queen' ? 'empty' : 'queen';
+    const nextGrid = applyCellAction(grid, r, c, 'toggle_queen');
 
     setGrid(nextGrid);
     setHistory((prev) => [...prev, { r, c, prev: prevVal, next: nextVal }]);
@@ -509,45 +466,15 @@ export const QueensGame: React.FC = () => {
         <button
           type="button"
           className={`${styles.actionBtn} ${styles.primaryActionBtn}`}
-          onClick={() => void generateNewPuzzle()}
-          disabled={isGenerating}
+          onClick={generateNewPuzzle}
         >
-          <FiRefreshCw size={13} className={isGenerating ? 'spin' : ''} />
+          <FiRefreshCw size={13} />
           <span>New Puzzle</span>
         </button>
       </div>
 
-      {/* Toolbar / Mode Toggle */}
+      {/* Toolbar */}
       <div className={styles.toolBar}>
-        <div className={styles.modeGroup}>
-          <button
-            type="button"
-            className={`${styles.modeBtn} ${inputMode === 'auto' ? styles.activeMode : ''}`}
-            onClick={() => setInputMode('auto')}
-            title="Single tap for X, double tap for Queen"
-          >
-            Auto Mode
-          </button>
-          <button
-            type="button"
-            className={`${styles.modeBtn} ${inputMode === 'queen' ? styles.activeMode : ''}`}
-            onClick={() => setInputMode('queen')}
-            title="Tap to place Queen"
-          >
-            <FiAward size={14} />
-            <span>Queen</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.modeBtn} ${inputMode === 'x' ? styles.activeMode : ''}`}
-            onClick={() => setInputMode('x')}
-            title="Tap to place X marker"
-          >
-            <FiX size={14} />
-            <span>X-Mark</span>
-          </button>
-        </div>
-
         <div className={styles.controlsBar}>
           <button
             type="button"
@@ -663,7 +590,7 @@ export const QueensGame: React.FC = () => {
           <li>Queens <strong>cannot touch each other</strong>, even diagonally (must have at least one empty square between them).</li>
         </ul>
         <div className={styles.tipBox}>
-          <strong>Controls Tip:</strong> Single tap to place an X marker on impossible squares. Double tap (or switch to Queen mode) to place a Queen.
+          <strong>Controls Tip:</strong> Tap a square to place a Queen; tap it again to remove it.
         </div>
       </section>
 
@@ -682,7 +609,7 @@ export const QueensGame: React.FC = () => {
             { label: 'Moves Made', value: movesCount },
             { label: 'Hints Used', value: hintsUsed },
           ]}
-          onPlayAgain={() => void generateNewPuzzle()}
+          onPlayAgain={generateNewPuzzle}
           playAgainLabel="Play Fresh Puzzle"
           hubHref="/games"
         />
@@ -702,8 +629,8 @@ export const QueensGame: React.FC = () => {
           `Every puzzle is procedurally generated with a guaranteed single unique answer.`,
         ]}
         controls={{
-          desktop: 'Single click to mark an X. Double click or press "Q" to place a Queen. Arrow keys navigate.',
-          mobile: 'Tap to mark an X. Quick double-tap to place a Queen, or toggle between Queen and X modes above.',
+          desktop: 'Click a square to place or remove a Queen. Press "X" to mark a square. Arrow keys navigate.',
+          mobile: 'Tap a square to place a Queen; tap it again to remove it.',
         }}
         tips={[
           'Start by placing X marks around placed Queens: all 8 neighboring squares are immediately invalid.',
