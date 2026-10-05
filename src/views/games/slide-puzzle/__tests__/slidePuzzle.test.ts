@@ -226,3 +226,24 @@ test('the server-render INITIAL_BOARD is a valid solvable scramble', () => {
   assert.equal(isSolved(board), false);
   assert.ok(manhattanDistance(board) >= MIN_SCRAMBLE_DISTANCE);
 });
+test('isSolvable and getShuffledBoard hold for other board shapes', () => {
+  const dirs = ['up', 'down', 'left', 'right'] as const;
+  for (const [rows, cols] of [[3, 3], [3, 5], [5, 3], [5, 5], [6, 4], [8, 8]]) {
+    const n = rows * cols;
+    let tiles = Array.from({ length: n }, (_, i) => (i === n - 1 ? 0 : i + 1));
+    for (let step = 0; step < 400; step++) {
+      const result = slideInDirection(tiles, dirs[Math.floor(Math.random() * 4)], cols);
+      if (result) tiles = result.newTiles;
+    }
+    assert.equal(isSolvable(tiles, cols), true, `${rows}x${cols} walk`);
+    const swapped = [...tiles];
+    const a = swapped.findIndex((t) => t !== 0);
+    const b = swapped.findIndex((t, i) => i > a && t !== 0);
+    [swapped[a], swapped[b]] = [swapped[b], swapped[a]];
+    assert.equal(isSolvable(swapped, cols), false, `${rows}x${cols} swapped`);
+    const board = getShuffledBoard(rows, cols);
+    assert.equal(board.length, n);
+    assert.equal(isSolvable(board, cols), true, `${rows}x${cols} shuffle`);
+    assert.equal(isSolved(board), false);
+  }
+});

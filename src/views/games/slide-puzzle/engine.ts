@@ -22,11 +22,14 @@ export interface SlideResult {
   movedCount: number;
   moves: SlideStep[];
 }
+/** Board sizes offered in the picker; any rows × cols within these bounds is playable. */
+export const MIN_DIM = 3;
+export const MAX_DIM = 8;
 export const isSolved = (tiles: number[]): boolean => {
-  for (let i = 0; i < TOTAL_TILES - 1; i++) {
+  for (let i = 0; i < tiles.length - 1; i++) {
     if (tiles[i] !== i + 1) return false;
   }
-  return tiles[TOTAL_TILES - 1] === 0;
+  return tiles[tiles.length - 1] === 0;
 };
 export const countInversions = (tiles: number[]): number => {
   let inversions = 0;
@@ -41,21 +44,24 @@ export const countInversions = (tiles: number[]): number => {
   }
   return inversions;
 };
-export const isSolvable = (tiles: number[]): boolean => {
+// Odd width: solvable iff inversions are even. Even width: iff inversions + blank row (counted
+// from the bottom, 1-based) is odd.
+export const isSolvable = (tiles: number[], cols = GRID_SIZE): boolean => {
   const blankIdx = tiles.indexOf(0);
   if (blankIdx === -1) return false;
-  const blankRowFromBottom = GRID_SIZE - Math.floor(blankIdx / GRID_SIZE);
   const inversions = countInversions(tiles);
+  if (cols % 2 === 1) return inversions % 2 === 0;
+  const blankRowFromBottom = tiles.length / cols - Math.floor(blankIdx / cols);
   return (inversions + blankRowFromBottom) % 2 === 1;
 };
 /** Sum of each tile's grid distance from its solved position (blank excluded). */
-export const manhattanDistance = (tiles: number[]): number => {
+export const manhattanDistance = (tiles: number[], cols = GRID_SIZE): number => {
   let total = 0;
   for (let i = 0; i < tiles.length; i++) {
     const val = tiles[i];
     if (val === 0) continue;
     const target = val - 1;
-    total += Math.abs(Math.floor(i / GRID_SIZE) - Math.floor(target / GRID_SIZE)) + Math.abs((i % GRID_SIZE) - (target % GRID_SIZE));
+    total += Math.abs(Math.floor(i / cols) - Math.floor(target / cols)) + Math.abs((i % cols) - (target % cols));
   }
   return total;
 };
@@ -64,15 +70,19 @@ export const manhattanDistance = (tiles: number[]): number => {
  * distance of ~37 (optimal solutions ~52 moves); anything under this would feel nearly solved.
  */
 export const MIN_SCRAMBLE_DISTANCE = 24;
+/** Same bar scaled to other sizes (24 for 4×4); small boards get a gentler one. */
+export const minScrambleDistance = (cellCount: number): number =>
+  Math.round(cellCount * (cellCount >= 16 ? 1.5 : 1));
 /** Deterministic solvable scramble for the server render; replaced by a random one on mount. */
 export const INITIAL_BOARD: readonly number[] = [12, 1, 10, 2, 7, 11, 4, 14, 5, 0, 9, 15, 8, 13, 6, 3];
-const randomPermutation = (): number[] => {
-  const tiles = Array.from({ length: TOTAL_TILES }, (_, i) => (i === TOTAL_TILES - 1 ? 0 : i + 1));
+const randomPermutation = (rows: number, cols: number): number[] => {
+  const total = rows * cols;
+  const tiles = Array.from({ length: total }, (_, i) => (i === total - 1 ? 0 : i + 1));
   for (let i = tiles.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
   }
-  if (!isSolvable(tiles)) {
+  if (!isSolvable(tiles, cols)) {
     // Swapping any two numbered tiles flips inversion parity, turning an unsolvable board solvable.
     const a = tiles.findIndex((t) => t !== 0);
     const b = tiles.findIndex((t, i) => i > a && t !== 0);
@@ -80,40 +90,42 @@ const randomPermutation = (): number[] => {
   }
   return tiles;
 };
-export const getShuffledBoard = (): number[] => {
-  let tiles = randomPermutation();
-  for (let attempt = 0; attempt < 50 && (isSolved(tiles) || manhattanDistance(tiles) < MIN_SCRAMBLE_DISTANCE); attempt++) {
-    tiles = randomPermutation();
+export const getShuffledBoard = (rows = GRID_SIZE, cols = GRID_SIZE): number[] => {
+  const minDistance = minScrambleDistance(rows * cols);
+  let tiles = randomPermutation(rows, cols);
+  for (let attempt = 0; attempt < 50 && (isSolved(tiles) || manhattanDistance(tiles, cols) < minDistance); attempt++) {
+    tiles = randomPermutation(rows, cols);
   }
   return tiles;
 };
-export const canSlide = (tiles: number[], clickedIdx: number): boolean => {
+export const canSlide = (tiles: number[], clickedIdx: number, cols = GRID_SIZE): boolean => {
   const blankIdx = tiles.indexOf(0);
   if (blankIdx === -1 || clickedIdx === blankIdx) return false;
-  const blankRow = Math.floor(blankIdx / GRID_SIZE);
-  const blankCol = blankIdx % GRID_SIZE;
-  const clickedRow = Math.floor(clickedIdx / GRID_SIZE);
-  const clickedCol = clickedIdx % GRID_SIZE;
+  const blankRow = Math.floor(blankIdx / cols);
+  const blankCol = blankIdx % cols;
+  const clickedRow = Math.floor(clickedIdx / cols);
+  const clickedCol = clickedIdx % cols;
   return blankRow === clickedRow || blankCol === clickedCol;
 };
 export const slideTiles = (
   tiles: number[],
-  clickedIdx: number
+  clickedIdx: number,
+  cols = GRID_SIZE
 ): SlideResult | null => {
   const blankIdx = tiles.indexOf(0);
   if (blankIdx === -1 || clickedIdx === blankIdx) return null;
-  const blankRow = Math.floor(blankIdx / GRID_SIZE);
-  const blankCol = blankIdx % GRID_SIZE;
-  const clickedRow = Math.floor(clickedIdx / GRID_SIZE);
-  const clickedCol = clickedIdx % GRID_SIZE;
+  const blankRow = Math.floor(blankIdx / cols);
+  const blankCol = blankIdx % cols;
+  const clickedRow = Math.floor(clickedIdx / cols);
+  const clickedCol = clickedIdx % cols;
   const next = [...tiles];
   const moves: SlideStep[] = [];
   if (blankRow === clickedRow) {
     if (clickedCol < blankCol) {
       // Tiles to left of blank shift RIGHT
       for (let c = blankCol - 1; c >= clickedCol; c--) {
-        const fromIdx = blankRow * GRID_SIZE + c;
-        const toIdx = blankRow * GRID_SIZE + (c + 1);
+        const fromIdx = blankRow * cols + c;
+        const toIdx = blankRow * cols + (c + 1);
         moves.push({
           tileValue: tiles[fromIdx],
           fromIndex: fromIdx,
@@ -127,8 +139,8 @@ export const slideTiles = (
     } else {
       // Tiles to right of blank shift LEFT
       for (let c = blankCol + 1; c <= clickedCol; c++) {
-        const fromIdx = blankRow * GRID_SIZE + c;
-        const toIdx = blankRow * GRID_SIZE + (c - 1);
+        const fromIdx = blankRow * cols + c;
+        const toIdx = blankRow * cols + (c - 1);
         moves.push({
           tileValue: tiles[fromIdx],
           fromIndex: fromIdx,
@@ -145,8 +157,8 @@ export const slideTiles = (
     if (clickedRow < blankRow) {
       // Tiles above blank shift DOWN
       for (let r = blankRow - 1; r >= clickedRow; r--) {
-        const fromIdx = r * GRID_SIZE + blankCol;
-        const toIdx = (r + 1) * GRID_SIZE + blankCol;
+        const fromIdx = r * cols + blankCol;
+        const toIdx = (r + 1) * cols + blankCol;
         moves.push({
           tileValue: tiles[fromIdx],
           fromIndex: fromIdx,
@@ -160,8 +172,8 @@ export const slideTiles = (
     } else {
       // Tiles below blank shift UP
       for (let r = blankRow + 1; r <= clickedRow; r++) {
-        const fromIdx = r * GRID_SIZE + blankCol;
-        const toIdx = (r - 1) * GRID_SIZE + blankCol;
+        const fromIdx = r * cols + blankCol;
+        const toIdx = (r - 1) * cols + blankCol;
         moves.push({
           tileValue: tiles[fromIdx],
           fromIndex: fromIdx,
@@ -178,50 +190,52 @@ export const slideTiles = (
 };
 export const slideInDirection = (
   tiles: number[],
-  dir: 'up' | 'down' | 'left' | 'right'
+  dir: 'up' | 'down' | 'left' | 'right',
+  cols = GRID_SIZE
 ): SlideResult | null => {
   const blankIdx = tiles.indexOf(0);
   if (blankIdx === -1) return null;
-  const blankRow = Math.floor(blankIdx / GRID_SIZE);
-  const blankCol = blankIdx % GRID_SIZE;
+  const blankRow = Math.floor(blankIdx / cols);
+  const blankCol = blankIdx % cols;
   let targetRow = blankRow;
   let targetCol = blankCol;
   if (dir === 'up') targetRow = blankRow + 1;
   else if (dir === 'down') targetRow = blankRow - 1;
   else if (dir === 'left') targetCol = blankCol + 1;
   else if (dir === 'right') targetCol = blankCol - 1;
-  if (targetRow < 0 || targetRow >= GRID_SIZE || targetCol < 0 || targetCol >= GRID_SIZE) {
+  if (targetRow < 0 || targetRow >= tiles.length / cols || targetCol < 0 || targetCol >= cols) {
     return null;
   }
-  const targetIdx = targetRow * GRID_SIZE + targetCol;
-  return slideTiles(tiles, targetIdx);
+  const targetIdx = targetRow * cols + targetCol;
+  return slideTiles(tiles, targetIdx, cols);
 };
 export const slideTileInDirection = (
   tiles: number[],
   startIdx: number,
-  dir: 'up' | 'down' | 'left' | 'right'
+  dir: 'up' | 'down' | 'left' | 'right',
+  cols = GRID_SIZE
 ): SlideResult | null => {
   const blankIdx = tiles.indexOf(0);
   if (blankIdx === -1 || startIdx === blankIdx) return null;
-  const blankRow = Math.floor(blankIdx / GRID_SIZE);
-  const blankCol = blankIdx % GRID_SIZE;
-  const startRow = Math.floor(startIdx / GRID_SIZE);
-  const startCol = startIdx % GRID_SIZE;
+  const blankRow = Math.floor(blankIdx / cols);
+  const blankCol = blankIdx % cols;
+  const startRow = Math.floor(startIdx / cols);
+  const startCol = startIdx % cols;
   if (startRow === blankRow) {
     if (blankCol > startCol && dir === 'right') {
-      return slideTiles(tiles, startIdx);
+      return slideTiles(tiles, startIdx, cols);
     }
     if (blankCol < startCol && dir === 'left') {
-      return slideTiles(tiles, startIdx);
+      return slideTiles(tiles, startIdx, cols);
     }
   }
   if (startCol === blankCol) {
     if (blankRow > startRow && dir === 'down') {
-      return slideTiles(tiles, startIdx);
+      return slideTiles(tiles, startIdx, cols);
     }
     if (blankRow < startRow && dir === 'up') {
-      return slideTiles(tiles, startIdx);
+      return slideTiles(tiles, startIdx, cols);
     }
   }
-  return slideInDirection(tiles, dir);
+  return slideInDirection(tiles, dir, cols);
 };

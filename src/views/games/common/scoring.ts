@@ -70,9 +70,17 @@ const TARGET_TIMES: Record<string, Record<string, number>> = {
   },
 };
 
+// Slide puzzle boards come in any rows×cols; scale the 4×4 tuning (1.2×, 180s, 80 moves) by cell
+// count so a 3×3 isn't worth as much as a 4×4, and big boards are rewarded (multiplier capped).
+const slideScale = (gameId: string, diffKey: string): number | null => {
+  const m = gameId === 'slide-puzzle' ? /^(\d+)x(\d+)$/.exec(diffKey) : null;
+  return m ? (Number(m[1]) * Number(m[2])) / 16 : null;
+};
+
 export function calculateGameScore(input: ScoreCalculationInput): ScoreBreakdown {
   const diffKey = (input.difficulty || 'easy').toLowerCase();
-  const multiplier = DIFFICULTY_MULTIPLIERS[diffKey] ?? 1.0;
+  const scale = slideScale(input.gameId, diffKey);
+  const multiplier = scale !== null ? Math.min(3, Math.round(1.2 * scale * 100) / 100) : DIFFICULTY_MULTIPLIERS[diffKey] ?? 1.0;
   if (input.outcome === 'lost') {
     return {
       baseScore: 50,
@@ -84,7 +92,7 @@ export function calculateGameScore(input: ScoreCalculationInput): ScoreBreakdown
   }
   const baseScore = BASE_SCORES[input.gameId] ?? 500;
   const gameTargets = TARGET_TIMES[input.gameId] || {};
-  const targetTime = gameTargets[diffKey] ?? 300;
+  const targetTime = scale !== null ? Math.round(180 * scale) : gameTargets[diffKey] ?? 300;
   const timeDiff = Math.max(0, targetTime - input.timeSeconds);
   const timeBonus = Math.min(1000, Math.round(timeDiff * 2.5));
   let penalty = 0;
@@ -93,7 +101,7 @@ export function calculateGameScore(input: ScoreCalculationInput): ScoreBreakdown
   }
   if (input.gameId === 'slide-puzzle' && input.moves) {
     // Standard 15 puzzle optimal moves ~80
-    const excessMoves = Math.max(0, input.moves - 80);
+    const excessMoves = Math.max(0, input.moves - Math.round(80 * (scale ?? 1)));
     penalty += Math.min(200, excessMoves * 2);
   }
   const subtotal = Math.max(100, baseScore + timeBonus - penalty);

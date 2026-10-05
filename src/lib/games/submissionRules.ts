@@ -16,7 +16,8 @@ export const ALLOWED_DIFFICULTIES: Record<GameId, readonly string[]> = {
   hitori: CLASSIC,
   tango: CLASSIC,
   queens: ['6x6', '7x7', '8x8', '9x9', '10x10'],
-  'slide-puzzle': ['4x4'],
+  // Any rows×cols from 3 to 8 (the board-size picker's range).
+  'slide-puzzle': [3, 4, 5, 6, 7, 8].flatMap((r) => [3, 4, 5, 6, 7, 8].map((c) => `${r}x${c}`)),
 };
 export const SUBMISSION_LIMITS = {
   /** A win reported faster than this is not credible for any game here (fastest real win: 8s). */
