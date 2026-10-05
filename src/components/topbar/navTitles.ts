@@ -65,6 +65,7 @@ export const NAV_TITLES: Record<string, string> = {
   '/games/slide-puzzle': '15-Slide Puzzle',
   '/games/hitori': 'Hitori',
   '/games/tango': 'Tango',
+  '/games/queens': 'Queens',
 };
 export const getNavTitle = (pathname: string): string => {
   return NAV_TITLES[pathname] ?? 'Rupee Calculator';

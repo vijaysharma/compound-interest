@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { clearPendingLinks, useLocation } from '@/navigation';
 import { NAV_INTENT_ATTR } from '@/navigation/prehydrationFeedback';
+import { NAV_TITLES } from './topbar/navTitles';
 import styles from './NavigationProgressBar.module.scss';
 declare global {
   interface Window {
@@ -10,6 +11,8 @@ declare global {
   }
 }
 const clearPrehydrationIntent = () => document.documentElement.removeAttribute(NAV_INTENT_ATTR);
+/** Set on <html> while a navigation is pending; dims the current page (_base.scss). */
+export const NAV_LOADING_ATTR = 'data-nav-loading';
 export const NAV_START_EVENT = 'app:nav-start';
 export const NAV_STOP_EVENT = 'app:nav-stop';
 // Backstops for a bar whose navigation never lands. A press may turn into a scroll or drag, so it
@@ -32,6 +35,8 @@ export function NavigationProgressBar() {
   const { pathname, search } = useLocation();
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);
+  // Destination page name for the loader card, when the navigation came from a known link.
+  const [label, setLabel] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const safetyTimerRef = useRef<NodeJS.Timeout | null>(null);
   const safetyDeadlineRef = useRef(0);
@@ -62,6 +67,7 @@ export function NavigationProgressBar() {
       setVisible(false);
       resetTimerRef.current = setTimeout(() => {
         setProgress(0);
+        setLabel(null);
         stateRef.current = 'idle';
       }, 200);
     }, 180);
@@ -127,6 +133,7 @@ export function NavigationProgressBar() {
           return;
         }
         if (e.type === 'pointerdown') pressedAnchorRef.current = anchor;
+        setLabel(NAV_TITLES[targetUrl.pathname] ?? null);
         start(e.type !== 'click');
       } catch {
         // ignore malformed URLs
@@ -167,6 +174,9 @@ export function NavigationProgressBar() {
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     };
   }, [start, done]);
+  useEffect(() => {
+    document.documentElement.toggleAttribute(NAV_LOADING_ATTR, visible);
+  }, [visible]);
   const barRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (barRef.current) {
@@ -191,8 +201,9 @@ export function NavigationProgressBar() {
         </div>
       </div>
       {visible && (
-        <div className={styles.spinnerWrapper} aria-hidden="true">
-          <div className={styles.spinner} />
+        <div className={styles.pageLoader} role="status" aria-live="polite">
+          <div className={styles.spinner} aria-hidden="true" />
+          <span className={styles.pageLoaderText}>{label ? `Opening ${label}…` : 'Loading page…'}</span>
         </div>
       )}
     </>

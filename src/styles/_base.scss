@@ -115,6 +115,33 @@ html[data-nav-intent] {
     box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 90%, transparent);
     animation: navIntentProgress 8s cubic-bezier(0.1, 0.6, 0.3, 1) forwards;
   }
+
+  // Same centred card as NavigationProgressBar's page loader.
+  body::after {
+    content: 'Loading page…';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999998;
+    pointer-events: none;
+    padding: 1.5rem 1.75rem;
+    border-radius: 1rem;
+    background: var(--color-base-100);
+    border: 1px solid var(--color-base-300);
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.25);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+}
+
+// Pending navigation (React loader or pre-hydration intent): dim the page being left so it's
+// clear it is on its way out. The nav chrome is outside <main> and stays fully usable.
+html[data-nav-loading] main,
+html[data-nav-intent] main {
+  opacity: 0.45;
+  transition: opacity 120ms ease-out;
 }
 
 // Pre-hydration tap on the mobile menu button: TopBar opens the drawer once it mounts.
