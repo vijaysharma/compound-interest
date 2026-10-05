@@ -17,3 +17,10 @@ clicking its sync button.
 
 The calculators read mutual-fund schemes and IMF inflation from the local API
 endpoints. NAV history is cached in Neon the first time a scheme is opened.
+
+## Engineering Documentation
+
+See [`docs/DOCUMENTATION_INDEX.md`](docs/DOCUMENTATION_INDEX.md) for the
+source-backed architecture, product, financial, data, security, operations, and
+handover documentation. Production configuration and legal/provider claims
+marked for human verification remain unverified.
