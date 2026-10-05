@@ -118,6 +118,8 @@ export function NavigationProgressBar() {
     const handlePointerAction = (e: MouseEvent | PointerEvent) => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       if (e.defaultPrevented) return;
+      // A touch press may become a scroll; touch feedback starts on the click instead.
+      if (e.type === 'pointerdown' && (e as PointerEvent).pointerType !== 'mouse') return;
       const anchor = (e.target as HTMLElement)?.closest('a');
       if (!anchor || !anchor.href) return;
       if (anchor.target && anchor.target !== '_self') return;

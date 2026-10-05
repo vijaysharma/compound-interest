@@ -470,6 +470,9 @@
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  // The drawer shell is `touch-action: none` (no page scroll behind it); re-allow vertical
+  // panning here explicitly so the menu itself always scrolls.
+  touch-action: pan-y;
   // Uses the themed darker primary rather than mixing toward black, which
   // would collapse to near-black under the dark theme.
   background-color: var(--color-primary-active);

@@ -6,8 +6,8 @@
  * triggers a full document load with no in-app feedback, so the app looks frozen. This inline
  * script runs before any bundle and marks <html> on press of an internal link, which shows a
  * CSS-only bar (`html[data-nav-intent]` in _base.scss). Like the hydrated Link it reacts on
- * pointerdown; a press that turns into a scroll/drag (pointercancel, or released off the link)
- * clears it, a click commits it. NavigationProgressBar sets `window.__navHydrated` on mount and
+ * pointerdown for a mouse (a touch waits for the click, since it may be a scroll); a press released
+ * off the link clears it, a click commits it. NavigationProgressBar sets `window.__navHydrated` on mount and
  * takes over any intent still showing.
  *
  * The mobile menu button is the way into navigation on small screens, but the drawer only exists
@@ -29,7 +29,7 @@ if(u.origin!==location.origin||(u.pathname===location.pathname&&u.search===locat
 return a;
 }
 function release(){if(pressed&&!committed)d.removeAttribute(A);pressed=null;}
-addEventListener('pointerdown',function(e){pressed=e.isPrimary?link(e):null;if(pressed)d.setAttribute(A,'');},true);
+addEventListener('pointerdown',function(e){pressed=e.isPrimary&&e.pointerType==='mouse'?link(e):null;if(pressed)d.setAttribute(A,'');},true);
 addEventListener('pointerup',function(e){if(pressed&&pressed.contains(e.target))pressed=null;else release();},true);
 addEventListener('pointercancel',release,true);
 addEventListener('click',function(e){

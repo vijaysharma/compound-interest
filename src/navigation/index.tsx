@@ -144,7 +144,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         }}
         onPointerDown={(e) => {
           prefetchOnIntent();
-          if (!e.defaultPrevented && e.button === 0 && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+          // Mouse only: a touch may be the start of a scroll (e.g. through the mobile menu), so
+          // touch feedback waits for the click, which fires only for a real tap.
+          if (e.pointerType === 'mouse' && !e.defaultPrevented && e.button === 0 && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
             const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
             const targetClean = target.split('#')[0];
             if (targetClean && targetClean !== currentPath) {
