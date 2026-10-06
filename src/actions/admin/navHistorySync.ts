@@ -4,6 +4,7 @@ import { redisGet, redisSet } from '@/lib/redis';
 import { formatAmfiDate } from '@/lib/amfi/amfiDate';
 import { fetchAmfiHistoricalChunk } from '@/lib/amfi/amfiClient';
 import { bulkUpsertAmfiSchemes } from '@/lib/amfi/amfiBulkStorage';
+import { getActiveSchemeCodeSet } from '@/lib/amfi/trackedSchemes';
 import { calculateNext90DayWindow, validate90DayInterval } from './navHistoryDates';
 import type { NavHistoryCheckpoint, NavHistorySyncOptions, NavHistorySyncReport } from './navHistoryTypes';
 const CHECKPOINT_KEY = 'nav:history:sync:checkpoint';
@@ -37,7 +38,9 @@ export async function syncNavHistoryAction(
       }
     }
   }
-  const bulkResult = await bulkUpsertAmfiSchemes(parsed, 300, 35_000);
+  // An explicit scheme list was filtered above; otherwise NAV is stored for the tracked list only.
+  const navCodes = requestedCodes.length > 0 ? undefined : await getActiveSchemeCodeSet(sql);
+  const bulkResult = await bulkUpsertAmfiSchemes(parsed, 300, 35_000, navCodes);
   const nextWindow = calculateNext90DayWindow(options.fromDate);
   const nextFromAmfi = formatAmfiDate(nextWindow.nextFrom);
   const nextToAmfi = formatAmfiDate(nextWindow.nextTo);

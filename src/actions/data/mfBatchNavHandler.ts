@@ -80,7 +80,7 @@ export async function handleGetBatchMutualFundNav(
       const rows = (await sql`
         SELECT scheme_code, to_char(date, 'DD-MM-YYYY') as date, nav::text as nav
         FROM mutual_fund_nav WHERE scheme_code = ANY(${missingNums})
-        ORDER BY scheme_code, date DESC
+        ORDER BY scheme_code, mutual_fund_nav.date DESC
       `) as Array<{ scheme_code: string | number; date: string; nav: string }>;
       const stillMissing = new Set(missing);
       const grouped = new Map<string, Array<{ date: string; nav: string }>>();
@@ -110,12 +110,20 @@ export async function handleGetBatchMutualFundNav(
       console.warn('[nav] batch DB read failed:', dbErr);
     }
   }
-  if (missing.length > 0) {
-    const { ensureSchemeTrackedAndBackfilled } = await import('@/lib/amfi/autoInclusion');
-    const { readStored } = await import('./navStoredReader');
-    await mapWithConcurrency(missing, NAV_BATCH_CONCURRENCY, async (code) => {
-      await ensureSchemeTrackedAndBackfilled(code);
-      const stored = await readStored(code);
+  // Missing schemes, ones holding only a few days of NAV (a partial import), and ones whose history
+  // walk is part-way get their full history backfilled before answering.
+  const { hasShortNavHistory, pendingHistoryBackfills } = await import('@/lib/amfi/autoInclusion');
+  const pending = await pendingHistoryBackfills([...found.keys()]);
+  const needsBackfill = [
+    ...missing,
+    ...[...found]
+      .filter(([code, entry]) => hasShortNavHistory(entry.payload) || pending.has(code))
+      .map(([code]) => code),
+  ];
+  if (needsBackfill.length > 0) {
+    const { readStoredWithBackfill } = await import('./navStoredReader');
+    await mapWithConcurrency(needsBackfill, NAV_BATCH_CONCURRENCY, async (code) => {
+      const stored = await readStoredWithBackfill(code);
       if (stored.payload) found.set(code, { payload: stored.payload, latest: stored.latest ?? latestOf(stored.payload) });
     });
   }
@@ -126,6 +134,14 @@ export async function handleGetBatchMutualFundNav(
       null
     )
   );
+  // Cached series behind the market are re-read from the DB before anything goes upstream.
+  const { refreshStaleFromDb } = await import('./navStoredReader');
+  await mapWithConcurrency([...found.keys()], NAV_BATCH_CONCURRENCY, async (code) => {
+    const entry = found.get(code)!;
+    if (entry.latest && entry.latest >= ceiling) return;
+    const current = await refreshStaleFromDb(code, { ...entry, fromDb: false }, ceiling);
+    if (current.payload) found.set(code, { payload: current.payload, latest: current.latest });
+  });
   const stale: Array<{ code: string; current: NavPayload | null }> = [];
   for (const [code, entry] of found) {
     result[code] = withResponseMeta(entry.payload, ceiling, explicitStart, endDate);

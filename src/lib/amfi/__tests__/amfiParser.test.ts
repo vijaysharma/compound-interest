@@ -63,5 +63,23 @@ invalidSchemeCode;INF123;INF456;Fund;10.0;24-Sep-2026
     const rows = res.byScheme.get('135762');
     assert.ok(rows && rows.length === 1);
     assert.deepEqual(rows[0], { date: '24-09-2026', nav: '29.6475' });
+    assert.equal(res.schemes.get('135762')?.fundHouse, 'Axis Mutual Fund');
+    assert.deepEqual(res.fundHouses, ['Axis Mutual Fund']);
+  });
+  it('attributes each scheme to the fund-house heading above it', () => {
+    const res = parseAmfiText(`
+Open Ended Schemes(Arbitrage Fund)
+
+Axis Mutual Fund
+
+112;INF1;-;Axis Arbitrage Fund;Direct Plan;Growth Option;10.5;05-Oct-2026
+
+quant Mutual Fund
+
+153428;INF966L01DZ1;-;quant Arbitrage Fund;Regular Plan;Growth Option;11.0364;05-Oct-2026
+`);
+    assert.equal(res.schemes.get('112')?.fundHouse, 'Axis Mutual Fund');
+    assert.equal(res.schemes.get('153428')?.fundHouse, 'quant Mutual Fund');
+    assert.deepEqual(res.fundHouses, ['Axis Mutual Fund', 'quant Mutual Fund']);
   });
 });

@@ -9,7 +9,7 @@ import {
   runNavMaintenance,
   syncSchemeFromUpstream,
 } from './navSync';
-import { readStored } from './navStoredReader';
+import { readStoredWithBackfill, refreshStaleFromDb } from './navStoredReader';
 export { readStored } from './navStoredReader';
 export async function handleGetMutualFundNav(
   schemeCodeRaw: string | number,
@@ -25,12 +25,7 @@ export async function handleGetMutualFundNav(
     requestedStartDate && ISO_DATE_REGEX.test(requestedStartDate.trim())
       ? requestedStartDate.trim()
       : null;
-  let stored = await readStored(schemeCode);
-  if (!stored.payload || (Array.isArray(stored.payload.data) && stored.payload.data.length <= 1)) {
-    const { ensureSchemeTrackedAndBackfilled } = await import('@/lib/amfi/autoInclusion');
-    await ensureSchemeTrackedAndBackfilled(schemeCode);
-    stored = await readStored(schemeCode);
-  }
+  const stored = await readStoredWithBackfill(schemeCode);
   if (!stored.payload) {
     const fetched = await syncSchemeFromUpstream(schemeCode, FIRST_FETCH_TIMEOUT_MS, null);
     if (!fetched) {
@@ -44,11 +39,13 @@ export async function handleGetMutualFundNav(
     return withResponseMeta(fetched, firstCeiling, explicitStart, endDate);
   }
   const ceiling = await resolveFreshnessCeiling(endDate, stored.latest);
-  const isFresh = Boolean(stored.latest && stored.latest >= ceiling);
-  if (!isFresh) {
-    scheduleMaintenance([{ code: schemeCode, current: stored.payload }]);
+  const current = await refreshStaleFromDb(schemeCode, stored, ceiling);
+  const isFresh = Boolean(current.latest && current.latest >= ceiling);
+  if (!isFresh && current.payload) {
+    // Even the DB is behind (the nightly sync hasn't caught this scheme yet): go upstream.
+    scheduleMaintenance([{ code: schemeCode, current: current.payload }]);
   }
-  return withResponseMeta(stored.payload, ceiling, explicitStart, endDate);
+  return withResponseMeta(current.payload ?? stored.payload, ceiling, explicitStart, endDate);
 }
 export function withResponseMeta(
   payload: NavPayload,

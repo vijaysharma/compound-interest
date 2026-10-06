@@ -12,7 +12,12 @@ export interface AmfiNavRecord {
 export interface AmfiParseResult {
   records: AmfiNavRecord[];
   byScheme: Map<string, NavType[]>;
-  schemes: Map<string, { schemeCode: string; schemeName: string; isinGrowth: string | null }>;
+  schemes: Map<
+    string,
+    { schemeCode: string; schemeName: string; isinGrowth: string | null; fundHouse: string | null }
+  >;
+  /** Fund-house headings in the order the file lists them. */
+  fundHouses: string[];
   skippedLines: number;
 }
 export interface AmfiChunk {

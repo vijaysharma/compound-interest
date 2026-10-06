@@ -51,12 +51,20 @@ function parseAmfiRow(parts: string[]): AmfiNavRecord | null {
 export function parseAmfiText(text: string): AmfiParseResult {
   const records: AmfiNavRecord[] = [];
   const byScheme = new Map<string, NavType[]>();
-  const schemes = new Map<string, { schemeCode: string; schemeName: string; isinGrowth: string | null }>();
+  const schemes: AmfiParseResult['schemes'] = new Map();
+  const fundHouses: string[] = [];
+  // Scheme rows are grouped under a fund-house heading ("quant Mutual Fund"), itself under a
+  // category heading ("Open Ended Schemes(...)").
+  let fundHouse: string | null = null;
   let skippedLines = 0;
   const lines = text.split(/\r?\n/);
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed || !/^\d{1,10};/.test(trimmed)) {
+      if (!trimmed.includes(';') && /mutual fund/i.test(trimmed) && !/schemes/i.test(trimmed)) {
+        fundHouse = trimmed;
+        if (!fundHouses.includes(trimmed)) fundHouses.push(trimmed);
+      }
       skippedLines++;
       continue;
     }
@@ -73,8 +81,9 @@ export function parseAmfiText(text: string): AmfiParseResult {
         schemeCode: record.schemeCode,
         schemeName: record.schemeName,
         isinGrowth: record.isinGrowth,
+        fundHouse,
       });
     }
   }
-  return { records, byScheme, schemes, skippedLines };
+  return { records, byScheme, schemes, fundHouses, skippedLines };
 }

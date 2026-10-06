@@ -26,7 +26,7 @@ source facts; MEDIUM for completeness Owner: UNKNOWN Related Documents:
 
 ## Data and AI
 
-- **VERIFIED:** AMFI, MFAPI, World Bank, IMF, Open ER, NSE, Yahoo Finance,
+- **VERIFIED:** AMFI, World Bank, IMF, Open ER, NSE, Yahoo Finance,
   Shiprocket, Google, Gemini, Razorpay, India Post, Vercel Blob integrations
   appear in code.
 - **PARTIALLY VERIFIED:** Freshness and fallback behavior are documented;

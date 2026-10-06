@@ -1,57 +1,33 @@
 import { NextResponse } from 'next/server';
-import { probeMarketWatermark, readWatermark } from '@/actions/data/navWatermark';
-import {
-  isCronAuthorised,
-  fetchCronCandidates,
-  executeCronWorkers,
-  syncStoredSchemesFromAmfi,
-  type CandidateRow,
-} from './cronNavWorker';
+import { probeMarketWatermark } from '@/actions/data/navWatermark';
+import { syncTrackedSchemesFromAmfi } from '@/lib/amfi/trackedNavSync';
+import { isCronAuthorised } from './cronNavWorker';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
-const MAX_SCHEMES_PER_RUN = 40;
-const REFRESH_BUDGET_MS = 20_000;
+// Leaves headroom under maxDuration for the watermark probe and the response.
+const SYNC_BUDGET_MS = 24_000;
+/**
+ * Nightly (~1 AM IST, vercel.json): brings every tracked scheme's stored NAV up to date from AMFI
+ * and re-probes the market watermark the request path's freshness checks use.
+ */
 export async function GET(request: Request) {
   if (!isCronAuthorised(request)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
   const startedAt = Date.now();
-  const existing = await readWatermark();
-  const probePromise = probeMarketWatermark({ force: true });
-  const probeForSelection = existing ? null : await probePromise;
-  const watermark = existing ?? probeForSelection?.watermark ?? null;
-  if (!watermark?.date) {
-    const probe = await probePromise;
-    return NextResponse.json({
-      ok: true,
-      probed: probe.probed,
-      note: 'No watermark could be established; upstream is unreachable.',
-      elapsedMs: Date.now() - startedAt,
-    });
-  }
-  let candidates: CandidateRow[] = [];
-  try {
-    candidates = await fetchCronCandidates(watermark.date, MAX_SCHEMES_PER_RUN);
-  } catch (dbErr) {
-    console.warn('[nav][cron] candidate query failed:', dbErr);
-    return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
-  }
-  const deadline = startedAt + REFRESH_BUDGET_MS;
-  const [{ outcomes, ranOutOfTime }, probe, amfiSync] = await Promise.all([
-    executeCronWorkers(candidates, deadline),
-    probePromise,
-    syncStoredSchemesFromAmfi(),
+  const [sync, probe] = await Promise.all([
+    syncTrackedSchemesFromAmfi({ deadline: startedAt + SYNC_BUDGET_MS }).catch((err) => {
+      console.warn('[nav][cron] tracked sync failed:', err);
+      return null;
+    }),
+    probeMarketWatermark({ force: true }),
   ]);
-  const latestWatermark = probe.watermark ?? watermark;
+  if (!sync) return NextResponse.json({ error: 'Tracked NAV sync failed' }, { status: 503 });
   return NextResponse.json({
-    ok: true,
-    watermark: latestWatermark.date,
+    ok: !sync.error,
+    watermark: probe.watermark?.date ?? null,
     watermarkAdvanced: probe.advanced,
-    noAdvanceCount: latestWatermark.noAdvanceCount,
-    candidates: candidates.length,
-    amfiSync,
-    ...outcomes,
-    ranOutOfTime,
+    ...sync,
     elapsedMs: Date.now() - startedAt,
   });
 }

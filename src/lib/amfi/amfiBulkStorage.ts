@@ -8,10 +8,15 @@ export interface BulkSyncResult {
   elapsedMs: number;
   hasMore: boolean;
 }
+/**
+ * Upserts scheme names for everything in `parsed`, and NAV rows only for `navCodes` (the tracked
+ * list) — NAV is stored for tracked schemes only.
+ */
 export async function bulkUpsertAmfiSchemes(
   parsed: AmfiParseResult,
   batchSize = 200,
-  timeBudgetMs = 25_000
+  timeBudgetMs = 25_000,
+  navCodes?: Set<string>
 ): Promise<BulkSyncResult> {
   const startedAt = Date.now();
   const sql = getDb();
@@ -47,6 +52,7 @@ export async function bulkUpsertAmfiSchemes(
     `;
     const flatRows: Array<{ scheme_code: string; date: string; nav: number }> = [];
     for (const [code, rows] of chunk) {
+      if (navCodes && !navCodes.has(code)) continue;
       for (const r of rows) {
         const iso = navDateToISO(r.date);
         const navNum = parseFloat(r.nav);

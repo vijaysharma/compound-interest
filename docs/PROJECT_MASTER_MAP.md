@@ -34,7 +34,7 @@ flowchart TD
 - **Financial engine:** pure/shared utilities plus view-local engines; formula
   catalog/audit in `FINANCIAL_CALCULATION_CATALOG.md` and
   `FINANCIAL_CALCULATION_AUDIT.md`.
-- **External data:** AMFI/MFAPI, Open ER, World Bank, IMF, NSE, Yahoo; data
+- **External data:** AMFI, Open ER, World Bank, IMF, NSE, Yahoo; data
   lineage in `DATA_SOURCES_AND_PROVENANCE.md`.
 - **Backend:** Next server actions and seven route handler files; API inventory
   in `API_CATALOG.md` and JSON.

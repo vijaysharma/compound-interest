@@ -64,6 +64,7 @@ export async function fetchAmfiHistoricalRange(
     records: [],
     byScheme: new Map(),
     schemes: new Map(),
+    fundHouses: [],
     skippedLines: 0,
   };
   for (const chunk of chunks) {
@@ -73,6 +74,9 @@ export async function fetchAmfiHistoricalRange(
       for (const [code, rows] of chunkResult.byScheme) {
         if (!combined.byScheme.has(code)) combined.byScheme.set(code, []);
         combined.byScheme.get(code)!.push(...rows);
+      }
+      for (const house of chunkResult.fundHouses) {
+        if (!combined.fundHouses.includes(house)) combined.fundHouses.push(house);
       }
       for (const [code, meta] of chunkResult.schemes) {
         if (!combined.schemes.has(code)) combined.schemes.set(code, meta);

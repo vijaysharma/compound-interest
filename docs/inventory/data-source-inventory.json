@@ -4,14 +4,8 @@
     {
       "name": "AMFI",
       "kind": "official mutual fund NAV feed",
-      "code": "src/lib/amfi/amfiClient.ts; src/lib/amfi/amfiSingleDayFetcher.ts",
+      "code": "src/lib/amfi/amfiClient.ts; src/lib/amfi/amfiSingleDayFetcher.ts; src/lib/amfi/amfiSchemeBackfill.ts",
       "freshness": "market-day; cached/refreshed"
-    },
-    {
-      "name": "MFAPI",
-      "kind": "NAV fallback/auto-inclusion",
-      "code": "src/lib/amfi/autoInclusion.ts",
-      "freshness": "on demand"
     },
     {
       "name": "World Bank PPP",

@@ -11,7 +11,7 @@ routes, provider clients, migrations, cron configuration Last Verified:
 | Domain                     | Critical dependency               | Degraded behavior observed                              | Continuity gap                                                 |
 | -------------------------- | --------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
 | Core calculator arithmetic | Browser JavaScript                | Most formulas compute locally                           | Browser compatibility/testing target UNKNOWN                   |
-| Mutual-fund history        | AMFI/MFAPI, DB, Redis             | Stored NAV and scheduled refresh; source fetch can fail | Stale-age disclosure and alternate provider agreement UNKNOWN  |
+| Mutual-fund history        | AMFI, DB, Redis             | Stored NAV and scheduled refresh; source fetch can fail | Stale-age disclosure and alternate provider agreement UNKNOWN  |
 | Auth/admin                 | Neon DB                           | DB unavailable breaks session checks/actions            | No offline admin/bootstrap process documented                  |
 | Tax AI                     | Neon settings + Gemini            | Missing key/provider error returned                     | Manual advice fallback and provider outage procedure UNKNOWN   |
 | Payments                   | Razorpay/DB or manual UPI review  | Checkout/manual workflow                                | Reconciliation/refund process UNKNOWN                          |
