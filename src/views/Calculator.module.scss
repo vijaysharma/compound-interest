@@ -342,8 +342,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
   border-radius: 9999px;
   background: transparent;
   border: none;
@@ -352,6 +354,13 @@
   transition:
     color 0.15s ease,
     background-color 0.15s ease;
+
+  @include tablet-up {
+    width: 2.25rem;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+  }
 
   &:hover:not(:disabled) {
     color: var(--color-primary);
@@ -367,15 +376,21 @@
     color: var(--color-primary);
     background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
 }
 
 .scientificToggleBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  height: 2rem;
-  padding: 0 0.625rem;
-  font-size: 0.75rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   border-radius: var(--radius-btn, 0.5rem);
   border: none;
@@ -383,6 +398,12 @@
   background: transparent;
   color: color-mix(in srgb, var(--color-base-content) 70%, transparent);
   transition: all 0.15s ease;
+
+  @include tablet-up {
+    height: 2.25rem;
+    min-height: 2.25rem;
+    font-size: 0.75rem;
+  }
 
   &:hover {
     color: var(--color-primary);
@@ -393,6 +414,11 @@
     background-color: var(--color-primary);
     color: var(--color-primary-content);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 
@@ -423,8 +449,9 @@
 }
 
 .degRadBtn {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+  min-height: 36px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -435,6 +462,11 @@
   &.active {
     background-color: var(--color-primary);
     color: var(--color-primary-content);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 
@@ -447,9 +479,10 @@
 .memoryActionBtn {
   background: transparent;
   border: none;
-  font-size: 11px;
+  font-size: 0.8125rem;
   font-weight: 700;
-  padding: 0.25rem 0.5rem;
+  min-height: 36px;
+  padding: 0.35rem 0.6rem;
   border-radius: var(--radius-btn, 0.375rem);
   cursor: pointer;
   color: var(--color-primary);
@@ -462,6 +495,11 @@
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 
   &Error {
