@@ -9,6 +9,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { RouteTracker } from '@/components/RouteTracker';
 import NavigationProgressBar from '@/components/NavigationProgressBar';
+import NavigationWarmup from '@/components/NavigationWarmup';
 export default function AppClientLayout({
   children,
 }: {
@@ -18,6 +19,7 @@ export default function AppClientLayout({
     <AuthProvider>
       <SidebarProvider>
         <NavigationProgressBar />
+        <NavigationWarmup />
         <RouteTracker />
         <TopBar className={styles.appTopbarSticky} />
         <div className={styles.appBody}>

@@ -25,7 +25,7 @@ export function useNavigate(): NavigateFunction {
       const targetStr = typeof to === 'string' ? to : '';
       const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
       if (targetStr && targetStr !== currentPath) {
-        startNavigationProgress();
+        startNavigationProgress(false, targetStr, Boolean(options?.replace));
       }
       if (options?.replace) {
         router.replace(to);
@@ -128,7 +128,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       const targetClean = target.split('#')[0];
       if (!targetClean || targetClean === currentPath) return;
       e.currentTarget.setAttribute(NAV_PENDING_ATTR, '');
-      startNavigationProgress();
+      startNavigationProgress(false, target, Boolean(replace));
     };
     return (
       <NextLink

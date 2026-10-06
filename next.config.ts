@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
   experimental: {
     optimizePackageImports: ['react-icons', 'ag-charts-community', 'ag-charts-react'],
+    // Static pages only change on deploy, so keep prefetched ones (see NavigationWarmup) for an
+    // hour instead of the default 5 minutes; a cached route navigates without any request.
+    staleTimes: { static: 3600 },
   },
   sassOptions: {
     includePaths: [path.join(process.cwd(), 'src/styles')],

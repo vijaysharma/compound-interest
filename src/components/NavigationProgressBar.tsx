@@ -20,10 +20,29 @@ export const NAV_STOP_EVENT = 'app:nav-stop';
 // backstop only has to outlast a slow network (a 2s-RTT route can take >6s to commit).
 const PRESS_BACKSTOP_MS = 6000;
 const NAVIGATION_BACKSTOP_MS = 20000;
+// A soft navigation to a known URL that still hasn't committed by now is treated as stuck — e.g.
+// its RSC requests sit on a stalled HTTP/2 connection, which was seen holding them for ~30s. Fall
+// back to a full document load rather than leave the user waiting (or hide the loader while the
+// navigation is still pending).
+const STALL_FALLBACK_MS = 10000;
+interface NavStartDetail {
+  pressOnly?: boolean;
+  /** Destination, when known; arms the stalled-navigation fallback. */
+  href?: string;
+  replace?: boolean;
+}
 /** `pressOnly` for pointerdown-time feedback that may not become a navigation. */
-export const startNavigationProgress = (pressOnly = false) => {
+export const startNavigationProgress = (pressOnly = false, href?: string, replace = false) => {
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(NAV_START_EVENT, { detail: { pressOnly } }));
+    let absoluteHref: string | undefined;
+    try {
+      const url = href ? new URL(href, window.location.href) : null;
+      if (url && url.origin === window.location.origin) absoluteHref = url.href;
+    } catch {
+      // unknown destination: no fallback
+    }
+    const detail: NavStartDetail = { pressOnly, href: absoluteHref, replace };
+    window.dispatchEvent(new CustomEvent(NAV_START_EVENT, { detail }));
   }
 };
 export const stopNavigationProgress = () => {
@@ -40,6 +59,9 @@ export function NavigationProgressBar() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const safetyTimerRef = useRef<NodeJS.Timeout | null>(null);
   const safetyDeadlineRef = useRef(0);
+  const stallTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Destination of the current confirmed navigation, for the stalled-navigation fallback.
+  const targetRef = useRef<{ href: string; replace: boolean } | null>(null);
   // The link under a press that hasn't been confirmed by a click yet, and whether the current
   // run has been confirmed (click, navigate(), back/forward) — a confirmed run is never cancelled.
   const pressedAnchorRef = useRef<HTMLAnchorElement | null>(null);
@@ -57,6 +79,11 @@ export function NavigationProgressBar() {
       clearTimeout(safetyTimerRef.current);
       safetyTimerRef.current = null;
     }
+    if (stallTimerRef.current) {
+      clearTimeout(stallTimerRef.current);
+      stallTimerRef.current = null;
+    }
+    targetRef.current = null;
     clearPendingLinks();
     clearPrehydrationIntent();
     confirmedRef.current = false;
@@ -72,9 +99,25 @@ export function NavigationProgressBar() {
       }, 200);
     }, 180);
   }, []);
-  const start = useCallback((pressOnly = false) => {
+  const start = useCallback((pressOnly = false, href?: string, replace = false) => {
     const backstopMs = pressOnly ? PRESS_BACKSTOP_MS : NAVIGATION_BACKSTOP_MS;
     if (!pressOnly) confirmedRef.current = true;
+    // A click reaches both the document listener and Link's onClick; keep whichever named the
+    // destination, and (re)arm the fallback only for a newly named one.
+    if (!pressOnly && href && targetRef.current?.href !== href) {
+      targetRef.current = { href, replace };
+      if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
+      stallTimerRef.current = setTimeout(() => {
+        stallTimerRef.current = null;
+        const target = targetRef.current;
+        if (stateRef.current !== 'loading' || !target) return;
+        // The document is about to be replaced: drop the backstop so the loader stays up until it is.
+        if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = null;
+        if (target.replace) window.location.replace(target.href);
+        else window.location.assign(target.href);
+      }, STALL_FALLBACK_MS);
+    }
     if (timerRef.current) clearInterval(timerRef.current);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
@@ -112,8 +155,15 @@ export function NavigationProgressBar() {
     }
   }, [pathname, search, done]);
   useEffect(() => {
-    const handleStart = (e: Event) => start(Boolean((e as CustomEvent<{ pressOnly?: boolean }>).detail?.pressOnly));
+    const handleStart = (e: Event) => {
+      const detail = (e as CustomEvent<NavStartDetail | undefined>).detail;
+      start(Boolean(detail?.pressOnly), detail?.href, Boolean(detail?.replace));
+    };
     const handleStop = () => done();
+    // Returning to this page from the back/forward cache restores it mid-navigation; reset.
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) done();
+    };
     const handlePopState = () => start();
     const handlePointerAction = (e: MouseEvent | PointerEvent) => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
@@ -136,7 +186,8 @@ export function NavigationProgressBar() {
         }
         if (e.type === 'pointerdown') pressedAnchorRef.current = anchor;
         setLabel(NAV_TITLES[targetUrl.pathname] ?? null);
-        start(e.type !== 'click');
+        if (e.type === 'click') start(false, targetUrl.href);
+        else start(true);
       } catch {
         // ignore malformed URLs
       }
@@ -153,6 +204,7 @@ export function NavigationProgressBar() {
     window.addEventListener(NAV_START_EVENT, handleStart);
     window.addEventListener(NAV_STOP_EVENT, handleStop);
     window.addEventListener('popstate', handlePopState);
+    window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('pointerdown', handlePointerAction, { capture: true, passive: true });
     document.addEventListener('click', handlePointerAction, { capture: true });
     document.addEventListener('pointerup', handlePressEnd, { capture: true, passive: true });
@@ -166,12 +218,14 @@ export function NavigationProgressBar() {
       window.removeEventListener(NAV_START_EVENT, handleStart);
       window.removeEventListener(NAV_STOP_EVENT, handleStop);
       window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('pointerdown', handlePointerAction, { capture: true });
       document.removeEventListener('click', handlePointerAction, { capture: true });
       document.removeEventListener('pointerup', handlePressEnd, { capture: true });
       document.removeEventListener('pointercancel', handlePressEnd, { capture: true });
       if (timerRef.current) clearInterval(timerRef.current);
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+      if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
     };
