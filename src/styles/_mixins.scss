@@ -1,11 +1,15 @@
 @use "./variables" as *;
 
-// Page-level modal overlay: starts below the top bar (48px mobile, 64px tablet+) so the
-// navigation above it stays visible and tappable while the dialog is open.
+// Page-level modal overlay: starts below the top bar (48px mobile, 64px tablet+) and right of the
+// sidebar (768px+) so the navigation stays visible and tappable while the dialog is open. The
+// sidebar paints above page overlays, so a full-width one had its left part hidden under it.
 @mixin below-app-chrome {
   top: 48px;
   @media (min-width: #{$bp-tablet}) {
     top: 64px;
+  }
+  @media (min-width: #{$bp-laptop}) {
+    left: var(--app-sidebar-width, 0px);
   }
 }
 

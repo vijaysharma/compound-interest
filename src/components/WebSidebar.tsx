@@ -32,6 +32,7 @@ const WebSidebar: React.FC = () => {
   return (
     <aside
       className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : styles.expanded}`}
+      data-app-sidebar={isCollapsed ? 'collapsed' : 'expanded'}
       aria-label="Sidebar Navigation"
     >
       <nav className={styles.navBody}>

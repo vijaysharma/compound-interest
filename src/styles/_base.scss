@@ -3,6 +3,17 @@
 
 // Base CSS resets and mobile-first typography
 
+// Current width of the desktop sidebar (WebSidebar sets data-app-sidebar), for overlays that must
+// sit beside it rather than under it — see the below-app-chrome mixin.
+@media (min-width: #{$bp-laptop}) {
+  :root:has([data-app-sidebar='expanded']) {
+    --app-sidebar-width: 240px;
+  }
+  :root:has([data-app-sidebar='collapsed']) {
+    --app-sidebar-width: 64px;
+  }
+}
+
 *,
 *::before,
 *::after {
