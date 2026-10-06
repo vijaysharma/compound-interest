@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   FiTrendingUp,
   FiSearch,
@@ -9,9 +9,11 @@ import {
   FiPlusCircle,
   FiCheckCircle,
 } from 'react-icons/fi';
+import MutualFundSelectorModal from '../../components/MutualFundSelectorModal';
+import { useFundSearch } from '../../components/mutual-fund/useFundSearch';
 import { getCurrencySymbol } from '../../utilities/currency';
-import { fetchAllMfs, fetchMFWithMeta } from '../../data/api_data';
-import type { NavType, MFJSONType } from '../../types/types';
+import { fetchMFWithMeta } from '../../data/api_data';
+import type { NavType, MFType } from '../../types/types';
 import type { PPFCalculationResult, PpfInvestmentRecord } from '../../utilities/ppfCalculations';
 import {
   calculateMfComparison,
@@ -70,12 +72,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
   const [isLoadingNav, setIsLoadingNav] = useState<boolean>(false);
   const [navError, setNavError] = useState<string | null>(null);
 
-  // Search State
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [searchResults, setSearchResults] = useState<MFJSONType[]>([]);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
-  const searchWrapperRef = useRef<HTMLDivElement>(null);
 
   // Fetch NAV data whenever selected fund changes
   useEffect(() => {
@@ -110,42 +106,20 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
     };
   }, [selectedSchemeCode]);
 
-  // Handle fund search with debounce
-  useEffect(() => {
-    const trimmed = searchQuery.trim();
-    if (!trimmed || trimmed.length < 2) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
+  // Mutual Fund Selector Modal State
+  const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
+  const fundSearch = useFundSearch(selectedSchemeName, isSelectorOpen);
 
-    setIsSearching(true);
-    const timer = setTimeout(() => {
-      fetchAllMfs(trimmed)
-        .then((data) => {
-          setSearchResults(data.slice(0, 15));
-        })
-        .catch(() => {
-          setSearchResults([]);
-        })
-        .finally(() => {
-          setIsSearching(false);
-        });
-    }, 300);
+  const pinnedFunds = useMemo(
+    () => [{ schemeCode: selectedSchemeCode, schemeName: selectedSchemeName, color: 'var(--color-primary)' }],
+    [selectedSchemeCode, selectedSchemeName]
+  );
 
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Click outside search results dropdown
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
-        setShowSearchResults(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const handleTogglePinFund = (fund: MFType) => {
+    setSelectedSchemeCode(String(fund.value));
+    setSelectedSchemeName(fund.name);
+    setIsSelectorOpen(false);
+  };
 
   // Compute Comparison Results
   const comparisonResult: MfComparisonResult | null = useMemo(() => {
@@ -157,13 +131,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
       selectedSchemeName
     );
   }, [investments, navData, ppfResult, selectedSchemeCode, selectedSchemeName]);
-
-  const handleSelectSearchResult = (fund: MFJSONType) => {
-    setSelectedSchemeCode(String(fund.schemeCode));
-    setSelectedSchemeName(fund.schemeName);
-    setSearchQuery('');
-    setShowSearchResults(false);
-  };
 
   const handleLoadSampleHistory = async () => {
     const currentYear = new Date().getFullYear();
@@ -232,42 +199,14 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
           })}
         </div>
 
-        {/* Custom Fund Search Input */}
-        <div className={styles.searchWrapper} ref={searchWrapperRef}>
-          <FiSearch className={styles.searchIcon} />
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Search and compare ANY mutual fund in India (e.g. Nippon Small Cap, Axis Bluechip)..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setShowSearchResults(true);
-            }}
-            onFocus={() => setShowSearchResults(true)}
-          />
-          {showSearchResults && searchResults.length > 0 && (
-            <div className={styles.searchResultsDropdown}>
-              {searchResults.map((fund) => (
-                <button
-                  key={fund.schemeCode}
-                  type="button"
-                  className={styles.searchResultItem}
-                  onClick={() => handleSelectSearchResult(fund)}
-                >
-                  <div className={styles.resultFundName}>{fund.schemeName}</div>
-                  <div className={styles.resultFundCode}>Scheme Code: {fund.schemeCode}</div>
-                </button>
-              ))}
-            </div>
-          )}
-          {showSearchResults && isSearching && (
-            <div className={styles.searchResultsDropdown} style={{ padding: '0.75rem', fontSize: '0.8125rem' }}>
-              Searching mutual funds...
-            </div>
-          )}
+          <button
+            type="button"
+            className={styles.benchmarkPill}
+            onClick={() => setIsSelectorOpen(true)}
+          >
+            <FiSearch /> Search Other Mutual Funds...
+          </button>
         </div>
-      </div>
 
       {/* Active Fund Header Card */}
       <div className={styles.activeFundBar}>
@@ -462,6 +401,21 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
           </div>
         </>
       )}
+
+      {/* Mutual Fund Selector Modal */}
+      <MutualFundSelectorModal
+        open={isSelectorOpen}
+        onClose={() => setIsSelectorOpen(false)}
+        searchKey={fundSearch.searchKey}
+        setSearchKey={fundSearch.setSearchKey}
+        selectedType={fundSearch.selectedType}
+        setSelectedType={fundSearch.setSelectedType}
+        selectedGrowth={fundSearch.selectedGrowth}
+        setSelectedGrowth={fundSearch.setSelectedGrowth}
+        funds={fundSearch.mfs}
+        pinnedFunds={pinnedFunds}
+        togglePinFund={handleTogglePinFund}
+      />
     </div>
   );
 };
