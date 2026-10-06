@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/cron/sync-nav",
-      "schedule": "30 19 * * 2-6"
+      "schedule": "05 19 * * 2-6"
     },
     {
       "path": "/api/cron/sync-fii-dii",
