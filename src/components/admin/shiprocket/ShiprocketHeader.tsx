@@ -60,9 +60,15 @@ export const ShiprocketHeader: React.FC<ShiprocketHeaderProps> = React.memo(
                 title="Refresh All Data"
               >
                 <FiRefreshCw className={loading ? styles.spinner : ''} />
+                <span className={styles.buttonLabelWeb}>Refresh</span>
               </button>
-              <button className={styles.primaryBtn} onClick={onNewShipment}>
+              <button
+                className={styles.primaryBtn}
+                onClick={onNewShipment}
+                title="Add Order"
+              >
                 <FiPlus />
+                <span className={styles.buttonLabelWeb}>Add Order</span>
               </button>
             </div>
           </div>

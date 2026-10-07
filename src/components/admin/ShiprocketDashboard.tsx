@@ -117,10 +117,8 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           onLengthChange={createForm.setLength}
           onBreadthChange={createForm.setBreadth}
           onHeightChange={createForm.setHeight}
-          onItemNameChange={createForm.setItemName}
-          onItemSkuChange={createForm.setItemSku}
-          onItemQtyChange={createForm.setItemQty}
-          onItemPriceChange={createForm.setItemPrice}
+          onShippingChargesChange={createForm.setShippingCharges}
+          onDiscountChange={createForm.setDiscount}
           {...createForm}
         />
       )}

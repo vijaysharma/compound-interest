@@ -98,6 +98,9 @@
     transform: none;
   }
 }
+.buttonLabelWeb {
+  display: inline;
+}
 .outlineBtn {
   display: inline-flex;
   align-items: center;
@@ -1200,6 +1203,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
+  }
+  .buttonLabelWeb {
+    display: none;
   }
   .primaryBtn,
   .outlineBtn {

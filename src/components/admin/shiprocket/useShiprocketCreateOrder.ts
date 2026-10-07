@@ -22,13 +22,32 @@ export function useShiprocketCreateOrder(
   const [length, setLength] = useState('10');
   const [breadth, setBreadth] = useState('10');
   const [height, setHeight] = useState('10');
-  const [itemName, setItemName] = useState('');
-  const [itemSku, setItemSku] = useState('');
-  const [itemQty, setItemQty] = useState('1');
-  const [itemPrice, setItemPrice] = useState('299');
+  const [items, setItems] = useState<Array<{ name: string; sku: string; units: string; selling_price: string }>>([
+    { name: '', sku: '', units: '1', selling_price: '299' },
+  ]);
+  const [shippingCharges, setShippingCharges] = useState('0');
+  const [discount, setDiscount] = useState('0');
   const [paymentMode, setPaymentMode] = useState<'Prepaid' | 'COD'>('Prepaid');
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [createdOrderResult, setCreatedOrderResult] = useState<{ orderId: number; shipmentId: number } | null>(null);
+
+  const handleAddItem = useCallback(() => {
+    setItems((prev) => [...prev, { name: '', sku: '', units: '1', selling_price: '0' }]);
+  }, []);
+
+  const handleRemoveItem = useCallback((index: number) => {
+    setItems((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
+  }, []);
+
+  const handleItemChange = useCallback(
+    (index: number, field: 'name' | 'sku' | 'units' | 'selling_price', val: string) => {
+      setItems((prev) =>
+        prev.map((it, i) => (i === index ? { ...it, [field]: val } : it))
+      );
+    },
+    []
+  );
+
   useEffect(() => {
     if (account?.pickupLocations && account.pickupLocations.length > 0 && !pickupLoc) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -72,9 +91,22 @@ export function useShiprocketCreateOrder(
       setAlertMsg({ type: 'error', text: 'Please fill in all mandatory customer and address details.' });
       return;
     }
+    const validItems = items.filter((it) => it.name.trim() !== '');
+    if (validItems.length === 0) {
+      setAlertMsg({ type: 'error', text: 'Please provide at least one item with a valid name.' });
+      return;
+    }
     setCreatingOrder(true);
     setAlertMsg(null);
     try {
+      const itemsSubtotal = validItems.reduce(
+        (acc, it) => acc + (parseFloat(it.selling_price) || 0) * (parseInt(it.units, 10) || 1),
+        0
+      );
+      const shipChargeNum = parseFloat(shippingCharges) || 0;
+      const discountNum = parseFloat(discount) || 0;
+      const orderSubtotal = Math.max(0, itemsSubtotal + shipChargeNum - discountNum);
+
       const payload = {
         order_id: `ORD-${Date.now()}`,
         order_date: new Date().toISOString().slice(0, 10),
@@ -89,19 +121,19 @@ export function useShiprocketCreateOrder(
         billing_pincode: custPincode,
         billing_country: 'India',
         payment_method: paymentMode,
-        sub_total: Number(itemPrice) * Number(itemQty || 1),
-        weight: Number(weight || 0.5),
-        length: Number(length || 10),
-        breadth: Number(breadth || 10),
-        height: Number(height || 10),
-        order_items: [
-          {
-            name: itemName || 'Standard Item',
-            sku: itemSku || `SKU-${Date.now()}`,
-            units: Number(itemQty || 1),
-            selling_price: Number(itemPrice || 299),
-          },
-        ],
+        sub_total: orderSubtotal,
+        shipping_charges: shipChargeNum,
+        discount: discountNum,
+        weight: Number(parseFloat(weight) || 0.5),
+        length: Number(parseFloat(length) || 10),
+        breadth: Number(parseFloat(breadth) || 10),
+        height: Number(parseFloat(height) || 10),
+        order_items: validItems.map((it, idx) => ({
+          name: it.name.trim(),
+          sku: it.sku.trim() || `SKU-${Date.now()}-${idx + 1}`,
+          units: Number(parseInt(it.units, 10) || 1),
+          selling_price: Number(parseFloat(it.selling_price) || 0),
+        })),
       };
       const res = await createShiprocketOrderAction(payload, token);
       if (res.success && res.data?.order_id && res.data?.shipment_id) {
@@ -122,16 +154,17 @@ export function useShiprocketCreateOrder(
     }
   }, [
     token, pickupLoc, custName, custPhone, custEmail, custAddress, custAddress2,
-    custCity, custState, custPincode, paymentMode, itemPrice, itemQty, weight,
-    length, breadth, height, itemName, itemSku, setAlertMsg, onOrderCreated,
+    custCity, custState, custPincode, paymentMode, items, shippingCharges, discount,
+    weight, length, breadth, height, setAlertMsg, onOrderCreated,
   ]);
   return {
     pickupLoc, setPickupLoc, custName, setCustName, custPhone, setCustPhone,
     custEmail, setCustEmail, custAddress, setCustAddress, custAddress2, setCustAddress2,
     custPincode, setCustPincode, custCity, setCustCity, custState, setCustState,
     pincodeLoading, weight, setWeight, length, setLength, breadth, setBreadth,
-    height, setHeight, itemName, setItemName, itemSku, setItemSku, itemQty, setItemQty,
-    itemPrice, setItemPrice, paymentMode, setPaymentMode, creatingOrder,
+    height, setHeight, items, shippingCharges, setShippingCharges, discount, setDiscount,
+    onAddItem: handleAddItem, onRemoveItem: handleRemoveItem, onItemChange: handleItemChange,
+    paymentMode, setPaymentMode, creatingOrder,
     createdOrderResult, setCreatedOrderResult, volumetricWeight, appliedWeight, handleCreateOrder,
   };
 }

@@ -25,10 +25,9 @@ export const ShiprocketCreateTab: React.FC<ShiprocketCreateTabProps> = React.mem
     length,
     breadth,
     height,
-    itemName,
-    itemSku,
-    itemQty,
-    itemPrice,
+    items,
+    shippingCharges,
+    discount,
     volumetricWeight,
     appliedWeight,
     creatingOrder,
@@ -60,10 +59,9 @@ export const ShiprocketCreateTab: React.FC<ShiprocketCreateTabProps> = React.mem
         length={length}
         breadth={breadth}
         height={height}
-        itemName={itemName}
-        itemSku={itemSku}
-        itemQty={itemQty}
-        itemPrice={itemPrice}
+        items={items}
+        shippingCharges={shippingCharges}
+        discount={discount}
         volumetricWeight={volumetricWeight}
         appliedWeight={appliedWeight}
         {...handlers}

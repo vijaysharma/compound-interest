@@ -136,6 +136,8 @@ export async function createShiprocketOrderAction(
     breadth: Number(payload.breadth || 10),
     height: Number(payload.height || 10),
     weight: Number(payload.weight || 0.5),
+    shipping_charges: Number(payload.shipping_charges || 0),
+    discount: Number(payload.discount || 0),
   };
   const res = await shiprocketFetch('orders/create/adhoc', {
     method: 'POST',

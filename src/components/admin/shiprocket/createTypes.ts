@@ -17,10 +17,9 @@ export interface ShiprocketCreateTabProps {
   length: string;
   breadth: string;
   height: string;
-  itemName: string;
-  itemSku: string;
-  itemQty: string;
-  itemPrice: string;
+  items: Array<{ name: string; sku: string; units: string; selling_price: string }>;
+  shippingCharges: string;
+  discount: string;
   volumetricWeight: string;
   appliedWeight: string;
   creatingOrder: boolean;
@@ -43,8 +42,9 @@ export interface ShiprocketCreateTabProps {
   onLengthChange: (val: string) => void;
   onBreadthChange: (val: string) => void;
   onHeightChange: (val: string) => void;
-  onItemNameChange: (val: string) => void;
-  onItemSkuChange: (val: string) => void;
-  onItemQtyChange: (val: string) => void;
-  onItemPriceChange: (val: string) => void;
+  onShippingChargesChange: (val: string) => void;
+  onDiscountChange: (val: string) => void;
+  onAddItem: () => void;
+  onRemoveItem: (index: number) => void;
+  onItemChange: (index: number, field: 'name' | 'sku' | 'units' | 'selling_price', val: string) => void;
 }
