@@ -21,12 +21,14 @@ import {
   FiPackage,
   FiCalendar,
   FiX,
+  FiGitMerge,
 } from 'react-icons/fi';
 import {
   listShiprocketCustomersAction,
   saveShiprocketCustomerAction,
   deleteShiprocketCustomerAction,
   syncHistoricalCustomersAction,
+  mergeShiprocketCustomersAction,
 } from '@/actions/admin';
 import type { ShiprocketCustomer } from '@/types/shiprocket';
 import styles from './ShiprocketCustomers.module.scss';
@@ -63,6 +65,21 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const [state, setState] = useState('');
   const [pincode, setPincode] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Merge state
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [sourceCustomer, setSourceCustomer] = useState<ShiprocketCustomer | null>(null);
+  const [targetCustomerId, setTargetCustomerId] = useState<string>('');
+  const [mergeName, setMergeName] = useState('');
+  const [mergePhone, setMergePhone] = useState('');
+  const [mergePhone2, setMergePhone2] = useState('');
+  const [mergeEmail, setMergeEmail] = useState('');
+  const [mergeAddress, setMergeAddress] = useState('');
+  const [mergeAddress2, setMergeAddress2] = useState('');
+  const [mergeCity, setMergeCity] = useState('');
+  const [mergeState, setMergeState] = useState('');
+  const [mergePincode, setMergePincode] = useState('');
+  const [merging, setMerging] = useState(false);
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
     try {
@@ -115,6 +132,89 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setState(cust.customer_state);
     setPincode(cust.customer_pincode);
     setShowForm(true);
+  };
+
+  const handleOpenMerge = (cust: ShiprocketCustomer) => {
+    setSourceCustomer(cust);
+    // Find a candidate target customer (e.g. first different customer)
+    const otherCust = customers.find((c) => c.id !== cust.id);
+    const targetId = otherCust ? otherCust.id : '';
+    setTargetCustomerId(targetId);
+
+    // Initial merged values: default to source or candidate target
+    const target = otherCust || null;
+    setMergeName(target?.customer_name || cust.customer_name);
+    setMergePhone(target?.customer_phone || cust.customer_phone || '');
+    setMergePhone2(target?.customer_phone_2 || cust.customer_phone_2 || '');
+    setMergeEmail(target?.customer_email || cust.customer_email || '');
+    setMergeAddress(target?.customer_address || cust.customer_address);
+    setMergeAddress2(target?.customer_address_2 || cust.customer_address_2 || '');
+    setMergeCity(target?.customer_city || cust.customer_city);
+    setMergeState(target?.customer_state || cust.customer_state);
+    setMergePincode(target?.customer_pincode || cust.customer_pincode);
+    setShowMergeModal(true);
+  };
+
+  const handleSelectMergeTarget = (chosenTargetId: string) => {
+    setTargetCustomerId(chosenTargetId);
+    const target = customers.find((c) => c.id === chosenTargetId);
+    if (target && sourceCustomer) {
+      setMergeName(target.customer_name || sourceCustomer.customer_name);
+      setMergePhone(target.customer_phone || sourceCustomer.customer_phone || '');
+      setMergePhone2(target.customer_phone_2 || sourceCustomer.customer_phone_2 || '');
+      setMergeEmail(target.customer_email || sourceCustomer.customer_email || '');
+      setMergeAddress(target.customer_address || sourceCustomer.customer_address);
+      setMergeAddress2(target.customer_address_2 || sourceCustomer.customer_address_2 || '');
+      setMergeCity(target.customer_city || sourceCustomer.customer_city);
+      setMergeState(target.customer_state || sourceCustomer.customer_state);
+      setMergePincode(target.customer_pincode || sourceCustomer.customer_pincode);
+    }
+  };
+
+  const handleMergeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sourceCustomer || !targetCustomerId) {
+      setAlert({ type: 'error', text: 'Both source and target customers must be selected' });
+      return;
+    }
+    if (!mergeName.trim() || !mergeAddress.trim() || !mergePincode.trim()) {
+      setAlert({ type: 'error', text: 'Name, Address, and Pincode are required for final merged customer' });
+      return;
+    }
+    setMerging(true);
+    setAlert(null);
+    try {
+      const res = await mergeShiprocketCustomersAction(
+        {
+          sourceCustomerId: sourceCustomer.id,
+          targetCustomerId,
+          finalCustomer: {
+            customer_name: mergeName,
+            customer_phone: mergePhone,
+            customer_phone_2: mergePhone2,
+            customer_email: mergeEmail,
+            customer_address: mergeAddress,
+            customer_address_2: mergeAddress2,
+            customer_city: mergeCity,
+            customer_state: mergeState,
+            customer_pincode: mergePincode,
+          },
+        },
+        token
+      );
+      if (res.success) {
+        setAlert({ type: 'success', text: res.message });
+        setShowMergeModal(false);
+        setSourceCustomer(null);
+        setTargetCustomerId('');
+        fetchCustomers();
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to merge customers';
+      setAlert({ type: 'error', text: msg });
+    } finally {
+      setMerging(false);
+    }
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -470,6 +570,238 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
           </div>
         </div>
       )}
+      {/* Merge Customer Modal Dialog */}
+      {showMergeModal && sourceCustomer && (
+        <div
+          className={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !merging) {
+              setShowMergeModal(false);
+              setSourceCustomer(null);
+            }
+          }}
+        >
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div className={`${styles.formSectionTitle} ${styles.formSectionFlat}`}>
+                <FiGitMerge /> Merge Customer: {sourceCustomer.customer_name}
+              </div>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => {
+                  setShowMergeModal(false);
+                  setSourceCustomer(null);
+                }}
+                disabled={merging}
+                aria-label="Close merge modal"
+              >
+                <FiX size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleMergeSubmit}>
+              <div className={styles.mergeNotice}>
+                Merging will transfer all order history from <strong>{sourceCustomer.customer_name}</strong> to the target record below, delete the duplicate customer, and update the target customer with these final values.
+              </div>
+
+              <div className={styles.mergeSelectBox}>
+                <label className={styles.fieldLabel}>Merge into Target Customer *</label>
+                <select
+                  className={styles.fieldInput}
+                  value={targetCustomerId}
+                  onChange={(e) => handleSelectMergeTarget(e.target.value)}
+                  disabled={merging}
+                  required
+                >
+                  <option value="">-- Select Target Customer to Merge With --</option>
+                  {customers
+                    .filter((c) => c.id !== sourceCustomer.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.customer_name} ({c.customer_phone || 'No phone'}) - {c.customer_city}, {c.customer_pincode} ({c.total_orders} orders)
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Side-by-side comparison */}
+              <div className={styles.mergeComparisonGrid}>
+                <div className={styles.mergeCustCard}>
+                  <div className={styles.mergeCustCardTitle}>
+                    <span>Source (Will be deleted)</span>
+                    <span className={styles.ordersCountBadge}>
+                      <FiPackage size={12} /> {sourceCustomer.total_orders} orders
+                    </span>
+                  </div>
+                  <div><strong>Name:</strong> {sourceCustomer.customer_name}</div>
+                  <div><strong>Phone:</strong> {sourceCustomer.customer_phone || 'None'}</div>
+                  {sourceCustomer.customer_phone_2 && (
+                    <div><strong>Alt Phone:</strong> {sourceCustomer.customer_phone_2}</div>
+                  )}
+                  {sourceCustomer.customer_email && (
+                    <div><strong>Email:</strong> {sourceCustomer.customer_email}</div>
+                  )}
+                  <div>
+                    <strong>Address:</strong> {sourceCustomer.customer_address}
+                    {sourceCustomer.customer_address_2 ? `, ${sourceCustomer.customer_address_2}` : ''}
+                  </div>
+                  <div>
+                    <strong>Location:</strong> {sourceCustomer.customer_city}, {sourceCustomer.customer_state} - {sourceCustomer.customer_pincode}
+                  </div>
+                </div>
+
+                {targetCustomerId && customers.find((c) => c.id === targetCustomerId) && (
+                  (() => {
+                    const target = customers.find((c) => c.id === targetCustomerId)!;
+                    return (
+                      <div className={styles.mergeCustCard}>
+                        <div className={styles.mergeCustCardTitle}>
+                          <span>Target (Will be kept & updated)</span>
+                          <span className={styles.ordersCountBadge}>
+                            <FiPackage size={12} /> {target.total_orders} orders
+                          </span>
+                        </div>
+                        <div><strong>Name:</strong> {target.customer_name}</div>
+                        <div><strong>Phone:</strong> {target.customer_phone || 'None'}</div>
+                        {target.customer_phone_2 && (
+                          <div><strong>Alt Phone:</strong> {target.customer_phone_2}</div>
+                        )}
+                        {target.customer_email && (
+                          <div><strong>Email:</strong> {target.customer_email}</div>
+                        )}
+                        <div>
+                          <strong>Address:</strong> {target.customer_address}
+                          {target.customer_address_2 ? `, ${target.customer_address_2}` : ''}
+                        </div>
+                        <div>
+                          <strong>Location:</strong> {target.customer_city}, {target.customer_state} - {target.customer_pincode}
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+
+              <div className={styles.colTitle} style={{ marginTop: '0.75rem', marginBottom: '0.5rem' }}>
+                Final Customer Details (Verify / Edit before merging)
+              </div>
+              <div className={styles.formGrid3}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Final Name *</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={mergeName}
+                    onChange={(e) => setMergeName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Primary Phone</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={mergePhone}
+                    onChange={(e) => setMergePhone(e.target.value)}
+                    placeholder="10-digit mobile"
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Alternate Phone</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={mergePhone2}
+                    onChange={(e) => setMergePhone2(e.target.value)}
+                    placeholder="Secondary phone"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGrid2}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Email Address</label>
+                  <input
+                    type="email"
+                    className={styles.fieldInput}
+                    value={mergeEmail}
+                    onChange={(e) => setMergeEmail(e.target.value)}
+                    placeholder="customer@example.com"
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Address Line 2 / Landmark</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={mergeAddress2}
+                    onChange={(e) => setMergeAddress2(e.target.value)}
+                    placeholder="Landmark or flat/block"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>Full Street Address *</label>
+                <input
+                  className={styles.fieldInput}
+                  value={mergeAddress}
+                  onChange={(e) => setMergeAddress(e.target.value)}
+                  placeholder="Street address"
+                  required
+                />
+              </div>
+
+              <div className={styles.formGrid3}>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>City *</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={mergeCity}
+                    onChange={(e) => setMergeCity(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>State *</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={mergeState}
+                    onChange={(e) => setMergeState(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Pincode *</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={mergePincode}
+                    onChange={(e) => setMergePincode(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button
+                  type="submit"
+                  className={styles.primaryBtn}
+                  disabled={merging || !targetCustomerId}
+                >
+                  {merging ? 'Merging Customers...' : 'Confirm & Merge Customer'}
+                </button>
+                <button
+                  type="button"
+                  className={styles.outlineBtn}
+                  onClick={() => {
+                    setShowMergeModal(false);
+                    setSourceCustomer(null);
+                  }}
+                  disabled={merging}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {/* Filter and Search Bar */}
       <div className={styles.filterBar}>
         <div className={styles.searchBox}>
@@ -610,6 +942,14 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                       <div className={`${styles.actionBtnsRow} ${styles.actionBtnsRowEnd}`}>
                         <button
                           type="button"
+                          className={styles.mergeBtnSmall}
+                          onClick={() => handleOpenMerge(cust)}
+                          title="Merge Customer"
+                        >
+                          <FiGitMerge /> Merge
+                        </button>
+                        <button
+                          type="button"
                           className={styles.editBtnSmall}
                           onClick={() => handleEdit(cust)}
                           title="Edit Customer"
@@ -696,6 +1036,14 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   </div>
                 </div>
                 <div className={styles.customerFooter}>
+                  <button
+                    type="button"
+                    className={styles.actionBtn}
+                    onClick={() => handleOpenMerge(cust)}
+                    title="Merge Customer"
+                  >
+                    <FiGitMerge /> Merge
+                  </button>
                   <button
                     type="button"
                     className={styles.actionBtn}

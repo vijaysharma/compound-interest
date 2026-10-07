@@ -573,6 +573,164 @@ export async function deleteShiprocketCustomerAction(
 }
 
 /**
+ * Merge two customer records into one target customer.
+ * Transducers order links from the source customer to the target customer's dedup_key,
+ * updates total_orders count, applies any final changes to the merged customer,
+ * and deletes the source customer record.
+ */
+export async function mergeShiprocketCustomersAction(
+  params: {
+    sourceCustomerId: string;
+    targetCustomerId: string;
+    finalCustomer: CustomerInput;
+  },
+  token?: string | null
+): Promise<{ success: boolean; id: string; message: string }> {
+  const sql = getDb();
+  await ensureTables(sql);
+  if (!(await isAuthorizedUser(token, sql))) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  const { sourceCustomerId, targetCustomerId, finalCustomer } = params;
+  if (!sourceCustomerId || !targetCustomerId) {
+    throw new Error('Both source and target customers are required for merge');
+  }
+  if (sourceCustomerId === targetCustomerId) {
+    throw new Error('Cannot merge a customer into themselves');
+  }
+
+  const customers = (await sql`
+    SELECT id, dedup_key, source_account_ids, total_orders, last_order_id, last_order_date
+    FROM shiprocket_customers
+    WHERE id IN (${sourceCustomerId}, ${targetCustomerId})
+  `) as Array<{
+    id: string;
+    dedup_key: string;
+    source_account_ids: string[];
+    total_orders: number;
+    last_order_id: string | null;
+    last_order_date: string | null;
+  }>;
+
+  const source = customers.find((c) => c.id === sourceCustomerId);
+  const target = customers.find((c) => c.id === targetCustomerId);
+  if (!source || !target) {
+    throw new Error('One or both customers to merge were not found');
+  }
+
+  const name = finalCustomer.customer_name.trim();
+  const phone = cleanPhone(finalCustomer.customer_phone);
+  const phone2Raw = cleanPhone(finalCustomer.customer_phone_2);
+  const phone2 = phone2Raw && phone2Raw !== phone ? phone2Raw : null;
+  const pincode = cleanPincode(finalCustomer.customer_pincode);
+  const address = finalCustomer.customer_address.trim();
+  const address2 = finalCustomer.customer_address_2?.trim() || null;
+  const city = finalCustomer.customer_city.trim();
+  const state = finalCustomer.customer_state.trim();
+  const email = finalCustomer.customer_email?.trim() || null;
+
+  if (!name || !pincode || !address) {
+    throw new Error('Name, Address, and Pincode are mandatory');
+  }
+
+  const newDedupKey = buildDedupKey(name, pincode);
+
+  // Check if new dedupKey conflicts with an unrelated third customer
+  const existingConflict = (await sql`
+    SELECT id FROM shiprocket_customers
+    WHERE dedup_key = ${newDedupKey} AND id NOT IN (${sourceCustomerId}, ${targetCustomerId})
+    LIMIT 1
+  `) as Array<{ id: string }>;
+  if (existingConflict.length > 0) {
+    throw new Error(`Another customer already exists with name '${name}' at pincode ${pincode}`);
+  }
+
+  // 1. Reassign orders from source (and target if dedup_key changed) to newDedupKey
+  await sql`
+    UPDATE shiprocket_customer_orders o
+    SET dedup_key = ${newDedupKey}
+    WHERE o.dedup_key IN (${source.dedup_key}, ${target.dedup_key})
+      AND o.dedup_key <> ${newDedupKey}
+      AND NOT EXISTS (
+        SELECT 1 FROM shiprocket_customer_orders x
+        WHERE x.dedup_key = ${newDedupKey}
+          AND x.account_id = o.account_id
+          AND x.order_id = o.order_id
+      )
+  `;
+
+  // Delete redundant order rows for the old keys that could not be updated due to conflict
+  await sql`
+    DELETE FROM shiprocket_customer_orders
+    WHERE dedup_key IN (${source.dedup_key}, ${target.dedup_key})
+      AND dedup_key <> ${newDedupKey}
+  `;
+
+  // 2. Calculate updated order stats for target
+  const orderStats = (await sql`
+    SELECT
+      COUNT(DISTINCT (account_id, order_id))::int as total_orders,
+      (ARRAY_AGG(order_id ORDER BY order_date DESC NULLS LAST, created_at DESC))[1] as last_order_id,
+      MAX(order_date) as last_order_date,
+      ARRAY_AGG(DISTINCT account_id) as source_account_ids
+    FROM shiprocket_customer_orders
+    WHERE dedup_key = ${newDedupKey}
+  `) as Array<{
+    total_orders: number;
+    last_order_id: string | null;
+    last_order_date: string | null;
+    source_account_ids: string[] | null;
+  }>;
+
+  const mergedTotalOrders = Math.max(
+    orderStats[0]?.total_orders || 0,
+    (source.total_orders || 0) + (target.total_orders || 0)
+  );
+  const mergedLastOrderId = orderStats[0]?.last_order_id || target.last_order_id || source.last_order_id;
+  const mergedLastOrderDate = orderStats[0]?.last_order_date || target.last_order_date || source.last_order_date;
+  const combinedAccounts = Array.from(
+    new Set([
+      ...(orderStats[0]?.source_account_ids || []),
+      ...(target.source_account_ids || []),
+      ...(source.source_account_ids || []),
+    ])
+  );
+
+  // 3. Delete source customer
+  await sql`DELETE FROM shiprocket_customers WHERE id = ${sourceCustomerId}`;
+
+  // 4. Update target customer with final details
+  await sql`
+    UPDATE shiprocket_customers
+    SET
+      customer_name = ${name},
+      customer_phone = ${phone},
+      customer_phone_2 = ${phone2},
+      customer_email = ${email},
+      customer_address = ${address},
+      customer_address_2 = ${address2},
+      customer_city = ${city},
+      customer_state = ${state},
+      customer_pincode = ${pincode},
+      dedup_key = ${newDedupKey},
+      total_orders = ${mergedTotalOrders},
+      last_order_id = ${mergedLastOrderId},
+      last_order_date = ${mergedLastOrderDate},
+      source_account_ids = ${combinedAccounts},
+      updated_at = NOW()
+    WHERE id = ${targetCustomerId}
+  `;
+
+  await invalidateShiprocketCustomersCache();
+  return {
+    success: true,
+    id: targetCustomerId,
+    message: `Merged customer successfully into '${name}'.`,
+  };
+}
+
+/**
  * Sync Historical Customers Across All Accounts
  * Iterates through all configured Shiprocket accounts, pulls historical orders for the selected period,
  * and standardizes & dedupes customer records into `shiprocket_customers` table.

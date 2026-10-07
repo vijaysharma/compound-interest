@@ -175,4 +175,11 @@ export async function syncHistoricalCustomersAction(
   const { syncHistoricalCustomersAction: fn } = await import('./admin/shiprocketCustomerManager');
   return fn(period, token);
 }
+export async function mergeShiprocketCustomersAction(
+  params: Parameters<typeof import('./admin/shiprocketCustomerManager').mergeShiprocketCustomersAction>[0],
+  token?: string | null
+) {
+  const { mergeShiprocketCustomersAction: fn } = await import('./admin/shiprocketCustomerManager');
+  return fn(params, token);
+}
 export type { NavHistorySyncReport, NavHistoryCheckpoint } from './admin/navHistoryTypes';
