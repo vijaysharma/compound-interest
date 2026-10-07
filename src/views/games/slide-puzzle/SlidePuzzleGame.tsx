@@ -47,7 +47,7 @@ interface Dims {
  * yellow → lime → green… by 30° of hue, so the solved board shows nested L-shaped layers. */
 const tileHue = (val: number, cols: number): number => {
   const home = val - 1;
-  return Math.min(Math.floor(home / cols), home % cols) * 30;
+  return Math.min(Math.floor(home / cols), home % cols) * 120;
 };
 export const SlidePuzzleGame: React.FC = () => {
   useGameSession('slide-puzzle');
@@ -160,44 +160,47 @@ export const SlidePuzzleGame: React.FC = () => {
     // Timer owns elapsed time; the win handler reads it via elapsedSecondsRef.
     return () => clearInterval(timer);
   }, [isStarted, isWon]);
-  const executeMove = useCallback((result: SlideResult, moveType: 'TAP' | 'SWIPE') => {
-    if (isCompletedRef.current) return;
-    if (!isStartedRef.current) {
-      isStartedRef.current = true;
-      setIsStarted(true);
-    }
-    tilesRef.current = result.newTiles;
-    // Authoritative move count lives in a ref so the winning move can record its score without
-    // running side effects inside a setState updater. React may invoke an updater more than once
-    // (StrictMode double-invokes, and re-renders can replay it), which previously meant
-    // recordGameScore could write to storage twice and called setState mid-updater.
-    movesRef.current += 1;
-    const finalMoves = movesRef.current;
-    setTiles(result.newTiles);
-    setMoves(finalMoves);
-    const now = Date.now();
-    const newSlideMoves: SlideMove[] = result.moves.map((m) => ({
-      ...m,
-      moveType,
-      timestamp: now,
-    }));
-    setMovementLog((prev) => [...prev, ...newSlideMoves]);
-    if (isStartedRef.current && finalMoves >= 5 && isSolved(result.newTiles)) {
-      isCompletedRef.current = true;
-      setIsWon(true);
-      const res = recordGameScore({
-        gameId: 'slide-puzzle',
-        gameName: '15-Slide Puzzle',
-        difficulty: `${dimsRef.current.rows}x${dimsRef.current.cols}`,
-        timeSeconds: Math.max(1, elapsedSecondsRef.current),
-        moves: finalMoves,
-        outcome: 'won',
-        playerName: user?.user_alias || user?.name || undefined,
-      });
-      setPersonalBest(res.isPersonalBest);
-      setScoreBreakdown(res.scoreBreakdown);
-    }
-  }, [user]);
+  const executeMove = useCallback(
+    (result: SlideResult, moveType: 'TAP' | 'SWIPE') => {
+      if (isCompletedRef.current) return;
+      if (!isStartedRef.current) {
+        isStartedRef.current = true;
+        setIsStarted(true);
+      }
+      tilesRef.current = result.newTiles;
+      // Authoritative move count lives in a ref so the winning move can record its score without
+      // running side effects inside a setState updater. React may invoke an updater more than once
+      // (StrictMode double-invokes, and re-renders can replay it), which previously meant
+      // recordGameScore could write to storage twice and called setState mid-updater.
+      movesRef.current += 1;
+      const finalMoves = movesRef.current;
+      setTiles(result.newTiles);
+      setMoves(finalMoves);
+      const now = Date.now();
+      const newSlideMoves: SlideMove[] = result.moves.map((m) => ({
+        ...m,
+        moveType,
+        timestamp: now,
+      }));
+      setMovementLog((prev) => [...prev, ...newSlideMoves]);
+      if (isStartedRef.current && finalMoves >= 5 && isSolved(result.newTiles)) {
+        isCompletedRef.current = true;
+        setIsWon(true);
+        const res = recordGameScore({
+          gameId: 'slide-puzzle',
+          gameName: '15-Slide Puzzle',
+          difficulty: `${dimsRef.current.rows}x${dimsRef.current.cols}`,
+          timeSeconds: Math.max(1, elapsedSecondsRef.current),
+          moves: finalMoves,
+          outcome: 'won',
+          playerName: user?.user_alias || user?.name || undefined,
+        });
+        setPersonalBest(res.isPersonalBest);
+        setScoreBreakdown(res.scoreBreakdown);
+      }
+    },
+    [user]
+  );
   // Resolve the grid's geometry once per gesture. `getBoundingClientRect` is a layout read, so
   // doing it per pointermove (as the old hit-test did) is wasteful on a 120Hz pointer stream.
   const readGridRect = useCallback((): DOMRect | null => {
@@ -212,49 +215,58 @@ export const SlidePuzzleGame: React.FC = () => {
   // and it is also wrong mid-animation: tiles carry a 0.12s transition, so hit-testing during a
   // slide can resolve to whichever element happens to be under the finger part-way through.
   // Computing the cell from the cached rect is both cheaper and deterministic.
-  const getTileIndexFromPoint = useCallback((clientX: number, clientY: number): number | null => {
-    const rect = gridRectRef.current ?? readGridRect();
-    if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
-      return null;
-    }
-    const { rows, cols } = dimsRef.current;
-    const col = Math.min(cols - 1, Math.max(0, Math.floor((x / rect.width) * cols)));
-    const row = Math.min(rows - 1, Math.max(0, Math.floor((y / rect.height) * rows)));
-    return row * cols + col;
-  }, [readGridRect]);
-  const handleCellTransition = useCallback((currentIdx: number, isMoveGesture: boolean) => {
-    if (isWon) return;
-    if (controlMode === 'tap' && isMoveGesture) return;
-    const currentTiles = tilesRef.current;
-    const currentBlank = currentTiles.indexOf(0);
-    if (currentBlank === -1) return;
-    const prevIdx = lastPointerTileRef.current;
-    lastPointerTileRef.current = currentIdx;
-    if (prevIdx === currentIdx || currentIdx === currentBlank) {
-      return;
-    }
-    // Entering any tile in the blank's row or column slides it (and any tiles between) into the
-    // gap, wherever the pointer came from: the blank, a neighbour, or the far side of the board.
-    const result = slideTiles(currentTiles, currentIdx, dimsRef.current.cols);
-    if (result) {
-      hasMovedInGestureRef.current = true;
-      lastSwipeAtRef.current = Date.now();
-      executeMove(result, 'SWIPE');
-      lastPointerTileRef.current = currentIdx; // now currentIdx is the new blank space!
-    }
-  }, [controlMode, executeMove, isWon]);
-  const handleTileClick = useCallback((idx: number) => {
-    if (isWon) return;
-    if (controlMode === 'swipe') return; // Taps disabled in swipe mode
-    // Suppress the click that trails a slide gesture. Time-based, so it cannot latch on.
-    if (Date.now() - lastSwipeAtRef.current < 150) return;
-    const result = slideTiles(tilesRef.current, idx, dimsRef.current.cols);
-    if (!result) return;
-    executeMove(result, 'TAP');
-  }, [controlMode, executeMove, isWon]);
+  const getTileIndexFromPoint = useCallback(
+    (clientX: number, clientY: number): number | null => {
+      const rect = gridRectRef.current ?? readGridRect();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+        return null;
+      }
+      const { rows, cols } = dimsRef.current;
+      const col = Math.min(cols - 1, Math.max(0, Math.floor((x / rect.width) * cols)));
+      const row = Math.min(rows - 1, Math.max(0, Math.floor((y / rect.height) * rows)));
+      return row * cols + col;
+    },
+    [readGridRect]
+  );
+  const handleCellTransition = useCallback(
+    (currentIdx: number, isMoveGesture: boolean) => {
+      if (isWon) return;
+      if (controlMode === 'tap' && isMoveGesture) return;
+      const currentTiles = tilesRef.current;
+      const currentBlank = currentTiles.indexOf(0);
+      if (currentBlank === -1) return;
+      const prevIdx = lastPointerTileRef.current;
+      lastPointerTileRef.current = currentIdx;
+      if (prevIdx === currentIdx || currentIdx === currentBlank) {
+        return;
+      }
+      // Entering any tile in the blank's row or column slides it (and any tiles between) into the
+      // gap, wherever the pointer came from: the blank, a neighbour, or the far side of the board.
+      const result = slideTiles(currentTiles, currentIdx, dimsRef.current.cols);
+      if (result) {
+        hasMovedInGestureRef.current = true;
+        lastSwipeAtRef.current = Date.now();
+        executeMove(result, 'SWIPE');
+        lastPointerTileRef.current = currentIdx; // now currentIdx is the new blank space!
+      }
+    },
+    [controlMode, executeMove, isWon]
+  );
+  const handleTileClick = useCallback(
+    (idx: number) => {
+      if (isWon) return;
+      if (controlMode === 'swipe') return; // Taps disabled in swipe mode
+      // Suppress the click that trails a slide gesture. Time-based, so it cannot latch on.
+      if (Date.now() - lastSwipeAtRef.current < 150) return;
+      const result = slideTiles(tilesRef.current, idx, dimsRef.current.cols);
+      if (!result) return;
+      executeMove(result, 'TAP');
+    },
+    [controlMode, executeMove, isWon]
+  );
   const endGesture = useCallback((e?: React.PointerEvent) => {
     if (e) {
       try {
@@ -365,7 +377,12 @@ export const SlidePuzzleGame: React.FC = () => {
           <span className={styles.hudLabel}>Moves</span>
           <span className={styles.hudValue}>{moves}</span>
         </div>
-        <button type="button" className={styles.shuffleBtn} onClick={resetGame} aria-label="Shuffle board">
+        <button
+          type="button"
+          className={styles.shuffleBtn}
+          onClick={resetGame}
+          aria-label="Shuffle board"
+        >
           <FiRefreshCw size={14} />
           <span>New Game</span>
         </button>
@@ -394,12 +411,28 @@ export const SlidePuzzleGame: React.FC = () => {
             ))}
           </div>
           <div className={styles.customSize}>
-            <select aria-label="Rows" value={dims.rows} onChange={(e) => handleDimsChange({ ...dims, rows: Number(e.target.value) })}>
-              {DIM_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+            <select
+              aria-label="Rows"
+              value={dims.rows}
+              onChange={(e) => handleDimsChange({ ...dims, rows: Number(e.target.value) })}
+            >
+              {DIM_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
             </select>
             <span aria-hidden="true">×</span>
-            <select aria-label="Columns" value={dims.cols} onChange={(e) => handleDimsChange({ ...dims, cols: Number(e.target.value) })}>
-              {DIM_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+            <select
+              aria-label="Columns"
+              value={dims.cols}
+              onChange={(e) => handleDimsChange({ ...dims, cols: Number(e.target.value) })}
+            >
+              {DIM_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -423,7 +456,11 @@ export const SlidePuzzleGame: React.FC = () => {
             </span>
           )}
         </div>
-        <div className={styles.segmentedControl} role="radiogroup" aria-label="Movement Control Mode">
+        <div
+          className={styles.segmentedControl}
+          role="radiogroup"
+          aria-label="Movement Control Mode"
+        >
           <button
             type="button"
             className={`${styles.segmentBtn} ${controlMode === 'tap' ? styles.segmentBtnActive : ''}`}
@@ -466,7 +503,15 @@ export const SlidePuzzleGame: React.FC = () => {
           stats={[
             { label: 'Moves', value: moves },
             { label: 'Time', value: formatGameTime(elapsedSeconds) },
-            { label: 'Control', value: controlMode === 'tap' ? 'Tap' : controlMode === 'swipe' ? 'Slide / Hover' : 'Hybrid' },
+            {
+              label: 'Control',
+              value:
+                controlMode === 'tap'
+                  ? 'Tap'
+                  : controlMode === 'swipe'
+                    ? 'Slide / Hover'
+                    : 'Hybrid',
+            },
             { label: 'Logged Slides', value: movementLog.length },
           ]}
           isPersonalBest={personalBest}
@@ -487,13 +532,24 @@ export const SlidePuzzleGame: React.FC = () => {
         gameTitle="15-Slide Puzzle"
         objective="Slide the numbered tiles until they are in order from left to right, top to bottom, with the empty space in the bottom-right corner. Pick any board from 3×3 up to 8×8."
         rules={[
-          <><strong>Adjacent Sliding:</strong> Tiles adjacent to the empty slot can be slid into it horizontally or vertically.</>,
-          <><strong>Multi-tile Sliding:</strong> Tapping or sliding a tile in the same row or column as the empty space will push all intervening tiles into the blank space.</>,
-          <><strong>Colour Guide:</strong> Each tile's colour shows its home band. Red tiles belong in the top row and left column, orange in the next band in, and so on.</>,
+          <>
+            <strong>Adjacent Sliding:</strong> Tiles adjacent to the empty slot can be slid into it
+            horizontally or vertically.
+          </>,
+          <>
+            <strong>Multi-tile Sliding:</strong> Tapping or sliding a tile in the same row or column
+            as the empty space will push all intervening tiles into the blank space.
+          </>,
+          <>
+            <strong>Colour Guide:</strong> Each tile's colour shows its home band. Red tiles belong
+            in the top row and left column, orange in the next band in, and so on.
+          </>,
         ]}
         controls={{
-          desktop: 'Click tiles adjacent to the empty space (or anywhere in its row/col in Tap mode). In Slide mode, move onto any tile in line with the blank.',
-          mobile: 'Tap a tile in the blank space\'s row or column, or switch to "Slide" mode to drag tiles directly.',
+          desktop:
+            'Click tiles adjacent to the empty space (or anywhere in its row/col in Tap mode). In Slide mode, move onto any tile in line with the blank.',
+          mobile:
+            'Tap a tile in the blank space\'s row or column, or switch to "Slide" mode to drag tiles directly.',
           shortcuts: 'Switch modes via the segmented control: Tap, Slide / Hover, or Hybrid.',
         }}
         tips={[
@@ -577,9 +633,12 @@ export const SlidePuzzleGame: React.FC = () => {
         </div>
       </div>
       <p className={styles.instructions}>
-        {controlMode === 'tap' && 'Tap Mode: Tap any tile in the blank space\'s row or column to slide it.'}
-        {controlMode === 'swipe' && 'Slide / Hover Mode: Move the pointer (or slide a finger) onto any tile in the blank\'s row or column and it slides into the gap.'}
-        {controlMode === 'hybrid' && 'Hybrid Mode: Tap tiles, or hover/slide onto any tile in the blank\'s row or column to speed-solve.'}
+        {controlMode === 'tap' &&
+          "Tap Mode: Tap any tile in the blank space's row or column to slide it."}
+        {controlMode === 'swipe' &&
+          "Slide / Hover Mode: Move the pointer (or slide a finger) onto any tile in the blank's row or column and it slides into the gap."}
+        {controlMode === 'hybrid' &&
+          "Hybrid Mode: Tap tiles, or hover/slide onto any tile in the blank's row or column to speed-solve."}
       </p>
     </GameShell>
   );

@@ -1,13 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  FiZoomIn,
-  FiZoomOut,
-  FiSmile,
-  FiFrown,
-  FiAward,
-  FiAlertCircle,
-} from 'react-icons/fi';
+import { FiZoomIn, FiZoomOut } from 'react-icons/fi';
 import {
   checkWinCondition,
   createEmptyBoard,
@@ -44,8 +37,10 @@ export const MinesweeperGame: React.FC = () => {
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null);
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
   const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
-  const handleZoomIn = () => setZoom((prev) => Math.min(2.0, Math.round((prev + 0.15) * 100) / 100));
-  const handleZoomOut = () => setZoom((prev) => Math.max(0.6, Math.round((prev - 0.15) * 100) / 100));
+  const handleZoomIn = () =>
+    setZoom((prev) => Math.min(2.0, Math.round((prev + 0.15) * 100) / 100));
+  const handleZoomOut = () =>
+    setZoom((prev) => Math.max(0.6, Math.round((prev - 0.15) * 100) / 100));
   const handleZoomReset = () => setZoom(1.0);
   const cellSize = Math.round(30 * zoom);
   const cellFontSize = `${(1.15 * zoom).toFixed(2)}rem`;
@@ -55,13 +50,23 @@ export const MinesweeperGame: React.FC = () => {
   const handleCycleFontScale = () => {
     setFontScaleIndex((prev) => (prev + 1) % FONT_SCALES.length);
   };
-  const pointerStartRef = useRef<{ x: number; y: number; r: number; c: number; moved: boolean; at: number } | null>(null);
+  const pointerStartRef = useRef<{
+    x: number;
+    y: number;
+    r: number;
+    c: number;
+    moved: boolean;
+    at: number;
+  } | null>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef<boolean>(false);
   const lastLongPressTimestampRef = useRef<number>(0);
   const resetGame = useCallback((diff: MinesweeperDifficulty, mobileOverride?: boolean) => {
-    const activeMob = mobileOverride !== undefined ? mobileOverride : (typeof window !== 'undefined' && window.innerWidth < 768);
+    const activeMob =
+      mobileOverride !== undefined
+        ? mobileOverride
+        : typeof window !== 'undefined' && window.innerWidth < 768;
     const nextConfig = getPreset(diff, activeMob);
     setBoard(createEmptyBoard(nextConfig.rows, nextConfig.cols));
     setGameStatus('idle');
@@ -102,7 +107,9 @@ export const MinesweeperGame: React.FC = () => {
       if (!cell || cell.state === 'revealed') return prev;
       const nextState: CellState = cell.state === 'flagged' ? 'hidden' : 'flagged';
       return prev.map((row, rIdx) =>
-        rIdx === r ? row.map((cellItem, cIdx) => (cIdx === c ? { ...cellItem, state: nextState } : cellItem)) : [...row]
+        rIdx === r
+          ? row.map((cellItem, cIdx) => (cIdx === c ? { ...cellItem, state: nextState } : cellItem))
+          : [...row]
       );
     });
   }, []);
@@ -186,7 +193,9 @@ export const MinesweeperGame: React.FC = () => {
       const cell = board[r][c];
       if (cell.state !== 'revealed' || cell.neighborMines === 0) return;
       const neighbors = getNeighbors(r, c, config.rows, config.cols);
-      const flaggedNeighbors = neighbors.filter(([nr, nc]) => board[nr][nc].state === 'flagged').length;
+      const flaggedNeighbors = neighbors.filter(
+        ([nr, nc]) => board[nr][nc].state === 'flagged'
+      ).length;
       if (flaggedNeighbors === cell.neighborMines) {
         const currentBoard = board.map((row) => row.map((item) => ({ ...item })));
         let hitMine = false;
@@ -227,7 +236,9 @@ export const MinesweeperGame: React.FC = () => {
       if (e.button !== 0) return;
       pointerStartRef.current = { x: e.clientX, y: e.clientY, r, c, moved: false, at: Date.now() };
       isLongPressRef.current = false;
-      setIsFaceSurprised(true);
+      if (board[r]?.[c]?.state === 'hidden') {
+        setIsFaceSurprised(true);
+      }
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = setTimeout(() => {
         isLongPressRef.current = true;
@@ -243,11 +254,14 @@ export const MinesweeperGame: React.FC = () => {
         }
       }, LONG_PRESS_MS);
     },
-    [gameStatus, toggleFlag]
+    [board, gameStatus, toggleFlag]
   );
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!pointerStartRef.current || pointerStartRef.current.moved) return;
-    const dist = Math.hypot(e.clientX - pointerStartRef.current.x, e.clientY - pointerStartRef.current.y);
+    const dist = Math.hypot(
+      e.clientX - pointerStartRef.current.x,
+      e.clientY - pointerStartRef.current.y
+    );
     if (dist > 10) {
       pointerStartRef.current.moved = true;
       if (longPressTimerRef.current) {
@@ -271,7 +285,8 @@ export const MinesweeperGame: React.FC = () => {
       }
       // Browsers run input events ahead of timers, so on a busy phone the release can arrive
       // before the long-press timer fires; judge the hold by its actual duration as well.
-      const heldLong = pointerStartRef.current && Date.now() - pointerStartRef.current.at >= LONG_PRESS_MS;
+      const heldLong =
+        pointerStartRef.current && Date.now() - pointerStartRef.current.at >= LONG_PRESS_MS;
       if (heldLong && !pointerStartRef.current?.moved) {
         lastLongPressTimestampRef.current = Date.now();
         toggleFlag(r, c);
@@ -336,16 +351,22 @@ export const MinesweeperGame: React.FC = () => {
   );
   const flaggedCount = getFlaggedCount(board);
   const minesLeft = Math.max(0, config.mines - flaggedCount);
-  const faceIcon =
-    gameStatus === 'lost' ? (
-      <FiFrown size={20} />
-    ) : gameStatus === 'won' ? (
-      <FiAward size={20} />
-    ) : isFaceSurprised ? (
-      <FiAlertCircle size={20} />
-    ) : (
-      <FiSmile size={20} />
-    );
+  const faceEmoji =
+    gameStatus === 'lost'
+      ? '😵'
+      : gameStatus === 'won'
+        ? '😎'
+        : isFaceSurprised
+          ? '😮'
+          : '🙂';
+  const faceLabel =
+    gameStatus === 'lost'
+      ? 'Dead / Lost (😵) - Reset game'
+      : gameStatus === 'won'
+        ? 'Cool / Won (😎) - Reset game'
+        : isFaceSurprised
+          ? 'Surprised (😮) - Reset game'
+          : 'Normal (🙂) - Reset game';
   return (
     <GameShell className={styles.container}>
       <GameShell.Header
@@ -416,10 +437,12 @@ export const MinesweeperGame: React.FC = () => {
             type="button"
             className={styles.faceBtn}
             onClick={() => resetGame(difficulty)}
-            title="Reset game"
-            aria-label="Reset game"
+            title={faceLabel}
+            aria-label={faceLabel}
           >
-            {faceIcon}
+            <span role="img" aria-hidden="true">
+              {faceEmoji}
+            </span>
           </button>
           <div className={styles.counterDisplay} title="Elapsed time">
             {elapsedSeconds.toString().padStart(3, '0')}
@@ -466,7 +489,10 @@ export const MinesweeperGame: React.FC = () => {
                 } else if (cell.state === 'flagged') {
                   content = <FlagIcon size="1.5em" aria-label="Flagged" />;
                 }
-                const numberClass = cell.neighborMines > 0 && cell.state === 'revealed' && !cell.isMine ? styles[`n${cell.neighborMines}`] : '';
+                const numberClass =
+                  cell.neighborMines > 0 && cell.state === 'revealed' && !cell.isMine
+                    ? styles[`n${cell.neighborMines}`]
+                    : '';
                 return (
                   <div
                     key={`${r}-${c}`}
@@ -532,15 +558,31 @@ export const MinesweeperGame: React.FC = () => {
         gameTitle="Minesweeper"
         objective="Uncover all safe squares without detonating any of the hidden mines on the field."
         rules={[
-          <><strong>Uncovering Cells:</strong> Clicking or tapping an unrevealed square digs it up.</>,
-          <><strong>Number Clues:</strong> Numbers (1–8) reveal how many mines are located directly in the 8 neighboring cells around that square.</>,
-          <><strong>Zero Clue / Blank:</strong> Opening a square with 0 adjacent mines automatically expands and opens all connected safe squares.</>,
-          <><strong>Flags:</strong> Place flags on suspected mine locations to avoid accidentally detonating them.</>,
-          <><strong>Chording:</strong> Clicking/tapping an already revealed number when all its surrounding flags are placed will instantly reveal all other adjacent cells.</>,
+          <>
+            <strong>Uncovering Cells:</strong> Clicking or tapping an unrevealed square digs it up.
+          </>,
+          <>
+            <strong>Number Clues:</strong> Numbers (1–8) reveal how many mines are located directly
+            in the 8 neighboring cells around that square.
+          </>,
+          <>
+            <strong>Zero Clue / Blank:</strong> Opening a square with 0 adjacent mines automatically
+            expands and opens all connected safe squares.
+          </>,
+          <>
+            <strong>Flags:</strong> Place flags on suspected mine locations to avoid accidentally
+            detonating them.
+          </>,
+          <>
+            <strong>Chording:</strong> Clicking/tapping an already revealed number when all its
+            surrounding flags are placed will instantly reveal all other adjacent cells.
+          </>,
         ]}
         controls={{
-          desktop: 'Left-click to reveal/dig. Right-click to place or remove a flag. Click a revealed number to chord.',
-          mobile: 'Tap to dig (or flag if Flag Mode is ON). Long-press to toggle a flag with haptic vibration.',
+          desktop:
+            'Left-click to reveal/dig. Right-click to place or remove a flag. Click a revealed number to chord.',
+          mobile:
+            'Tap to dig (or flag if Flag Mode is ON). Long-press to toggle a flag with haptic vibration.',
           shortcuts: 'Use the reset face button to quickly restart or reset the current board.',
         }}
         tips={[
