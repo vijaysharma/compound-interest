@@ -1,9 +1,6 @@
 'use client';
-import { useMemo } from 'react';
-import JoinedButtonGroup from './JoinedButtonGroup';
 import { useScrollLock } from '../utilities/useScrollLock';
-import { MutualFundSelectorPinned } from './mutual-fund-selector/MutualFundSelectorPinned';
-import { MutualFundSelectorList } from './mutual-fund-selector/MutualFundSelectorList';
+import { MutualFundSelectorPanel } from './mutual-fund-selector/MutualFundSelectorPanel';
 import type { MutualFundSelectorModalProps, PinnedFund } from './mutual-fund-selector/types';
 import styles from './MutualFundSelectorModal.module.scss';
 export type { MutualFundSelectorModalProps, PinnedFund };
@@ -28,10 +25,6 @@ const MutualFundSelectorModal = ({
     }
     onClose();
   };
-  const pinnedFundMap = useMemo(
-    () => new Map(pinnedFunds.map((f) => [f.schemeCode, f])),
-    [pinnedFunds]
-  );
   if (!open) return null;
   return (
     <div
@@ -62,51 +55,17 @@ const MutualFundSelectorModal = ({
             </span>
           </button>
         </div>
-        <div className={styles.filterRow}>
-          <JoinedButtonGroup
-            data={[
-              { id: 'direct', title: 'Direct', value: 'Direct' },
-              { id: 'regular', title: 'Regular', value: '!Direct' },
-            ]}
-            selectedValue={selectedType}
-            updateSelectedValue={setSelectedType}
-            sizePrefix="xs"
-            compact
-            className={styles.filterGroup}
-          />
-          <JoinedButtonGroup
-            data={[
-              { id: 'growth', title: 'Growth', value: 'Growth' },
-              { id: 'dividend', title: 'Dividend', value: 'Dividend' },
-              { id: 'idcw', title: 'IDCW', value: 'IDCW' },
-            ]}
-            selectedValue={selectedGrowth}
-            updateSelectedValue={setSelectedGrowth}
-            sizePrefix="xs"
-            compact
-            className={styles.filterGroup}
-          />
-        </div>
-        <input
-          type="text"
-          placeholder="Search Mutual Funds..."
-          maxLength={80}
-          className={styles.searchInput}
-          value={searchKey}
-          onChange={(event) => setSearchKey(event.target.value.replace(/[.*+?^${}()|[\]\\]/g, '').slice(0, 80))}
-          autoFocus
-        />
-        <MutualFundSelectorPinned
-          pinnedFunds={pinnedFunds}
-          loadingSchemeCodes={loadingSchemeCodes}
-          togglePinFund={togglePinFund}
-        />
-        <MutualFundSelectorList
+        <MutualFundSelectorPanel
+          searchKey={searchKey}
+          setSearchKey={setSearchKey}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          selectedGrowth={selectedGrowth}
+          setSelectedGrowth={setSelectedGrowth}
           funds={funds}
           pinnedFunds={pinnedFunds}
-          pinnedFundMap={pinnedFundMap}
-          loadingSchemeCodes={loadingSchemeCodes}
           togglePinFund={togglePinFund}
+          loadingSchemeCodes={loadingSchemeCodes}
         />
         <button type="button" className={styles.doneBtn} onClick={handleClose}>
           Done

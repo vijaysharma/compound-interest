@@ -9,7 +9,7 @@ import {
   FiPlusCircle,
   FiCheckCircle,
 } from 'react-icons/fi';
-import MutualFundSelectorModal from '../../components/MutualFundSelectorModal';
+import { MutualFundSelectorPanel } from '../../components/mutual-fund-selector/MutualFundSelectorPanel';
 import { useFundSearch } from '../../components/mutual-fund/useFundSearch';
 import { getCurrencySymbol } from '../../utilities/currency';
 import { fetchMFWithMeta } from '../../data/api_data';
@@ -39,8 +39,9 @@ const BENCHMARK_FUNDS: BenchmarkFund[] = [
     label: 'Parag Parikh Flexi Cap',
   },
   {
-    code: '118989',
-    name: 'HDFC Top 100 Fund - Direct Plan - Growth Option',
+    // 118989 is HDFC Mid Cap; 119018 is HDFC Large Cap (formerly Top 100), per AMFI.
+    code: '119018',
+    name: 'HDFC Large Cap Fund - Direct Plan - Growth Option',
     label: 'HDFC Large Cap',
   },
 ];
@@ -201,12 +202,40 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
 
           <button
             type="button"
-            className={styles.benchmarkPill}
-            onClick={() => setIsSelectorOpen(true)}
+            className={`${styles.benchmarkPill} ${isSelectorOpen ? styles.benchmarkPillActive : ''}`}
+            aria-expanded={isSelectorOpen}
+            onClick={() => setIsSelectorOpen((open) => !open)}
           >
             <FiSearch /> Search Other Mutual Funds...
           </button>
         </div>
+        {/* Already inside the passbook dialog: search in place rather than stacking another modal. */}
+        {isSelectorOpen && (
+          <div className={styles.inlineFundSearch}>
+            <div className={styles.inlineFundSearchHeader}>
+              <span>Pick a fund to compare against</span>
+              <button
+                type="button"
+                className={styles.inlineFundSearchClose}
+                onClick={() => setIsSelectorOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+            <MutualFundSelectorPanel
+              inline
+              searchKey={fundSearch.searchKey}
+              setSearchKey={fundSearch.setSearchKey}
+              selectedType={fundSearch.selectedType}
+              setSelectedType={fundSearch.setSelectedType}
+              selectedGrowth={fundSearch.selectedGrowth}
+              setSelectedGrowth={fundSearch.setSelectedGrowth}
+              funds={fundSearch.mfs}
+              pinnedFunds={pinnedFunds}
+              togglePinFund={handleTogglePinFund}
+            />
+          </div>
+        )}
 
       {/* Active Fund Header Card */}
       <div className={styles.activeFundBar}>
@@ -402,20 +431,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
         </>
       )}
 
-      {/* Mutual Fund Selector Modal */}
-      <MutualFundSelectorModal
-        open={isSelectorOpen}
-        onClose={() => setIsSelectorOpen(false)}
-        searchKey={fundSearch.searchKey}
-        setSearchKey={fundSearch.setSearchKey}
-        selectedType={fundSearch.selectedType}
-        setSelectedType={fundSearch.setSelectedType}
-        selectedGrowth={fundSearch.selectedGrowth}
-        setSelectedGrowth={fundSearch.setSelectedGrowth}
-        funds={fundSearch.mfs}
-        pinnedFunds={pinnedFunds}
-        togglePinFund={handleTogglePinFund}
-      />
     </div>
   );
 };

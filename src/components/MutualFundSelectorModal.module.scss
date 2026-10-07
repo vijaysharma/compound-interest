@@ -45,6 +45,24 @@
   border-radius: var(--radius-box, 0.75rem);
 }
 
+// The selector blocks. In the modal they fill the dialog and the list scrolls; inline (inside
+// another dialog) the list gets its own bounded height.
+.panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panelInline {
+  flex: none;
+
+  .fundsList {
+    flex: none;
+    max-height: min(22rem, 45dvh);
+  }
+}
+
 .header {
   margin-bottom: 0.75rem;
   display: flex;
