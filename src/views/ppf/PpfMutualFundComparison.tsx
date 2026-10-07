@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   FiTrendingUp,
-  FiSearch,
   FiInfo,
   FiAlertTriangle,
   FiArrowUpRight,
@@ -17,6 +16,7 @@ import type { NavType, MFType } from '../../types/types';
 import type { PPFCalculationResult, PpfInvestmentRecord } from '../../utilities/ppfCalculations';
 import {
   calculateMfComparison,
+  findPreInceptionDeposits,
   type MfComparisonResult,
 } from '../../utilities/ppfMutualFundComparison';
 import styles from './PpfHistoryModal.module.scss';
@@ -114,6 +114,11 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
     setSelectedSchemeName(fund.name);
     setIsSelectorOpen(false);
   };
+  // Deposits older than the fund have no real NAV; the comparison is withheld until another fund is picked.
+  const preInception = useMemo(
+    () => (isLoadingNav ? null : findPreInceptionDeposits(investments, navData)),
+    [investments, navData, isLoadingNav]
+  );
   // Compute Comparison Results
   const comparisonResult: MfComparisonResult | null = useMemo(() => {
     return calculateMfComparison(
@@ -247,7 +252,27 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
           <FiAlertTriangle /> {navError}
         </div>
       )}
-      {comparisonResult && (
+      {preInception && (
+        <div className={styles.preInceptionBlock} role="alert">
+          <FiAlertTriangle className={styles.preInceptionIcon} aria-hidden="true" />
+          <div>
+            <p className={styles.preInceptionTitle}>
+              Choose a different fund: your PPF investments started before this fund existed.
+            </p>
+            <p className={styles.preInceptionBody}>
+              <strong>{selectedSchemeName}</strong> launched on{' '}
+              <strong>{preInception.inceptionDate}</strong>, but your first deposit was on{' '}
+              <strong>{preInception.firstDepositDate}</strong>. {preInception.count} of your deposits (
+              {currencySymbol}
+              {preInception.amount.toLocaleString('en-IN')}) have no real NAV, so no comparison is shown
+              rather than one built on a substitute price. Pick one of the benchmarks above, or use Select Other
+              Mutual Funds to choose one launched before {preInception.firstDepositDate}.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {comparisonResult && !preInception && (
         <>
           {/* Comparison Metrics Grid */}
           <div className={styles.outcomeMetricsGrid}>
@@ -328,18 +353,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
               </div>
             </div>
           </div>
-          {/* Inception Warning if Applicable */}
-          {comparisonResult.hasInceptionWarning && (
-            <div className={styles.warningBanner}>
-              <FiAlertTriangle style={{ flexShrink: 0, marginTop: '0.125rem' }} />
-              <div>
-                <strong>Notice on Inception Date:</strong> Some of your investment dates occurred
-                before this mutual fund&apos;s inception ({comparisonResult.earliestNavDate}). For
-                dates before launch, units were allotted using the fund&apos;s earliest available
-                NAV.
-              </div>
-            </div>
-          )}
           {/* Tax and Risk Insight */}
           <div className={styles.insightBox}>
             <FiInfo className={styles.insightIcon} />
@@ -368,7 +381,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
                     <th>Current Value (₹)</th>
                     <th>Absolute Gain (₹)</th>
                     <th>Return %</th>
-                    <th>Inception Note</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -400,15 +412,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
                       <td className={row.gainPercent >= 0 ? styles.gainPositive : ''}>
                         {row.gainPercent >= 0 ? '+' : ''}
                         {row.gainPercent.toFixed(1)}%
-                      </td>
-                      <td>
-                        {row.isBeforeInception ? (
-                          <span style={{ fontSize: '0.6875rem', color: 'var(--color-warning)' }}>
-                            Pre-Inception NAV used
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '0.6875rem', opacity: 0.7 }}>Matched</span>
-                        )}
                       </td>
                     </tr>
                   ))}

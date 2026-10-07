@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateMfComparison } from '../ppfMutualFundComparison';
+import { calculateMfComparison, findPreInceptionDeposits } from '../ppfMutualFundComparison';
 import type { NavType } from '../../types/types';
 import type { PPFCalculationResult, PpfInvestmentRecord } from '../ppfCalculations';
 
@@ -72,25 +72,27 @@ describe('PPF vs Mutual Fund Real Outcome Comparison', () => {
     assert.ok(res.diffAmount > 0);
     assert.ok(res.diffPercent > 0);
     assert.ok(res.wealthMultiplier > 1);
-    assert.strictEqual(res.hasInceptionWarning, false);
+    assert.strictEqual(findPreInceptionDeposits(dummyInvestments, dummyNavData), null);
     assert.ok(typeof res.xirr === 'number');
   });
 
-  it('handles investment before inception date with a flag', () => {
+  it('refuses to price deposits made before the fund existed', () => {
     const earlyInvestments: PpfInvestmentRecord[] = [
-      { id: '1', investmentDate: '2018-04-05', amount: 150000 },
+      { id: '0', investmentDate: '2018-04-05', amount: 150000 },
+      { id: '00', investmentDate: '2019-06-10', amount: 50000 },
+      ...dummyInvestments,
     ];
-    const res = calculateMfComparison(
-      earlyInvestments,
-      dummyNavData,
-      dummyPpfResult,
-      '120716',
-      'Test Nifty Index'
+    assert.deepStrictEqual(findPreInceptionDeposits(earlyInvestments, dummyNavData), {
+      inceptionDate: '2020-04-01',
+      firstDepositDate: '2018-04-05',
+      count: 2,
+      amount: 200000,
+    });
+    // No outcome is computed: a pre-launch deposit would need a NAV from a later date.
+    assert.strictEqual(
+      calculateMfComparison(earlyInvestments, dummyNavData, dummyPpfResult, '120716', 'Test Nifty Index'),
+      null
     );
-
-    assert.ok(res);
-    assert.strictEqual(res.hasInceptionWarning, true);
-    assert.strictEqual(res.outcomes[0].isBeforeInception, true);
   });
 
   it('returns null gracefully on empty inputs', () => {

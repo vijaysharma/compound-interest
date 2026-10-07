@@ -14,7 +14,6 @@ export interface MfInvestmentOutcome {
   currentValue: number;
   absoluteGain: number;
   gainPercent: number;
-  isBeforeInception: boolean;
 }
 
 export interface MfComparisonResult {
@@ -36,12 +35,57 @@ export interface MfComparisonResult {
   diffPercent: number; // ((mfCurrentValue - ppfCurrentValue) / ppfCurrentValue) * 100
   wealthMultiplier: number; // mfCurrentValue / ppfCurrentValue
   outcomes: MfInvestmentOutcome[];
-  hasInceptionWarning: boolean;
+}
+
+/** Deposits made before the fund's first published NAV, which no real NAV can price. */
+export interface PreInceptionDeposits {
+  /** The fund's first NAV date (ISO). */
+  inceptionDate: string;
+  /** The earliest deposit (ISO). */
+  firstDepositDate: string;
+  count: number;
+  amount: number;
+}
+
+const firstNavRow = (navData: NavType[]) =>
+  navData
+    .map((row) => ({ nav: Number(row.nav), time: parseNavDate(row.date).getTime(), iso: navDateToISO(row.date) }))
+    .filter((row) => Number.isFinite(row.nav) && row.nav > 0 && Number.isFinite(row.time))
+    .reduce<{ time: number; iso: string } | null>((min, row) => (!min || row.time < min.time ? row : min), null);
+
+/**
+ * The deposits that predate the fund, or null when the fund's NAV history covers every deposit.
+ * Such deposits are never priced at a substitute NAV: the comparison asks for a different fund.
+ */
+export function findPreInceptionDeposits(
+  investments: PpfInvestmentRecord[],
+  navData: NavType[]
+): PreInceptionDeposits | null {
+  const first = firstNavRow(navData ?? []);
+  if (!first) return null;
+  let count = 0;
+  let amount = 0;
+  let firstDepositDate: string | null = null;
+  for (const inv of investments) {
+    const invAmount = Number(inv.amount) || 0;
+    if (invAmount <= 0) continue;
+    const invTime = parseAnyDate(inv.investmentDate).getTime();
+    if (!Number.isFinite(invTime) || invTime >= first.time) continue;
+    count += 1;
+    amount += invAmount;
+    if (!firstDepositDate || inv.investmentDate < firstDepositDate) firstDepositDate = inv.investmentDate;
+  }
+  return count > 0 && firstDepositDate
+    ? { inceptionDate: first.iso, firstDepositDate, count, amount }
+    : null;
 }
 
 /**
  * Calculates real investment outcomes if the exact same historical PPF deposits
  * were invested into a chosen mutual fund on those exact dates.
+ *
+ * Every deposit is priced at a real NAV for its date. Returns null when any deposit predates the
+ * fund (see findPreInceptionDeposits) rather than pricing it at a NAV from a later date.
  */
 export function calculateMfComparison(
   investments: PpfInvestmentRecord[],
@@ -51,6 +95,9 @@ export function calculateMfComparison(
   schemeName = 'Mutual Fund'
 ): MfComparisonResult | null {
   if (!navData || navData.length === 0 || investments.length === 0) {
+    return null;
+  }
+  if (findPreInceptionDeposits(investments, navData)) {
     return null;
   }
 
@@ -71,14 +118,12 @@ export function calculateMfComparison(
 
   const earliestRow = validNavs[0];
   const latestRow = validNavs[validNavs.length - 1];
-  const earliestTime = earliestRow.time;
   const latestNav = latestRow.nav;
   const latestNavDate = latestRow.iso;
   const earliestNavDate = earliestRow.iso;
 
   let totalInvested = 0;
   let totalUnits = 0;
-  let hasInceptionWarning = false;
 
   const outcomes: MfInvestmentOutcome[] = [];
 
@@ -86,16 +131,11 @@ export function calculateMfComparison(
     const invAmount = Number(inv.amount) || 0;
     if (invAmount <= 0) continue;
 
-    totalInvested += invAmount;
-    const invTime = parseAnyDate(inv.investmentDate).getTime();
-    const isBefore = Number.isFinite(invTime) && invTime < earliestTime;
-    if (isBefore) {
-      hasInceptionWarning = true;
-    }
-
     const nearest = getNearest(inv.investmentDate, navData);
-    const applicableNav = nearest && Number(nearest.nav) > 0 ? Number(nearest.nav) : earliestRow.nav;
-    const applicableNavDate = nearest ? navDateToISO(nearest.date) : earliestNavDate;
+    if (!nearest || !(Number(nearest.nav) > 0)) return null;
+    totalInvested += invAmount;
+    const applicableNav = Number(nearest.nav);
+    const applicableNavDate = navDateToISO(nearest.date);
 
     const units = applicableNav > 0 ? invAmount / applicableNav : 0;
     totalUnits += units;
@@ -114,7 +154,6 @@ export function calculateMfComparison(
       currentValue,
       absoluteGain,
       gainPercent,
-      isBeforeInception: isBefore,
     });
   }
 
@@ -168,6 +207,5 @@ export function calculateMfComparison(
     diffPercent,
     wealthMultiplier,
     outcomes,
-    hasInceptionWarning,
   };
 }
