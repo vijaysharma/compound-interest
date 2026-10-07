@@ -181,7 +181,7 @@
   gap: 0.35rem;
 }
 .rechargeLink {
-  font-size: $fs-caption;
+  font-size: $fs-caption * 0.9;
   font-weight: 600;
   color: var(--color-primary);
   text-decoration: none;
@@ -1235,16 +1235,17 @@
     text-align: center;
   }
   .statLabel {
-    font-size: $fs-caption;
+    font-size: $fs-caption * 0.9;
     letter-spacing: 0.03em;
     flex-direction: column;
+    line-height: 1.2;
   }
   .statIcon {
     font-size: $fs-body;
     flex-shrink: 0;
   }
   .statValue {
-    font-size: 1.3rem;
+    font-size: 1rem;
   }
   .statSubtext {
     font-size: $fs-caption;
@@ -1260,12 +1261,14 @@
     padding: 0;
   }
   .tabBtn {
-    justify-content: center;
+    justify-content: flex-start;
     flex-direction: column;
     min-height: 44px;
     padding: 0.4rem 0.5rem;
-    font-size: $fs-caption;
+    font-size: $fs-caption * 0.9;
     touch-action: manipulation;
+    line-height: 1;
+    gap: 4px;
   }
   .alert {
     margin-bottom: 1rem;

@@ -81,7 +81,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
         </button>
         {isWon && <ConfettiCanvas />}
         <div className={styles.iconHeader}>{isWon ? <FiAward size={48} /> : <FiAlertCircle size={48} />}</div>
-        <h2 className={`${styles.title} ${!isWon ? styles.titleDefeat : ''}`}>
+        <h2 data-dialog-title className={`${styles.title} ${!isWon ? styles.titleDefeat : ''}`}>
           {isWon ? 'Victory!' : 'Game Over'}
         </h2>
         {effectiveName && (

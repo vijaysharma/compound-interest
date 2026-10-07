@@ -24,8 +24,8 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
     return (
       <div className={styles.modalBackdrop} onClick={onClose}>
         <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-          <div className={styles.modalHeader}>
-            <h3 className={styles.modalTitle}>
+          <div data-dialog-header className={styles.modalHeader}>
+            <h3 data-dialog-title className={styles.modalTitle}>
               <FiSend /> Ship Order #{order.id}
             </h3>
             <button className={styles.closeBtn} onClick={onClose}>

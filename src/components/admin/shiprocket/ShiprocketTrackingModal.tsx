@@ -13,8 +13,8 @@ export const ShiprocketTrackingModal: React.FC<ShiprocketTrackingModalProps> = R
   ({ awb, trackingData, loadingTracking, onClose }) => (
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>
+        <div data-dialog-header className={styles.modalHeader}>
+          <h3 data-dialog-title className={styles.modalTitle}>
             <FiTruck /> Tracking AWB: {awb}
           </h3>
           <button className={styles.closeBtn} onClick={onClose}>

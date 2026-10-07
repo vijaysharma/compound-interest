@@ -103,7 +103,7 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
           />
           <FundModalPortfolioSection meta={state.meta} constituentProfile={constituentProfile} />
         </div>
-        <div className={styles.footer}>
+        <div data-dialog-footer className={styles.footer}>
           <button type="button" className={styles.doneBtn} onClick={onClose}>
             Done
           </button>

@@ -24,7 +24,7 @@ export const QuitModal: React.FC<QuitModalProps> = ({
         <div className={styles.icon}>
           <FiPause size={32} />
         </div>
-        <h3 id="quit-modal-title" className={styles.title}>Game Paused</h3>
+        <h3 data-dialog-title id="quit-modal-title" className={styles.title}>Game Paused</h3>
         <p className={styles.message}>
           Are you sure you want to quit {gameTitle}? Any unsaved progress will be forfeited.
         </p>

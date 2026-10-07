@@ -34,7 +34,7 @@ export const NotesSecurityModal: React.FC<NotesSecurityModalProps> = ({
           </div>
           <div className={styles.securityHeaderMeta}>
             <div className={styles.securityTitleRow}>
-              <h3 id="security-modal-title" className={`${styles.modalTitle} ${styles.securityTitleLarge}`}>
+              <h3 data-dialog-title id="security-modal-title" className={`${styles.modalTitle} ${styles.securityTitleLarge}`}>
                 End-to-End Encrypted
               </h3>
               <span className={`${styles.badge} ${styles.badgeSuccess}`}>

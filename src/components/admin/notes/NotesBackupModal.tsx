@@ -41,14 +41,14 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
   return (
     <div className={styles.modalOverlay}>
       <div className={`${styles.modalBox} ${styles.modalBoxLg} ${styles.noSelect}`}>
-        <div className={styles.modalHeader}>
+        <div data-dialog-header className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={`${styles.modalIconBox} ${styles.backupIconBox}`}>
               <FiUploadCloud size={16} />
             </div>
             <div>
               <div className={styles.titleWithBadge}>
-                <h3 className={styles.modalTitle}>Backup &amp; Restore</h3>
+                <h3 data-dialog-title className={styles.modalTitle}>Backup &amp; Restore</h3>
                 <span className={`${styles.badge} ${styles.badgeSuccess}`}>
                   <FiShield size={10} /> E2EE
                 </span>
@@ -125,7 +125,7 @@ export const NotesBackupModal: React.FC<NotesBackupModalProps> = ({
                 onClose={onClose}
               />
             ) : (
-              <div className={styles.modalFooterBorder}>
+              <div data-dialog-footer className={styles.modalFooterBorder}>
                 <button type="button" onClick={onClose} className={styles.btnGhost}>
                   Close
                 </button>

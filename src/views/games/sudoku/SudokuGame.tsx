@@ -479,7 +479,7 @@ export const SudokuGame: React.FC = () => {
         {isPaused && (
           <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
-              <h2 className={styles.modalTitle}>Game Paused</h2>
+              <h2 data-dialog-title className={styles.modalTitle}>Game Paused</h2>
               <p className={styles.modalText}>Take a breather. The timer is currently paused.</p>
               <button
                 type="button"

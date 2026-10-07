@@ -87,9 +87,9 @@ export const PpfHistoryModal: React.FC<PpfHistoryModalProps> = ({
       />
       <div className={styles.modalCard}>
         {/* Modal Top Header */}
-        <div className={styles.modalHeader}>
+        <div data-dialog-header className={styles.modalHeader}>
           <div className={styles.headerTitleGroup}>
-            <h3 id="ppf-history-modal-title" className={styles.modalTitle}>
+            <h3 id="ppf-history-modal-title" data-dialog-title className={styles.modalTitle}>
               <FiDatabase /> Actual PPF Investment History &amp; Passbook
             </h3>
             {investments.length > 0 && (

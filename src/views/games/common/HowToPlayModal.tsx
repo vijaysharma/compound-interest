@@ -67,10 +67,10 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
       }}
     >
       <div className={styles.modal} ref={dialogRef}>
-        <div className={styles.header}>
+        <div data-dialog-header className={styles.header}>
           <div className={styles.titleWrap}>
             <FiHelpCircle className={styles.titleIcon} />
-            <h2 id="how-to-play-title" className={styles.title}>
+            <h2 data-dialog-title id="how-to-play-title" className={styles.title}>
               How to Play {gameTitle}
             </h2>
           </div>
@@ -160,7 +160,7 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
           )}
         </div>
 
-        <div className={styles.footer}>
+        <div data-dialog-footer className={styles.footer}>
           <button type="button" className={styles.gotItBtn} onClick={onClose}>
             Got it, let's play!
           </button>

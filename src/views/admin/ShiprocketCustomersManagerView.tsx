@@ -443,7 +443,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
           }}
         >
           <div className={styles.modalCard}>
-            <div className={styles.modalHeader}>
+            <div data-dialog-header className={styles.modalHeader}>
               <div
                 className={`${styles.formSectionTitle} ${styles.formSectionFlat}`}
               >
@@ -553,7 +553,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   />
                 </div>
               </div>
-              <div className={styles.modalActions}>
+              <div data-dialog-footer className={styles.modalActions}>
                 <button type="submit" className={styles.primaryBtn} disabled={submitting}>
                   {submitting ? 'Saving...' : editId ? 'Update Customer' : 'Save Customer'}
                 </button>
@@ -582,7 +582,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
           }}
         >
           <div className={styles.modalCard}>
-            <div className={styles.modalHeader}>
+            <div data-dialog-header className={styles.modalHeader}>
               <div className={`${styles.formSectionTitle} ${styles.formSectionFlat}`}>
                 <FiGitMerge /> Merge Customer: {sourceCustomer.customer_name}
               </div>
@@ -778,7 +778,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                 </div>
               </div>
 
-              <div className={styles.modalActions}>
+              <div data-dialog-footer className={styles.modalActions}>
                 <button
                   type="submit"
                   className={styles.primaryBtn}

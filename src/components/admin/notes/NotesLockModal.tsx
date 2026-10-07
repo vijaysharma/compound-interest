@@ -31,12 +31,12 @@ export const NotesLockModal: React.FC<NotesLockModalProps> = ({
   return (
     <div className={styles.modalOverlay}>
       <div className={`${styles.modalBox} ${styles.modalBoxSm}`}>
-        <div className={styles.modalHeader}>
+        <div data-dialog-header className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalIconBox}>
               <FiLock size={16} />
             </div>
-            <h3 className={styles.modalTitle}>
+            <h3 data-dialog-title className={styles.modalTitle}>
               {isLocked ? 'Note Password' : 'Lock Note'}
             </h3>
           </div>

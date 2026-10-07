@@ -74,6 +74,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+
+  // Phones: the tinted header bar spans the panel, past its padding.
+  @include mobile-only {
+    margin: -0.625rem -0.5rem 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
 }
 
 .headerTitle {
@@ -278,6 +285,20 @@
   font-size: $fs-caption;
   opacity: 0.6;
   margin-top: 0.25rem;
+}
+
+.footer {
+  flex: none;
+
+  @include mobile-only {
+    margin: 0 -0.5rem -0.625rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+
+    .doneBtn {
+      margin-top: 0;
+    }
+  }
 }
 
 .doneBtn {

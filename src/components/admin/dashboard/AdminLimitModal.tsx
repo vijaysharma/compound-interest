@@ -26,10 +26,10 @@ export const AdminLimitModal: React.FC<AdminLimitModalProps> = React.memo(
   }) => (
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
+        <div data-dialog-header className={styles.modalHeader}>
           <div className={styles.modalHeaderTitle}>
             <FiSliders size={20} />
-            <h3 className={styles.modalTitle}>Set Calculation Quota Limit</h3>
+            <h3 data-dialog-title className={styles.modalTitle}>Set Calculation Quota Limit</h3>
           </div>
           <button
             type="button"
@@ -65,7 +65,7 @@ export const AdminLimitModal: React.FC<AdminLimitModalProps> = React.memo(
             ))}
           </div>
         </div>
-        <div className={styles.modalFooter}>
+        <div data-dialog-footer className={styles.modalFooter}>
           <button
             type="button"
             onClick={onClose}

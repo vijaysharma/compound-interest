@@ -303,3 +303,17 @@
     transform: rotate(360deg);
   }
 }
+
+// Phones: tighter panel padding, and the tinted header/footer bars span the panel edge to edge.
+@include mobile-only {
+  .modalCard {
+    padding: 0 0.875rem 0.875rem;
+  }
+
+  .modalHeader {
+    margin-left: -0.875rem;
+    margin-right: -0.875rem;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+}

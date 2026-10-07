@@ -187,3 +187,39 @@ a {
   color: var(--color-text);
   line-height: 1.6;
 }
+
+// Dialog chrome on phones (UI review 2026-10-07). Dialog header, title and footer elements are
+// tagged data-dialog-header / -title / -footer. Compact headings with a light primary tint so
+// they read as frame, not content. !important: the dialogs style their own headers with
+// selectors at least as specific as these, and this is the one deliberate override.
+// The 0.8rem title is the requested exception to the 13px caption floor.
+@media (max-width: #{$bp-tablet - 1px}) {
+  [data-dialog-header],
+  [data-dialog-footer] {
+    gap: 4px !important;
+    line-height: 1.15 !important;
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-base-100, #fff)) !important;
+  }
+
+  [data-dialog-header] {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+
+  [data-dialog-footer] {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    border-top: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+
+  [data-dialog-title],
+  [data-dialog-header] :is(h1, h2, h3) {
+    font-size: 0.8rem !important;
+    line-height: 1.15 !important;
+  }
+
+  [data-dialog-header] > * {
+    gap: 4px !important;
+  }
+}

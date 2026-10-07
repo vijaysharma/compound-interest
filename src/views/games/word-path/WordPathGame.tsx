@@ -906,7 +906,7 @@ export const WordPathGame: React.FC = () => {
       {!isWon && showResultsModal && (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <div className={styles.modalCard}>
-            <h2 className={styles.modalTitle}>Puzzle Progress</h2>
+            <h2 data-dialog-title className={styles.modalTitle}>Puzzle Progress</h2>
             <div className={styles.modalStats}>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Words Found</span>

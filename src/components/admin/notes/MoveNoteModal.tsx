@@ -43,13 +43,13 @@ export const MoveNoteModal: React.FC<MoveNoteModalProps> = ({
   return (
     <div className={styles.modalOverlay}>
       <div className={`${styles.modalBox} ${styles.modalBoxSm}`}>
-        <div className={styles.modalHeader}>
+        <div data-dialog-header className={styles.modalHeader}>
           <div className={styles.modalHeaderLeft}>
             <div className={styles.modalIconBox}>
               <FiFolder size={16} />
             </div>
             <div>
-              <h3 className={styles.modalTitle}>Move to Folder</h3>
+              <h3 data-dialog-title className={styles.modalTitle}>Move to Folder</h3>
               <p className={styles.modalSubtitle}>
                 {note.title || 'Untitled Note'}
               </p>
@@ -82,7 +82,7 @@ export const MoveNoteModal: React.FC<MoveNoteModalProps> = ({
             })}
           </div>
         </div>
-        <div className={styles.modalFooter}>
+        <div data-dialog-footer className={styles.modalFooter}>
           {isCreating ? (
             <form onSubmit={handleCreateAndMove} className={styles.createFolderForm}>
               <input

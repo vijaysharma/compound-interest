@@ -40,8 +40,8 @@ const MutualFundSelectorModal = ({
         onClick={handleClose}
       />
       <section className={styles.modalContent}>
-        <div className={styles.header}>
-          <h2 id="mutual-fund-selector-title" className={styles.headerTitle}>
+        <div data-dialog-header className={styles.header}>
+          <h2 id="mutual-fund-selector-title" data-dialog-title className={styles.headerTitle}>
             Select mutual funds
           </h2>
           <button
@@ -67,9 +67,11 @@ const MutualFundSelectorModal = ({
           togglePinFund={togglePinFund}
           loadingSchemeCodes={loadingSchemeCodes}
         />
-        <button type="button" className={styles.doneBtn} onClick={handleClose}>
-          Done
-        </button>
+        <div data-dialog-footer className={styles.footer}>
+          <button type="button" className={styles.doneBtn} onClick={handleClose}>
+            Done
+          </button>
+        </div>
       </section>
     </div>
   );

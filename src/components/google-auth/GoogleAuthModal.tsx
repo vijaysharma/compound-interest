@@ -59,12 +59,12 @@ export function GoogleAuthModal({
         >
           <FiX size={16} />
         </button>
-        <div className={styles.modalHeader}>
+        <div data-dialog-header className={styles.modalHeader}>
           <div className={styles.iconWrapper}>
             <GoogleIcon />
           </div>
           <div>
-            <h3 id="auth-modal-title" className={styles.modalTitle}>
+            <h3 id="auth-modal-title" data-dialog-title className={styles.modalTitle}>
               {modalTitle}
             </h3>
             <p className={styles.modalSubtitle}>
