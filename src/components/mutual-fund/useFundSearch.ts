@@ -51,7 +51,9 @@ export function useFundSearch(initialSearch = 'Kotak Arbitrage Fund', isModalOpe
     filtered = filterMfs(filtered, selectedGrowth);
     const search = deferredSearchKey.trim();
     if (search) {
-      const searchParts = search.split(/\s+/).filter(Boolean).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '')).filter(Boolean);
+      const searchParts = search.split(/\s+/).filter(Boolean).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, ''))
+        // A token with no letters or digits (the " - " in a full scheme name) can never match \b.
+        .filter((p) => /[\p{L}\p{N}]/u.test(p));
       if (searchParts.length > 0) {
         const expr = new RegExp(searchParts.map((p) => `(?=.*?\\b${p})`).join('') + '.*', 'i');
         return filtered.filter((fund) => expr.test(fund.name));

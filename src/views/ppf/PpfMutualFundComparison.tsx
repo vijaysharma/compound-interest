@@ -194,7 +194,11 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
             type="button"
             className={`${styles.benchmarkPill} ${isSelectorOpen ? styles.benchmarkPillActive : ''}`}
             aria-expanded={isSelectorOpen}
-            onClick={() => setIsSelectorOpen((open) => !open)}
+            onClick={() => {
+              // Open on an empty search, ready to type; the current fund shows as the pinned chip.
+              if (!isSelectorOpen) fundSearch.setSearchKey('');
+              setIsSelectorOpen((open) => !open);
+            }}
           >
             Select Other Mutual Funds
           </button>
