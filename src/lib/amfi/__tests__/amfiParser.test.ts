@@ -66,6 +66,21 @@ invalidSchemeCode;INF123;INF456;Fund;10.0;24-Sep-2026
     assert.equal(res.schemes.get('135762')?.fundHouse, 'Axis Mutual Fund');
     assert.deepEqual(res.fundHouses, ['Axis Mutual Fund']);
   });
+  it('reads the NAV history report layout from its header row', () => {
+    const res = parseAmfiText(`Scheme Code;NAV Name;Plan;Option;ISIN Div Payout/ISIN Growth;ISIN Div Reinvestment;Net Asset Value;Date
+
+Open Ended Schemes(Index Funds)
+
+UTI Mutual Fund
+
+120716;UTI Nifty 50 Index Fund - Direct Plan - Growth;Direct Plan;Growth;INF789F01XA0;;158.8290;05-Oct-2026
+`);
+    const meta = res.schemes.get('120716');
+    assert.equal(meta?.schemeName, 'UTI Nifty 50 Index Fund - Direct Plan - Growth');
+    assert.equal(meta?.isinGrowth, 'INF789F01XA0');
+    assert.equal(meta?.fundHouse, 'UTI Mutual Fund');
+    assert.deepEqual(res.byScheme.get('120716'), [{ date: '05-10-2026', nav: '158.8290' }]);
+  });
   it('attributes each scheme to the fund-house heading above it', () => {
     const res = parseAmfiText(`
 Open Ended Schemes(Arbitrage Fund)

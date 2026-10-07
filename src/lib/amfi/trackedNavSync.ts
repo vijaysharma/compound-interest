@@ -2,7 +2,7 @@ import { getDb } from '../db';
 import { redisDel, redisGet, redisSet } from '../redis';
 import { mfNavCache, navPayloadKey } from '@/actions/data/constants';
 import { formatAmfiDate } from './amfiDate';
-import { fetchAmfiHistoricalChunk } from './amfiClient';
+import { fetchAmfiHistoricalChunk, fetchAmfiLatest } from './amfiClient';
 import { resolveAmfiFundHouseCode } from './amfiFundHouses';
 import { upsertWhitelistedNavBatch } from './amfiNavStorage';
 import type { AmfiNavRecord } from './amfiNavTypes';
@@ -56,7 +56,7 @@ const toRecords = (parsed: AmfiParseResult, codes: Set<string>): AmfiNavRecord[]
       nav: r.navNumeric,
       date: r.isoDate,
     }));
-/** Scheme names for search; refreshed for every scheme AMFI lists, NAV or not. */
+/** Scheme names for search, from NAVAll.txt; refreshed for every scheme AMFI lists, NAV or not. */
 async function upsertSchemeNames(parsed: AmfiParseResult): Promise<number> {
   const rows = [...parsed.schemes.values()].map((meta) => ({
     scheme_code: meta.schemeCode,
@@ -218,7 +218,8 @@ export async function syncTrackedSchemesFromAmfi({
       };
       report.gapsQueued += 1;
     }
-    report.namesUpserted = await upsertSchemeNames(recent);
+    // Names come from NAVAll.txt, the format every stored name uses, not the history report.
+    report.namesUpserted = await upsertSchemeNames(await fetchAmfiLatest(RECENT_TIMEOUT_MS));
   } catch (err) {
     report.error = err instanceof Error ? err.message : String(err);
     console.warn('[nav][cron] recent AMFI window failed:', err);
