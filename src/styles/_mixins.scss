@@ -312,3 +312,80 @@
   padding: 0 0.5rem;
   user-select: none;
 }
+
+// Wide data table that becomes one card per row when its container is narrower than $below, so
+// it never needs horizontal scrolling: not on a phone, not beside the sidebar on a tablet or small
+// laptop, not inside a dialog. Each <td> carries data-label="<column header>", shown as the label
+// beside its value; the <thead> is hidden. Apply to the <table>, after its own cell rules, and
+// put stacked-table-container on the element wrapping it (the width being measured). A cell
+// spanning the row (colSpan, e.g. an expanded detail row) gets data-full to drop the label.
+@mixin stacked-table-container {
+  container-type: inline-size;
+}
+
+@mixin stacked-table($below: 960px) {
+  // Above the threshold the columns fit; let headers and text wrap rather than push past it.
+  th,
+  td {
+    white-space: normal;
+  }
+
+  // Direct children only: a table nested in a cell (an expanded detail row) stacks on its own.
+  @container (max-width: #{$below - 1px}) {
+    &,
+    > tbody,
+    > tbody > tr,
+    > tbody > tr > td {
+      display: block;
+      width: 100%;
+    }
+
+    & {
+      min-width: 0;
+    }
+
+    > thead {
+      display: none;
+    }
+
+    > tbody > tr {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    > tbody > tr:last-child {
+      border-bottom: none;
+    }
+
+    > tbody > tr > td {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.375rem 0;
+      border: none;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    > tbody > tr > td::before {
+      content: attr(data-label);
+      flex: 0 0 auto;
+      max-width: 50%;
+      font-size: $fs-small;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-align: left;
+    }
+
+    > tbody > tr > td[data-full] {
+      display: block;
+      padding: 0;
+      text-align: left;
+    }
+
+    > tbody > tr > td[data-full]::before {
+      content: none;
+    }
+  }
+}

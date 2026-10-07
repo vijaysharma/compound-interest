@@ -82,6 +82,15 @@ $bp-laptop: 768px;
 $bp-desktop: 1024px;
 $bp-wide: 1280px;
 
+// Type scale (docs/UI_UX_ENGINEERING_STANDARD.md §10–11), the same on phones and desktop.
+// Nothing renders below $fs-caption; body text, table values and inputs use $fs-body.
+$fs-caption: 0.8125rem; // 13px - badges, table headers, chart legends
+$fs-small: 0.875rem;    // 14px - helper text, metadata, secondary labels
+$fs-body: 1rem;         // 16px - body copy, table values, inputs
+$fs-body-lg: 1.125rem;  // 18px - emphasised values
+$fs-h4: 1.25rem;        // 20px
+$fs-h3: 1.5rem;         // 24px
+
 // Transitions
 $transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 $transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);

@@ -80,17 +80,17 @@ export function PpfScheduleTable({
                 return (
                   <React.Fragment key={row.yearNumber}>
                     <tr>
-                      <td>
+                      <td data-label="Year">
                         <strong>Yr {row.yearNumber}</strong>
                         {row.isExtensionYear && <span className={styles.extBadge}>(Ext)</span>}
                         {row.yearNumber === 1 && <span className={styles.extBadge}>(Opening)</span>}
                         {row.isMaturityYear && <span className={styles.extBadge}>(Maturity)</span>}
                       </td>
-                      <td>
+                      <td data-label="Financial Year">
                         FY {row.fyLabel}
                         {row.isMaturityYear && <div>Matures 31 Mar {row.startYear + 1}</div>}
                       </td>
-                      <td>
+                      <td data-label="Interest Rate">
                         <span
                           className={`${styles.rateBadge} ${
                             row.isHistorical ? styles.rateBadgeHistorical : styles.rateBadgeProjected
@@ -99,8 +99,8 @@ export function PpfScheduleTable({
                           {row.rateLabel ? `${row.rateLabel}%` : `${row.interestRate}%`} {row.isActualHistory ? 'Actual History' : row.isHistorical ? 'Historical' : 'Projected'}
                         </span>
                       </td>
-                      <td>{currencySymbol}{row.openingBalance.toLocaleString('en-IN')}</td>
-                      <td>
+                      <td data-label="Opening Balance">{currencySymbol}{row.openingBalance.toLocaleString('en-IN')}</td>
+                      <td data-label="Deposits">
                         {currencySymbol}{row.annualDeposit.toLocaleString('en-IN')}
                         {!!row.excessDeposit && (
                           <div title="Deposits above ₹1.5 lakh in a financial year are not accepted and earn no interest">
@@ -108,13 +108,13 @@ export function PpfScheduleTable({
                           </div>
                         )}
                       </td>
-                      <td className={styles.interestCell}>
+                      <td data-label="Interest (Mar 31)" className={styles.interestCell}>
                         +{currencySymbol}{row.totalInterest.toLocaleString('en-IN')}
                       </td>
-                      <td className={styles.balanceCell}>
+                      <td data-label="Closing Balance" className={styles.balanceCell}>
                         {currencySymbol}{row.closingBalance.toLocaleString('en-IN')}
                       </td>
-                      <td>
+                      <td data-label="Monthly Breakdown">
                         <button
                           type="button"
                           className={styles.expandBtn}
@@ -130,7 +130,7 @@ export function PpfScheduleTable({
                     </tr>
                     {isExpanded && (
                       <tr>
-                        <td colSpan={8} className={styles.monthExpandCell}>
+                        <td colSpan={8} data-full className={styles.monthExpandCell}>
                           <div className={styles.monthTableWrapper}>
                             <div className={styles.monthTableHeading}>
                               Month-by-Month Interest Breakdown for FY {row.fyLabel} (Rate: {row.rateLabel ? `${row.rateLabel}% by quarter` : `${row.interestRate}%`})
@@ -148,13 +148,13 @@ export function PpfScheduleTable({
                               <tbody>
                                 {row.months.map((m) => (
                                   <tr key={m.monthIndex}>
-                                    <td>{m.monthName}</td>
-                                    <td>{currencySymbol}{m.deposit.toLocaleString('en-IN')}</td>
-                                    <td>{currencySymbol}{m.eligibleBalanceForInterest.toLocaleString('en-IN')}</td>
-                                    <td className={styles.monthCellInterest}>
+                                    <td data-label="Month">{m.monthName}</td>
+                                    <td data-label="Deposit">{currencySymbol}{m.deposit.toLocaleString('en-IN')}</td>
+                                    <td data-label="Eligible Balance">{currencySymbol}{m.eligibleBalanceForInterest.toLocaleString('en-IN')}</td>
+                                    <td data-label="Interest Accrued" className={styles.monthCellInterest}>
                                       +{currencySymbol}{m.monthlyInterest.toLocaleString('en-IN')}
                                     </td>
-                                    <td>{currencySymbol}{m.closingBalance.toLocaleString('en-IN')}</td>
+                                    <td data-label="Running Balance">{currencySymbol}{m.closingBalance.toLocaleString('en-IN')}</td>
                                   </tr>
                                 ))}
                               </tbody>

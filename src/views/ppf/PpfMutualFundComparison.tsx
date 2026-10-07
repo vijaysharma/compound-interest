@@ -292,7 +292,7 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
                 {comparisonResult.ppfTotalGain.toLocaleString('en-IN')} (
                 {comparisonResult.ppfGainPercent.toFixed(1)}%)
               </div>
-              <div style={{ fontSize: '0.6875rem', opacity: 0.7, marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '0.8125rem', opacity: 0.7, marginTop: '0.25rem' }}>
                 Zero market volatility &bull; 100% Sovereign Backed
               </div>
             </div>
@@ -386,30 +386,30 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
                 <tbody>
                   {comparisonResult.outcomes.map((row) => (
                     <tr key={row.id}>
-                      <td>
+                      <td data-label="Deposit Date">
                         <strong>{row.date}</strong>
                       </td>
-                      <td>
+                      <td data-label="Amount">
                         {currencySymbol}
                         {row.amount.toLocaleString('en-IN')}
                       </td>
-                      <td>
+                      <td data-label="NAV on Date">
                         {currencySymbol}
                         {row.nav.toFixed(2)}
                       </td>
-                      <td>{row.units.toFixed(3)}</td>
-                      <td>
+                      <td data-label="Units Allotted">{row.units.toFixed(3)}</td>
+                      <td data-label="Current Value">
                         <strong>
                           {currencySymbol}
                           {Math.round(row.currentValue).toLocaleString('en-IN')}
                         </strong>
                       </td>
-                      <td className={row.absoluteGain >= 0 ? styles.gainPositive : ''}>
+                      <td data-label="Absolute Gain" className={row.absoluteGain >= 0 ? styles.gainPositive : ''}>
                         {row.absoluteGain >= 0 ? '+' : ''}
                         {currencySymbol}
                         {Math.round(row.absoluteGain).toLocaleString('en-IN')}
                       </td>
-                      <td className={row.gainPercent >= 0 ? styles.gainPositive : ''}>
+                      <td data-label="Return %" className={row.gainPercent >= 0 ? styles.gainPositive : ''}>
                         {row.gainPercent >= 0 ? '+' : ''}
                         {row.gainPercent.toFixed(1)}%
                       </td>

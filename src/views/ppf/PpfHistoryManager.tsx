@@ -392,7 +392,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                 if (isEditing) {
                   return (
                     <tr key={entry.id}>
-                      <td>
+                      <td data-label="Date">
                         <input
                           type="date"
                           className={`${styles.historyInput} ${styles.editInputCompact}`}
@@ -400,7 +400,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                           onChange={(e) => setEditDate(e.target.value)}
                         />
                       </td>
-                      <td>
+                      <td data-label="Amount">
                         <input
                           type="text"
                           className={`${styles.historyInput} ${styles.editInputAmount}`}
@@ -408,14 +408,14 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                           onChange={(e) => setEditAmount(e.target.value)}
                         />
                       </td>
-                      <td>
+                      <td data-label="Interest Eligibility">
                         <span className={styles.editEligibilityText}>
                           {parseInt(editDate.slice(8, 10), 10) <= 5
                             ? 'Earns Month Interest'
                             : 'Next Month'}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Notes">
                         <input
                           type="text"
                           className={`${styles.historyInput} ${styles.editInputCompact}`}
@@ -423,7 +423,7 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                           onChange={(e) => setEditNotes(e.target.value)}
                         />
                       </td>
-                      <td className={styles.tdActions}>
+                      <td data-label="Actions" className={styles.tdActions}>
                         <div
                           className={`${styles.actionBtnGroup} ${styles.actionBtnGroupRight}`}
                         >
@@ -450,14 +450,14 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                 }
                 return (
                   <tr key={entry.id}>
-                    <td>
+                    <td data-label="Date">
                       <strong>{entry.investmentDate}</strong>
                     </td>
-                    <td>
+                    <td data-label="Amount">
                       {currencySymbol}
                       {entry.amount.toLocaleString('en-IN')}
                     </td>
-                    <td>
+                    <td data-label="Interest Eligibility">
                       <span
                         className={`${styles.rateBadge} ${
                           isEarly ? styles.rateBadgeEarly : styles.rateBadgeLate
@@ -466,8 +466,8 @@ export const PpfHistoryManager: React.FC<PpfHistoryManagerProps> = ({
                         {isEarly ? 'On/Before 5th (Full Month)' : 'After 5th (Next Month)'}
                       </span>
                     </td>
-                    <td>{entry.notes || '-'}</td>
-                    <td className={styles.tdActions}>
+                    <td data-label="Notes">{entry.notes || '-'}</td>
+                    <td data-label="Actions" className={styles.tdActions}>
                       <div className={`${styles.actionBtnGroup} ${styles.actionBtnGroupRight}`}>
                         <button
                           type="button"
