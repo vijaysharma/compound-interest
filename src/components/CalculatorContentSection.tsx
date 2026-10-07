@@ -110,7 +110,11 @@ export const CalculatorContentSection: React.FC<ContentSectionProps> = ({
                   {comparisonTable.rows.map((row, i) => (
                     <tr key={i} className={styles.tableRow}>
                       {row.map((cell, j) => (
-                        <td key={j} className={`${styles.tableTd} ${j === 0 ? styles.tableTdFirst : ''}`}>
+                        <td
+                          key={j}
+                          data-label={comparisonTable.headers[j]}
+                          className={`${styles.tableTd} ${j === 0 ? styles.tableTdFirst : ''}`}
+                        >
                           {cell}
                         </td>
                       ))}

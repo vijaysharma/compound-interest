@@ -36,7 +36,7 @@
 }
 
 .label {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   color: color-mix(in srgb, var(--color-base-content) 60%, transparent);
   letter-spacing: 0.05em;

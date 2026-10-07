@@ -56,7 +56,7 @@
   align-items: center;
   gap: 0.15rem;
   padding: 0.25rem 0.5rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   color: var(--color-primary);
   background: transparent;
@@ -177,7 +177,7 @@
   transition: border-color 0.2s;
 
   @include laptop-up {
-    font-size: 0.75rem;
+    font-size: $fs-caption;
   }
 
   &:focus {
@@ -205,7 +205,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.7;
   padding-top: 0.15rem;
 }
@@ -213,7 +213,7 @@
 .sortSelect {
   height: 24px;
   padding: 0 1.25rem 0 0.25rem;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 600;
   border: none;
   background: transparent;
@@ -296,7 +296,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
 }
 
 .cardDate {
@@ -325,7 +325,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 10px;
+  font-size: $fs-caption;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
   background: var(--color-bg-secondary);
@@ -342,7 +342,7 @@
 }
 
 .tagBadge {
-  font-size: 10px;
+  font-size: $fs-caption;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
   background: rgba(99, 102, 241, 0.1);
@@ -420,7 +420,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.15rem 0.4rem;
-  font-size: 10px;
+  font-size: $fs-caption;
   font-weight: 600;
   border-radius: 4px;
   background: var(--color-bg-secondary);
@@ -469,7 +469,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 600;
 }
 
@@ -477,7 +477,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 10.5px;
+  font-size: $fs-caption;
   color: var(--color-success);
   text-decoration: underline;
   background: transparent;
@@ -504,7 +504,7 @@
 }
 
 .galleryCardTitle {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
 }
 
 .galleryCardHeaderActions {
@@ -515,7 +515,7 @@
 }
 
 .gallerySnippet {
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.5;
   margin: 0;
   line-height: 1.3;
@@ -535,13 +535,13 @@
 }
 
 .galleryDate {
-  font-size: 10px;
+  font-size: $fs-caption;
   opacity: 0.5;
   font-weight: 500;
 }
 
 .galleryFolderBtn {
-  font-size: 10px;
+  font-size: $fs-caption;
   color: var(--color-primary);
   text-decoration: underline;
   background: transparent;
@@ -565,7 +565,7 @@
 
 .sectionTitleHeader {
   padding: 0.25rem 0.5rem;
-  font-size: 10px;
+  font-size: $fs-caption;
   font-weight: 700;
   opacity: 0.4;
   text-transform: uppercase;
@@ -583,7 +583,7 @@
 
 .notesSectionHeader {
   padding: 0.5rem 0.5rem 0.25rem;
-  font-size: 10px;
+  font-size: $fs-caption;
   font-weight: 700;
   opacity: 0.4;
   text-transform: uppercase;

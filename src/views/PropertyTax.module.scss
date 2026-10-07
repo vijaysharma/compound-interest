@@ -33,7 +33,7 @@
   padding: 0.25rem 0.75rem;
   background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
-  font-size: 0.75rem;
+  @include page-badge-text;
   font-weight: 700;
   border-radius: 9999px;
   margin-bottom: 0.5rem;
@@ -42,7 +42,7 @@
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: $fs-title-mobile;
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.25;
@@ -60,7 +60,7 @@
   line-height: 1.5;
 
   @include tablet-up {
-    font-size: 0.9375rem;
+    font-size: $fs-body;
     max-width: 48rem;
   }
 }
@@ -129,7 +129,7 @@
 }
 
 .verdictText {
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   line-height: 1.45;
   color: var(--color-text);
   opacity: 0.9;
@@ -159,7 +159,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.625rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   border-radius: 9999px;
   background: var(--color-bg);
@@ -186,7 +186,7 @@
 }
 
 .ciiStat {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: var(--color-text);
   opacity: 0.8;
 }
@@ -227,7 +227,7 @@
   right: 12px;
   background: var(--color-success);
   color: var(--color-success-content);
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   font-weight: 800;
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
@@ -247,7 +247,7 @@
 }
 
 .regimeDesc {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: var(--color-text);
   opacity: 0.75;
   margin-top: 0.125rem;
@@ -267,7 +267,7 @@
 
 .regimeRateBadge {
   display: inline-block;
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   font-weight: 700;
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
@@ -289,7 +289,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
 }
 
 .breakdownLabel {
@@ -315,16 +315,16 @@
 }
 
 .tableCard {
+  @include stacked-table-container;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 8px);
   padding: 1rem;
-  overflow-x: auto;
   margin-bottom: 1.5rem;
 }
 
 .tableTitle {
-  font-size: 0.9375rem;
+  font-size: $fs-body;
   font-weight: 700;
   color: var(--color-heading);
   margin-bottom: 0.75rem;
@@ -333,7 +333,7 @@
 .auditTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   text-align: left;
 
   th,
@@ -343,7 +343,7 @@
   }
 
   th {
-    font-size: 0.75rem;
+    font-size: $fs-caption;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -368,6 +368,9 @@
   .textRight {
     text-align: right;
   }
+
+  // Last, so it overrides the cell rules above below the threshold.
+  @include stacked-table(640px);
 }
 
 .disclaimerBanner {
@@ -375,7 +378,7 @@
   border: 1px solid color-mix(in srgb, var(--color-warning) 25%, transparent);
   border-radius: var(--radius-md, 8px);
   padding: 0.75rem 1rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: var(--color-text);
   line-height: 1.45;
   margin-bottom: 1.5rem;
@@ -383,7 +386,7 @@
 
 .indexedSubtitle {
   display: block;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.7;
 }
 

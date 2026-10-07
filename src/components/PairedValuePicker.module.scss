@@ -65,7 +65,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   .titleBar {
     gap: 8px;
     padding: 2px 4px;
-    font-size: 11.5px;
+    font-size: $fs-caption;
   }
 
   .inputRow {
@@ -102,14 +102,14 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
     width: $control-height-condensed - 4px;
     min-width: $control-height-condensed - 4px;
     height: $control-height-condensed - 4px;
-    font-size: 13.5px;
+    font-size: $fs-small;
   }
 
   .grid button {
     height: $control-height-condensed;
     min-height: $control-height-condensed;
     padding: 0 2px;
-    font-size: 13px;
+    font-size: $fs-small;
   }
 
   .bridgeRow {
@@ -119,7 +119,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 
   .bridgeLabel,
   .bridgeSelect {
-    font-size: 0.75rem;
+    font-size: $fs-caption;
   }
 
   // Matches `.inputRow`'s gap and padding, not its own — the two readouts are
@@ -127,7 +127,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   .wordsRow {
     gap: 8px;
     padding: 0 4px;
-    font-size: 13px;
+    font-size: $fs-small;
     line-height: 18px;
   }
 }
@@ -138,7 +138,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   .titleBar {
     gap: 4px;
     padding: 4px 6px;
-    font-size: 10.5px;
+    font-size: $fs-caption;
   }
 
   .inputRow {
@@ -160,7 +160,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
     padding: 0 6px;
 
     input {
-      font-size: 15.5px;
+      font-size: $fs-body;
       line-height: 20px;
     }
   }
@@ -171,14 +171,14 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   }
 
   .grid button {
-    font-size: 11px;
+    font-size: $fs-caption;
     padding: 0 1px;
   }
 
   .wordsRow {
     gap: 4px;
     padding: 0 6px;
-    font-size: 12px;
+    font-size: $fs-caption;
   }
 }
 
@@ -187,7 +187,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 // own cell instead of letting neighbours touch.
 @mixin tier-phone {
   .grid button {
-    font-size: 10px;
+    font-size: $fs-caption;
     letter-spacing: -0.03em;
   }
 }
@@ -197,7 +197,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   .titleBar {
     gap: 8px;
     padding: 5px 16px;
-    font-size: 12.5px;
+    font-size: $fs-caption;
   }
 
   .inputRow {
@@ -253,7 +253,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
 
   .bridgeLabel,
   .bridgeSelect {
-    font-size: 0.8rem;
+    font-size: $fs-caption;
   }
 
   .wordsRow {
@@ -435,7 +435,7 @@ $grid-tint: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg));
   padding: 0.4rem 0.6rem;
   border-radius: 6px;
   background: var(--color-bg-tertiary);
-  font-size: 11px;
+  font-size: $fs-caption;
   line-height: 1.6;
   color: var(--color-text-secondary);
 }

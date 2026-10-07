@@ -885,7 +885,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
               <tbody>
                 {customers.map((cust) => (
                   <tr key={cust.id}>
-                    <td>
+                    <td data-label="Name">
                       <div className={styles.custName}>{cust.customer_name}</div>
                       {cust.last_order_id && (
                         <div className={styles.contactSecondary}>
@@ -893,7 +893,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                         </div>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Phone & Email">
                       <div className={styles.phoneBadge}>
                         <FiPhone size={13} className={styles.primaryIcon} />
                         <span>{cust.customer_phone || '—'}</span>
@@ -905,7 +905,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                         </div>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Alt. Phone">
                       {cust.customer_phone_2 ? (
                         <div className={styles.phoneBadge}>
                           <FiPhone size={13} className={styles.secondaryIcon} />
@@ -915,13 +915,13 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                         <span className={styles.emptyDash}>—</span>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Address">
                       <div className={styles.addressText}>
                         {cust.customer_address}
                         {cust.customer_address_2 ? `, ${cust.customer_address_2}` : ''}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="City & State">
                       <div className={styles.cityStatePincode}>
                         <FiMapPin size={12} />
                         <span>
@@ -929,16 +929,16 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                         </span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Pincode">
                       <span className={styles.cityStatePincode}>{cust.customer_pincode}</span>
                     </td>
-                    <td>
+                    <td data-label="Orders">
                       <span className={styles.ordersCountBadge}>
                         <FiPackage size={12} />
                         <span>{cust.total_orders}</span>
                       </span>
                     </td>
-                    <td className={styles.tableTdRight}>
+                    <td data-label="Actions" className={styles.tableTdRight}>
                       <div className={`${styles.actionBtnsRow} ${styles.actionBtnsRowEnd}`}>
                         <button
                           type="button"

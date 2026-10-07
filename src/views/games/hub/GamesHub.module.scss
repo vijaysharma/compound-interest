@@ -1,3 +1,5 @@
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
 .container {
   display: flex;
   flex-direction: column;
@@ -21,7 +23,7 @@
   letter-spacing: -0.025em;
 }
 .subtitle {
-  font-size: 0.95rem;
+  font-size: $fs-body;
   color: var(--muted-color, #64748b);
   margin: 0 auto 16px;
   max-width: 580px;
@@ -56,13 +58,13 @@
 }
 
 .aliasLabel {
-  font-size: 0.85rem;
+  font-size: $fs-small;
   font-weight: 600;
   color: var(--muted-color, #64748b);
 }
 
 .currentAlias {
-  font-size: 0.95rem;
+  font-size: $fs-body;
   font-weight: 800;
   color: var(--title-color, #0f172a);
 }
@@ -76,7 +78,7 @@
   color: #475569;
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -99,7 +101,7 @@
   padding: 5px 10px;
   border: 1px solid #94a3b8;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: $fs-small;
   font-weight: 600;
   outline: none;
   width: 150px;
@@ -119,7 +121,7 @@
   border: none;
   padding: 6px 12px;
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: $fs-small;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -140,7 +142,7 @@
   color: #64748b;
   padding: 5px 10px;
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: $fs-small;
   font-weight: 600;
   cursor: pointer;
 
@@ -151,13 +153,13 @@
 }
 
 .aliasErrorText {
-  font-size: 0.8rem;
+  font-size: $fs-caption;
   color: #dc2626;
   font-weight: 600;
 }
 
 .aliasSuccessText {
-  font-size: 0.8rem;
+  font-size: $fs-caption;
   color: #16a34a;
   font-weight: 600;
 }
@@ -234,7 +236,7 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 .categoryBadge {
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -250,7 +252,7 @@
   margin: 0 0 6px 0;
 }
 .gameDesc {
-  font-size: 0.85rem;
+  font-size: $fs-small;
   color: var(--muted-color, #64748b);
   line-height: 1.5;
   margin: 0 0 14px 0;
@@ -265,7 +267,7 @@
   border-radius: 8px;
   padding: 6px 10px;
   margin-bottom: 14px;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   color: #854d0e;
   font-weight: 700;
 }
@@ -340,7 +342,7 @@
   border: 1px solid #cbd5e1;
   background: #ffffff;
   padding: 6px 14px;
-  font-size: 0.82rem;
+  font-size: $fs-small;
   font-weight: 600;
   border-radius: 9999px;
   cursor: pointer;
@@ -362,6 +364,7 @@
   }
 }
 .tableWrapper {
+  @include stacked-table-container;
   width: 100%;
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -374,6 +377,9 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 0.88rem;
+
+  // Last, so it overrides the cell rules below the threshold.
+  @include stacked-table(800px);
 }
 .th {
   background: #f8fafc;
@@ -381,7 +387,7 @@
   font-weight: 700;
   color: #475569;
   border-bottom: 1px solid #e2e8f0;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -419,7 +425,7 @@
   font-weight: 700;
 }
 .emptySubtext {
-  font-size: 0.85rem;
+  font-size: $fs-small;
   margin-top: 4px;
 }
 .medal {
@@ -430,14 +436,14 @@
   text-align: center;
   padding: 40px 20px;
   color: #64748b;
-  font-size: 0.95rem;
+  font-size: $fs-body;
 }
 @media (max-width: 767px) {
   .container {
     padding: 16px 12px 32px;
   }
   .title {
-    font-size: 1.5rem;
+    font-size: $fs-title-mobile;
   }
   .gamesGrid {
     grid-template-columns: 1fr;
@@ -448,6 +454,6 @@
   }
   .th, .td {
     padding: 8px 10px;
-    font-size: 0.8rem;
+    font-size: $fs-caption;
   }
 }

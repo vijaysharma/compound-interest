@@ -93,7 +93,7 @@
 }
 
 .label {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   font-weight: 700;
   opacity: 0.7;
   margin-bottom: 0.25rem;
@@ -117,7 +117,7 @@
 }
 
 .convertedUnit {
-  font-size: 0.625rem;
+  font-size: $fs-caption;
   font-weight: 500;
   opacity: 0.5;
   margin-top: 0.25rem;
@@ -136,7 +136,7 @@
 }
 
 .resultTag {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;

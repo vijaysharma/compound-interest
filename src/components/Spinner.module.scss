@@ -54,7 +54,7 @@
 }
 
 .label {
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 500;
   color: color-mix(in srgb, var(--color-base-content) 70%, transparent);
 }

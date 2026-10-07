@@ -44,7 +44,7 @@
 
 .label {
   display: block;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 700;
   opacity: 0.7;
   margin-bottom: 0.25rem;
@@ -55,7 +55,7 @@
 
 .dimLabel {
   display: block;
-  font-size: 9px;
+  font-size: $fs-caption;
   font-weight: 700;
   opacity: 0.7;
   margin-bottom: 0.25rem;
@@ -91,7 +91,7 @@
 .statusContainer {
   min-height: 18px;
   margin-top: 0.25rem;
-  font-size: 11px;
+  font-size: $fs-caption;
 }
 
 .statusLoading {
@@ -221,11 +221,12 @@
 .resultsTitle {
   font-weight: 700;
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: $fs-body;
   color: var(--color-heading);
 }
 
 .tableContainer {
+  @include stacked-table-container;
   overflow-y: auto;
   overflow-x: auto;
   max-height: calc(100dvh - 485px);
@@ -251,7 +252,7 @@
     background: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: $fs-caption;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--color-border);
@@ -273,6 +274,8 @@
   :global([data-theme="dark"]) & tbody tr:nth-child(even) {
     background: rgba(255, 255, 255, 0.02);
   }
+
+  @include stacked-table(640px);
 }
 
 .courierName {
@@ -282,7 +285,7 @@
 .rateVal {
   font-weight: 600;
   color: var(--color-primary);
-  font-size: 15px;
+  font-size: $fs-body;
 }
 
 .ratingVal {

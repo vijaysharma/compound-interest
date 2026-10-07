@@ -33,7 +33,7 @@
   padding: 0.25rem 0.75rem;
   background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
-  font-size: 0.75rem;
+  @include page-badge-text;
   font-weight: 700;
   border-radius: 9999px;
   margin-bottom: 0.5rem;
@@ -42,7 +42,7 @@
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: $fs-title-mobile;
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.25;
@@ -54,7 +54,7 @@
 
 .subtitle {
   margin-top: 0.25rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   opacity: 0.75;
   line-height: 1.5;
 
@@ -96,7 +96,7 @@
 }
 
 .sectionHeading {
-  font-size: 0.9375rem;
+  font-size: $fs-body;
   font-weight: 700;
   color: var(--color-heading);
   margin: 0 0 0.75rem;
@@ -121,7 +121,7 @@
 }
 
 .fieldLabel {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -161,7 +161,7 @@
 .sliderLabels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   opacity: 0.7;
 }
 
@@ -184,7 +184,7 @@
 }
 
 .heroPensionLabel {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -204,7 +204,7 @@
 }
 
 .heroPensionWords {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.75;
   margin-top: 0.25rem;
 }
@@ -223,7 +223,7 @@
 }
 
 .statLabel {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -282,7 +282,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.375rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
 }
 
 .splitDotLumpSum {
@@ -308,7 +308,7 @@
   flex-direction: column;
   gap: 0.5rem;
   margin-top: 0.5rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
 }
 
 .taxBenefitItem {
@@ -329,6 +329,7 @@
 }
 
 .tableWrapper {
+  @include stacked-table-container;
   overflow-x: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 8px);
@@ -338,27 +339,24 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   text-align: left;
-  min-width: 500px;
 
   th {
     background: var(--color-bg-secondary);
     padding: 0.625rem 0.75rem;
-    font-size: 0.6875rem;
+    font-size: $fs-caption;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--color-text);
     border-bottom: 1px solid var(--color-border);
-    white-space: nowrap;
   }
 
   td {
     padding: 0.625rem 0.75rem;
     border-bottom: 1px solid var(--color-border);
     color: var(--color-text);
-    white-space: nowrap;
   }
 
   tr:last-child td {
@@ -368,6 +366,9 @@
   tr:hover td {
     background: color-mix(in srgb, var(--color-primary) 3%, transparent);
   }
+
+  // Last, so it overrides the cell rules above below the threshold.
+  @include stacked-table(800px);
 }
 
 .badgeIcon {
@@ -389,13 +390,13 @@
 }
 
 .noteText {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.75;
   margin-top: 0.35rem;
 }
 
 .annuitySplitNote {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.85;
   font-weight: 700;
   margin-top: 0.125rem;
@@ -408,7 +409,7 @@
 }
 
 .corpusSplitTitle {
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   color: var(--color-heading);
 }
@@ -428,7 +429,7 @@
 }
 
 .splitDesc {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   opacity: 0.7;
 }
 
@@ -470,7 +471,7 @@
   border: 1px solid var(--color-primary);
   border-radius: 8px;
   padding: 10px 14px;
-  font-size: 0.8rem;
+  font-size: $fs-caption;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -487,6 +488,6 @@
   border: 1px solid var(--color-warning, #f59e0b);
   border-radius: 8px;
   padding: 10px 14px;
-  font-size: 0.8rem;
+  font-size: $fs-caption;
   margin-bottom: 12px;
 }

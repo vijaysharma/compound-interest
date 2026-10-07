@@ -47,15 +47,15 @@ export const AdminSubmissionsTab: React.FC<AdminSubmissionsTabProps> = React.mem
             <tbody>
               {submissions.map((sub) => (
                 <tr key={sub.id}>
-                  <td className={styles.cellUserEmail}>{sub.user_email}</td>
-                  <td className={styles.cellUtrRef}>
+                  <td data-label="Email" className={styles.cellUserEmail}>{sub.user_email}</td>
+                  <td data-label="UTR / Ref" className={styles.cellUtrRef}>
                     {sub.utr_ref}
                   </td>
-                  <td>₹{sub.amount}</td>
-                  <td className={styles.cellDate}>
+                  <td data-label="Amount">₹{sub.amount}</td>
+                  <td data-label="Date" className={styles.cellDate}>
                     {new Date(sub.created_at).toLocaleString()}
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <span
                       className={`${styles.badge} ${
                         sub.status === 'approved'
@@ -68,7 +68,7 @@ export const AdminSubmissionsTab: React.FC<AdminSubmissionsTabProps> = React.mem
                       {sub.status}
                     </span>
                   </td>
-                  <td className={styles.tableRight}>
+                  <td data-label="Actions" className={styles.tableRight}>
                     {sub.status === 'pending' ? (
                       <div className={styles.actionsGroup}>
                         <button

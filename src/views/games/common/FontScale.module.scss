@@ -1,3 +1,4 @@
+@use "../../../styles/variables" as *;
 // Matches HowToPlayButton's trigger so it sits naturally in each game's header actions.
 .btn {
   display: inline-flex;
@@ -8,7 +9,7 @@
   color: #475569;
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: $fs-caption;
   font-weight: 700;
   cursor: pointer;
   touch-action: manipulation;

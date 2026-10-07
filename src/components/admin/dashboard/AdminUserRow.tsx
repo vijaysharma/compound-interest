@@ -38,15 +38,15 @@ export const AdminUserRow: React.FC<AdminUserRowProps> = React.memo(
     }
     return (
       <tr>
-        <td className={styles.cellUserEmail}>{user.email}</td>
-        <td>
+        <td data-label="Email" className={styles.cellUserEmail}>{user.email}</td>
+        <td data-label="Role">
           <span
             className={`${styles.badge} ${user.role === 'admin' ? styles.badgeAccent : styles.badgeGhost}`}
           >
             {user.role}
           </span>
         </td>
-        <td>
+        <td data-label="Quota">
           <div className={styles.quotaWrapper}>
             <span
               className={`${styles.quotaText} ${isOverLimit && user.role !== 'admin' ? styles.quotaOverLimit : ''}`}
@@ -63,8 +63,8 @@ export const AdminUserRow: React.FC<AdminUserRowProps> = React.memo(
             </button>
           </div>
         </td>
-        <td>{trialBadge}</td>
-        <td>
+        <td data-label="48h Trial">{trialBadge}</td>
+        <td data-label="Subscription">
           <span
             className={`${styles.badge} ${
               user.subscription_status === 'active'
@@ -77,12 +77,12 @@ export const AdminUserRow: React.FC<AdminUserRowProps> = React.memo(
             {user.subscription_status}
           </span>
         </td>
-        <td className={styles.cellDate}>
+        <td data-label="Expires At" className={styles.cellDate}>
           {user.subscription_expires_at
             ? new Date(user.subscription_expires_at).toLocaleDateString()
             : '—'}
         </td>
-        <td className={styles.tableRight}>
+        <td data-label="Actions" className={styles.tableRight}>
           <div className={styles.actionsGroup}>
             <button
               type="button"

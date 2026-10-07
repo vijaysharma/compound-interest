@@ -9,7 +9,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: color-mix(in srgb, var(--color-base-content) 60%, transparent);
   list-style: none;
   padding: 0;

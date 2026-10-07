@@ -339,7 +339,7 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
             <XAxis
               dataKey="formattedDate"
               stroke="#94a3b8"
-              fontSize={isMobile ? 10 : 11}
+              fontSize={13}
               tickLine={false}
               axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
               interval="preserveStartEnd"
@@ -349,7 +349,7 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
             <YAxis
               yAxisId="left"
               stroke="#94a3b8"
-              fontSize={isMobile ? 10 : 11}
+              fontSize={13}
               tickLine={false}
               axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
               tickFormatter={formatLeftAxisTick}
@@ -361,7 +361,7 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
                 yAxisId="right"
                 orientation="right"
                 stroke="#64748b"
-                fontSize={isMobile ? 10 : 11}
+                fontSize={13}
                 tickLine={false}
                 axisLine={{ stroke: 'rgba(148, 163, 184, 0.3)' }}
                 domain={rightAxisDomain}
@@ -379,7 +379,7 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
               verticalAlign="top"
               align="right"
               iconType="circle"
-              wrapperStyle={{ paddingBottom: 10, fontSize: '0.8rem' }}
+              wrapperStyle={{ paddingBottom: 10, fontSize: '0.8125rem' }}
             />
             {/* Flow Data: Toggled between Bar and Line representations */}
             {isLineMode ? (

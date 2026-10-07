@@ -21,7 +21,7 @@
   padding: 0.25rem 0.75rem;
   background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
-  font-size: 0.75rem;
+  @include page-badge-text;
   font-weight: 700;
   border-radius: 9999px;
   margin-bottom: 0.5rem;
@@ -30,7 +30,7 @@
 }
 
 .title {
-  font-size: 1.875rem;
+  font-size: $fs-title-mobile;
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.25;
@@ -53,7 +53,7 @@
 }
 
 .dateSubtitle {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.6;
 }
 
@@ -219,7 +219,7 @@
 }
 
 .sourceUsage {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.75;
   line-height: 1.5;
   margin-top: 0.25rem;
@@ -261,7 +261,7 @@
 }
 
 .toolDesc {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.6;
   margin-top: 0.125rem;
 }

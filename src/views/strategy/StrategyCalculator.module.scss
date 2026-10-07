@@ -57,7 +57,7 @@
   border: 1px solid $border-light;
   border-radius: $radius-md;
   background: $bg-white;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   color: $color-text-secondary;
   white-space: nowrap;
@@ -65,7 +65,7 @@
   @include tablet-up {
     min-height: 36px;
     padding: 0.35rem 0.6rem;
-    font-size: 0.75rem;
+    font-size: $fs-caption;
   }
 
   &:hover:not(:disabled) {
@@ -108,7 +108,7 @@
   max-width: 14rem;
 
   @include tablet-up {
-    font-size: 0.8125rem;
+    font-size: $fs-small;
     min-height: 36px;
     padding: 0.35rem 0.5rem;
   }
@@ -124,14 +124,14 @@
 }
 
 .headerNote {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: $color-text-secondary;
   max-width: 60ch;
 }
 
 // Projection readouts.
 .projectionHorizon {
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $primary;
   font-variant-numeric: tabular-nums;
@@ -146,7 +146,7 @@
   gap: 0.3rem;
   margin: 0.25rem 0 0;
   padding-left: 1rem;
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   line-height: 1.45;
   color: $color-text-secondary;
   li {
@@ -213,13 +213,13 @@
 }
 
 .cardSubtitle {
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   font-weight: 500;
   color: $color-text-secondary;
 }
 
 .badge {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   font-weight: 700;
   padding: 0.1rem 0.4rem;
   border-radius: $radius-full;
@@ -244,7 +244,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  font-size: 0.7rem;
+  font-size: $fs-caption;
   color: $color-text-secondary;
 }
 
@@ -322,13 +322,13 @@
   margin: 0;
   --jbg-margin-y: 0;
   --jbg-height: 28px;
-  --jbg-font-size: 0.75rem;
+  --jbg-font-size: $fs-caption;
   --jbg-font-weight: 600;
   --jbg-padding: 0 0.85rem;
   --jbg-border-radius: 9999px;
 
   h5 {
-    font-size: 0.72rem;
+    font-size: $fs-caption;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -366,12 +366,12 @@
   margin: 0;
   --jbg-margin-y: 0;
   --jbg-height: 28px;
-  --jbg-font-size: 0.8rem;
+  --jbg-font-size: $fs-caption;
   --jbg-font-weight: 600;
   --jbg-padding: 0 0.5rem;
 
   h5 {
-    font-size: 0.72rem;
+    font-size: $fs-caption;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -397,7 +397,7 @@
 
 .infoTitle {
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: $fs-small;
   color: $color-heading;
   margin-bottom: 0.35rem;
 }
@@ -414,12 +414,12 @@
   background: color-mix(in srgb, var(--color-primary) 5%, #f8fafc);
   border-left: 3px solid var(--color-primary);
   border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   color: $color-text;
 }
 
 .infoFooter {
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   color: $color-text-secondary;
   margin-top: 0.5rem;
   padding-top: 0.4rem;
@@ -428,7 +428,7 @@
 
 .chartControlWide {
   --jbg-padding: 0 0.25rem;
-  --jbg-font-size: 0.78rem;
+  --jbg-font-size: $fs-caption;
 }
 
 /*
@@ -440,7 +440,7 @@
  */
 .chartControlNotes {
   margin: 0.25rem 0 1rem;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   line-height: 1.5;
   color: $color-text-secondary;
 
@@ -465,7 +465,7 @@
 }
 
 .tableDetails {
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   border-top: 1px solid $border-subtle;
   padding-top: 0.4rem;
 }
@@ -482,6 +482,7 @@
 }
 
 .tableScroll {
+  @include stacked-table-container;
   max-height: 14rem;
   overflow: auto;
   margin-top: 0.4rem;
@@ -497,7 +498,6 @@
     text-align: right;
     padding: 0.2rem 0.35rem;
     border-bottom: 1px solid $border-subtle;
-    white-space: nowrap;
   }
 
   th:first-child,
@@ -510,7 +510,20 @@
     top: 0;
     background: $bg-muted;
     color: $color-text-secondary;
-    font-size: 0.68rem;
+    font-size: $fs-caption;
+  }
+
+  // Last, so it overrides the cell rules above below the threshold.
+  @include stacked-table(800px);
+
+  // The mixin stacks td cells; the row header (th scope="row", the date) becomes the card title.
+  @container (max-width: 799px) {
+    > tbody > tr > th {
+      display: block;
+      padding: 0 0 0.125rem;
+      border: none;
+      text-align: left;
+    }
   }
 }
 
@@ -521,7 +534,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   line-height: 1.35;
 }
 
@@ -539,7 +552,7 @@
 }
 
 .statStrong {
-  font-size: 0.95rem;
+  font-size: $fs-body;
   color: $primary;
 }
 
@@ -570,14 +583,14 @@
 }
 
 .statStrongProjected {
-  font-size: 0.95rem;
+  font-size: $fs-body;
   font-weight: 800;
   color: $primary;
 }
 
 .statShortfallBadge {
   display: block;
-  font-size: 0.62rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-error);
   line-height: 1;
@@ -606,7 +619,7 @@
 }
 
 .statGroupTitle {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $color-heading;
   margin: 0;
@@ -617,7 +630,7 @@
   align-items: baseline;
   gap: 0.6rem;
   flex-shrink: 0;
-  font-size: 0.66rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -647,7 +660,7 @@
 }
 
 .personalTitle {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -683,7 +696,7 @@
 }
 
 .personalValueMeta {
-  font-size: 0.64rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -711,7 +724,7 @@
   flex-wrap: wrap;
   gap: 0.15rem 1rem;
   margin-top: 0.15rem;
-  font-size: 0.7rem;
+  font-size: $fs-caption;
   font-variant-numeric: tabular-nums;
 
   dt {
@@ -757,7 +770,7 @@
 }
 
 .personalLastLabel {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -770,13 +783,13 @@
   flex-wrap: wrap;
   gap: 0.15rem 0.4rem;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: $fs-body;
   font-weight: 800;
   color: $color-heading;
 }
 
 .personalLastLabelProjected {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -791,14 +804,14 @@
   flex-wrap: wrap;
   gap: 0.15rem 0.4rem;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: $fs-body;
   font-weight: 800;
   color: $primary;
   width: 100%;
 }
 
 .personalLastMeta {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   font-weight: 600;
   color: $color-text-secondary;
 }
@@ -816,7 +829,7 @@
 }
 
 .selectLabel {
-  font-size: 0.7rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $color-text-secondary;
 }
@@ -826,7 +839,7 @@
   border-radius: $radius-sm;
   background: $bg-muted;
   color: $color-text;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   padding: 0.15rem 0.3rem;
 
@@ -837,7 +850,7 @@
 }
 
 .statGroupTitle {
-  font-size: 0.66rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -857,7 +870,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.4rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   padding: 0.35rem 0.5rem;
   border-radius: $radius-sm;
   border-left: 3px solid transparent;
@@ -893,7 +906,7 @@
   border: 1px solid $border-light;
   border-radius: $radius-md;
   background: $bg-muted;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   color: $color-text;
 
@@ -932,13 +945,13 @@
   border-radius: $radius-md;
   background: $primary;
   color: $primary-content;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
 
   @include tablet-up {
     min-height: 38px;
     padding: 0.45rem 0.6rem;
-    font-size: 0.75rem;
+    font-size: $fs-caption;
   }
 
   &:hover {
@@ -962,13 +975,13 @@
   border: 1px dashed $border-purple;
   border-radius: $radius-md;
   color: $primary;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
 
   @include tablet-up {
     min-height: 38px;
     padding: 0.4rem;
-    font-size: 0.75rem;
+    font-size: $fs-caption;
   }
 
   &:hover {
@@ -997,7 +1010,7 @@
   @include tablet-up {
     min-width: 32px;
     min-height: 32px;
-    font-size: 0.85rem;
+    font-size: $fs-small;
   }
 
   &:hover {
@@ -1045,7 +1058,7 @@
   flex: 1;
   min-width: 0;
   text-align: left;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $color-heading;
 
@@ -1068,7 +1081,7 @@
 }
 
 .itemMeta {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   line-height: 1.35;
   color: $color-text-secondary;
   font-variant-numeric: tabular-nums;
@@ -1097,7 +1110,7 @@
   padding: 0.2rem 0.5rem;
   border-radius: $radius-sm;
   background: $bg-muted;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-variant-numeric: tabular-nums;
   min-width: 0;
 }
@@ -1115,7 +1128,7 @@
 }
 
 .fieldLabel {
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   color: $color-text-secondary;
 }
@@ -1124,7 +1137,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   color: $color-text;
 
@@ -1139,7 +1152,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 0.4rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   color: $color-text-secondary;
   font-variant-numeric: tabular-nums;
 }
@@ -1150,7 +1163,7 @@
 }
 
 .emptyHint {
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   color: $color-text-secondary;
   text-align: center;
   padding: 0.6rem 0.25rem;
@@ -1202,7 +1215,7 @@
   gap: 0.4rem;
   flex: 1;
   text-align: left;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $color-heading;
 
@@ -1222,7 +1235,7 @@
 }
 
 .bulkSubtitle {
-  font-size: 0.7rem;
+  font-size: $fs-caption;
   color: $color-text-secondary;
   margin: 0;
   line-height: 1.35;
@@ -1248,7 +1261,7 @@
 }
 
 .bulkLabel {
-  font-size: 0.7rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $color-text-secondary;
 }
@@ -1275,7 +1288,7 @@
 }
 
 .bulkCurrency {
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   color: $color-text-secondary;
   margin-right: 0.35rem;
@@ -1323,7 +1336,7 @@
   border-radius: $radius-sm;
   background: $bg-white;
   padding: 0.3rem 0.45rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   color: $color-text;
 
@@ -1334,7 +1347,7 @@
 }
 
 .syncBadge {
-  font-size: 0.62rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-success, #2e7d32);
   background: color-mix(in srgb, var(--color-success, #2e7d32) 12%, transparent);
@@ -1346,7 +1359,7 @@
 
 .syncButton {
   @include button-reset;
-  font-size: 0.64rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $primary;
   text-decoration: underline;
@@ -1366,7 +1379,7 @@
 }
 
 .previewScheduleHeader {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: $color-text-secondary;
   text-transform: uppercase;
@@ -1381,7 +1394,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.4rem;
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   padding: 0.2rem 0.35rem;
   border-radius: $radius-xs;
   background: color-mix(in srgb, $bg-white 80%, $bg-muted);
@@ -1409,7 +1422,7 @@
 }
 
 .offsetPill {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   font-weight: 700;
   padding: 0.1rem 0.4rem;
   border-radius: $radius-full;
@@ -1418,7 +1431,7 @@
 }
 
 .modifiedPill {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   font-weight: 700;
   padding: 0.1rem 0.4rem;
   border-radius: $radius-full;
@@ -1445,14 +1458,14 @@
   border-radius: $radius-md;
   background: $bg-white;
   color: $color-text-secondary;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   white-space: nowrap;
 
   @include tablet-up {
     min-height: 36px;
     padding: 0.35rem 0.6rem;
-    font-size: 0.72rem;
+    font-size: $fs-caption;
   }
 
   &:hover:not(:disabled) {

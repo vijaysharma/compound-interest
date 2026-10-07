@@ -29,7 +29,7 @@ $font-family:
 
 .title {
   font-family: $font-family;
-  font-size: 15px;
+  font-size: $fs-body;
   font-weight: 600;
   color: $color-text-primary;
   margin: 0 0 $space-xs 0;
@@ -102,7 +102,7 @@ $font-family:
   background-color: $color-primary;
   color: var(--color-primary-content);
   font-family: $font-family;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -177,7 +177,7 @@ $font-family:
   }
 
   @include laptop-up {
-    font-size: 15px;
+    font-size: $fs-body;
     padding: 0 $space-md;
   }
 }
@@ -200,7 +200,7 @@ $font-family:
   padding: 0 $space-sm;
 
   @include laptop-up {
-    font-size: 15px;
+    font-size: $fs-body;
     padding: 0 $space-md;
   }
 }
@@ -253,7 +253,7 @@ $font-family:
 
   .pairedStackedLabel {
     padding: 3px 8px;
-    font-size: 10.5px;
+    font-size: $fs-caption;
   }
 
   .pairedStackedSlot {
@@ -262,14 +262,14 @@ $font-family:
 
   .pairedInput,
   .pairedSelect {
-    font-size: 15px;
+    font-size: $fs-body;
     padding: 0 $space-sm;
   }
 
   @include container-max(360px) {
     .pairedStackedLabel {
       padding: 3px 6px;
-      font-size: 10px;
+      font-size: $fs-caption;
     }
 
     .pairedInput,
@@ -281,12 +281,12 @@ $font-family:
 
   @include container-min(640px) {
     .title {
-      font-size: 15px;
+      font-size: $fs-body;
     }
 
     .pairedStackedLabel {
       padding: 3px 10px;
-      font-size: 11px;
+      font-size: $fs-caption;
     }
 
     .pairedStackedSlot {
@@ -295,7 +295,7 @@ $font-family:
 
     .pairedInput,
     .pairedSelect {
-      font-size: 15px;
+      font-size: $fs-body;
       padding: 0 $space-md;
     }
   }

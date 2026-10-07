@@ -96,7 +96,7 @@
 }
 
 .statLabel {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -104,7 +104,7 @@
 }
 
 .statValue {
-  font-size: 0.9375rem;
+  font-size: $fs-body;
   font-weight: 700;
   color: var(--color-heading);
   font-variant-numeric: tabular-nums;
@@ -147,7 +147,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   opacity: 0.8;
 }
 
@@ -186,7 +186,7 @@
   padding: 0.25rem 0.75rem;
   background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
-  font-size: 0.75rem;
+  @include page-badge-text;
   font-weight: 700;
   border-radius: 9999px;
   margin-bottom: 0.5rem;
@@ -195,7 +195,7 @@
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: $fs-title-mobile;
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.25;
@@ -207,7 +207,7 @@
 
 .subtitle {
   margin-top: 0.25rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.7;
   line-height: 1.5;
 
@@ -245,7 +245,7 @@
 }
 
 .footnote {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.6;
   margin-top: 0.5rem;
 }
@@ -281,7 +281,7 @@
   background-color: var(--color-primary);
   color: var(--color-primary-content);
   text-align: center;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   padding: 0 0.5rem;
   flex-shrink: 0;
@@ -290,7 +290,7 @@
 .swapBtn {
   background: transparent;
   border: none;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: var(--color-primary);
   font-weight: 600;
   cursor: pointer;
@@ -339,7 +339,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
 
   @include tablet-up {
     flex-direction: row;
@@ -366,7 +366,7 @@
 }
 
 .summarySub {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.7;
   font-weight: normal;
 }
@@ -427,7 +427,7 @@
 }
 
 .taxTitle {
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   color: var(--color-heading);
   display: flex;
@@ -439,7 +439,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   font-weight: 600;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -455,7 +455,7 @@
 
 .taxSlabBtn {
   padding: 0.25rem 0.625rem;
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   font-weight: 600;
   border-radius: var(--radius-sm, 6px);
   border: 1px solid var(--color-border);
@@ -494,7 +494,7 @@
 }
 
 .taxNotice {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   line-height: 1.35;
   color: var(--color-text-muted);
   background: color-mix(in srgb, var(--color-primary) 6%, transparent);

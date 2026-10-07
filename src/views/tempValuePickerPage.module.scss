@@ -28,7 +28,7 @@
   border-radius: $radius-full;
   background-color: $primary-light;
   color: $primary;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -184,7 +184,7 @@
 
   .label {
     display: block;
-    font-size: 0.75rem;
+    font-size: $fs-caption;
     color: $text-muted;
     margin-bottom: 0.25rem;
   }

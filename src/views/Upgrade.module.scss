@@ -25,7 +25,7 @@
 }
 
 .supportBadge {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -36,7 +36,7 @@
 }
 
 .title {
-  font-size: 1.875rem;
+  font-size: $fs-title-mobile;
   font-weight: 800;
   letter-spacing: -0.025em;
 
@@ -85,7 +85,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-info);
   text-transform: uppercase;
@@ -94,7 +94,7 @@
 }
 
 .trialMainText {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 500;
 
   @include tablet-up {
@@ -108,7 +108,7 @@
 }
 
 .trialSubText {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   opacity: 0.65;
   margin-top: 0.125rem;
 }
@@ -117,7 +117,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   border: 1px solid var(--color-info);
   color: var(--color-info);
@@ -196,12 +196,12 @@
 }
 
 .letterSubhead {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.6;
 }
 
 .letterBody {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   line-height: 1.6;
   opacity: 0.85;
   display: flex;
@@ -257,7 +257,7 @@
 .proBadge {
   display: inline-block;
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   text-transform: uppercase;
   padding: 0.25rem 0.75rem;
   margin-bottom: 0.5rem;
@@ -295,7 +295,7 @@
 
 .pricingAccount {
   margin-top: 0.375rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.75;
 }
 
@@ -341,7 +341,7 @@
 .payMethodsNote {
   margin-top: 0.5rem;
   text-align: center;
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   opacity: 0.6;
 }
 
@@ -352,7 +352,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.8;
 
   @include tablet-up {
@@ -395,7 +395,7 @@
 
 .billingToggleBtn {
   padding: 0.4rem 1rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   border-radius: 9999px;
   border: none;
@@ -412,7 +412,7 @@
 }
 
 .saveBadge {
-  font-size: 0.6875rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-success);
   background-color: rgba(22, 163, 74, 0.12);
@@ -467,7 +467,7 @@
 }
 
 .savingsBadgeText {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: var(--color-success);
   font-weight: 600;
   margin-top: 0.25rem;

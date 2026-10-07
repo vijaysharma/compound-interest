@@ -63,10 +63,10 @@ export const ChartDataTable = ({
               return (
                 <tr key={snapshot.date}>
                   <th scope="row">{snapshot.date}</th>
-                  <td>{formatRupees(snapshot.column1Value)}</td>
-                  <td>{formatRupees(snapshot.column2Value)}</td>
-                  <td>{formatRupees(snapshot.totalValue)}</td>
-                  {hasProjected && <td>{projected ? 'Projected' : 'Actual'}</td>}
+                  <td data-label={COLUMN_LABELS.core}>{formatRupees(snapshot.column1Value)}</td>
+                  <td data-label={COLUMN_LABELS.growth}>{formatRupees(snapshot.column2Value)}</td>
+                  <td data-label="Combined">{formatRupees(snapshot.totalValue)}</td>
+                  {hasProjected && <td data-label="Source">{projected ? 'Projected' : 'Actual'}</td>}
                 </tr>
               );
             })}

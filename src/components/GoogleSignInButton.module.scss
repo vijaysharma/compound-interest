@@ -46,7 +46,7 @@
 }
 
 .errorText {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   color: var(--color-error);
   text-align: center;
 }
@@ -136,7 +136,7 @@
 }
 
 .modalSubtitle {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.6;
 }
 
@@ -144,7 +144,7 @@
   background-color: var(--color-error-surface);
   color: var(--color-error-text);
   border: 1px solid var(--color-error-border);
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   padding: 0.5rem 0.75rem;
   margin-bottom: 1rem;
   border-radius: var(--radius-btn, 0.5rem);
@@ -163,7 +163,7 @@
 
 .label {
   display: block;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -218,7 +218,7 @@
 
 .adminNotice {
   margin-top: 0.25rem;
-  font-size: 11px;
+  font-size: $fs-caption;
   color: var(--color-secondary);
   font-weight: 500;
   display: flex;

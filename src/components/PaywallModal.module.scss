@@ -82,7 +82,7 @@
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
@@ -105,7 +105,7 @@
 
 .subtitle {
   margin-top: 0.5rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.8;
   line-height: 1.625;
 
@@ -127,7 +127,7 @@
   padding: 0.625rem 1rem;
   margin-bottom: 1rem;
   border-radius: var(--radius-btn, 0.5rem);
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   &Success {
@@ -202,7 +202,7 @@
 
 .securityInfo {
   text-align: center;
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.6;
 }
 
@@ -214,7 +214,7 @@
 .dismissLink {
   background: transparent;
   border: none;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.6;
   text-decoration: underline;
   cursor: pointer;
@@ -240,7 +240,7 @@
   background-color: transparent;
   color: inherit;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -260,7 +260,7 @@
   background: none;
   border: none;
   color: var(--color-primary);
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;

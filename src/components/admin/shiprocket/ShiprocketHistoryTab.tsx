@@ -54,10 +54,10 @@ export const ShiprocketHistoryTab: React.FC<ShiprocketHistoryTabProps> = React.m
               {statement.map((item, idx) => (
                 <tr key={idx}>
                   <td data-label="Date">{item.date || item.created_at || '—'}</td>
-                  <td data-label="Description" data-wide>
+                  <td data-label="Description">
                     <strong>{item.description || item.action || 'Transaction'}</strong>
                   </td>
-                  <td data-label="Order / AWB" data-wide>
+                  <td data-label="Order / AWB">
                     {item.order_id || item.awb_code ? (
                       <div>
                         {item.order_id && <span>Order: #{item.order_id} </span>}

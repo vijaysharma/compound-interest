@@ -180,7 +180,7 @@
 }
 
 .fieldLabel {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-text);
   text-transform: uppercase;
@@ -254,7 +254,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.2rem 0.6rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   border-radius: 9999px;
 }
@@ -277,7 +277,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.65rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   border-radius: var(--radius-sm, 6px);
   background: color-mix(in srgb, var(--color-primary) 10%, transparent);
@@ -290,7 +290,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   color: var(--color-text-secondary);
 }
 
@@ -324,7 +324,7 @@
   color: var(--color-error);
   border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
   padding: 0.3rem 0.6rem;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   display: inline-flex;
@@ -341,7 +341,7 @@
   color: var(--color-text);
   border: 1px solid var(--color-border);
   padding: 0.3rem 0.6rem;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   display: inline-flex;
@@ -359,7 +359,7 @@
   color: var(--color-primary);
   border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
   padding: 0.3rem 0.75rem;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   font-weight: 600;
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
@@ -374,7 +374,7 @@
 }
 
 .activeIndicator {
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-primary);
   display: inline-flex;
@@ -422,7 +422,7 @@
 }
 
 .syncMeta {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   margin-top: 0.25rem;
   color: var(--color-text-secondary);
 }

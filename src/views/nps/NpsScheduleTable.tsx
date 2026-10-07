@@ -38,12 +38,12 @@ export function NpsScheduleTable({
             <tbody>
               {yearlyBreakdown.map((row) => (
                 <tr key={row.yearNumber}>
-                  <td>Yr {row.yearNumber}</td>
-                  <td><strong>{row.age} Yrs</strong></td>
-                  <td>{currencySymbol}{row.annualContribution.toLocaleString('en-IN')}</td>
-                  <td>{currencySymbol}{row.cumulativeInvested.toLocaleString('en-IN')}</td>
-                  <td className={styles.interestCell}>+{currencySymbol}{row.interestEarned.toLocaleString('en-IN')}</td>
-                  <td className={styles.balanceCell}>{currencySymbol}{row.closingCorpus.toLocaleString('en-IN')}</td>
+                  <td data-label="Year">Yr {row.yearNumber}</td>
+                  <td data-label="Age"><strong>{row.age} Yrs</strong></td>
+                  <td data-label="Annual Contribution">{currencySymbol}{row.annualContribution.toLocaleString('en-IN')}</td>
+                  <td data-label="Total Invested">{currencySymbol}{row.cumulativeInvested.toLocaleString('en-IN')}</td>
+                  <td data-label="Interest This Year" className={styles.interestCell}>+{currencySymbol}{row.interestEarned.toLocaleString('en-IN')}</td>
+                  <td data-label="Closing Corpus" className={styles.balanceCell}>{currencySymbol}{row.closingCorpus.toLocaleString('en-IN')}</td>
                 </tr>
               ))}
             </tbody>

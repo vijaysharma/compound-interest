@@ -99,7 +99,7 @@
 }
 
 .modalSubtitle {
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.65;
   color: var(--color-text);
   margin: 2px 0 0 0;
@@ -140,7 +140,7 @@
 .alertError {
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   background: color-mix(in srgb, var(--color-error) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
   color: var(--color-error);
@@ -153,7 +153,7 @@
 .alertSuccess {
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   background: color-mix(in srgb, var(--color-success) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
   color: var(--color-success);
@@ -178,7 +178,7 @@
   justify-content: center;
   gap: 0.35rem;
   padding: 0.4rem 0.875rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   border-radius: 8px;
   background: var(--color-primary);
@@ -199,7 +199,7 @@
   justify-content: center;
   gap: 0.35rem;
   padding: 0.4rem 0.75rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 500;
   border-radius: 8px;
   background: transparent;
@@ -236,7 +236,7 @@
 
   @include laptop-up {
     height: 36px;
-    font-size: 0.8125rem;
+    font-size: $fs-small;
   }
 
   &:focus {
@@ -251,7 +251,7 @@
 
 .fieldLabel {
   display: block;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 600;
   opacity: 0.7;
   margin-bottom: 0.25rem;
@@ -259,7 +259,7 @@
 }
 
 .helperText {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.7;
   margin: 0 0 0.75rem 0;
   line-height: 1.4;
@@ -285,7 +285,7 @@
   border-radius: 8px;
   border: none;
   background: transparent;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 500;
   cursor: pointer;
   color: var(--color-text);
@@ -319,7 +319,7 @@
 
 .tabItem {
   padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   border: none;
   border-bottom: 2px solid transparent;
@@ -347,7 +347,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   margin-top: 0.75rem;
 }
 
@@ -371,7 +371,7 @@
 
 .featureHeading {
   font-weight: 700;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   color: var(--color-heading);
   margin: 0 0 0.15rem 0;
 }
@@ -387,7 +387,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.15rem 0.45rem;
-  font-size: 10px;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   border-radius: 4px;
@@ -556,7 +556,7 @@
   border-radius: 10px;
   padding: 0.65rem 0.85rem;
   margin-bottom: 1rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -639,7 +639,7 @@
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -652,14 +652,14 @@
 }
 
 .backupStatusSub {
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.6;
   margin: 2px 0 0 0;
 }
 
 .sectionLabel {
   display: block;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -724,7 +724,7 @@
 }
 
 .cloudBtnDesc {
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.6;
   margin: 2px 0 0 0;
 }
@@ -762,7 +762,7 @@
 }
 
 .dropzoneDesc {
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.5;
   margin: 4px 0 0 0;
 }
@@ -772,7 +772,7 @@
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
 }
 
 .backupDetailsHeader {
@@ -787,7 +787,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   padding-top: 0.5rem;
-  font-size: 11px;
+  font-size: $fs-caption;
   opacity: 0.7;
 }
 
@@ -808,7 +808,7 @@
 }
 
 .restoreModeLabel {
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 700;
   display: block;
   opacity: 0.6;
@@ -835,7 +835,7 @@
 }
 
 .restoreModeDesc {
-  font-size: 10px;
+  font-size: $fs-caption;
   opacity: 0.5;
   font-style: italic;
   margin: 4px 0 0 0;

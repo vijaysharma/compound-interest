@@ -80,13 +80,13 @@ export function useChartOptions(
             ? {
                 crossLines: [{
                   type: 'line' as const, value: markerDate, stroke: chartTheme.axisLine, strokeWidth: 1, lineDash: [4, 4],
-                  label: { text: markerLabel ?? 'today', position: 'top' as const, fontSize: chartTheme.isMobile ? 8 : 9, color: chartTheme.labelText },
+                  label: { text: markerLabel ?? 'today', position: 'top' as const, fontSize: 13, color: chartTheme.labelText },
                 }],
               }
             : {}),
           label: {
             enabled: true, rotation: 0, avoidCollisions: true, minSpacing: chartTheme.isMobile ? 48 : 60,
-            fontSize: chartTheme.isMobile ? 8 : 9, fontWeight: 'bold', color: chartTheme.labelText,
+            fontSize: 13, fontWeight: 'bold', color: chartTheme.labelText,
             formatter: ({ value, index }: { value: unknown; index: number }) => {
               const year = yearOf(String(value));
               if (!year) return '';
@@ -98,7 +98,7 @@ export function useChartOptions(
           type: 'number', position: 'left', line: { enabled: true, stroke: chartTheme.axisLine },
           interval: { minSpacing: chartTheme.isMobile ? 44 : 28 },
           label: {
-            avoidCollisions: true, fontSize: chartTheme.isMobile ? 8 : 9, fontWeight: 'bold',
+            avoidCollisions: true, fontSize: 13, fontWeight: 'bold',
             color: chartTheme.labelText, formatter: ({ value }: { value: number }) => formatAxisCurrency(value),
           },
         },

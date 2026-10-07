@@ -1,4 +1,5 @@
 @use "../../../styles/mixins" as *;
+@use "../../../styles/variables" as *;
 .overlay {
   position: fixed;
   inset: 0;
@@ -127,7 +128,7 @@
 }
 
 .listItem {
-  font-size: 0.86rem;
+  font-size: $fs-small;
   color: #475569;
   line-height: 1.5;
 
@@ -150,7 +151,7 @@
 }
 
 .controlBoxLabel {
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: #0f172a;
   display: flex;
@@ -160,7 +161,7 @@
 }
 
 .controlBoxDesc {
-  font-size: 0.82rem;
+  font-size: $fs-small;
   color: #475569;
   margin: 0;
   line-height: 1.4;
@@ -200,7 +201,7 @@
   color: #475569;
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: $fs-caption;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -231,5 +232,5 @@
 }
 
 .triggerIcon {
-  font-size: 0.95rem;
+  font-size: $fs-body;
 }

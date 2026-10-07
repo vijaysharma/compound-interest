@@ -73,17 +73,17 @@ export const NavSyncSection: React.FC<NavSyncSectionProps> = ({
               <tbody>
                 {navReport.schemes.map((row) => (
                   <tr key={row.schemeCode}>
-                    <td>
+                    <td data-label="Scheme">
                       <div>{row.schemeName ?? '—'}</div>
                       <div className={styles.inputMono}>{row.schemeCode}</div>
                     </td>
-                    <td>{row.before ?? '—'}</td>
-                    <td>{row.after ?? '—'}</td>
-                    <td className={styles.tableRight}>
+                    <td data-label="Before">{row.before ?? '—'}</td>
+                    <td data-label="After">{row.after ?? '—'}</td>
+                    <td data-label="Rows" className={styles.tableRight}>
                       {row.rowsAfter}
                       {row.rowsAfter !== row.rowsBefore && ` (+${row.rowsAfter - row.rowsBefore})`}
                     </td>
-                    <td>
+                    <td data-label="Result">
                       <span className={`${styles.badge} ${styles[OUTCOME_BADGE[row.outcome]]}`}>
                         {row.outcome}
                       </span>

@@ -196,7 +196,7 @@
 }
 
 .syncDateLabel {
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   color: var(--color-text-secondary);
 }
@@ -204,7 +204,7 @@
 .syncDateInput {
   height: 36px;
   padding: 0.25rem 0.55rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm, 6px);
   background: var(--color-bg);
@@ -271,7 +271,7 @@
 .sortSelect {
   height: 38px;
   padding: 0 0.65rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   border-radius: var(--radius-sm, 6px);
   border: 1px solid var(--color-border);
@@ -286,7 +286,7 @@
 
 .desktopTableWrapper,
 .tableWrapper {
-  overflow-x: auto;
+  @include stacked-table-container;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 8px);
   background: var(--color-bg);
@@ -331,7 +331,7 @@
 }
 
 .orderIdBadge {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-heading);
   background: var(--color-bg-secondary);
@@ -350,7 +350,7 @@
 }
 
 .colTitle {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -362,7 +362,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   line-height: 1.4;
   margin-bottom: 0.2rem;
 }
@@ -388,7 +388,7 @@
 }
 
 .altBadge {
-  font-size: 0.68rem;
+  font-size: $fs-caption;
   font-weight: 600;
   padding: 0.05rem 0.35rem;
   border-radius: 3px;
@@ -399,7 +399,7 @@
 
 .mutedText {
   color: var(--color-text-secondary);
-  font-size: 0.8rem;
+  font-size: $fs-caption;
 }
 
 .locationBadgeRow {
@@ -421,7 +421,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.45rem 0.8rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   color: var(--color-text);
   background: var(--color-bg);
@@ -446,14 +446,13 @@
 .dataTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: $fs-small;
   text-align: left;
   th {
     background: var(--color-bg-secondary);
     color: var(--color-text);
     padding: 0.75rem 0.85rem;
     font-weight: 700;
-    white-space: nowrap;
     border-bottom: 1px solid var(--color-border);
     user-select: none;
   }
@@ -469,6 +468,7 @@
   tr:hover td {
     background: color-mix(in srgb, var(--color-primary) 3%, var(--color-bg));
   }
+  @include stacked-table(960px);
 }
 
 .thSortable {
@@ -494,7 +494,7 @@
 
 .addressText {
   color: var(--color-text-secondary);
-  font-size: 0.8rem;
+  font-size: $fs-caption;
   max-width: 320px;
   line-height: 1.35;
 }
@@ -506,7 +506,7 @@
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-sm, 4px);
   background: var(--color-bg-secondary);
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   color: var(--color-text);
 }
@@ -517,7 +517,7 @@
   gap: 0.3rem;
   padding: 0.2rem 0.55rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   color: var(--color-primary);
@@ -534,7 +534,7 @@
   color: var(--color-text);
   border: 1px solid var(--color-border);
   padding: 0.3rem 0.55rem;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   display: inline-flex;
@@ -552,7 +552,7 @@
   color: var(--color-primary);
   border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   padding: 0.3rem 0.55rem;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   display: inline-flex;
@@ -570,7 +570,7 @@
   color: var(--color-error);
   border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
   padding: 0.3rem 0.55rem;
-  font-size: 0.78rem;
+  font-size: $fs-caption;
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   display: inline-flex;
@@ -588,7 +588,7 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   padding: 0.5rem 0;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   color: var(--color-text-secondary);
 }
 
@@ -664,7 +664,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
 }
 
 .mergeCustCardTitle {
@@ -682,7 +682,7 @@
   background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
   border-radius: var(--radius-sm, 6px);
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   line-height: 1.45;
   color: var(--color-text);
   margin-bottom: 1rem;
@@ -759,7 +759,7 @@
 }
 
 .fieldLabel {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-text);
   text-transform: uppercase;
@@ -801,7 +801,7 @@
 }
 
 .emptyDesc {
-  font-size: 0.85rem;
+  font-size: $fs-small;
   color: var(--color-text-secondary);
   max-width: 480px;
   margin: 0 auto 1.25rem;
@@ -840,11 +840,11 @@
   }
 
   .title {
-    font-size: 1.2rem;
+    font-size: $fs-title-mobile;
   }
 
   .subtitle {
-    font-size: 0.78rem;
+    font-size: $fs-caption;
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
@@ -867,7 +867,7 @@
   .alertSuccess,
   .alertError {
     margin-bottom: 1rem;
-    font-size: 0.8125rem;
+    font-size: $fs-small;
     padding: 0.65rem 0.75rem;
   }
 
@@ -883,7 +883,7 @@
   }
 
   .syncTitle {
-    font-size: 0.95rem;
+    font-size: $fs-body;
   }
 
   .syncControls {
@@ -909,7 +909,7 @@
   }
 
   .syncDateLabel {
-    font-size: 0.75rem;
+    font-size: $fs-caption;
   }
 
   .syncDateInput {
@@ -929,7 +929,7 @@
     .outlineBtn {
       justify-content: center;
       min-height: 44px;
-      font-size: 0.8rem;
+      font-size: $fs-caption;
       touch-action: manipulation;
     }
   }
@@ -1010,7 +1010,7 @@
   .actionBtn {
     justify-content: center;
     min-height: 44px;
-    font-size: 0.8rem;
+    font-size: $fs-caption;
     touch-action: manipulation;
   }
 
@@ -1118,7 +1118,7 @@
 }
 
 .contactSecondary {
-  font-size: 0.72rem;
+  font-size: $fs-caption;
   color: var(--color-text-secondary);
 }
 

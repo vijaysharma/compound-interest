@@ -1,3 +1,4 @@
+@use "../styles/variables" as *;
 .notFoundContainer {
   min-height: 75vh;
   display: flex;
@@ -45,7 +46,7 @@
   color: var(--color-primary, #6d0b74);
   padding: 4px 12px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -101,7 +102,7 @@
 
 .exploreHeading {
   display: block;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   color: var(--color-text-muted, #64748b);
   text-transform: uppercase;
@@ -117,7 +118,7 @@
 
 .calcLink {
   color: var(--color-primary, #6d0b74);
-  font-size: 0.825rem;
+  font-size: $fs-small;
   font-weight: 600;
   text-decoration: none;
   &:hover {

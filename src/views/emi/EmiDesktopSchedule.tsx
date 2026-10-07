@@ -39,29 +39,29 @@ export const EmiDesktopSchedule: React.FC<EmiDesktopScheduleProps> = ({ schedule
                     : styles.rowNormal
               }
             >
-              <td className={`${styles.td} ${styles.tdMono}`}>{row.date}</td>
-              <td className={`${styles.td} ${styles.tdRight} ${styles.textPrimary}`}>
+              <td data-label="Date" className={`${styles.td} ${styles.tdMono}`}>{row.date}</td>
+              <td data-label="EMI" className={`${styles.td} ${styles.tdRight} ${styles.textPrimary}`}>
                 ₹{parseFloat(row.emi).toLocaleString('en-IN')}
               </td>
-              <td className={`${styles.td} ${styles.tdRight} ${styles.textEmerald}`}>
+              <td data-label="Principal" className={`${styles.td} ${styles.tdRight} ${styles.textEmerald}`}>
                 ₹{parseFloat(row.principal).toLocaleString('en-IN')}
               </td>
-              <td className={`${styles.td} ${styles.tdRight} ${styles.textRose}`}>
+              <td data-label="Interest" className={`${styles.td} ${styles.tdRight} ${styles.textRose}`}>
                 ₹{parseFloat(row.interest).toLocaleString('en-IN')}
               </td>
-              <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono}`}>
+              <td data-label="Balance" className={`${styles.td} ${styles.tdRight} ${styles.tdMono}`}>
                 ₹{parseFloat(row.balance).toLocaleString('en-IN')}
               </td>
-              <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textEmerald}`}>
+              <td data-label="Cum. Principal" className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textEmerald}`}>
                 ₹{parseFloat(row.cumulativePrincipal).toLocaleString('en-IN')}
               </td>
-              <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textRose}`}>
+              <td data-label="Cum. Interest" className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textRose}`}>
                 ₹{parseFloat(row.cumulativeInterest).toLocaleString('en-IN')}
               </td>
-              <td className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textAmber}`}>
+              <td data-label="Remaining Interest" className={`${styles.td} ${styles.tdRight} ${styles.tdMono} ${styles.textAmber}`}>
                 ₹{parseFloat(row.remainingInterest).toLocaleString('en-IN')}
               </td>
-              <td className={styles.td}>
+              <td data-label="Note" className={styles.td}>
                 {row.note && <span className={styles.badgeOutline}>{row.note}</span>}
               </td>
             </tr>

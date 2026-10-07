@@ -51,7 +51,7 @@
   color: var(--color-base-content);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
   border-radius: 9999px;
   border: 1px solid color-mix(in srgb, var(--color-base-300) 50%, transparent);
@@ -118,7 +118,7 @@
 }
 
 .historyTitle {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -140,7 +140,7 @@
   gap: 0.25rem;
   background: transparent;
   border: none;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 500;
   color: var(--color-error);
   cursor: pointer;
@@ -172,7 +172,7 @@
 }
 
 .emptyHistory {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.5;
   text-align: center;
   padding: 1rem 0;
@@ -198,7 +198,7 @@
 }
 
 .historyExpr {
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   opacity: 0.6;
   font-family: monospace;
   overflow: hidden;
@@ -228,7 +228,7 @@
   color: var(--color-primary-content);
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-family: monospace;
   font-weight: 700;
   cursor: pointer;
@@ -390,7 +390,7 @@
   height: 2.5rem;
   min-height: 2.5rem;
   padding: 0 0.75rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   border-radius: var(--radius-btn, 0.5rem);
   border: none;
@@ -402,7 +402,7 @@
   @include tablet-up {
     height: 2.25rem;
     min-height: 2.25rem;
-    font-size: 0.75rem;
+    font-size: $fs-caption;
   }
 
   &:hover {
@@ -451,7 +451,7 @@
 .degRadBtn {
   min-height: 36px;
   padding: 0.35rem 0.65rem;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -479,7 +479,7 @@
 .memoryActionBtn {
   background: transparent;
   border: none;
-  font-size: 0.8125rem;
+  font-size: $fs-small;
   font-weight: 700;
   min-height: 36px;
   padding: 0.35rem 0.6rem;
@@ -515,7 +515,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.375rem;
-  font-size: 0.75rem;
+  font-size: $fs-caption;
   font-weight: 600;
 }
 
@@ -529,7 +529,7 @@
   color: var(--color-primary);
   border: none;
   cursor: pointer;
-  font-size: clamp(0.6875rem, 1.5vh, 0.75rem);
+  font-size: clamp($fs-caption, 1.5vh, 0.75rem);
   font-weight: 500;
   transition: background-color 0.15s ease;
 

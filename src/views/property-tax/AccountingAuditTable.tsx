@@ -35,22 +35,22 @@ export function AccountingAuditTable({
           </thead>
           <tbody>
             <tr>
-              <td>Full Value of Consideration (Sale Price)</td>
-              <td className={styles.textRight}>{currencySymbol}{numSale.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{numSale.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Full Value of Consideration (Sale Price)</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{numSale.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{numSale.toLocaleString('en-IN')}</td>
             </tr>
             <tr>
-              <td>Less: Transfer Expenses</td>
-              <td className={styles.textRight}>-{currencySymbol}{numExpenses.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>-{currencySymbol}{numExpenses.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Less: Transfer Expenses</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>-{currencySymbol}{numExpenses.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>-{currencySymbol}{numExpenses.toLocaleString('en-IN')}</td>
             </tr>
             <tr className={styles.boldRow}>
-              <td>Net Sale Consideration</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.netSaleConsideration.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.netSaleConsideration.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Net Sale Consideration</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.netSaleConsideration.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{comparison.netSaleConsideration.toLocaleString('en-IN')}</td>
             </tr>
             <tr>
-              <td>
+              <td data-label="Particulars">
                 Cost of Acquisition
                 {comparison.isLongTerm && (
                   <span className={styles.indexedSubtitle}>
@@ -58,61 +58,61 @@ export function AccountingAuditTable({
                   </span>
                 )}
               </td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.oldRegime.indexedAcquisitionCost.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{numPurchase.toLocaleString('en-IN')}</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.oldRegime.indexedAcquisitionCost.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{numPurchase.toLocaleString('en-IN')}</td>
             </tr>
             {numImprovement > 0 && (
               <tr>
-                <td>Cost of Improvement (Renovation)</td>
-                <td className={styles.textRight}>{currencySymbol}{comparison.oldRegime.indexedImprovementCost.toLocaleString('en-IN')}</td>
-                <td className={styles.textRight}>{currencySymbol}{numImprovement.toLocaleString('en-IN')}</td>
+                <td data-label="Particulars">Cost of Improvement (Renovation)</td>
+                <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.oldRegime.indexedImprovementCost.toLocaleString('en-IN')}</td>
+                <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{numImprovement.toLocaleString('en-IN')}</td>
               </tr>
             )}
             <tr className={styles.boldRow}>
-              <td>Gross Capital Gain</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.oldRegime.grossGain.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.newRegime.grossGain.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Gross Capital Gain</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.oldRegime.grossGain.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{comparison.newRegime.grossGain.toLocaleString('en-IN')}</td>
             </tr>
             {numExemptions > 0 && (
               <tr>
-                <td>Less: Section 54 &amp; 54EC Exemptions</td>
-                <td className={styles.textRight}>-{currencySymbol}{comparison.oldRegime.exemptions.toLocaleString('en-IN')}</td>
-                <td className={styles.textRight}>-{currencySymbol}{comparison.newRegime.exemptions.toLocaleString('en-IN')}</td>
+                <td data-label="Particulars">Less: Section 54 &amp; 54EC Exemptions</td>
+                <td data-label="Old Rule (Indexation)" className={styles.textRight}>-{currencySymbol}{comparison.oldRegime.exemptions.toLocaleString('en-IN')}</td>
+                <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>-{currencySymbol}{comparison.newRegime.exemptions.toLocaleString('en-IN')}</td>
               </tr>
             )}
             <tr className={styles.boldRow}>
-              <td>Net Taxable Capital Gain</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.oldRegime.taxableGain.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.newRegime.taxableGain.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Net Taxable Capital Gain</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.oldRegime.taxableGain.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{comparison.newRegime.taxableGain.toLocaleString('en-IN')}</td>
             </tr>
             <tr>
-              <td>Base Tax Rate</td>
-              <td className={styles.textRight}>20.00%</td>
-              <td className={styles.textRight}>12.50%</td>
+              <td data-label="Particulars">Base Tax Rate</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>20.00%</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>12.50%</td>
             </tr>
             <tr>
-              <td>Base Tax Amount</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.oldRegime.baseTax.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.newRegime.baseTax.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Base Tax Amount</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.oldRegime.baseTax.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{comparison.newRegime.baseTax.toLocaleString('en-IN')}</td>
             </tr>
             <tr>
-              <td>Add: 4% Health &amp; Education Cess</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.oldRegime.cess.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.newRegime.cess.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Add: 4% Health &amp; Education Cess</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.oldRegime.cess.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{comparison.newRegime.cess.toLocaleString('en-IN')}</td>
             </tr>
             <tr className={styles.boldRow}>
-              <td>Total Tax Payable</td>
-              <td className={`${styles.textRight} ${comparison.recommendedOption === 'old' ? styles.winnerCell : ''}`}>
+              <td data-label="Particulars">Total Tax Payable</td>
+              <td data-label="Old Rule (Indexation)" className={`${styles.textRight} ${comparison.recommendedOption === 'old' ? styles.winnerCell : ''}`}>
                 {currencySymbol}{comparison.oldRegime.totalTax.toLocaleString('en-IN')}
               </td>
-              <td className={`${styles.textRight} ${comparison.recommendedOption === 'new' ? styles.winnerCell : ''}`}>
+              <td data-label="New Rule (Flat 12.5%)" className={`${styles.textRight} ${comparison.recommendedOption === 'new' ? styles.winnerCell : ''}`}>
                 {currencySymbol}{comparison.newRegime.totalTax.toLocaleString('en-IN')}
               </td>
             </tr>
             <tr className={styles.boldRow}>
-              <td>Net In-Hand Proceeds</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.oldRegime.netInHand.toLocaleString('en-IN')}</td>
-              <td className={styles.textRight}>{currencySymbol}{comparison.newRegime.netInHand.toLocaleString('en-IN')}</td>
+              <td data-label="Particulars">Net In-Hand Proceeds</td>
+              <td data-label="Old Rule (Indexation)" className={styles.textRight}>{currencySymbol}{comparison.oldRegime.netInHand.toLocaleString('en-IN')}</td>
+              <td data-label="New Rule (Flat 12.5%)" className={styles.textRight}>{currencySymbol}{comparison.newRegime.netInHand.toLocaleString('en-IN')}</td>
             </tr>
           </tbody>
         </table>

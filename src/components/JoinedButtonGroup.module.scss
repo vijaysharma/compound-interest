@@ -196,10 +196,10 @@ $btn-radius: 8px;
 
   // Size variants
   &.sizeXs {
-    @include jbg-size(30px, 12px, 0 6px);
+    @include jbg-size(30px, $fs-caption, 0 6px);
 
     @include tablet-up {
-      @include jbg-size(32px, 12.5px, 0 8px);
+      @include jbg-size(32px, $fs-caption, 0 8px);
     }
   }
 
@@ -207,7 +207,7 @@ $btn-radius: 8px;
     @include jbg-size(40px, 13px, 0 6px);
 
     @include container-max(380px) {
-      font-size: var(--jbg-font-size, 12px);
+      font-size: var(--jbg-font-size, #{$fs-caption});
       padding: var(--jbg-padding, 0 3px);
     }
 
@@ -217,7 +217,7 @@ $btn-radius: 8px;
   }
 
   &.sizeMd {
-    @include jbg-size(42px, 13.5px, 0 8px);
+    @include jbg-size(42px, $fs-small, 0 8px);
 
     @include tablet-up {
       @include jbg-size(48px, 14.5px, 0 12px);

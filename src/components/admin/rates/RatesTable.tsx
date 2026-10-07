@@ -22,17 +22,17 @@ export const RatesTable: React.FC<RatesTableProps> = React.memo(({ result }) => 
         <tbody>
           {result.map((c) => (
             <tr key={c.courier_company_id}>
-              <td className={styles.courierName}>{c.courier_name}</td>
-              <td>{c.etd}</td>
-              <td className={styles.rateVal}>₹{c.rate}</td>
-              <td className={styles.ratingVal}>
+              <td data-label="Courier" className={styles.courierName}>{c.courier_name}</td>
+              <td data-label="Est. Time">{c.etd}</td>
+              <td data-label="Rate" className={styles.rateVal}>₹{c.rate}</td>
+              <td data-label="Rating" className={styles.ratingVal}>
                 {c.rating} <FiStar />
               </td>
             </tr>
           ))}
           {result.length === 0 && (
             <tr>
-              <td colSpan={4} className={styles.emptyState}>
+              <td colSpan={4} data-full className={styles.emptyState}>
                 No couriers available for this route.
               </td>
             </tr>

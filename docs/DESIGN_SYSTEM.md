@@ -33,6 +33,32 @@ UNKNOWN Related Documents: [Mobile-first guide](MOBILE_FIRST_DESIGN_GUIDE.md),
 - A condensed control tier is 32px, explicitly intended for dense desktop
   columns; regular input controls vary by component.
 
+## Typography and Data Tables (2026-10-07)
+
+Type scale tokens in `_variables.scss` are the same on phones and desktop:
+
+| Token | Size | Use |
+| --- | --- | --- |
+| `$fs-caption` | 13px | badges, table headers, chart legends and ticks — the floor |
+| `$fs-small` | 14px | helper text, metadata, secondary labels, compact buttons |
+| `$fs-body` | 16px | body copy, table values, inputs |
+| `$fs-body-lg` / `$fs-h4` / `$fs-h3` | 18 / 20 / 24px | emphasis and headings |
+
+Two deliberate phone exceptions: the eyebrow badge above a page H1 uses
+`@include page-badge-text` (11px below 640px, 13px above), and page H1s use
+`$fs-title-mobile` (20px) below 640px (`$fs-hero-mobile`, 28px, for the
+landing hero). Body line-height is 1.45. Game-board cell text is excluded:
+boards size it to the board and have their own text-size control.
+
+Nothing may scroll horizontally on any device. Wide tables use
+`@include stacked-table-container` on their wrapper and
+`@include stacked-table($below)` as the last rule of the table block
+(960px for 7+ columns, 800px for 5–6, 640px for up to 4): below that container
+width every row becomes a card of `data-label` / value lines, so every `<td>`
+needs `data-label`, and a full-width cell takes `data-full`. Chip rows wrap
+instead of scrolling, and multi-column layouts decide by the space they
+actually have (the sidebar takes 240px), not by viewport width alone.
+
 ## Components and Patterns
 
 CSS Modules with Sass are the primary style architecture; tokens/mixins are

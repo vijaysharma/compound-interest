@@ -191,7 +191,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background-color: $color-primary;
   color: var(--color-primary-content);
   font-family: $font-family;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -265,17 +265,17 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 .tabSize-xs .tabBtn {
   height: 24px;
   min-height: 24px;
-  font-size: 11px;
+  font-size: $fs-caption;
 }
 .tabSize-sm .tabBtn {
   height: 32px;
   min-height: 32px;
-  font-size: 12px;
+  font-size: $fs-caption;
 }
 .tabSize-lg .tabBtn {
   height: 52px;
   min-height: 52px;
-  font-size: 15px;
+  font-size: $fs-body;
 }
 .tabSize-xl .tabBtn {
   height: 60px;
@@ -561,22 +561,16 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background-color: $color-neutral-bg;
 }
 
+// One row of quick-pick chips while they fit; when they don't (e.g. a tablet-width column with
+// every chip shown) they wrap onto a second row instead of scrolling sideways.
 .singleRowGrid {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
   .gridRow {
-    min-width: 100%;
-    width: max-content;
-    grid-auto-columns: minmax(max-content, 1fr);
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .gridCell {
+    flex: 1 1 auto;
     white-space: nowrap;
     padding: 0 $space-sm;
   }
@@ -653,7 +647,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   @include container-max(380px) {
-    font-size: 12px;
+    font-size: $fs-caption;
     padding: 0 3px;
   }
 
@@ -758,7 +752,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background-color: $color-primary;
   color: var(--color-primary-content);
   font-family: $font-family;
-  font-size: 11px;
+  font-size: $fs-caption;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -823,7 +817,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   color: var(--color-primary-content);
   border-radius: 0;
   font-family: $font-family;
-  font-size: 12.5px;
+  font-size: $fs-caption;
   line-height: 1;
   font-weight: 600;
   user-select: none;
@@ -891,7 +885,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
   @include tablet-up {
-    font-size: 15px;
+    font-size: $fs-body;
   }
 }
 
@@ -912,7 +906,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 
   @include tablet-up {
-    font-size: 15px;
+    font-size: $fs-body;
   }
 }
 
@@ -947,7 +941,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   background: transparent;
   text-align: center;
   font-family: $font-family;
-  font-size: 13.5px;
+  font-size: $fs-small;
   line-height: 1;
   font-weight: 500;
   color: $color-text-primary;
@@ -973,7 +967,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   text-align: center;
   text-align-last: center;
   font-family: $font-family;
-  font-size: 13.5px;
+  font-size: $fs-small;
   line-height: 1;
   font-weight: 500;
   color: $color-text-primary;
@@ -1206,7 +1200,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     width: $control-height-condensed;
     min-width: $control-height-condensed;
     height: $control-height-condensed;
-    font-size: 15px;
+    font-size: $fs-body;
   }
 
   .inputWrapper {
@@ -1245,7 +1239,7 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   @include container-max(360px) {
     .titleBar {
       padding: 4px 6px;
-      font-size: 10.5px;
+      font-size: $fs-caption;
     }
 
     .inputRow {
@@ -1268,17 +1262,17 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
 
     .inputField {
-      font-size: 15.5px;
+      font-size: $fs-body;
       line-height: 20px;
     }
 
     .gridCell {
       padding: 0 2px;
-      font-size: 11px;
+      font-size: $fs-caption;
     }
 
     .wordsDisplay {
-      font-size: 12px;
+      font-size: $fs-caption;
     }
   }
 

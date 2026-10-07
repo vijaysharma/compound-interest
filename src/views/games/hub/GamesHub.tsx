@@ -380,17 +380,17 @@ export const GamesHub: React.FC = () => {
                   <tbody>
                     {globalRankings.map((r, idx) => (
                       <tr key={r.userId} className={idx < 3 ? styles.topRow : ''}>
-                        <td className={styles.td}>
+                        <td data-label="Rank" className={styles.td}>
                           <span className={styles.medal}>{getMedal(idx)}</span>
                         </td>
-                        <td className={`${styles.td} ${styles.tdBold}`}>
+                        <td data-label="Player" className={`${styles.td} ${styles.tdBold}`}>
                           {r.playerName}
                         </td>
-                        <td className={styles.td}>{r.totalGames}</td>
-                        <td className={`${styles.td} ${styles.tdRankFirst}`}>
+                        <td data-label="Games Played" className={styles.td}>{r.totalGames}</td>
+                        <td data-label="Total Points" className={`${styles.td} ${styles.tdRankFirst}`}>
                           {r.totalPoints.toLocaleString()}
                         </td>
-                        <td className={`${styles.td} ${styles.tdCapitalize}`}>
+                        <td data-label="Top Game" className={`${styles.td} ${styles.tdCapitalize}`}>
                           {r.bestGame}
                         </td>
                       </tr>
@@ -436,22 +436,22 @@ export const GamesHub: React.FC = () => {
                           }))
                     ).map((e, idx) => (
                       <tr key={e.id} className={idx < 3 ? styles.topRow : ''}>
-                        <td className={styles.td}>
+                        <td data-label="Rank" className={styles.td}>
                           <span className={styles.medal}>{getMedal(idx)}</span>
                         </td>
-                        <td className={`${styles.td} ${styles.tdSemiBold}`}>
+                        <td data-label="Player" className={`${styles.td} ${styles.tdSemiBold}`}>
                           {(e as LeaderboardRecord).playerName || 'Player'}
                         </td>
-                        <td className={`${styles.td} ${styles.tdSemiBold} ${styles.tdCapitalize}`}>
+                        <td data-label="Game" className={`${styles.td} ${styles.tdSemiBold} ${styles.tdCapitalize}`}>
                           {e.gameId}
                         </td>
-                        <td className={`${styles.td} ${styles.tdCapitalize}`}>
+                        <td data-label="Difficulty" className={`${styles.td} ${styles.tdCapitalize}`}>
                           {e.difficulty}
                         </td>
-                        <td className={`${styles.td} ${styles.tdTime}`}>
+                        <td data-label="Time" className={`${styles.td} ${styles.tdTime}`}>
                           {formatGameTime(e.timeSeconds)}
                         </td>
-                        <td className={`${styles.td} ${styles.tdPoints}`}>
+                        <td data-label="Points" className={`${styles.td} ${styles.tdPoints}`}>
                           {e.totalPoints !== undefined ? e.totalPoints.toLocaleString() : '—'}
                         </td>
                       </tr>

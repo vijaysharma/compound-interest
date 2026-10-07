@@ -58,7 +58,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = React.memo(
         </p>
       ) : (
         <div className={styles.tableWrapper}>
-          <table className={styles.table}>
+          <table className={`${styles.table} ${styles.tableWide}`}>
             <thead>
               <tr>
                 <th>Email</th>
