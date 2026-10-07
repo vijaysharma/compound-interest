@@ -773,6 +773,9 @@
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome(true);
 }
 .modalBox {
   background: var(--color-bg);
@@ -785,6 +788,9 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
+
+  // Phones: the whole visible screen.
+  @include dialog-sheet-panel;
 }
 .modalHeader {
   display: flex;

@@ -4,7 +4,6 @@
 .dialogOverlay {
   position: fixed;
   inset: 0;
-  @include below-app-chrome;
   z-index: 1200;
   display: flex;
   align-items: center;
@@ -14,6 +13,9 @@
   @include tablet-up {
     padding: 0.75rem;
   }
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome(true);
 }
 
 .backdrop {
@@ -43,6 +45,9 @@
   }
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   border-radius: var(--radius-box, 0.75rem);
+
+  // Phones: the whole visible screen.
+  @include dialog-sheet-panel;
 }
 
 // The selector blocks. In the modal they fill the dialog and the list scrolls; inline (inside

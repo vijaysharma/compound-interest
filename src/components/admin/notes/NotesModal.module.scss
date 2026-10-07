@@ -15,6 +15,9 @@
   @include mobile-only {
     padding: 0.5rem;
   }
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome;
 }
 
 .modalBox {
@@ -36,6 +39,9 @@
     max-height: calc(100dvh - 1rem);
     border-radius: 12px;
   }
+
+  // Phones: centred, within the visible screen.
+  @include dialog-compact-panel;
 }
 
 .modalBoxSm {

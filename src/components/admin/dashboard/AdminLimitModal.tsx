@@ -24,7 +24,7 @@ export const AdminLimitModal: React.FC<AdminLimitModalProps> = React.memo(
     onCustomLimitChange,
     onUserAction,
   }) => (
-    <div className={styles.modalOverlay} onClick={onClose}>
+    <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div className={styles.modalHeaderTitle}>

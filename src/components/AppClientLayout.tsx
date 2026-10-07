@@ -10,6 +10,7 @@ import { SidebarProvider } from '@/context/SidebarContext';
 import { RouteTracker } from '@/components/RouteTracker';
 import NavigationProgressBar from '@/components/NavigationProgressBar';
 import NavigationWarmup from '@/components/NavigationWarmup';
+import VisualViewportVars from '@/components/VisualViewportVars';
 export default function AppClientLayout({
   children,
 }: {
@@ -20,6 +21,7 @@ export default function AppClientLayout({
       <SidebarProvider>
         <NavigationProgressBar />
         <NavigationWarmup />
+        <VisualViewportVars />
         <RouteTracker />
         <TopBar className={styles.appTopbarSticky} />
         <div className={styles.appBody}>

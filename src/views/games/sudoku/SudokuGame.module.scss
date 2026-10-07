@@ -1,3 +1,6 @@
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
+
 .container {
   display: flex;
   flex-direction: column;
@@ -303,6 +306,9 @@
   border-radius: 8px;
   z-index: 10;
   backdrop-filter: blur(2px);
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome;
 }
 .modalContent {
   background: #ffffff;
@@ -311,6 +317,9 @@
   text-align: center;
   max-width: 85%;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+  // Phones: centred, within the visible screen.
+  @include dialog-compact-panel;
 }
 .modalTitle {
   font-size: 1.4rem;

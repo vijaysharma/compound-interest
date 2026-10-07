@@ -4,7 +4,6 @@
 .dialogOverlay {
   position: fixed;
   inset: 0;
-  @include below-app-chrome;
   z-index: 1100;
   display: flex;
   align-items: center;
@@ -18,6 +17,9 @@
     padding: 0.5rem;
     align-items: center;
   }
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome(true);
 }
 
 @keyframes fadeIn {
@@ -61,6 +63,9 @@
     min-width: 80%;
     max-width: 1200px;
   }
+
+  // Phones: the whole visible screen.
+  @include dialog-sheet-panel;
 }
 
 @keyframes slideUp {

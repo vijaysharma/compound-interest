@@ -609,6 +609,9 @@
   padding: 1rem;
   backdrop-filter: blur(3px);
   overflow-y: auto;
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome(true);
 }
 
 .modalCard {
@@ -623,6 +626,9 @@
   position: relative;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
   animation: modalFadeIn 0.18s ease-out;
+
+  // Phones: the whole visible screen.
+  @include dialog-sheet-panel;
 }
 
 @keyframes modalFadeIn {

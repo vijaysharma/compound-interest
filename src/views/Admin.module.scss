@@ -576,6 +576,9 @@
   background: rgba(0, 0, 0, 0.6);
   padding: 1rem;
   backdrop-filter: blur(2px);
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome;
 }
 
 .modalCard {
@@ -587,6 +590,9 @@
   padding: 1.5rem;
   position: relative;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+  // Phones: centred, within the visible screen.
+  @include dialog-compact-panel;
 }
 
 .modalClose {

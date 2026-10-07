@@ -59,6 +59,14 @@ needs `data-label`, and a full-width cell takes `data-full`. Chip rows wrap
 instead of scrolling, and multi-column layouts decide by the space they
 actually have (the sidebar takes 240px), not by viewport width alone.
 
+Dialogs on phones (below 640px) size to the visual viewport, not the layout
+viewport, because the on-screen keyboard only shrinks the former.
+`VisualViewportVars` (mounted in `AppClientLayout`) publishes `--vv-height` /
+`--vv-top`. Every overlay ends its block with `@include below-app-chrome` —
+`(true)` for full-screen sheets (forms, lists, multi-tab dialogs) paired with
+`dialog-sheet-panel`, or the default paired with `dialog-compact-panel` for
+short confirmations. Dialog content scrolls inside the panel, never the page.
+
 ## Components and Patterns
 
 CSS Modules with Sass are the primary style architecture; tokens/mixins are

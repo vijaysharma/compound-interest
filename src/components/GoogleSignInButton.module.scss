@@ -65,6 +65,9 @@
   @include mobile-only {
     padding: 0.5rem;
   }
+
+  // Last: overrides this block's own phone padding/positioning.
+  @include below-app-chrome;
 }
 
 .modalCard {
@@ -86,6 +89,9 @@
   @include tablet-up {
     padding: 2rem;
   }
+
+  // Phones: centred, within the visible screen.
+  @include dialog-compact-panel;
 }
 
 .closeButton {

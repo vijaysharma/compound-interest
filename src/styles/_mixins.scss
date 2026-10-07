@@ -3,13 +3,56 @@
 // Page-level modal overlay: starts below the top bar (48px mobile, 64px tablet+) and right of the
 // sidebar (768px+) so the navigation stays visible and tappable while the dialog is open. The
 // sidebar paints above page overlays, so a full-width one had its left part hidden under it.
-@mixin below-app-chrome {
+//
+// Phones: the overlay instead covers exactly the visible screen — the visual viewport published
+// by VisualViewportVars, which shrinks when the keyboard opens and moves when iOS scrolls the page
+// to a focused field. Sized to the layout viewport, dialogs ran under the keyboard and the page
+// showed through above them. `$sheet: true` drops the overlay padding for a full-screen dialog
+// (pair with dialog-sheet-panel); otherwise pair the panel with dialog-compact-panel.
+@mixin below-app-chrome($sheet: false) {
   top: 48px;
+  @media (max-width: #{$bp-tablet - 1px}) {
+    top: var(--vv-top, 0px);
+    bottom: auto;
+    height: var(--vv-height, 100dvh);
+    // Above the top bar: on a phone the dialog owns the screen and has its own close control.
+    z-index: $z-app-chrome + 1;
+    @if $sheet {
+      padding: 0;
+      align-items: stretch;
+    }
+  }
   @media (min-width: #{$bp-tablet}) {
     top: 64px;
   }
   @media (min-width: #{$bp-laptop}) {
     left: var(--app-sidebar-width, 0px);
+  }
+}
+
+// Large dialog (forms, lists, multi-tab content) on a phone: the whole visible screen, no frame.
+// Include last in the panel block. The panel's own content must scroll inside it.
+@mixin dialog-sheet-panel {
+  @media (max-width: #{$bp-tablet - 1px}) {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+// Small dialog (confirmations, short messages) on a phone: stays centred, never taller than the
+// visible screen, and scrolls inside if it has to. Include last in the panel block.
+@mixin dialog-compact-panel {
+  @media (max-width: #{$bp-tablet - 1px}) {
+    max-height: calc(var(--vv-height, 100dvh) - 1.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 
