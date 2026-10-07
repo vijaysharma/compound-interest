@@ -26,11 +26,10 @@
   width: 100%;
   margin-bottom: 12px;
 }
-.headerActions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-shrink: 0;
+// Shared top toolbar / info section: full width inside the centred column.
+.toolbar,
+.info {
+  width: 100%;
 }
 .titleGroup {
   display: flex;
@@ -63,8 +62,23 @@
   border-radius: 12px;
   padding: 10px 14px;
   box-sizing: border-box;
-  margin-bottom: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  // Phones: one slim status line — label and value side by side.
+  @include mobile-only {
+    padding: 6px 10px;
+    border-radius: 10px;
+
+    .hudStat {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .hudValue {
+      font-size: 0.95rem;
+    }
+  }
 }
 .hudStat {
   display: flex;
@@ -110,9 +124,23 @@
   justify-content: space-between;
   align-items: stretch;
   width: 100%;
-  margin-bottom: 12px;
   gap: 8px;
   flex-wrap: wrap;
+
+  // Phones: difficulty and New Puzzle share one row.
+  @include mobile-only {
+    flex-wrap: nowrap;
+
+    .difficultySelector {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .puzzleBtn {
+      flex: none;
+      padding: 6px 10px;
+    }
+  }
 }
 .difficultySelector {
   display: flex;
@@ -193,7 +221,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 12px;
   position: relative;
   @include mobile-md {
     padding: 6px;
@@ -374,7 +401,6 @@
   gap: 10px;
   width: 100%;
   max-width: 480px;
-  margin-bottom: 14px;
 }
 .actionBtn {
   flex: 1;
@@ -425,7 +451,6 @@
   padding: 4px;
   border-radius: 12px;
   gap: 4px;
-  margin-bottom: 12px;
   width: 100%;
   max-width: 480px;
   box-sizing: border-box;
@@ -492,7 +517,6 @@
   border-radius: 10px;
   padding: 8px 12px;
   box-sizing: border-box;
-  margin-bottom: 12px;
   color: #78350f;
   font-size: 0.92rem;
   line-height: 1.4;
@@ -529,7 +553,6 @@
   border-radius: 12px;
   box-sizing: border-box;
   overflow: hidden;
-  margin-bottom: 14px;
 }
 .rulesHeader {
   display: flex;
@@ -581,7 +604,7 @@
 .progressMessage {
   width: 100%;
   max-width: 480px;
-  margin: 0 0 10px;
+  margin: 0;
   padding: 10px 14px;
   box-sizing: border-box;
   border-radius: 10px;

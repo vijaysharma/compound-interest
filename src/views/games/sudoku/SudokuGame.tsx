@@ -7,7 +7,7 @@ import type { SudokuDifficulty, SudokuMove, SudokuState } from './types';
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
-import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { HowToPlayModal } from '../common/HowToPlayModal';
 import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
@@ -376,16 +376,16 @@ export const SudokuGame: React.FC = () => {
       <GameShell.Header
         title="Sudoku"
         subtitle="Fill each row, column, and 3×3 box with digits 1–9"
+        className={styles.toolbar}
         actions={
-          <div className={styles.headerActions}>
+          <>
             <div className={styles.timerBadge}>
               <FiClock aria-hidden="true" />
               <span>{formatTimer(elapsedSeconds)}</span>
             </div>
             <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
-            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
-          </div>
+          </>
         }
       />
       <div className={styles.topControls}>
@@ -492,52 +492,6 @@ export const SudokuGame: React.FC = () => {
           </div>
         )}
       </div>
-      {isComplete && (
-        <GameOverModal
-          outcome="won"
-          gameTitle={`Sudoku (${difficulty.toUpperCase()})`}
-          subtitle={`You solved the ${difficulty} puzzle in ${formatTimer(elapsedSeconds)}!`}
-          scoreBreakdown={scoreBreakdown || undefined}
-          timeSeconds={elapsedSeconds}
-          stats={[
-            { label: 'Time', value: formatTimer(elapsedSeconds) },
-            { label: 'Difficulty', value: difficulty },
-            { label: 'Hints Used', value: hintsUsed },
-          ]}
-          isPersonalBest={personalBest}
-          onPlayAgain={() => startNewGame(difficulty)}
-          playAgainLabel="Play Again"
-          hubHref="/games"
-        />
-      )}
-      <QuitModal
-        isOpen={showQuitModal}
-        gameTitle="Sudoku"
-        onCancel={() => setShowQuitModal(false)}
-        onConfirmQuit={() => setShowQuitModal(false)}
-      />
-      <HowToPlayModal
-        isOpen={showHowToPlay}
-        onClose={() => setShowHowToPlay(false)}
-        gameTitle="Sudoku"
-        objective="Fill the 9×9 grid so that every row, every column, and every 3×3 box contains all digits from 1 to 9 without repetition."
-        rules={[
-          <><strong>Rows:</strong> Each horizontal row of 9 cells must contain digits 1 through 9 exactly once.</>,
-          <><strong>Columns:</strong> Each vertical column of 9 cells must contain digits 1 through 9 exactly once.</>,
-          <><strong>3×3 Boxes:</strong> Each outlined 3×3 square box must contain digits 1 through 9 exactly once.</>,
-          <><strong>No Guessing Required:</strong> Every valid puzzle has a single unique solution deducible purely by deductive logic.</>,
-        ]}
-        controls={{
-          desktop: 'Click any empty cell, then press digits 1–9 or click keypad buttons. Press Backspace/Delete to erase. Arrow keys navigate.',
-          mobile: 'Tap a cell to select it, then tap a number 1–9 from the bottom keypad to place it.',
-          shortcuts: 'N = Toggle Pencil/Notes mode. Z (Ctrl/Cmd) = Undo move. H = Reveal Hint. Arrow keys = Move selection.',
-        }}
-        tips={[
-          'Use Pencil mode (Notes) to jot down candidates in difficult cells.',
-          'Look for rows, columns, or 3×3 boxes with 7 or 8 cells already filled to find forced numbers immediately.',
-          'The keypad shows badges with remaining placements left for each number.',
-        ]}
-      />
       <div className={styles.actionToolbar}>
         <button
           type="button"
@@ -596,6 +550,53 @@ export const SudokuGame: React.FC = () => {
           );
         })}
       </div>
+      <GameShell.Info className={styles.info} onHowToPlay={() => setShowHowToPlay(true)} />
+      {isComplete && (
+        <GameOverModal
+          outcome="won"
+          gameTitle={`Sudoku (${difficulty.toUpperCase()})`}
+          subtitle={`You solved the ${difficulty} puzzle in ${formatTimer(elapsedSeconds)}!`}
+          scoreBreakdown={scoreBreakdown || undefined}
+          timeSeconds={elapsedSeconds}
+          stats={[
+            { label: 'Time', value: formatTimer(elapsedSeconds) },
+            { label: 'Difficulty', value: difficulty },
+            { label: 'Hints Used', value: hintsUsed },
+          ]}
+          isPersonalBest={personalBest}
+          onPlayAgain={() => startNewGame(difficulty)}
+          playAgainLabel="Play Again"
+          hubHref="/games"
+        />
+      )}
+      <QuitModal
+        isOpen={showQuitModal}
+        gameTitle="Sudoku"
+        onCancel={() => setShowQuitModal(false)}
+        onConfirmQuit={() => setShowQuitModal(false)}
+      />
+      <HowToPlayModal
+        isOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
+        gameTitle="Sudoku"
+        objective="Fill the 9×9 grid so that every row, every column, and every 3×3 box contains all digits from 1 to 9 without repetition."
+        rules={[
+          <><strong>Rows:</strong> Each horizontal row of 9 cells must contain digits 1 through 9 exactly once.</>,
+          <><strong>Columns:</strong> Each vertical column of 9 cells must contain digits 1 through 9 exactly once.</>,
+          <><strong>3×3 Boxes:</strong> Each outlined 3×3 square box must contain digits 1 through 9 exactly once.</>,
+          <><strong>No Guessing Required:</strong> Every valid puzzle has a single unique solution deducible purely by deductive logic.</>,
+        ]}
+        controls={{
+          desktop: 'Click any empty cell, then press digits 1–9 or click keypad buttons. Press Backspace/Delete to erase. Arrow keys navigate.',
+          mobile: 'Tap a cell to select it, then tap a number 1–9 from the bottom keypad to place it.',
+          shortcuts: 'N = Toggle Pencil/Notes mode. Z (Ctrl/Cmd) = Undo move. H = Reveal Hint. Arrow keys = Move selection.',
+        }}
+        tips={[
+          'Use Pencil mode (Notes) to jot down candidates in difficult cells.',
+          'Look for rows, columns, or 3×3 boxes with 7 or 8 cells already filled to find forced numbers immediately.',
+          'The keypad shows badges with remaining placements left for each number.',
+        ]}
+      />
     </GameShell>
   );
 };

@@ -15,7 +15,7 @@ import type { TangoCellVal, TangoDifficulty, TangoMove, TangoPreset } from './ty
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
-import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { HowToPlayModal } from '../common/HowToPlayModal';
 import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
@@ -372,33 +372,18 @@ export const TangoGame: React.FC = () => {
       <GameShell.Header
         title="Tango (Binairo)"
         subtitle="Fill the grid with primary & light circles"
+        className={styles.toolbar}
         actions={
-          <div className={styles.headerActions}>
+          <>
+            <div className={styles.timerBadge} aria-label={`Elapsed time ${formatGameTime(elapsedSeconds)}`}>
+              <FiClock aria-hidden="true" />
+              <span>{formatGameTime(elapsedSeconds)}</span>
+            </div>
             <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
-            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
-          </div>
+          </>
         }
       />
-      {/* HUD Bar */}
-      <div className={styles.hudBar}>
-        <div className={styles.hudStat}>
-          <span className={styles.hudLabel}>Difficulty</span>
-          <span className={`${styles.hudValue} ${styles.capitalize}`}>
-            {difficulty} ({size}×{size})
-          </span>
-        </div>
-        <div className={styles.hudStat}>
-          <span className={styles.hudLabel}>Filled</span>
-          <span className={styles.hudValue}>
-            {placedCount} / {totalCells}
-          </span>
-        </div>
-        <div className={styles.timerBadge} aria-label={`Elapsed time ${formatGameTime(elapsedSeconds)}`}>
-          <FiClock aria-hidden="true" />
-          <span>{formatGameTime(elapsedSeconds)}</span>
-        </div>
-      </div>
       {/* Top Controls: Difficulty and New Puzzle */}
       <div className={styles.topControls}>
         <div className={styles.difficultySelector} role="group" aria-label="Difficulty">
@@ -423,6 +408,21 @@ export const TangoGame: React.FC = () => {
           <FiRefreshCw size={16} aria-hidden="true" />
           <span>New Puzzle</span>
         </button>
+      </div>
+      {/* HUD Bar */}
+      <div className={styles.hudBar}>
+        <div className={styles.hudStat}>
+          <span className={styles.hudLabel}>Difficulty</span>
+          <span className={`${styles.hudValue} ${styles.capitalize}`}>
+            {difficulty} ({size}×{size})
+          </span>
+        </div>
+        <div className={styles.hudStat}>
+          <span className={styles.hudLabel}>Filled</span>
+          <span className={styles.hudValue}>
+            {placedCount} / {totalCells}
+          </span>
+        </div>
       </div>
       {/* Active Hint Banner */}
       {activeHint && (
@@ -558,48 +558,6 @@ export const TangoGame: React.FC = () => {
           <span>Hint</span>
         </button>
       </div>
-      {/* Rules Accordion */}
-      <div className={styles.rulesAccordion}>
-        <button
-          type="button"
-          className={styles.rulesHeader}
-          onClick={() => setRulesOpen((prev) => !prev)}
-          aria-expanded={rulesOpen}
-        >
-          <span>How to play</span>
-          {rulesOpen ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />}
-        </button>
-        {rulesOpen && (
-          <div className={styles.rulesContent}>
-            <ul>
-              <li>
-                Fill the grid so that each cell contains either a{' '}
-                <span className={styles.ruleCirclePrimary} /> Primary or a{' '}
-                <span className={styles.ruleCircleLight} /> Light circle.
-              </li>
-              <li>
-                No more than 2 of the same circle may be next to each other, either vertically or
-                horizontally.
-              </li>
-              <li>
-                Each row and column must contain the same number of{' '}
-                <span className={styles.ruleCirclePrimary} /> and{' '}
-                <span className={styles.ruleCircleLight} /> circles ({size / 2} each).
-              </li>
-              <li>
-                Cells separated by an <span className={`${styles.sign} ${styles.ruleSign}`}><SignGlyph sign="=" /></span> sign must be of the <strong>same</strong> type.
-              </li>
-              <li>
-                Cells separated by an <span className={`${styles.sign} ${styles.ruleSign}`}><SignGlyph sign="x" /></span> sign must be of the <strong>opposite</strong> type.
-              </li>
-              <li>
-                Every puzzle is freshly generated, has exactly one answer, and can be solved by deduction (no guessing).
-                Easy needs only the direct rules, Medium needs whole-row/column reasoning, Hard needs a short &ldquo;what if&rdquo; lookahead.
-              </li>
-            </ul>
-          </div>
-        )}
-      </div>
       {progressMessage && (
         <p className={styles.progressMessage} role="status" aria-live="polite">
           {progressMessage}
@@ -615,6 +573,51 @@ export const TangoGame: React.FC = () => {
           'Check Progress'
         )}
       </button>
+      {/* How to play, then the rules */}
+      <GameShell.Info className={styles.info} onHowToPlay={() => setShowHowToPlay(true)}>
+        {/* Rules Accordion */}
+        <div className={styles.rulesAccordion}>
+          <button
+            type="button"
+            className={styles.rulesHeader}
+            onClick={() => setRulesOpen((prev) => !prev)}
+            aria-expanded={rulesOpen}
+          >
+            <span>Rules</span>
+            {rulesOpen ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />}
+          </button>
+          {rulesOpen && (
+            <div className={styles.rulesContent}>
+              <ul>
+                <li>
+                  Fill the grid so that each cell contains either a{' '}
+                  <span className={styles.ruleCirclePrimary} /> Primary or a{' '}
+                  <span className={styles.ruleCircleLight} /> Light circle.
+                </li>
+                <li>
+                  No more than 2 of the same circle may be next to each other, either vertically or
+                  horizontally.
+                </li>
+                <li>
+                  Each row and column must contain the same number of{' '}
+                  <span className={styles.ruleCirclePrimary} /> and{' '}
+                  <span className={styles.ruleCircleLight} /> circles ({size / 2} each).
+                </li>
+                <li>
+                  Cells separated by an <span className={`${styles.sign} ${styles.ruleSign}`}><SignGlyph sign="=" /></span> sign must be of the <strong>same</strong> type.
+                </li>
+                <li>
+                  Cells separated by an <span className={`${styles.sign} ${styles.ruleSign}`}><SignGlyph sign="x" /></span> sign must be of the <strong>opposite</strong> type.
+                </li>
+                <li>
+                  Every puzzle is freshly generated, has exactly one answer, and can be solved by deduction (no guessing).
+                  Easy needs only the direct rules, Medium needs whole-row/column reasoning, Hard needs a short &ldquo;what if&rdquo; lookahead.
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </GameShell.Info>
       {/* Game Over Modal */}
       {isComplete && (
         <GameOverModal

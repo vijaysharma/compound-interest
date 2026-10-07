@@ -26,7 +26,7 @@ import {
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
-import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { HowToPlayModal } from '../common/HowToPlayModal';
 import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
@@ -364,12 +364,12 @@ export const SlidePuzzleGame: React.FC = () => {
       <GameShell.Header
         title="15-Slide Puzzle"
         subtitle={`Slide tiles into ascending 1 to ${dims.rows * dims.cols - 1} sequence`}
+        className={styles.header}
         actions={
-          <div className={styles.headerActions}>
+          <>
             <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
-            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
-          </div>
+          </>
         }
       />
       <div className={styles.hudBar}>
@@ -437,127 +437,6 @@ export const SlidePuzzleGame: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className={styles.controlModeSection}>
-        <div className={styles.controlModeHeader}>
-          <span className={styles.controlModeLabel}>Control Mode:</span>
-          {lastMove && (
-            <span className={styles.lastMoveBadge}>
-              Last: Tile {lastMove.tileValue}{' '}
-              {lastMove.directionRelativeToBlank === 'UP' ? (
-                <FiArrowUp aria-hidden="true" />
-              ) : lastMove.directionRelativeToBlank === 'DOWN' ? (
-                <FiArrowDown aria-hidden="true" />
-              ) : lastMove.directionRelativeToBlank === 'LEFT' ? (
-                <FiArrowLeft aria-hidden="true" />
-              ) : (
-                <FiArrowRight aria-hidden="true" />
-              )}{' '}
-              ({lastMove.moveType})
-            </span>
-          )}
-        </div>
-        <div
-          className={styles.segmentedControl}
-          role="radiogroup"
-          aria-label="Movement Control Mode"
-        >
-          <button
-            type="button"
-            className={`${styles.segmentBtn} ${controlMode === 'tap' ? styles.segmentBtnActive : ''}`}
-            onClick={() => handleModeChange('tap')}
-            role="radio"
-            aria-checked={controlMode === 'tap'}
-          >
-            <FiMousePointer className={styles.btnIcon} />
-            <span>Tap</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.segmentBtn} ${controlMode === 'swipe' ? styles.segmentBtnActive : ''}`}
-            onClick={() => handleModeChange('swipe')}
-            role="radio"
-            aria-checked={controlMode === 'swipe'}
-          >
-            <FiMove className={styles.btnIcon} />
-            <span>Slide / Hover</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.segmentBtn} ${controlMode === 'hybrid' ? styles.segmentBtnActive : ''}`}
-            onClick={() => handleModeChange('hybrid')}
-            role="radio"
-            aria-checked={controlMode === 'hybrid'}
-          >
-            <FiLayers className={styles.btnIcon} />
-            <span>Hybrid</span>
-          </button>
-        </div>
-      </div>
-      {isWon && (
-        <GameOverModal
-          outcome="won"
-          gameTitle="15-Slide Puzzle"
-          subtitle="You solved the puzzle in numerical order!"
-          scoreBreakdown={scoreBreakdown || undefined}
-          timeSeconds={elapsedSeconds}
-          stats={[
-            { label: 'Moves', value: moves },
-            { label: 'Time', value: formatGameTime(elapsedSeconds) },
-            {
-              label: 'Control',
-              value:
-                controlMode === 'tap'
-                  ? 'Tap'
-                  : controlMode === 'swipe'
-                    ? 'Slide / Hover'
-                    : 'Hybrid',
-            },
-            { label: 'Logged Slides', value: movementLog.length },
-          ]}
-          isPersonalBest={personalBest}
-          onPlayAgain={resetGame}
-          playAgainLabel="Play Again"
-          hubHref="/games"
-        />
-      )}
-      <QuitModal
-        isOpen={showQuitModal}
-        gameTitle="15-Slide Puzzle"
-        onCancel={() => setShowQuitModal(false)}
-        onConfirmQuit={() => setShowQuitModal(false)}
-      />
-      <HowToPlayModal
-        isOpen={showHowToPlay}
-        onClose={() => setShowHowToPlay(false)}
-        gameTitle="15-Slide Puzzle"
-        objective="Slide the numbered tiles until they are in order from left to right, top to bottom, with the empty space in the bottom-right corner. Pick any board from 3×3 up to 8×8."
-        rules={[
-          <>
-            <strong>Adjacent Sliding:</strong> Tiles adjacent to the empty slot can be slid into it
-            horizontally or vertically.
-          </>,
-          <>
-            <strong>Multi-tile Sliding:</strong> Tapping or sliding a tile in the same row or column
-            as the empty space will push all intervening tiles into the blank space.
-          </>,
-          <>
-            <strong>Colour Guide:</strong> Each tile's colour shows its home band. Red tiles belong
-            in the top row and left column, orange in the next band in, and so on.
-          </>,
-        ]}
-        controls={{
-          desktop:
-            'Click tiles adjacent to the empty space (or anywhere in its row/col in Tap mode). In Slide mode, move onto any tile in line with the blank.',
-          mobile:
-            'Tap a tile in the blank space\'s row or column, or switch to "Slide" mode to drag tiles directly.',
-          shortcuts: 'Switch modes via the segmented control: Tap, Slide / Hover, or Hybrid.',
-        }}
-        tips={[
-          'Solve row by row from the top: first solve 1, 2, 3, 4, then 5, 6, 7, 8.',
-          'To place the last two tiles in a row (e.g., 3 and 4), place 4 in slot 3 and 3 below it, then cycle them together into place.',
-          'Solve the bottom two rows column by column: pair up 9 & 13, then 10 & 14, leaving the final 2×2 block to cycle.',
-        ]}
-      />
       <div
         ref={boardRef}
         className={styles.boardWrapper}
@@ -632,14 +511,137 @@ export const SlidePuzzleGame: React.FC = () => {
           })}
         </div>
       </div>
-      <p className={styles.instructions}>
-        {controlMode === 'tap' &&
-          "Tap Mode: Tap any tile in the blank space's row or column to slide it."}
-        {controlMode === 'swipe' &&
-          "Slide / Hover Mode: Move the pointer (or slide a finger) onto any tile in the blank's row or column and it slides into the gap."}
-        {controlMode === 'hybrid' &&
-          "Hybrid Mode: Tap tiles, or hover/slide onto any tile in the blank's row or column to speed-solve."}
-      </p>
+      <div className={styles.controlModeSection}>
+        <div className={styles.controlModeHeader}>
+          <span className={styles.controlModeLabel}>Control Mode:</span>
+          {lastMove && (
+            <span className={styles.lastMoveBadge}>
+              Last: Tile {lastMove.tileValue}{' '}
+              {lastMove.directionRelativeToBlank === 'UP' ? (
+                <FiArrowUp aria-hidden="true" />
+              ) : lastMove.directionRelativeToBlank === 'DOWN' ? (
+                <FiArrowDown aria-hidden="true" />
+              ) : lastMove.directionRelativeToBlank === 'LEFT' ? (
+                <FiArrowLeft aria-hidden="true" />
+              ) : (
+                <FiArrowRight aria-hidden="true" />
+              )}{' '}
+              ({lastMove.moveType})
+            </span>
+          )}
+        </div>
+        <div
+          className={styles.segmentedControl}
+          role="radiogroup"
+          aria-label="Movement Control Mode"
+        >
+          <button
+            type="button"
+            className={`${styles.segmentBtn} ${controlMode === 'tap' ? styles.segmentBtnActive : ''}`}
+            onClick={() => handleModeChange('tap')}
+            role="radio"
+            aria-checked={controlMode === 'tap'}
+          >
+            <FiMousePointer className={styles.btnIcon} />
+            <span>Tap</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.segmentBtn} ${controlMode === 'swipe' ? styles.segmentBtnActive : ''}`}
+            onClick={() => handleModeChange('swipe')}
+            role="radio"
+            aria-checked={controlMode === 'swipe'}
+          >
+            <FiMove className={styles.btnIcon} />
+            <span>Slide / Hover</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.segmentBtn} ${controlMode === 'hybrid' ? styles.segmentBtnActive : ''}`}
+            onClick={() => handleModeChange('hybrid')}
+            role="radio"
+            aria-checked={controlMode === 'hybrid'}
+          >
+            <FiLayers className={styles.btnIcon} />
+            <span>Hybrid</span>
+          </button>
+        </div>
+      </div>
+      <GameShell.Info className={styles.info} onHowToPlay={() => setShowHowToPlay(true)}>
+        <p className={styles.instructions}>
+          {controlMode === 'tap' &&
+            "Tap Mode: Tap any tile in the blank space's row or column to slide it."}
+          {controlMode === 'swipe' &&
+            "Slide / Hover Mode: Move the pointer (or slide a finger) onto any tile in the blank's row or column and it slides into the gap."}
+          {controlMode === 'hybrid' &&
+            "Hybrid Mode: Tap tiles, or hover/slide onto any tile in the blank's row or column to speed-solve."}
+        </p>
+      </GameShell.Info>
+      {isWon && (
+        <GameOverModal
+          outcome="won"
+          gameTitle="15-Slide Puzzle"
+          subtitle="You solved the puzzle in numerical order!"
+          scoreBreakdown={scoreBreakdown || undefined}
+          timeSeconds={elapsedSeconds}
+          stats={[
+            { label: 'Moves', value: moves },
+            { label: 'Time', value: formatGameTime(elapsedSeconds) },
+            {
+              label: 'Control',
+              value:
+                controlMode === 'tap'
+                  ? 'Tap'
+                  : controlMode === 'swipe'
+                    ? 'Slide / Hover'
+                    : 'Hybrid',
+            },
+            { label: 'Logged Slides', value: movementLog.length },
+          ]}
+          isPersonalBest={personalBest}
+          onPlayAgain={resetGame}
+          playAgainLabel="Play Again"
+          hubHref="/games"
+        />
+      )}
+      <QuitModal
+        isOpen={showQuitModal}
+        gameTitle="15-Slide Puzzle"
+        onCancel={() => setShowQuitModal(false)}
+        onConfirmQuit={() => setShowQuitModal(false)}
+      />
+      <HowToPlayModal
+        isOpen={showHowToPlay}
+        onClose={() => setShowHowToPlay(false)}
+        gameTitle="15-Slide Puzzle"
+        objective="Slide the numbered tiles until they are in order from left to right, top to bottom, with the empty space in the bottom-right corner. Pick any board from 3×3 up to 8×8."
+        rules={[
+          <>
+            <strong>Adjacent Sliding:</strong> Tiles adjacent to the empty slot can be slid into it
+            horizontally or vertically.
+          </>,
+          <>
+            <strong>Multi-tile Sliding:</strong> Tapping or sliding a tile in the same row or column
+            as the empty space will push all intervening tiles into the blank space.
+          </>,
+          <>
+            <strong>Colour Guide:</strong> Each tile's colour shows its home band. Red tiles belong
+            in the top row and left column, orange in the next band in, and so on.
+          </>,
+        ]}
+        controls={{
+          desktop:
+            'Click tiles adjacent to the empty space (or anywhere in its row/col in Tap mode). In Slide mode, move onto any tile in line with the blank.',
+          mobile:
+            'Tap a tile in the blank space\'s row or column, or switch to "Slide" mode to drag tiles directly.',
+          shortcuts: 'Switch modes via the segmented control: Tap, Slide / Hover, or Hybrid.',
+        }}
+        tips={[
+          'Solve row by row from the top: first solve 1, 2, 3, 4, then 5, 6, 7, 8.',
+          'To place the last two tiles in a row (e.g., 3 and 4), place 4 in slot 3 and 3 below it, then cycle them together into place.',
+          'Solve the bottom two rows column by column: pair up 9 & 13, then 10 & 14, leaving the final 2×2 block to cycle.',
+        ]}
+      />
     </GameShell>
   );
 };

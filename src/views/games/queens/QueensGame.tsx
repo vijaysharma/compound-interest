@@ -412,8 +412,9 @@ export const QueensGame: React.FC = () => {
         title="Queens Puzzle"
         subtitle="One queen per row, column, & region • No touching"
         icon={<FiAward className={styles.crownBadge} aria-hidden="true" />}
+        className={styles.header}
         actions={
-          <div className={styles.headerActions}>
+          <>
             <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
             <button
               type="button"
@@ -427,22 +428,13 @@ export const QueensGame: React.FC = () => {
             <button
               type="button"
               className={styles.iconBtn}
-              onClick={() => setShowHowToPlay(true)}
-              title="How to Play"
-              aria-label="How to Play"
-            >
-              <FiHelpCircle size={18} />
-            </button>
-            <button
-              type="button"
-              className={styles.iconBtn}
               onClick={() => setShowQuitModal(true)}
               title="Exit Game"
               aria-label="Exit Game"
             >
               <FiLogOut size={18} />
             </button>
-          </div>
+          </>
         }
       />
 
@@ -474,42 +466,6 @@ export const QueensGame: React.FC = () => {
           <FiRefreshCw size={13} />
           <span>New Puzzle</span>
         </button>
-      </div>
-
-      {/* Toolbar */}
-      <div className={styles.toolBar}>
-        <div className={styles.controlsBar}>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            onClick={handleUndo}
-            disabled={history.length === 0 || isWon}
-            title="Undo (Ctrl+Z)"
-            aria-label="Undo"
-          >
-            <FiRotateCcw size={15} />
-          </button>
-          <button
-            type="button"
-            className={styles.iconBtn}
-            onClick={handleRedo}
-            disabled={redoStack.length === 0 || isWon}
-            title="Redo (Ctrl+Shift+Z)"
-            aria-label="Redo"
-          >
-            <FiRotateCw size={15} />
-          </button>
-          <button
-            type="button"
-            className={styles.actionBtn}
-            onClick={handleHint}
-            disabled={isWon || !puzzle}
-            title="Hint (H)"
-          >
-            <FiHelpCircle size={15} />
-            <span>Hint {hintsUsed > 0 ? `(${hintsUsed})` : ''}</span>
-          </button>
-        </div>
       </div>
 
       {/* Active Hint Banner */}
@@ -583,19 +539,57 @@ export const QueensGame: React.FC = () => {
         )}
       </div>
 
-      {/* Rules & Instructions Footer Card */}
-      <section className={styles.instructionsCard}>
-        <h2 className={styles.sectionHeading}>Rules & Objectives</h2>
-        <ul className={styles.rulesList}>
-          <li>Place <strong>exactly 1 Queen</strong> in every row.</li>
-          <li>Place <strong>exactly 1 Queen</strong> in every column.</li>
-          <li>Place <strong>exactly 1 Queen</strong> in every colored region.</li>
-          <li>Queens <strong>cannot touch each other</strong>, even diagonally (must have at least one empty square between them).</li>
-        </ul>
-        <div className={styles.tipBox}>
-          <strong>Controls Tip:</strong> Tap a square to place a Queen; tap it again to remove it.
+      {/* Toolbar */}
+      <div className={styles.toolBar}>
+        <div className={styles.controlsBar}>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={handleUndo}
+            disabled={history.length === 0 || isWon}
+            title="Undo (Ctrl+Z)"
+            aria-label="Undo"
+          >
+            <FiRotateCcw size={15} />
+          </button>
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={handleRedo}
+            disabled={redoStack.length === 0 || isWon}
+            title="Redo (Ctrl+Shift+Z)"
+            aria-label="Redo"
+          >
+            <FiRotateCw size={15} />
+          </button>
+          <button
+            type="button"
+            className={styles.actionBtn}
+            onClick={handleHint}
+            disabled={isWon || !puzzle}
+            title="Hint (H)"
+          >
+            <FiHelpCircle size={15} />
+            <span>Hint {hintsUsed > 0 ? `(${hintsUsed})` : ''}</span>
+          </button>
         </div>
-      </section>
+      </div>
+
+      {/* Rules & Instructions Footer Card */}
+      <GameShell.Info className={styles.info} onHowToPlay={() => setShowHowToPlay(true)}>
+        <section className={styles.instructionsCard}>
+          <h2 className={styles.sectionHeading}>Rules & Objectives</h2>
+          <ul className={styles.rulesList}>
+            <li>Place <strong>exactly 1 Queen</strong> in every row.</li>
+            <li>Place <strong>exactly 1 Queen</strong> in every column.</li>
+            <li>Place <strong>exactly 1 Queen</strong> in every colored region.</li>
+            <li>Queens <strong>cannot touch each other</strong>, even diagonally (must have at least one empty square between them).</li>
+          </ul>
+          <div className={styles.tipBox}>
+            <strong>Controls Tip:</strong> Tap a square to place a Queen; tap it again to remove it.
+          </div>
+        </section>
+      </GameShell.Info>
 
       {/* Victory / Game Over Modal */}
       {isWon && (

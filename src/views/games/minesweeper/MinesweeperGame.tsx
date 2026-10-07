@@ -14,7 +14,7 @@ import type { Cell, CellState, MinesweeperDifficulty } from './types';
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
-import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { HowToPlayModal } from '../common/HowToPlayModal';
 import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
 import { FlagIcon, MineIcon } from './icons';
@@ -372,11 +372,23 @@ export const MinesweeperGame: React.FC = () => {
       <GameShell.Header
         title="Minesweeper"
         subtitle="Uncover safe tiles without detonating hidden mines"
+        className={styles.header}
         actions={
-          <div className={styles.headerActions}>
-            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
+          <>
+            {isMobile && (
+              <button
+                type="button"
+                className={styles.mobileFontScalerBtn}
+                onClick={handleCycleFontScale}
+                title="Scale cell font size"
+                aria-label={`Scale cell font size: currently ${Math.round(mobileFontScale * 100)}%`}
+              >
+                <span className={styles.fontScalerIcon}>A+</span>
+                <span>{Math.round(mobileFontScale * 100)}%</span>
+              </button>
+            )}
             <QuitButton onClick={() => setShowQuitModal(true)} />
-          </div>
+          </>
         }
       />
       <div className={styles.controlsRow}>
@@ -394,39 +406,6 @@ export const MinesweeperGame: React.FC = () => {
             </button>
           ))}
         </div>
-        {!isMobile && (
-          <div className={styles.webZoomControls} aria-label="Zoom controls">
-            <button
-              type="button"
-              className={styles.zoomBtn}
-              onClick={handleZoomOut}
-              disabled={zoom <= 0.6}
-              title="Zoom out"
-              aria-label="Zoom out"
-            >
-              <FiZoomOut size={15} />
-            </button>
-            <button
-              type="button"
-              className={styles.zoomResetBtn}
-              onClick={handleZoomReset}
-              title="Reset zoom to 100%"
-              aria-label="Reset zoom"
-            >
-              {Math.round(zoom * 100)}%
-            </button>
-            <button
-              type="button"
-              className={styles.zoomBtn}
-              onClick={handleZoomIn}
-              disabled={zoom >= 2.0}
-              title="Zoom in"
-              aria-label="Zoom in"
-            >
-              <FiZoomIn size={15} />
-            </button>
-          </div>
-        )}
       </div>
       <div className={styles.boardCard} onContextMenu={(e) => e.preventDefault()}>
         <div className={styles.topBar}>
@@ -524,6 +503,55 @@ export const MinesweeperGame: React.FC = () => {
           </div>
         </div>
       </div>
+      <div className={styles.mobileControls}>
+        <button
+          type="button"
+          className={`${styles.modeToggleBtn} ${isFlagMode ? styles.modeToggleActive : ''}`}
+          onClick={() => setIsFlagMode(!isFlagMode)}
+          aria-pressed={isFlagMode}
+        >
+          <FlagIcon size="1.25em" />
+          <span>{isFlagMode ? 'Flagging Mode: ON' : 'Tap to Dig (Switch to Flag)'}</span>
+        </button>
+        {!isMobile && (
+          <div className={styles.webZoomControls} aria-label="Zoom controls">
+            <button
+              type="button"
+              className={styles.zoomBtn}
+              onClick={handleZoomOut}
+              disabled={zoom <= 0.6}
+              title="Zoom out"
+              aria-label="Zoom out"
+            >
+              <FiZoomOut size={15} />
+            </button>
+            <button
+              type="button"
+              className={styles.zoomResetBtn}
+              onClick={handleZoomReset}
+              title="Reset zoom to 100%"
+              aria-label="Reset zoom"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              type="button"
+              className={styles.zoomBtn}
+              onClick={handleZoomIn}
+              disabled={zoom >= 2.0}
+              title="Zoom in"
+              aria-label="Zoom in"
+            >
+              <FiZoomIn size={15} />
+            </button>
+          </div>
+        )}
+      </div>
+      <GameShell.Info className={styles.info} onHowToPlay={() => setShowHowToPlay(true)}>
+        <p className={styles.instructions}>
+          Tap to dig. Long-press or toggle Flag mode to mark mines. Tap revealed numbers to chord.
+        </p>
+      </GameShell.Info>
       {(gameStatus === 'won' || gameStatus === 'lost') && (
         <GameOverModal
           outcome={gameStatus}
@@ -591,32 +619,6 @@ export const MinesweeperGame: React.FC = () => {
           'If an uncovered number equals the number of flags already placed around it, chord that number to sweep adjacent cells rapidly.',
         ]}
       />
-      <div className={styles.mobileControls}>
-        <button
-          type="button"
-          className={`${styles.modeToggleBtn} ${isFlagMode ? styles.modeToggleActive : ''}`}
-          onClick={() => setIsFlagMode(!isFlagMode)}
-          aria-pressed={isFlagMode}
-        >
-          <FlagIcon size="1.25em" />
-          <span>{isFlagMode ? 'Flagging Mode: ON' : 'Tap to Dig (Switch to Flag)'}</span>
-        </button>
-        {isMobile && (
-          <button
-            type="button"
-            className={styles.mobileFontScalerBtn}
-            onClick={handleCycleFontScale}
-            title="Scale cell font size"
-            aria-label={`Scale cell font size: currently ${Math.round(mobileFontScale * 100)}%`}
-          >
-            <span className={styles.fontScalerIcon}>A+</span>
-            <span>{Math.round(mobileFontScale * 100)}%</span>
-          </button>
-        )}
-      </div>
-      <p className={styles.instructions}>
-        Tap to dig. Long-press or toggle Flag mode to mark mines. Tap revealed numbers to chord.
-      </p>
     </GameShell>
   );
 };

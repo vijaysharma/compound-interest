@@ -18,7 +18,7 @@ import type { CellState, HitoriDifficulty, HitoriMove } from './types';
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
-import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { HowToPlayModal } from '../common/HowToPlayModal';
 import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { formatGameTime, recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
@@ -330,12 +330,12 @@ export const HitoriGame: React.FC = () => {
       <GameShell.Header
         title="Hitori"
         subtitle="Eliminate duplicate numbers by shading cells"
+        className={styles.header}
         actions={
-          <div className={styles.headerActions}>
+          <>
             <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
-            <HowToPlayButton onClick={() => setShowHowToPlay(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
-          </div>
+          </>
         }
       />
       {/* HUD stats */}
@@ -378,35 +378,6 @@ export const HitoriGame: React.FC = () => {
           >
             <FiRefreshCw size={13} />
             <span>New {size}×{size} Puzzle</span>
-          </button>
-        </div>
-      </div>
-      {/* Tap Mode Segmented Bar for Mobile */}
-      <div className={styles.tapModeBar}>
-        <span className={styles.tapModeLabel}>Tap Action:</span>
-        <div className={styles.segmentedMode}>
-          <button
-            type="button"
-            className={`${styles.modeBtn} ${tapMode === 'cycle' ? styles.modeBtnActive : ''}`}
-            onClick={() => setTapMode('cycle')}
-          >
-            Cycle
-          </button>
-          <button
-            type="button"
-            className={`${styles.modeBtn} ${tapMode === 'shade' ? styles.modeBtnActive : ''}`}
-            onClick={() => setTapMode('shade')}
-          >
-            <span className={styles.modeIconSquare} aria-hidden="true" />
-            <span>Shade</span>
-          </button>
-          <button
-            type="button"
-            className={`${styles.modeBtn} ${tapMode === 'circle' ? styles.modeBtnActive : ''}`}
-            onClick={() => setTapMode('circle')}
-          >
-            <span className={styles.modeIconCircle} aria-hidden="true" />
-            <span>Circle</span>
           </button>
         </div>
       </div>
@@ -461,6 +432,35 @@ export const HitoriGame: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Tap Mode Segmented Bar */}
+      <div className={styles.tapModeBar}>
+        <span className={styles.tapModeLabel}>Tap Action:</span>
+        <div className={styles.segmentedMode}>
+          <button
+            type="button"
+            className={`${styles.modeBtn} ${tapMode === 'cycle' ? styles.modeBtnActive : ''}`}
+            onClick={() => setTapMode('cycle')}
+          >
+            Cycle
+          </button>
+          <button
+            type="button"
+            className={`${styles.modeBtn} ${tapMode === 'shade' ? styles.modeBtnActive : ''}`}
+            onClick={() => setTapMode('shade')}
+          >
+            <span className={styles.modeIconSquare} aria-hidden="true" />
+            <span>Shade</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.modeBtn} ${tapMode === 'circle' ? styles.modeBtnActive : ''}`}
+            onClick={() => setTapMode('circle')}
+          >
+            <span className={styles.modeIconCircle} aria-hidden="true" />
+            <span>Circle</span>
+          </button>
+        </div>
+      </div>
       {/* Action Toolbar */}
       <div className={styles.actionBar}>
         <button
@@ -504,22 +504,24 @@ export const HitoriGame: React.FC = () => {
         </button>
       </div>
       {/* Rules and Instructions */}
-      <div className={styles.instructionsCard}>
-        <h3 className={styles.instructionTitle}>
-          <FiSliders size={16} /> Rules of Hitori
-        </h3>
-        <ol className={styles.ruleList}>
-          <li>
-            <strong>No Duplicates:</strong> Unshaded numbers cannot appear more than once in any row or column.
-          </li>
-          <li>
-            <strong>No Adjacent Black Cells:</strong> Shaded (black) cells cannot touch orthogonally (up, down, left, right).
-          </li>
-          <li>
-            <strong>Connected White Cells:</strong> All unshaded numbers must form a single continuous orthogonal path.
-          </li>
-        </ol>
-      </div>
+      <GameShell.Info className={styles.info} onHowToPlay={() => setShowHowToPlay(true)}>
+        <div className={styles.instructionsCard}>
+          <h3 className={styles.instructionTitle}>
+            <FiSliders size={16} /> Rules of Hitori
+          </h3>
+          <ol className={styles.ruleList}>
+            <li>
+              <strong>No Duplicates:</strong> Unshaded numbers cannot appear more than once in any row or column.
+            </li>
+            <li>
+              <strong>No Adjacent Black Cells:</strong> Shaded (black) cells cannot touch orthogonally (up, down, left, right).
+            </li>
+            <li>
+              <strong>Connected White Cells:</strong> All unshaded numbers must form a single continuous orthogonal path.
+            </li>
+          </ol>
+        </div>
+      </GameShell.Info>
       {/* Modals */}
       {isComplete && (
         <GameOverModal
@@ -557,7 +559,7 @@ export const HitoriGame: React.FC = () => {
         ]}
         controls={{
           desktop: 'Click to cycle cell states (Unmarked → Shaded → Circled). Right-click directly circles a confirmed cell.',
-          mobile: 'Use the Tap Action bar above the grid to select "Cycle", "Shade", or "Circle", then tap tiles on the board.',
+          mobile: 'Use the Tap Action bar below the grid to select "Cycle", "Shade", or "Circle", then tap tiles on the board.',
           shortcuts: 'Use "Auto-Circle" to automatically circle all neighbors of black cells, or "Hint" for logic guidance.',
         }}
         tips={[

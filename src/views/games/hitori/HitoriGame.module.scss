@@ -1,3 +1,6 @@
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
+
 .container {
   display: flex;
   flex-direction: column;
@@ -14,12 +17,10 @@
   -webkit-touch-callout: none;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+// GameShell.Header / GameShell.Info: stretch across the centred column.
+.header,
+.info {
   width: 100%;
-  margin-bottom: 12px;
 }
 
 .titleGroup {
@@ -53,6 +54,21 @@
   box-sizing: border-box;
   margin-bottom: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  // Phones: one slim status line — label and value side by side.
+  @include mobile-only {
+    padding: 6px 10px;
+
+    .hudStat {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .hudValue {
+      font-size: 0.95rem;
+    }
+  }
 }
 
 .hudStat {
@@ -180,12 +196,6 @@
   width: 100%;
   max-width: 440px;
   aspect-ratio: 1 / 1;
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .hudValueCapitalize {
@@ -500,6 +510,17 @@
 @media (max-width: 480px) {
   .container {
     padding: 12px 8px;
+  }
+
+  // The shell's flex gap already spaces sections; drop the extra margins on phones.
+  .hudBar,
+  .topControls,
+  .boardCard,
+  .tapModeBar,
+  .actionBar,
+  .hintBanner,
+  .statusMessage {
+    margin-bottom: 0;
   }
 
   .boardCard {

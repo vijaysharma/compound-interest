@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { FiClock } from 'react-icons/fi';
+import { HowToPlayButton } from './HowToPlayModal';
 import styles from './GameShell.module.scss';
 
 export interface GameShellProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -37,6 +38,12 @@ export interface GameShellControlsProps {
   className?: string;
 }
 
+export interface GameShellInfoProps {
+  onHowToPlay: () => void;
+  children?: React.ReactNode;
+  className?: string;
+}
+
 export function GameShell({ children, className = '', ...rest }: GameShellProps) {
   return (
     <div className={`${styles.gameShell} ${className}`.trim()} {...rest}>
@@ -45,6 +52,11 @@ export function GameShell({ children, className = '', ...rest }: GameShellProps)
   );
 }
 
+/**
+ * The game's top toolbar. The top bar already names the game, so the title and subtitle are
+ * kept only for search engines and screen readers (visually hidden); `actions` — timer, text
+ * size, pause/quit — are what shows.
+ */
 export function GameShellHeader({
   title,
   subtitle,
@@ -54,12 +66,12 @@ export function GameShellHeader({
 }: GameShellHeaderProps) {
   return (
     <header className={`${styles.header} ${className}`.trim()}>
-      <div className={styles.titleGroup}>
-        <h1 className={styles.title}>
-          {icon && <span className={styles.titleBadge}>{icon}</span>}
-          <span>{title}</span>
+      <div className={styles.visuallyHidden}>
+        <h1>
+          {icon}
+          {title}
         </h1>
-        {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+        {subtitle && <p>{subtitle}</p>}
       </div>
       {actions && <div className={styles.headerActions}>{actions}</div>}
     </header>
@@ -120,9 +132,22 @@ export function GameShellControls({ children, className = '' }: GameShellControl
   );
 }
 
+/** Below the board and its controls: "How to play", then any rules, tips or stats. */
+export function GameShellInfo({ onHowToPlay, children, className = '' }: GameShellInfoProps) {
+  return (
+    <section className={`${styles.info} ${className}`.trim()} aria-label="How to play and game information">
+      <div className={styles.infoHowTo}>
+        <HowToPlayButton onClick={onHowToPlay} label="How to play" />
+      </div>
+      {children}
+    </section>
+  );
+}
+
 GameShell.Header = GameShellHeader;
 GameShell.Hud = GameShellHud;
 GameShell.Board = GameShellBoard;
 GameShell.Controls = GameShellControls;
+GameShell.Info = GameShellInfo;
 
 export default GameShell;

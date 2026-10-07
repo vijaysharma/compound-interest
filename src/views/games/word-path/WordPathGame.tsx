@@ -26,7 +26,7 @@ import { PRESET_BOARDS } from './boards';
 import { GameShell } from '../common/GameShell';
 import { GameOverModal } from '../common/GameOverModal';
 import { QuitButton, QuitModal } from '../common/QuitModal';
-import { HowToPlayButton, HowToPlayModal } from '../common/HowToPlayModal';
+import { HowToPlayModal } from '../common/HowToPlayModal';
 import { FontScaleButton, useGameFontScale } from '../common/FontScale';
 import { recordGameScore, useGameSession } from '../common/leaderboardStorage';
 import type { ScoreBreakdown } from '../common/scoring';
@@ -556,14 +556,17 @@ export const WordPathGame: React.FC = () => {
         title="Word Path"
         subtitle={`Topic: ${board.theme || board.title}`}
         actions={
-          <div className={styles.topControls}>
+          <>
+            <div className={styles.timerBadge}>
+              <FiClock aria-hidden="true" />
+              <span>{formatTime(elapsedSeconds)}</span>
+            </div>
             <FontScaleButton scale={fontScale.scale} onClick={fontScale.cycle} />
-            <HowToPlayButton onClick={() => setShowHowToPlayModal(true)} />
             <QuitButton onClick={() => setShowQuitModal(true)} />
-          </div>
+          </>
         }
       />
-      {/* Top Header / Bar */}
+      {/* Difficulty + new puzzle */}
       <div className={styles.topBar}>
         <div className={styles.diffSelector} role="radiogroup" aria-label="Difficulty">
           {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
@@ -582,10 +585,6 @@ export const WordPathGame: React.FC = () => {
           ))}
         </div>
         <div className={styles.topControls}>
-          <div className={styles.timerBadge}>
-            <FiClock aria-hidden="true" />
-            <span>{formatTime(elapsedSeconds)}</span>
-          </div>
           <button
             type="button"
             className={styles.iconBtn}
@@ -596,6 +595,11 @@ export const WordPathGame: React.FC = () => {
             <FiRefreshCw aria-hidden="true" />
           </button>
         </div>
+      </div>
+      {/* The topic is part of the puzzle, so it stays visible (the header subtitle is screen-reader only) */}
+      <div className={styles.topicBanner}>
+        <span className={styles.topicLabel}>Topic</span>
+        <span className={styles.topicTitle}>{board.theme || board.title}</span>
       </div>
       {/* Live Word Construction Badge */}
       <div className={styles.liveWordBadgeContainer} aria-live="polite">
@@ -811,45 +815,56 @@ export const WordPathGame: React.FC = () => {
           {hintButtonLabel}
         </button>
       </div>
-      {/* Collapsible Instruction Drawers */}
-      <div className={styles.accordion}>
-        <button
-          type="button"
-          className={styles.accordionHeader}
-          onClick={() => setHowToPlayOpen(!howToPlayOpen)}
-          aria-expanded={howToPlayOpen}
-        >
-          <span>How to play</span>
-          {howToPlayOpen ? <FiChevronUp /> : <FiChevronDown />}
-        </button>
-        {howToPlayOpen && (
-          <div className={styles.accordionBody}>
-            <p>
-              Find the <strong>{board.words.length} hidden words</strong> — {wordsSummaryLengths}{' '}
-              letters long.
-            </p>
-            <p>Use every letter tile exactly once.</p>
-          </div>
+      {/* How to play, then collapsible instruction drawers and progress */}
+      <GameShell.Info onHowToPlay={() => setShowHowToPlayModal(true)}>
+        <div className={styles.accordion}>
+          <button
+            type="button"
+            className={styles.accordionHeader}
+            onClick={() => setHowToPlayOpen(!howToPlayOpen)}
+            aria-expanded={howToPlayOpen}
+          >
+            <span>Rules</span>
+            {howToPlayOpen ? <FiChevronUp /> : <FiChevronDown />}
+          </button>
+          {howToPlayOpen && (
+            <div className={styles.accordionBody}>
+              <p>
+                Find the <strong>{board.words.length} hidden words</strong> — {wordsSummaryLengths}{' '}
+                letters long.
+              </p>
+              <p>Use every letter tile exactly once.</p>
+            </div>
+          )}
+        </div>
+        <div className={styles.accordion}>
+          <button
+            type="button"
+            className={styles.accordionHeader}
+            onClick={() => setKeyboardOpen(!keyboardOpen)}
+            aria-expanded={keyboardOpen}
+          >
+            <span>Keyboard controls</span>
+            {keyboardOpen ? <FiChevronUp /> : <FiChevronDown />}
+          </button>
+          {keyboardOpen && (
+            <div className={styles.accordionBody}>
+              <p>Arrows: Move between cells</p>
+              <p>Enter/Space: Toggle word selection</p>
+              <p>Backspace: Delete the focused word</p>
+            </div>
+          )}
+        </div>
+        {!isWon && (
+          <button
+            type="button"
+            className={styles.seeResultsBtn}
+            onClick={() => setShowResultsModal(true)}
+          >
+            See results
+          </button>
         )}
-      </div>
-      <div className={styles.accordion}>
-        <button
-          type="button"
-          className={styles.accordionHeader}
-          onClick={() => setKeyboardOpen(!keyboardOpen)}
-          aria-expanded={keyboardOpen}
-        >
-          <span>Keyboard controls</span>
-          {keyboardOpen ? <FiChevronUp /> : <FiChevronDown />}
-        </button>
-        {keyboardOpen && (
-          <div className={styles.accordionBody}>
-            <p>Arrows: Move between cells</p>
-            <p>Enter/Space: Toggle word selection</p>
-            <p>Backspace: Delete the focused word</p>
-          </div>
-        )}
-      </div>
+      </GameShell.Info>
       {isWon && (
         <GameOverModal
           outcome="won"
@@ -894,15 +909,6 @@ export const WordPathGame: React.FC = () => {
           'If you get stuck, use "Shuffle" to view candidate start letters or "Hint" to reveal the first letter of an unsolved word.',
         ]}
       />
-      {!isWon && (
-        <button
-          type="button"
-          className={styles.seeResultsBtn}
-          onClick={() => setShowResultsModal(true)}
-        >
-          See results
-        </button>
-      )}
       {!isWon && showResultsModal && (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <div className={styles.modalCard}>
