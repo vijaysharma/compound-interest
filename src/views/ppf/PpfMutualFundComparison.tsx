@@ -20,13 +20,11 @@ import {
   type MfComparisonResult,
 } from '../../utilities/ppfMutualFundComparison';
 import styles from './PpfHistoryModal.module.scss';
-
 interface BenchmarkFund {
   code: string;
   name: string;
   label: string;
 }
-
 const BENCHMARK_FUNDS: BenchmarkFund[] = [
   {
     code: '120716',
@@ -45,7 +43,6 @@ const BENCHMARK_FUNDS: BenchmarkFund[] = [
     label: 'HDFC Large Cap',
   },
 ];
-
 interface PpfMutualFundComparisonProps {
   investments: PpfInvestmentRecord[];
   ppfResult: PPFCalculationResult;
@@ -54,7 +51,6 @@ interface PpfMutualFundComparisonProps {
     entries: Array<{ investmentDate: string; amount: number; notes?: string }>
   ) => Promise<void>;
 }
-
 export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = ({
   investments,
   ppfResult,
@@ -62,25 +58,20 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
   importInvestments,
 }) => {
   const currencySymbol = getCurrencySymbol('en-IN', 'INR');
-
   // Selected Fund State
   const [selectedSchemeCode, setSelectedSchemeCode] = useState<string>(BENCHMARK_FUNDS[0].code);
   const [selectedSchemeName, setSelectedSchemeName] = useState<string>(BENCHMARK_FUNDS[0].name);
-
   // NAV & Fund Metadata
   const [navData, setNavData] = useState<NavType[]>([]);
   const [fundCategory, setFundCategory] = useState<string>('');
   const [isLoadingNav, setIsLoadingNav] = useState<boolean>(false);
   const [navError, setNavError] = useState<string | null>(null);
-
-
   // Fetch NAV data whenever selected fund changes
   useEffect(() => {
     if (!selectedSchemeCode) return;
     let isCancelled = false;
     setIsLoadingNav(true);
     setNavError(null);
-
     fetchMFWithMeta(selectedSchemeCode)
       .then((res) => {
         if (isCancelled) return;
@@ -101,27 +92,28 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
       .finally(() => {
         if (!isCancelled) setIsLoadingNav(false);
       });
-
     return () => {
       isCancelled = true;
     };
   }, [selectedSchemeCode]);
-
   // Mutual Fund Selector Modal State
   const [isSelectorOpen, setIsSelectorOpen] = useState<boolean>(false);
   const fundSearch = useFundSearch(selectedSchemeName, isSelectorOpen);
-
   const pinnedFunds = useMemo(
-    () => [{ schemeCode: selectedSchemeCode, schemeName: selectedSchemeName, color: 'var(--color-primary)' }],
+    () => [
+      {
+        schemeCode: selectedSchemeCode,
+        schemeName: selectedSchemeName,
+        color: 'var(--color-primary)',
+      },
+    ],
     [selectedSchemeCode, selectedSchemeName]
   );
-
   const handleTogglePinFund = (fund: MFType) => {
     setSelectedSchemeCode(String(fund.value));
     setSelectedSchemeName(fund.name);
     setIsSelectorOpen(false);
   };
-
   // Compute Comparison Results
   const comparisonResult: MfComparisonResult | null = useMemo(() => {
     return calculateMfComparison(
@@ -132,7 +124,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
       selectedSchemeName
     );
   }, [investments, navData, ppfResult, selectedSchemeCode, selectedSchemeName]);
-
   const handleLoadSampleHistory = async () => {
     const currentYear = new Date().getFullYear();
     const sampleEntries = [
@@ -144,7 +135,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
     ];
     await importInvestments(sampleEntries);
   };
-
   if (investments.length === 0) {
     return (
       <div className={styles.emptyStateContainer}>
@@ -155,12 +145,10 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
           with dates in the Passbook tab, or load a sample 5-year investment history to preview the
           comparison.
         </p>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button
-            type="button"
-            className={styles.emptyActionBtn}
-            onClick={handleLoadSampleHistory}
-          >
+        <div
+          style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}
+        >
+          <button type="button" className={styles.emptyActionBtn} onClick={handleLoadSampleHistory}>
             <FiPlusCircle /> Load Sample 5-Year History (₹1.5L / yr)
           </button>
           <button
@@ -174,7 +162,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
       </div>
     );
   }
-
   return (
     <div className={styles.mfCompareContainer}>
       {/* Benchmark Fund Selector & Search Bar */}
@@ -198,45 +185,43 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
               </button>
             );
           })}
-        </div>
-
           <button
             type="button"
             className={`${styles.benchmarkPill} ${isSelectorOpen ? styles.benchmarkPillActive : ''}`}
             aria-expanded={isSelectorOpen}
             onClick={() => setIsSelectorOpen((open) => !open)}
           >
-            <FiSearch /> Search Other Mutual Funds...
+            Select Other Mutual Funds
           </button>
         </div>
-        {/* Already inside the passbook dialog: search in place rather than stacking another modal. */}
-        {isSelectorOpen && (
-          <div className={styles.inlineFundSearch}>
-            <div className={styles.inlineFundSearchHeader}>
-              <span>Pick a fund to compare against</span>
-              <button
-                type="button"
-                className={styles.inlineFundSearchClose}
-                onClick={() => setIsSelectorOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-            <MutualFundSelectorPanel
-              inline
-              searchKey={fundSearch.searchKey}
-              setSearchKey={fundSearch.setSearchKey}
-              selectedType={fundSearch.selectedType}
-              setSelectedType={fundSearch.setSelectedType}
-              selectedGrowth={fundSearch.selectedGrowth}
-              setSelectedGrowth={fundSearch.setSelectedGrowth}
-              funds={fundSearch.mfs}
-              pinnedFunds={pinnedFunds}
-              togglePinFund={handleTogglePinFund}
-            />
+      </div>
+      {/* Already inside the passbook dialog: search in place rather than stacking another modal. */}
+      {isSelectorOpen && (
+        <div className={styles.inlineFundSearch}>
+          <div className={styles.inlineFundSearchHeader}>
+            <span>Pick a fund to compare against</span>
+            <button
+              type="button"
+              className={styles.inlineFundSearchClose}
+              onClick={() => setIsSelectorOpen(false)}
+            >
+              Cancel
+            </button>
           </div>
-        )}
-
+          <MutualFundSelectorPanel
+            inline
+            searchKey={fundSearch.searchKey}
+            setSearchKey={fundSearch.setSearchKey}
+            selectedType={fundSearch.selectedType}
+            setSelectedType={fundSearch.setSelectedType}
+            selectedGrowth={fundSearch.selectedGrowth}
+            setSelectedGrowth={fundSearch.setSelectedGrowth}
+            funds={fundSearch.mfs}
+            pinnedFunds={pinnedFunds}
+            togglePinFund={handleTogglePinFund}
+          />
+        </div>
+      )}
       {/* Active Fund Header Card */}
       <div className={styles.activeFundBar}>
         <div className={styles.activeFundInfo}>
@@ -252,19 +237,16 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
           </div>
         )}
       </div>
-
       {isLoadingNav && (
         <div className={styles.loadingSpinner}>
           <FiTrendingUp className="spin" /> Loading official AMFI NAV history...
         </div>
       )}
-
       {navError && (
         <div className={styles.warningBanner}>
           <FiAlertTriangle /> {navError}
         </div>
       )}
-
       {comparisonResult && (
         <>
           {/* Comparison Metrics Grid */}
@@ -289,7 +271,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
                 Zero market volatility &bull; 100% Sovereign Backed
               </div>
             </div>
-
             {/* Mutual Fund Outcome Card */}
             <div className={`${styles.metricCard} ${styles.metricCardMf}`}>
               <div className={styles.metricCardTag}>Mutual Fund Real Outcome</div>
@@ -306,19 +287,24 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
                 {comparisonResult.mfGainPercent.toFixed(1)}%)
               </div>
               {comparisonResult.xirr !== undefined && (
-                <div className={styles.gainHighlight} style={{ marginTop: '0.25rem', width: 'fit-content' }}>
+                <div
+                  className={styles.gainHighlight}
+                  style={{ marginTop: '0.25rem', width: 'fit-content' }}
+                >
                   XIRR: {(comparisonResult.xirr * 100).toFixed(2)}% p.a.
                 </div>
               )}
             </div>
-
             {/* Difference / Wealth Alpha Card */}
             <div className={`${styles.metricCard} ${styles.metricCardDelta}`}>
               <div className={styles.metricCardTag}>Real Wealth Creation Delta</div>
               <div
                 className={styles.metricCardValue}
                 style={{
-                  color: comparisonResult.diffAmount >= 0 ? 'var(--color-success)' : 'var(--color-error)',
+                  color:
+                    comparisonResult.diffAmount >= 0
+                      ? 'var(--color-success)'
+                      : 'var(--color-error)',
                 }}
               >
                 {comparisonResult.diffAmount >= 0 ? '+' : ''}
@@ -328,10 +314,13 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
               <div className={styles.metricSubtext}>
                 {comparisonResult.diffAmount >= 0 ? (
                   <span className={styles.gainPositive}>
-                    <FiArrowUpRight /> {comparisonResult.diffPercent.toFixed(1)}% more wealth than PPF
+                    <FiArrowUpRight /> {comparisonResult.diffPercent.toFixed(1)}% more wealth than
+                    PPF
                   </span>
                 ) : (
-                  <span>PPF outperformed by {Math.abs(comparisonResult.diffPercent).toFixed(1)}%</span>
+                  <span>
+                    PPF outperformed by {Math.abs(comparisonResult.diffPercent).toFixed(1)}%
+                  </span>
                 )}
               </div>
               <div className={styles.metricSubtext} style={{ fontWeight: 600 }}>
@@ -339,31 +328,30 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
               </div>
             </div>
           </div>
-
           {/* Inception Warning if Applicable */}
           {comparisonResult.hasInceptionWarning && (
             <div className={styles.warningBanner}>
               <FiAlertTriangle style={{ flexShrink: 0, marginTop: '0.125rem' }} />
               <div>
-                <strong>Notice on Inception Date:</strong> Some of your investment dates occurred before this
-                mutual fund&apos;s inception ({comparisonResult.earliestNavDate}). For dates before launch, units
-                were allotted using the fund&apos;s earliest available NAV.
+                <strong>Notice on Inception Date:</strong> Some of your investment dates occurred
+                before this mutual fund&apos;s inception ({comparisonResult.earliestNavDate}). For
+                dates before launch, units were allotted using the fund&apos;s earliest available
+                NAV.
               </div>
             </div>
           )}
-
           {/* Tax and Risk Insight */}
           <div className={styles.insightBox}>
             <FiInfo className={styles.insightIcon} />
             <div>
-              <strong>Tax &amp; Risk Perspective:</strong> PPF enjoys guaranteed Sovereign EEE status (100% tax-free
-              at deposit, accrual, and maturity). Equity Mutual Funds carry market risk and are subject to 12.5% Long
-              Term Capital Gains (LTCG) tax on annual gains exceeding ₹1.25 Lakh (Finance Act 2024). Over longer
-              horizons (10–15+ years), equity compounding historically offsets tax differences with substantial
-              wealth outperformance.
+              <strong>Tax &amp; Risk Perspective:</strong> PPF enjoys guaranteed Sovereign EEE
+              status (100% tax-free at deposit, accrual, and maturity). Equity Mutual Funds carry
+              market risk and are subject to 12.5% Long Term Capital Gains (LTCG) tax on annual
+              gains exceeding ₹1.25 Lakh (Finance Act 2024). Over longer horizons (10–15+ years),
+              equity compounding historically offsets tax differences with substantial wealth
+              outperformance.
             </div>
           </div>
-
           {/* Detailed Ledger Breakdown Table */}
           <div>
             <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9375rem', fontWeight: 700 }}>
@@ -430,7 +418,6 @@ export const PpfMutualFundComparison: React.FC<PpfMutualFundComparisonProps> = (
           </div>
         </>
       )}
-
     </div>
   );
 };

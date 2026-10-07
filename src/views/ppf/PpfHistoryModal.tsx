@@ -10,7 +10,6 @@ import type {
 import { PpfHistoryManager } from './PpfHistoryManager';
 import { PpfMutualFundComparison } from './PpfMutualFundComparison';
 import styles from './PpfHistoryModal.module.scss';
-
 export interface PpfHistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,7 +38,6 @@ export interface PpfHistoryModalProps {
   syncStatus: 'synced' | 'saving' | 'offline' | 'error';
   statusMessage?: string;
 }
-
 export const PpfHistoryModal: React.FC<PpfHistoryModalProps> = ({
   isOpen,
   onClose,
@@ -58,15 +56,12 @@ export const PpfHistoryModal: React.FC<PpfHistoryModalProps> = ({
   statusMessage,
 }) => {
   const [activeTab, setActiveTab] = useState<'passbook' | 'mf-compare'>(initialTab);
-
   useScrollLock(isOpen);
-
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
     }
   }, [initialTab, isOpen]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -76,9 +71,7 @@ export const PpfHistoryModal: React.FC<PpfHistoryModalProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
   if (!isOpen) return null;
-
   return (
     <div
       className={styles.modalOverlay}
@@ -102,10 +95,7 @@ export const PpfHistoryModal: React.FC<PpfHistoryModalProps> = ({
             {investments.length > 0 && (
               <span className={styles.countBadge}>{investments.length} Deposits</span>
             )}
-            <span
-              className={styles.syncIndicator}
-              title={statusMessage || 'Synced to database'}
-            >
+            <span className={styles.syncIndicator} title={statusMessage || 'Synced to database'}>
               <FiCloud />
               {syncStatus === 'saving'
                 ? 'Saving...'
@@ -123,7 +113,6 @@ export const PpfHistoryModal: React.FC<PpfHistoryModalProps> = ({
             <FiX style={{ fontSize: '1.25rem' }} />
           </button>
         </div>
-
         {/* Modal Navigation Tabs */}
         <div className={styles.tabsBar}>
           <button
@@ -147,7 +136,6 @@ export const PpfHistoryModal: React.FC<PpfHistoryModalProps> = ({
             <span className={`${styles.tabBadge} ${styles.tabBadgeCompare}`}>Real NAV</span>
           </button>
         </div>
-
         {/* Modal Body with Tab Content */}
         <div className={styles.modalBody}>
           {activeTab === 'passbook' ? (
