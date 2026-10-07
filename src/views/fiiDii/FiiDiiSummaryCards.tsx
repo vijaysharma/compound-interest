@@ -86,6 +86,57 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
   return (
     <div className={styles.summarySection}>
       <div className={styles.summaryGrid}>
+        {/* 4. Index Benchmarks */}
+        <div className={`${styles.summaryCard}${refreshCls}`}>
+          <div className={styles.cardHeader}>
+            <span className={styles.cardTitle}>Index Benchmarks</span>
+            <span className={styles.cardDate}>Closing</span>
+          </div>
+          <div className={styles.cardDateRange}>{periodLabel}</div>
+          {/* <div className={styles.cardSplitRow}> */}
+          <div>
+            <span className={styles.splitLabel}>Nifty 50:</span>
+            <span className={styles.splitVal}>
+              {latestNifty ? latestNifty.toLocaleString('en-IN') : '—'}
+            </span>
+            {niftyPeriodChangePercent !== null && (
+              <span
+                className={`${styles.changeBadge} ${niftyPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
+              >
+                {niftyPeriodChangePercent >= 0 ? (
+                  <FiTrendingUp aria-hidden="true" />
+                ) : (
+                  <FiTrendingDown aria-hidden="true" />
+                )}{' '}
+                {Math.abs(niftyPeriodChangePercent)}%
+              </span>
+            )}
+          </div>
+          <div>
+            <span className={styles.splitLabel}>Sensex:</span>
+            <span className={styles.splitVal}>
+              {latestSensex ? latestSensex.toLocaleString('en-IN') : '—'}
+            </span>
+            {sensexPeriodChangePercent !== null && (
+              <span
+                className={`${styles.changeBadge} ${sensexPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
+              >
+                {sensexPeriodChangePercent >= 0 ? (
+                  <FiTrendingUp aria-hidden="true" />
+                ) : (
+                  <FiTrendingDown aria-hidden="true" />
+                )}{' '}
+                {Math.abs(sensexPeriodChangePercent)}%
+              </span>
+            )}
+          </div>
+          {/* </div> */}
+          <div className={styles.cardFooter}>
+            <span className={styles.cardMetaText}>
+              CPI: {summary.cpiLatest} | PPP: ₹{summary.pppLatest}/$
+            </span>
+          </div>
+        </div>
         {/* 1. Latest FII Flow — always nominal ₹ Cr for last trading day */}
         <div className={`${styles.summaryCard}${refreshCls}`}>
           <div className={styles.cardHeader}>
@@ -174,57 +225,6 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
                 maximumFractionDigits: 1,
               })}{' '}
               {unitLabel}
-            </span>
-          </div>
-        </div>
-        {/* 4. Index Benchmarks */}
-        <div className={`${styles.summaryCard}${refreshCls}`}>
-          <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Index Benchmarks</span>
-            <span className={styles.cardDate}>Closing</span>
-          </div>
-          <div className={styles.cardDateRange}>{periodLabel}</div>
-          {/* <div className={styles.cardSplitRow}> */}
-          <div>
-            <span className={styles.splitLabel}>Nifty 50:</span>
-            <span className={styles.splitVal}>
-              {latestNifty ? latestNifty.toLocaleString('en-IN') : '—'}
-            </span>
-            {niftyPeriodChangePercent !== null && (
-              <span
-                className={`${styles.changeBadge} ${niftyPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
-              >
-                {niftyPeriodChangePercent >= 0 ? (
-                  <FiTrendingUp aria-hidden="true" />
-                ) : (
-                  <FiTrendingDown aria-hidden="true" />
-                )}{' '}
-                {Math.abs(niftyPeriodChangePercent)}%
-              </span>
-            )}
-          </div>
-          <div>
-            <span className={styles.splitLabel}>Sensex:</span>
-            <span className={styles.splitVal}>
-              {latestSensex ? latestSensex.toLocaleString('en-IN') : '—'}
-            </span>
-            {sensexPeriodChangePercent !== null && (
-              <span
-                className={`${styles.changeBadge} ${sensexPeriodChangePercent >= 0 ? styles.pos : styles.neg}`}
-              >
-                {sensexPeriodChangePercent >= 0 ? (
-                  <FiTrendingUp aria-hidden="true" />
-                ) : (
-                  <FiTrendingDown aria-hidden="true" />
-                )}{' '}
-                {Math.abs(sensexPeriodChangePercent)}%
-              </span>
-            )}
-          </div>
-          {/* </div> */}
-          <div className={styles.cardFooter}>
-            <span className={styles.cardMetaText}>
-              CPI: {summary.cpiLatest} | PPP: ₹{summary.pppLatest}/$
             </span>
           </div>
         </div>

@@ -1189,6 +1189,10 @@
   .summaryCard {
     padding: 0.5rem;
     border-radius: 10px;
+    &:nth-child(1),
+    &:nth-child(4) {
+      grid-column: 1 / -1;
+    }
   }
   .cardTitle {
     font-size: $fs-caption;
