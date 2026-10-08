@@ -344,16 +344,16 @@
   display: grid;
   grid-template-columns: 1fr;
   width: 100%;
-  gap: 0.625rem;
+  gap: 0.75rem;
   padding-bottom: 0.75rem;
   min-height: auto;
 
-  @media (min-width: 480px) {
+  @media (min-width: 640px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   @include tablet-up {
-    gap: 0.75rem;
+    gap: 0.875rem;
   }
 }
 
@@ -850,4 +850,407 @@
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* SIP Specific Card Layout (as per SIP screenshot) */
+.sipTopNavSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding-top: 0.2rem;
+}
+
+.sipNavValuesCol {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.sipNavItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sipNavLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-heading, #1e293b);
+}
+
+.sipNavDate {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+.sipNavPrice {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-heading, #0f172a);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.15rem;
+}
+
+.sipNavArrow {
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 1rem;
+}
+
+.sipSparklineCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.sipReturnPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sipPillSuccess {
+  background-color: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success-text-strong, #16a34a);
+}
+
+.sipPillError {
+  background-color: color-mix(in srgb, var(--color-error) 12%, transparent);
+  color: var(--color-error, #dc2626);
+}
+
+.sipSparklineSvg {
+  width: 100px;
+  height: 28px;
+  overflow: visible;
+}
+
+.sipValuesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
+
+  @media (max-width: 420px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 0.5rem;
+
+    .sipValueCol:last-child {
+      grid-column: span 2;
+    }
+  }
+}
+
+.sipValueCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.sipValueColLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  white-space: nowrap;
+}
+
+.sipValueColAmount {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--color-heading, #0f172a);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+
+  @include tablet-up {
+    font-size: 1.25rem;
+  }
+}
+
+.sipValueColAmountPurple {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #9333ea;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+
+  @include tablet-up {
+    font-size: 1.25rem;
+  }
+}
+
+.sipGainLossText {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.sipGainLossPct {
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sipBottomMetricsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  width: 100%;
+  gap: 0.5rem 0.25rem;
+  padding-top: 0.25rem;
+
+  @media (min-width: 600px) {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+}
+
+.sipBottomMetricItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0 0.4rem 0 0;
+  min-width: 0;
+  flex: 1 1 calc(33.333% - 0.5rem);
+
+  @media (min-width: 480px) and (max-width: 599px) {
+    flex: 1 1 calc(20% - 0.5rem);
+  }
+
+  @media (min-width: 600px) {
+    flex: initial;
+    border-right: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+}
+
+.sipBottomMetricLabel {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  white-space: normal;
+  line-height: 1.2;
+}
+
+.sipBottomMetricVal {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-heading, #0f172a);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  word-break: break-word;
+
+  @include tablet-up {
+    font-size: 0.875rem;
+  }
+}
+
+/* SWP Specific Card Layout (as per SWP screenshot) */
+.swpTopMetricsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+  width: 100%;
+  padding-top: 0.2rem;
+}
+
+.swpTopMetricItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.swpTopMetricLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.swpTopMetricVal {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+
+  @include tablet-up {
+    font-size: 1.35rem;
+  }
+}
+
+.swpNavSparklineRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.35rem 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap;
+}
+
+.swpNavProgressionCol {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-secondary, #334155);
+  font-weight: 500;
+  flex-wrap: wrap;
+
+  .swpNavDatesSpan {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary, #64748b);
+  }
+
+  strong {
+    color: var(--color-heading, #0f172a);
+    font-weight: 700;
+  }
+}
+
+.swpSparklineCol {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.swpSparklineSvg {
+  width: 60px;
+  height: 22px;
+  overflow: visible;
+}
+
+.swpReturnPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.swpValuesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
+
+  @media (max-width: 420px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 0.5rem;
+
+    .swpValueCol:last-child {
+      grid-column: span 2;
+    }
+  }
+}
+
+.swpValueCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.swpValueColLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  white-space: nowrap;
+}
+
+.swpValueColAmount {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--color-heading, #0f172a);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+
+  @include tablet-up {
+    font-size: 1.25rem;
+  }
+}
+
+.swpValueColAmountPurple {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #9333ea;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+
+  @include tablet-up {
+    font-size: 1.25rem;
+  }
+}
+
+.swpGainLossText {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.swpBottomRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+}
+
+.swpBottomItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.swpBottomLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  white-space: nowrap;
+}
+
+.swpBottomVal {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-heading, #0f172a);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+
+  @include tablet-up {
+    font-size: 1rem;
+  }
+}
+
+
 
