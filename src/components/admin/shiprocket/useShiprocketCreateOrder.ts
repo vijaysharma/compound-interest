@@ -48,12 +48,18 @@ export function useShiprocketCreateOrder(
     []
   );
 
+  const activeAccountId = account?.profile?.id || '';
   useEffect(() => {
-    if (account?.pickupLocations && account.pickupLocations.length > 0 && !pickupLoc) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!account?.pickupLocations || account.pickupLocations.length === 0) {
+      setPickupLoc('');
+      return;
+    }
+    const availableLocs = account.pickupLocations.map((l) => l.pickup_location);
+    // If pickupLoc is empty or not in the current account's registered locations, reset to the first one
+    if (!pickupLoc || !availableLocs.includes(pickupLoc)) {
       setPickupLoc(account.pickupLocations[0].pickup_location);
     }
-  }, [account, pickupLoc]);
+  }, [activeAccountId, account?.pickupLocations, pickupLoc]);
   useEffect(() => {
     if (!custPincode || custPincode.length !== 6) return;
     const clean = custPincode.replace(/\D/g, '');

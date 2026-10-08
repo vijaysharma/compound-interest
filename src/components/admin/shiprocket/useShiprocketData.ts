@@ -130,21 +130,38 @@ export function useShiprocketData(token: string) {
   }, [fetchAll]);
   const handleSwitchAccount = useCallback(
     async (accountId: string) => {
+      // 1. Immediately wipe previous account data & set skeleton loading indicators
+      setAccount(null);
+      setOrders([]);
+      setStatement([]);
+      setOrderDateFrom('');
+      setOrderDateTo('');
       setLoadingAccount(true);
+      setLoadingOrders(true);
+      setLoadingStatement(true);
       try {
         const res = await switchActiveShiprocketAccountAction(accountId, token);
         if (res.success) {
           setAlertMsg({ type: 'success', text: res.message });
-          fetchAll();
+          // Fetch updated accounts list to update active badges & balances
+          await fetchAccountsList();
+          // Fetch the new account details, orders, and ledger statement
+          await Promise.all([
+            fetchAccount(),
+            fetchOrders('', ''),
+            fetchStatement(),
+          ]);
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Failed to switch active account';
         setAlertMsg({ type: 'error', text: msg });
       } finally {
         setLoadingAccount(false);
+        setLoadingOrders(false);
+        setLoadingStatement(false);
       }
     },
-    [token, fetchAll]
+    [token, fetchAccountsList, fetchAccount, fetchOrders, fetchStatement]
   );
   const handleAddAccount = useCallback(
     async (input: {

@@ -144,8 +144,19 @@ export async function createShiprocketOrderAction(
     body: JSON.stringify(fullPayload),
   });
   const data = await res.json();
-  if (!res.ok || data.status_code === 400 || data.status_code === 422) {
-    throw new Error(data?.message || JSON.stringify(data));
+  if (
+    !res.ok ||
+    data.status_code === 400 ||
+    data.status_code === 422 ||
+    !data?.order_id ||
+    !data?.shipment_id
+  ) {
+    const errorMsg =
+      data?.message ||
+      (typeof data?.data === 'string' ? data.data : '') ||
+      (data?.errors ? JSON.stringify(data.errors) : '') ||
+      'Failed to create order on Shiprocket';
+    throw new Error(errorMsg);
   }
   await invalidateShiprocketOrdersCache();
   return { success: true, data };

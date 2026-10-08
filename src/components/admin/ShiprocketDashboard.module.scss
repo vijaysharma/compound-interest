@@ -1483,3 +1483,55 @@
 .selectServerIcon {
   color: var(--color-primary);
 }
+
+.shimmer {
+  border-radius: var(--radius-sm, 6px);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-base-content) 6%, transparent) 25%,
+    color-mix(in srgb, var(--color-base-content) 12%, transparent) 37%,
+    color-mix(in srgb, var(--color-base-content) 6%, transparent) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    background: color-mix(in srgb, var(--color-base-content) 8%, transparent);
+  }
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.skeletonStatValue {
+  height: 2rem;
+  width: 70%;
+  margin: 0.25rem 0;
+}
+
+.skeletonLine {
+  height: 1.25rem;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.skeletonCard {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--color-border);
+  background: var(--color-card, #ffffff);
+}
+

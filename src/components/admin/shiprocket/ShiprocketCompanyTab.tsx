@@ -17,12 +17,14 @@ import styles from '../ShiprocketDashboard.module.scss';
 export interface ShiprocketCompanyTabProps {
   account: ShiprocketAccountData | null;
   accountsList?: ShiprocketAccountProfile[];
+  loadingAccount?: boolean;
   onSwitchAccount?: (id: string) => Promise<void>;
   onDeleteAccount?: (id: string) => Promise<void>;
 }
 export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.memo(
-  ({ account, accountsList = [], onSwitchAccount, onDeleteAccount }) => {
+  ({ account, accountsList = [], loadingAccount, onSwitchAccount, onDeleteAccount }) => {
     const profile = account?.profile;
+    const isLoading = loadingAccount || !account;
     return (
       <div className={styles.companyStack}>
         {/* 1. Master Company & User Profile Details */}
@@ -34,28 +36,50 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
             <div>
               <label className={styles.fieldLabel}>Company Name</label>
               <div className={styles.valueHighlight}>
-                {profile?.company_name || '—'}
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  profile?.company_name || '—'
+                )}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>Contact / User Name</label>
               <div className={styles.valueHighlight}>
-                <FiUser className={styles.inlineIcon} />
-                {profile?.contact_name || '—'}
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  <>
+                    <FiUser className={styles.inlineIcon} />
+                    {profile?.contact_name || '—'}
+                  </>
+                )}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>Phone Number</label>
               <div className={styles.valueHighlight}>
-                <FiPhone className={styles.inlineIcon} />
-                {profile?.contact_phone || '—'}
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  <>
+                    <FiPhone className={styles.inlineIcon} />
+                    {profile?.contact_phone || '—'}
+                  </>
+                )}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>Contact Email</label>
               <div className={styles.valueHighlight}>
-                <FiMail className={styles.inlineIcon} />
-                {profile?.contact_email || '—'}
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  <>
+                    <FiMail className={styles.inlineIcon} />
+                    {profile?.contact_email || '—'}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -69,33 +93,48 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
             <div>
               <label className={styles.fieldLabel}>API User Name</label>
               <div className={styles.valueHighlight}>
-                {account?.user?.first_name || profile?.sr_first_name || 'API'}{' '}
-                {account?.user?.last_name || profile?.sr_last_name || 'User'}
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  `${account?.user?.first_name || profile?.sr_first_name || 'API'} ${account?.user?.last_name || profile?.sr_last_name || 'User'}`
+                )}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>API User Email</label>
               <div className={styles.valueHighlight}>
-                {account?.user?.email || profile?.api_email || '—'}
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  account?.user?.email || profile?.api_email || '—'
+                )}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>Shiprocket Company ID</label>
               <div className={styles.valueHighlight}>
-                #{account?.user?.company_id || profile?.sr_company_id || '—'}
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  `#${account?.user?.company_id || profile?.sr_company_id || '—'}`
+                )}
               </div>
             </div>
             <div>
               <label className={styles.fieldLabel}>Token Storage</label>
               <div className={styles.valueHighlight}>
-                <span className={`${styles.statusBadge} ${styles.statusGreen}`}>
-                  <FiKey className={styles.inlineIcon} />
-                  {profile ? 'Database Token' : 'Environment Token'}
-                </span>
+                {isLoading ? (
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} />
+                ) : (
+                  <span className={`${styles.statusBadge} ${styles.statusGreen}`}>
+                    <FiKey className={styles.inlineIcon} />
+                    {profile ? 'Database Token' : 'Environment Token'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-          {profile?.token_expires_at && (
+          {!isLoading && profile?.token_expires_at && (
             <div className={styles.createdAtText}>
               DB Token Expires At: {new Date(profile.token_expires_at).toLocaleString()} (Auto-renews upon expiry)
             </div>
@@ -184,9 +223,19 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
         {/* 4. Registered Pickup Locations */}
         <div className={styles.formCard}>
           <div className={styles.formSectionTitle}>
-            <FiMapPin /> Registered Pickup Locations & Warehouses ({account?.pickupLocations.length || 0})
+            <FiMapPin /> Registered Pickup Locations & Warehouses ({account?.pickupLocations?.length || 0})
           </div>
-          {account?.pickupLocations && account.pickupLocations.length > 0 ? (
+          {isLoading ? (
+            <div className={styles.pickupsGrid}>
+              {[1, 2].map((i) => (
+                <div key={i} className={`${styles.skeletonCard} ${styles.shimmer}`}>
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} style={{ width: '40%' }} />
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} style={{ width: '80%' }} />
+                  <div className={`${styles.shimmer} ${styles.skeletonLine}`} style={{ width: '60%' }} />
+                </div>
+              ))}
+            </div>
+          ) : account?.pickupLocations && account.pickupLocations.length > 0 ? (
             <div className={styles.pickupsGrid}>
               {account.pickupLocations.map((loc) => (
                 <div key={loc.id} className={styles.pickupCard}>

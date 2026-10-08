@@ -5,6 +5,7 @@ import styles from '../ShiprocketDashboard.module.scss';
 import { FaIndianRupeeSign } from 'react-icons/fa6';
 export interface ShiprocketStatsProps {
   balance?: string | number;
+  loading?: boolean;
   stats: {
     total: number;
     inTransit: number;
@@ -12,14 +13,18 @@ export interface ShiprocketStatsProps {
     cancelled: number;
   };
 }
-export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ balance, stats }) => (
+export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ balance, loading, stats }) => (
   <div className={styles.overviewGrid}>
     <div className={`${styles.statCard} ${styles.statCardHighlight}`}>
       <div className={styles.statLabel}>
         <FaIndianRupeeSign className={styles.statIcon} />
         <span>Balance</span>
       </div>
-      <div className={styles.statValue}>{balance ?? '0.00'}</div>
+      {loading ? (
+        <div className={`${styles.shimmer} ${styles.skeletonStatValue}`} />
+      ) : (
+        <div className={styles.statValue}>{balance ?? '0.00'}</div>
+      )}
       <div className={styles.statSubtext}>
         <a
           href="https://app.shiprocket.in/billing/recharge"
@@ -36,7 +41,11 @@ export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ bal
         <FiPackage className={styles.statIcon} />
         <span>Total Shipments</span>
       </div>
-      <div className={styles.statValue}>{stats.total}</div>
+      {loading ? (
+        <div className={`${styles.shimmer} ${styles.skeletonStatValue}`} />
+      ) : (
+        <div className={styles.statValue}>{stats.total}</div>
+      )}
       <div className={styles.statSubtext}>
         <span>All time orders</span>
       </div>
@@ -46,7 +55,11 @@ export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ bal
         <FiTruck className={styles.statIcon} />
         <span>In Transit</span>
       </div>
-      <div className={styles.statValue}>{stats.inTransit}</div>
+      {loading ? (
+        <div className={`${styles.shimmer} ${styles.skeletonStatValue}`} />
+      ) : (
+        <div className={styles.statValue}>{stats.inTransit}</div>
+      )}
       <div className={styles.statSubtext}>
         <span>En route to destination</span>
       </div>
@@ -56,7 +69,11 @@ export const ShiprocketStats: React.FC<ShiprocketStatsProps> = React.memo(({ bal
         <FiCheckCircle className={styles.statIcon} />
         <span>Delivered</span>
       </div>
-      <div className={styles.statValue}>{stats.delivered}</div>
+      {loading ? (
+        <div className={`${styles.shimmer} ${styles.skeletonStatValue}`} />
+      ) : (
+        <div className={styles.statValue}>{stats.delivered}</div>
+      )}
       <div className={styles.statSubtext}>
         <span>Successfully completed</span>
       </div>

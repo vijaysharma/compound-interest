@@ -55,7 +55,11 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           createForm.setCreatedOrderResult(null);
         }}
       />
-      <ShiprocketStats balance={data.account?.balance} stats={filter.stats} />
+      <ShiprocketStats
+        balance={data.account?.balance}
+        loading={data.loadingAccount}
+        stats={filter.stats}
+      />
       <ShiprocketTabsNav
         activeTab={activeTab}
         ordersCount={data.orders.length}
@@ -133,6 +137,7 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
         <ShiprocketCompanyTab
           account={data.account}
           accountsList={data.accountsList}
+          loadingAccount={data.loadingAccount}
           onSwitchAccount={data.handleSwitchAccount}
           onDeleteAccount={data.handleDeleteAccount}
         />

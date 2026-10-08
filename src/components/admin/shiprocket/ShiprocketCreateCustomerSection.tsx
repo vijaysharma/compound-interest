@@ -54,13 +54,18 @@ export const ShiprocketCreateCustomerSection: React.FC<ShiprocketCreateCustomerP
             className={styles.selectInput}
             value={pickupLoc}
             onChange={(e) => onPickupLocChange(e.target.value)}
+            disabled={!account || !account.pickupLocations || account.pickupLocations.length === 0}
             required
           >
-            {account?.pickupLocations.map((loc) => (
-              <option key={loc.id} value={loc.pickup_location}>
-                {loc.pickup_location} ({loc.city}, {loc.pin_code})
-              </option>
-            ))}
+            {(!account || !account.pickupLocations || account.pickupLocations.length === 0) ? (
+              <option value="">Loading pickup locations...</option>
+            ) : (
+              account.pickupLocations.map((loc) => (
+                <option key={loc.id} value={loc.pickup_location}>
+                  {loc.pickup_location} ({loc.city}, {loc.pin_code})
+                </option>
+              ))
+            )}
           </select>
         </div>
         <div className={styles.fieldGroup}>
