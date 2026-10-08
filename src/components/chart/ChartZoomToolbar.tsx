@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ZoomRange } from './types';
 import styles from '../Chart.module.scss';
+import { RxReset } from 'react-icons/rx';
 const PRESETS = ['1M', '6M', '1Y', '3Y', '5Y', 'All'];
 export interface ChartZoomToolbarProps {
   showPresets?: boolean;
@@ -38,7 +39,7 @@ export const ChartZoomToolbar: React.FC<ChartZoomToolbarProps> = React.memo(
               onClick={onResetZoom}
               title="Reset Zoom"
             >
-              ↩ Reset
+              <RxReset /> Reset
             </button>
           </>
         ) : (
