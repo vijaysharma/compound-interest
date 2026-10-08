@@ -2,6 +2,7 @@ import type { RegimeTaxResult, TaxIncomeInputs, TaxRegime } from './types';
 import { calculateHousePropertyIncome, calculateHRAExemption } from './exemptions';
 import { calculateNewRegimeSlabTax, calculateOldRegimeSlabTax, calculateSurcharge } from './taxSlabs';
 import { calculateDeductions } from './deductions';
+import { getCapitalGainsRules, getNewRegimeRules } from './rules';
 export function computeTaxForRegime(inputs: TaxIncomeInputs, regime: TaxRegime): RegimeTaxResult {
   const {
     financialYear = '2026-27',
@@ -27,14 +28,15 @@ export function computeTaxForRegime(inputs: TaxIncomeInputs, regime: TaxRegime):
     otherIncome,
     ageCategory,
   } = inputs;
+  const newRules = getNewRegimeRules(financialYear);
+  const gainsRules = getCapitalGainsRules(financialYear);
   const hpResult = calculateHousePropertyIncome(isSelfOccupied, rentalIncome, municipalTaxes, homeLoanInterestProperty);
   let standardDeduction = 0;
   if (isSalaried && grossSalary > 0) {
     if (customStandardDeduction !== undefined && customStandardDeduction !== null) {
       standardDeduction = Math.min(grossSalary, Math.max(0, customStandardDeduction));
     } else if (regime === 'new') {
-      const defaultNewStd = financialYear === '2023-24' ? 50000 : 75000;
-      standardDeduction = Math.min(grossSalary, defaultNewStd);
+      standardDeduction = Math.min(grossSalary, newRules.standardDeduction);
     } else {
       standardDeduction = Math.min(grossSalary, 50000);
     }
@@ -62,23 +64,21 @@ export function computeTaxForRegime(inputs: TaxIncomeInputs, regime: TaxRegime):
     regime === 'new'
       ? calculateNewRegimeSlabTax(normalTaxableIncome, financialYear)
       : calculateOldRegimeSlabTax(normalTaxableIncome, ageCategory);
-  const isPreJuly2024 = financialYear === '2023-24';
-  const stcgRate = isPreJuly2024 ? 0.15 : 0.20;
-  const ltcgRate = isPreJuly2024 ? 0.10 : 0.125;
-  const ltcgExemption = isPreJuly2024 ? 100000 : 125000;
+  const { stcgRate, ltcgRate, ltcgExemption } = gainsRules;
   const stcgTax = Math.max(0, equityStcg) * stcgRate;
   const taxableLtcg = Math.max(0, equityLtcg - ltcgExemption);
   const ltcgTax = taxableLtcg * ltcgRate;
   const totalTaxBeforeRebate = slabCalc.slabTax + stcgTax + ltcgTax;
   let rebate87A = 0;
   if (regime === 'new') {
-    if (totalTaxableIncome <= 700000) {
-      rebate87A = Math.min(totalTaxBeforeRebate, 25000);
-    } else if (totalTaxableIncome > 700000 && totalTaxableIncome <= 727777) {
-      const excessIncome = totalTaxableIncome - 700000;
-      if (totalTaxBeforeRebate > excessIncome) {
-        rebate87A = totalTaxBeforeRebate - excessIncome;
-      }
+    const { rebateIncomeLimit, rebateMax, rebateExcludesSpecialRateTax } = newRules;
+    const rebatableTax = rebateExcludesSpecialRateTax ? slabCalc.slabTax : totalTaxBeforeRebate;
+    if (totalTaxableIncome <= rebateIncomeLimit) {
+      rebate87A = Math.min(rebatableTax, rebateMax);
+    } else {
+      // Marginal relief: tax may not exceed the income earned above the rebate limit.
+      const excessIncome = totalTaxableIncome - rebateIncomeLimit;
+      rebate87A = Math.max(0, rebatableTax - excessIncome);
     }
   } else if (totalTaxableIncome <= 500000) {
     rebate87A = Math.min(totalTaxBeforeRebate, 12500);

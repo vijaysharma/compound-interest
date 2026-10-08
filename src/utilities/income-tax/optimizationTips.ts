@@ -1,4 +1,5 @@
 import type { RegimeTaxResult, TaxIncomeInputs, TaxOptimizationTip } from './types';
+import { getCapitalGainsRules, getNewRegimeRules } from './rules';
 export function generateTaxOptimizationTips(
   inputs: TaxIncomeInputs,
   oldResult: RegimeTaxResult,
@@ -7,10 +8,8 @@ export function generateTaxOptimizationTips(
   const tips: TaxOptimizationTip[] = [];
   const marginalRate =
     oldResult.taxableIncome > 1000000 ? 0.312 : oldResult.taxableIncome > 500000 ? 0.208 : 0.052;
-  const isPreJuly2024 = inputs.financialYear === '2023-24';
-  const newStdDeductionText = isPreJuly2024 ? '₹50,000' : '₹75,000';
-  const ltcgExemption = isPreJuly2024 ? 100000 : 125000;
-  const ltcgRate = isPreJuly2024 ? 0.10 : 0.125;
+  const newStdDeductionText = `₹${getNewRegimeRules(inputs.financialYear).standardDeduction.toLocaleString('en-IN')}`;
+  const { ltcgExemption, ltcgRate } = getCapitalGainsRules(inputs.financialYear);
   if (newResult.totalTaxPayable < oldResult.totalTaxPayable) {
     const diff = oldResult.totalTaxPayable - newResult.totalTaxPayable;
     tips.push({

@@ -42,7 +42,7 @@ export const SEO_TAX_AND_LOANS = {
   incomeTaxCalculator: createPageMetadata({
     title: 'Income Tax Calculator FY 2024-25 & 2025-26 — Old vs New Tax Regime | Rupee Calculator',
     description:
-      'Calculate & compare income tax under Old vs New Tax Regime with Budget 2024 slabs, capital gains rules, PPF exemption, breakeven deductions, and Tax Strategy Advisory.',
+      'Calculate & compare income tax under Old vs New Tax Regime with Budget 2025 slabs, capital gains rules, PPF exemption, breakeven deductions, and Tax Strategy Advisory.',
     keywords: [
       'income tax calculator',
       'old vs new tax regime',

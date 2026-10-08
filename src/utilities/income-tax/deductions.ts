@@ -1,4 +1,5 @@
 import type { TaxIncomeInputs, TaxRegime } from './types';
+import { getNewRegimeRules } from './rules';
 export function calculateDeductions(inputs: TaxIncomeInputs, regime: TaxRegime): number {
   const {
     basicSalary,
@@ -13,6 +14,7 @@ export function calculateDeductions(inputs: TaxIncomeInputs, regime: TaxRegime):
     section80G,
     section80Tta,
     savingsInterest,
+    fdInterest,
     section80Gg = 0,
     section80Ddb = 0,
     section80U = 0,
@@ -25,7 +27,7 @@ export function calculateDeductions(inputs: TaxIncomeInputs, regime: TaxRegime):
     ageCategory,
   } = inputs;
   if (regime === 'new') {
-    return Math.min(section80Ccd2, basicSalary * 0.14);
+    return Math.min(Math.max(0, section80Ccd2), basicSalary * getNewRegimeRules(inputs.financialYear).employerNpsCap);
   }
   const capped80C = Math.min(150000, Math.max(0, section80C));
   const capped80CCD1B = Math.min(50000, Math.max(0, section80Ccd1b));
@@ -34,8 +36,12 @@ export function calculateDeductions(inputs: TaxIncomeInputs, regime: TaxRegime):
   const capped80D_self = Math.min(maxSelf80D, Math.max(0, section80D_self));
   const maxParents80D = parentsSeniorCitizen ? 50000 : 25000;
   const capped80D_parents = Math.min(maxParents80D, Math.max(0, section80D_parents));
-  const max80TTA = ageCategory === 'senior' || ageCategory === 'super_senior' ? 50000 : 10000;
-  const capped80TTA = Math.min(max80TTA, Math.max(0, section80Tta, savingsInterest));
+  // 80TTA (savings interest, ₹10k) or, for seniors, 80TTB (savings + deposit interest, ₹50k):
+  // the deduction can never exceed the claim or the interest actually reported.
+  const isSenior = ageCategory === 'senior' || ageCategory === 'super_senior';
+  const max80TTA = isSenior ? 50000 : 10000;
+  const eligibleInterest = Math.max(0, savingsInterest) + (isSenior ? Math.max(0, fdInterest) : 0);
+  const capped80TTA = Math.min(max80TTA, Math.max(0, section80Tta), eligibleInterest);
   const capped80GG = Math.min(60000, Math.max(0, section80Gg));
   const max80DDB = parentsSeniorCitizen || selfSeniorCitizen || ageCategory !== 'general' ? 100000 : 40000;
   const capped80DDB = Math.min(max80DDB, Math.max(0, section80Ddb));

@@ -21,7 +21,7 @@ export const taxSchema = {
           name: 'What is the zero-tax limit under the New Tax Regime for salaried employees?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Under the New Tax Regime, salaried individuals enjoy an enhanced Standard Deduction of ₹75,000 and Section 87A rebate up to ₹25,000 on taxable income up to ₹7,00,000. Effectively, salaried individuals with a gross income of up to ₹7,75,000 pay zero income tax.',
+            text: 'From FY 2025-26, salaried individuals under the New Tax Regime get a Standard Deduction of ₹75,000 and a Section 87A rebate of up to ₹60,000 on taxable income up to ₹12,00,000. Effectively, salaried individuals with a gross income of up to ₹12,75,000 pay zero income tax. (For FY 2024-25 the limit was ₹7,00,000 taxable, ₹7,75,000 gross.)',
           },
         },
         {
@@ -37,19 +37,19 @@ export const taxSchema = {
   ],
 };
 export const taxComparisonTable = {
-  headers: ['Feature', 'New Tax Regime (FY 2024-25 / 2025-26)', 'Old Tax Regime'],
+  headers: ['Feature', 'New Tax Regime (FY 2025-26 / 2026-27)', 'Old Tax Regime'],
   rows: [
     ['Standard Deduction', '₹75,000 (Salaried & Pensioners)', '₹50,000'],
     [
       'Zero Tax Income (Salaried)',
-      'Up to ₹7,75,000 (with Sec 87A rebate)',
+      'Up to ₹12,75,000 (with Sec 87A rebate)',
       'Up to ₹5,50,000 (with Sec 87A rebate)',
     ],
     ['Section 80C Deductions', 'Not Allowed', 'Allowed up to ₹1,50,000 (PPF, ELSS, EPF)'],
     ['NPS Tier-1 Self (80CCD 1B)', 'Not Allowed', 'Allowed up to ₹50,000'],
     [
       'Employer NPS (80CCD 2)',
-      'Allowed up to 10% of Basic+DA',
+      'Allowed up to 14% of Basic+DA',
       'Allowed up to 10% of Basic+DA',
     ],
     ['HRA Exemption (10(13A))', 'Not Allowed', 'Allowed with rent receipts'],
@@ -65,7 +65,7 @@ export const taxFaqs = [
   {
     question: 'How does the Section 87A rebate work in the New Tax Regime?',
     answer:
-      'In the New Tax Regime, if your total taxable income (after standard deduction) is ₹7,00,000 or less, you receive a full rebate of up to ₹25,000 under Section 87A, making your tax payable zero. For salaried individuals, adding the ₹75,000 standard deduction means gross salaries up to ₹7,75,000 pay zero income tax.',
+      'From FY 2025-26, if your total taxable income under the New Tax Regime (after standard deduction) is ₹12,00,000 or less, you receive a rebate of up to ₹60,000 under Section 87A, making your tax payable zero. Marginal relief applies just above ₹12,00,000, so your tax never exceeds the income earned above that limit. The rebate does not cover tax on special-rate income such as equity STCG or LTCG. For salaried individuals, adding the ₹75,000 standard deduction means gross salaries up to ₹12,75,000 pay zero income tax.',
   },
   {
     question: 'Can I switch between the Old and New Tax Regimes every year?',
