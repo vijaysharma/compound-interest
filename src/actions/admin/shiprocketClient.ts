@@ -45,10 +45,14 @@ export async function getShiprocketAuth(
       }
     }
   } catch (err) {
-    console.warn('Could not read shiprocket_accounts from DB, checking environment fallback:', err);
+    console.warn('Could not read shiprocket_accounts from DB:', err);
   }
-  // 1. If DB account exists, authenticate/use it
-  if (activeDbAccount) {
+  // Require active DB account
+  if (!activeDbAccount) {
+    throw new Error(
+      'No active Shiprocket account found in database. Please configure an account in Accounts Manager.'
+    );
+  }
     const now = Date.now();
     const dbExpiry = activeDbAccount.token_expires_at
       ? new Date(activeDbAccount.token_expires_at).getTime()
@@ -148,45 +152,6 @@ export async function getShiprocketAuth(
       user: restUser,
       profile: activeDbAccount,
     };
-  }
-  // 2. Fallback to Environment Variables if no DB accounts exist
-  const email = process.env.SHIPROCKET_EMAIL;
-  const rawPassword = process.env.SHIPROCKET_PASSWORD || process.env.SHIPROCKET_API_TOKEN;
-  const password = rawPassword ? rawPassword.replace(/\\(\$)/g, '$1') : undefined;
-  const tokenEnv = process.env.SHIPROCKET_TOKEN;
-  if (!email || !password) {
-    throw new Error(
-      'No active Shiprocket account found in database and environment credentials (SHIPROCKET_EMAIL, SHIPROCKET_API_TOKEN) are missing.'
-    );
-  }
-  let authToken = tokenEnv;
-  if (!authToken && password && password.startsWith('eyJ')) {
-    authToken = password;
-  }
-  if (!forceRefresh && !authToken && cachedShiprocketToken && cachedShiprocketToken.expiresAt > Date.now()) {
-    return { token: cachedShiprocketToken.token, user: cachedShiprocketUser, profile: null };
-  }
-  if (forceRefresh || !authToken) {
-    const authRes = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    const authData = (await authRes.json()) as { token?: string; message?: string; [key: string]: unknown };
-    if (!authRes.ok || !authData.token) {
-      const errorMsg = authData?.message || `HTTP ${authRes.status}`;
-      console.error('Shiprocket authentication failed:', authRes.status, authData);
-      throw new Error(`Shiprocket authentication failed: ${errorMsg}`);
-    }
-    authToken = authData.token;
-    const { token: _unused, ...restUser } = authData;
-    cachedShiprocketUser = restUser;
-    cachedShiprocketToken = {
-      token: authData.token,
-      expiresAt: Date.now() + 8 * 24 * 60 * 60 * 1000,
-    };
-  }
-  return { token: authToken, user: cachedShiprocketUser, profile: null };
 }
 export async function shiprocketFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
   const { token } = await getShiprocketAuth();

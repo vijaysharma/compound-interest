@@ -128,7 +128,7 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
                 ) : (
                   <span className={`${styles.statusBadge} ${styles.statusGreen}`}>
                     <FiKey className={styles.inlineIcon} />
-                    {profile ? 'Database Token' : 'Environment Token'}
+                    Database Token
                   </span>
                 )}
               </div>
@@ -216,7 +216,7 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
             </div>
           ) : (
             <p className={styles.emptyText}>
-              No database accounts configured yet. Currently operating with environment fallback credentials.
+              No accounts configured in database. Please click &ldquo;Add Account&rdquo; in Accounts Manager to set up Shiprocket API access.
             </p>
           )}
         </div>
