@@ -2,7 +2,7 @@
 
 Status: Reconstructed from routes/components/actions; manual UX verification NOT
 PERFORMED Source: `src/app/`, `src/components/AppClientLayout.tsx`,
-`src/context/`, `src/actions/` Last Verified: 2026-10-05 Confidence: MEDIUM
+`src/context/`, `src/actions/` Last Verified: 2026-10-08 Confidence: MEDIUM
 Owner: UNKNOWN Related Documents:
 [Product inventory](PRODUCT_AND_FEATURE_INVENTORY.md),
 [auth security](AUTH_SECURITY.md), [API catalog](API_CATALOG.md)
@@ -41,6 +41,12 @@ sequenceDiagram
   Action-->>UI: Series + marketAsOf
   UI->>UI: Calculate units/returns and render
 ```
+
+Fund search (`useFundSearch`) matches every typed word against word boundaries
+in the scheme name, ignoring tokens with no letters or digits, so pasting a full
+name such as "Kotak Arbitrage Fund - Direct Plan - Growth" still finds the
+scheme. On the PPF comparison, "Select Other Mutual Funds" opens the selector
+with an empty search; the current fund stays visible as the pinned chip.
 
 ## Login / Subscription
 

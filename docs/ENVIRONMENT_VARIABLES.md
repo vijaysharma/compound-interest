@@ -2,7 +2,7 @@
 
 Status: Names and code consumers inventoried; requiredness is per-path Source:
 `process.env` references under `src/`, `scripts/`, `next.config.ts`,
-`vercel.json` Last Verified: 2026-10-05 Confidence: HIGH for source references;
+`vercel.json` Last Verified: 2026-10-08 Confidence: HIGH for source references;
 deployment values/availability UNKNOWN Owner: UNKNOWN Related Documents:
 [System design](SYSTEM_DESIGN.md),
 [security architecture](SECURITY_ARCHITECTURE.md), [DevOps](DEVOPS_GUIDE.md)
@@ -33,13 +33,14 @@ contain secrets.
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID`       | Checkout key ID fallback                                     | Optional; public                                                         | Public identifier                     | Payment setup may fail                                       |
 | `VITE_RAZORPAY_KEY_ID`              | Legacy key ID fallback                                       | Optional                                                                 | Public/legacy identifier              | Fallback only                                                |
 | `RAZORPAY_KEY_SECRET`               | Order API auth/payment signature verification                | Required for Razorpay paths                                              | Secret                                | Payment actions fail                                         |
-| `SHIPROCKET_EMAIL`                  | Environment account email fallback                           | Optional                                                                 | Sensitive account identifier          | Account DB config may be used                                |
-| `SHIPROCKET_PASSWORD`               | Shiprocket login credential                                  | Optional; `SHIPROCKET_API_TOKEN` alias used by client                    | Secret                                | Shiprocket auth unavailable                                  |
-| `SHIPROCKET_API_TOKEN`              | Legacy credential alias                                      | Optional                                                                 | Secret                                | Fallback only                                                |
-| `SHIPROCKET_TOKEN`                  | Preissued token fallback in Shiprocket client                | Optional                                                                 | Secret                                | Auth path may fail without other credentials                 |
 
 ## Operational Notes
 
+- Shiprocket no longer reads any environment variables. `SHIPROCKET_EMAIL`,
+  `SHIPROCKET_PASSWORD`, `SHIPROCKET_API_TOKEN` and `SHIPROCKET_TOKEN` were
+  removed with the env fallback; credentials come only from the active row in
+  `shiprocket_accounts` (see the Shiprocket technical doc). Remove them from
+  deployment settings.
 - No `.env.example` was found in the root inventory. Required variable sets are
   not validated centrally at startup.
 - `.env`, `.env.local`, and `README_SECRETS.md` exist in the local workspace

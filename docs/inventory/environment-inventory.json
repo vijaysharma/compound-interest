@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-10-05",
+  "verifiedAt": "2026-10-08",
   "secretValuesIncluded": false,
   "variables": [
     {
@@ -121,30 +121,6 @@
       "sensitive": true,
       "consumer": "Razorpay order/signature actions",
       "requiredness": "required for payments"
-    },
-    {
-      "name": "SHIPROCKET_EMAIL",
-      "sensitive": true,
-      "consumer": "Shiprocket client fallback",
-      "requiredness": "optional"
-    },
-    {
-      "name": "SHIPROCKET_PASSWORD",
-      "sensitive": true,
-      "consumer": "Shiprocket client",
-      "requiredness": "optional with aliases/DB credentials"
-    },
-    {
-      "name": "SHIPROCKET_API_TOKEN",
-      "sensitive": true,
-      "consumer": "Shiprocket client fallback",
-      "requiredness": "optional legacy alias"
-    },
-    {
-      "name": "SHIPROCKET_TOKEN",
-      "sensitive": true,
-      "consumer": "Shiprocket client fallback",
-      "requiredness": "optional"
     }
   ]
 }

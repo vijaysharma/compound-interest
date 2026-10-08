@@ -2,7 +2,7 @@
 
 Status: Source-backed bounded-context overview Source: `src/views/games/`,
 `src/actions/gameLeaderboard.ts`, `src/lib/games/submissionRules.ts`,
-`src/app/games/**` Last Verified: 2026-10-05 Confidence: HIGH for source
+`src/app/games/**` Last Verified: 2026-10-08 Confidence: HIGH for source
 mechanics; production usage/analytics UNKNOWN Owner: UNKNOWN Related Documents:
 [System design](SYSTEM_DESIGN.md), [API catalog](API_CATALOG.md),
 [testing and QA](TESTING_AND_QA.md)
@@ -14,6 +14,14 @@ The hub is `/games`; game routes are `/games/hitori`, `/games/minesweeper`,
 `/games/word-path`. Shared components include game shell, how-to-play,
 quit/game-over/victory UI, confetti, scoring and leaderboard storage under
 `src/views/games/common/`.
+
+Every game lays out through `GameShell` (`src/views/games/common/GameShell.tsx`):
+`GameShell.Header` → `Hud` → `Board` → `Controls` → `Info`. The app top bar
+already names the game, so the header's `h1` title and subtitle are visually
+hidden (kept for SEO and screen readers) and only its `actions` — timer, text
+size, pause/quit — are shown. `GameShell.Info` sits below the board and
+controls and holds the "How to play" button followed by any rules, tips or
+stats; games should not render their own how-to-play buttons in the header.
 
 Mechanics are implemented in each game’s `engine.ts`, `generator.ts`, presets,
 and view component. Inventory exists in source; a rule-by-rule game manual is

@@ -136,7 +136,7 @@ CREATE INDEX IF NOT EXISTS shiprocket_customer_orders_dedup_idx ON shiprocket_cu
 ## 4. Key Server Actions & Workflows
 
 ### 4.1 Client & Authentication Layer ([`src/actions/admin/shiprocketClient.ts`](file:///Users/vijay.sharma06/personal/projects/0.%20hosted/compound-interest/src/actions/admin/shiprocketClient.ts))
-- **`getShiprocketAuth(forceRefresh?: boolean)`**: Resolves credentials from the active database account (`is_active = true`), auto-refreshes expiring tokens against `https://apiv2.shiprocket.in/v1/external/auth/login`, persists the new token and 8-day expiration to PostgreSQL, and holds an in-memory cache.
+- **`getShiprocketAuth(forceRefresh?: boolean)`**: Resolves credentials from the active database account (`is_active = true`), auto-refreshes expiring tokens against `https://apiv2.shiprocket.in/v1/external/auth/login`, persists the new token and 8-day expiration to PostgreSQL, and holds an in-memory cache. An active database account is **required**: if none exists (or `shiprocket_accounts` cannot be read) it throws `No active Shiprocket account found in database. Please configure an account in Accounts Manager.` The former `SHIPROCKET_EMAIL` / `SHIPROCKET_PASSWORD` / `SHIPROCKET_API_TOKEN` / `SHIPROCKET_TOKEN` environment fallback has been removed.
 - **`shiprocketFetch(endpoint, options)`**: Wraps fetch with bearer authorization headers. Automatically catches `401 Unauthorized`, flushes token cache, performs live re-login, and retries the request transparently.
 - **`invalidateShiprocketAuthCache()`**: Async cache evictor called upon account switching or credential changes.
 
@@ -150,7 +150,7 @@ CREATE INDEX IF NOT EXISTS shiprocket_customer_orders_dedup_idx ON shiprocket_cu
 ### 4.3 Orders & Logistics ([`src/actions/admin/shiprocketOrders.ts`](file:///Users/vijay.sharma06/personal/projects/0.%20hosted/compound-interest/src/actions/admin/shiprocketOrders.ts))
 - **`getShiprocketOrdersAction(options, token)`**: Supports pagination (`page`, `per_page`), date range filters (`from`, `to`), search strings, and status filtering (`filter_by`).
 - **`getShiprocketTrackingAction(awb, token)`**: Real-time tracking queries via `/v1/external/courier/track/awb/:awb`.
-- **`createShiprocketOrderAction(payload, token)`**: Dispatches ad-hoc custom order generation (`/v1/external/orders/create/adhoc`).
+- **`createShiprocketOrderAction(payload, token)`**: Dispatches ad-hoc custom order generation (`/v1/external/orders/create/adhoc`). A response is treated as a failure unless it is HTTP-OK, its `status_code` is not 400/422, **and** it carries both `order_id` and `shipment_id`. The thrown message is the first of `message`, a string `data`, serialized `errors`, or `Failed to create order on Shiprocket`, so the admin sees Shiprocket's reason instead of a false success. The orders cache is invalidated only on success.
 - **`cancelShiprocketOrderAction(payload, token)`**: Cancels orders by IDs or AWBs (`/v1/external/orders/cancel` or `/orders/cancel/shipment/awbs`).
 
 ### 4.4 Customer Management & Sync ([`src/actions/admin/shiprocketCustomerManager.ts`](file:///Users/vijay.sharma06/personal/projects/0.%20hosted/compound-interest/src/actions/admin/shiprocketCustomerManager.ts))
@@ -232,12 +232,15 @@ changing any of them.
 
 ### 5.1 `/admin/shiprocket` ([`ShiprocketDashboard.tsx`](file:///Users/vijay.sharma06/personal/projects/0.%20hosted/compound-interest/src/components/admin/ShiprocketDashboard.tsx))
 - **Header**: Account Switcher dropdown displaying `[Account Label] (₹Balance)`.
+- **Account switching** (`useShiprocketData.handleSwitchAccount`): the previous account's details, orders, ledger statement and date filter are cleared immediately and all three loading flags are set, so no stale data from the old account is shown. After the switch succeeds it refreshes the accounts list (active badge/balances), then fetches account details, orders and statement in parallel.
+- **Loading skeletons**: the stats row (`ShiprocketStats`, `loading` prop) shows shimmer placeholders for Balance / Total / In Transit / Delivered, and the Company tab shows shimmer lines for every profile/API field and two placeholder pickup cards while the account is loading.
+- **Pickup location**: the Create Shipment pickup `<select>` is disabled (showing "Loading pickup locations...") until the active account's locations arrive, and resets to that account's first location whenever the current choice is not one of its registered locations (e.g. after a switch).
 - **Date Range Picker**: Filter orders between specific Start and End dates.
 - **Tabs**:
   - *Shipments*: Filterable by Status (Ready to Ship, In Transit, Delivered, Cancelled), search bar, and AWB tracking modal.
   - *Create Shipment*: Ad-hoc order creator with customer address, weight, dimensions, and item breakdown.
   - *History & Ledger*: Live wallet balance and transaction statement ledger.
-  - *Company*: Company metadata, verified pickup warehouses, and linked sales channels.
+  - *Company*: Company metadata, verified pickup warehouses, and linked sales channels. Token Storage always reads "Database Token"; with no accounts configured, the Accounts list prompts the admin to use "Add Account" in Accounts Manager.
 
 ### 5.2 `/admin/shiprocket-accounts` ([`ShiprocketAccountsManagerView.tsx`](file:///Users/vijay.sharma06/personal/projects/0.%20hosted/compound-interest/src/views/admin/ShiprocketAccountsManagerView.tsx))
 - Account cards displaying Company Name, API User Email, live Wallet Balance badge, active status pill, and token expiration timer.

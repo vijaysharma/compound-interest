@@ -2,7 +2,7 @@
 
 Status: Source-backed visual inventory; no design-team specification found
 Source: `src/styles/_theme.scss`, `_variables.scss`, `_mixins.scss`,
-`_base.scss`, `src/index.scss`, component SCSS modules Last Verified: 2026-10-05
+`_base.scss`, `src/index.scss`, component SCSS modules Last Verified: 2026-10-08
 Confidence: HIGH for global tokens; MEDIUM for full component consistency Owner:
 UNKNOWN Related Documents: [Mobile-first guide](MOBILE_FIRST_DESIGN_GUIDE.md),
 [accessibility guide](ACCESSIBILITY_GUIDE.md)
@@ -67,14 +67,51 @@ viewport, because the on-screen keyboard only shrinks the former.
 `dialog-sheet-panel`, or the default paired with `dialog-compact-panel` for
 short confirmations. Dialog content scrolls inside the panel, never the page.
 
+Dialog chrome on phones is styled once, globally, in `src/styles/_base.scss`
+(below `$bp-tablet`). Mark a dialog's header with `data-dialog-header`, its
+title with `data-dialog-title` and its footer with `data-dialog-footer`; the
+global rules give them 4px vertical padding and gaps, a 1.15 line-height, an 8%
+primary tint with an 18% primary border, and a 0.8rem title (`h1`–`h3` inside the
+header too). This is the single deliberate `!important` override and the
+requested exception to the 13px caption floor — do not restyle dialog headers
+per module on phones; tag new dialogs instead.
+
 ## Components and Patterns
 
 CSS Modules with Sass are the primary style architecture; tokens/mixins are
 shared through `src/styles/index.scss`. Common patterns include value pickers,
 paired controls, selectors, charts, navigation, dialogs, game HUDs,
-loading/skeletons, and result cards. `react-icons` supplies iconography. Some
+loading/skeletons, and result cards. `react-icons` supplies iconography
+(e.g. the chart zoom toolbar's Reset button uses `RxReset`). Some
 components use plain inline styles, component-specific tokens, or duplicated
 local styles, so global consistency is not guaranteed.
+
+### Fund statistic cards
+
+Mutual fund (`FundStatsCard`), SIP (`SipStatCard`) and SWP (`SwpStatCard`)
+result cards share one layout, styled by the `mfCard*` / `swp*` classes in
+`src/views/MutualFundAnalytics.module.scss`:
+
+- Header: fund colour dot, cleaned scheme name (full name kept in `title`) and
+  a decorative chevron.
+- Tag pills from `parseFundSchemeDetails` (`src/utilities/mutual-fund/mfCardDetails.ts`):
+  category (tinted with the fund colour via `color-mix`), plan
+  (Direct/Regular) and option (Growth/IDCW). The parser also strips
+  "(erstwhile …)" and the "- Direct Plan / - Growth / - IDCW" suffixes from the
+  displayed name.
+- Mutual fund card: Current Value with signed profit/loss and absolute %,
+  CAGR (C) / Absolute (A) metrics, then NAV start → end with a small up/down
+  trend SVG.
+- SIP/SWP cards: CAGR (XIRR) and Absolute Return on top, NAV progression,
+  Invested Amount / Current Value / Gain / Loss columns, and a footer row
+  (SIP: Installments, Units, Avg. Buy Price; SWP: Instalments, Units Left,
+  Avg. Buy Price).
+- Gains use `textSuccess`, losses `textError`; the skeleton shows until both
+  start and end NAV are known.
+
+On the FII/DII tracker the Index Benchmarks card (Nifty 50 / Sensex closing and
+period change, CPI/PPP footer) is the first summary card, ahead of the FII and
+DII flow cards.
 
 ## Feedback and Accessibility Patterns
 
