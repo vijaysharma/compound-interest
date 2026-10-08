@@ -109,7 +109,8 @@ export async function upstashDelPattern(pattern: string): Promise<boolean> {
   const cfg = getUpstashConfig();
   if (!cfg) return false;
   try {
-    const res = await fetch(`${cfg.url}/keys/${encodeURIComponent(pattern)}`, {
+    const encodedPattern = pattern.split('*').map(encodeURIComponent).join('*');
+    const res = await fetch(`${cfg.url}/keys/${encodedPattern}`, {
       headers: { Authorization: `Bearer ${cfg.token}` },
       signal: AbortSignal.timeout(3000),
     });
