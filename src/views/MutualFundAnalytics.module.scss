@@ -358,20 +358,20 @@
 }
 
 .mfDisplayItem {
-  padding: 0.75rem 0.625rem;
+  padding: 1rem 1.125rem;
   min-width: 0;
   min-height: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   background-color: var(--color-base-100);
   border: 1px solid var(--color-base-300);
-  border-radius: var(--radius-card, 0.5rem);
+  border-radius: var(--radius-card, 0.75rem);
   cursor: pointer;
   transition: all 0.15s ease-in-out;
 
   @include tablet-up {
-    padding: 0.875rem 0.75rem;
+    padding: 1.125rem 1.25rem;
   }
 
   &:hover {
@@ -661,3 +661,193 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Modern Mutual Fund Card (as per design spec) */
+.mfCardContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.mfCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.mfCardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.mfCardChevron {
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.mfDisplayItem:hover .mfCardChevron {
+  transform: translateX(2px);
+  color: var(--color-primary);
+}
+
+.mfCardTagsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.mfCardTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--color-base-content) 5%, transparent);
+  color: var(--color-text-secondary, #64748b);
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+}
+
+.mfCardTagHighlight {
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.mfCardValueRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.mfCardValueLeft {
+  display: flex;
+  flex-direction: column;
+}
+
+.mfCardFieldLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 0.15rem;
+}
+
+.mfCardBigAmount {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-heading, #0f172a);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+
+  @include tablet-up {
+    font-size: 1.5rem;
+  }
+}
+
+.mfCardValueRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mfCardProfitMain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mfCardProfitSub {
+  font-size: 0.785rem;
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+
+.mfCardMetricsRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  padding-top: 0.1rem;
+}
+
+.mfCardMetricItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mfCardMetricLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.mfCardMetricVal {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mfCardNavRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-base-content) 8%, transparent);
+  width: 100%;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mfCardNavText {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-secondary, #334155);
+  font-weight: 500;
+  white-space: nowrap;
+
+  strong {
+    color: var(--color-heading, #0f172a);
+    font-weight: 600;
+  }
+}
+
+.mfCardNavTrendCol {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mfCardNavArrowSvg {
+  width: 72px;
+  height: 20px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.mfCardNavReturn {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
