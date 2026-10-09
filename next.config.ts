@@ -1,6 +1,11 @@
 import type { NextConfig } from 'next';
 import path from 'node:path';
 const nextConfig: NextConfig = {
+  // Version-skew protection: Vercel sets VERCEL_DEPLOYMENT_ID per deployment. With it, a tab left
+  // open across a deploy gets a mismatch on its next navigation and does a full page load; without
+  // it the old client fetched the new build's route data and the navigation hung (e.g. clicking a
+  // sidebar link after leaving /admin/shiprocket-rates idle did nothing). Unset locally.
+  deploymentId: process.env.VERCEL_DEPLOYMENT_ID || undefined,
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,

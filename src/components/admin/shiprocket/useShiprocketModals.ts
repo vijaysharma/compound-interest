@@ -4,6 +4,8 @@ import {
   getShiprocketTrackingAction,
   getShiprocketCouriersAction,
   assignShiprocketCourierAction,
+  generateShiprocketPickupAction,
+  generateShiprocketLabelAction,
 } from '../../../actions/admin';
 import type {
   ShiprocketOrder,
@@ -12,6 +14,11 @@ import type {
   ShiprocketCourierRate,
   AlertMessage,
 } from './types';
+export interface AssignedShipment {
+  shipmentId: number;
+  awb: string;
+  courierName: string;
+}
 export function useShiprocketModals(
   token: string,
   account: ShiprocketAccountData | null,
@@ -25,6 +32,11 @@ export function useShiprocketModals(
   const [couriersList, setCouriersList] = useState<ShiprocketCourierRate[]>([]);
   const [loadingCouriers, setLoadingCouriers] = useState(false);
   const [assigningCourier, setAssigningCourier] = useState(false);
+  // Second step of the ship dialog: the courier is assigned; schedule the pickup, print the label.
+  const [assignedShipment, setAssignedShipment] = useState<AssignedShipment | null>(null);
+  const [schedulingPickup, setSchedulingPickup] = useState(false);
+  const [scheduledPickupDate, setScheduledPickupDate] = useState<string | null>(null);
+  const [printingLabel, setPrintingLabel] = useState(false);
   const handleOpenTracking = useCallback(async (awb: string) => {
     setTrackingModalAwb(awb);
     setTrackingData(null);
@@ -45,6 +57,8 @@ export function useShiprocketModals(
   }, [token, setAlertMsg]);
   const handleOpenShipModal = useCallback(async (order: ShiprocketOrder) => {
     setShipModalOrder(order);
+    setAssignedShipment(null);
+    setScheduledPickupDate(null);
     setCouriersList([]);
     setLoadingCouriers(true);
     try {
@@ -84,9 +98,16 @@ export function useShiprocketModals(
         token
       );
       if (res.success) {
+        const assigned = (res.data as { response?: { data?: { awb_code?: string; courier_name?: string } } })
+          ?.response?.data;
+        // Stay in the dialog: next comes the pickup and the label.
+        setAssignedShipment({
+          shipmentId,
+          awb: assigned?.awb_code || '',
+          courierName: assigned?.courier_name || '',
+        });
         setAlertMsg({ type: 'success', text: 'Courier assigned and AWB generated successfully!' });
-        setShipModalOrder(null);
-        await onOrdersUpdated();
+        void onOrdersUpdated();
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to assign courier';
@@ -95,6 +116,45 @@ export function useShiprocketModals(
       setAssigningCourier(false);
     }
   }, [token, onOrdersUpdated, setAlertMsg]);
+  const handleSchedulePickup = useCallback(async (shipmentId: number, pickupDate: string) => {
+    setSchedulingPickup(true);
+    try {
+      const res = await generateShiprocketPickupAction([shipmentId], token, pickupDate);
+      if (res.success) {
+        const scheduled = (res.data as { response?: { pickup_scheduled_date?: string } })?.response
+          ?.pickup_scheduled_date;
+        setScheduledPickupDate(scheduled || pickupDate);
+        setAlertMsg({ type: 'success', text: `Pickup scheduled for ${scheduled || pickupDate}` });
+        void onOrdersUpdated();
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to schedule pickup';
+      setAlertMsg({ type: 'error', text: msg });
+    } finally {
+      setSchedulingPickup(false);
+    }
+  }, [token, onOrdersUpdated, setAlertMsg]);
+  const handlePrintShipmentLabel = useCallback(async (shipmentId: number) => {
+    setPrintingLabel(true);
+    try {
+      const res = await generateShiprocketLabelAction([shipmentId], token);
+      if (res.success && res.label_url) {
+        window.open(res.label_url, '_blank', 'noopener,noreferrer');
+      } else {
+        setAlertMsg({ type: 'error', text: 'Label URL not returned by Shiprocket' });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate label';
+      setAlertMsg({ type: 'error', text: msg });
+    } finally {
+      setPrintingLabel(false);
+    }
+  }, [token, setAlertMsg]);
+  const closeShipModal = useCallback(() => {
+    setShipModalOrder(null);
+    setAssignedShipment(null);
+    setScheduledPickupDate(null);
+  }, []);
   return {
     trackingModalAwb,
     trackingData,
@@ -103,10 +163,17 @@ export function useShiprocketModals(
     couriersList,
     loadingCouriers,
     assigningCourier,
+    assignedShipment,
+    schedulingPickup,
+    scheduledPickupDate,
+    printingLabel,
     setTrackingModalAwb,
     setShipModalOrder,
     handleOpenTracking,
     handleOpenShipModal,
     handleAssignCourier,
+    handleSchedulePickup,
+    handlePrintShipmentLabel,
+    closeShipModal,
   };
 }

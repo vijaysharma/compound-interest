@@ -32,9 +32,11 @@ export async function assignShiprocketCourierAction(
   }
   return { success: true, data };
 }
+/** `pickupDate` (YYYY-MM-DD) asks for that day; without it Shiprocket picks the next slot. */
 export async function generateShiprocketPickupAction(
   shipmentIds: (number | string)[],
-  token?: string | null
+  token?: string | null,
+  pickupDate?: string
 ): Promise<{ success: boolean; data: unknown }> {
   const sql = getDb();
   await ensureTables(sql);
@@ -46,7 +48,10 @@ export async function generateShiprocketPickupAction(
   }
   const res = await shiprocketFetch('courier/generate/pickup', {
     method: 'POST',
-    body: JSON.stringify({ shipment_id: shipmentIds.map(Number) }),
+    body: JSON.stringify({
+      shipment_id: shipmentIds.map(Number),
+      ...(pickupDate && /^\d{4}-\d{2}-\d{2}$/.test(pickupDate) ? { pickup_date: [pickupDate] } : {}),
+    }),
   });
   const data = await res.json();
   if (!res.ok) {

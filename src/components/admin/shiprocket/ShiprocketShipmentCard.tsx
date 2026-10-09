@@ -22,7 +22,8 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
     const primaryShipment = order.shipments?.[0];
     const awb = primaryShipment?.awb;
     const courier = primaryShipment?.courier || primaryShipment?.sr_courier_name;
-    const canShip = !awb || (order.status || '').toUpperCase() === 'NEW';
+    const isCancelled = (order.status || '').toUpperCase().includes('CANCEL');
+    const canShip = !isCancelled && (!awb || (order.status || '').toUpperCase() === 'NEW');
     const canSchedulePickup = Boolean(awb && !primaryShipment?.pickup_scheduled_date);
     const isDelivered = (order.status || '').toUpperCase().includes('DELIVERED');
     return (

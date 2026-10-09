@@ -35,7 +35,6 @@ export const ShiprocketCreateTab: React.FC<ShiprocketCreateTabProps> = React.mem
     onSubmit,
     onCancel,
     onOpenShipModal,
-    onPrintLabel,
     ...handlers
   }) => (
     <form className={styles.formCard} onSubmit={onSubmit}>
@@ -71,22 +70,17 @@ export const ShiprocketCreateTab: React.FC<ShiprocketCreateTabProps> = React.mem
           <div>
             <strong>Shipment Created!</strong> Order ID: #{createdOrderResult.orderId}, Shipment ID: #{createdOrderResult.shipmentId}.
             <div className={styles.createdActions}>
+              {/* The label only exists once a courier is assigned; it is offered in the ship dialog. */}
               <button
                 type="button"
                 className={styles.primaryBtn}
-                onClick={() => {
-                  const found = orders.find((o) => o.id === createdOrderResult.orderId);
-                  if (found) onOpenShipModal(found);
-                }}
+                onClick={() =>
+                  onOpenShipModal(
+                    orders.find((o) => o.id === createdOrderResult.orderId) ?? createdOrderResult.order
+                  )
+                }
               >
-                Assign Courier & Ship Now
-              </button>
-              <button
-                type="button"
-                className={styles.outlineBtn}
-                onClick={() => onPrintLabel(createdOrderResult.shipmentId)}
-              >
-                Print Label
+                Choose Courier & Ship
               </button>
             </div>
           </div>

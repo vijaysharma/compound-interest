@@ -106,7 +106,6 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           onSubmit={createForm.handleCreateOrder}
           onCancel={() => setActiveTab('shipments')}
           onOpenShipModal={modals.handleOpenShipModal}
-          onPrintLabel={data.handlePrintLabel}
           onPickupLocChange={createForm.setPickupLoc}
           onPaymentModeChange={createForm.setPaymentMode}
           onCustNameChange={createForm.setCustName}
@@ -156,8 +155,14 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           couriersList={modals.couriersList}
           loadingCouriers={modals.loadingCouriers}
           assigningCourier={modals.assigningCourier}
+          assignedShipment={modals.assignedShipment}
+          schedulingPickup={modals.schedulingPickup}
+          scheduledPickupDate={modals.scheduledPickupDate}
+          printingLabel={modals.printingLabel}
           onAssignCourier={modals.handleAssignCourier}
-          onClose={() => modals.setShipModalOrder(null)}
+          onSchedulePickup={modals.handleSchedulePickup}
+          onPrintLabel={modals.handlePrintShipmentLabel}
+          onClose={modals.closeShipModal}
         />
       )}
     </div>

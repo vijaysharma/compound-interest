@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getPostcodeDetailsAction, createShiprocketOrderAction } from '../../../actions/admin';
 import type { ShiprocketAccountData, AlertMessage } from './types';
+import type { CreatedOrderResult } from './createTypes';
 export function useShiprocketCreateOrder(
   token: string,
   account: ShiprocketAccountData | null,
@@ -29,7 +30,7 @@ export function useShiprocketCreateOrder(
   const [discount, setDiscount] = useState('0');
   const [paymentMode, setPaymentMode] = useState<'Prepaid' | 'COD'>('Prepaid');
   const [creatingOrder, setCreatingOrder] = useState(false);
-  const [createdOrderResult, setCreatedOrderResult] = useState<{ orderId: number; shipmentId: number } | null>(null);
+  const [createdOrderResult, setCreatedOrderResult] = useState<CreatedOrderResult | null>(null);
 
   const handleAddItem = useCallback(() => {
     setItems((prev) => [...prev, { name: '', sku: '', units: '1', selling_price: '0' }]);
@@ -143,7 +144,25 @@ export function useShiprocketCreateOrder(
       };
       const res = await createShiprocketOrderAction(payload, token);
       if (res.success && res.data?.order_id && res.data?.shipment_id) {
-        setCreatedOrderResult({ orderId: res.data.order_id, shipmentId: res.data.shipment_id });
+        // A snapshot of the new order: the orders list only has it after a refresh, and the ship
+        // dialog needs its route, weight and shipment id now.
+        setCreatedOrderResult({
+          orderId: res.data.order_id,
+          shipmentId: res.data.shipment_id,
+          order: {
+            id: res.data.order_id,
+            status: 'NEW',
+            customer_name: custName,
+            customer_phone: custPhone,
+            customer_city: custCity,
+            customer_state: custState,
+            customer_pincode: custPincode,
+            pickup_location: pickupLoc,
+            payment_method: paymentMode,
+            shipments: [{ id: res.data.shipment_id, weight: appliedWeight }],
+            others: { weight: Number(appliedWeight) },
+          },
+        });
         setAlertMsg({
           type: 'success',
           text: `Shipment order created! Order ID: ${res.data.order_id}, Shipment ID: ${res.data.shipment_id}`,
@@ -160,7 +179,7 @@ export function useShiprocketCreateOrder(
     }
   }, [
     token, pickupLoc, custName, custPhone, custEmail, custAddress, custAddress2,
-    custCity, custState, custPincode, paymentMode, items, shippingCharges, discount,
+    custCity, custState, custPincode, paymentMode, items, shippingCharges, discount, appliedWeight,
     weight, length, breadth, height, setAlertMsg, onOrderCreated,
   ]);
   return {

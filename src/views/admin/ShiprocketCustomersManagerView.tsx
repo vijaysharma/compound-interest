@@ -31,6 +31,7 @@ import {
   mergeShiprocketCustomersAction,
 } from '@/actions/admin';
 import type { ShiprocketCustomer } from '@/types/shiprocket';
+import { usePincodeAutofill, type PincodePlace } from '@/components/admin/shiprocket/usePincodeAutofill';
 import styles from './ShiprocketCustomers.module.scss';
 interface Props {
   token: string;
@@ -79,6 +80,17 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const [mergeCity, setMergeCity] = useState('');
   const [mergeState, setMergeState] = useState('');
   const [mergePincode, setMergePincode] = useState('');
+  // Typing a pincode fills city and state, as the create-order form does.
+  const fillAddressPlace = useCallback((place: PincodePlace) => {
+    setCity(place.city);
+    if (place.state) setState(place.state);
+  }, []);
+  const fillMergePlace = useCallback((place: PincodePlace) => {
+    setMergeCity(place.city);
+    if (place.state) setMergeState(place.state);
+  }, []);
+  const addressPincode = usePincodeAutofill(fillAddressPlace);
+  const mergeAddressPincode = usePincodeAutofill(fillMergePlace);
   const [merging, setMerging] = useState(false);
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
@@ -543,12 +555,20 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   />
                 </div>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Pincode *</label>
+                  <label className={styles.fieldLabel}>
+                    Pincode * {addressPincode.loading && '(Looking up…)'}
+                  </label>
                   <input
                     className={styles.fieldInput}
                     placeholder="400001"
+                    inputMode="numeric"
+                    maxLength={6}
                     value={pincode}
-                    onChange={(e) => setPincode(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setPincode(next);
+                      addressPincode.onPincodeTyped(next);
+                    }}
                     required
                   />
                 </div>
@@ -768,11 +788,19 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   />
                 </div>
                 <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Pincode *</label>
+                  <label className={styles.fieldLabel}>
+                    Pincode * {mergeAddressPincode.loading && '(Looking up…)'}
+                  </label>
                   <input
                     className={styles.fieldInput}
+                    inputMode="numeric"
+                    maxLength={6}
                     value={mergePincode}
-                    onChange={(e) => setMergePincode(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setMergePincode(next);
+                      mergeAddressPincode.onPincodeTyped(next);
+                    }}
                     required
                   />
                 </div>

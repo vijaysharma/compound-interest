@@ -84,9 +84,10 @@ export async function assignShiprocketCourierAction(
 }
 export async function generateShiprocketPickupAction(
   shipmentIds: (number | string)[],
-  token?: string | null
+  token?: string | null,
+  pickupDate?: string
 ) {
-  return fulfillment.generateShiprocketPickupAction(shipmentIds, token);
+  return fulfillment.generateShiprocketPickupAction(shipmentIds, token, pickupDate);
 }
 export async function generateShiprocketLabelAction(
   shipmentIds: (number | string)[],
