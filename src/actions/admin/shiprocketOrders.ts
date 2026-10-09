@@ -1,7 +1,7 @@
 'use server';
 import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import type { ShiprocketOrder, ShiprocketTrackingData } from '@/types/shiprocket';
-import { shiprocketFetch } from './shiprocketClient';
+import { getShiprocketAuth, shiprocketFetch } from './shiprocketClient';
 import {
   withShiprocketCache,
   invalidateShiprocketOrdersCache,
@@ -40,7 +40,10 @@ export async function getShiprocketOrdersAction(
     throw new Error('Unauthorized: Admin access required');
   }
 
-  const cacheKey = `sr:orders:${options.page || 1}:${options.per_page || 15}:${options.search?.trim() || ''}:${options.sort || ''}:${options.filter_by || ''}:${options.from || ''}:${options.to || ''}`;
+  // Keyed by account: during a switch, an in-flight request for the previous account could
+  // otherwise write its orders back under a shared key after the cache was cleared.
+  const { profile } = await getShiprocketAuth();
+  const cacheKey = `sr:orders:${profile?.id || 'active'}:${options.page || 1}:${options.per_page || 15}:${options.search?.trim() || ''}:${options.sort || ''}:${options.filter_by || ''}:${options.from || ''}:${options.to || ''}`;
 
   return withShiprocketCache(cacheKey, SR_CACHE_TTL.ORDERS_LIST, async () => {
     const params = new URLSearchParams();

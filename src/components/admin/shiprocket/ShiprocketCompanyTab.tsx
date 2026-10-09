@@ -136,7 +136,9 @@ export const ShiprocketCompanyTab: React.FC<ShiprocketCompanyTabProps> = React.m
           </div>
           {!isLoading && profile?.token_expires_at && (
             <div className={styles.createdAtText}>
-              DB Token Expires At: {new Date(profile.token_expires_at).toLocaleString()} (Auto-renews upon expiry)
+              {new Date(profile.token_expires_at).getTime() > Date.now()
+                ? `Token valid until ${new Date(profile.token_expires_at).toLocaleString()} (auto-renews)`
+                : `Token expired ${new Date(profile.token_expires_at).toLocaleString()} — renews automatically on the next Shiprocket request`}
             </div>
           )}
         </div>

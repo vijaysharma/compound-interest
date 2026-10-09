@@ -71,7 +71,9 @@ export async function getShiprocketStatementAction(
   if (!(await isAuthorizedUser(token, sql))) {
     throw new Error('Unauthorized: Admin access required');
   }
-  const cacheKey = `sr:statement:${options.page || 1}:${options.per_page || 15}:${options.from || ''}:${options.to || ''}`;
+  // Keyed by account, like the orders cache (see shiprocketOrders.ts).
+  const { profile } = await getShiprocketAuth();
+  const cacheKey = `sr:statement:${profile?.id || 'active'}:${options.page || 1}:${options.per_page || 15}:${options.from || ''}:${options.to || ''}`;
 
   return withShiprocketCache(cacheKey, SR_CACHE_TTL.STATEMENT, async () => {
     const params = new URLSearchParams();

@@ -378,7 +378,9 @@ export const ShiprocketAccountsManagerView: React.FC<Props> = ({ token }) => {
                 )}
                 {acc.token_expires_at && (
                   <div className={styles.syncMeta}>
-                    Token Expires: {new Date(acc.token_expires_at).toLocaleDateString()} (Auto-renews)
+                    {new Date(acc.token_expires_at).getTime() > Date.now()
+                      ? `Token valid until ${new Date(acc.token_expires_at).toLocaleDateString()} (auto-renews)`
+                      : `Token expired ${new Date(acc.token_expires_at).toLocaleDateString()} — renews automatically the next time this account is used`}
                   </div>
                 )}
               </div>

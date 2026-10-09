@@ -1,6 +1,7 @@
 'use server';
 import { ensureTables, getDb } from '@/lib/db';
 import type { DbShiprocketAccount } from '@/lib/db/types';
+import { redisDel } from '@/lib/redis';
 let cachedShiprocketToken: { token: string; expiresAt: number; accountId?: string } | null = null;
 let cachedShiprocketUser: Record<string, unknown> | null = null;
 export async function invalidateShiprocketAuthCache(): Promise<void> {
@@ -138,6 +139,8 @@ export async function getShiprocketAuth(
           updated_at = NOW()
         WHERE id = ${activeDbAccount.id}
       `;
+      // The cached accounts list still holds the old expiry; drop it so the UI shows the new one.
+      await redisDel('sr:acc:list').catch(() => false);
     } catch (saveErr) {
       console.warn('Failed to update refreshed token in DB:', saveErr);
     }

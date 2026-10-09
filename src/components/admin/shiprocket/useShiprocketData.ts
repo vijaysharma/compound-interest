@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   getShiprocketAccountAction,
   getShiprocketOrdersAction,
@@ -43,10 +43,14 @@ export function useShiprocketData(token: string) {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingStatement, setLoadingStatement] = useState(false);
   const [alertMsg, setAlertMsg] = useState<AlertMessage | null>(null);
+  // Each fetch kind numbers its requests; a response that isn't the latest is dropped, so a slow
+  // request for the previous account can never overwrite the new account's data.
+  const seq = useRef({ list: 0, account: 0, orders: 0, statement: 0 });
   const fetchAccountsList = useCallback(async () => {
+    const id = ++seq.current.list;
     try {
       const res = await listShiprocketAccountsAction(token);
-      if (res.success && res.accounts) {
+      if (id === seq.current.list && res.success && res.accounts) {
         setAccountsList(res.accounts);
       }
     } catch (err: unknown) {
@@ -54,88 +58,122 @@ export function useShiprocketData(token: string) {
     }
   }, [token]);
   const fetchAccount = useCallback(async () => {
+    const id = ++seq.current.account;
     setLoadingAccount(true);
     try {
       const res = await getShiprocketAccountAction(token);
-      if (res.success && res.account) {
+      if (id === seq.current.account && res.success && res.account) {
         setAccount(res.account);
       }
     } catch (err: unknown) {
+      if (id !== seq.current.account) return;
       const msg = err instanceof Error ? err.message : 'Failed to load Shiprocket account details';
       setAlertMsg({ type: 'error', text: msg });
     } finally {
-      setLoadingAccount(false);
+      if (id === seq.current.account) setLoadingAccount(false);
     }
   }, [token]);
-  const [orderDateFrom, setOrderDateFrom] = useState('');
-  const [orderDateTo, setOrderDateTo] = useState('');
+  // The order date range. Read through a ref so fetchOrders (and fetchAll) keep the same identity
+  // when it changes: depending on the dates re-ran the page's load effect on every change, and an
+  // account switch cascaded through 4–5 full reloads. `userSet` separates a range the user picked
+  // (kept across account switches and sent as the filter) from one filled in from the loaded
+  // orders (display only, never sent).
+  const [orderDateFrom, setOrderDateFromState] = useState('');
+  const [orderDateTo, setOrderDateToState] = useState('');
+  const range = useRef({ from: '', to: '', userSet: false });
+  const setOrderDateFrom = useCallback((value: string) => {
+    range.current = { ...range.current, from: value, userSet: true };
+    setOrderDateFromState(value);
+  }, []);
+  const setOrderDateTo = useCallback((value: string) => {
+    range.current = { ...range.current, to: value, userSet: true };
+    setOrderDateToState(value);
+  }, []);
   const fetchOrders = useCallback(async (customFrom?: string, customTo?: string) => {
+    if (customFrom !== undefined || customTo !== undefined) {
+      const from = customFrom ?? range.current.from;
+      const to = customTo ?? range.current.to;
+      range.current = { from, to, userSet: Boolean(from || to) };
+      setOrderDateFromState(from);
+      setOrderDateToState(to);
+    }
+    const { from, to, userSet } = range.current;
+    const id = ++seq.current.orders;
     setLoadingOrders(true);
     try {
-      const fromParam = customFrom !== undefined ? customFrom : orderDateFrom;
-      const toParam = customTo !== undefined ? customTo : orderDateTo;
-      if (customFrom !== undefined) setOrderDateFrom(customFrom);
-      if (customTo !== undefined) setOrderDateTo(customTo);
       const res = await getShiprocketOrdersAction(
         {
           per_page: 50,
-          ...(fromParam ? { from: fromParam } : {}),
-          ...(toParam ? { to: toParam } : {}),
+          ...(userSet && from ? { from } : {}),
+          ...(userSet && to ? { to } : {}),
         },
         token
       );
+      if (id !== seq.current.orders) return;
       if (res.success && res.orders) {
         setOrders(res.orders);
-        if (customFrom === undefined && customTo === undefined && !orderDateFrom && !orderDateTo && res.orders.length > 0) {
+        if (!range.current.userSet) {
+          // Show the span the loaded orders cover; it stays a label, not a filter.
           const dates = res.orders
             .map((o) => parseOrderDateToIso(o.created_at))
             .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
             .sort();
-          if (dates.length > 0) {
-            setOrderDateFrom(dates[0]);
-            setOrderDateTo(dates[dates.length - 1]);
-          }
+          setOrderDateFromState(dates[0] ?? '');
+          setOrderDateToState(dates[dates.length - 1] ?? '');
+          range.current = { from: dates[0] ?? '', to: dates[dates.length - 1] ?? '', userSet: false };
         }
       }
     } catch (err: unknown) {
+      if (id !== seq.current.orders) return;
       const msg = err instanceof Error ? err.message : 'Failed to load Shiprocket orders';
       setAlertMsg({ type: 'error', text: msg });
     } finally {
-      setLoadingOrders(false);
+      if (id === seq.current.orders) setLoadingOrders(false);
     }
-  }, [token, orderDateFrom, orderDateTo]);
+  }, [token]);
   const fetchStatement = useCallback(async () => {
+    const id = ++seq.current.statement;
     setLoadingStatement(true);
     try {
       const res = await getShiprocketStatementAction({ per_page: 50 }, token);
-      if (res.success && res.data) {
+      if (id === seq.current.statement && res.success && res.data) {
         setStatement(res.data);
       }
     } catch (err: unknown) {
+      if (id !== seq.current.statement) return;
       const msg = err instanceof Error ? err.message : 'Failed to load wallet ledger statement';
       setAlertMsg({ type: 'error', text: msg });
     } finally {
-      setLoadingStatement(false);
+      if (id === seq.current.statement) setLoadingStatement(false);
     }
   }, [token]);
   const fetchAll = useCallback(() => {
-    fetchAccountsList();
-    fetchAccount();
-    fetchOrders();
-    fetchStatement();
+    void fetchAccountsList();
+    void fetchAccount();
+    void fetchOrders();
+    void fetchStatement();
   }, [fetchAccountsList, fetchAccount, fetchOrders, fetchStatement]);
+  // Once per token: the fetchers above only change with it.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
   }, [fetchAll]);
   const handleSwitchAccount = useCallback(
     async (accountId: string) => {
-      // 1. Immediately wipe previous account data & set skeleton loading indicators
+      // Clear the previous account's data at once; a user-chosen date range is kept and applied
+      // to the new account, a derived one is recomputed from the new account's orders.
       setAccount(null);
       setOrders([]);
       setStatement([]);
-      setOrderDateFrom('');
-      setOrderDateTo('');
+      if (!range.current.userSet) {
+        range.current = { from: '', to: '', userSet: false };
+        setOrderDateFromState('');
+        setOrderDateToState('');
+      }
+      // Invalidate anything still in flight for the old account.
+      seq.current.account++;
+      seq.current.orders++;
+      seq.current.statement++;
       setLoadingAccount(true);
       setLoadingOrders(true);
       setLoadingStatement(true);
@@ -143,19 +181,11 @@ export function useShiprocketData(token: string) {
         const res = await switchActiveShiprocketAccountAction(accountId, token);
         if (res.success) {
           setAlertMsg({ type: 'success', text: res.message });
-          // Fetch updated accounts list to update active badges & balances
-          await fetchAccountsList();
-          // Fetch the new account details, orders, and ledger statement
-          await Promise.all([
-            fetchAccount(),
-            fetchOrders('', ''),
-            fetchStatement(),
-          ]);
+          await Promise.all([fetchAccountsList(), fetchAccount(), fetchOrders(), fetchStatement()]);
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Failed to switch active account';
         setAlertMsg({ type: 'error', text: msg });
-      } finally {
         setLoadingAccount(false);
         setLoadingOrders(false);
         setLoadingStatement(false);
