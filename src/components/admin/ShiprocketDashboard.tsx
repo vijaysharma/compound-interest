@@ -48,6 +48,7 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
         account={data.account}
         accountsList={data.accountsList}
         onSwitchAccount={data.handleSwitchAccount}
+        switchingToAccountId={data.switchingToAccountId}
         loading={data.loadingAccount || data.loadingOrders || data.loadingStatement}
         onRefreshAll={data.fetchAll}
         onNewShipment={() => {

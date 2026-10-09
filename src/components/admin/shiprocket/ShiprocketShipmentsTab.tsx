@@ -136,9 +136,14 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
         </div>
       </div>
       {loadingOrders ? (
-        <div className={styles.emptyState}>
-          <span className={styles.spinner} />
-          <p className={styles.emptyDesc}>Loading Shiprocket orders...</p>
+        <div className={styles.ordersSkeleton} role="status" aria-label="Loading Shiprocket orders">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={styles.orderSkeletonCard} aria-hidden="true">
+              <span className={`${styles.skeletonBar} ${styles.skeletonBarShort}`} />
+              <span className={styles.skeletonBar} />
+              <span className={`${styles.skeletonBar} ${styles.skeletonBarMid}`} />
+            </div>
+          ))}
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className={styles.emptyState}>

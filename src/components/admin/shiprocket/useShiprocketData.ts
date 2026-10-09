@@ -34,6 +34,16 @@ function parseOrderDateToIso(raw?: unknown): string {
   return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
 }
 
+/** Local calendar date (YYYY-MM-DD), `monthsBack` months before today. */
+function localIsoDate(monthsBack = 0): string {
+  const d = new Date();
+  if (monthsBack) d.setMonth(d.getMonth() - monthsBack);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+/** Default order window: the last six months, up to today. */
+const DEFAULT_RANGE_MONTHS = 6;
+const byNewestFirst = (a: ShiprocketOrder, b: ShiprocketOrder) =>
+  parseOrderDateToIso(b.created_at).localeCompare(parseOrderDateToIso(a.created_at)) || b.id - a.id;
 export function useShiprocketData(token: string) {
   const [account, setAccount] = useState<ShiprocketAccountData | null>(null);
   const [accountsList, setAccountsList] = useState<ShiprocketAccountProfile[]>([]);
@@ -73,56 +83,54 @@ export function useShiprocketData(token: string) {
       if (id === seq.current.account) setLoadingAccount(false);
     }
   }, [token]);
-  // The order date range. Read through a ref so fetchOrders (and fetchAll) keep the same identity
-  // when it changes: depending on the dates re-ran the page's load effect on every change, and an
-  // account switch cascaded through 4–5 full reloads. `userSet` separates a range the user picked
-  // (kept across account switches and sent as the filter) from one filled in from the loaded
-  // orders (display only, never sent).
-  const [orderDateFrom, setOrderDateFromState] = useState('');
-  const [orderDateTo, setOrderDateToState] = useState('');
-  const range = useRef({ from: '', to: '', userSet: false });
+  // The order date range, defaulting to the last six months. Read through a ref so fetchOrders
+  // (and fetchAll) keep the same identity when it changes: depending on the dates re-ran the
+  // page's load effect on every change, and an account switch cascaded through 4–5 reloads.
+  // The range is kept across account switches.
+  const [orderDateFrom, setOrderDateFromState] = useState(() => localIsoDate(DEFAULT_RANGE_MONTHS));
+  const [orderDateTo, setOrderDateToState] = useState(() => localIsoDate(0));
+  const range = useRef({ from: orderDateFrom, to: orderDateTo });
   const setOrderDateFrom = useCallback((value: string) => {
-    range.current = { ...range.current, from: value, userSet: true };
+    range.current = { ...range.current, from: value };
     setOrderDateFromState(value);
   }, []);
   const setOrderDateTo = useCallback((value: string) => {
-    range.current = { ...range.current, to: value, userSet: true };
+    range.current = { ...range.current, to: value };
     setOrderDateToState(value);
   }, []);
+  // The account whose orders the page may show: set on a switch, learned from the first load.
+  // A response for any other account (a stale cache entry, a request that straddled the switch)
+  // is dropped and fetched again rather than shown under the wrong account.
+  const expectedAccountId = useRef<string | null>(null);
+  const [switchingToAccountId, setSwitchingToAccountId] = useState<string | null>(null);
   const fetchOrders = useCallback(async (customFrom?: string, customTo?: string) => {
     if (customFrom !== undefined || customTo !== undefined) {
       const from = customFrom ?? range.current.from;
       const to = customTo ?? range.current.to;
-      range.current = { from, to, userSet: Boolean(from || to) };
+      range.current = { from, to };
       setOrderDateFromState(from);
       setOrderDateToState(to);
     }
-    const { from, to, userSet } = range.current;
+    const { from, to } = range.current;
     const id = ++seq.current.orders;
     setLoadingOrders(true);
     try {
-      const res = await getShiprocketOrdersAction(
-        {
-          per_page: 50,
-          ...(userSet && from ? { from } : {}),
-          ...(userSet && to ? { to } : {}),
-        },
-        token
-      );
-      if (id !== seq.current.orders) return;
-      if (res.success && res.orders) {
-        setOrders(res.orders);
-        if (!range.current.userSet) {
-          // Show the span the loaded orders cover; it stays a label, not a filter.
-          const dates = res.orders
-            .map((o) => parseOrderDateToIso(o.created_at))
-            .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
-            .sort();
-          setOrderDateFromState(dates[0] ?? '');
-          setOrderDateToState(dates[dates.length - 1] ?? '');
-          range.current = { from: dates[0] ?? '', to: dates[dates.length - 1] ?? '', userSet: false };
-        }
+      // Two attempts: a response for another account is retried once, then refused.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await getShiprocketOrdersAction(
+          { per_page: 50, ...(from ? { from } : {}), ...(to ? { to } : {}) },
+          token
+        );
+        if (id !== seq.current.orders) return;
+        if (!res.success || !res.orders) return;
+        const expected = expectedAccountId.current;
+        if (expected && res.accountId && res.accountId !== expected) continue;
+        if (!expected && res.accountId) expectedAccountId.current = res.accountId;
+        setOrders([...res.orders].sort(byNewestFirst));
+        return;
       }
+      setOrders([]);
+      setAlertMsg({ type: 'error', text: 'Orders came back for a different account; please refresh.' });
     } catch (err: unknown) {
       if (id !== seq.current.orders) return;
       const msg = err instanceof Error ? err.message : 'Failed to load Shiprocket orders';
@@ -162,14 +170,11 @@ export function useShiprocketData(token: string) {
     async (accountId: string) => {
       // Clear the previous account's data at once; a user-chosen date range is kept and applied
       // to the new account, a derived one is recomputed from the new account's orders.
+      setSwitchingToAccountId(accountId);
+      expectedAccountId.current = accountId;
       setAccount(null);
       setOrders([]);
       setStatement([]);
-      if (!range.current.userSet) {
-        range.current = { from: '', to: '', userSet: false };
-        setOrderDateFromState('');
-        setOrderDateToState('');
-      }
       // Invalidate anything still in flight for the old account.
       seq.current.account++;
       seq.current.orders++;
@@ -186,9 +191,12 @@ export function useShiprocketData(token: string) {
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Failed to switch active account';
         setAlertMsg({ type: 'error', text: msg });
+        expectedAccountId.current = null;
         setLoadingAccount(false);
         setLoadingOrders(false);
         setLoadingStatement(false);
+      } finally {
+        setSwitchingToAccountId(null);
       }
     },
     [token, fetchAccountsList, fetchAccount, fetchOrders, fetchStatement]
@@ -231,6 +239,7 @@ export function useShiprocketData(token: string) {
   return {
     account,
     accountsList,
+    switchingToAccountId,
     orders,
     statement,
     loadingAccount,

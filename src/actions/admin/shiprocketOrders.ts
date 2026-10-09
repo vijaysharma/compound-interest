@@ -31,6 +31,8 @@ export async function getShiprocketOrdersAction(
   token?: string | null
 ): Promise<{
   success: boolean;
+  /** The Shiprocket account these orders belong to; the client drops orders for any other. */
+  accountId: string | null;
   orders: ShiprocketOrder[];
   meta?: { pagination?: { total: number; count: number; per_page: number; current_page: number; total_pages: number } };
 }> {
@@ -42,7 +44,8 @@ export async function getShiprocketOrdersAction(
 
   // Keyed by account: during a switch, an in-flight request for the previous account could
   // otherwise write its orders back under a shared key after the cache was cleared.
-  const { profile } = await getShiprocketAuth();
+  const auth = await getShiprocketAuth();
+  const { profile } = auth;
   const cacheKey = `sr:orders:${profile?.id || 'active'}:${options.page || 1}:${options.per_page || 15}:${options.search?.trim() || ''}:${options.sort || ''}:${options.filter_by || ''}:${options.from || ''}:${options.to || ''}`;
 
   return withShiprocketCache(cacheKey, SR_CACHE_TTL.ORDERS_LIST, async () => {
@@ -55,13 +58,14 @@ export async function getShiprocketOrdersAction(
     if (options.from) params.set('from', toOrdersDate(options.from));
     if (options.to) params.set('to', toOrdersDate(options.to));
     const endpoint = `orders${params.toString() ? `?${params.toString()}` : ''}`;
-    const res = await shiprocketFetch(endpoint);
+    const res = await shiprocketFetch(endpoint, {}, auth);
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data?.message || `Failed to fetch orders: HTTP ${res.status}`);
     }
     return {
       success: true,
+      accountId: profile?.id ?? null,
       orders: Array.isArray(data?.data) ? (data.data as ShiprocketOrder[]) : [],
       meta: data?.meta,
     };

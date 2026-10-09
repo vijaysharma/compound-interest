@@ -7,14 +7,22 @@ export interface ShiprocketHeaderProps {
   account: ShiprocketAccountData | null;
   accountsList?: ShiprocketAccountProfile[];
   onSwitchAccount?: (id: string) => Promise<void>;
+  /** The account being switched to, so the picker shows the choice while it loads. */
+  switchingToAccountId?: string | null;
   loading: boolean;
   onRefreshAll: () => void;
   onNewShipment: () => void;
 }
+/** "radhagopal@gmail.com" -> "rad***@gmail.com" */
+const maskLogin = (email: string) => {
+  const [user, domain] = email.split('@');
+  return domain ? `${user.slice(0, 3)}***@${domain}` : email;
+};
 export const ShiprocketHeader: React.FC<ShiprocketHeaderProps> = React.memo(
-  ({ account, accountsList = [], onSwitchAccount, loading, onRefreshAll, onNewShipment }) => {
+  ({ account, accountsList = [], onSwitchAccount, switchingToAccountId, loading, onRefreshAll, onNewShipment }) => {
     const profile = account?.profile;
-    const activeAccountId = profile?.id || accountsList.find((a) => a.is_active)?.id || '';
+    const activeAccountId =
+      switchingToAccountId || profile?.id || accountsList.find((a) => a.is_active)?.id || '';
     return (
       <div className={styles.header}>
         <div className={styles.headerLeft}>
@@ -44,8 +52,12 @@ export const ShiprocketHeader: React.FC<ShiprocketHeaderProps> = React.memo(
                         : Number(acc.balance || 0);
                     const balStr = `₹${bal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     return (
+                      // Several accounts share a label and company name; the Shiprocket company
+                      // id and a masked login tell them apart.
                       <option key={acc.id} value={acc.id}>
-                        {acc.account_label} ({acc.company_name}) — {balStr}
+                        {acc.account_label}
+                        {acc.sr_company_id ? ` · #${acc.sr_company_id}` : ''}
+                        {acc.api_email ? ` · ${maskLogin(acc.api_email)}` : ''} — {balStr}
                       </option>
                     );
                   })}

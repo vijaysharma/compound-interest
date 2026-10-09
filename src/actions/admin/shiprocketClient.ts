@@ -156,8 +156,16 @@ export async function getShiprocketAuth(
       profile: activeDbAccount,
     };
 }
-export async function shiprocketFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
-  const { token } = await getShiprocketAuth();
+/**
+ * `auth` pins the request to an account already resolved by the caller (so a cache key and the
+ * request it caches can't straddle an account switch); otherwise the active account is used.
+ */
+export async function shiprocketFetch(
+  endpoint: string,
+  options: RequestInit = {},
+  auth?: { token: string }
+): Promise<Response> {
+  const { token } = auth ?? (await getShiprocketAuth());
   let res = await fetch(`https://apiv2.shiprocket.in/v1/external/${endpoint.replace(/^\//, '')}`, {
     ...options,
     headers: {
