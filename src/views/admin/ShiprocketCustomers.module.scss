@@ -1183,3 +1183,14 @@
     padding-right: 0.875rem;
   }
 }
+
+// "Searching…" inside the right end of the search box.
+.searchStatus {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: $fs-caption;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}

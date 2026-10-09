@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from '@/navigation';
 import {
   FiUsers,
@@ -46,11 +46,18 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const [syncFrom, setSyncFrom] = useState('2023-01-01');
   const [syncTo, setSyncTo] = useState(() => new Date().toISOString().slice(0, 10));
   // Filter & pagination state
+  // What's typed shows at once; the search itself waits for a pause in typing. Server actions run
+  // one at a time, so a request per keystroke queued up and results trickled in for seconds.
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
   const [sortBy, setSortBy] = useState<
     'name' | 'phone' | 'city' | 'state' | 'pincode' | 'orders' | 'updated_at' | 'created_at'
-  >('updated_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  >('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const perPage = 25;
   // Form CRUD state
@@ -92,7 +99,10 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const addressPincode = usePincodeAutofill(fillAddressPlace);
   const mergeAddressPincode = usePincodeAutofill(fillMergePlace);
   const [merging, setMerging] = useState(false);
+  // Only the latest request may update the list.
+  const fetchSeq = useRef(0);
   const fetchCustomers = useCallback(async () => {
+    const id = ++fetchSeq.current;
     setLoading(true);
     try {
       const res = await listShiprocketCustomersAction(
@@ -105,15 +115,17 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         },
         token
       );
+      if (id !== fetchSeq.current) return;
       if (res.success) {
         setCustomers(res.customers);
         setTotalCount(res.total);
       }
     } catch (err: unknown) {
+      if (id !== fetchSeq.current) return;
       const msg = err instanceof Error ? err.message : 'Failed to load customers';
       setAlert({ type: 'error', text: msg });
     } finally {
-      setLoading(false);
+      if (id === fetchSeq.current) setLoading(false);
     }
   }, [token, search, sortBy, sortOrder, page]);
   useEffect(() => {
@@ -345,7 +357,8 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortBy(col);
-      setSortOrder('desc');
+      // Text columns start A–Z; counts and dates start with the most / newest.
+      setSortOrder(col === 'orders' || col === 'updated_at' || col === 'created_at' ? 'desc' : 'asc');
     }
   };
   const totalPages = Math.ceil(totalCount / perPage) || 1;
@@ -838,12 +851,14 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             type="text"
             className={styles.searchInput}
             placeholder="Search by name, phone, alt. phone, email, address, city, pincode..."
-            value={search}
+            value={searchInput}
             onChange={(e) => {
-              setSearch(e.target.value);
+              setSearchInput(e.target.value);
               setPage(1);
             }}
+            aria-busy={loading}
           />
+          {loading && searchInput.trim() && <span className={styles.searchStatus}>Searching…</span>}
         </div>
         <div className={styles.filterControlsRight}>
           <select
@@ -856,9 +871,9 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             }}
             aria-label="Sort Customers"
           >
+            <option value="name-asc">Name (A-Z)</option>
             <option value="updated_at-desc">Recently Updated</option>
             <option value="created_at-desc">Recently Added</option>
-            <option value="name-asc">Name (A-Z)</option>
             <option value="name-desc">Name (Z-A)</option>
             <option value="orders-desc">Most Orders</option>
             <option value="city-asc">City (A-Z)</option>

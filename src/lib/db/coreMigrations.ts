@@ -139,6 +139,28 @@ export async function applyCoreMigrations(sql: Query): Promise<void> {
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS shiprocket_customer_orders_dedup_idx ON shiprocket_customer_orders (dedup_key)`;
+  // An order's existing link wins over its recomputed key on re-sync, so look it up by order.
+  await sql`CREATE INDEX IF NOT EXISTS shiprocket_customer_orders_order_idx ON shiprocket_customer_orders (account_id, order_id)`;
+  // When an edit or merge changes a customer's key, the old key maps to the new one, so a later
+  // sync of the same buyer's orders lands on that customer instead of recreating the old record.
+  await sql`
+    CREATE TABLE IF NOT EXISTS shiprocket_customer_aliases (
+      old_key TEXT PRIMARY KEY,
+      new_key TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  // edited_at: set when the admin saves or merges a customer; the sync then never overwrites that
+  // record's contact or address details (it only fills fields that are blank). Customers that
+  // existed when the column was added are marked, since which of them were hand-edited isn't known.
+  const editedAtExists = (await sql`
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'shiprocket_customers' AND column_name = 'edited_at'
+  `) as unknown[];
+  if (editedAtExists.length === 0) {
+    await sql`ALTER TABLE shiprocket_customers ADD COLUMN IF NOT EXISTS edited_at TIMESTAMPTZ`;
+    await sql`UPDATE shiprocket_customers SET edited_at = updated_at WHERE edited_at IS NULL`;
+  }
 
   // PPF Actual Investment Records
   await sql`

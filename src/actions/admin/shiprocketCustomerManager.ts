@@ -163,6 +163,24 @@ function buildDedupKey(name: string, pincode: string): string {
   return `${cleanName(name)}_${cleanPincode(pincode)}`;
 }
 /**
+ * Remember that `oldKeys` now live under `newKey` (an edit changed the name/pincode, or a merge),
+ * so a later sync of those orders resolves to this customer rather than recreating the old one.
+ * Aliases that pointed at an old key are re-pointed, and `newKey` itself is never an alias.
+ */
+async function recordKeyAliases(sql: ReturnType<typeof getDb>, oldKeys: string[], newKey: string) {
+  const olds = Array.from(new Set(oldKeys.filter((k) => k && k !== newKey)));
+  if (olds.length === 0) return;
+  for (const oldKey of olds) {
+    await sql`
+      INSERT INTO shiprocket_customer_aliases (old_key, new_key)
+      VALUES (${oldKey}, ${newKey})
+      ON CONFLICT (old_key) DO UPDATE SET new_key = EXCLUDED.new_key, created_at = NOW()
+    `;
+  }
+  await sql`UPDATE shiprocket_customer_aliases SET new_key = ${newKey} WHERE new_key = ANY(${olds})`;
+  await sql`DELETE FROM shiprocket_customer_aliases WHERE old_key = ${newKey}`;
+}
+/**
  * Helper to ensure a valid auth token for an account, auto-refreshing if expired
  */
 async function getAccountToken(
@@ -228,229 +246,78 @@ export async function listShiprocketCustomersAction(
   const page = Math.max(1, options.page || 1);
   const perPage = Math.min(100, Math.max(5, options.perPage || 25));
   const offset = (page - 1) * perPage;
-  const sortCol = options.sortBy || 'updated_at';
-  const sortDir = options.sortOrder === 'asc' ? 'ASC' : 'DESC';
+  const sortCol = options.sortBy || 'name';
+  const sortDir = options.sortOrder === 'desc' ? 'DESC' : 'ASC';
 
   const cacheKey = `sr:cust:list:${page}:${perPage}:${search}:${sortCol}:${sortDir}`;
 
   return withShiprocketCache(cacheKey, SR_CACHE_TTL.CUSTOMERS_LIST, async () => {
-    let rows: DbShiprocketCustomer[];
-    let countResult: Array<{ count: number }>;
-    if (search) {
-      const term = `%${search}%`;
-
-    countResult = (await sql`
-      SELECT count(*)::int as count
-      FROM shiprocket_customers
-      WHERE
-        LOWER(customer_name) LIKE ${term}
-        OR customer_phone LIKE ${term}
-        OR COALESCE(customer_phone_2, '') LIKE ${term}
-        OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-        OR LOWER(customer_address) LIKE ${term}
-        OR LOWER(customer_city) LIKE ${term}
-        OR LOWER(customer_state) LIKE ${term}
-        OR customer_pincode LIKE ${term}
-    `) as Array<{ count: number }>;
-    if (sortCol === 'name') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY customer_name ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'phone') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY customer_phone ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'city') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY customer_city ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'state') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY customer_state ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'pincode') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY customer_pincode ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'orders') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY total_orders ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'created_at') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY created_at ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        WHERE
-          LOWER(customer_name) LIKE ${term}
-          OR customer_phone LIKE ${term}
-          OR COALESCE(customer_phone_2, '') LIKE ${term}
-          OR LOWER(COALESCE(customer_email, '')) LIKE ${term}
-          OR LOWER(customer_address) LIKE ${term}
-          OR LOWER(customer_city) LIKE ${term}
-          OR LOWER(customer_state) LIKE ${term}
-          OR customer_pincode LIKE ${term}
-        ORDER BY updated_at ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    }
-  } else {
-    countResult = (await sql`SELECT count(*)::int as count FROM shiprocket_customers`) as Array<{ count: number }>;
-    if (sortCol === 'name') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY customer_name ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'phone') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY customer_phone ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'city') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY customer_city ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'state') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY customer_state ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'pincode') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY customer_pincode ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'orders') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY total_orders ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else if (sortCol === 'created_at') {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY created_at ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    } else {
-      rows = (await sql`
-        SELECT * FROM shiprocket_customers
-        ORDER BY updated_at ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}
-        LIMIT ${perPage} OFFSET ${offset}
-      `) as DbShiprocketCustomer[];
-    }
-  }
-  const total = Number(countResult[0]?.count || 0);
-  return {
-    success: true,
-    customers: rows.map((r) => ({
-      id: r.id,
-      customer_name: r.customer_name,
-      customer_phone: r.customer_phone,
-      customer_phone_2: r.customer_phone_2 ?? null,
-      customer_email: r.customer_email ?? null,
-      customer_address: r.customer_address,
-      customer_address_2: r.customer_address_2 ?? null,
-      customer_city: r.customer_city,
-      customer_state: r.customer_state,
-      customer_pincode: r.customer_pincode,
-      dedup_key: r.dedup_key,
-      source_account_ids: r.source_account_ids || [],
-      total_orders: Number(r.total_orders || 1),
-      last_order_id: r.last_order_id ?? null,
-      last_order_date: r.last_order_date ?? null,
-      created_at: r.created_at,
-      updated_at: r.updated_at,
-    })),
-    total,
-    page,
-    perPage,
-  };
+    const term = `%${search}%`;
+    const where = search
+      ? sql`WHERE
+          LOWER(c.customer_name) LIKE ${term}
+          OR c.customer_phone LIKE ${term}
+          OR COALESCE(c.customer_phone_2, '') LIKE ${term}
+          OR LOWER(COALESCE(c.customer_email, '')) LIKE ${term}
+          OR LOWER(c.customer_address) LIKE ${term}
+          OR LOWER(c.customer_city) LIKE ${term}
+          OR LOWER(c.customer_state) LIKE ${term}
+          OR c.customer_pincode LIKE ${term}`
+      : sql``;
+    const orderBy = {
+      name: sql`LOWER(c.customer_name)`,
+      phone: sql`c.customer_phone`,
+      city: sql`LOWER(c.customer_city)`,
+      state: sql`LOWER(c.customer_state)`,
+      pincode: sql`c.customer_pincode`,
+      orders: sql`order_count`,
+      updated_at: sql`c.updated_at`,
+      created_at: sql`c.created_at`,
+    }[sortCol] ?? sql`LOWER(c.customer_name)`;
+    // One query: the page, the total (window count) and each customer's order count. The count
+    // comes from the order links the sync records, not the stored total_orders counter, which
+    // had drifted (customers added by hand counted 1 with no orders; edits left counts stale).
+    const rows = (await sql`
+      SELECT
+        c.*,
+        COALESCE(o.order_count, 0)::int AS order_count,
+        count(*) OVER ()::int AS total_count
+      FROM shiprocket_customers c
+      LEFT JOIN (
+        SELECT dedup_key, count(*) AS order_count
+        FROM shiprocket_customer_orders
+        GROUP BY dedup_key
+      ) o ON o.dedup_key = c.dedup_key
+      ${where}
+      ORDER BY ${orderBy} ${sortDir === 'ASC' ? sql`ASC` : sql`DESC`}, LOWER(c.customer_name) ASC
+      LIMIT ${perPage} OFFSET ${offset}
+    `) as Array<DbShiprocketCustomer & { order_count: number; total_count: number }>;
+    const total = Number(rows[0]?.total_count || 0);
+    return {
+      success: true,
+      customers: rows.map((r) => ({
+        id: r.id,
+        customer_name: r.customer_name,
+        customer_phone: r.customer_phone,
+        customer_phone_2: r.customer_phone_2 ?? null,
+        customer_email: r.customer_email ?? null,
+        customer_address: r.customer_address,
+        customer_address_2: r.customer_address_2 ?? null,
+        customer_city: r.customer_city,
+        customer_state: r.customer_state,
+        customer_pincode: r.customer_pincode,
+        dedup_key: r.dedup_key,
+        source_account_ids: r.source_account_ids || [],
+        total_orders: Number(r.order_count || 0),
+        last_order_id: r.last_order_id ?? null,
+        last_order_date: r.last_order_date ?? null,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+      })),
+      total,
+      page,
+      perPage,
+    };
   });
 }
 
@@ -484,6 +351,9 @@ export async function saveShiprocketCustomerAction(
   const email = customer.customer_email?.trim() || null;
   const address2 = customer.customer_address_2?.trim() || null;
   if (customer.id) {
+    const before = (await sql`
+      SELECT dedup_key FROM shiprocket_customers WHERE id = ${customer.id} LIMIT 1
+    `) as Array<{ dedup_key: string }>;
     // Check if new dedupKey conflicts with another customer
     const existing = (await sql`
       SELECT id FROM shiprocket_customers WHERE dedup_key = ${dedupKey} AND id != ${customer.id} LIMIT 1
@@ -518,9 +388,11 @@ export async function saveShiprocketCustomerAction(
         customer_state = ${state},
         customer_pincode = ${pincode},
         dedup_key = ${dedupKey},
+        edited_at = NOW(),
         updated_at = NOW()
       WHERE id = ${customer.id}
     `;
+    if (before[0]?.dedup_key) await recordKeyAliases(sql, [before[0].dedup_key], dedupKey);
     // Without this the cached list keeps serving the pre-edit row (e.g. the old phone number).
     await invalidateShiprocketCustomersCache();
     return { success: true, id: customer.id, message: 'Customer details updated successfully' };
@@ -531,13 +403,14 @@ export async function saveShiprocketCustomerAction(
     INSERT INTO shiprocket_customers (
       id, customer_name, customer_phone, customer_phone_2, customer_email,
       customer_address, customer_address_2, customer_city, customer_state, customer_pincode,
-      dedup_key, source_account_ids, total_orders, created_at, updated_at
+      dedup_key, source_account_ids, total_orders, edited_at, created_at, updated_at
     ) VALUES (
       ${id}, ${name}, ${phone}, ${phone2}, ${email},
       ${address}, ${address2}, ${city}, ${state}, ${pincode},
-      ${dedupKey}, '{}', 1, NOW(), NOW()
+      ${dedupKey}, '{}', 1, NOW(), NOW(), NOW()
     )
     ON CONFLICT (dedup_key) DO UPDATE SET
+      edited_at = NOW(),
       customer_name = EXCLUDED.customer_name,
       customer_phone_2 = COALESCE(EXCLUDED.customer_phone_2, shiprocket_customers.customer_phone_2),
       customer_email = COALESCE(EXCLUDED.customer_email, shiprocket_customers.customer_email),
@@ -718,9 +591,13 @@ export async function mergeShiprocketCustomersAction(
       last_order_id = ${mergedLastOrderId},
       last_order_date = ${mergedLastOrderDate},
       source_account_ids = ${combinedAccounts},
+      edited_at = NOW(),
       updated_at = NOW()
     WHERE id = ${targetCustomerId}
   `;
+  // The deleted source (and the target's old key, if the final name/pincode changed it) now
+  // resolve to the merged customer, so a sync can't bring the source back as a new record.
+  await recordKeyAliases(sql, [source.dedup_key, target.dedup_key], newDedupKey);
 
   await invalidateShiprocketCustomersCache();
   return {
@@ -844,6 +721,33 @@ export async function syncHistoricalCustomersAction(
       }
     }
     return '';
+  };
+  // Where each already-synced order lives now, and where renamed/merged keys point. An order keeps
+  // its existing customer even after an edit or merge changed that customer's key; without this a
+  // re-sync recomputed the old key and recreated the edited or merged-away customer.
+  const linkedOrderKey = new Map<string, string>();
+  const keyAlias = new Map<string, string>();
+  try {
+    const links = (await sql`
+      SELECT o.account_id, o.order_id, o.dedup_key
+      FROM shiprocket_customer_orders o
+      JOIN shiprocket_customers c ON c.dedup_key = o.dedup_key
+    `) as Array<{ account_id: string; order_id: string; dedup_key: string }>;
+    for (const l of links) linkedOrderKey.set(`${l.account_id}|${l.order_id}`, l.dedup_key);
+    const aliases = (await sql`SELECT old_key, new_key FROM shiprocket_customer_aliases`) as Array<{
+      old_key: string;
+      new_key: string;
+    }>;
+    for (const a of aliases) keyAlias.set(a.old_key, a.new_key);
+  } catch (err) {
+    console.warn('Could not preload customer order links/aliases:', err);
+  }
+  const resolveKey = (computedKey: string, accountId: string, orderId: string): string => {
+    const linked = orderId ? linkedOrderKey.get(`${accountId}|${orderId}`) : undefined;
+    if (linked) return linked;
+    let key = computedKey;
+    for (let hops = 0; hops < 5 && keyAlias.has(key); hops++) key = keyAlias.get(key)!;
+    return key;
   };
   for (const acc of accounts) {
     const authToken = await getAccountToken(acc, sql);
@@ -1159,7 +1063,7 @@ export async function syncHistoricalCustomersAction(
           // Phone is stored when genuinely available but is no longer part of the identity key.
           const effectivePhone = finalPhone;
           const effectivePincode = finalPincode;
-          const dedupKey = buildDedupKey(finalName, effectivePincode);
+          const computedKey = buildDedupKey(finalName, effectivePincode);
           const rawEmail =
             resolvedOrder.customer_email ||
             resolvedOrder.billing_email ||
@@ -1225,6 +1129,7 @@ export async function syncHistoricalCustomersAction(
           const effectivePhone2 = altPhone || null;
           const orderId = String(resolvedOrder.id || resolvedOrder.order_id || order.id || '');
           const orderDate = (resolvedOrder.created_at || order.created_at) ? new Date(String(resolvedOrder.created_at || order.created_at)).toISOString() : null;
+          const dedupKey = resolveKey(computedKey, accSourceId, orderId);
           const custId = `cust_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
           try {
             await sql`
@@ -1238,20 +1143,63 @@ export async function syncHistoricalCustomersAction(
                 ${dedupKey}, ARRAY[${accSourceId}]::TEXT[], 1, ${orderId}, ${orderDate}, NOW(), NOW()
               )
               ON CONFLICT (dedup_key) DO UPDATE SET
-                customer_name = CASE WHEN EXCLUDED.customer_name != 'Customer' THEN EXCLUDED.customer_name ELSE shiprocket_customers.customer_name END,
-                customer_phone = CASE WHEN COALESCE(EXCLUDED.customer_phone, '') <> '' THEN EXCLUDED.customer_phone ELSE shiprocket_customers.customer_phone END,
-                customer_phone_2 = COALESCE(EXCLUDED.customer_phone_2, shiprocket_customers.customer_phone_2),
-                customer_email = COALESCE(EXCLUDED.customer_email, shiprocket_customers.customer_email),
-                customer_address = CASE WHEN EXCLUDED.customer_address != 'Address on file' THEN EXCLUDED.customer_address ELSE shiprocket_customers.customer_address END,
-                customer_address_2 = COALESCE(EXCLUDED.customer_address_2, shiprocket_customers.customer_address_2),
-                customer_city = EXCLUDED.customer_city,
-                customer_state = EXCLUDED.customer_state,
+                -- A customer the admin edited or merged (edited_at set) keeps its details; the
+                -- sync only fills fields that are still blank. Otherwise an order updates the
+                -- details only if it is at least as recent as the latest one already recorded,
+                -- so syncing an old period can't revert a newer address or phone number.
+                customer_name = CASE
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND EXCLUDED.customer_name <> 'Customer'
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN EXCLUDED.customer_name ELSE shiprocket_customers.customer_name END,
+                customer_phone = CASE
+                  WHEN COALESCE(shiprocket_customers.customer_phone, '') = '' THEN COALESCE(EXCLUDED.customer_phone, '')
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND COALESCE(EXCLUDED.customer_phone, '') <> ''
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN EXCLUDED.customer_phone ELSE shiprocket_customers.customer_phone END,
+                customer_phone_2 = CASE
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN COALESCE(EXCLUDED.customer_phone_2, shiprocket_customers.customer_phone_2)
+                  ELSE COALESCE(shiprocket_customers.customer_phone_2, EXCLUDED.customer_phone_2) END,
+                customer_email = CASE
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN COALESCE(EXCLUDED.customer_email, shiprocket_customers.customer_email)
+                  ELSE COALESCE(shiprocket_customers.customer_email, EXCLUDED.customer_email) END,
+                customer_address = CASE
+                  WHEN shiprocket_customers.customer_address IN ('', 'Address on file') THEN EXCLUDED.customer_address
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND EXCLUDED.customer_address <> 'Address on file'
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN EXCLUDED.customer_address ELSE shiprocket_customers.customer_address END,
+                customer_address_2 = CASE
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN COALESCE(EXCLUDED.customer_address_2, shiprocket_customers.customer_address_2)
+                  ELSE COALESCE(shiprocket_customers.customer_address_2, EXCLUDED.customer_address_2) END,
+                customer_city = CASE
+                  WHEN COALESCE(shiprocket_customers.customer_city, '') = '' THEN EXCLUDED.customer_city
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND COALESCE(EXCLUDED.customer_city, '') <> ''
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN EXCLUDED.customer_city ELSE shiprocket_customers.customer_city END,
+                customer_state = CASE
+                  WHEN COALESCE(shiprocket_customers.customer_state, '') = '' THEN EXCLUDED.customer_state
+                  WHEN shiprocket_customers.edited_at IS NULL
+                    AND COALESCE(EXCLUDED.customer_state, '') <> ''
+                    AND COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN EXCLUDED.customer_state ELSE shiprocket_customers.customer_state END,
                 source_account_ids = CASE
                   WHEN NOT (${accSourceId} = ANY(shiprocket_customers.source_account_ids))
                   THEN array_append(shiprocket_customers.source_account_ids, ${accSourceId})
                   ELSE shiprocket_customers.source_account_ids
                 END,
-                last_order_id = COALESCE(EXCLUDED.last_order_id, shiprocket_customers.last_order_id),
+                last_order_id = CASE
+                  WHEN COALESCE(EXCLUDED.last_order_date, '-infinity') >= COALESCE(shiprocket_customers.last_order_date, '-infinity')
+                  THEN COALESCE(EXCLUDED.last_order_id, shiprocket_customers.last_order_id)
+                  ELSE shiprocket_customers.last_order_id END,
                 last_order_date = GREATEST(COALESCE(EXCLUDED.last_order_date, '1970-01-01'::timestamptz), COALESCE(shiprocket_customers.last_order_date, '1970-01-01'::timestamptz)),
                 updated_at = NOW()
             `;
@@ -1263,6 +1211,7 @@ export async function syncHistoricalCustomersAction(
                 VALUES (${dedupKey}, ${accSourceId}, ${orderId}, ${orderDate})
                 ON CONFLICT (dedup_key, account_id, order_id) DO NOTHING
               `;
+              linkedOrderKey.set(`${accSourceId}|${orderId}`, dedupKey);
             }
             totalUpserted++;
           } catch (upsertErr) {

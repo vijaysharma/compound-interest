@@ -4,7 +4,7 @@ import { applyDataMigrations } from './dataMigrations';
 import { applyTrackedSchemesMigrations } from './trackedSchemesMigrations';
 import { applyStateAndLeaderboardMigrations } from './stateAndLeaderboardMigrations';
 import { applyFiiDiiMigrations } from './fiiDiiMigrations';
-export const SCHEMA_VERSION = 18; // 18: game_sessions for server-verified leaderboard submissions
+export const SCHEMA_VERSION = 19; // 19: Shiprocket customer edit protection + key aliases
 let tablesReady: Promise<void> | null = null;
 let tablesInitialized = false;
 async function readSchemaVersion(sql: Query): Promise<number> {
