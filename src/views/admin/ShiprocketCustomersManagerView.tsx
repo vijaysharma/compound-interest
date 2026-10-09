@@ -31,7 +31,10 @@ import {
   mergeShiprocketCustomersAction,
 } from '@/actions/admin';
 import type { ShiprocketCustomer } from '@/types/shiprocket';
-import { usePincodeAutofill, type PincodePlace } from '@/components/admin/shiprocket/usePincodeAutofill';
+import {
+  usePincodeAutofill,
+  type PincodePlace,
+} from '@/components/admin/shiprocket/usePincodeAutofill';
 import styles from './ShiprocketCustomers.module.scss';
 interface Props {
   token: string;
@@ -73,7 +76,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const [state, setState] = useState('');
   const [pincode, setPincode] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
   // Merge state
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [sourceCustomer, setSourceCustomer] = useState<ShiprocketCustomer | null>(null);
@@ -157,14 +159,12 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setPincode(cust.customer_pincode);
     setShowForm(true);
   };
-
   const handleOpenMerge = (cust: ShiprocketCustomer) => {
     setSourceCustomer(cust);
     // Find a candidate target customer (e.g. first different customer)
     const otherCust = customers.find((c) => c.id !== cust.id);
     const targetId = otherCust ? otherCust.id : '';
     setTargetCustomerId(targetId);
-
     // Initial merged values: default to source or candidate target
     const target = otherCust || null;
     setMergeName(target?.customer_name || cust.customer_name);
@@ -178,7 +178,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setMergePincode(target?.customer_pincode || cust.customer_pincode);
     setShowMergeModal(true);
   };
-
   const handleSelectMergeTarget = (chosenTargetId: string) => {
     setTargetCustomerId(chosenTargetId);
     const target = customers.find((c) => c.id === chosenTargetId);
@@ -194,7 +193,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
       setMergePincode(target.customer_pincode || sourceCustomer.customer_pincode);
     }
   };
-
   const handleMergeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sourceCustomer || !targetCustomerId) {
@@ -202,7 +200,10 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
       return;
     }
     if (!mergeName.trim() || !mergeAddress.trim() || !mergePincode.trim()) {
-      setAlert({ type: 'error', text: 'Name, Address, and Pincode are required for final merged customer' });
+      setAlert({
+        type: 'error',
+        text: 'Name, Address, and Pincode are required for final merged customer',
+      });
       return;
     }
     setMerging(true);
@@ -358,7 +359,9 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     } else {
       setSortBy(col);
       // Text columns start A–Z; counts and dates start with the most / newest.
-      setSortOrder(col === 'orders' || col === 'updated_at' || col === 'created_at' ? 'desc' : 'asc');
+      setSortOrder(
+        col === 'orders' || col === 'updated_at' || col === 'created_at' ? 'desc' : 'asc'
+      );
     }
   };
   const totalPages = Math.ceil(totalCount / perPage) || 1;
@@ -469,9 +472,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         >
           <div className={styles.modalCard}>
             <div data-dialog-header className={styles.modalHeader}>
-              <div
-                className={`${styles.formSectionTitle} ${styles.formSectionFlat}`}
-              >
+              <div className={`${styles.formSectionTitle} ${styles.formSectionFlat}`}>
                 <FiUsers /> {editId ? 'Edit Customer Details' : 'Add New Customer Record'}
               </div>
               <button
@@ -634,9 +635,10 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             </div>
             <form onSubmit={handleMergeSubmit}>
               <div className={styles.mergeNotice}>
-                Merging will transfer all order history from <strong>{sourceCustomer.customer_name}</strong> to the target record below, delete the duplicate customer, and update the target customer with these final values.
+                Merging will transfer all order history from{' '}
+                <strong>{sourceCustomer.customer_name}</strong> to the target record below, delete
+                the duplicate customer, and update the target customer with these final values.
               </div>
-
               <div className={styles.mergeSelectBox}>
                 <label className={styles.fieldLabel}>Merge into Target Customer *</label>
                 <select
@@ -651,12 +653,12 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                     .filter((c) => c.id !== sourceCustomer.id)
                     .map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.customer_name} ({c.customer_phone || 'No phone'}) - {c.customer_city}, {c.customer_pincode} ({c.total_orders} orders)
+                        {c.customer_name} ({c.customer_phone || 'No phone'}) - {c.customer_city},{' '}
+                        {c.customer_pincode} ({c.total_orders} orders)
                       </option>
                     ))}
                 </select>
               </div>
-
               {/* Side-by-side comparison */}
               <div className={styles.mergeComparisonGrid}>
                 <div className={styles.mergeCustCard}>
@@ -666,24 +668,35 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                       <FiPackage size={12} /> {sourceCustomer.total_orders} orders
                     </span>
                   </div>
-                  <div><strong>Name:</strong> {sourceCustomer.customer_name}</div>
-                  <div><strong>Phone:</strong> {sourceCustomer.customer_phone || 'None'}</div>
+                  <div>
+                    <strong>Name:</strong> {sourceCustomer.customer_name}
+                  </div>
+                  <div>
+                    <strong>Phone:</strong> {sourceCustomer.customer_phone || 'None'}
+                  </div>
                   {sourceCustomer.customer_phone_2 && (
-                    <div><strong>Alt Phone:</strong> {sourceCustomer.customer_phone_2}</div>
+                    <div>
+                      <strong>Alt Phone:</strong> {sourceCustomer.customer_phone_2}
+                    </div>
                   )}
                   {sourceCustomer.customer_email && (
-                    <div><strong>Email:</strong> {sourceCustomer.customer_email}</div>
+                    <div>
+                      <strong>Email:</strong> {sourceCustomer.customer_email}
+                    </div>
                   )}
                   <div>
                     <strong>Address:</strong> {sourceCustomer.customer_address}
-                    {sourceCustomer.customer_address_2 ? `, ${sourceCustomer.customer_address_2}` : ''}
+                    {sourceCustomer.customer_address_2
+                      ? `, ${sourceCustomer.customer_address_2}`
+                      : ''}
                   </div>
                   <div>
-                    <strong>Location:</strong> {sourceCustomer.customer_city}, {sourceCustomer.customer_state} - {sourceCustomer.customer_pincode}
+                    <strong>Location:</strong> {sourceCustomer.customer_city},{' '}
+                    {sourceCustomer.customer_state} - {sourceCustomer.customer_pincode}
                   </div>
                 </div>
-
-                {targetCustomerId && customers.find((c) => c.id === targetCustomerId) && (
+                {targetCustomerId &&
+                  customers.find((c) => c.id === targetCustomerId) &&
                   (() => {
                     const target = customers.find((c) => c.id === targetCustomerId)!;
                     return (
@@ -694,28 +707,38 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                             <FiPackage size={12} /> {target.total_orders} orders
                           </span>
                         </div>
-                        <div><strong>Name:</strong> {target.customer_name}</div>
-                        <div><strong>Phone:</strong> {target.customer_phone || 'None'}</div>
+                        <div>
+                          <strong>Name:</strong> {target.customer_name}
+                        </div>
+                        <div>
+                          <strong>Phone:</strong> {target.customer_phone || 'None'}
+                        </div>
                         {target.customer_phone_2 && (
-                          <div><strong>Alt Phone:</strong> {target.customer_phone_2}</div>
+                          <div>
+                            <strong>Alt Phone:</strong> {target.customer_phone_2}
+                          </div>
                         )}
                         {target.customer_email && (
-                          <div><strong>Email:</strong> {target.customer_email}</div>
+                          <div>
+                            <strong>Email:</strong> {target.customer_email}
+                          </div>
                         )}
                         <div>
                           <strong>Address:</strong> {target.customer_address}
                           {target.customer_address_2 ? `, ${target.customer_address_2}` : ''}
                         </div>
                         <div>
-                          <strong>Location:</strong> {target.customer_city}, {target.customer_state} - {target.customer_pincode}
+                          <strong>Location:</strong> {target.customer_city}, {target.customer_state}{' '}
+                          - {target.customer_pincode}
                         </div>
                       </div>
                     );
-                  })()
-                )}
+                  })()}
               </div>
-
-              <div className={styles.colTitle} style={{ marginTop: '0.75rem', marginBottom: '0.5rem' }}>
+              <div
+                className={styles.colTitle}
+                style={{ marginTop: '0.75rem', marginBottom: '0.5rem' }}
+              >
                 Final Customer Details (Verify / Edit before merging)
               </div>
               <div className={styles.formGrid3}>
@@ -747,7 +770,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   />
                 </div>
               </div>
-
               <div className={styles.formGrid2}>
                 <div className={styles.fieldGroup}>
                   <label className={styles.fieldLabel}>Email Address</label>
@@ -769,7 +791,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   />
                 </div>
               </div>
-
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Full Street Address *</label>
                 <input
@@ -780,7 +801,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   required
                 />
               </div>
-
               <div className={styles.formGrid3}>
                 <div className={styles.fieldGroup}>
                   <label className={styles.fieldLabel}>City *</label>
@@ -818,7 +838,6 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   />
                 </div>
               </div>
-
               <div data-dialog-footer className={styles.modalActions}>
                 <button
                   type="submit"
@@ -882,9 +901,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
         </div>
       </div>
       {loading && customers.length === 0 ? (
-        <div className={styles.emptyBox}>
-          Loading customers...
-        </div>
+        <div className={styles.emptyBox}>Loading customers...</div>
       ) : customers.length === 0 ? (
         <div className={styles.emptyBox}>
           <FiUsers size={36} className={styles.primaryIcon} />
@@ -906,21 +923,51 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
               <thead>
                 <tr>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('name')}>
-                    Customer Name {sortBy === 'name' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
+                    Customer Name{' '}
+                    {sortBy === 'name' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp aria-hidden="true" />
+                      ) : (
+                        <FiChevronDown aria-hidden="true" />
+                      ))}
                   </th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('phone')}>
-                    Phone & Email {sortBy === 'phone' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
+                    Phone & Email{' '}
+                    {sortBy === 'phone' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp aria-hidden="true" />
+                      ) : (
+                        <FiChevronDown aria-hidden="true" />
+                      ))}
                   </th>
                   <th>Alt. Phone</th>
                   <th>Full Address</th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('city')}>
-                    City & State {sortBy === 'city' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
+                    City & State{' '}
+                    {sortBy === 'city' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp aria-hidden="true" />
+                      ) : (
+                        <FiChevronDown aria-hidden="true" />
+                      ))}
                   </th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('pincode')}>
-                    Pincode {sortBy === 'pincode' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
+                    Pincode{' '}
+                    {sortBy === 'pincode' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp aria-hidden="true" />
+                      ) : (
+                        <FiChevronDown aria-hidden="true" />
+                      ))}
                   </th>
                   <th className={styles.thSortable} onClick={() => handleSortToggle('orders')}>
-                    Orders {sortBy === 'orders' && (sortOrder === 'asc' ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />)}
+                    Orders{' '}
+                    {sortBy === 'orders' &&
+                      (sortOrder === 'asc' ? (
+                        <FiChevronUp aria-hidden="true" />
+                      ) : (
+                        <FiChevronDown aria-hidden="true" />
+                      ))}
                   </th>
                   <th className={styles.tableThRight}>Actions</th>
                 </tr>

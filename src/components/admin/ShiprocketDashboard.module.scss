@@ -511,6 +511,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  margin-left: 0.5rem;
 }
 .copyBtn {
   background: none;
@@ -1399,9 +1400,7 @@
     font-size: $fs-caption;
     touch-action: manipulation;
   }
-  .awbCode {
-    margin-left: 0.5rem;
-  }
+
   .copyBtn {
     min-width: 36px;
     justify-content: center;
@@ -1534,7 +1533,6 @@
   border: 1px solid var(--color-border);
   background: var(--color-card, #ffffff);
 }
-
 
 // Ship dialog: tags on the courier list, the "let Shiprocket pick" link, and the pickup step.
 .courierTag {

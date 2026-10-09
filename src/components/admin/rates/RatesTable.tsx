@@ -22,9 +22,13 @@ export const RatesTable: React.FC<RatesTableProps> = React.memo(({ result }) => 
         <tbody>
           {result.map((c) => (
             <tr key={c.courier_company_id}>
-              <td data-label="Courier" className={styles.courierName}>{c.courier_name}</td>
+              <td data-label="Courier" className={styles.courierName}>
+                {c.courier_name}
+              </td>
               <td data-label="Est. Time">{c.etd}</td>
-              <td data-label="Rate" className={styles.rateVal}>₹{c.rate}</td>
+              <td data-label="Rate" className={styles.rateVal}>
+                ₹{c.rate}
+              </td>
               <td data-label="Rating" className={styles.ratingVal}>
                 {c.rating} <FiStar />
               </td>

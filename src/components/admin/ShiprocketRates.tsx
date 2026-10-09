@@ -38,41 +38,45 @@ const ShiprocketRates: React.FC<ShiprocketRatesProps> = ({ token }) => {
     volumetricWeight,
   } = useShiprocketRates(token);
   return (
-    <>
+    <div className={styles.container}>
       <h2 className={styles.cardTitle}>
         <FiTruck className={styles.titleIcon} /> Shiprocket Rate Calculator
       </h2>
       {error && <div className={styles.alertError}>{error}</div>}
-      <PincodeInputs
-        pickup={pickup}
-        delivery={delivery}
-        pickupLocation={pickupLocation}
-        pickupLoading={pickupLoading}
-        deliveryLocation={deliveryLocation}
-        deliveryLoading={deliveryLoading}
-        onPickupChange={setPickup}
-        onDeliveryChange={setDelivery}
-        onPickupLoadingChange={setPickupLoading}
-        onDeliveryLoadingChange={setDeliveryLoading}
-        onPickupLocationClear={() => setPickupLocation(null)}
-        onDeliveryLocationClear={() => setDeliveryLocation(null)}
-      />
-      <DimensionsInputs
-        length={length}
-        breadth={breadth}
-        height={height}
-        weight={weight}
-        volumetricWeight={volumetricWeight}
-        loading={loading}
-        hasResult={Boolean(result && result.length > 0)}
-        onLengthChange={setLength}
-        onBreadthChange={setBreadth}
-        onHeightChange={setHeight}
-        onWeightChange={setWeight}
-        onFetchRates={fetchRates}
-      />
-      {result && <RatesTable result={result} />}
-    </>
+      <div className={styles.contentsContainer}>
+        <div className={styles.leftSection}>
+          <PincodeInputs
+            pickup={pickup}
+            delivery={delivery}
+            pickupLocation={pickupLocation}
+            pickupLoading={pickupLoading}
+            deliveryLocation={deliveryLocation}
+            deliveryLoading={deliveryLoading}
+            onPickupChange={setPickup}
+            onDeliveryChange={setDelivery}
+            onPickupLoadingChange={setPickupLoading}
+            onDeliveryLoadingChange={setDeliveryLoading}
+            onPickupLocationClear={() => setPickupLocation(null)}
+            onDeliveryLocationClear={() => setDeliveryLocation(null)}
+          />
+          <DimensionsInputs
+            length={length}
+            breadth={breadth}
+            height={height}
+            weight={weight}
+            volumetricWeight={volumetricWeight}
+            loading={loading}
+            hasResult={Boolean(result && result.length > 0)}
+            onLengthChange={setLength}
+            onBreadthChange={setBreadth}
+            onHeightChange={setHeight}
+            onWeightChange={setWeight}
+            onFetchRates={fetchRates}
+          />
+        </div>
+        <div className={styles.rightSection}>{result && <RatesTable result={result} />}</div>
+      </div>
+    </div>
   );
 };
 export default ShiprocketRates;
