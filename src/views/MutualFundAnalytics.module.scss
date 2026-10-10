@@ -233,7 +233,7 @@
 }
 
 .lumpsumOutputCol {
-  min-height: 240px;
+  min-height: 280px;
   width: 100%;
 
   @include tablet-up {
@@ -244,10 +244,10 @@
 }
 
 .lumpsumChartContainer {
-  min-height: 240px;
-  height: 240px;
+  min-height: 280px;
+  height: 280px;
   width: 100%;
-  margin-bottom: 0.125rem;
+  margin-bottom: 0.5rem;
   clear: both;
   position: relative;
   display: flex;
@@ -1417,7 +1417,9 @@
 .lumpsumChartRow {
   display: none;
   width: 155px;
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  overflow: visible;
 
   @include tablet-up {
     display: block;
@@ -1426,7 +1428,7 @@
 
 .lumpsumChartSvg {
   width: 100%;
-  height: 32px;
+  height: 34px;
   display: block;
   overflow: visible;
 }

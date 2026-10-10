@@ -58,8 +58,8 @@ export function useChartOptions(
     const resolvedHeight = typeof height === 'number' ? height : resolvedMinHeight;
     return {
       background: { visible: false },
-      padding: { top: 8, right: 8, bottom: 6, left: 4 },
-      seriesArea: { padding: { top: 6, right: 6, bottom: 6, left: 4 } },
+      padding: { top: 8, right: 8, bottom: 16, left: 4 },
+      seriesArea: { padding: { top: 6, right: 6, bottom: 10, left: 4 } },
       data: chartData,
       ...(isAutoHeight ? { minHeight: resolvedMinHeight } : { height: resolvedHeight }),
       legend: { enabled: false },
