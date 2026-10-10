@@ -38,6 +38,9 @@ export const LumpsumGrid: React.FC<LumpsumGridProps> = React.memo(
                 absoluteReturn={fund.absProfit}
                 title={fund.schemeName}
                 color={fund.color}
+                investedAmount={fund.investedAmount}
+                units={fund.units}
+                avgBuyPrice={fund.avgBuyPrice}
               />
             </div>
           ))}

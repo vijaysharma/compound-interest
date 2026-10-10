@@ -41,6 +41,7 @@ export function useLumpsumAnalysis(
       const absoluteReturn = ((endValue - startValue) / startValue) * 100;
       const matureAmount = (investment / startValue) * endValue;
       const profitAmount = matureAmount - investment;
+      const units = investment / startValue;
       return {
         schemeCode: fund.schemeCode,
         schemeName: fund.schemeName,
@@ -51,6 +52,9 @@ export function useLumpsumAnalysis(
         absProfit: absoluteReturn,
         matureAmt: Number(matureAmount.toFixed(2)),
         profitAmt: Number(profitAmount.toFixed(2)),
+        investedAmount: investment,
+        units,
+        avgBuyPrice: startValue,
       };
     });
   }, [pinnedFunds, pinnedNavData, startDate, endDate, invAmt]);

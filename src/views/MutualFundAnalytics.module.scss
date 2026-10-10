@@ -358,7 +358,7 @@
 }
 
 .mfDisplayItem {
-  padding: 1rem 1.125rem;
+  padding: 0.25rem;
   min-width: 0;
   min-height: auto;
   display: flex;
@@ -371,12 +371,13 @@
   transition: all 0.15s ease-in-out;
 
   @include tablet-up {
-    padding: 1.125rem 1.25rem;
+    padding: 0.5rem;
   }
 
   &:hover {
     border-color: var(--color-primary);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 10%, transparent);
+    box-shadow: 0 4px 12px
+      color-mix(in srgb, var(--color-primary) 10%, transparent);
     transform: translateY(-1px);
   }
 
@@ -667,7 +668,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 0.75rem;
+  gap: 0.25rem;
   text-align: left;
 }
 
@@ -709,13 +710,18 @@
 .mfCardTag {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  padding: 0.1rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
   border-radius: 9999px;
-  background-color: color-mix(in srgb, var(--color-base-content) 5%, transparent);
+  background-color: color-mix(
+    in srgb,
+    var(--color-base-content) 5%,
+    transparent
+  );
   color: var(--color-text-secondary, #64748b);
-  border: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--color-base-content) 10%, transparent);
 }
 
 .mfCardTagHighlight {
@@ -812,7 +818,8 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding-top: 0.6rem;
-  border-top: 1px solid color-mix(in srgb, var(--color-base-content) 8%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 8%, transparent);
   width: 100%;
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
@@ -939,8 +946,10 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem 0;
-  border-top: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
 
   @media (max-width: 420px) {
     grid-template-columns: 1fr 1fr;
@@ -1035,7 +1044,8 @@
 
   @media (min-width: 600px) {
     flex: initial;
-    border-right: 1px solid color-mix(in srgb, var(--color-base-content) 10%, transparent);
+    border-right: 1px solid
+      color-mix(in srgb, var(--color-base-content) 10%, transparent);
 
     &:last-child {
       border-right: none;
@@ -1156,8 +1166,10 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem 0;
-  border-top: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
 
   @media (max-width: 420px) {
     grid-template-columns: 1fr 1fr;
@@ -1252,5 +1264,266 @@
   }
 }
 
+/* Lumpsum Card Design (matching reference UI) */
+.lumpsumDateRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-top: 0.15rem;
+  margin-bottom: 0.1rem;
+}
 
+.lumpsumCalendarIcon {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary, #64748b);
+  flex-shrink: 0;
+}
 
+.lumpsumDateRange {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lumpsumDateDivider {
+  color: var(--color-text-secondary, #cbd5e1);
+}
+
+.lumpsumDurationBadge {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lumpsumValueCardRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.lumpsumValueCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.lumpsumValueLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 0.15rem;
+}
+
+.lumpsumValueBig {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--color-heading, #0f172a);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+
+  @include tablet-up {
+    font-size: 1.75rem;
+  }
+}
+
+.lumpsumValueSub {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+.lumpsumRightCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.25rem;
+}
+
+.lumpsumReturnBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 120px;
+}
+
+.lumpsumReturnBoxPositive {
+  background-color: #ecfdf5;
+}
+
+.lumpsumReturnBoxNegative {
+  background-color: #fff1f2;
+}
+
+.lumpsumReturnGainRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.lumpsumReturnPercent {
+  margin-left: 0.15rem;
+}
+.lumpsumReturnGainRowPositive {
+  color: #15803d;
+}
+
+.lumpsumReturnGainRowNegative {
+  color: #dc2626;
+}
+
+.lumpsumGainArrowIcon {
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.lumpsumReturnSubRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 0.2rem;
+  white-space: nowrap;
+}
+
+.lumpsumReturnSubDivider {
+  color: #cbd5e1;
+}
+
+.lumpsumReturnValPositive {
+  font-weight: 600;
+  color: #15803d;
+}
+
+.lumpsumReturnValNegative {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.lumpsumChartRow {
+  display: none;
+  width: 155px;
+  margin-top: 0.15rem;
+
+  @include tablet-up {
+    display: block;
+  }
+}
+
+.lumpsumChartSvg {
+  width: 100%;
+  height: 32px;
+  display: block;
+  overflow: visible;
+}
+
+.lumpsumBottomGrid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 0.25rem 0;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
+
+  @include tablet-up {
+    margin-top: 0.45rem;
+    padding-bottom: 0.65rem;
+  }
+}
+
+.lumpsumBottomCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  position: relative;
+
+  &:not(:first-child) {
+    padding-left: 0.75rem;
+    border-left: 1px solid
+      color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  }
+}
+
+.lumpsumBottomLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  white-space: nowrap;
+}
+
+.lumpsumBottomValue {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-heading, #0f172a);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  word-break: break-word;
+
+  @include tablet-up {
+    font-size: 1rem;
+  }
+}
+
+.lumpsumFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  width: 100%;
+  padding-top: 0.25rem;
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap;
+}
+
+.lumpsumFooterLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.lumpsumFooterRight {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.lumpsumNavTag {
+  color: var(--color-heading, #0f172a);
+  font-weight: 700;
+}
+
+.lumpsumNavPrice {
+  color: var(--color-heading, #0f172a);
+  font-weight: 600;
+}
+
+.lumpsumNavArrow {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}

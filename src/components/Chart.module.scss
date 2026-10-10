@@ -1,4 +1,4 @@
-@use '../styles/mixins' as *;
+@use "../styles/mixins" as *;
 @use "../styles/variables" as *;
 
 .emptyContainer {
@@ -154,12 +154,17 @@
   top: 6px;
   bottom: 6px;
   width: 1px;
-  border-left: 1.5px dashed color-mix(in srgb, var(--color-primary) 70%, var(--color-text-muted, #757575));
+  border-left: 1.5px dashed
+    color-mix(
+      in srgb,
+      var(--color-primary) 70%,
+      var(--color-text-muted, #757575)
+    );
   pointer-events: none;
   z-index: 5;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: -1px;
     left: -3px;
@@ -193,7 +198,9 @@
  */
 :global(.ag-charts-popover.ag-charts-popover) {
   border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.15),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   font-family: inherit;
 }
 

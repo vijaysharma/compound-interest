@@ -20,6 +20,9 @@ export interface FundAnalysis {
   absProfit: number;
   matureAmt: number;
   profitAmt: number;
+  investedAmount?: number;
+  units?: number;
+  avgBuyPrice?: number;
 }
 export interface LumpsumSavedState {
   searchKey: string;

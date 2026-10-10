@@ -49,29 +49,32 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
   if (!fund) return null;
   return (
     <div className={styles.dialogOverlay} role="dialog" aria-modal="true">
-      <button type="button" className={styles.backdrop} aria-label="Close modal" onClick={onClose} />
+      <button
+        type="button"
+        className={styles.backdrop}
+        aria-label="Close modal"
+        onClick={onClose}
+      />
       <section className={styles.modalContent}>
         <FundModalHeader fund={fund} meta={state.meta} onClose={onClose} />
         <div className={styles.modalBody}>
-          <div>
-            <div className={styles.chartTitle}>
-              <span>Historical NAV &amp; Portfolio Trajectory</span>
-              <span className={styles.chartHint}>Use presets or drag horizontally to zoom</span>
-            </div>
-            <Chart
-              className={styles.chart}
-              datasets={performance.datasets}
-              investmentAmount={performance.invested}
-              dataMode="value"
-              autoHeight={true}
-              minHeight={350}
-              enableZoom={true}
-              showPresets={true}
-              startDate={state.currentNavStartDate}
-              endDate={state.currentNavEndDate}
-              onPresetChange={state.handleSelectPreset}
-            />
+          <div className={styles.chartTitle}>
+            <span>Historical NAV &amp; Portfolio Trajectory</span>
+            <span className={styles.chartHint}>Use presets or drag horizontally to zoom</span>
           </div>
+          <Chart
+            className={styles.chart}
+            datasets={performance.datasets}
+            investmentAmount={performance.invested}
+            dataMode="value"
+            autoHeight={true}
+            minHeight={350}
+            enableZoom={true}
+            showPresets={true}
+            startDate={state.currentNavStartDate}
+            endDate={state.currentNavEndDate}
+            onPresetChange={state.handleSelectPreset}
+          />
           <div className={styles.controlsStatsGrid}>
             <FundModalControls
               startDateISO={state.startDateISO}

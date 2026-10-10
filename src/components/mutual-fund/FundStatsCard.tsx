@@ -1,10 +1,43 @@
 import React, { useMemo } from 'react';
-import { FiChevronRight, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import { FiChevronRight, FiCalendar, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import type { NavType } from '../../types/types';
 import styles from '../../views/MutualFundAnalytics.module.scss';
 import { NavValuesSkeleton } from '../skeleton';
 import { parseFundSchemeDetails } from '../../utilities/mutual-fund/mfCardDetails';
-
+import { parseAnyDate } from '../../utilities/dateUtils';
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+function formatCardDate(dateStr: string): string {
+  const d = parseAnyDate(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+}
+function formatCompactRupee(val: number): string {
+  const abs = Math.abs(val);
+  const sign = val < 0 ? '-' : '';
+  if (abs >= 10000000) {
+    return `${sign}₹${(abs / 10000000).toFixed(2)}Cr`;
+  }
+  if (abs >= 100000) {
+    return `${sign}₹${(abs / 100000).toFixed(2)}L`;
+  }
+  if (abs >= 1000) {
+    return `${sign}₹${(abs / 1000).toFixed(2)}K`;
+  }
+  return `${sign}₹${Math.round(abs).toLocaleString('en-IN')}`;
+}
 export interface FundStatsCardProps {
   start?: NavType;
   end?: NavType;
@@ -14,8 +47,10 @@ export interface FundStatsCardProps {
   absoluteReturn: number;
   title: string;
   color: string;
+  investedAmount?: number;
+  units?: number;
+  avgBuyPrice?: number;
 }
-
 export const FundStatsCard: React.FC<FundStatsCardProps> = React.memo(
   ({
     start,
@@ -26,11 +61,22 @@ export const FundStatsCard: React.FC<FundStatsCardProps> = React.memo(
     absoluteReturn,
     title,
     color,
+    investedAmount,
+    units,
+    avgBuyPrice,
   }) => {
     const parsed = useMemo(() => parseFundSchemeDetails(title), [title]);
     const isProfit = profitAmount >= 0;
-    const isAbsPositive = absoluteReturn >= 0;
-
+    const dateRangeStr = useMemo(() => {
+      if (!start?.date || !end?.date) return '';
+      return `${formatCardDate(start.date)} – ${formatCardDate(end.date)}`;
+    }, [start?.date, end?.date]);
+    // Fallbacks if not passed directly
+    const invested = investedAmount ?? (start && matureAmount ? matureAmount - profitAmount : 0);
+    const startNavVal = start ? parseFloat(start.nav) : 0;
+    const endNavVal = end ? parseFloat(end.nav) : 0;
+    const calculatedUnits = units ?? (startNavVal > 0 ? invested / startNavVal : 0);
+    const calculatedAvgBuy = avgBuyPrice ?? startNavVal;
     return (
       <div className={styles.mfCardContainer}>
         {/* Header: Dot + Fund Title + Chevron */}
@@ -49,7 +95,6 @@ export const FundStatsCard: React.FC<FundStatsCardProps> = React.memo(
           </div>
           <FiChevronRight className={styles.mfCardChevron} aria-hidden="true" />
         </div>
-
         {/* Tags / Pills */}
         <div className={styles.mfCardTagsRow}>
           {parsed.category && (
@@ -67,140 +112,93 @@ export const FundStatsCard: React.FC<FundStatsCardProps> = React.memo(
           {parsed.planType && <span className={styles.mfCardTag}>{parsed.planType}</span>}
           {parsed.optionType && <span className={styles.mfCardTag}>{parsed.optionType}</span>}
         </div>
-
         {!start || !end ? (
           <NavValuesSkeleton />
         ) : (
           <>
-            {/* Primary Value Row: Current Value on Left, Profit/Loss on Right */}
-            <div className={styles.mfCardValueRow}>
-              <div className={styles.mfCardValueLeft}>
-                <span className={styles.mfCardFieldLabel}>Current Value</span>
-                <span className={styles.mfCardBigAmount}>
-                  ₹{Math.round(matureAmount).toLocaleString('en-IN')}
+            {/* Primary Value Row: Current Value on Left, and Right Col (Return Box + Sparkline) on Right */}
+            <div className={styles.lumpsumValueCardRow}>
+              <div className={styles.lumpsumValueCol}>
+                <span className={styles.lumpsumValueLabel}>Current Value</span>
+                <span className={styles.lumpsumValueBig}>{formatCompactRupee(matureAmount)}</span>
+                <span className={styles.lumpsumValueSub}>
+                  (₹{Math.round(matureAmount).toLocaleString('en-IN')})
                 </span>
               </div>
-              <div className={styles.mfCardValueRight}>
-                <span
-                  className={`${styles.mfCardProfitMain} ${isProfit ? styles.textSuccess : styles.textError}`}
+              <div className={styles.lumpsumRightCol}>
+                <div
+                  className={`${styles.lumpsumReturnBox} ${
+                    isProfit ? styles.lumpsumReturnBoxPositive : styles.lumpsumReturnBoxNegative
+                  }`}
                 >
-                  {isProfit ? '+' : '-'}₹{Math.round(Math.abs(profitAmount)).toLocaleString('en-IN')}{' '}
-                  {isProfit ? <FiArrowUp /> : <FiArrowDown />}
-                </span>
-                <span
-                  className={`${styles.mfCardProfitSub} ${isAbsPositive ? styles.textSuccess : styles.textError}`}
-                >
-                  {isAbsPositive ? '+' : ''}{absoluteReturn.toFixed(2)}% (A)
-                </span>
-              </div>
-            </div>
-
-            {/* Metrics: CAGR (C) & Absolute (A) */}
-            <div className={styles.mfCardMetricsRow}>
-              <div className={styles.mfCardMetricItem}>
-                <span className={styles.mfCardMetricLabel}>CAGR (C)</span>
-                <span
-                  className={`${styles.mfCardMetricVal} ${cagr >= 0 ? styles.textSuccess : styles.textError}`}
-                >
-                  {cagr.toFixed(2)}%
-                </span>
-              </div>
-              <div className={styles.mfCardMetricItem}>
-                <span className={styles.mfCardMetricLabel}>Absolute (A)</span>
-                <span
-                  className={`${styles.mfCardMetricVal} ${isAbsPositive ? styles.textSuccess : styles.textError}`}
-                >
-                  {absoluteReturn.toFixed(2)}%
-                </span>
-              </div>
-            </div>
-
-            {/* Bottom: NAV Progression and Mini Trend Arrow */}
-            <div className={styles.mfCardNavRow}>
-              <div className={styles.mfCardNavText}>
-                <span>NAV</span>
-                <strong>₹{parseFloat(start.nav).toFixed(2)}</strong>
-                <span>&rarr;</span>
-                <strong>₹{parseFloat(end.nav).toFixed(2)}</strong>
-              </div>
-              <div className={styles.mfCardNavTrendCol}>
-                <svg
-                  className={styles.mfCardNavArrowSvg}
-                  viewBox="0 0 72 20"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <linearGradient
-                      id={`grad-${isAbsPositive ? 'up' : 'down'}-${color.replace(/[^a-zA-Z0-9]/g, '')}`}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
+                  <div
+                    className={`${styles.lumpsumReturnGainRow} ${
+                      isProfit
+                        ? styles.lumpsumReturnGainRowPositive
+                        : styles.lumpsumReturnGainRowNegative
+                    }`}
+                  >
+                    <span>
+                      {isProfit ? '+' : ''}
+                      {formatCompactRupee(profitAmount)}{' '}
+                    </span>
+                    {isProfit ? (
+                      <FiArrowUp className={styles.lumpsumGainArrowIcon} />
+                    ) : (
+                      <FiArrowDown className={styles.lumpsumGainArrowIcon} />
+                    )}
+                  </div>
+                  <div className={styles.lumpsumReturnSubRow}>
+                    <span>CAGR:</span>
+                    <span
+                      className={
+                        cagr >= 0
+                          ? styles.lumpsumReturnValPositive
+                          : styles.lumpsumReturnValNegative
+                      }
                     >
-                      <stop
-                        offset="0%"
-                        stopColor={isAbsPositive ? 'var(--color-success)' : 'var(--color-error)'}
-                        stopOpacity="0.18"
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={isAbsPositive ? 'var(--color-success)' : 'var(--color-error)'}
-                        stopOpacity="0"
-                      />
-                    </linearGradient>
-                  </defs>
-                  {isAbsPositive ? (
-                    <>
-                      <path
-                        d="M 2 16 Q 30 15 54 8 L 64 5 L 64 20 L 2 20 Z"
-                        fill={`url(#grad-up-${color.replace(/[^a-zA-Z0-9]/g, '')})`}
-                      />
-                      <path
-                        d="M 2 16 Q 32 15 62 6"
-                        stroke="var(--color-success)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        fill="none"
-                      />
-                      <polyline
-                        points="54,4 64,5 61,13"
-                        stroke="var(--color-success)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <path
-                        d="M 2 5 Q 30 6 54 12 L 64 15 L 64 20 L 2 20 Z"
-                        fill={`url(#grad-down-${color.replace(/[^a-zA-Z0-9]/g, '')})`}
-                      />
-                      <path
-                        d="M 2 5 Q 32 6 62 14"
-                        stroke="var(--color-error)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        fill="none"
-                      />
-                      <polyline
-                        points="54,16 64,15 61,7"
-                        stroke="var(--color-error)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                    </>
-                  )}
-                </svg>
-                <span
-                  className={`${styles.mfCardNavReturn} ${isAbsPositive ? styles.textSuccess : styles.textError}`}
-                >
-                  {isAbsPositive ? '+' : ''}{absoluteReturn.toFixed(2)}%
+                      {cagr.toFixed(2)}%
+                      <span className={styles.lumpsumReturnPercent}>
+                        ({absoluteReturn.toFixed(2)}%)
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* 3-Column Mid Grid: Invested, Units, Avg. Buy Price */}
+            <div className={styles.lumpsumBottomGrid}>
+              <div className={styles.lumpsumBottomCol}>
+                <span className={styles.lumpsumBottomLabel}>Invested</span>
+                <span className={styles.lumpsumBottomValue}>
+                  ₹{Math.round(invested).toLocaleString('en-IN')}
                 </span>
+              </div>
+              <div className={styles.lumpsumBottomCol}>
+                <span className={styles.lumpsumBottomLabel}>Units</span>
+                <span className={styles.lumpsumBottomValue}>
+                  {calculatedUnits.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+              <div className={styles.lumpsumBottomCol}>
+                <span className={styles.lumpsumBottomLabel}>Avg. Buy Price</span>
+                <span className={styles.lumpsumBottomValue}>₹{calculatedAvgBuy.toFixed(2)}</span>
+              </div>
+            </div>
+            {/* Bottom Footer Row: Date Range + Duration on Left, NAV Start -> End on Right */}
+            <div className={styles.lumpsumFooterRow}>
+              <div className={styles.lumpsumFooterLeft}>
+                <FiCalendar className={styles.lumpsumCalendarIcon} aria-hidden="true" />
+                <span className={styles.lumpsumDateRange}>{dateRangeStr}</span>
+              </div>
+              <div className={styles.lumpsumFooterRight}>
+                <span className={styles.lumpsumNavTag}>NAV</span>
+                <span className={styles.lumpsumNavPrice}>₹{startNavVal.toFixed(2)}</span>
+                <span className={styles.lumpsumNavArrow}>&rarr;</span>
+                <span className={styles.lumpsumNavPrice}>₹{endNavVal.toFixed(2)}</span>
               </div>
             </div>
           </>
