@@ -108,6 +108,7 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
           canShip={canShip}
           canSchedulePickup={canSchedulePickup}
           isDelivered={isDelivered}
+          isCancelled={isCancelled}
           primaryShipmentId={primaryShipment?.id}
           actionBusy={actionBusy}
           actions={actions}

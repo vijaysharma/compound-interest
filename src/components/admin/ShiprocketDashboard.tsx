@@ -85,6 +85,8 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           orders={data.orders}
           filteredOrders={filter.filteredOrders}
           statusFilter={filter.statusFilter}
+          hideCancelled={filter.hideCancelled}
+          onToggleHideCancelled={filter.setHideCancelled}
           searchQuery={filter.searchQuery}
           loadingOrders={data.loadingOrders}
           actionBusy={data.actionBusy}

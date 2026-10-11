@@ -292,6 +292,38 @@
     border-color: var(--color-primary);
   }
 }
+.hideCancelledLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.65rem;
+  font-size: $fs-caption;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius-sm, 6px);
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--color-heading);
+  }
+}
+.hideCancelledDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.hideCancelledCheckbox {
+  margin: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
 .searchBox {
   position: relative;
   min-width: 240px;
@@ -366,8 +398,14 @@
   }
 }
 .dateClearBtn {
-  padding: 0.25rem 0.5rem;
-  font-size: $fs-caption;
+  height: 36px;
+  padding: 0 0.75rem;
+  font-size: $fs-small;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 .ordersList {
   display: flex;

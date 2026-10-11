@@ -16,6 +16,7 @@ export interface ShiprocketShipmentActionsProps {
   canShip: boolean;
   canSchedulePickup: boolean;
   isDelivered: boolean;
+  isCancelled?: boolean;
   primaryShipmentId?: number;
   actionBusy: string | null;
   actions: OrderItemActionHandlers;
@@ -27,6 +28,7 @@ export const ShiprocketShipmentActions: React.FC<ShiprocketShipmentActionsProps>
     canShip,
     canSchedulePickup,
     isDelivered,
+    isCancelled = false,
     primaryShipmentId,
     actionBusy,
     actions,
@@ -75,7 +77,7 @@ export const ShiprocketShipmentActions: React.FC<ShiprocketShipmentActionsProps>
       >
         <FiFileText /> Invoice
       </button>
-      {!isDelivered && (
+      {!isDelivered && !isCancelled && (
         <button
           className={`${styles.actionBtn} ${styles.actionDanger}`}
           onClick={() => actions.onCancelShipment(order)}

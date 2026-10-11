@@ -2,11 +2,22 @@
 import { useState, useMemo } from 'react';
 import type { ShiprocketOrder, StatusFilter } from './types';
 export function useShiprocketFilter(orders: ShiprocketOrder[]) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilterState] = useState<StatusFilter>('all');
+  const [hideCancelled, setHideCancelled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const setStatusFilter = (filter: StatusFilter) => {
+    setStatusFilterState(filter);
+    if (filter === 'cancelled') {
+      setHideCancelled(false);
+    }
+  };
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       const status = (o.status || '').toUpperCase();
+      if (statusFilter === 'all' && hideCancelled && ['CANCEL', 'RTO'].some((s) => status.includes(s))) {
+        return false;
+      }
       if (statusFilter === 'new' && !['NEW', 'READY TO SHIP', 'MANIFEST GENERATED'].some((s) => status.includes(s))) {
         return false;
       }
@@ -30,7 +41,7 @@ export function useShiprocketFilter(orders: ShiprocketOrder[]) {
       }
       return true;
     });
-  }, [orders, statusFilter, searchQuery]);
+  }, [orders, statusFilter, hideCancelled, searchQuery]);
   const stats = useMemo(() => {
     let pending = 0;
     let inTransit = 0;
@@ -48,6 +59,8 @@ export function useShiprocketFilter(orders: ShiprocketOrder[]) {
   return {
     statusFilter,
     setStatusFilter,
+    hideCancelled,
+    setHideCancelled,
     searchQuery,
     setSearchQuery,
     filteredOrders,

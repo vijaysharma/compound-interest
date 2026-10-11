@@ -8,6 +8,8 @@ export interface ShiprocketShipmentsTabProps {
   orders: ShiprocketOrder[];
   filteredOrders: ShiprocketOrder[];
   statusFilter: StatusFilter;
+  hideCancelled?: boolean;
+  onToggleHideCancelled?: (val: boolean) => void;
   searchQuery: string;
   loadingOrders: boolean;
   actionBusy: string | null;
@@ -31,6 +33,8 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
     orders,
     filteredOrders,
     statusFilter,
+    hideCancelled = true,
+    onToggleHideCancelled,
     searchQuery,
     loadingOrders,
     actionBusy,
@@ -78,6 +82,18 @@ export const ShiprocketShipmentsTab: React.FC<ShiprocketShipmentsTabProps> = Rea
           >
             Cancelled
           </button>
+          <label
+            className={`${styles.hideCancelledLabel} ${statusFilter !== 'all' ? styles.hideCancelledDisabled : ''}`}
+          >
+            <input
+              type="checkbox"
+              className={styles.hideCancelledCheckbox}
+              checked={statusFilter === 'all' ? hideCancelled : false}
+              disabled={statusFilter !== 'all'}
+              onChange={(e) => onToggleHideCancelled?.(e.target.checked)}
+            />
+            <span>Hide Cancelled</span>
+          </label>
         </div>
         <div className={styles.filterRight}>
           <div className={styles.dateFilterGroup}>
