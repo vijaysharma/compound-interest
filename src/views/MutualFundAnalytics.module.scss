@@ -1358,11 +1358,11 @@
 }
 
 .lumpsumReturnBoxPositive {
-  background-color: #ecfdf5;
+  background-color: var(--color-profit-surface, var(--color-success-surface));
 }
 
 .lumpsumReturnBoxNegative {
-  background-color: #fff1f2;
+  background-color: var(--color-loss-surface, var(--color-danger-surface));
 }
 
 .lumpsumReturnGainRow {
@@ -1377,11 +1377,11 @@
   margin-left: 0.15rem;
 }
 .lumpsumReturnGainRowPositive {
-  color: #15803d;
+  color: var(--color-profit-text, var(--color-success-text-strong));
 }
 
 .lumpsumReturnGainRowNegative {
-  color: #dc2626;
+  color: var(--color-loss-text, var(--color-error-text));
 }
 
 .lumpsumGainArrowIcon {
@@ -1395,23 +1395,23 @@
   gap: 0.35rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--color-text-secondary);
   margin-top: 0.2rem;
   white-space: nowrap;
 }
 
 .lumpsumReturnSubDivider {
-  color: #cbd5e1;
+  color: var(--color-border);
 }
 
 .lumpsumReturnValPositive {
   font-weight: 600;
-  color: #15803d;
+  color: var(--color-profit-text, var(--color-success-text-strong));
 }
 
 .lumpsumReturnValNegative {
   font-weight: 600;
-  color: #dc2626;
+  color: var(--color-loss-text, var(--color-error-text));
 }
 
 .lumpsumChartRow {

@@ -27,13 +27,13 @@ const SERIES_TOKENS = [
  */
 const SERIES_FALLBACKS = [
   '#6d0b74',
-  '#0891b2',
-  '#c2410c',
-  '#15803d',
-  '#9333ea',
-  '#be123c',
-  '#0369a1',
-  '#a16207',
+  '#09b3b3',
+  '#c2470a',
+  '#149041',
+  '#8a26ed',
+  '#c31336',
+  '#046fa4',
+  '#a06a0d',
 ] as const;
 const CHROME_FALLBACKS: Record<string, string> = {
   '--chart-axis-line': '#e2e8f0',

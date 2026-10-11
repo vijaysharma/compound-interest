@@ -1,81 +1,242 @@
 // =============================================================================
 // Theme Color Tokens and CSS Variables (Global Design System)
-// Aligned with Fantasy Theme & Custom Financial Brand Design System
+// Emits runtime CSS Custom Properties from canonical Sass tokens
+// Single source of truth: `_color-tokens.scss` ($brand-primary)
 // =============================================================================
+
+@use "./color-tokens" as tokens;
 
 :root,
 [data-theme="fantasy"] {
   color-scheme: light;
 
   // ---------------------------------------------------------------------------
-  // Primary & Secondary Brand Tokens
+  // Canonical Brand Scales & Primitives
   // ---------------------------------------------------------------------------
-  --color-primary: #6d0b74;
-  --color-primary-content: #ffffff;
-  --color-primary-hover: #58085e;
-  --color-primary-active: #48064c;
-  --color-primary-light: #f6edf7;
-  --color-primary-subtle: #ebd5ed;
+  --brand-primary: #{tokens.$brand-primary};
 
-  --color-secondary: #9c27b0;
-  --color-secondary-content: #ffffff;
-  --color-secondary-hover: #7b1fa2;
+  @each $step, $val in tokens.$brand-scale {
+    --brand-#{$step}: #{$val};
+  }
 
-  --color-accent: #7b1fa2;
-  --color-accent-content: #ffffff;
+  @each $step, $val in tokens.$neutral-scale {
+    --neutral-#{$step}: #{$val};
+  }
+
+  @each $family, $scale in tokens.$semantic-scales {
+    @each $step, $val in $scale {
+      --#{$family}-#{$step}: #{$val};
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Primary & Secondary Brand Tokens (Theme-Compatible Aliases)
+  // ---------------------------------------------------------------------------
+  --color-primary: #{tokens.$brand-primary};
+  --color-primary-content: #{tokens.$white};
+  --color-primary-hover: #{tokens.$brand-700};
+  --color-primary-active: #{tokens.$brand-800};
+  --color-primary-light: #{tokens.$brand-50};
+  --color-primary-subtle: #{tokens.$brand-150};
+
+  --color-secondary: #{tokens.hue-shift(tokens.$brand-primary, 20deg)};
+  --color-secondary-content: #{tokens.$white};
+  --color-secondary-hover: #{tokens.shade(tokens.hue-shift(tokens.$brand-primary, 20deg), 15%)};
+
+  --color-accent: #{tokens.hue-shift(tokens.$brand-primary, 15deg)};
+  --color-accent-content: #{tokens.$white};
 
   // ---------------------------------------------------------------------------
   // Neutrals & Component Surfaces
   // ---------------------------------------------------------------------------
-  --color-neutral: #212121;
-  --color-neutral-content: #ffffff;
-  --color-neutral-bg: #ffffff;
-  --color-neutral-border: #e0e0e0;
+  --color-neutral: #{tokens.$neutral-950};
+  --color-neutral-content: #{tokens.$white};
+  --color-neutral-bg: #{tokens.$white};
+  --color-neutral-border: #{tokens.$neutral-200};
 
   // ---------------------------------------------------------------------------
   // Semantic Surfaces & Backgrounds
   // ---------------------------------------------------------------------------
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f8fafc;
-  --color-bg-tertiary: #f1f5f9;
-  --color-border: #e2e8f0;
-  --color-border-subtle: #f1f5f9;
+  --color-bg: #{tokens.$color-surface};
+  --color-bg-secondary: #{tokens.$color-page};
+  --color-bg-tertiary: #{tokens.$color-surface-muted};
+  --color-page: #{tokens.$color-page};
+  --color-surface: #{tokens.$color-surface};
+  --color-surface-subtle: #{tokens.$color-surface-subtle};
+  --color-surface-muted: #{tokens.$color-surface-muted};
+  --color-surface-raised: #{tokens.$color-surface-raised};
+  --color-surface-overlay: #{tokens.$color-surface-overlay};
+  --color-surface-brand: #{tokens.$color-surface-brand};
+  --color-surface-brand-hover: #{tokens.$color-surface-brand-hover};
+  --color-surface-brand-selected: #{tokens.$color-surface-brand-selected};
+  --color-surface-success: #{tokens.$color-surface-success};
+  --color-surface-danger: #{tokens.$color-surface-danger};
+  --color-surface-warning: #{tokens.$color-surface-warning};
+  --color-surface-info: #{tokens.$color-surface-info};
+
+  // ---------------------------------------------------------------------------
+  // Semantic Borders
+  // ---------------------------------------------------------------------------
+  --color-border: #{tokens.$color-border};
+  --color-border-subtle: #{tokens.$color-border-subtle};
+  --color-border-strong: #{tokens.$color-border-strong};
+  --color-border-brand: #{tokens.$color-border-brand};
+  --color-border-success: #{tokens.$color-border-success};
+  --color-border-danger: #{tokens.$color-border-danger};
+  --color-border-warning: #{tokens.$color-border-warning};
+  --color-border-info: #{tokens.$color-border-info};
+  --color-divider: #{tokens.$color-divider};
 
   // ---------------------------------------------------------------------------
   // Semantic Typography & Text Colors
   // ---------------------------------------------------------------------------
-  --color-heading: #212121;
-  --color-text: #212121;
-  --color-text-primary: #212121;
-  --color-text-secondary: #757575;
-  --color-text-muted: #757575;
-  --color-feedback: #6d0b74;
+  --color-heading: #{tokens.$color-text-primary};
+  --color-text: #{tokens.$color-text-primary};
+  --color-text-primary: #{tokens.$color-text-primary};
+  --color-text-secondary: #{tokens.$color-text-secondary};
+  --color-text-muted: #{tokens.$color-text-muted};
+  --color-text-disabled: #{tokens.$color-text-disabled};
+  --color-text-inverse: #{tokens.$color-text-inverse};
+  --color-text-brand: #{tokens.$color-text-brand};
+  --color-text-link: #{tokens.$color-text-link};
+  --color-text-link-hover: #{tokens.$color-text-link-hover};
+  --color-text-link-visited: #{tokens.$color-text-link-visited};
+  --color-feedback: #{tokens.$brand-primary};
 
   // ---------------------------------------------------------------------------
   // Base Palette Compatibility (DaisyUI & Layout resets)
   // ---------------------------------------------------------------------------
-  --color-base-100: #ffffff;
-  --color-base-200: #f8fafc;
-  --color-base-300: #e2e8f0;
-  --color-base-content: #212121;
+  --color-base-100: #{tokens.$white};
+  --color-base-200: #{tokens.$color-page};
+  --color-base-300: #{tokens.$color-border};
+  --color-base-content: #{tokens.$color-text-primary};
 
   // ---------------------------------------------------------------------------
-  // Status, Alerts & Utility Colors
+  // Status, Alerts & Action Colors
   // ---------------------------------------------------------------------------
-  --color-info: #0284c7;
-  --color-info-content: #ffffff;
-  --color-success: #16a34a;
-  --color-success-content: #ffffff;
-  --color-warning: #d97706;
-  --color-warning-content: #1e293b;
-  --color-error: #dc2626;
-  --color-error-content: #ffffff;
+  --color-info: #{tokens.$info-600};
+  --color-info-content: #{tokens.$white};
+  --color-info-surface: #{tokens.$color-info-surface};
+  --color-info-border: #{tokens.$color-info-border};
+  --color-info-text: #{tokens.$color-info-text};
+  --color-info-icon: #{tokens.$color-info-icon};
 
-  // ---------------------------------------------------------------------------
-  // Component Surface Aliases
-  // Legacy/shorthand names consumed by components. Defined via var() indirection
-  // so they automatically follow whichever theme block is active.
-  // ---------------------------------------------------------------------------
+  --color-success: #{tokens.$success-600};
+  --color-success-content: #{tokens.$white};
+  --color-success-surface: #{tokens.$color-success-surface};
+  --color-success-surface-strong: #{tokens.$success-100};
+  --color-success-border: #{tokens.$color-success-border};
+  --color-success-border-strong: #{tokens.$success-400};
+  --color-success-text: #{tokens.$color-success-text};
+  --color-success-text-strong: #{tokens.$success-800};
+  --color-success-text-muted: #{tokens.$success-600};
+  --color-success-icon: #{tokens.$color-success-icon};
+
+  --color-warning: #{tokens.$warning-600};
+  --color-warning-content: #{tokens.$neutral-950};
+  --color-warning-surface: #{tokens.$color-warning-surface};
+  --color-warning-border: #{tokens.$color-warning-border};
+  --color-warning-text: #{tokens.$color-warning-text};
+  --color-warning-icon: #{tokens.$color-warning-icon};
+
+  // Danger / Error
+  --color-danger: #{tokens.$danger-600};
+  --color-danger-content: #{tokens.$white};
+  --color-danger-surface: #{tokens.$color-danger-surface};
+  --color-danger-border: #{tokens.$color-danger-border};
+  --color-danger-text: #{tokens.$color-danger-text};
+  --color-danger-icon: #{tokens.$color-danger-icon};
+
+  --color-error: #{tokens.$danger-600};
+  --color-error-content: #{tokens.$white};
+  --color-error-surface: #{tokens.$color-danger-surface};
+  --color-error-border: #{tokens.$color-danger-border};
+  --color-error-text: #{tokens.$color-danger-text};
+  --color-error-text-strong: #{tokens.$danger-800};
+
+  // Actions
+  --color-action-primary-bg: #{tokens.$color-action-primary-bg};
+  --color-action-primary-bg-hover: #{tokens.$color-action-primary-bg-hover};
+  --color-action-primary-bg-active: #{tokens.$color-action-primary-bg-active};
+  --color-action-primary-bg-disabled: #{tokens.$color-action-primary-bg-disabled};
+  --color-action-primary-text: #{tokens.$color-action-primary-text};
+  --color-action-primary-text-disabled: #{tokens.$color-action-primary-text-disabled};
+  --color-action-secondary-bg: #{tokens.$color-action-secondary-bg};
+  --color-action-secondary-bg-hover: #{tokens.$color-action-secondary-bg-hover};
+  --color-action-secondary-bg-active: #{tokens.$color-action-secondary-bg-active};
+  --color-action-secondary-text: #{tokens.$color-action-secondary-text};
+  --color-action-secondary-border: #{tokens.$color-action-secondary-border};
+  --color-action-ghost-bg-hover: #{tokens.$color-action-ghost-bg-hover};
+  --color-action-ghost-bg-active: #{tokens.$color-action-ghost-bg-active};
+  --color-action-ghost-text: #{tokens.$color-action-ghost-text};
+  --color-action-danger-bg: #{tokens.$color-action-danger-bg};
+  --color-action-danger-bg-hover: #{tokens.$color-action-danger-bg-hover};
+  --color-action-danger-text: #{tokens.$color-action-danger-text};
+
+  // Form Controls
+  --color-input-bg: #{tokens.$color-input-bg};
+  --color-input-bg-hover: #{tokens.$color-input-bg-hover};
+  --color-input-bg-disabled: #{tokens.$color-input-bg-disabled};
+  --color-input-text: #{tokens.$color-input-text};
+  --color-input-placeholder: #{tokens.$color-input-placeholder};
+  --color-input-border: #{tokens.$color-input-border};
+  --color-input-border-hover: #{tokens.$color-input-border-hover};
+  --color-input-border-focus: #{tokens.$color-input-border-focus};
+  --color-input-border-error: #{tokens.$color-input-border-error};
+  --color-input-border-success: #{tokens.$color-input-border-success};
+  --color-input-addon-bg: #{tokens.$color-input-addon-bg};
+
+  // Focus & Keyboard
+  --color-focus-ring: #{tokens.$color-focus-ring};
+  --color-focus-ring-offset: #{tokens.$color-focus-ring-offset};
+  --color-selection-bg: #{tokens.$color-selection-bg};
+  --color-selection-text: #{tokens.$color-selection-text};
+  --color-keyboard-shortcut-bg: #{tokens.$color-keyboard-shortcut-bg};
+  --color-keyboard-shortcut-text: #{tokens.$color-keyboard-shortcut-text};
+
+  // Financial-Analysis Semantics
+  --color-profit-text: #{tokens.$color-profit-text};
+  --color-profit-icon: #{tokens.$color-profit-icon};
+  --color-profit-surface: #{tokens.$color-profit-surface};
+  --color-profit-border: #{tokens.$color-profit-border};
+  --color-loss-text: #{tokens.$color-loss-text};
+  --color-loss-icon: #{tokens.$color-loss-icon};
+  --color-loss-surface: #{tokens.$color-loss-surface};
+  --color-loss-border: #{tokens.$color-loss-border};
+  --color-neutral-change: #{tokens.$color-neutral-change};
+  --color-value-highlight: #{tokens.$color-value-highlight};
+  --color-chart-positive: #{tokens.$color-chart-positive};
+  --color-chart-negative: #{tokens.$color-chart-negative};
+
+  // Navigation & Selection
+  --color-nav-bg: #{tokens.$color-nav-bg};
+  --color-nav-text: #{tokens.$color-nav-text};
+  --color-nav-item-hover-bg: #{tokens.$color-nav-item-hover-bg};
+  --color-nav-item-active-bg: #{tokens.$color-nav-item-active-bg};
+  --color-nav-item-active-indicator: #{tokens.$color-nav-item-active-indicator};
+  --color-tab-text: #{tokens.$color-tab-text};
+  --color-tab-text-active: #{tokens.$color-tab-text-active};
+  --color-tab-border-active: #{tokens.$color-tab-border-active};
+  --color-badge-brand-bg: #{tokens.$color-badge-brand-bg};
+  --color-badge-brand-text: #{tokens.$color-badge-brand-text};
+
+  // Component Tokens
+  --color-card-bg: #{tokens.$color-card-bg};
+  --color-card-border: #{tokens.$color-card-border};
+  --color-card-title: #{tokens.$color-card-title};
+  --color-modal-bg: #{tokens.$color-modal-bg};
+  --color-modal-header-bg: #{tokens.$color-modal-header-bg};
+  --color-modal-footer-bg: #{tokens.$color-modal-footer-bg};
+  --color-tooltip-bg: #{tokens.$color-tooltip-bg};
+  --color-tooltip-text: #{tokens.$color-tooltip-text};
+  --color-table-header-bg: #{tokens.$color-table-header-bg};
+  --color-table-row-hover: #{tokens.$color-table-row-hover};
+  --color-table-row-selected: #{tokens.$color-table-row-selected};
+  --color-skeleton-base: #{tokens.$color-skeleton-base};
+  --color-skeleton-highlight: #{tokens.$color-skeleton-highlight};
+  --color-backdrop: #{tokens.$color-backdrop};
+
+  // Component Surface Aliases (Var-indirection)
   --bg-card: var(--color-bg);
   --bg-card-header: var(--color-bg-secondary);
   --bg-hover: var(--color-bg-secondary);
@@ -87,45 +248,11 @@
   --text-muted: var(--color-text-secondary);
 
   // ---------------------------------------------------------------------------
-  // Semantic Tinted Surfaces
-  // Tinted block backgrounds/borders/text for success, error, warning and info
-  // regions. Components reference these instead of inlining hex values.
+  // Chart Palette (Categorical Series & Chrome)
   // ---------------------------------------------------------------------------
-  --color-success-surface: #f0fdf4;
-  --color-success-surface-strong: #dcfce7;
-  --color-success-border: #bbf7d0;
-  --color-success-border-strong: #86efac;
-  --color-success-text: #166534;
-  --color-success-text-strong: #15803d;
-  --color-success-text-muted: #4b7a58;
-
-  --color-error-surface: #fee2e2;
-  --color-error-border: #fecaca;
-  --color-error-text: #991b1b;
-  --color-error-text-strong: #b91c1c;
-
-  --color-warning-surface: #fffbeb;
-  --color-warning-border: #fde68a;
-  --color-warning-text: #92400e;
-
-  --color-info-surface: #eff6ff;
-  --color-info-border: #bfdbfe;
-  --color-info-text: #1e40af;
-
-  // ---------------------------------------------------------------------------
-  // Chart Palette
-  // Primary-anchored categorical series colors plus chart chrome. Series colors
-  // stay perceptually distinct so multiple funds remain separable, while the
-  // first series and all chrome derive from the brand primary.
-  // ---------------------------------------------------------------------------
-  --chart-series-1: #6d0b74;
-  --chart-series-2: #0891b2;
-  --chart-series-3: #c2410c;
-  --chart-series-4: #15803d;
-  --chart-series-5: #9333ea;
-  --chart-series-6: #be123c;
-  --chart-series-7: #0369a1;
-  --chart-series-8: #a16207;
+  @each $series, $val in tokens.$chart-series {
+    --chart-series-#{$series}: #{$val};
+  }
 
   --chart-axis-line: var(--color-border);
   --chart-grid-line: var(--color-border-subtle);
@@ -157,86 +284,183 @@
 }
 
 // -----------------------------------------------------------------------------
-// Dark Theme
+// Dark Theme (Derived Role Mapping)
 // -----------------------------------------------------------------------------
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --color-primary: #a855f7;
-  --color-primary-content: #ffffff;
-  --color-primary-hover: #9333ea;
-  --color-primary-active: #7e22ce;
-  --color-primary-light: #2e1065;
-  --color-primary-subtle: #3b0764;
+  --color-primary: #{tokens.$brand-400};
+  --color-primary-content: #{tokens.$neutral-950};
+  --color-primary-hover: #{tokens.$brand-300};
+  --color-primary-active: #{tokens.$brand-200};
+  --color-primary-light: #{tokens.$brand-950};
+  --color-primary-subtle: #{tokens.$brand-900};
 
-  --color-secondary: #c084fc;
-  --color-secondary-content: #ffffff;
-  --color-secondary-hover: #a855f7;
+  --color-secondary: #{tokens.tint(tokens.hue-shift(tokens.$brand-primary, 20deg), 40%)};
+  --color-secondary-content: #{tokens.$neutral-950};
+  --color-secondary-hover: #{tokens.tint(tokens.hue-shift(tokens.$brand-primary, 20deg), 60%)};
 
-  --color-accent: #d8b4fe;
-  --color-accent-content: #1e1b4b;
+  --color-accent: #{tokens.tint(tokens.hue-shift(tokens.$brand-primary, 15deg), 50%)};
+  --color-accent-content: #{tokens.$neutral-950};
 
-  --color-neutral: #f8fafc;
-  --color-neutral-content: #0f172a;
-  --color-neutral-bg: #1e293b;
-  --color-neutral-border: #334155;
+  --color-neutral: #{tokens.$neutral-50};
+  --color-neutral-content: #{tokens.$neutral-950};
+  --color-neutral-bg: #{tokens.$neutral-900};
+  --color-neutral-border: #{tokens.$neutral-700};
 
-  --color-bg: #0f172a;
-  --color-bg-secondary: #1e293b;
-  --color-bg-tertiary: #334155;
-  --color-border: #334155;
-  --color-border-subtle: #1e293b;
+  --color-bg: #{tokens.$neutral-950};
+  --color-bg-secondary: #{tokens.$neutral-900};
+  --color-bg-tertiary: #{tokens.$neutral-800};
+  --color-page: #{tokens.$neutral-950};
+  --color-surface: #{tokens.$neutral-900};
+  --color-surface-subtle: #{tokens.$neutral-900};
+  --color-surface-muted: #{tokens.$neutral-800};
+  --color-surface-raised: #{tokens.$neutral-900};
+  --color-surface-overlay: #{tokens.shade(tokens.$neutral-950, 10%)};
+  --color-surface-brand: #{tokens.$brand-950};
+  --color-surface-brand-hover: #{tokens.$brand-900};
+  --color-surface-brand-selected: #{tokens.$brand-800};
+  --color-surface-success: #{tokens.shade(tokens.$success-900, 15%)};
+  --color-surface-danger: #{tokens.shade(tokens.$danger-900, 15%)};
+  --color-surface-warning: #{tokens.shade(tokens.$warning-900, 15%)};
+  --color-surface-info: #{tokens.shade(tokens.$info-900, 15%)};
 
-  --color-heading: #f8fafc;
-  --color-text: #e2e8f0;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #94a3b8;
-  --color-feedback: #c084fc;
+  --color-border: #{tokens.$neutral-700};
+  --color-border-subtle: #{tokens.$neutral-800};
+  --color-border-strong: #{tokens.$neutral-500};
+  --color-border-brand: #{tokens.$brand-700};
+  --color-border-success: #{tokens.$success-700};
+  --color-border-danger: #{tokens.$danger-700};
+  --color-border-warning: #{tokens.$warning-700};
+  --color-border-info: #{tokens.$info-700};
+  --color-divider: #{tokens.$neutral-700};
 
-  --color-base-100: #0f172a;
-  --color-base-200: #1e293b;
-  --color-base-300: #334155;
-  --color-base-content: #f8fafc;
+  --color-heading: #{tokens.$neutral-50};
+  --color-text: #{tokens.$neutral-100};
+  --color-text-primary: #{tokens.$neutral-50};
+  --color-text-secondary: #{tokens.$neutral-200};
+  --color-text-muted: #{tokens.$neutral-200};
+  --color-text-disabled: #{tokens.$neutral-400};
+  --color-text-inverse: #{tokens.$neutral-950};
+  --color-text-brand: #{tokens.$brand-300};
+  --color-text-link: #{tokens.$brand-300};
+  --color-text-link-hover: #{tokens.$brand-200};
+  --color-text-link-visited: #{tokens.$brand-400};
+  --color-feedback: #{tokens.$brand-300};
 
-  --color-info: #38bdf8;
-  --color-info-content: #0f172a;
-  --color-success: #22c55e;
-  --color-success-content: #0f172a;
-  --color-warning: #f59e0b;
-  --color-warning-content: #0f172a;
-  --color-error: #ef4444;
-  --color-error-content: #ffffff;
+  --color-base-100: #{tokens.$neutral-950};
+  --color-base-200: #{tokens.$neutral-900};
+  --color-base-300: #{tokens.$neutral-800};
+  --color-base-content: #{tokens.$neutral-50};
 
-  // Semantic tinted surfaces (dark)
-  --color-success-surface: #052e16;
-  --color-success-surface-strong: #14532d;
-  --color-success-border: #166534;
-  --color-success-border-strong: #15803d;
-  --color-success-text: #86efac;
-  --color-success-text-strong: #4ade80;
-  --color-success-text-muted: #86a992;
+  --color-info: #{tokens.$info-400};
+  --color-info-content: #{tokens.$neutral-950};
+  --color-info-surface: #{tokens.shade(tokens.$info-900, 15%)};
+  --color-info-border: #{tokens.$info-700};
+  --color-info-text: #{tokens.$info-300};
+  --color-info-icon: #{tokens.$info-300};
 
-  --color-error-surface: #450a0a;
-  --color-error-border: #7f1d1d;
-  --color-error-text: #fca5a5;
-  --color-error-text-strong: #f87171;
+  --color-success: #{tokens.$success-400};
+  --color-success-content: #{tokens.$neutral-950};
+  --color-success-surface: #{tokens.shade(tokens.$success-900, 15%)};
+  --color-success-surface-strong: #{tokens.shade(tokens.$success-800, 10%)};
+  --color-success-border: #{tokens.$success-700};
+  --color-success-border-strong: #{tokens.$success-600};
+  --color-success-text: #{tokens.$success-300};
+  --color-success-text-strong: #{tokens.$success-200};
+  --color-success-text-muted: #{tokens.$success-400};
+  --color-success-icon: #{tokens.$success-300};
 
-  --color-warning-surface: #451a03;
-  --color-warning-border: #78350f;
-  --color-warning-text: #fcd34d;
+  --color-warning: #{tokens.$warning-400};
+  --color-warning-content: #{tokens.$neutral-950};
+  --color-warning-surface: #{tokens.shade(tokens.$warning-900, 15%)};
+  --color-warning-border: #{tokens.$warning-700};
+  --color-warning-text: #{tokens.$warning-300};
+  --color-warning-icon: #{tokens.$warning-300};
 
-  --color-info-surface: #172554;
-  --color-info-border: #1e3a8a;
-  --color-info-text: #93c5fd;
+  --color-danger: #{tokens.$danger-400};
+  --color-danger-content: #{tokens.$neutral-950};
+  --color-danger-surface: #{tokens.shade(tokens.$danger-900, 15%)};
+  --color-danger-border: #{tokens.$danger-700};
+  --color-danger-text: #{tokens.$danger-300};
+  --color-danger-icon: #{tokens.$danger-300};
 
-  // Chart palette (dark) - brightened for contrast on dark surfaces
-  --chart-series-1: #c084fc;
-  --chart-series-2: #22d3ee;
-  --chart-series-3: #fb923c;
-  --chart-series-4: #4ade80;
-  --chart-series-5: #e879f9;
-  --chart-series-6: #fb7185;
-  --chart-series-7: #60a5fa;
-  --chart-series-8: #fbbf24;
+  --color-error: #{tokens.$danger-400};
+  --color-error-content: #{tokens.$neutral-950};
+  --color-error-surface: #{tokens.shade(tokens.$danger-900, 15%)};
+  --color-error-border: #{tokens.$danger-700};
+  --color-error-text: #{tokens.$danger-300};
+  --color-error-text-strong: #{tokens.$danger-200};
+
+  --color-action-primary-bg: #{tokens.$brand-400};
+  --color-action-primary-bg-hover: #{tokens.$brand-300};
+  --color-action-primary-bg-active: #{tokens.$brand-200};
+  --color-action-primary-text: #{tokens.$neutral-950};
+  --color-action-secondary-bg: #{tokens.$neutral-900};
+  --color-action-secondary-text: #{tokens.$brand-300};
+  --color-action-secondary-border: #{tokens.$brand-700};
+
+  --color-input-bg: #{tokens.$neutral-900};
+  --color-input-bg-hover: #{tokens.$neutral-800};
+  --color-input-bg-disabled: #{tokens.$neutral-800};
+  --color-input-text: #{tokens.$neutral-50};
+  --color-input-placeholder: #{tokens.$neutral-300};
+  --color-input-border: #{tokens.$neutral-600};
+  --color-input-border-hover: #{tokens.$brand-400};
+  --color-input-border-focus: #{tokens.$brand-300};
+  --color-input-addon-bg: #{tokens.$neutral-800};
+
+  --color-focus-ring: #{tokens.$info-300};
+  --color-focus-ring-offset: #{tokens.$neutral-950};
+  --color-selection-bg: #{tokens.$brand-800};
+  --color-selection-text: #{tokens.$neutral-50};
+
+  --color-profit-text: #{tokens.$success-300};
+  --color-profit-icon: #{tokens.$success-300};
+  --color-profit-surface: #{tokens.shade(tokens.$success-900, 15%)};
+  --color-profit-border: #{tokens.$success-700};
+  --color-loss-text: #{tokens.$danger-300};
+  --color-loss-icon: #{tokens.$danger-300};
+  --color-loss-surface: #{tokens.shade(tokens.$danger-900, 15%)};
+  --color-loss-border: #{tokens.$danger-700};
+  --color-neutral-change: #{tokens.$neutral-200};
+  --color-value-highlight: #{tokens.$brand-300};
+  --color-chart-positive: #{tokens.$success-300};
+  --color-chart-negative: #{tokens.$danger-300};
+
+  --color-nav-bg: #{tokens.$neutral-950};
+  --color-nav-text: #{tokens.$neutral-50};
+  --color-nav-item-hover-bg: #{tokens.$neutral-800};
+  --color-nav-item-active-bg: #{tokens.$brand-900};
+  --color-nav-item-active-indicator: #{tokens.$brand-300};
+  --color-tab-text: #{tokens.$neutral-200};
+  --color-tab-text-active: #{tokens.$brand-300};
+  --color-tab-border-active: #{tokens.$brand-300};
+  --color-badge-brand-bg: #{tokens.$brand-900};
+  --color-badge-brand-text: #{tokens.$brand-200};
+
+  --color-card-bg: #{tokens.$neutral-900};
+  --color-card-border: #{tokens.$neutral-700};
+  --color-card-title: #{tokens.$neutral-50};
+  --color-modal-bg: #{tokens.$neutral-900};
+  --color-modal-header-bg: #{tokens.$neutral-950};
+  --color-modal-footer-bg: #{tokens.$neutral-950};
+  --color-tooltip-bg: #{tokens.$neutral-50};
+  --color-tooltip-text: #{tokens.$neutral-950};
+  --color-table-header-bg: #{tokens.$neutral-800};
+  --color-table-row-hover: #{tokens.$brand-950};
+  --color-table-row-selected: #{tokens.$brand-900};
+  --color-skeleton-base: #{tokens.$neutral-800};
+  --color-skeleton-highlight: #{tokens.$neutral-700};
+  --color-backdrop: #{tokens.tint(tokens.$black, 45%)};
+
+  // Chart palette (dark)
+  --chart-series-1: #{tokens.$brand-300};
+  --chart-series-2: #{tokens.tint(tokens.$chart-2, 35%)};
+  --chart-series-3: #{tokens.tint(tokens.$chart-3, 35%)};
+  --chart-series-4: #{tokens.tint(tokens.$chart-4, 35%)};
+  --chart-series-5: #{tokens.tint(tokens.$chart-5, 35%)};
+  --chart-series-6: #{tokens.tint(tokens.$chart-6, 35%)};
+  --chart-series-7: #{tokens.tint(tokens.$chart-7, 35%)};
+  --chart-series-8: #{tokens.tint(tokens.$chart-8, 35%)};
 }

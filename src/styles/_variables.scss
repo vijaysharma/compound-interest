@@ -3,53 +3,56 @@
 // Synchronized with _theme.scss design system tokens
 // =============================================================================
 
+@use "./color-tokens" as tokens;
+@forward "./color-tokens";
+
 // Primary Brand Theme
-$primary: var(--color-primary, #6d0b74);
-$primary-content: var(--color-primary-content, #ffffff);
-$primary-hover: var(--color-primary-hover, #58085e);
-$primary-active: var(--color-primary-active, #48064c);
-$primary-light: var(--color-primary-light, #f6edf7);
-$primary-subtle: var(--color-primary-subtle, #ebd5ed);
-$primary-dark-text: #2f0432;
+$primary: var(--color-primary, #{tokens.$brand-primary});
+$primary-content: var(--color-primary-content, #{tokens.$white});
+$primary-hover: var(--color-primary-hover, #{tokens.$brand-700});
+$primary-active: var(--color-primary-active, #{tokens.$brand-800});
+$primary-light: var(--color-primary-light, #{tokens.$brand-50});
+$primary-subtle: var(--color-primary-subtle, #{tokens.$brand-150});
+$primary-dark-text: var(--color-text-primary, #{tokens.$neutral-950});
 
 // Secondary & Accent Theme
-$secondary: var(--color-secondary, #9c27b0);
-$secondary-content: var(--color-secondary-content, #ffffff);
-$secondary-hover: var(--color-secondary-hover, #7b1fa2);
-$accent: var(--color-accent, #7b1fa2);
-$accent-content: var(--color-accent-content, #ffffff);
+$secondary: var(--color-secondary, #{tokens.hue-shift(tokens.$brand-primary, 20deg)});
+$secondary-content: var(--color-secondary-content, #{tokens.$white});
+$secondary-hover: var(--color-secondary-hover, #{tokens.shade(tokens.hue-shift(tokens.$brand-primary, 20deg), 15%)});
+$accent: var(--color-accent, #{tokens.hue-shift(tokens.$brand-primary, 15deg)});
+$accent-content: var(--color-accent-content, #{tokens.$white});
 
 // Neutral Surfaces & Borders
-$color-neutral-bg: var(--color-neutral-bg, #ffffff);
-$color-neutral-border: var(--color-neutral-border, #e0e0e0);
-$color-bg: var(--color-bg, #ffffff);
-$color-bg-secondary: var(--color-bg-secondary, #f8fafc);
-$color-bg-tertiary: var(--color-bg-tertiary, #f1f5f9);
+$color-neutral-bg: var(--color-neutral-bg, #{tokens.$white});
+$color-neutral-border: var(--color-neutral-border, #{tokens.$neutral-200});
+$color-bg: var(--color-bg, #{tokens.$color-surface});
+$color-bg-secondary: var(--color-bg-secondary, #{tokens.$color-page});
+$color-bg-tertiary: var(--color-bg-tertiary, #{tokens.$color-surface-muted});
 
-$bg-white: var(--color-bg, #ffffff);
-$bg-muted: var(--color-bg-secondary, #f8fafc);
-$bg-tinted-tab: #ece7ee;
-$border-purple: var(--color-primary, #6d0b74);
-$border-light: var(--color-border, #e2e8f0);
-$border-subtle: var(--color-bg-tertiary, #f1f5f9);
+$bg-white: var(--color-bg, #{tokens.$white});
+$bg-muted: var(--color-bg-secondary, #{tokens.$color-page});
+$bg-tinted-tab: var(--color-primary-subtle, #{tokens.$brand-150});
+$border-purple: var(--color-primary, #{tokens.$brand-primary});
+$border-light: var(--color-border, #{tokens.$color-border});
+$border-subtle: var(--color-border-subtle, #{tokens.$color-border-subtle});
 
 // Semantic Typography & Text
-$color-heading: var(--color-heading, #212121);
-$color-text: var(--color-text, #212121);
-$color-text-primary: var(--color-text-primary, #212121);
-$color-text-secondary: var(--color-text-secondary, #757575);
-$color-text-muted: var(--color-text-muted, #757575);
-$color-feedback: var(--color-feedback, #6d0b74);
+$color-heading: var(--color-heading, #{tokens.$color-text-primary});
+$color-text: var(--color-text, #{tokens.$color-text-primary});
+$color-text-primary: var(--color-text-primary, #{tokens.$color-text-primary});
+$color-text-secondary: var(--color-text-secondary, #{tokens.$color-text-secondary});
+$color-text-muted: var(--color-text-muted, #{tokens.$color-text-muted});
+$color-feedback: var(--color-feedback, #{tokens.$brand-primary});
 
-$text-dark: var(--color-heading, #212121);
-$text-body: var(--color-text, #212121);
-$text-muted: var(--color-text-secondary, #757575);
-$text-purple: var(--color-primary, #6d0b74);
+$text-dark: var(--color-heading, #{tokens.$color-text-primary});
+$text-body: var(--color-text, #{tokens.$color-text-primary});
+$text-muted: var(--color-text-secondary, #{tokens.$color-text-secondary});
+$text-purple: var(--color-primary, #{tokens.$brand-primary});
 
 // Action buttons
-$btn-clear-bg: #e9ecef;
-$btn-clear-hover: #dee2e6;
-$btn-clear-text: #495057;
+$btn-clear-bg: var(--color-bg-tertiary, #{tokens.$neutral-100});
+$btn-clear-hover: var(--color-border, #{tokens.$neutral-200});
+$btn-clear-text: var(--color-text-secondary, #{tokens.$neutral-700});
 
 // Radii
 $radius-xs: var(--radius-xs, 0.25rem);

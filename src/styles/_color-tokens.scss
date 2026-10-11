@@ -1,0 +1,339 @@
+// =============================================================================
+// Financial Analysis — Brand-Derived Color Tokens (Canonical Sass Module)
+// =============================================================================
+// Pure token definitions, math derivation functions, and token maps.
+// This module exports variables and functions only; it emits NO CSS selectors.
+// To emit runtime CSS custom properties, import this module into `_theme.scss`.
+//
+// Single Source of Truth: Change $brand-primary and rebuild.
+// =============================================================================
+
+@use "sass:color";
+@use "sass:map";
+@use "sass:math";
+
+// -----------------------------------------------------------------------------
+// 1. Authoritative Canonical Brand Primary
+// -----------------------------------------------------------------------------
+$brand-primary: #6d0b74 !default;
+
+// -----------------------------------------------------------------------------
+// 2. Color Derivation Functions (Pure Dart Sass)
+// -----------------------------------------------------------------------------
+@function _clamp-percent($value) {
+  @return math.max(0%, math.min(100%, $value));
+}
+
+/// Tint a color by mixing with pure white (#ffffff)
+@function tint($source, $amount) {
+  @return color.mix(#ffffff, $source, _clamp-percent($amount));
+}
+
+/// Shade a color by mixing with pure black (#000000)
+@function shade($source, $amount) {
+  @return color.mix(#000000, $source, _clamp-percent($amount));
+}
+
+/// Rotate color hue by a given degree offset
+@function hue-shift($source, $degrees) {
+  @return color.adjust($source, $hue: $degrees);
+}
+
+/// Derive semantic status families anchored to the primary hue.
+/// With brand primary #6d0b74 (hue ~296deg):
+/// +180deg -> ~116-140deg (success green)
+/// +60deg  -> ~356-0deg   (danger red)
+/// +100deg -> ~36-40deg   (warning amber)
+/// -60deg  -> ~236deg     (info blue)
+@function semantic-base($degrees, $saturation: 78%, $lightness: 34%) {
+  $rotated: hue-shift($brand-primary, $degrees);
+  @return color.change(
+    $rotated,
+    $saturation: $saturation,
+    $lightness: $lightness
+  );
+}
+
+@function semantic-tint($base, $amount) {
+  @return tint($base, $amount);
+}
+
+@function semantic-shade($base, $amount) {
+  @return shade($base, $amount);
+}
+
+// Fixed endpoint anchors
+$white: #ffffff !default;
+$black: #000000 !default;
+
+// -----------------------------------------------------------------------------
+// 3. Primitive Scales
+// -----------------------------------------------------------------------------
+
+// Brand scale (50 - 950)
+$brand-50:  tint($brand-primary, 96%) !default;
+$brand-100: tint($brand-primary, 90%) !default;
+$brand-150: tint($brand-primary, 84%) !default;
+$brand-200: tint($brand-primary, 76%) !default;
+$brand-300: tint($brand-primary, 60%) !default;
+$brand-400: tint($brand-primary, 38%) !default;
+$brand-500: $brand-primary !default;
+$brand-600: shade($brand-primary, 10%) !default;
+$brand-700: shade($brand-primary, 20%) !default;
+$brand-800: shade($brand-primary, 30%) !default;
+$brand-900: shade($brand-primary, 40%) !default;
+$brand-950: shade($brand-primary, 50%) !default;
+
+// Neutral scale (0 - 950) subtly tinted with brand primary
+$neutral-0:   $white !default;
+$neutral-25:  tint($brand-primary, 99.3%) !default;
+$neutral-50:  tint($brand-primary, 98%) !default;
+$neutral-100: tint($brand-primary, 96%) !default;
+$neutral-150: tint($brand-primary, 92%) !default;
+$neutral-200: tint($brand-primary, 87%) !default;
+$neutral-300: tint($brand-primary, 77%) !default;
+$neutral-400: tint($brand-primary, 58%) !default;
+$neutral-500: tint($brand-primary, 38%) !default;
+$neutral-600: shade($brand-primary, 28%) !default;
+$neutral-700: shade($brand-primary, 42%) !default;
+$neutral-800: shade($brand-primary, 58%) !default;
+$neutral-900: shade($brand-primary, 72%) !default;
+$neutral-950: shade($brand-primary, 86%) !default;
+
+// Semantic primitive families
+$success-base: semantic-base(180deg) !default;
+$danger-base:  semantic-base(60deg) !default;
+$warning-base: semantic-base(100deg, 82%, 30%) !default;
+$info-base:    semantic-base(-60deg) !default;
+
+$success-50:  semantic-tint($success-base, 94%) !default;
+$success-100: semantic-tint($success-base, 88%) !default;
+$success-200: semantic-tint($success-base, 72%) !default;
+$success-300: semantic-tint($success-base, 52%) !default;
+$success-400: semantic-tint($success-base, 30%) !default;
+$success-500: $success-base !default;
+$success-600: semantic-shade($success-base, 10%) !default;
+$success-700: semantic-shade($success-base, 20%) !default;
+$success-800: semantic-shade($success-base, 30%) !default;
+$success-900: semantic-shade($success-base, 40%) !default;
+
+$danger-50:  semantic-tint($danger-base, 95%) !default;
+$danger-100: semantic-tint($danger-base, 89%) !default;
+$danger-200: semantic-tint($danger-base, 73%) !default;
+$danger-300: semantic-tint($danger-base, 52%) !default;
+$danger-400: semantic-tint($danger-base, 30%) !default;
+$danger-500: $danger-base !default;
+$danger-600: semantic-shade($danger-base, 10%) !default;
+$danger-700: semantic-shade($danger-base, 20%) !default;
+$danger-800: semantic-shade($danger-base, 30%) !default;
+$danger-900: semantic-shade($danger-base, 40%) !default;
+
+$warning-50:  semantic-tint($warning-base, 95%) !default;
+$warning-100: semantic-tint($warning-base, 88%) !default;
+$warning-200: semantic-tint($warning-base, 70%) !default;
+$warning-300: semantic-tint($warning-base, 50%) !default;
+$warning-400: semantic-tint($warning-base, 28%) !default;
+$warning-500: $warning-base !default;
+$warning-600: semantic-shade($warning-base, 10%) !default;
+$warning-700: semantic-shade($warning-base, 20%) !default;
+$warning-800: semantic-shade($warning-base, 30%) !default;
+$warning-900: semantic-shade($warning-base, 40%) !default;
+
+$info-50:  semantic-tint($info-base, 95%) !default;
+$info-100: semantic-tint($info-base, 89%) !default;
+$info-200: semantic-tint($info-base, 73%) !default;
+$info-300: semantic-tint($info-base, 52%) !default;
+$info-400: semantic-tint($info-base, 30%) !default;
+$info-500: $info-base !default;
+$info-600: semantic-shade($info-base, 10%) !default;
+$info-700: semantic-shade($info-base, 20%) !default;
+$info-800: semantic-shade($info-base, 30%) !default;
+$info-900: semantic-shade($info-base, 40%) !default;
+
+// Primitive Maps
+$brand-scale: (
+  50: $brand-50, 100: $brand-100, 150: $brand-150, 200: $brand-200,
+  300: $brand-300, 400: $brand-400, 500: $brand-500, 600: $brand-600,
+  700: $brand-700, 800: $brand-800, 900: $brand-900, 950: $brand-950
+) !default;
+
+$neutral-scale: (
+  0: $neutral-0, 25: $neutral-25, 50: $neutral-50, 100: $neutral-100,
+  150: $neutral-150, 200: $neutral-200, 300: $neutral-300, 400: $neutral-400,
+  500: $neutral-500, 600: $neutral-600, 700: $neutral-700, 800: $neutral-800,
+  900: $neutral-900, 950: $neutral-950
+) !default;
+
+$semantic-scales: (
+  success: (50: $success-50, 100: $success-100, 200: $success-200, 300: $success-300, 400: $success-400, 500: $success-500, 600: $success-600, 700: $success-700, 800: $success-800, 900: $success-900),
+  danger: (50: $danger-50, 100: $danger-100, 200: $danger-200, 300: $danger-300, 400: $danger-400, 500: $danger-500, 600: $danger-600, 700: $danger-700, 800: $danger-800, 900: $danger-900),
+  warning: (50: $warning-50, 100: $warning-100, 200: $warning-200, 300: $warning-300, 400: $warning-400, 500: $warning-500, 600: $warning-600, 700: $warning-700, 800: $warning-800, 900: $warning-900),
+  info: (50: $info-50, 100: $info-100, 200: $info-200, 300: $info-300, 400: $info-400, 500: $info-500, 600: $info-600, 700: $info-700, 800: $info-800, 900: $info-900)
+) !default;
+
+// -----------------------------------------------------------------------------
+// 4. Semantic Tokens (Light Theme Defaults)
+// -----------------------------------------------------------------------------
+
+// Typography & Content
+$color-text-primary: $neutral-950 !default;
+$color-text-secondary: $neutral-700 !default;
+$color-text-muted: $neutral-700 !default;
+$color-text-disabled: $neutral-600 !default;
+$color-text-inverse: $white !default;
+$color-text-brand: $brand-700 !default;
+$color-text-link: $brand-700 !default;
+$color-text-link-hover: $brand-900 !default;
+$color-text-link-visited: $brand-800 !default;
+
+// Surfaces & Backgrounds
+$color-page: $neutral-50 !default;
+$color-surface: $white !default;
+$color-surface-subtle: $neutral-25 !default;
+$color-surface-muted: $neutral-100 !default;
+$color-surface-raised: $white !default;
+$color-surface-overlay: tint($neutral-950, 45%) !default;
+$color-surface-brand: $brand-50 !default;
+$color-surface-brand-hover: $brand-100 !default;
+$color-surface-brand-selected: $brand-150 !default;
+$color-surface-success: $success-50 !default;
+$color-surface-danger: $danger-50 !default;
+$color-surface-warning: $warning-50 !default;
+$color-surface-info: $info-50 !default;
+
+// Borders & Structural Elements
+$color-border: $neutral-200 !default;
+$color-border-subtle: $neutral-150 !default;
+$color-border-strong: $neutral-400 !default;
+$color-border-brand: $brand-300 !default;
+$color-border-success: $success-300 !default;
+$color-border-danger: $danger-300 !default;
+$color-border-warning: $warning-300 !default;
+$color-border-info: $info-300 !default;
+$color-divider: $neutral-200 !default;
+
+// Actions
+$color-action-primary-bg: $brand-500 !default;
+$color-action-primary-bg-hover: $brand-700 !default;
+$color-action-primary-bg-active: $brand-800 !default;
+$color-action-primary-bg-disabled: $neutral-200 !default;
+$color-action-primary-text: $white !default;
+$color-action-primary-text-disabled: $neutral-600 !default;
+
+$color-action-secondary-bg: $white !default;
+$color-action-secondary-bg-hover: $brand-50 !default;
+$color-action-secondary-bg-active: $brand-100 !default;
+$color-action-secondary-text: $brand-700 !default;
+$color-action-secondary-border: $brand-300 !default;
+
+$color-action-ghost-bg-hover: $brand-50 !default;
+$color-action-ghost-bg-active: $brand-100 !default;
+$color-action-ghost-text: $neutral-800 !default;
+
+$color-action-danger-bg: $danger-600 !default;
+$color-action-danger-bg-hover: $danger-700 !default;
+$color-action-danger-text: $white !default;
+
+// Form Controls
+$color-input-bg: $white !default;
+$color-input-bg-hover: $neutral-25 !default;
+$color-input-bg-disabled: $neutral-100 !default;
+$color-input-text: $color-text-primary !default;
+$color-input-placeholder: $neutral-700 !default;
+$color-input-border: $neutral-300 !default;
+$color-input-border-hover: $brand-400 !default;
+$color-input-border-focus: $brand-600 !default;
+$color-input-border-error: $danger-600 !default;
+$color-input-border-success: $success-600 !default;
+$color-input-addon-bg: $neutral-100 !default;
+
+// Focus & Keyboard
+$color-focus-ring: $info-600 !default;
+$color-focus-ring-offset: $white !default;
+$color-selection-bg: $brand-200 !default;
+$color-selection-text: $neutral-950 !default;
+$color-keyboard-shortcut-bg: $neutral-100 !default;
+$color-keyboard-shortcut-text: $neutral-800 !default;
+
+// Feedback & Status
+$color-success-text: $success-700 !default;
+$color-success-icon: $success-600 !default;
+$color-success-border: $success-300 !default;
+$color-success-surface: $success-50 !default;
+
+$color-danger-text: $danger-700 !default;
+$color-danger-icon: $danger-600 !default;
+$color-danger-border: $danger-300 !default;
+$color-danger-surface: $danger-50 !default;
+
+$color-warning-text: $warning-700 !default;
+$color-warning-icon: $warning-600 !default;
+$color-warning-border: $warning-300 !default;
+$color-warning-surface: $warning-50 !default;
+
+$color-info-text: $info-700 !default;
+$color-info-icon: $info-600 !default;
+$color-info-border: $info-300 !default;
+$color-info-surface: $info-50 !default;
+
+// Financial-Analysis Semantics
+$color-profit-text: $success-700 !default;
+$color-profit-icon: $success-600 !default;
+$color-profit-surface: $success-50 !default;
+$color-profit-border: $success-300 !default;
+
+$color-loss-text: $danger-700 !default;
+$color-loss-icon: $danger-600 !default;
+$color-loss-surface: $danger-50 !default;
+$color-loss-border: $danger-300 !default;
+
+$color-neutral-change: $neutral-800 !default;
+$color-value-highlight: $brand-700 !default;
+$color-chart-positive: $success-600 !default;
+$color-chart-negative: $danger-600 !default;
+
+// Navigation
+$color-nav-bg: $brand-700 !default;
+$color-nav-text: $white !default;
+$color-nav-item-hover-bg: $brand-600 !default;
+$color-nav-item-active-bg: $brand-800 !default;
+$color-nav-item-active-indicator: $brand-300 !default;
+$color-tab-text: $neutral-700 !default;
+$color-tab-text-active: $brand-700 !default;
+$color-tab-border-active: $brand-600 !default;
+$color-badge-brand-bg: $brand-100 !default;
+$color-badge-brand-text: $brand-800 !default;
+
+// Data Visualization (8 Series Categorical Palette)
+// Anchored to brand primary ($chart-1: $brand-primary), with remaining series
+// derived via controlled hue rotations, high saturation and distinct lightness
+// to guarantee multi-series contrast and categorical distinction.
+$chart-1: $brand-primary !default;
+$chart-2: color.change(hue-shift($brand-primary, -116deg), $saturation: 90%, $lightness: 37%) !default; // Cyan/Teal
+$chart-3: color.change(hue-shift($brand-primary, 84deg),   $saturation: 90%, $lightness: 40%) !default; // Amber/Orange
+$chart-4: color.change(hue-shift($brand-primary, -154deg), $saturation: 76%, $lightness: 32%) !default; // Forest Green
+$chart-5: color.change(hue-shift($brand-primary, -26deg),  $saturation: 85%, $lightness: 54%) !default; // Violet/Indigo
+$chart-6: color.change(hue-shift($brand-primary, 52deg),   $saturation: 82%, $lightness: 42%) !default; // Crimson Rose
+$chart-7: color.change(hue-shift($brand-primary, -96deg),  $saturation: 95%, $lightness: 33%) !default; // Ocean Blue
+$chart-8: color.change(hue-shift($brand-primary, 102deg),  $saturation: 85%, $lightness: 34%) !default; // Warm Ochre
+
+$chart-series: (
+  1: $chart-1, 2: $chart-2, 3: $chart-3, 4: $chart-4,
+  5: $chart-5, 6: $chart-6, 7: $chart-7, 8: $chart-8
+) !default;
+
+// Component Tokens
+$color-card-bg: $color-surface-raised !default;
+$color-card-border: $color-border !default;
+$color-card-title: $color-text-primary !default;
+$color-modal-bg: $color-surface !default;
+$color-modal-header-bg: $color-surface-brand !default;
+$color-modal-footer-bg: $color-surface-subtle !default;
+$color-tooltip-bg: $neutral-950 !default;
+$color-tooltip-text: $white !default;
+$color-table-header-bg: $neutral-100 !default;
+$color-table-row-hover: $brand-50 !default;
+$color-table-row-selected: $brand-100 !default;
+$color-skeleton-base: $neutral-150 !default;
+$color-skeleton-highlight: $neutral-50 !default;
+$color-backdrop: tint($neutral-950, 40%) !default;
