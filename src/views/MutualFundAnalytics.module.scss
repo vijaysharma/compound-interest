@@ -858,220 +858,262 @@
   white-space: nowrap;
 }
 
-/* SIP Specific Card Layout (as per SIP screenshot) */
-.sipTopNavSection {
+/* SIP Specific Card Layout (as per ab.png reference UI) */
+.sipValueCardRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
   width: 100%;
-  padding-top: 0.2rem;
+  margin-top: 0.25rem;
 }
 
-.sipNavValuesCol {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.sipNavItem {
+.sipCurrentValueCol {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
 }
 
-.sipNavLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-heading, #1e293b);
+.sipValueLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 0.15rem;
 }
 
-.sipNavDate {
-  font-size: 0.75rem;
+.sipValueBig {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--color-heading, #0f172a);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+
+  @include tablet-up {
+    font-size: 1.75rem;
+  }
+}
+.sipValueBigPositive {
+  color: var(--color-profit-text, var(--color-success-text-strong));
+}
+.sipValueBigNegative {
+  color: var(--color-loss-text, var(--color-error-text));
+}
+
+.sipValueSub {
+  font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--color-text-secondary, #64748b);
   font-variant-numeric: tabular-nums;
+  margin-top: 0.1rem;
 }
 
-.sipNavPrice {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--color-heading, #0f172a);
+.sipReturnBox {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.625rem;
   font-variant-numeric: tabular-nums;
-  margin-top: 0.15rem;
+  min-width: 130px;
 }
 
-.sipNavArrow {
-  color: var(--color-text-secondary, #94a3b8);
-  font-size: 1rem;
+.sipReturnBoxPositive {
+  background-color: var(--color-profit-surface, var(--color-success-surface));
 }
 
-.sipSparklineCol {
+.sipReturnBoxNegative {
+  background-color: var(--color-loss-surface, var(--color-danger-surface));
+}
+
+.sipReturnBoxLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 0.15rem;
+}
+
+.sipReturnGainRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.sipReturnGainRowContainer {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
+  align-items: center;
+}
+.sipReturnGainPositive {
+  color: var(--color-profit-text, var(--color-success-text-strong));
+}
+
+.sipReturnGainNegative {
+  color: var(--color-loss-text, var(--color-error-text));
+}
+
+.sipGainArrowIcon {
+  font-size: 1.125rem;
   flex-shrink: 0;
 }
 
-.sipReturnPill {
-  display: inline-flex;
+.sipReturnSubRow {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-top: 0.15rem;
+  white-space: nowrap;
+}
+
+.sipReturnValPositive {
   font-weight: 700;
-  border-radius: 9999px;
-  font-variant-numeric: tabular-nums;
+  color: var(--color-profit-text, var(--color-success-text-strong));
 }
 
-.sipPillSuccess {
-  background-color: color-mix(in srgb, var(--color-success) 12%, transparent);
-  color: var(--color-success-text-strong, #16a34a);
+.sipReturnValNegative {
+  font-weight: 700;
+  color: var(--color-loss-text, var(--color-error-text));
 }
 
-.sipPillError {
-  background-color: color-mix(in srgb, var(--color-error) 12%, transparent);
-  color: var(--color-error, #dc2626);
-}
-
-.sipSparklineSvg {
-  width: 100px;
-  height: 28px;
-  overflow: visible;
-}
-
-.sipValuesGrid {
+.sipMetricsRow {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: 1fr 1fr;
   width: 100%;
-  padding: 0.75rem 0;
-  border-top: 1px solid
-    color-mix(in srgb, var(--color-base-content) 7%, transparent);
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--color-base-content) 7%, transparent);
-
-  @media (max-width: 420px) {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem 0.5rem;
-
-    .sipValueCol:last-child {
-      grid-column: span 2;
-    }
-  }
+  padding-top: 0.25rem;
+  padding-bottom: 0.15rem;
 }
 
-.sipValueCol {
+.sipMetricItem {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  min-width: 0;
+  font-variant-numeric: tabular-nums;
 }
 
-.sipValueColLabel {
+.sipMetricLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #64748b);
+}
+
+.sipMetricVal {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+
+  @include tablet-up {
+    font-size: 1.35rem;
+  }
+}
+
+.sipBottomGrid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 0.4rem 0;
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
+
+  @include tablet-up {
+    margin-top: 0.1rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.sipBottomCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  position: relative;
+
+  &:not(:first-child) {
+    padding-left: 0.75rem;
+    border-left: 1px solid
+      color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  }
+}
+
+.sipBottomLabel {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-text-secondary, #64748b);
   white-space: nowrap;
 }
 
-.sipValueColAmount {
-  font-size: 1.125rem;
-  font-weight: 800;
-  color: var(--color-heading, #0f172a);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-  word-break: break-word;
-
-  @include tablet-up {
-    font-size: 1.25rem;
-  }
-}
-
-.sipValueColAmountPurple {
-  font-size: 1.125rem;
-  font-weight: 800;
-  color: #9333ea;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-  word-break: break-word;
-
-  @include tablet-up {
-    font-size: 1.25rem;
-  }
-}
-
-.sipGainLossText {
-  font-size: 1.05rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-  word-break: break-word;
-}
-
-.sipGainLossPct {
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.sipBottomMetricsGrid {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  width: 100%;
-  gap: 0.5rem 0.25rem;
-  padding-top: 0.25rem;
-
-  @media (min-width: 600px) {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.35rem;
-  }
-}
-
-.sipBottomMetricItem {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0 0.4rem 0 0;
-  min-width: 0;
-  flex: 1 1 calc(33.333% - 0.5rem);
-
-  @media (min-width: 480px) and (max-width: 599px) {
-    flex: 1 1 calc(20% - 0.5rem);
-  }
-
-  @media (min-width: 600px) {
-    flex: initial;
-    border-right: 1px solid
-      color-mix(in srgb, var(--color-base-content) 10%, transparent);
-
-    &:last-child {
-      border-right: none;
-    }
-  }
-}
-
-.sipBottomMetricLabel {
-  font-size: 0.6875rem;
-  font-weight: 500;
-  color: var(--color-text-secondary, #64748b);
-  white-space: normal;
-  line-height: 1.2;
-}
-
-.sipBottomMetricVal {
-  font-size: 0.8125rem;
+.sipBottomValue {
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--color-heading, #0f172a);
   font-variant-numeric: tabular-nums;
-  line-height: 1.25;
+  line-height: 1.2;
   word-break: break-word;
 
   @include tablet-up {
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
+}
+
+.sipFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  width: 100%;
+  padding-top: 0.35rem;
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap;
+}
+
+.sipFooterLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sipCalendarIcon {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary, #64748b);
+  flex-shrink: 0;
+}
+
+.sipDateRange {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sipFooterRight {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sipNavTag {
+  color: var(--color-heading, #0f172a);
+  font-weight: 700;
+}
+
+.sipNavPrice {
+  color: var(--color-heading, #0f172a);
+  font-weight: 600;
+}
+
+.sipNavArrow {
+  color: #94a3b8;
+  font-size: 0.875rem;
 }
 
 /* SWP Specific Card Layout (as per SWP screenshot) */

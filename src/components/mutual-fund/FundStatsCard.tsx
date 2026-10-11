@@ -172,7 +172,6 @@ export const FundStatsCard: React.FC<FundStatsCardProps> = React.memo(
                     </span>
                   </div>
                 </div>
-
                 {/* Sparkline Row (Visible only on Desktop / tablet-up, hidden on mobile) */}
                 <div className={styles.lumpsumChartRow}>
                   <svg
@@ -182,7 +181,13 @@ export const FundStatsCard: React.FC<FundStatsCardProps> = React.memo(
                     aria-hidden="true"
                   >
                     <defs>
-                      <linearGradient id={`sparkline-${color.replace(/[^a-zA-Z0-9]/g, '')}`} x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient
+                        id={`sparkline-${color.replace(/[^a-zA-Z0-9]/g, '')}`}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
                         <stop
                           offset="0%"
                           stopColor={isProfit ? '#22c55e' : '#ef4444'}
