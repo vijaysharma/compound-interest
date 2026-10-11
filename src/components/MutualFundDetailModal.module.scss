@@ -14,11 +14,10 @@
   animation: fadeIn 0.18s ease-out;
 
   @include mobile-only {
-    padding: 0.5rem;
-    align-items: center;
+    padding: 0;
+    align-items: flex-end;
   }
 
-  // Last: overrides this block's own phone padding/positioning.
   @include below-app-chrome(true);
 }
 
@@ -42,10 +41,10 @@
 .modalContent {
   position: relative;
   width: 95%;
-  max-height: 90vh;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  max-height: 92vh;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl, 16px);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
@@ -54,17 +53,15 @@
 
   @include mobile-only {
     width: 100%;
-    max-height: calc(100dvh - 1rem);
-    border-radius: 12px;
+    max-height: calc(100dvh - 0.5rem);
+    border-radius: var(--radius-xl, 16px) var(--radius-xl, 16px) 0 0;
   }
 
   @include laptop-up {
-    width: 85%;
-    min-width: 80%;
-    max-width: 1200px;
+    width: 90%;
+    max-width: 1240px;
   }
 
-  // Phones: the whole visible screen.
   @include dialog-sheet-panel;
 }
 
@@ -79,318 +76,422 @@
   }
 }
 
-.header {
+// ==========================================
+// Header & Overview Card
+// ==========================================
+.headerWrapper {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-card-header);
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-bg);
 
   @include mobile-only {
-    gap: 8px;
-    padding: 10px 12px;
+    padding: 12px 14px;
+    background: var(--color-primary); // Brand primary purple banner on mobile
+    color: var(--color-primary-content);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary-hover) 80%, black);
   }
 }
 
-.headerLeft {
+.headerTopLeft {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .colorIndicator {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.titleGroup {
+.titleInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
 }
 
-.title {
-  font-size: 1.15rem;
+.schemeTitle {
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--color-heading);
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @include mobile-only {
+    color: var(--color-primary-content);
+    font-size: 0.95rem;
+  }
 }
 
-.metaTags {
+.subTitleRow {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
   align-items: center;
+  gap: 6px;
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+
+  @include mobile-only {
+    color: var(--color-primary-subtle);
+    font-size: 0.725rem;
+  }
 }
 
-.tag {
+.subTitleDivider {
+  color: var(--color-border);
+
+  @include mobile-only {
+    color: color-mix(in srgb, var(--color-primary-content) 40%, transparent);
+  }
+}
+
+.headerTopRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.headerDesktopTags {
+  display: none;
+  align-items: center;
+  gap: 6px;
+
+  @include tablet-up {
+    display: flex;
+  }
+}
+
+.headerMobileTags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+
+  @include tablet-up {
+    display: none;
+  }
+}
+
+.tagPill {
   display: inline-block;
-  font-size: $fs-caption;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 2px 10px;
   border-radius: 9999px;
   background: var(--tag-bg);
   color: var(--tag-text);
+  border: 1px solid var(--color-border);
 }
 
-.tagPrimary {
+.tagPillCategory {
   background: var(--color-primary-light);
   color: var(--color-primary);
-  border: 1px solid var(--color-primary-subtle);
+  border-color: var(--color-primary-subtle);
 }
 
-.tagSuccess {
-  background: var(--color-success-surface);
-  color: var(--color-success-text-strong);
-  border: 1px solid var(--color-success-border);
-}
-
-.closeBtn {
+.headerCloseBtn {
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   line-height: 1;
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: var(--radius-sm, 6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    color: var(--text-primary);
+    background: var(--color-bg-tertiary);
+    color: var(--color-heading);
+  }
+
+  @include mobile-only {
+    color: var(--color-primary-content);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary-content) 15%, transparent);
+      color: var(--color-primary-content);
+    }
   }
 }
 
-.controlBar {
+// Overview Stats Card inside Header
+.overviewCard {
+  padding: 14px 20px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: 12px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 12px;
+  background: var(--color-bg);
 
-  @include laptop-up {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
+  @include mobile-only {
+    padding: 12px 14px;
+    gap: 10px;
   }
 }
 
-.controlGroup {
+.overviewMainRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.overviewCurrentValCol {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
+}
 
-  @include laptop-up {
-    flex-direction: row;
-    align-items: center;
+.overviewLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.overviewValueWrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.overviewValueBig {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-heading);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.overviewValueExact {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.overviewReturnBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-md, 8px);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 140px;
+}
+
+.overviewReturnBoxPositive {
+  background-color: var(--color-success-surface);
+}
+
+.overviewReturnBoxNegative {
+  background-color: var(--color-error-surface);
+}
+
+.overviewReturnGainRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-success-text-strong);
+
+  .overviewReturnBoxNegative & {
+    color: var(--color-error);
   }
 }
 
-.controlLabel {
-  font-size: $fs-caption;
-  font-weight: 600;
-  color: var(--text-muted);
-  white-space: nowrap;
+.overviewReturnArrow {
+  font-size: 1rem;
 }
 
+.overviewReturnRatesRow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-success-text);
+  margin-top: 2px;
+  white-space: nowrap;
+
+  .overviewReturnBoxNegative & {
+    color: var(--color-error-text);
+  }
+}
+
+.overviewStatsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.overviewStatCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &:not(:first-child) {
+    padding-left: 12px;
+    border-left: 1px solid var(--color-border-subtle);
+  }
+}
+
+.statColLabel {
+  font-size: 0.725rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.statColValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overviewFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.overviewFooterLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overviewDurationBadge {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.overviewFooterRight {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+// ==========================================
+// Modal Body Layout
+// ==========================================
 .modalBody {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  min-width: 0;
-  padding: 20px 24px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
 
   @include mobile-only {
-    padding: 8px 6px;
-    gap: 10px;
+    padding: 10px 12px;
+    gap: 14px;
   }
 }
 
-/*
- * Controls beside stats. This was previously an inline `grid-template-columns:
- * 1fr 1fr`, which could not carry a media query and so stayed two-up on phones
- * — the stat cards overflowed the modal and clipped off the right edge.
- */
-.controlsStatsGrid {
+// Middle 2-Column Row
+.chartAndControlsRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 1rem;
-  min-width: 0;
+  gap: 16px;
 
-  @include mobile-only {
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+  @include tablet-up {
+    grid-template-columns: minmax(0, 62%) minmax(0, 38%);
   }
 
-  @include laptop-up {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  @include desktop-up {
+    grid-template-columns: minmax(0, 65%) minmax(0, 35%);
   }
 }
 
-.controlsColumn {
+// Chart Card
+.chartCard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 10px;
   min-width: 0;
 
   @include mobile-only {
-    gap: 0.5rem;
+    padding: 10px 10px;
+    border-radius: var(--radius-md, 8px);
   }
 }
 
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(140px, 1fr));
-  gap: 12px;
-
-  // 140px minimum forces a single column under ~320px; 0 + 2 columns keeps the
-  // stat cards side by side on the narrowest phones.
-  @include mobile-only {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-  }
-}
-
-.statCard {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  // Without this a grid item refuses to shrink below its content width, which
-  // is what pushed the stat cards past the edge of the modal.
-  min-width: 0;
-
-  @include mobile-only {
-    padding: 8px 10px;
-  }
-}
-
-.statLabel {
-  font-size: $fs-caption;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  min-width: 0;
-  overflow-wrap: break-word;
-
-  @include mobile-only {
-    // Uppercase plus letter-spacing is what made these labels truncate in a
-    // narrow card, so both are relaxed on mobile.
-    font-size: $fs-caption;
-    letter-spacing: 0;
-    text-transform: none;
-    line-height: 1.25;
-  }
-}
-
-.statValue {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  min-width: 0;
-  // Long INR amounts must be allowed to break rather than overflow the card.
-  overflow-wrap: anywhere;
-
-  @include mobile-only {
-    font-size: $fs-body;
-    line-height: 1.2;
-  }
-}
-
-.statGain {
-  color: var(--color-success);
-}
-
-.statLoss {
-  color: var(--color-error);
-}
-
-.statSubtext {
-  font-size: $fs-caption;
-  color: var(--text-muted);
-  min-width: 0;
-  overflow-wrap: break-word;
-
-  @include mobile-only {
-    font-size: $fs-caption;
-    line-height: 1.25;
-  }
-}
-
-.chartSection {
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  // Minimal side padding so the chart keeps its full drawable width on mobile.
-  @include mobile-only {
-    padding: 8px 2px;
-    gap: 8px;
-    border-radius: 8px;
-  }
-}
-
-.chartTitle {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text-primary);
+.chartCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-width: 0;
-
-  // Side by side these two crowd each other into two ragged columns on a
-  // phone, so the hint drops below the heading.
-  @include mobile-only {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    font-size: $fs-small;
-  }
+  flex-wrap: wrap;
 }
 
-.chartHint {
-  font-size: $fs-caption;
-  font-weight: 500;
-  color: var(--text-muted);
-
-  @include mobile-only {
-    font-size: $fs-caption;
-  }
+.chartTitleLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.chartWrapper {
-  min-height: 350px;
+.chartTitleText {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.chartInfoIcon {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  cursor: help;
+}
+
+.chartInnerWrap {
   width: 100%;
+  min-height: 280px;
   overflow: hidden;
 
   @include mobile-only {
     min-height: 240px;
-    height: auto;
   }
 }
 
@@ -399,14 +500,309 @@
   height: 100%;
 }
 
-.taxSection {
-  @include mobile-only {
-    padding: 10px 8px;
-    border-radius: 8px;
-  }
+.controlsSideCol {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+// ==========================================
+// Investment Card
+// ==========================================
+.investmentCard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  height: 100%;
+
+  @include mobile-only {
+    padding: 14px 12px;
+    border-radius: var(--radius-md, 8px);
+  }
+}
+
+.investmentCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.investmentCardTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+.investmentTabPillWrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--color-bg-tertiary);
+  padding: 3px;
+  border-radius: var(--radius-md, 8px);
+  gap: 4px;
+}
+
+.investmentTabPill {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: var(--color-heading);
+  }
+}
+
+.investmentTabPillActive {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+
+  &:hover {
+    background: var(--color-primary-hover);
+    color: var(--color-primary-content);
+  }
+}
+
+.investmentInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.investmentInputLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.investmentInputBoxWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg);
+  padding: 0 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+}
+
+.investmentCurrencyPrefix {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+}
+
+.investmentAmountInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 9px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  background: transparent;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+
+.investmentClearBtn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs, 4px);
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.investmentStepPillsRow {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+
+  @include mobile-only {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+}
+
+.investmentStepPill {
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-primary-subtle);
+  border-radius: var(--radius-sm, 6px);
+  padding: 5px 2px;
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    border-color: var(--color-primary);
+  }
+}
+
+// ==========================================
+// Investment Results Section (4 Metric Cards)
+// ==========================================
+.investmentResultsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.investmentResultsHeading {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+.investmentResultsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @include laptop-up {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.metricCard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 10px);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  @include mobile-only {
+    padding: 10px 12px;
+    gap: 4px;
+  }
+}
+
+.metricCardTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metricIconWrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metricIconBlue {
+  background: var(--color-info-surface);
+  color: var(--color-info-text);
+}
+
+.metricIconCyan {
+  background: color-mix(in srgb, var(--chart-series-2) 12%, transparent);
+  color: var(--chart-series-2);
+}
+
+.metricIconGreen {
+  background: var(--color-success-surface);
+  color: var(--color-success);
+}
+
+.metricIcon {
+  font-size: 0.875rem;
+}
+
+.metricTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metricValue {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-heading);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+
+  @include mobile-only {
+    font-size: 1.1rem;
+  }
+}
+
+.metricSubtext {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.gainPositive {
+  color: var(--color-success-text-strong);
+}
+
+.gainNegative {
+  color: var(--color-error);
+}
+
+// ==========================================
+// Tax & Portfolio Sections
+// ==========================================
+.taxSection {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  @include mobile-only {
+    padding: 12px;
+    border-radius: var(--radius-md, 8px);
+  }
 }
 
 .taxHeader {
@@ -418,11 +814,9 @@
 }
 
 .taxTitle {
-  font-size: $fs-body;
+  font-size: 0.9rem;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--color-heading);
   margin: 0;
 }
 
@@ -430,43 +824,38 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .taxToggleBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
-  padding: 0.45rem 1rem;
-  font-size: $fs-small;
+  padding: 4px 10px;
+  font-size: 0.75rem;
   font-weight: 600;
-  border-radius: 8px;
-  background-color: #fff;
+  border-radius: var(--radius-sm, 6px);
+  background-color: var(--color-bg);
   color: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  border: 1px solid var(--color-primary-subtle);
   cursor: pointer;
-  transition:
-    opacity 0.15s,
-    transform 0.1s;
+  transition: all 0.15s ease;
 
   &:hover {
-    opacity: 0.92;
+    background-color: var(--color-primary-light);
   }
+
   &.activeToggle {
     background-color: var(--color-primary);
     color: var(--color-primary-content);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    border-color: var(--color-primary);
   }
 }
 
 .taxCardsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 10px;
 
   @include mobile-only {
     gap: 6px;
@@ -474,90 +863,96 @@
 }
 
 .taxCard {
-  background: var(--bg-card);
-  border: 1px solid var(--color-primary);
-  border-radius: 8px;
-  padding: 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-
-  @include mobile-only {
-    padding: 8px;
-  }
 }
 
 .taxCardHighlight {
-  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-subtle);
 }
 
 .taxCardLabel {
-  font-size: $fs-caption;
+  font-size: 0.725rem;
   font-weight: 600;
-  color: var(--text-muted);
-  min-width: 0;
-  overflow-wrap: break-word;
-
-  @include mobile-only {
-    font-size: $fs-caption;
-    line-height: 1.25;
-  }
+  color: var(--color-text-secondary);
 }
 
 .taxCardValue {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--color-success-text-strong);
-  min-width: 0;
-  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
 
-  @include mobile-only {
-    font-size: $fs-body;
-    line-height: 1.2;
-  }
+.taxCardValPrimary {
+  font-size: 1rem;
+  color: var(--color-heading);
+}
+
+.taxCardValError {
+  color: var(--color-error);
+}
+
+.taxCardValSuccess {
+  color: var(--color-success-text-strong);
+}
+
+.taxCardSubtextMuted {
+  font-size: 0.725rem;
+  color: var(--color-text-secondary);
+}
+
+.taxCardSubtextSuccessBold {
+  font-size: 0.725rem;
+  color: var(--color-success-text);
+  font-weight: 600;
+}
+
+.taxCardSubtextSuccess {
+  font-size: 0.725rem;
+  color: var(--color-success-text);
 }
 
 .taxDisclaimer {
-  font-size: $fs-caption;
-  color: var(--color-primary);
+  font-size: 0.725rem;
+  color: var(--color-text-secondary);
   line-height: 1.4;
   margin: 0;
 }
 
 .infoSection {
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px 20px;
-
-  @include mobile-only {
-    padding: 10px 8px;
-    border-radius: 8px;
-  }
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: var(--bg-hover);
+
+  @include mobile-only {
+    padding: 12px;
+    border-radius: var(--radius-md, 8px);
+  }
 }
 
 .infoSectionTitle {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--color-heading);
   margin: 0;
 }
 
 .infoDetailsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  font-size: $fs-caption;
-
-  @include mobile-only {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
 }
 
 .infoItem {
@@ -567,97 +962,31 @@
 }
 
 .infoItemLabel {
-  font-size: $fs-caption;
-  color: var(--text-muted);
+  font-size: 0.725rem;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .infoItemValue {
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-primary);
-  word-break: break-word;
+  color: var(--color-heading);
 }
 
 .constituentsBox {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px;
-  font-size: $fs-caption;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 14px 24px;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-card-header);
-
-  @include mobile-only {
-    padding: 8px 10px;
-  }
-}
-
-.doneBtn {
-  background: var(--color-primary);
-  color: var(--color-primary-content);
-  border: none;
-  border-radius: 8px;
-  padding: 8px 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  &:hover {
-    background: var(--color-primary-hover);
-  }
-}
-
-.chartLoadingFallback {
-  height: 280px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.taxCardValPrimary {
-  font-size: 1rem;
-  color: var(--text-primary);
-}
-
-.taxCardSubtextMuted {
-  font-size: $fs-caption;
-  color: var(--text-muted);
-}
-
-.taxCardValError {
-  color: var(--color-error-text-strong);
-}
-
-.taxCardValSuccess {
-  color: var(--color-success-text-strong);
-}
-
-.taxCardSubtextSuccessBold {
-  font-size: $fs-caption;
-  color: var(--color-success-text);
-  font-weight: 600;
-}
-
-.taxCardSubtextSuccess {
-  font-size: $fs-caption;
-  color: var(--color-success-text);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  color: var(--color-text);
+  line-height: 1.45;
 }
 
 .constituentsTitle {
   font-weight: 700;
-  margin-bottom: 4px;
-  color: var(--text-primary);
+  margin-bottom: 3px;
+  color: var(--color-heading);
 }
 
 .constituentsContent {
@@ -667,5 +996,51 @@
 .constituentsSubTitle {
   font-weight: 700;
   margin-bottom: 2px;
-  color: var(--text-primary);
+  color: var(--color-heading);
+}
+
+// ==========================================
+// Modal Footer
+// ==========================================
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  flex-shrink: 0;
+
+  @include mobile-only {
+    padding: 10px 14px;
+  }
+}
+
+.doneBtn {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  padding: 9px 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-primary-hover);
+  }
+
+  @include mobile-only {
+    width: 100%;
+    padding: 11px 0;
+    text-align: center;
+  }
+}
+
+.chartLoadingFallback {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -1,6 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import { FiInfo } from 'react-icons/fi';
 import Spinner from './Spinner';
 import { useScrollLock } from '../utilities/useScrollLock';
 import styles from './MutualFundDetailModal.module.scss';
@@ -56,44 +57,66 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
         onClick={onClose}
       />
       <section className={styles.modalContent}>
-        <FundModalHeader fund={fund} meta={state.meta} onClose={onClose} />
+        {/* Header & Overview Stats Card */}
+        <FundModalHeader
+          fund={fund}
+          meta={state.meta}
+          performance={performance}
+          holdingDays={state.holdingDays}
+          startDateISO={state.startDateISO}
+          endDateISO={state.endDateISO}
+          onClose={onClose}
+        />
         <div className={styles.modalBody}>
-          <div className={styles.chartTitle}>
-            <span>Historical NAV &amp; Portfolio Trajectory</span>
-            <span className={styles.chartHint}>Use presets or drag horizontally to zoom</span>
+          {/* Main Middle Row: Chart on Left, Investment Controls on Right */}
+          <div className={styles.chartAndControlsRow}>
+            {/* Chart Card */}
+            <div className={styles.chartCard}>
+              <div className={styles.chartCardHeader}>
+                <div className={styles.chartTitleLeft}>
+                  <span className={styles.chartTitleText}>
+                    Historical NAV &amp; Portfolio Trajectory
+                  </span>
+                  <FiInfo
+                    className={styles.chartInfoIcon}
+                    title="Historical NAV and portfolio trajectory"
+                  />
+                </div>
+              </div>
+              <div className={styles.chartInnerWrap}>
+                <Chart
+                  className={styles.chart}
+                  datasets={performance.datasets}
+                  investmentAmount={performance.invested}
+                  dataMode="value"
+                  autoHeight={true}
+                  minHeight={280}
+                  enableZoom={true}
+                  showPresets={true}
+                  startDate={state.currentNavStartDate}
+                  endDate={state.currentNavEndDate}
+                  onPresetChange={state.handleSelectPreset}
+                />
+              </div>
+            </div>
+            {/* Investment Controls Card */}
+            <div className={styles.controlsSideCol}>
+              <FundModalControls
+                investmentType={state.investmentType}
+                setInvestmentType={state.setInvestmentType}
+                investmentValue={state.investmentValue}
+                setInvestmentValue={state.setInvestmentValue}
+              />
+            </div>
           </div>
-          <Chart
-            className={styles.chart}
-            datasets={performance.datasets}
-            investmentAmount={performance.invested}
-            dataMode="value"
-            autoHeight={true}
-            minHeight={350}
-            enableZoom={true}
-            showPresets={true}
-            startDate={state.currentNavStartDate}
-            endDate={state.currentNavEndDate}
-            onPresetChange={state.handleSelectPreset}
+          {/* Investment Results Section */}
+          <FundModalStatsGrid
+            performance={performance}
+            investmentType={state.investmentType}
+            holdingDays={state.holdingDays}
+            holdingYears={state.holdingYears}
           />
-          <div className={styles.controlsStatsGrid}>
-            <FundModalControls
-              startDateISO={state.startDateISO}
-              endDateISO={state.endDateISO}
-              minNavDateISO={state.minNavDateISO}
-              setStartDateISO={state.setStartDateISO}
-              setEndDateISO={state.setEndDateISO}
-              investmentType={state.investmentType}
-              setInvestmentType={state.setInvestmentType}
-              investmentValue={state.investmentValue}
-              setInvestmentValue={state.setInvestmentValue}
-            />
-            <FundModalStatsGrid
-              performance={performance}
-              investmentType={state.investmentType}
-              holdingDays={state.holdingDays}
-              holdingYears={state.holdingYears}
-            />
-          </div>
+          {/* Post-Tax In-Hand Returns Section */}
           <FundModalTaxSection
             taxMode={state.taxMode}
             setTaxMode={state.setTaxMode}
@@ -104,9 +127,11 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
             fundCategory={state.fundCategory}
             isLongTerm={state.isLongTerm}
           />
+          {/* Scheme Portfolio & Structural Profile */}
           <FundModalPortfolioSection meta={state.meta} constituentProfile={constituentProfile} />
         </div>
-        <div data-dialog-footer className={styles.footer}>
+        {/* Modal Footer with Done button */}
+        <div className={styles.footer}>
           <button type="button" className={styles.doneBtn} onClick={onClose}>
             Done
           </button>

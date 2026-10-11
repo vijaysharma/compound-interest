@@ -13,6 +13,9 @@ export interface DetailedFundItem {
   profit: number; // CAGR %
   absProfit: number; // Absolute %
   invAmt: number;
+  investedAmount?: number;
+  units?: number;
+  avgBuyPrice?: number;
   navData?: NavType[];
 }
 export interface MutualFundDetailModalProps {

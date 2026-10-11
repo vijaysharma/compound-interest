@@ -53,6 +53,9 @@ const SWP = ({ onSelectionChange }: SwpProps) => {
       swp.setDetailModalFund({
         ...fund,
         invAmt: parseFloat(swp.lumpSumInvestmentAmount) || 0,
+        investedAmount: fund.invested,
+        units: fund.units,
+        avgBuyPrice: fund.averageNav,
         startDate: swp.lumpsumStartDate || swp.startSwpDate,
         endDate: swp.endSwpDate,
         navData: pinned.pinnedNavData[fund.schemeCode] || [],

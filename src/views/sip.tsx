@@ -71,8 +71,14 @@ const SIP = ({ onSelectionChange }: SipProps) => {
   );
   const handleSelectFund = useCallback((fund: SipFundAnalysis) => {
     setDetailModalFund({
-      ...fund, invAmt: parseFloat(monthlyAmount) || 0,
-      startDate: dates.startDate, endDate: dates.endDate, navData: pinned.pinnedNavData[fund.schemeCode] || [],
+      ...fund,
+      invAmt: parseFloat(monthlyAmount) || 0,
+      investedAmount: fund.invested,
+      units: fund.units,
+      avgBuyPrice: fund.averageNav,
+      startDate: dates.startDate,
+      endDate: dates.endDate,
+      navData: pinned.pinnedNavData[fund.schemeCode] || [],
     });
   }, [dates.startDate, dates.endDate, monthlyAmount, pinned.pinnedNavData]);
   if (search.error.status === 'error' && search.deferredSearchKey.trim()) {
