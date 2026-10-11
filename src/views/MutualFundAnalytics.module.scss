@@ -1013,15 +1013,36 @@
 .sipBottomGrid {
   display: grid;
   width: 100%;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   padding: 0.4rem 0;
   border-top: 1px solid
     color-mix(in srgb, var(--color-base-content) 7%, transparent);
+
+  > :nth-child(1),
+  > :nth-child(2) {
+    grid-column: span 3;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  }
+
+  /* Last three children span 2 columns each (third width) */
+  > :nth-child(3),
+  > :nth-child(4),
+  > :nth-child(5) {
+    padding-top: 0.4rem;
+    grid-column: span 2;
+  }
 
   @include tablet-up {
     margin-top: 0.1rem;
     padding-bottom: 0.5rem;
   }
+}
+
+.swpBottomGridRow {
+  border-top: 1px solid
+    color-mix(in srgb, var(--color-base-content) 7%, transparent);
 }
 
 .sipBottomCol {
@@ -1031,11 +1052,11 @@
   min-width: 0;
   position: relative;
 
-  &:not(:first-child) {
-    padding-left: 0.75rem;
-    border-left: 1px solid
-      color-mix(in srgb, var(--color-base-content) 7%, transparent);
-  }
+  // &:not(:first-child) {
+  //   padding-left: 0.75rem;
+  //   border-left: 1px solid
+  //     color-mix(in srgb, var(--color-base-content) 7%, transparent);
+  // }
 }
 
 .sipBottomLabel {
