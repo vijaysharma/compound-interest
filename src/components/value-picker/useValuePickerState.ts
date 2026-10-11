@@ -25,6 +25,7 @@ export function useValuePickerState(opts: ValuePickerStateOptions) {
   } = opts;
   const [isFocused, setIsFocused] = useState(false);
   const [localInput, setLocalInput] = useState<string>('');
+  const [pendingOptimisticValue, setPendingOptimisticValue] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pendingCursorRef = useRef<number | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -32,10 +33,16 @@ export function useValuePickerState(opts: ValuePickerStateOptions) {
   useEffect(() => {
     latestOnChangeRef.current = effectiveOnChange;
   }, [effectiveOnChange]);
+  useEffect(() => {
+    setPendingOptimisticValue(null);
+  }, [effectiveValue]);
   const numericValue = useMemo(() => {
+    if (pendingOptimisticValue !== null) {
+      return pendingOptimisticValue;
+    }
     const parsed = sanctnum(effectiveValue, min, safeMax);
     return Number.isFinite(parsed) ? parsed : min;
-  }, [effectiveValue, min, safeMax]);
+  }, [pendingOptimisticValue, effectiveValue, min, safeMax]);
   const wordsText = useMemo(
     () => getWordsText(numericValue, showWords, effectiveSymbol, supportsDecimals, title, locale),
     [numericValue, showWords, effectiveSymbol, supportsDecimals, title, locale]
@@ -71,7 +78,7 @@ export function useValuePickerState(opts: ValuePickerStateOptions) {
       React.startTransition(() => {
         latestOnChangeRef.current(valStr);
       });
-    }, 100);
+    }, 150);
   }, []);
   const {
     operation,
@@ -90,6 +97,7 @@ export function useValuePickerState(opts: ValuePickerStateOptions) {
     effectiveDefaultStep,
     setLocalInput,
     dispatchChange,
+    setPendingOptimisticValue,
   });
   const { handleInputChange, handleKeyDown, handleFocus, handleBlur } = useValuePickerKeyboard({
     disabled,
@@ -111,11 +119,17 @@ export function useValuePickerState(opts: ValuePickerStateOptions) {
   });
   const displayValue = isFocused
     ? localInput
-    : supportsDecimals
-      ? String(effectiveValue ?? '0')
-      : numericValue === 0
-        ? '0'
-        : numericValue.toLocaleString(locale);
+    : pendingOptimisticValue !== null
+      ? supportsDecimals
+        ? String(pendingOptimisticValue)
+        : pendingOptimisticValue === 0
+          ? '0'
+          : pendingOptimisticValue.toLocaleString(locale)
+      : supportsDecimals
+        ? String(effectiveValue ?? '0')
+        : numericValue === 0
+          ? '0'
+          : numericValue.toLocaleString(locale);
   return {
     operation,
     inputRef,
