@@ -607,7 +607,9 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
       {/* Merge Customer Modal Dialog */}
       {showMergeModal && sourceCustomer && (
         <div
-          className={styles.modalOverlay}
+          className={styles.modalBackdrop}
+          role="dialog"
+          aria-modal="true"
           onClick={(e) => {
             if (e.target === e.currentTarget && !merging) {
               setShowMergeModal(false);
