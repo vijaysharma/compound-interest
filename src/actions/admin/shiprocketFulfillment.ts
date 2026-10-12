@@ -1,6 +1,8 @@
 'use server';
 import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import { shiprocketFetch } from './shiprocketClient';
+import { invalidateShiprocketAccountsCache, invalidateShiprocketOrdersCache } from '@/lib/shiprocketCache';
+
 export async function assignShiprocketCourierAction(
   payload: { shipment_id: number | string; courier_id?: number | string; status?: string },
   token?: string | null
@@ -30,6 +32,10 @@ export async function assignShiprocketCourierAction(
   if (!res.ok) {
     throw new Error(data?.message || JSON.stringify(data));
   }
+  await Promise.all([
+    invalidateShiprocketAccountsCache(),
+    invalidateShiprocketOrdersCache(),
+  ]).catch(() => {});
   return { success: true, data };
 }
 /** `pickupDate` (YYYY-MM-DD) asks for that day; without it Shiprocket picks the next slot. */
@@ -57,6 +63,10 @@ export async function generateShiprocketPickupAction(
   if (!res.ok) {
     throw new Error(data?.message || JSON.stringify(data));
   }
+  await Promise.all([
+    invalidateShiprocketAccountsCache(),
+    invalidateShiprocketOrdersCache(),
+  ]).catch(() => {});
   return { success: true, data };
 }
 export async function generateShiprocketLabelAction(
@@ -109,5 +119,68 @@ export async function generateShiprocketInvoiceAction(
     success: true,
     invoice_url: (data as { invoice_url?: string }).invoice_url,
     data,
+  };
+}
+
+export async function generateShiprocketManifestAction(
+  shipmentIds: (number | string)[],
+  token?: string | null
+): Promise<{ success: boolean; manifest_url?: string; data: unknown }> {
+  const sql = getDb();
+  await ensureTables(sql);
+  if (!(await isAuthorizedUser(token, sql))) {
+    throw new Error('Unauthorized: Admin access required');
+  }
+  if (!shipmentIds || shipmentIds.length === 0) {
+    throw new Error('At least one shipment ID is required');
+  }
+
+  // 1. Try generating manifest (POST manifests/generate)
+  const numericShipmentIds = shipmentIds.map(Number);
+  let manifestUrl: string | undefined;
+  let responseData: unknown = null;
+
+  try {
+    const genRes = await shiprocketFetch('manifests/generate', {
+      method: 'POST',
+      body: JSON.stringify({ shipment_id: numericShipmentIds }),
+    });
+    const genData = await genRes.json();
+    responseData = genData;
+    if (genRes.ok && (genData as { manifest_url?: string })?.manifest_url) {
+      manifestUrl = (genData as { manifest_url: string }).manifest_url;
+    }
+  } catch (err) {
+    console.warn('POST manifests/generate returned error, trying manifests/print:', err);
+  }
+
+  // 2. If no direct manifest_url, or to fetch printable URL, try POST manifests/print
+  if (!manifestUrl) {
+    const printRes = await shiprocketFetch('manifests/print', {
+      method: 'POST',
+      body: JSON.stringify({
+        shipment_id: numericShipmentIds,
+        ids: numericShipmentIds,
+      }),
+    });
+    const printData = await printRes.json();
+    if (printRes.ok) {
+      manifestUrl =
+        (printData as { manifest_url?: string })?.manifest_url ||
+        (printData as { url?: string })?.url;
+      responseData = printData;
+    } else if (!responseData) {
+      throw new Error(printData?.message || JSON.stringify(printData));
+    }
+  }
+
+  if (!manifestUrl && responseData && (responseData as { message?: string })?.message) {
+    throw new Error((responseData as { message: string }).message);
+  }
+
+  return {
+    success: true,
+    manifest_url: manifestUrl,
+    data: responseData,
   };
 }

@@ -4,7 +4,10 @@ import type { ShiprocketAccountData, ShiprocketStatementItem } from '@/types/shi
 import { getShiprocketAuth, shiprocketFetch } from './shiprocketClient';
 import { withShiprocketCache, SR_CACHE_TTL } from '@/lib/shiprocketCache';
 
-export async function getShiprocketAccountAction(token?: string | null): Promise<{
+export async function getShiprocketAccountAction(
+  token?: string | null,
+  forceRefresh?: boolean
+): Promise<{
   success: boolean;
   account: ShiprocketAccountData;
 }> {
@@ -13,10 +16,13 @@ export async function getShiprocketAccountAction(token?: string | null): Promise
   if (!(await isAuthorizedUser(token, sql))) {
     throw new Error('Unauthorized: Admin access required');
   }
-  const { user, profile } = await getShiprocketAuth();
+  const { user, profile } = await getShiprocketAuth(forceRefresh);
   const cacheKey = `sr:acc:details:${profile?.id || 'active'}`;
 
-  return withShiprocketCache(cacheKey, SR_CACHE_TTL.ACCOUNT_DETAILS, async () => {
+  return withShiprocketCache(
+    cacheKey,
+    SR_CACHE_TTL.ACCOUNT_DETAILS,
+    async () => {
     let balance: string | number = '0.00';
     try {
       const balRes = await shiprocketFetch('account/details/wallet-balance');
@@ -60,7 +66,9 @@ export async function getShiprocketAccountAction(token?: string | null): Promise
         channels,
       },
     };
-  });
+  },
+  { bypassCache: forceRefresh }
+  );
 }
 export async function getShiprocketStatementAction(
   options: { page?: number; per_page?: number; from?: string; to?: string } = {},

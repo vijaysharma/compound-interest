@@ -6,6 +6,7 @@ import {
   assignShiprocketCourierAction,
   generateShiprocketPickupAction,
   generateShiprocketLabelAction,
+  generateShiprocketManifestAction,
 } from '../../../actions/admin';
 import type {
   ShiprocketOrder,
@@ -23,7 +24,8 @@ export function useShiprocketModals(
   token: string,
   account: ShiprocketAccountData | null,
   onOrdersUpdated: () => Promise<void>,
-  setAlertMsg: (msg: AlertMessage | null) => void
+  setAlertMsg: (msg: AlertMessage | null) => void,
+  onAccountUpdated?: () => Promise<void>
 ) {
   const [trackingModalAwb, setTrackingModalAwb] = useState<string | null>(null);
   const [trackingData, setTrackingData] = useState<ShiprocketTrackingData | null>(null);
@@ -37,6 +39,7 @@ export function useShiprocketModals(
   const [schedulingPickup, setSchedulingPickup] = useState(false);
   const [scheduledPickupDate, setScheduledPickupDate] = useState<string | null>(null);
   const [printingLabel, setPrintingLabel] = useState(false);
+  const [printingManifest, setPrintingManifest] = useState(false);
   const handleOpenTracking = useCallback(async (awb: string) => {
     setTrackingModalAwb(awb);
     setTrackingData(null);
@@ -108,6 +111,7 @@ export function useShiprocketModals(
         });
         setAlertMsg({ type: 'success', text: 'Courier assigned and AWB generated successfully!' });
         void onOrdersUpdated();
+        if (onAccountUpdated) void onAccountUpdated();
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to assign courier';
@@ -115,7 +119,7 @@ export function useShiprocketModals(
     } finally {
       setAssigningCourier(false);
     }
-  }, [token, onOrdersUpdated, setAlertMsg]);
+  }, [token, onOrdersUpdated, onAccountUpdated, setAlertMsg]);
   const handleSchedulePickup = useCallback(async (shipmentId: number, pickupDate: string) => {
     setSchedulingPickup(true);
     try {
@@ -126,6 +130,7 @@ export function useShiprocketModals(
         setScheduledPickupDate(scheduled || pickupDate);
         setAlertMsg({ type: 'success', text: `Pickup scheduled for ${scheduled || pickupDate}` });
         void onOrdersUpdated();
+        if (onAccountUpdated) void onAccountUpdated();
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to schedule pickup';
@@ -133,7 +138,7 @@ export function useShiprocketModals(
     } finally {
       setSchedulingPickup(false);
     }
-  }, [token, onOrdersUpdated, setAlertMsg]);
+  }, [token, onOrdersUpdated, onAccountUpdated, setAlertMsg]);
   const handlePrintShipmentLabel = useCallback(async (shipmentId: number) => {
     setPrintingLabel(true);
     try {
@@ -148,6 +153,22 @@ export function useShiprocketModals(
       setAlertMsg({ type: 'error', text: msg });
     } finally {
       setPrintingLabel(false);
+    }
+  }, [token, setAlertMsg]);
+  const handlePrintShipmentManifest = useCallback(async (shipmentId: number) => {
+    setPrintingManifest(true);
+    try {
+      const res = await generateShiprocketManifestAction([shipmentId], token);
+      if (res.success && res.manifest_url) {
+        window.open(res.manifest_url, '_blank', 'noopener,noreferrer');
+      } else {
+        setAlertMsg({ type: 'error', text: 'Manifest URL not returned by Shiprocket' });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate manifest';
+      setAlertMsg({ type: 'error', text: msg });
+    } finally {
+      setPrintingManifest(false);
     }
   }, [token, setAlertMsg]);
   const closeShipModal = useCallback(() => {
@@ -167,6 +188,7 @@ export function useShiprocketModals(
     schedulingPickup,
     scheduledPickupDate,
     printingLabel,
+    printingManifest,
     setTrackingModalAwb,
     setShipModalOrder,
     handleOpenTracking,
@@ -174,6 +196,7 @@ export function useShiprocketModals(
     handleAssignCourier,
     handleSchedulePickup,
     handlePrintShipmentLabel,
+    handlePrintShipmentManifest,
     closeShipModal,
   };
 }

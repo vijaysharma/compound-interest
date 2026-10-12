@@ -22,7 +22,13 @@ interface Props {
 const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
   const [activeTab, setActiveTab] = useState<TabType>('shipments');
   const data = useShiprocketData(token);
-  const modals = useShiprocketModals(token, data.account, data.fetchOrders, data.setAlertMsg);
+  const modals = useShiprocketModals(
+    token,
+    data.account,
+    data.fetchOrders,
+    data.setAlertMsg,
+    data.fetchAccount
+  );
   const createForm = useShiprocketCreateOrder(
     token,
     data.account,
@@ -38,6 +44,7 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
       onSchedulePickup: data.handleSchedulePickup,
       onPrintLabel: data.handlePrintLabel,
       onPrintInvoice: data.handlePrintInvoice,
+      onPrintManifest: data.handlePrintManifest,
       onCancelShipment: data.handleCancelShipment,
     }),
     [data, modals]
@@ -162,9 +169,11 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           schedulingPickup={modals.schedulingPickup}
           scheduledPickupDate={modals.scheduledPickupDate}
           printingLabel={modals.printingLabel}
+          printingManifest={modals.printingManifest}
           onAssignCourier={modals.handleAssignCourier}
           onSchedulePickup={modals.handleSchedulePickup}
           onPrintLabel={modals.handlePrintShipmentLabel}
+          onPrintManifest={modals.handlePrintShipmentManifest}
           onClose={modals.closeShipModal}
         />
       )}

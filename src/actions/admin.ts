@@ -46,8 +46,8 @@ export async function getShiprocketCouriersAction(
 ) {
   return rates.getShiprocketCouriersAction(params, token);
 }
-export async function getShiprocketAccountAction(token?: string | null) {
-  return account.getShiprocketAccountAction(token);
+export async function getShiprocketAccountAction(token?: string | null, forceRefresh?: boolean) {
+  return account.getShiprocketAccountAction(token, forceRefresh);
 }
 export async function getShiprocketStatementAction(
   options?: Parameters<typeof account.getShiprocketStatementAction>[0],
@@ -101,6 +101,12 @@ export async function generateShiprocketInvoiceAction(
 ) {
   return fulfillment.generateShiprocketInvoiceAction(orderIds, token);
 }
+export async function generateShiprocketManifestAction(
+  shipmentIds: (number | string)[],
+  token?: string | null
+) {
+  return fulfillment.generateShiprocketManifestAction(shipmentIds, token);
+}
 export async function getPostcodeDetailsAction(postcodeVal: string) {
   return postcode.getPostcodeDetailsAction(postcodeVal);
 }
@@ -125,9 +131,9 @@ export async function syncNavHistoryAction(
 export async function getNavHistorySyncStatusAction(token?: string | null) {
   return navHistorySync.getNavHistorySyncStatusAction(token);
 }
-export async function listShiprocketAccountsAction(token?: string | null) {
+export async function listShiprocketAccountsAction(token?: string | null, forceRefresh?: boolean) {
   const { listShiprocketAccountsAction: fn } = await import('./admin/shiprocketAccountManager');
-  return fn(token);
+  return fn(token, forceRefresh);
 }
 export async function switchActiveShiprocketAccountAction(accountId: string, token?: string | null) {
   const { switchActiveShiprocketAccountAction: fn } = await import('./admin/shiprocketAccountManager');

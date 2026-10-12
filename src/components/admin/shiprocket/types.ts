@@ -22,6 +22,7 @@ export interface OrderItemActionHandlers {
   onSchedulePickup: (shipmentId: number) => void;
   onPrintLabel: (shipmentId: number) => void;
   onPrintInvoice: (orderId: number) => void;
+  onPrintManifest: (shipmentId: number) => void;
   onCancelShipment: (order: ShiprocketOrder) => void;
 }
 export type {

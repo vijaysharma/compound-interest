@@ -69,6 +69,16 @@ export const ShiprocketShipmentActions: React.FC<ShiprocketShipmentActionsProps>
           <FiPrinter /> Label
         </button>
       )}
+      {primaryShipmentId && (
+        <button
+          className={styles.actionBtn}
+          onClick={() => actions.onPrintManifest(primaryShipmentId)}
+          disabled={actionBusy === `manifest-${primaryShipmentId}`}
+          title="Generate Shipping Manifest PDF"
+        >
+          <FiFileText /> Manifest
+        </button>
+      )}
       <button
         className={styles.actionBtn}
         onClick={() => actions.onPrintInvoice(order.id)}

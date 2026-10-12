@@ -4,13 +4,15 @@ import {
   generateShiprocketPickupAction,
   generateShiprocketLabelAction,
   generateShiprocketInvoiceAction,
+  generateShiprocketManifestAction,
   cancelShiprocketOrderAction,
 } from '../../../actions/admin';
 import type { ShiprocketOrder, AlertMessage } from './types';
 export function useShiprocketActions(
   token: string,
   onOrdersUpdated: () => Promise<void>,
-  setAlertMsg: (msg: AlertMessage | null) => void
+  setAlertMsg: (msg: AlertMessage | null) => void,
+  onAccountUpdated?: () => Promise<void>
 ) {
   const [actionBusy, setActionBusy] = useState<string | null>(null);
   const handleCopyAwb = useCallback((awb: string) => {
@@ -26,7 +28,10 @@ export function useShiprocketActions(
       const res = await generateShiprocketPickupAction([shipmentId], token);
       if (res.success) {
         setAlertMsg({ type: 'success', text: 'Pickup scheduled successfully!' });
-        await onOrdersUpdated();
+        await Promise.all([
+          onOrdersUpdated(),
+          onAccountUpdated ? onAccountUpdated() : Promise.resolve(),
+        ]);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to schedule pickup';
@@ -34,7 +39,7 @@ export function useShiprocketActions(
     } finally {
       setActionBusy(null);
     }
-  }, [token, onOrdersUpdated, setAlertMsg]);
+  }, [token, onOrdersUpdated, onAccountUpdated, setAlertMsg]);
   const handlePrintLabel = useCallback(async (shipmentId: number) => {
     setActionBusy(`label-${shipmentId}`);
     try {
@@ -67,6 +72,22 @@ export function useShiprocketActions(
       setActionBusy(null);
     }
   }, [token, setAlertMsg]);
+  const handlePrintManifest = useCallback(async (shipmentId: number) => {
+    setActionBusy(`manifest-${shipmentId}`);
+    try {
+      const res = await generateShiprocketManifestAction([shipmentId], token);
+      if (res.success && res.manifest_url) {
+        window.open(res.manifest_url, '_blank', 'noopener,noreferrer');
+      } else {
+        setAlertMsg({ type: 'error', text: 'Manifest URL not returned by Shiprocket' });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate manifest';
+      setAlertMsg({ type: 'error', text: msg });
+    } finally {
+      setActionBusy(null);
+    }
+  }, [token, setAlertMsg]);
   const handleCancelShipment = useCallback(async (order: ShiprocketOrder) => {
     const awb = order.shipments?.[0]?.awb;
     if (!window.confirm(`Are you sure you want to cancel order #${order.id}${awb ? ` (AWB: ${awb})` : ''}?`)) {
@@ -94,6 +115,7 @@ export function useShiprocketActions(
     handleSchedulePickup,
     handlePrintLabel,
     handlePrintInvoice,
+    handlePrintManifest,
     handleCancelShipment,
   };
 }

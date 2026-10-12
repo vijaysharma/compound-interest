@@ -120,7 +120,7 @@ export function useShiprocketCreateOrder(
         pickup_location: pickupLoc,
         billing_customer_name: custName,
         billing_phone: custPhone,
-        billing_email: custEmail || `${custPhone}@customer.rupeecalculator.in`,
+        billing_email: custEmail.trim(),
         billing_address: custAddress,
         billing_address_2: custAddress2,
         billing_city: custCity,

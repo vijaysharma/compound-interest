@@ -31,7 +31,8 @@ export interface UpdateShiprocketAccountInput {
   auth_token?: string;
 }
 export async function listShiprocketAccountsAction(
-  token?: string | null
+  token?: string | null,
+  forceRefresh?: boolean
 ): Promise<{ success: boolean; accounts: ShiprocketAccountProfile[] }> {
   const sql = getDb();
   await ensureTables(sql);
@@ -101,7 +102,8 @@ export async function listShiprocketAccountsAction(
         success: true,
         accounts,
       };
-    }
+    },
+    { bypassCache: forceRefresh }
   );
 }
 export async function switchActiveShiprocketAccountAction(

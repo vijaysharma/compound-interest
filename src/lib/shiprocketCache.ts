@@ -61,16 +61,19 @@ export async function invalidateShiprocketCustomersCache(): Promise<void> {
 export async function withShiprocketCache<T>(
   key: string,
   ttlSeconds: number,
-  fetcher: () => Promise<T>
+  fetcher: () => Promise<T>,
+  options?: { bypassCache?: boolean }
 ): Promise<T> {
-  // 1. Try cache hit
-  try {
-    const cached = await redisGet<T>(key);
-    if (cached !== null && cached !== undefined) {
-      return cached;
+  // 1. Try cache hit (unless bypassed)
+  if (!options?.bypassCache) {
+    try {
+      const cached = await redisGet<T>(key);
+      if (cached !== null && cached !== undefined) {
+        return cached;
+      }
+    } catch {
+      // Fallback to fetcher on cache error
     }
-  } catch {
-    // Fallback to fetcher on cache error
   }
 
   // 2. Fetch fresh data

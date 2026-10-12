@@ -56,10 +56,10 @@ export function useShiprocketData(token: string) {
   // Each fetch kind numbers its requests; a response that isn't the latest is dropped, so a slow
   // request for the previous account can never overwrite the new account's data.
   const seq = useRef({ list: 0, account: 0, orders: 0, statement: 0 });
-  const fetchAccountsList = useCallback(async () => {
+  const fetchAccountsList = useCallback(async (forceRefresh = false) => {
     const id = ++seq.current.list;
     try {
-      const res = await listShiprocketAccountsAction(token);
+      const res = await listShiprocketAccountsAction(token, forceRefresh);
       if (id === seq.current.list && res.success && res.accounts) {
         setAccountsList(res.accounts);
       }
@@ -67,11 +67,11 @@ export function useShiprocketData(token: string) {
       console.warn('Failed to load accounts list:', err);
     }
   }, [token]);
-  const fetchAccount = useCallback(async () => {
+  const fetchAccount = useCallback(async (forceRefresh = false) => {
     const id = ++seq.current.account;
     setLoadingAccount(true);
     try {
-      const res = await getShiprocketAccountAction(token);
+      const res = await getShiprocketAccountAction(token, forceRefresh);
       if (id === seq.current.account && res.success && res.account) {
         setAccount(res.account);
       }
@@ -155,16 +155,16 @@ export function useShiprocketData(token: string) {
       if (id === seq.current.statement) setLoadingStatement(false);
     }
   }, [token]);
-  const fetchAll = useCallback(() => {
-    void fetchAccountsList();
-    void fetchAccount();
+  const fetchAll = useCallback((forceRefresh = true) => {
+    void fetchAccountsList(forceRefresh);
+    void fetchAccount(forceRefresh);
     void fetchOrders();
     void fetchStatement();
   }, [fetchAccountsList, fetchAccount, fetchOrders, fetchStatement]);
   // Once per token: the fetchers above only change with it.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchAll();
+    fetchAll(false);
   }, [fetchAll]);
   const handleSwitchAccount = useCallback(
     async (accountId: string) => {
@@ -235,7 +235,7 @@ export function useShiprocketData(token: string) {
     },
     [token, fetchAll]
   );
-  const actions = useShiprocketActions(token, fetchOrders, setAlertMsg);
+  const actions = useShiprocketActions(token, fetchOrders, setAlertMsg, fetchAccount);
   return {
     account,
     accountsList,

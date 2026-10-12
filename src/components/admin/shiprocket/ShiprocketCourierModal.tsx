@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useState } from 'react';
-import { FiSend, FiX, FiChevronRight, FiStar, FiCheckCircle, FiPrinter, FiCalendar } from 'react-icons/fi';
+import { FiSend, FiX, FiChevronRight, FiStar, FiCheckCircle, FiPrinter, FiCalendar, FiFileText } from 'react-icons/fi';
 import type { ShiprocketOrder, ShiprocketCourierRate } from './types';
 import type { AssignedShipment } from './useShiprocketModals';
 import styles from '../ShiprocketDashboard.module.scss';
@@ -13,9 +13,11 @@ export interface ShiprocketCourierModalProps {
   schedulingPickup: boolean;
   scheduledPickupDate: string | null;
   printingLabel: boolean;
+  printingManifest?: boolean;
   onAssignCourier: (shipmentId: number, courierId?: number) => void;
   onSchedulePickup: (shipmentId: number, pickupDate: string) => void;
   onPrintLabel: (shipmentId: number) => void;
+  onPrintManifest?: (shipmentId: number) => void;
   onClose: () => void;
 }
 const MAX_PICKUP_DAYS_AHEAD = 7;
@@ -39,9 +41,11 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
     schedulingPickup,
     scheduledPickupDate,
     printingLabel,
+    printingManifest = false,
     onAssignCourier,
     onSchedulePickup,
     onPrintLabel,
+    onPrintManifest,
     onClose,
   }) => {
     const primaryShipmentId = order.shipments?.[0]?.id;
@@ -110,7 +114,10 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                   />
                 </div>
                 {scheduledPickupDate ? (
-                  <p className={styles.shipPickupDone}>Pickup scheduled for {scheduledPickupDate}.</p>
+                  <p className={styles.shipPickupDone}>
+                    <FiCheckCircle aria-hidden="true" style={{ verticalAlign: 'text-bottom', marginRight: '0.375rem' }} />
+                    Pickup scheduled successfully for {scheduledPickupDate}.
+                  </p>
                 ) : null}
                 <div data-dialog-footer className={styles.shipStepActions}>
                   {!scheduledPickupDate && (
@@ -131,7 +138,21 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                   >
                     <FiPrinter /> {printingLabel ? 'Preparing…' : 'Print Label'}
                   </button>
-                  <button type="button" className={styles.outlineBtn} onClick={onClose}>
+                  {onPrintManifest && (
+                    <button
+                      type="button"
+                      className={styles.outlineBtn}
+                      onClick={() => onPrintManifest(assignedShipment.shipmentId)}
+                      disabled={printingManifest}
+                    >
+                      <FiFileText /> {printingManifest ? 'Preparing…' : 'Download Manifest'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={scheduledPickupDate ? styles.primaryBtn : styles.outlineBtn}
+                    onClick={onClose}
+                  >
                     {scheduledPickupDate ? 'Done' : 'Schedule Later'}
                   </button>
                 </div>
