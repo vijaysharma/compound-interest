@@ -26,6 +26,8 @@ export interface ShiprocketCreateTabProps {
   createdOrderResult: CreatedOrderResult | null;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  onResetForm?: () => void;
+  resetCreateForm?: () => void;
   onOpenShipModal: (order: ShiprocketOrder) => void;
   onPickupLocChange: (val: string) => void;
   onPaymentModeChange: (val: 'Prepaid' | 'COD') => void;

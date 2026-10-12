@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getPostcodeDetailsAction, createShiprocketOrderAction } from '../../../actions/admin';
-import type { ShiprocketAccountData, AlertMessage } from './types';
+import type { ShiprocketAccountData, AlertMessage, ShiprocketOrder } from './types';
 import type { CreatedOrderResult } from './createTypes';
 export function useShiprocketCreateOrder(
   token: string,
   account: ShiprocketAccountData | null,
-  onOrderCreated: () => Promise<void>,
+  onOrderCreated: (createdOrder?: ShiprocketOrder) => Promise<void> | void,
   setAlertMsg: (msg: AlertMessage | null) => void
 ) {
   const [pickupLoc, setPickupLoc] = useState('');
@@ -146,28 +146,30 @@ export function useShiprocketCreateOrder(
       if (res.success && res.data?.order_id && res.data?.shipment_id) {
         // A snapshot of the new order: the orders list only has it after a refresh, and the ship
         // dialog needs its route, weight and shipment id now.
+        const orderSnapshot: ShiprocketOrder = {
+          id: res.data.order_id,
+          status: 'NEW',
+          customer_name: custName,
+          customer_phone: custPhone,
+          customer_city: custCity,
+          customer_state: custState,
+          customer_pincode: custPincode,
+          pickup_location: pickupLoc,
+          payment_method: paymentMode,
+          created_at: new Date().toISOString(),
+          shipments: [{ id: res.data.shipment_id, weight: appliedWeight }],
+          others: { weight: Number(appliedWeight) },
+        };
         setCreatedOrderResult({
           orderId: res.data.order_id,
           shipmentId: res.data.shipment_id,
-          order: {
-            id: res.data.order_id,
-            status: 'NEW',
-            customer_name: custName,
-            customer_phone: custPhone,
-            customer_city: custCity,
-            customer_state: custState,
-            customer_pincode: custPincode,
-            pickup_location: pickupLoc,
-            payment_method: paymentMode,
-            shipments: [{ id: res.data.shipment_id, weight: appliedWeight }],
-            others: { weight: Number(appliedWeight) },
-          },
+          order: orderSnapshot,
         });
         setAlertMsg({
           type: 'success',
           text: `Shipment order created! Order ID: ${res.data.order_id}, Shipment ID: ${res.data.shipment_id}`,
         });
-        await onOrderCreated();
+        await onOrderCreated(orderSnapshot);
       } else {
         throw new Error('Order creation did not return order & shipment IDs');
       }
@@ -182,6 +184,27 @@ export function useShiprocketCreateOrder(
     custCity, custState, custPincode, paymentMode, items, shippingCharges, discount, appliedWeight,
     weight, length, breadth, height, setAlertMsg, onOrderCreated,
   ]);
+
+  const resetCreateForm = useCallback(() => {
+    setCustName('');
+    setCustPhone('');
+    setCustEmail('');
+    setCustAddress('');
+    setCustAddress2('');
+    setCustPincode('');
+    setCustCity('');
+    setCustState('');
+    setWeight('0.5');
+    setLength('10');
+    setBreadth('10');
+    setHeight('10');
+    setItems([{ name: '', sku: '', units: '1', selling_price: '299' }]);
+    setShippingCharges('0');
+    setDiscount('0');
+    setPaymentMode('Prepaid');
+    setCreatedOrderResult(null);
+  }, []);
+
   return {
     pickupLoc, setPickupLoc, custName, setCustName, custPhone, setCustPhone,
     custEmail, setCustEmail, custAddress, setCustAddress, custAddress2, setCustAddress2,
@@ -191,5 +214,6 @@ export function useShiprocketCreateOrder(
     onAddItem: handleAddItem, onRemoveItem: handleRemoveItem, onItemChange: handleItemChange,
     paymentMode, setPaymentMode, creatingOrder,
     createdOrderResult, setCreatedOrderResult, volumetricWeight, appliedWeight, handleCreateOrder,
+    resetCreateForm,
   };
 }

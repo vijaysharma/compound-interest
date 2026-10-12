@@ -82,6 +82,15 @@ export const ShiprocketCreateTab: React.FC<ShiprocketCreateTabProps> = React.mem
               >
                 Choose Courier & Ship
               </button>
+              {handlers.resetCreateForm && (
+                <button
+                  type="button"
+                  className={styles.outlineBtn}
+                  onClick={handlers.resetCreateForm}
+                >
+                  Create Another Order
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -241,6 +241,7 @@ export function useShiprocketData(token: string) {
     accountsList,
     switchingToAccountId,
     orders,
+    setOrders,
     statement,
     loadingAccount,
     loadingOrders,

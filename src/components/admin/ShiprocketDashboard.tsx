@@ -1,7 +1,7 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
-import type { TabType, OrderItemActionHandlers } from './shiprocket/types';
+import type { TabType, OrderItemActionHandlers, ShiprocketOrder } from './shiprocket/types';
 import { useShiprocketData } from './shiprocket/useShiprocketData';
 import { useShiprocketModals } from './shiprocket/useShiprocketModals';
 import { useShiprocketCreateOrder } from './shiprocket/useShiprocketCreateOrder';
@@ -29,10 +29,22 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
     data.setAlertMsg,
     data.fetchAccount
   );
+  const handleOrderCreated = useCallback(
+    async (createdOrder?: ShiprocketOrder) => {
+      if (createdOrder) {
+        data.setOrders((prev) => [
+          createdOrder,
+          ...prev.filter((o) => o.id !== createdOrder.id),
+        ]);
+      }
+      await data.fetchOrders();
+    },
+    [data.setOrders, data.fetchOrders]
+  );
   const createForm = useShiprocketCreateOrder(
     token,
     data.account,
-    data.fetchOrders,
+    handleOrderCreated,
     data.setAlertMsg
   );
   const filter = useShiprocketFilter(data.orders);
