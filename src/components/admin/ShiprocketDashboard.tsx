@@ -187,6 +187,10 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
           onPrintLabel={modals.handlePrintShipmentLabel}
           onPrintManifest={modals.handlePrintShipmentManifest}
           onClose={modals.closeShipModal}
+          onViewOrders={() => {
+            modals.closeShipModal();
+            setActiveTab('shipments');
+          }}
         />
       )}
     </div>

@@ -125,10 +125,17 @@ export function useShiprocketModals(
     try {
       const res = await generateShiprocketPickupAction([shipmentId], token, pickupDate);
       if (res.success) {
-        const scheduled = (res.data as { response?: { pickup_scheduled_date?: string } })?.response
-          ?.pickup_scheduled_date;
-        setScheduledPickupDate(scheduled || pickupDate);
-        setAlertMsg({ type: 'success', text: `Pickup scheduled for ${scheduled || pickupDate}` });
+        const raw = res.data as Record<string, any> | undefined;
+        const scheduled =
+          raw?.response?.pickup_scheduled_date ||
+          raw?.response?.data?.pickup_scheduled_date ||
+          raw?.data?.pickup_scheduled_date ||
+          (Array.isArray(raw?.response?.data) && raw?.response?.data[0]?.pickup_scheduled_date) ||
+          (Array.isArray(raw?.data) && raw?.data[0]?.pickup_scheduled_date) ||
+          raw?.pickup_scheduled_date;
+        const finalDate = scheduled || pickupDate;
+        setScheduledPickupDate(finalDate);
+        setAlertMsg({ type: 'success', text: `Pickup scheduled successfully for ${finalDate}!` });
         void onOrdersUpdated();
         if (onAccountUpdated) void onAccountUpdated();
       }

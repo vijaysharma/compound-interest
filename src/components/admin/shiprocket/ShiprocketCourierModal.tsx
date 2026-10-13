@@ -19,6 +19,7 @@ export interface ShiprocketCourierModalProps {
   onPrintLabel: (shipmentId: number) => void;
   onPrintManifest?: (shipmentId: number) => void;
   onClose: () => void;
+  onViewOrders?: () => void;
 }
 const MAX_PICKUP_DAYS_AHEAD = 7;
 /** Local calendar date as YYYY-MM-DD, `daysAhead` days from today. */
@@ -47,6 +48,7 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
     onPrintLabel,
     onPrintManifest,
     onClose,
+    onViewOrders,
   }) => {
     const primaryShipmentId = order.shipments?.[0]?.id;
     const [pickupDate, setPickupDate] = useState(() => localIsoDate(0));
@@ -114,47 +116,89 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                   />
                 </div>
                 {scheduledPickupDate ? (
-                  <p className={styles.shipPickupDone}>
-                    <FiCheckCircle aria-hidden="true" style={{ verticalAlign: 'text-bottom', marginRight: '0.375rem' }} />
-                    Pickup scheduled successfully for {scheduledPickupDate}.
-                  </p>
+                  <div className={`${styles.alert} ${styles.alertSuccess}`} role="status">
+                    <FiCheckCircle aria-hidden="true" style={{ flexShrink: 0, fontSize: '1.25rem' }} />
+                    <div>
+                      <strong>Pickup Scheduled Successfully!</strong>
+                      <div>Scheduled for {scheduledPickupDate}. You can print the shipping label, download the manifest, or view this shipment in your orders list.</div>
+                    </div>
+                  </div>
                 ) : null}
                 <div data-dialog-footer className={styles.shipStepActions}>
-                  {!scheduledPickupDate && (
-                    <button
-                      type="button"
-                      className={styles.primaryBtn}
-                      onClick={() => onSchedulePickup(assignedShipment.shipmentId, pickupDate)}
-                      disabled={schedulingPickup || !pickupDate}
-                    >
-                      {schedulingPickup ? 'Scheduling…' : 'Schedule Pickup'}
-                    </button>
+                  {!scheduledPickupDate ? (
+                    <>
+                      <button
+                        type="button"
+                        className={styles.primaryBtn}
+                        onClick={() => onSchedulePickup(assignedShipment.shipmentId, pickupDate)}
+                        disabled={schedulingPickup || !pickupDate}
+                      >
+                        {schedulingPickup ? 'Scheduling…' : 'Schedule Pickup'}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.outlineBtn}
+                        onClick={() => onPrintLabel(assignedShipment.shipmentId)}
+                        disabled={printingLabel}
+                      >
+                        <FiPrinter /> {printingLabel ? 'Preparing…' : 'Print Label'}
+                      </button>
+                      {onPrintManifest && (
+                        <button
+                          type="button"
+                          className={styles.outlineBtn}
+                          onClick={() => onPrintManifest(assignedShipment.shipmentId)}
+                          disabled={printingManifest}
+                        >
+                          <FiFileText /> {printingManifest ? 'Preparing…' : 'Download Manifest'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={styles.outlineBtn}
+                        onClick={onClose}
+                      >
+                        Schedule Later
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {onViewOrders && (
+                        <button
+                          type="button"
+                          className={styles.primaryBtn}
+                          onClick={onViewOrders}
+                        >
+                          Go to Orders (Shipments) <FiChevronRight />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={styles.outlineBtn}
+                        onClick={() => onPrintLabel(assignedShipment.shipmentId)}
+                        disabled={printingLabel}
+                      >
+                        <FiPrinter /> {printingLabel ? 'Preparing…' : 'Print Label'}
+                      </button>
+                      {onPrintManifest && (
+                        <button
+                          type="button"
+                          className={styles.outlineBtn}
+                          onClick={() => onPrintManifest(assignedShipment.shipmentId)}
+                          disabled={printingManifest}
+                        >
+                          <FiFileText /> {printingManifest ? 'Preparing…' : 'Download Manifest'}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={onViewOrders ? styles.outlineBtn : styles.primaryBtn}
+                        onClick={onClose}
+                      >
+                        Done
+                      </button>
+                    </>
                   )}
-                  <button
-                    type="button"
-                    className={styles.outlineBtn}
-                    onClick={() => onPrintLabel(assignedShipment.shipmentId)}
-                    disabled={printingLabel}
-                  >
-                    <FiPrinter /> {printingLabel ? 'Preparing…' : 'Print Label'}
-                  </button>
-                  {onPrintManifest && (
-                    <button
-                      type="button"
-                      className={styles.outlineBtn}
-                      onClick={() => onPrintManifest(assignedShipment.shipmentId)}
-                      disabled={printingManifest}
-                    >
-                      <FiFileText /> {printingManifest ? 'Preparing…' : 'Download Manifest'}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className={scheduledPickupDate ? styles.primaryBtn : styles.outlineBtn}
-                    onClick={onClose}
-                  >
-                    {scheduledPickupDate ? 'Done' : 'Schedule Later'}
-                  </button>
                 </div>
               </div>
             ) : (
