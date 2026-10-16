@@ -4,21 +4,18 @@ import { FiBarChart2, FiArrowUpRight, FiPercent } from 'react-icons/fi';
 import type { PerformanceMetrics, InvestmentType } from './types';
 import { formatINR } from './utils';
 import styles from '../MutualFundDetailModal.module.scss';
-
 export interface FundModalStatsGridProps {
   performance: PerformanceMetrics;
   investmentType: InvestmentType;
   holdingDays: number;
   holdingYears: number;
 }
-
 export const FundModalStatsGrid: React.FC<FundModalStatsGridProps> = React.memo(
   ({ performance, investmentType, holdingDays, holdingYears }) => (
     <div className={styles.investmentResultsSection}>
       <h3 className={styles.investmentResultsHeading}>
         Investment Results (for selected period)
       </h3>
-
       <div className={styles.investmentResultsGrid}>
         {/* 1. Invested Capital */}
         <div className={styles.metricCard}>
@@ -37,7 +34,6 @@ export const FundModalStatsGrid: React.FC<FundModalStatsGridProps> = React.memo(
             Start NAV: ₹{performance.startNavVal.toFixed(2)}
           </div>
         </div>
-
         {/* 2. Pre-Tax Maturity */}
         <div className={styles.metricCard}>
           <div className={styles.metricCardTop}>
@@ -53,7 +49,6 @@ export const FundModalStatsGrid: React.FC<FundModalStatsGridProps> = React.memo(
             End NAV: ₹{performance.endNavVal.toFixed(2)}
           </div>
         </div>
-
         {/* 3. Gross Capital Gain */}
         <div className={styles.metricCard}>
           <div className={styles.metricCardTop}>
@@ -70,7 +65,6 @@ export const FundModalStatsGrid: React.FC<FundModalStatsGridProps> = React.memo(
             {performance.absReturn.toFixed(2)}% Absolute
           </div>
         </div>
-
         {/* 4. Annualized Return */}
         <div className={styles.metricCard}>
           <div className={styles.metricCardTop}>
@@ -90,5 +84,4 @@ export const FundModalStatsGrid: React.FC<FundModalStatsGridProps> = React.memo(
     </div>
   )
 );
-
 FundModalStatsGrid.displayName = 'FundModalStatsGrid';

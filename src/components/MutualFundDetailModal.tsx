@@ -106,6 +106,12 @@ export default function MutualFundDetailModal({ fund, onClose }: MutualFundDetai
                 setInvestmentType={state.setInvestmentType}
                 investmentValue={state.investmentValue}
                 setInvestmentValue={state.setInvestmentValue}
+                startDateISO={state.startDateISO}
+                endDateISO={state.endDateISO}
+                minNavDateISO={state.minNavDateISO}
+                maxNavDateISO={state.maxNavDateISO}
+                onStartDateChange={state.setStartDateISO}
+                onEndDateChange={state.setEndDateISO}
               />
             </div>
           </div>

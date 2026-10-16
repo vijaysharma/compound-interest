@@ -673,6 +673,38 @@
   }
 }
 
+.investmentDateGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.investmentDateCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.investmentDateInput {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg);
+  padding: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--color-heading);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-weight: 500;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+}
+
 // ==========================================
 // Investment Results Section (4 Metric Cards)
 // ==========================================
