@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiRepeat } from 'react-icons/fi';
+import { FiRepeat, FiCalendar } from 'react-icons/fi';
 import ValuePicker from '../../components/ValuePicker';
 import CountrySelect from '../../components/CountrySelect';
 import { IndianFormat } from '../../data/currencyCodes';
@@ -18,6 +18,9 @@ interface CurrencyInputsColProps {
   sourceCurrency: CountryCurrencyInfo;
   error: string | null;
   handleRefresh: () => void;
+  selectedDate: string;
+  onSelectDate: (d: string) => void;
+  rateDate: string | null;
 }
 export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
   srcCountry,
@@ -32,7 +35,11 @@ export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
   sourceCurrency,
   error,
   handleRefresh,
+  selectedDate,
+  onSelectDate,
+  rateDate,
 }) => {
+  const todayIso = new Date().toISOString().slice(0, 10);
   return (
     <div className={styles.inputsCol}>
       <ValuePicker
@@ -94,6 +101,34 @@ export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
         locale={sourceCurrency.locale}
         tabSize="sm"
       />
+      <div className={styles.datePickerContainer}>
+        <label className={styles.datePickerLabel} htmlFor="conversion-date-input">
+          <FiCalendar className={styles.dateIcon} />
+          <span>Conversion Date {rateDate ? `(${rateDate})` : ''}</span>
+        </label>
+        <div className={styles.datePickerInputWrapper}>
+          <input
+            id="conversion-date-input"
+            type="date"
+            value={selectedDate || todayIso}
+            max={todayIso}
+            min="1999-01-04"
+            onChange={(e) => onSelectDate(e.target.value)}
+            className={styles.dateInput}
+            aria-label="Conversion date"
+          />
+          {selectedDate && selectedDate !== todayIso && (
+            <button
+              type="button"
+              onClick={() => onSelectDate('')}
+              className={styles.resetDateBtn}
+              title="Reset to today / latest rates"
+            >
+              Reset to Today
+            </button>
+          )}
+        </div>
+      </div>
       {error && (
         <div className={styles.errorAlert}>
           <span>{error}</span>

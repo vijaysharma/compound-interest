@@ -16,9 +16,11 @@ export async function getExchangeRatesAction(): Promise<{
 export async function getHistoricalRatesAction(
   base: string,
   target: string,
-  days = 30
+  days = 30,
+  startDateStr?: string,
+  endDateStr?: string
 ): Promise<{ success: boolean; base: string; target: string; points: CurrencyHistoricalPoint[] }> {
-  return handleGetHistoricalRates(base, target, days);
+  return handleGetHistoricalRates(base, target, days, startDateStr, endDateStr);
 }
 export async function getPPPDataAction(): Promise<unknown> {
   return handleGetPPPData();

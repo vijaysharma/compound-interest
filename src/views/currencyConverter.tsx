@@ -31,6 +31,14 @@ const CurrencyConverter = () => {
     convertedAmount,
     historicalPoints,
     loadingHistory,
+    selectedDate,
+    setSelectedDate,
+    rateDate,
+    graphPreset,
+    graphStartDate,
+    graphEndDate,
+    handleSelectGraphPreset,
+    handleCustomGraphDates,
     handleRefresh,
     handleSwapCountries,
   } = useCurrencyConverter();
@@ -58,6 +66,9 @@ const CurrencyConverter = () => {
           sourceCurrency={sourceCurrency}
           error={error}
           handleRefresh={handleRefresh}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          rateDate={rateDate}
         />
         <CurrencyResultsCol
           exchangeRate={exchangeRate}
@@ -71,6 +82,8 @@ const CurrencyConverter = () => {
           lastRefreshed={lastRefreshed}
           handleRefresh={handleRefresh}
           loading={loading}
+          selectedDate={selectedDate}
+          rateDate={rateDate}
         />
       </div>
       <div className={styles.converterSection}>
@@ -79,6 +92,13 @@ const CurrencyConverter = () => {
           targetCurrency={targetCurrency}
           points={historicalPoints}
           loading={loadingHistory}
+          graphPreset={graphPreset}
+          graphStartDate={graphStartDate}
+          graphEndDate={graphEndDate}
+          onSelectGraphPreset={handleSelectGraphPreset}
+          onCustomGraphDates={handleCustomGraphDates}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
         />
       </div>
       <CalculatorContentSection

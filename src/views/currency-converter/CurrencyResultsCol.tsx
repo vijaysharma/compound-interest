@@ -16,6 +16,8 @@ interface CurrencyResultsColProps {
   lastRefreshed: string;
   handleRefresh: () => void;
   loading: boolean;
+  selectedDate?: string;
+  rateDate?: string | null;
 }
 export const CurrencyResultsCol: React.FC<CurrencyResultsColProps> = ({
   exchangeRate,
@@ -29,6 +31,8 @@ export const CurrencyResultsCol: React.FC<CurrencyResultsColProps> = ({
   lastRefreshed,
   handleRefresh,
   loading,
+  selectedDate,
+  rateDate,
 }) => {
   const displayTitle =
     exchangeRate > 0
@@ -59,9 +63,14 @@ export const CurrencyResultsCol: React.FC<CurrencyResultsColProps> = ({
               </span>
             </>
           )}
+          {selectedDate && (
+            <span className={styles.historicalBadge}>
+              Rate as of {rateDate || selectedDate}
+            </span>
+          )}
         </div>
         <div className={styles.rateRight}>
-          <span>Updated: {lastRefreshed}</span>
+          <span>{selectedDate ? `Date: ${rateDate || selectedDate}` : `Updated: ${lastRefreshed}`}</span>
           <button
             type="button"
             onClick={() => void handleRefresh()}

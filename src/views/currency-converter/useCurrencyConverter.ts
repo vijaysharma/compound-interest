@@ -3,6 +3,22 @@ import { fetchExchangeRates } from '../../data/api_data';
 import { DEFAULT_EXCHANGE_RATES } from '../../data/default_exchange_rates';
 import { buildCountryDataMap, PRIORITY_COUNTRIES } from './currencyDataUtils';
 import { getHistoricalRatesAction, type CurrencyHistoricalPoint } from '@/actions/data';
+export type GraphPresetType = '7D' | '1M' | '3M' | '6M' | '1Y' | 'custom';
+function computePresetDates(preset: '7D' | '1M' | '3M' | '6M' | '1Y'): { start: string; end: string } {
+  const now = new Date();
+  const end = now.toISOString().slice(0, 10);
+  const startD = new Date();
+  const daysMap: Record<string, number> = {
+    '7D': 7,
+    '1M': 30,
+    '3M': 90,
+    '6M': 180,
+    '1Y': 365,
+  };
+  startD.setDate(now.getDate() - (daysMap[preset] || 30));
+  const start = startD.toISOString().slice(0, 10);
+  return { start, end };
+}
 export function useCurrencyConverter() {
   const [rates, setRates] = useState<Record<string, number>>(DEFAULT_EXCHANGE_RATES);
   const [loading, setLoading] = useState(true);
@@ -13,6 +29,12 @@ export function useCurrencyConverter() {
   const [lastRefreshed, setLastRefreshed] = useState(() => new Date().toLocaleTimeString());
   const [historicalPoints, setHistoricalPoints] = useState<CurrencyHistoricalPoint[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [customDateRate, setCustomDateRate] = useState<number | null>(null);
+  const [loadingCustomDate, setLoadingCustomDate] = useState(false);
+  const [graphPreset, setGraphPreset] = useState<GraphPresetType>('1M');
+  const [graphStartDate, setGraphStartDate] = useState(() => computePresetDates('1M').start);
+  const [graphEndDate, setGraphEndDate] = useState(() => computePresetDates('1M').end);
   const countryData = useMemo(() => buildCountryDataMap(), []);
   const availableCountries = useMemo(() => {
     const list = Array.from(countryData.keys());
@@ -97,23 +119,34 @@ export function useCurrencyConverter() {
       },
     [countryData, tgtCountry]
   );
-  const numericAmount = parseFloat(amount) || 0;
-  const sourceRate = rates[sourceCurrency.code] ?? DEFAULT_EXCHANGE_RATES[sourceCurrency.code] ?? 0;
-  const targetRate = rates[targetCurrency.code] ?? DEFAULT_EXCHANGE_RATES[targetCurrency.code] ?? 0;
-  const exchangeRate = sourceRate > 0 && targetRate > 0 ? targetRate / sourceRate : 0;
-  const inverseRate = exchangeRate > 0 ? 1 / exchangeRate : 0;
-  const convertedAmount = numericAmount * exchangeRate;
   const handleSwapCountries = () => {
     setSrcCountry(tgtCountry);
     setTgtCountry(srcCountry);
   };
+  const handleSelectGraphPreset = useCallback((preset: '7D' | '1M' | '3M' | '6M' | '1Y') => {
+    setGraphPreset(preset);
+    const { start, end } = computePresetDates(preset);
+    setGraphStartDate(start);
+    setGraphEndDate(end);
+  }, []);
+  const handleCustomGraphDates = useCallback((start: string, end: string) => {
+    setGraphPreset('custom');
+    setGraphStartDate(start);
+    setGraphEndDate(end);
+  }, []);
   useEffect(() => {
     let cancelled = false;
     const fetchHistory = async () => {
       if (!sourceCurrency.code || !targetCurrency.code) return;
       setLoadingHistory(true);
       try {
-        const res = await getHistoricalRatesAction(sourceCurrency.code, targetCurrency.code, 30);
+        const res = await getHistoricalRatesAction(
+          sourceCurrency.code,
+          targetCurrency.code,
+          30,
+          graphStartDate,
+          graphEndDate
+        );
         if (!cancelled && res.success) {
           setHistoricalPoints(res.points);
         } else if (!cancelled) {
@@ -132,7 +165,53 @@ export function useCurrencyConverter() {
     return () => {
       cancelled = true;
     };
-  }, [sourceCurrency.code, targetCurrency.code]);
+  }, [sourceCurrency.code, targetCurrency.code, graphStartDate, graphEndDate]);
+  useEffect(() => {
+    let cancelled = false;
+    if (!selectedDate) return;
+    const matched = historicalPoints.find((p) => p.date === selectedDate);
+    if (matched) return;
+    const fetchSingleDate = async () => {
+      if (!sourceCurrency.code || !targetCurrency.code) return;
+      setLoadingCustomDate(true);
+      try {
+        const res = await getHistoricalRatesAction(
+          sourceCurrency.code,
+          targetCurrency.code,
+          1,
+          selectedDate,
+          selectedDate
+        );
+        if (!cancelled && res.success && res.points.length > 0) {
+          setCustomDateRate(res.points[0].rate);
+        } else if (!cancelled) {
+          setCustomDateRate(null);
+        }
+      } catch {
+        if (!cancelled) setCustomDateRate(null);
+      } finally {
+        if (!cancelled) setLoadingCustomDate(false);
+      }
+    };
+    void fetchSingleDate();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate, sourceCurrency.code, targetCurrency.code, historicalPoints]);
+  const numericAmount = parseFloat(amount) || 0;
+  const sourceRate = rates[sourceCurrency.code] ?? DEFAULT_EXCHANGE_RATES[sourceCurrency.code] ?? 0;
+  const targetRate = rates[targetCurrency.code] ?? DEFAULT_EXCHANGE_RATES[targetCurrency.code] ?? 0;
+  const fallbackSpotRate = sourceRate > 0 && targetRate > 0 ? targetRate / sourceRate : 0;
+  const latestHistoricalPoint = historicalPoints.length > 0 ? historicalPoints[historicalPoints.length - 1] : null;
+  const matchedPoint = selectedDate ? historicalPoints.find((p) => p.date === selectedDate) : null;
+  const effectiveExchangeRate = selectedDate
+    ? (customDateRate ?? matchedPoint?.rate ?? fallbackSpotRate)
+    : (latestHistoricalPoint?.rate ?? fallbackSpotRate);
+  const inverseRate = effectiveExchangeRate > 0 ? 1 / effectiveExchangeRate : 0;
+  const convertedAmount = numericAmount * effectiveExchangeRate;
+  const rateDate = selectedDate
+    ? (matchedPoint?.date || selectedDate)
+    : (latestHistoricalPoint?.date || null);
   return {
     loading,
     error,
@@ -148,11 +227,19 @@ export function useCurrencyConverter() {
     sourceCurrency,
     targetCurrency,
     numericAmount,
-    exchangeRate,
+    exchangeRate: effectiveExchangeRate,
     inverseRate,
     convertedAmount,
     historicalPoints,
-    loadingHistory,
+    loadingHistory: loadingHistory || loadingCustomDate,
+    selectedDate,
+    setSelectedDate,
+    rateDate,
+    graphPreset,
+    graphStartDate,
+    graphEndDate,
+    handleSelectGraphPreset,
+    handleCustomGraphDates,
     handleRefresh,
     handleSwapCountries,
   };

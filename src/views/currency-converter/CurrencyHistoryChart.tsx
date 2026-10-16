@@ -17,19 +17,37 @@ interface CurrencyHistoryChartProps {
   targetCurrency: CountryCurrencyInfo;
   points: CurrencyHistoricalPoint[];
   loading: boolean;
+  graphPreset?: '7D' | '1M' | '3M' | '6M' | '1Y' | 'custom';
+  graphStartDate?: string;
+  graphEndDate?: string;
+  onSelectGraphPreset?: (preset: '7D' | '1M' | '3M' | '6M' | '1Y') => void;
+  onCustomGraphDates?: (start: string, end: string) => void;
+  selectedDate?: string;
+  onSelectDate?: (date: string) => void;
 }
 export const CurrencyHistoryChart: React.FC<CurrencyHistoryChartProps> = ({
   sourceCurrency,
   targetCurrency,
   points,
   loading,
+  graphPreset = '1M',
+  graphStartDate,
+  graphEndDate,
+  onSelectGraphPreset,
+  onCustomGraphDates,
+  selectedDate,
+  onSelectDate,
 }) => {
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const rangeTitle = graphPreset === 'custom'
+    ? `${graphStartDate} to ${graphEndDate}`
+    : `${graphPreset} Rate Trajectory`;
   if (loading) {
     return (
       <div className={styles.chartCard}>
         <div className={styles.chartHeader}>
           <h3 className={styles.chartTitle}>
-            30-Day Rate History ({sourceCurrency.code} → {targetCurrency.code})
+            {rangeTitle} ({sourceCurrency.code} → {targetCurrency.code})
           </h3>
         </div>
         <div className={styles.chartEmpty}>
@@ -43,11 +61,48 @@ export const CurrencyHistoryChart: React.FC<CurrencyHistoryChartProps> = ({
       <div className={styles.chartCard}>
         <div className={styles.chartHeader}>
           <h3 className={styles.chartTitle}>
-            30-Day Rate History ({sourceCurrency.code} → {targetCurrency.code})
+            {rangeTitle} ({sourceCurrency.code} → {targetCurrency.code})
           </h3>
         </div>
+        <div className={styles.chartControlsRow}>
+          <div className={styles.presetGroup}>
+            {(['7D', '1M', '3M', '6M', '1Y'] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onSelectGraphPreset?.(p)}
+                className={`${styles.presetBtn} ${graphPreset === p ? styles.active : ''}`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <div className={styles.customDatesRow}>
+            <label htmlFor="graph-start-date-empty">From:</label>
+            <input
+              id="graph-start-date-empty"
+              type="date"
+              value={graphStartDate || ''}
+              max={graphEndDate || todayIso}
+              onChange={(e) => onCustomGraphDates?.(e.target.value, graphEndDate || todayIso)}
+              className={styles.customDateInput}
+              aria-label="Start date"
+            />
+            <label htmlFor="graph-end-date-empty">To:</label>
+            <input
+              id="graph-end-date-empty"
+              type="date"
+              value={graphEndDate || ''}
+              max={todayIso}
+              min={graphStartDate || '1999-01-04'}
+              onChange={(e) => onCustomGraphDates?.(graphStartDate || '', e.target.value)}
+              className={styles.customDateInput}
+              aria-label="End date"
+            />
+          </div>
+        </div>
         <div className={styles.chartEmpty}>
-          <span>No historical rate trajectory available for this currency pair.</span>
+          <span>No historical rate trajectory available for this range or currency pair.</span>
         </div>
       </div>
     );
@@ -67,10 +122,11 @@ export const CurrencyHistoryChart: React.FC<CurrencyHistoryChartProps> = ({
       <div className={styles.chartHeader}>
         <div>
           <h3 className={styles.chartTitle}>
-            30-Day Rate Trajectory ({sourceCurrency.code} → {targetCurrency.code})
+            {rangeTitle} ({sourceCurrency.code} → {targetCurrency.code})
           </h3>
           <span className={styles.chartSubTitle}>
-            Daily interbank closing rates over the past 30 days
+            Daily closing rates ({points.length} data points). Click any point to convert on that date.
+            {selectedDate ? ` (Active date: ${selectedDate})` : ''}
           </span>
         </div>
         <div className={`${styles.changeBadge} ${isPositive ? styles.changePos : styles.changeNeg}`}>
@@ -78,9 +134,56 @@ export const CurrencyHistoryChart: React.FC<CurrencyHistoryChartProps> = ({
           {changePercent.toFixed(2)}%
         </div>
       </div>
+      <div className={styles.chartControlsRow}>
+        <div className={styles.presetGroup}>
+          {(['7D', '1M', '3M', '6M', '1Y'] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => onSelectGraphPreset?.(p)}
+              className={`${styles.presetBtn} ${graphPreset === p ? styles.active : ''}`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        <div className={styles.customDatesRow}>
+          <label htmlFor="graph-start-date">From:</label>
+          <input
+            id="graph-start-date"
+            type="date"
+            value={graphStartDate || ''}
+            max={graphEndDate || todayIso}
+            onChange={(e) => onCustomGraphDates?.(e.target.value, graphEndDate || todayIso)}
+            className={styles.customDateInput}
+            aria-label="Start date"
+          />
+          <label htmlFor="graph-end-date">To:</label>
+          <input
+            id="graph-end-date"
+            type="date"
+            value={graphEndDate || ''}
+            max={todayIso}
+            min={graphStartDate || '1999-01-04'}
+            onChange={(e) => onCustomGraphDates?.(graphStartDate || '', e.target.value)}
+            className={styles.customDateInput}
+            aria-label="End date"
+          />
+        </div>
+      </div>
       <div className={styles.chartWrapper}>
         <ResponsiveContainer width="100%" height={240}>
-          <LineChart data={points} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <LineChart
+            data={points}
+            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+            onClick={(state) => {
+              const payloadState = state as unknown as { activePayload?: Array<{ payload?: { date?: string } }>; activeLabel?: string };
+              const clickedDate = payloadState?.activePayload?.[0]?.payload?.date || payloadState?.activeLabel;
+              if (clickedDate && onSelectDate) {
+                onSelectDate(clickedDate);
+              }
+            }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
             <XAxis
               dataKey="date"
