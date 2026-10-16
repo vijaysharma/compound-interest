@@ -1,17 +1,20 @@
 'use client';
 import { useCallback } from 'react';
 import { Note } from '../NotesTypes';
+import { saveLocalDraft } from './notesDraftStorage';
 interface UseNotesMutateActionsProps {
   notes: Note[];
   setNotes: React.Dispatch<React.SetStateAction<Note[]>>;
   selectedNoteId: string | null;
   queueNoteSync: (id: string) => void;
+  userId?: string;
 }
 export function useNotesMutateActions({
   notes,
   setNotes,
   selectedNoteId,
   queueNoteSync,
+  userId,
 }: UseNotesMutateActionsProps) {
   const handleUpdateNote = useCallback(
     (updatedFields: Partial<Note>) => {
@@ -21,10 +24,19 @@ export function useNotesMutateActions({
         ...updatedFields,
         updated_at: updatedFields.updated_at || updatedTime,
       };
-      setNotes((prevNotes) => prevNotes.map((n) => (n.id === selectedNoteId ? { ...n, ...payload } : n)));
+      setNotes((prevNotes) =>
+        prevNotes.map((n) => {
+          if (n.id === selectedNoteId) {
+            const merged = { ...n, ...payload };
+            if (userId) saveLocalDraft(userId, merged);
+            return merged;
+          }
+          return n;
+        })
+      );
       queueNoteSync(selectedNoteId);
     },
-    [selectedNoteId, queueNoteSync, setNotes]
+    [selectedNoteId, queueNoteSync, setNotes, userId]
   );
   const handleTogglePin = useCallback(
     (id?: string, e?: React.MouseEvent) => {

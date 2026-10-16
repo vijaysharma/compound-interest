@@ -1,12 +1,12 @@
 import { cleanNode, isSafeUrl } from './cleanNode';
 export { isSafeUrl };
-export function sanitizePlainInput(input: unknown, maxLength = 250): string {
+export function sanitizePlainInput(input: unknown, maxLength = 250, trim = true): string {
   if (typeof input !== 'string') return '';
-  return input
+  const cleaned = input
     .replace(/\0/g, '')
     .replace(/<[^>]*>/g, '')
-    .trim()
     .slice(0, maxLength);
+  return trim ? cleaned.trim() : cleaned;
 }
 export function sanitizeNoteHtml(html: string): string {
   if (!html || typeof html !== 'string') return '';

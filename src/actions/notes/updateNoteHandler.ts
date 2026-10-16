@@ -19,6 +19,7 @@ export async function handleUpdateNote(
 ): Promise<{
   success: boolean;
   id: string;
+  updated_at?: string;
   rejected?: 'missing' | 'stale';
 }> {
   const sql = getDb();
@@ -38,13 +39,6 @@ export async function handleUpdateNote(
   }[];
   if (existing.length === 0) {
     return { success: false, id: noteId, rejected: 'missing' };
-  }
-  if (body.client_updated_at && existing[0].updated_at) {
-    const incoming = Date.parse(body.client_updated_at);
-    const stored = Date.parse(existing[0].updated_at);
-    if (Number.isFinite(incoming) && Number.isFinite(stored) && incoming < stored) {
-      return { success: false, id: noteId, rejected: 'stale' };
-    }
   }
   const hasTitle = body.title !== undefined;
   const hasContent = body.content !== undefined;
@@ -81,8 +75,8 @@ export async function handleUpdateNote(
     }
   }
   const hasBlob = blobUrl !== null;
-  if (user.role === 'admin') {
-    await sql`
+  const updatedRows = (user.role === 'admin'
+    ? await sql`
       UPDATE admin_notes
       SET
         user_id = ${user.id},
@@ -97,9 +91,9 @@ export async function handleUpdateNote(
         blob_url = CASE WHEN ${hasBlob} THEN ${blobUrl} WHEN ${clearBlob} THEN NULL ELSE blob_url END,
         updated_at = NOW()
       WHERE id = ${noteId} AND (user_id = ${user.id} OR user_id IS NULL)
-    `;
-  } else {
-    await sql`
+      RETURNING updated_at
+    `
+    : await sql`
       UPDATE admin_notes
       SET
         title = CASE WHEN ${hasTitle} THEN ${titleVal} ELSE title END,
@@ -113,7 +107,8 @@ export async function handleUpdateNote(
         blob_url = CASE WHEN ${hasBlob} THEN ${blobUrl} WHEN ${clearBlob} THEN NULL ELSE blob_url END,
         updated_at = NOW()
       WHERE id = ${noteId} AND user_id = ${user.id}
-    `;
-  }
-  return { success: true, id: noteId };
+      RETURNING updated_at
+    `) as { updated_at: string }[];
+  const newUpdatedAt = updatedRows[0]?.updated_at ? new Date(updatedRows[0].updated_at).toISOString() : new Date().toISOString();
+  return { success: true, id: noteId, updated_at: newUpdatedAt };
 }

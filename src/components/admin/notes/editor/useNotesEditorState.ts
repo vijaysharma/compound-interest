@@ -74,6 +74,10 @@ export function useNotesEditorState(props: NotesEditorProps) {
     handleIndent: formatting.handleIndent,
     handleOutdent: formatting.handleOutdent,
     handleContentChange: content.handleContentChange,
+    handleSave: () => {
+      content.handleContentChange(true);
+      propagation.flushPropagation();
+    },
   });
   const tags = useEditorTags({
     note,

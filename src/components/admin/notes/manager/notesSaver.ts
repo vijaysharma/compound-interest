@@ -9,10 +9,15 @@ interface SavePendingNotesParams {
   userEmail: string;
   unconfirmedCreates: Set<string>;
 }
+export interface SavedNoteMeta {
+  id: string;
+  updated_at?: string;
+}
 interface SavePendingNotesResult {
   deletedElsewhereIds: string[];
   staleWrite: boolean;
   savedIds: string[];
+  savedNotes: SavedNoteMeta[];
 }
 export async function savePendingNotes({
   notes,
@@ -25,6 +30,7 @@ export async function savePendingNotes({
   const key = await getUserEncryptionKey(userId, userEmail);
   const deletedElsewhereIds: string[] = [];
   const savedIds: string[] = [];
+  const savedNotes: SavedNoteMeta[] = [];
   let staleWrite = false;
   for (const noteId of pendingIds) {
     const note = notes.find((n) => n.id === noteId);
@@ -45,24 +51,27 @@ export async function savePendingNotes({
       tags: note.tags,
     };
     if (unconfirmedCreates.has(noteId)) {
-      await createNoteAction(
+      const created = await createNoteAction(
         { ...payload, lock_password_hash: payload.lock_password_hash ?? undefined },
         token
       );
       unconfirmedCreates.delete(noteId);
       savedIds.push(noteId);
+      savedNotes.push({ id: noteId, updated_at: created.updated_at });
       continue;
     }
     const res = await updateNoteAction(
       { ...payload, client_updated_at: note.updated_at },
       token
     );
-    savedIds.push(noteId);
-    if (res?.rejected === 'missing') {
+    if (res?.success) {
+      savedIds.push(noteId);
+      savedNotes.push({ id: noteId, updated_at: res.updated_at });
+    } else if (res?.rejected === 'missing') {
       deletedElsewhereIds.push(noteId);
     } else if (res?.rejected === 'stale') {
       staleWrite = true;
     }
   }
-  return { deletedElsewhereIds, staleWrite, savedIds };
+  return { deletedElsewhereIds, staleWrite, savedIds, savedNotes };
 }

@@ -1,5 +1,5 @@
 import { RefObject, useState, useEffect, useRef, useCallback, MutableRefObject } from 'react';
-import { Note, deriveAutoTitleFromHtml, extractHashtags } from '../NotesTypes';
+import { Note } from '../NotesTypes';
 import { sanitizeNoteHtml } from '../sanitizeHtml';
 import { detectContentFontSize } from './constants';
 interface UseEditorContentParams {
@@ -43,8 +43,8 @@ export function useEditorContent({
     const clean = text.replace(/<[^>]+>/g, ' ').trim();
     const chars = clean.replace(/\s+/g, '').length;
     const words = clean ? clean.split(/\s+/).filter(Boolean).length : 0;
-    setWordCount(words);
-    setCharCount(chars);
+    setWordCount((prev) => (prev === words ? prev : words));
+    setCharCount((prev) => (prev === chars ? prev : chars));
   }, []);
   useEffect(() => {
     if (!note || !editorRef.current) return;
@@ -53,7 +53,8 @@ export function useEditorContent({
       editorRef.current.innerHTML === '<p><br></p>' ||
       editorRef.current.innerHTML === '<br>' ||
       editorRef.current.getAttribute('data-empty') === 'true';
-    if (lastLoadedNoteIdRef.current !== note.id || (isEditorEmpty && note.content && note.content.trim())) {
+    const isFocused = typeof document !== 'undefined' && editorRef.current.contains(document.activeElement);
+    if (lastLoadedNoteIdRef.current !== note.id || (!isFocused && isEditorEmpty && note.content && note.content.trim())) {
       const rawHtml = note.content && note.content.trim() ? note.content : '<p><br></p>';
       const initialHtml = sanitizeNoteHtml(rawHtml);
       editorRef.current.innerHTML = initialHtml;
@@ -84,18 +85,8 @@ export function useEditorContent({
     if (!isUndoRedoRef.current) {
       pushSnapshot(isForceNew);
     }
-    let effectiveTitle = note.title;
-    if (!hasManualTitleRef.current || !note.title || !note.title.trim()) {
-      const derived = deriveAutoTitleFromHtml(html);
-      if (derived) effectiveTitle = derived;
-    }
-    calculateStats((effectiveTitle || '') + ' ' + html);
-    const contentTags = extractHashtags((effectiveTitle || '') + ' ' + html);
-    const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
-    const updates: Partial<Note> = { content: html, tags: combinedTags };
-    if (effectiveTitle !== note.title) {
-      updates.title = effectiveTitle;
-    }
+    calculateStats((note.title || '') + ' ' + html);
+    const updates: Partial<Note> = { content: html };
     schedulePropagation(updates);
   }, [note, editorRef, isUndoRedoRef, pushSnapshot, calculateStats, schedulePropagation]);
   const handlePaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {

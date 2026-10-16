@@ -44,7 +44,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   } = useNotesNavigation({ userId, hasSelectedNote: Boolean(effectiveNoteId) });
   const selectedNote = notes.find((n) => n.id === (selectedNoteId || effectiveNoteId)) || null;
   const { handleUpdateNote, handleTogglePin, handleMoveNoteToFolder } = useNotesMutateActions({
-    notes, setNotes, selectedNoteId, queueNoteSync,
+    notes, setNotes, selectedNoteId, queueNoteSync, userId,
   });
   const { handleNewNote, handleDuplicateNote } = useNotesCreateActions({
     setNotes, selectedNote, setSelectedNoteId, setMobileScreen,

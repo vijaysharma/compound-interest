@@ -8,6 +8,7 @@ interface UseEditorKeyboardParams {
   handleIndent: () => void;
   handleOutdent: () => void;
   handleContentChange: (forceNewHistory?: boolean) => void;
+  handleSave?: () => void;
 }
 export function useEditorKeyboard({
   handleUndo,
@@ -17,6 +18,7 @@ export function useEditorKeyboard({
   handleIndent,
   handleOutdent,
   handleContentChange,
+  handleSave,
 }: UseEditorKeyboardParams) {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -46,7 +48,11 @@ export function useEditorKeyboard({
           insertChecklistItem();
         } else if (e.key === 's' || e.key === 'S') {
           e.preventDefault();
-          handleContentChange();
+          if (handleSave) {
+            handleSave();
+          } else {
+            handleContentChange();
+          }
         }
         return;
       }
@@ -90,6 +96,7 @@ export function useEditorKeyboard({
       handleIndent,
       handleOutdent,
       handleContentChange,
+      handleSave,
     ]
   );
   return { handleKeyDown };

@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { Note, SyncState } from '../NotesTypes';
 import { loadAndDecryptNotes } from './notesLoader';
+import { reconcileNotesWithLocalDrafts } from './notesDraftStorage';
 const SAVE_SWEEP_MS = 15_000;
 interface UseNotesSyncLifecycleProps {
   token: string;
@@ -59,7 +60,9 @@ export function useNotesSyncLifecycle({
         const { notes: decrypted, storageProvider: prov } = await loadAndDecryptNotes(token, userId, userEmail);
         if (!isMounted) return;
         if (prov) setStorageProvider(prov);
-        const reconciled = decrypted.filter((n) => !locallyDeletedRef.current.has(n.id));
+        const baseReconciled = decrypted.filter((n) => !locallyDeletedRef.current.has(n.id));
+        const { reconciled, unsavedDraftIds } = reconcileNotesWithLocalDrafts(userId, baseReconciled);
+        unsavedDraftIds.forEach((id) => savePendingRef.current.add(id));
         const unsaved = notesRef.current.filter(
           (n) => savePendingRef.current.has(n.id) && !reconciled.some((r) => r.id === n.id)
         );
@@ -100,12 +103,20 @@ export function useNotesSyncLifecycle({
     const handleVis = () => {
       if (document.visibilityState === 'hidden') flush();
     };
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (savePendingRef.current.size > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
     document.addEventListener('visibilitychange', handleVis);
     window.addEventListener('pagehide', flush);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       document.removeEventListener('visibilitychange', handleVis);
       window.removeEventListener('pagehide', flush);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       flush();
     };
-  }, [flushPendingSaves]);
+  }, [flushPendingSaves, savePendingRef]);
 }

@@ -24,6 +24,7 @@ export async function updateNoteAction(
 ): Promise<{
   success: boolean;
   id: string;
+  updated_at?: string;
   rejected?: 'missing' | 'stale';
 }> {
   return handleUpdateNote(body, token);

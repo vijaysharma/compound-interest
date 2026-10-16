@@ -1,5 +1,5 @@
 import { useState, useCallback, FormEvent, ChangeEvent, MutableRefObject } from 'react';
-import { Note, extractHashtags } from '../NotesTypes';
+import { Note } from '../NotesTypes';
 import { sanitizePlainInput } from '../sanitizeHtml';
 interface UseEditorTagsParams {
   note: Note | null;
@@ -18,12 +18,10 @@ export function useEditorTags({
   const handleTitleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       if (!note) return;
-      const newTitle = sanitizePlainInput(e.target.value, 250);
+      const newTitle = sanitizePlainInput(e.target.value, 250, false);
       hasManualTitleRef.current = Boolean(newTitle.trim());
       calculateStats(newTitle + ' ' + (note.content || ''));
-      const contentTags = extractHashtags(newTitle + ' ' + (note.content || ''));
-      const combinedTags = Array.from(new Set([...(note.tags || []), ...contentTags]));
-      onUpdateNote({ title: newTitle, tags: combinedTags });
+      onUpdateNote({ title: newTitle });
     },
     [note, hasManualTitleRef, calculateStats, onUpdateNote]
   );

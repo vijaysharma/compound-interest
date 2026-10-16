@@ -4,7 +4,8 @@ import { Note, SyncState } from '../NotesTypes';
 import { savePendingNotes } from './notesSaver';
 import { getInitialCustomFolders } from './notesLoader';
 import { useNotesSyncLifecycle } from './useNotesSyncLifecycle';
-const SAVE_DEBOUNCE_MS = 1_500;
+import { removeLocalDraft } from './notesDraftStorage';
+const SAVE_DEBOUNCE_MS = 2_500;
 interface UseNotesSyncProps {
   token: string;
   userId: string;
@@ -47,7 +48,7 @@ export function useNotesSync({ token, userId, userEmail, onSelectInitialNote }: 
     saveInFlightRef.current = true;
     setIsSaving(true);
     try {
-      const { deletedElsewhereIds, staleWrite, savedIds } = await savePendingNotes({
+      const { deletedElsewhereIds, staleWrite, savedIds, savedNotes } = await savePendingNotes({
         notes: notesRef.current,
         pendingIds: Array.from(savePendingRef.current),
         token,
@@ -55,7 +56,19 @@ export function useNotesSync({ token, userId, userEmail, onSelectInitialNote }: 
         userEmail,
         unconfirmedCreates: unconfirmedCreatesRef.current,
       });
-      savedIds.forEach((id) => savePendingRef.current.delete(id));
+      savedIds.forEach((id) => {
+        savePendingRef.current.delete(id);
+        removeLocalDraft(userId, id);
+      });
+      if (savedNotes.length > 0) {
+        const updateMap = new Map(savedNotes.filter((s) => s.updated_at).map((s) => [s.id, s.updated_at!]));
+        if (updateMap.size > 0) {
+          setNotes((prev) => prev.map((n) => {
+            const newTime = updateMap.get(n.id);
+            return newTime ? { ...n, updated_at: newTime } : n;
+          }));
+        }
+      }
       if (deletedElsewhereIds.length > 0) {
         deletedElsewhereIds.forEach((id) => locallyDeletedRef.current.add(id));
         setNotes((prev) => prev.filter((n) => !deletedElsewhereIds.includes(n.id)));
