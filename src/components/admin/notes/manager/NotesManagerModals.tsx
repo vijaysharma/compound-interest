@@ -4,6 +4,7 @@ import { Note } from '../NotesTypes';
 import { NotesLockModal } from '../NotesLockModal';
 import { NotesBackupModal } from '../NotesBackupModal';
 import { NotesSecurityModal } from '../NotesSecurityModal';
+import { UnsavedChangesModal } from '../editor/UnsavedChangesModal';
 interface NotesManagerModalsProps {
   selectedNote: Note | null;
   isLockModalOpen: boolean;
@@ -22,6 +23,10 @@ interface NotesManagerModalsProps {
   onRemoveLock: () => void;
   onUnlockSuccess: () => void;
   onRestoreSuccess: (notes: Note[], folders: string[]) => void;
+  isUnsavedChangesModalOpen?: boolean;
+  onCloseUnsavedChangesModal?: () => void;
+  onDiscardUnsavedChanges?: () => void;
+  onSaveAndProceedUnsavedChanges?: () => void;
 }
 export const NotesManagerModals: React.FC<NotesManagerModalsProps> = ({
   selectedNote,
@@ -41,6 +46,10 @@ export const NotesManagerModals: React.FC<NotesManagerModalsProps> = ({
   onRemoveLock,
   onUnlockSuccess,
   onRestoreSuccess,
+  isUnsavedChangesModalOpen,
+  onCloseUnsavedChangesModal,
+  onDiscardUnsavedChanges,
+  onSaveAndProceedUnsavedChanges,
 }) => {
   return (
     <>
@@ -70,6 +79,12 @@ export const NotesManagerModals: React.FC<NotesManagerModalsProps> = ({
         isOpen={isSecurityModalOpen}
         storageProvider={storageProvider}
         onClose={onCloseSecurityModal}
+      />
+      <UnsavedChangesModal
+        isOpen={Boolean(isUnsavedChangesModalOpen)}
+        onClose={onCloseUnsavedChangesModal || (() => {})}
+        onDiscard={onDiscardUnsavedChanges || (() => {})}
+        onSaveAndProceed={onSaveAndProceedUnsavedChanges || (() => {})}
       />
     </>
   );

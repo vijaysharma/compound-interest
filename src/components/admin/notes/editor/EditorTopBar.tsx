@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiChevronLeft, FiMenu, FiLock, FiUnlock, FiTrash2, FiRotateCcw } from 'react-icons/fi';
+import { FiChevronLeft, FiMenu, FiLock, FiUnlock, FiTrash2, FiRotateCcw, FiSave } from 'react-icons/fi';
 import { BsPinFill, BsPin } from 'react-icons/bs';
 import { Note } from '../NotesTypes';
 import { DropdownType, MobileMenuType } from './types';
@@ -33,6 +33,10 @@ interface EditorTopBarProps {
   onExportText: () => void;
   onPrint: () => void;
   copySuccess: boolean;
+  onManualSave?: () => void;
+  autoSaveEnabled?: boolean;
+  onToggleAutoSave?: () => void;
+  isSaving?: boolean;
 }
 export const EditorTopBar: React.FC<EditorTopBarProps> = ({
   note, isTrash, folders, folderTitle, isMobileScreen, isSidebarOpen,
@@ -40,6 +44,7 @@ export const EditorTopBar: React.FC<EditorTopBarProps> = ({
   onDeleteRequest, onUpdateNote, onOpenMoveModal, onOpenBackupModal, onDuplicateNote,
   activeDropdown, setActiveDropdown, setActiveMobileMenu, onDumpToGoogleDrive,
   onDumpToOneDrive, onCopy, onExportMarkdown, onExportText, onPrint, copySuccess,
+  onManualSave, autoSaveEnabled, onToggleAutoSave, isSaving,
 }) => {
   const currentFolder = note.folder || 'Quick Notes';
   const allFolderOptions = Array.from(new Set(['Quick Notes', ...folders]));
@@ -77,6 +82,32 @@ export const EditorTopBar: React.FC<EditorTopBarProps> = ({
       <div className={styles.topBarRight}>
         {!isTrash && (
           <>
+            <div className={styles.saveActionsGroup}>
+              <label
+                className={styles.autoSaveToggle}
+                title={autoSaveEnabled ? 'Auto-save is ON (click to disable)' : 'Auto-save is OFF (click to enable)'}
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(autoSaveEnabled)}
+                  onChange={onToggleAutoSave}
+                  className={styles.autoSaveCheckbox}
+                  aria-label="Toggle auto save"
+                />
+                <span className={styles.autoSaveLabel}>Auto-save</span>
+              </label>
+              <button
+                type="button"
+                onClick={onManualSave}
+                disabled={isSaving}
+                className={`${styles.btnPrimary} ${styles.saveNoteBtn}`}
+                title="Save note"
+                aria-label="Save note"
+              >
+                <FiSave size={14} className={styles.iconMr025} />
+                <span className={styles.saveNoteBtnText}>{isSaving ? 'Saving...' : 'Save note'}</span>
+              </button>
+            </div>
             <button
               onClick={onTogglePin}
               className={`${styles.iconBtn} ${note.is_pinned ? styles.active : ''}`}

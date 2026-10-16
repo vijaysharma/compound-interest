@@ -45,6 +45,13 @@ interface NotesManagerPanesProps {
   onOpenBackupModal: () => void;
   onOpenSecurityModal: () => void;
   onUnlockSession: () => void;
+  autoSaveEnabled?: boolean;
+  onToggleAutoSave?: () => void;
+  onManualSave?: () => void;
+  saveSuccessMessage?: string | null;
+  onSelectFolderRequest?: (folder: string) => void;
+  onSelectTagRequest?: (tag: string | null) => void;
+  onBackMobileRequest?: () => void;
 }
 export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
   notes, selectedNote, selectedNoteId, setSelectedNoteId, activeFolder, setActiveFolder,
@@ -55,6 +62,8 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
   onPermanentDelete, onRestoreNote, onEmptyTrash, onMoveNoteToFolder,
   onCreateFolder, onRenameFolder, onDeleteFolder, onOpenLockModal,
   onOpenBackupModal, onOpenSecurityModal, onUnlockSession,
+  autoSaveEnabled, onToggleAutoSave, onManualSave, saveSuccessMessage,
+  onSelectFolderRequest, onSelectTagRequest, onBackMobileRequest,
 }) => {
   const trashedCount = notes.filter((n) => n.is_trashed).length;
   return (
@@ -64,6 +73,10 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
           activeFolder={activeFolder} activeTag={activeTag} folders={folders} notes={notes}
           trashedCount={trashedCount}
           onSelectFolder={(f) => {
+            if (onSelectFolderRequest) {
+              onSelectFolderRequest(f);
+              return;
+            }
             setActiveFolder(f); setActiveTag(null);
             if (isMobile) setMobileScreen('list');
             else {
@@ -72,6 +85,10 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
             }
           }}
           onSelectTag={(t) => {
+            if (onSelectTagRequest) {
+              onSelectTagRequest(t);
+              return;
+            }
             setActiveTag(t);
             if (isMobile) setMobileScreen('list');
             else if (t) {
@@ -110,10 +127,12 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
           onNewNote={onNewNote} onOpenLockModal={onOpenLockModal} onDuplicateNote={onDuplicateNote}
           isUnlockedInSession={Boolean(selectedNoteId && unlockedNotes.has(selectedNoteId))}
           onUnlockSession={onUnlockSession} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-          isSidebarOpen={isSidebarOpen} onBackMobile={() => setMobileScreen('list')}
+          isSidebarOpen={isSidebarOpen} onBackMobile={onBackMobileRequest || (() => setMobileScreen('list'))}
           onOpenBackupModal={onOpenBackupModal} onOpenSecurityModal={onOpenSecurityModal}
           onCreateFolder={onCreateFolder} folderTitle={activeFolder === SYSTEM_FOLDERS.ALL ? 'All Notes' : activeFolder}
           isMobileScreen={isMobile && effectiveMobileScreen === 'editor'}
+          onManualSave={onManualSave} autoSaveEnabled={autoSaveEnabled}
+          onToggleAutoSave={onToggleAutoSave} saveSuccessMessage={saveSuccessMessage}
         />
       </div>
     </>

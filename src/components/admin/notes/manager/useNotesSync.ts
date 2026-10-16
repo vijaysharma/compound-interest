@@ -10,9 +10,10 @@ interface UseNotesSyncProps {
   token: string;
   userId: string;
   userEmail: string;
+  autoSaveEnabled?: boolean;
   onSelectInitialNote: (reconciled: Note[]) => void;
 }
-export function useNotesSync({ token, userId, userEmail, onSelectInitialNote }: UseNotesSyncProps) {
+export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true, onSelectInitialNote }: UseNotesSyncProps) {
   const foldersKey = `quick_notes_custom_folders_${userId}_v2`;
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<string[]>(() => getInitialCustomFolders(userId));
@@ -92,12 +93,13 @@ export function useNotesSync({ token, userId, userEmail, onSelectInitialNote }: 
   const queueNoteSync = useCallback((noteId: string) => {
     savePendingRef.current.add(noteId);
     setUnsyncedCount((prev) => (prev === savePendingRef.current.size ? prev : savePendingRef.current.size));
+    if (!autoSaveEnabled) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = null;
       void flushPendingSaves();
     }, SAVE_DEBOUNCE_MS);
-  }, [flushPendingSaves]);
+  }, [flushPendingSaves, autoSaveEnabled]);
   useNotesSyncLifecycle({
     token,
     userId,

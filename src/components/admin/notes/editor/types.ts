@@ -21,6 +21,10 @@ export interface NotesEditorProps {
   onCreateFolder?: (name: string) => void;
   folderTitle?: string;
   isMobileScreen?: boolean;
+  onManualSave?: () => void;
+  autoSaveEnabled?: boolean;
+  onToggleAutoSave?: () => void;
+  saveSuccessMessage?: string | null;
 }
 export type DropdownType = 'folder' | 'share' | 'format' | 'fontSize' | 'palette' | null;
 export type MobileMenuType = 'format' | 'palette' | 'lists' | 'more' | null;
