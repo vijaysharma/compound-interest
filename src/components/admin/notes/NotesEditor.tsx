@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { FiRotateCcw, FiCheck } from 'react-icons/fi';
+import { FiRotateCcw } from 'react-icons/fi';
 import { NotesEditorProps } from './editor/types';
 import { useNotesEditorState } from './editor/useNotesEditorState';
 import { applyContainerViewportStyles } from './editor/viewportStyleUtils';
@@ -61,13 +61,10 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
         onPrint={state.exportOps.handlePrint} copySuccess={state.exportOps.copySuccess}
         onManualSave={onManualSave} autoSaveEnabled={autoSaveEnabled}
         onToggleAutoSave={onToggleAutoSave} isSaving={isSaving}
+        isPendingSave={props.isPendingSave}
+        saveSuccessMessage={saveSuccessMessage}
+        saveError={props.saveError}
       />
-      {saveSuccessMessage && (
-        <div className={styles.saveSuccessBanner} role="status" aria-live="polite">
-          <FiCheck size={14} className={styles.iconMr025} />
-          <span>{saveSuccessMessage}</span>
-        </div>
-      )}
       {!isTrash && (
         <EditorToolbarDesktop
           currentFontSize={state.content.currentFontSize} activeDropdown={activeDropdown}

@@ -11,7 +11,6 @@ import { useNotesCreateActions } from './manager/useNotesCreateActions';
 import { useNotesDeleteActions } from './manager/useNotesDeleteActions';
 import { useNotesMutateActions } from './manager/useNotesMutateActions';
 import { useNotesFolderLockActions } from './manager/useNotesFolderLockActions';
-import { NotesSyncBanners } from './manager/NotesSyncBanners';
 import { NotesManagerPanes } from './manager/NotesManagerPanes';
 import { NotesManagerModals } from './manager/NotesManagerModals';
 import { removeLocalDraft } from './manager/notesDraftStorage';
@@ -55,7 +54,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   }, [userId, setSelectedNoteId]);
   const {
     notes, setNotes, folders, setFolders, foldersKeyRef, loading,
-    syncState, syncError, setReloadKey, saveError, setSaveError,
+    setReloadKey, saveError, setSaveError,
     unsyncedCount, setUnsyncedCount, isSaving, storageProvider,
     setStorageProvider, flushPendingSaves, queueNoteSync,
     savePendingRef, locallyDeletedRef, unconfirmedCreatesRef,
@@ -271,12 +270,11 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   }, [storageProvider, token, setStorageProvider, setIsSecurityModalOpen]);
   return (
     <div className={`${styles.container} quick-notes-theme`}>
-      <NotesSyncBanners
-        loading={loading} notesCount={notes.length} syncState={syncState} syncError={syncError}
-        saveError={saveError} unsyncedCount={unsyncedCount} isSaving={isSaving}
-        onDismissSaveError={() => setSaveError('')} onFlushPendingSaves={() => void flushPendingSaves()}
-        onRetrySync={() => setReloadKey((n) => n + 1)}
-      />
+      {loading && notes.length === 0 && (
+        <div className={styles.loadingOverlay}>
+          <span className={styles.spinner}></span>
+        </div>
+      )}
       <NotesManagerPanes
         notes={notes} selectedNote={selectedNote} selectedNoteId={selectedNoteId}
         setSelectedNoteId={setSelectedNoteId} activeFolder={activeFolder} setActiveFolder={setActiveFolder}
@@ -295,6 +293,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         autoSaveEnabled={autoSaveEnabled} onToggleAutoSave={handleToggleAutoSave}
         onManualSave={handleManualSave} saveSuccessMessage={saveSuccessMessage}
         isPendingSave={Boolean(selectedNoteId && unsyncedCount > 0)}
+        saveError={saveError}
         onSelectFolderRequest={handleSelectFolder} onSelectTagRequest={handleSelectTag}
         onBackMobileRequest={handleBackMobile}
       />

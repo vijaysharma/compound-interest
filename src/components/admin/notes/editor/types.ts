@@ -26,6 +26,7 @@ export interface NotesEditorProps {
   onToggleAutoSave?: () => void;
   saveSuccessMessage?: string | null;
   isPendingSave?: boolean;
+  saveError?: string;
 }
 export type DropdownType = 'folder' | 'share' | 'format' | 'fontSize' | 'palette' | null;
 export type MobileMenuType = 'format' | 'palette' | 'lists' | 'more' | null;
