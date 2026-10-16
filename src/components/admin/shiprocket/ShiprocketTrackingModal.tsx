@@ -46,6 +46,16 @@ export const ShiprocketTrackingModal: React.FC<ShiprocketTrackingModalProps> = R
                     {trackingData.shipment_track?.[0]?.courier_name || 'Shiprocket Partner'}
                   </div>
                 </div>
+                {trackingData.shipment_track?.[0]?.edd && (
+                  <div>
+                    <div className={styles.metaLabel}>
+                      Estimated Delivery Date
+                    </div>
+                    <div className={styles.metaValueLg}>
+                      {trackingData.shipment_track[0].edd}
+                    </div>
+                  </div>
+                )}
               </div>
               {trackingData.shipment_track?.[0]?.pod && (
                 <div className={styles.podLinkWrapper}>

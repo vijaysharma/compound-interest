@@ -81,6 +81,14 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
                 <strong>Weight:</strong> {primaryShipment?.weight || order.others?.weight || '0.5'}{' '}
                 kg
               </div>
+              {(primaryShipment?.estimated_delivery_date || primaryShipment?.etd) && (
+                <div>
+                  <strong>Est. Delivery:</strong>{' '}
+                  <span className={styles.statusGreen}>
+                    {primaryShipment.estimated_delivery_date || primaryShipment.etd}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <div>

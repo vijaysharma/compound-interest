@@ -102,6 +102,8 @@ export interface ShiprocketShipment {
   pickup_scheduled_date?: string;
   shipped_date?: string;
   delivered_date?: string;
+  estimated_delivery_date?: string;
+  etd?: string;
   pod?: string;
   cost?: string | number;
 }
