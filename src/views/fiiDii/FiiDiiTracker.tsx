@@ -42,13 +42,10 @@ export const FiiDiiTracker: React.FC = () => {
   const isPending = loadedKey !== requestKey;
   const hasLoadedInitially = baseData !== null;
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
-  // Safe handler to ensure at least one of FII or DII remains active
   const handleToggleFii = (val: boolean) => {
-    if (!val && !showDii) return; // Keep at least one active
     setShowFii(val);
   };
   const handleToggleDii = (val: boolean) => {
-    if (!val && !showFii) return; // Keep at least one active
     setShowDii(val);
   };
   // When timeframe changes, validate interval and set sensible defaults
