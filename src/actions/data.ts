@@ -1,15 +1,24 @@
 'use server';
 import { handleGetExchangeRates } from './data/exchangeRatesHandler';
+import { handleGetHistoricalRates, type CurrencyHistoricalPoint } from './data/historicalRatesHandler';
 import { handleGetPPPData, handleGetIMFInflation } from './data/macroDataHandler';
 import { handleSearchMutualFunds } from './data/mfSearchHandler';
 import { handleGetMutualFundNav } from './data/mfNavHandler';
 import { handleGetBatchMutualFundNav } from './data/mfBatchNavHandler';
+export type { CurrencyHistoricalPoint };
 export async function getExchangeRatesAction(): Promise<{
   result: string;
   base_code: string;
   rates: Record<string, number>;
 }> {
   return handleGetExchangeRates();
+}
+export async function getHistoricalRatesAction(
+  base: string,
+  target: string,
+  days = 30
+): Promise<{ success: boolean; base: string; target: string; points: CurrencyHistoricalPoint[] }> {
+  return handleGetHistoricalRates(base, target, days);
 }
 export async function getPPPDataAction(): Promise<unknown> {
   return handleGetPPPData();

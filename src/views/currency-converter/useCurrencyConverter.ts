@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { fetchExchangeRates } from '../../data/api_data';
 import { DEFAULT_EXCHANGE_RATES } from '../../data/default_exchange_rates';
 import { buildCountryDataMap, PRIORITY_COUNTRIES } from './currencyDataUtils';
+import { getHistoricalRatesAction, type CurrencyHistoricalPoint } from '@/actions/data';
 export function useCurrencyConverter() {
   const [rates, setRates] = useState<Record<string, number>>(DEFAULT_EXCHANGE_RATES);
   const [loading, setLoading] = useState(true);
@@ -10,6 +11,8 @@ export function useCurrencyConverter() {
   const [tgtCountry, setTgtCountry] = useState('India');
   const [amount, setAmount] = useState('1');
   const [lastRefreshed, setLastRefreshed] = useState(() => new Date().toLocaleTimeString());
+  const [historicalPoints, setHistoricalPoints] = useState<CurrencyHistoricalPoint[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const countryData = useMemo(() => buildCountryDataMap(), []);
   const availableCountries = useMemo(() => {
     const list = Array.from(countryData.keys());
@@ -104,6 +107,32 @@ export function useCurrencyConverter() {
     setSrcCountry(tgtCountry);
     setTgtCountry(srcCountry);
   };
+  useEffect(() => {
+    let cancelled = false;
+    const fetchHistory = async () => {
+      if (!sourceCurrency.code || !targetCurrency.code) return;
+      setLoadingHistory(true);
+      try {
+        const res = await getHistoricalRatesAction(sourceCurrency.code, targetCurrency.code, 30);
+        if (!cancelled && res.success) {
+          setHistoricalPoints(res.points);
+        } else if (!cancelled) {
+          setHistoricalPoints([]);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.warn('Failed to load currency history:', err);
+          setHistoricalPoints([]);
+        }
+      } finally {
+        if (!cancelled) setLoadingHistory(false);
+      }
+    };
+    void fetchHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceCurrency.code, targetCurrency.code]);
   return {
     loading,
     error,
@@ -122,6 +151,8 @@ export function useCurrencyConverter() {
     exchangeRate,
     inverseRate,
     convertedAmount,
+    historicalPoints,
+    loadingHistory,
     handleRefresh,
     handleSwapCountries,
   };

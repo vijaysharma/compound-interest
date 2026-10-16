@@ -8,6 +8,7 @@ import { useCurrencyConverter } from './currency-converter/useCurrencyConverter'
 import { CurrencyConverterHeader } from './currency-converter/CurrencyConverterHeader';
 import { CurrencyInputsCol } from './currency-converter/CurrencyInputsCol';
 import { CurrencyResultsCol } from './currency-converter/CurrencyResultsCol';
+import { CurrencyHistoryChart } from './currency-converter/CurrencyHistoryChart';
 import styles from './CurrencyConverter.module.scss';
 const CurrencyConverter = () => {
   const {
@@ -28,6 +29,8 @@ const CurrencyConverter = () => {
     exchangeRate,
     inverseRate,
     convertedAmount,
+    historicalPoints,
+    loadingHistory,
     handleRefresh,
     handleSwapCountries,
   } = useCurrencyConverter();
@@ -68,6 +71,14 @@ const CurrencyConverter = () => {
           lastRefreshed={lastRefreshed}
           handleRefresh={handleRefresh}
           loading={loading}
+        />
+      </div>
+      <div className={styles.converterSection}>
+        <CurrencyHistoryChart
+          sourceCurrency={sourceCurrency}
+          targetCurrency={targetCurrency}
+          points={historicalPoints}
+          loading={loadingHistory}
         />
       </div>
       <CalculatorContentSection

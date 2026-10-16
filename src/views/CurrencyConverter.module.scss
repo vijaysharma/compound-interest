@@ -329,3 +329,69 @@
     height: 0.875rem;
   }
 }
+
+.chartCard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chartTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+.chartSubTitle {
+  font-size: $fs-caption;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+.changeBadge {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm, 6px);
+  white-space: nowrap;
+}
+
+.changePos {
+  background-color: var(--color-profit-surface);
+  color: var(--color-profit-text);
+}
+
+.changeNeg {
+  background-color: var(--color-loss-surface);
+  color: var(--color-loss-text);
+}
+
+.chartWrapper {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.chartEmpty {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
