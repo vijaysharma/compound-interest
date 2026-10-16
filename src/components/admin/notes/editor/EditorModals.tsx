@@ -12,7 +12,7 @@ interface EditorModalsProps {
   onCloseMoveModal: () => void;
   onPermanentDelete: () => void;
   onDeleteNote: () => void;
-  onUpdateNote: (updated: Partial<Note>) => void;
+  onUpdateNote: (updated: Partial<Note>, targetId?: string) => void;
   onCreateFolder?: (name: string) => void;
 }
 export const EditorModals: React.FC<EditorModalsProps> = ({

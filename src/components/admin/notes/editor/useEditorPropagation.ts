@@ -3,7 +3,7 @@ import { Note } from '../NotesTypes';
 import { CONTENT_PROPAGATE_MS } from './constants';
 interface UseEditorPropagationParams {
   noteId?: string;
-  onUpdateNote: (updated: Partial<Note>) => void;
+  onUpdateNote: (updated: Partial<Note>, targetId?: string) => void;
 }
 export function useEditorPropagation({
   noteId,
@@ -12,9 +12,13 @@ export function useEditorPropagation({
   const pendingPropagationRef = useRef<Partial<Note> | null>(null);
   const propagateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onUpdateNoteRef = useRef(onUpdateNote);
+  const noteIdRef = useRef(noteId);
   useEffect(() => {
     onUpdateNoteRef.current = onUpdateNote;
   }, [onUpdateNote]);
+  useEffect(() => {
+    noteIdRef.current = noteId;
+  }, [noteId]);
   const flushPropagation = useCallback(() => {
     if (propagateTimerRef.current) {
       clearTimeout(propagateTimerRef.current);
@@ -23,7 +27,7 @@ export function useEditorPropagation({
     const pending = pendingPropagationRef.current;
     if (!pending) return;
     pendingPropagationRef.current = null;
-    onUpdateNoteRef.current(pending);
+    onUpdateNoteRef.current(pending, noteIdRef.current);
   }, []);
   const schedulePropagation = useCallback(
     (updates: Partial<Note>) => {
@@ -33,7 +37,11 @@ export function useEditorPropagation({
     },
     [flushPropagation]
   );
-  useEffect(() => flushPropagation, [noteId, flushPropagation]);
+  useEffect(() => {
+    return () => {
+      flushPropagation();
+    };
+  }, [noteId, flushPropagation]);
   useEffect(() => {
     const onHide = () => flushPropagation();
     const onVisibility = () => {

@@ -17,8 +17,9 @@ export function useNotesMutateActions({
   userId,
 }: UseNotesMutateActionsProps) {
   const handleUpdateNote = useCallback(
-    (updatedFields: Partial<Note>) => {
-      if (!selectedNoteId) return;
+    (updatedFields: Partial<Note>, targetId?: string) => {
+      const idToUpdate = targetId || selectedNoteId;
+      if (!idToUpdate) return;
       const updatedTime = new Date().toISOString();
       const payload: Partial<Note> = {
         ...updatedFields,
@@ -26,7 +27,7 @@ export function useNotesMutateActions({
       };
       setNotes((prevNotes) =>
         prevNotes.map((n) => {
-          if (n.id === selectedNoteId) {
+          if (n.id === idToUpdate) {
             const merged = { ...n, ...payload };
             if (userId) saveLocalDraft(userId, merged);
             return merged;
@@ -34,7 +35,7 @@ export function useNotesMutateActions({
           return n;
         })
       );
-      queueNoteSync(selectedNoteId);
+      queueNoteSync(idToUpdate);
     },
     [selectedNoteId, queueNoteSync, setNotes, userId]
   );

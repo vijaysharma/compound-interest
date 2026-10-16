@@ -2,10 +2,11 @@
 import { useCallback } from 'react';
 import { Note, SYSTEM_FOLDERS } from '../NotesTypes';
 import { createEncryptedNote } from './notesCreator';
+import { saveLocalDraft, removeLocalDraft } from './notesDraftStorage';
 interface UseNotesCreateActionsProps {
   setNotes: React.Dispatch<React.SetStateAction<Note[]>>;
   selectedNote: Note | null;
-  setSelectedNoteId: (id: string | null) => void;
+  setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
   setMobileScreen: (s: 'folders' | 'list' | 'editor') => void;
   activeFolder: string;
   activeTag: string | null;
@@ -62,6 +63,9 @@ export function useNotesCreateActions({
     setSelectedNoteId(tempId);
     setMobileScreen('editor');
     unconfirmedCreatesRef.current.add(tempId);
+    if (userId) {
+      saveLocalDraft(userId, newNote);
+    }
     if (!token) {
       setSaveError('Not signed in — this note has not been saved.');
       return;
@@ -69,8 +73,39 @@ export function useNotesCreateActions({
     try {
       const created = await createEncryptedNote({ note: newNote, token, userId, userEmail });
       unconfirmedCreatesRef.current.delete(tempId);
-      setNotes((prev) => prev.map((n) => (n.id === tempId ? { ...created, is_pinned: n.is_pinned, folder: n.folder, tags: n.tags } : n)));
-      setSelectedNoteId(created.id);
+      if (userId) {
+        removeLocalDraft(userId, tempId);
+      }
+      let hasLocalEdits = false;
+      let finalNote: Note = created;
+      setNotes((prev) =>
+        prev.map((n) => {
+          if (n.id === tempId) {
+            finalNote = {
+              ...created,
+              title: n.title || created.title,
+              content: n.content || created.content,
+              folder: n.folder,
+              tags: n.tags,
+              is_pinned: n.is_pinned,
+              updated_at: n.updated_at || created.updated_at,
+            };
+            hasLocalEdits = Boolean(
+              (n.title && n.title !== created.title) ||
+              (n.content && n.content !== created.content)
+            );
+            if (userId) {
+              saveLocalDraft(userId, finalNote);
+            }
+            return finalNote;
+          }
+          return n;
+        })
+      );
+      setSelectedNoteId((curr) => (curr === tempId ? created.id : curr));
+      if (hasLocalEdits) {
+        queueNoteSync(created.id);
+      }
     } catch (err) {
       queueNoteSync(tempId);
       setSaveError(`Could not create note on the server: ` + (err instanceof Error ? err.message : 'Unknown error'));
@@ -96,6 +131,9 @@ export function useNotesCreateActions({
       setSelectedNoteId(tempId);
       setMobileScreen('editor');
       unconfirmedCreatesRef.current.add(tempId);
+      if (userId) {
+        saveLocalDraft(userId, duplicated);
+      }
       if (!token) {
         setSaveError('Not signed in — this note has not been saved.');
         return;
@@ -103,8 +141,39 @@ export function useNotesCreateActions({
       try {
         const created = await createEncryptedNote({ note: duplicated, token, userId, userEmail });
         unconfirmedCreatesRef.current.delete(tempId);
-        setNotes((prev) => prev.map((n) => (n.id === tempId ? created : n)));
-        setSelectedNoteId(created.id);
+        if (userId) {
+          removeLocalDraft(userId, tempId);
+        }
+        let hasLocalEdits = false;
+        let finalNote: Note = created;
+        setNotes((prev) =>
+          prev.map((n) => {
+            if (n.id === tempId) {
+              finalNote = {
+                ...created,
+                title: n.title || created.title,
+                content: n.content || created.content,
+                folder: n.folder,
+                tags: n.tags,
+                is_pinned: n.is_pinned,
+                updated_at: n.updated_at || created.updated_at,
+              };
+              hasLocalEdits = Boolean(
+                (n.title && n.title !== created.title) ||
+                (n.content && n.content !== created.content)
+              );
+              if (userId) {
+                saveLocalDraft(userId, finalNote);
+              }
+              return finalNote;
+            }
+            return n;
+          })
+        );
+        setSelectedNoteId((curr) => (curr === tempId ? created.id : curr));
+        if (hasLocalEdits) {
+          queueNoteSync(created.id);
+        }
       } catch (err) {
         queueNoteSync(tempId);
         setSaveError(`Could not duplicate note on the server: ` + (err instanceof Error ? err.message : 'Unknown error'));

@@ -72,10 +72,25 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           ref={editorRef}
           contentEditable={!isTrash}
           suppressContentEditableWarning
-          onPaste={onPaste}
-          onInput={onInput}
+          onPaste={(e) => {
+            if (isTrash) {
+              e.preventDefault();
+              return;
+            }
+            onPaste(e);
+          }}
+          onInput={() => {
+            if (isTrash) return;
+            onInput();
+          }}
           onClick={onClick}
-          onKeyDown={onKeyDown}
+          onKeyDown={(e) => {
+            if (isTrash) {
+              e.preventDefault();
+              return;
+            }
+            onKeyDown(e);
+          }}
           onKeyUp={onSaveSelection}
           onMouseUp={onSaveSelection}
           className={`${styles.editorCanvas} qn-note-canvas`}

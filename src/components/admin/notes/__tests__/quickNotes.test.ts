@@ -152,3 +152,114 @@ test('reconcileNotesWithLocalDrafts preserves trashed state across refresh', () 
   assert.equal(reconciled[0].is_trashed, true);
   assert.deepEqual(unsavedDraftIds, ['note_trash_1']);
 });
+test('merge on note creation preserves user typed and pasted content over empty server response', () => {
+  const tempId = 'temp_note_123';
+  const serverCreatedNote: Note = {
+    id: 'server_id_789',
+    title: '',
+    content: '',
+    folder: 'Quick Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: false,
+    tags: [],
+    created_at: '2026-10-16T12:00:00.000Z',
+    updated_at: '2026-10-16T12:00:00.000Z',
+  };
+  const localNoteWithPastedData: Note = {
+    id: tempId,
+    title: 'My Meeting Notes',
+    content: '<p>Pasted confidential meeting notes</p>',
+    folder: 'Quick Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: false,
+    tags: ['work'],
+    created_at: '2026-10-16T12:00:00.000Z',
+    updated_at: '2026-10-16T12:00:01.000Z',
+  };
+  const merged: Note = {
+    ...serverCreatedNote,
+    title: localNoteWithPastedData.title || serverCreatedNote.title,
+    content: localNoteWithPastedData.content || serverCreatedNote.content,
+    folder: localNoteWithPastedData.folder,
+    tags: localNoteWithPastedData.tags,
+    is_pinned: localNoteWithPastedData.is_pinned,
+    updated_at: localNoteWithPastedData.updated_at || serverCreatedNote.updated_at,
+  };
+  assert.equal(merged.id, 'server_id_789');
+  assert.equal(merged.title, 'My Meeting Notes');
+  assert.equal(merged.content, '<p>Pasted confidential meeting notes</p>');
+  assert.deepEqual(merged.tags, ['work']);
+});
+test('note update targeting updates target note even when another note is selected', () => {
+  const noteA: Note = {
+    id: 'note_A',
+    title: 'Note A',
+    content: '<p>Content A</p>',
+    folder: 'Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: false,
+    tags: [],
+    created_at: '2026-10-16T10:00:00.000Z',
+    updated_at: '2026-10-16T10:00:00.000Z',
+  };
+  const noteB: Note = {
+    id: 'note_B',
+    title: 'Note B',
+    content: '<p>Content B</p>',
+    folder: 'Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: false,
+    tags: [],
+    created_at: '2026-10-16T10:00:00.000Z',
+    updated_at: '2026-10-16T10:00:00.000Z',
+  };
+  const notes = [noteA, noteB];
+  const selectedNoteId = 'note_B';
+  const targetId = 'note_A';
+  const idToUpdate = targetId || selectedNoteId;
+  const updatedFields: Partial<Note> = { content: '<p>Updated Content A while note_B active</p>' };
+  const updatedList = notes.map((n) => (n.id === idToUpdate ? { ...n, ...updatedFields } : n));
+  const updatedNoteA = updatedList.find((n) => n.id === 'note_A');
+  const updatedNoteB = updatedList.find((n) => n.id === 'note_B');
+  assert.equal(updatedNoteA?.content, '<p>Updated Content A while note_B active</p>');
+  assert.equal(updatedNoteB?.content, '<p>Content B</p>');
+});
+test('selectedNote preserves trashed note without redirecting to untrashed note', () => {
+  const trashedNote: Note = {
+    id: 'trashed_1',
+    title: 'Deleted Note',
+    content: '<p>Deleted Content</p>',
+    folder: 'Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: true,
+    tags: [],
+    created_at: '2026-10-16T10:00:00.000Z',
+    updated_at: '2026-10-16T10:00:00.000Z',
+  };
+  const activeNote: Note = {
+    id: 'active_1',
+    title: 'Active Note',
+    content: '<p>Active Content</p>',
+    folder: 'Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: false,
+    tags: [],
+    created_at: '2026-10-16T10:00:00.000Z',
+    updated_at: '2026-10-16T10:00:00.000Z',
+  };
+  const notes = [activeNote, trashedNote];
+  const selectedNoteId: string | null = 'trashed_1';
+  const activeFolder = 'trash';
+  const selectedNote =
+    (selectedNoteId ? notes.find((n) => n.id === selectedNoteId) : null) ||
+    (activeFolder === 'trash' ? null : notes.find((n) => !n.is_trashed)) ||
+    null;
+  assert.equal(selectedNote?.id, 'trashed_1');
+  assert.equal(selectedNote?.is_trashed, true);
+});

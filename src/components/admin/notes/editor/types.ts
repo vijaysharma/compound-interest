@@ -3,7 +3,7 @@ export interface NotesEditorProps {
   note: Note | null;
   folders: string[];
   isSaving: boolean;
-  onUpdateNote: (updated: Partial<Note>) => void;
+  onUpdateNote: (updated: Partial<Note>, targetId?: string) => void;
   onTogglePin: () => void;
   onDeleteNote: () => void;
   onRestoreNote: () => void;

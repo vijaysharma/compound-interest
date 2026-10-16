@@ -14,7 +14,7 @@ interface UseNotesFolderLockActionsProps {
   queueNoteSync: (id: string) => void;
   selectedNoteId: string | null;
   setSelectedNoteId: (id: string | null) => void;
-  handleUpdateNote: (fields: Partial<Note>) => void;
+  handleUpdateNote: (fields: Partial<Note>, targetId?: string) => void;
 }
 export function useNotesFolderLockActions({
   folders,

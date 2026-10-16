@@ -4,7 +4,7 @@ import { sanitizePlainInput } from '../sanitizeHtml';
 interface UseEditorTagsParams {
   note: Note | null;
   hasManualTitleRef: MutableRefObject<boolean>;
-  onUpdateNote: (updated: Partial<Note>) => void;
+  onUpdateNote: (updated: Partial<Note>, targetId?: string) => void;
   calculateStats: (text: string) => void;
 }
 export function useEditorTags({

@@ -4,6 +4,7 @@ import { useAuth } from '../../../context/useAuth';
 import { getNotesStorageStatusAction } from '@/actions/notes';
 import './quick-notes.css';
 import styles from './QuickNotesManager.module.scss';
+import { SYSTEM_FOLDERS } from './NotesTypes';
 import { useNotesSync } from './manager/useNotesSync';
 import { useNotesNavigation } from './manager/useNotesNavigation';
 import { useNotesCreateActions } from './manager/useNotesCreateActions';
@@ -29,7 +30,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       setSelectedNoteId((curr) => {
         const saved = localStorage.getItem(userId !== 'default' ? `quick_notes_${userId}_last_note_id` : 'quick_notes_last_note_id');
         const target = curr || saved;
-        if (target && reconciled.some((n) => n.id === target && !n.is_trashed)) return target;
+        if (target && reconciled.some((n) => n.id === target)) return target;
         return reconciled.find((n) => !n.is_trashed)?.id || null;
       });
     },
@@ -41,8 +42,14 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     viewMode, setViewMode, sortOption, setSortOption,
     isSidebarOpen, setIsSidebarOpen, setMobileScreen,
     isMobile, effectiveMobileScreen,
-  } = useNotesNavigation({ userId, hasSelectedNote: Boolean(effectiveNoteId) });
-  const selectedNote = notes.find((n) => n.id === (selectedNoteId || effectiveNoteId)) || null;
+  } = useNotesNavigation({
+    userId,
+    hasSelectedNote: Boolean(notes.length > 0),
+  });
+  const selectedNote =
+    (selectedNoteId ? notes.find((n) => n.id === selectedNoteId) : null) ||
+    (activeFolder === SYSTEM_FOLDERS.TRASH ? null : notes.find((n) => !n.is_trashed)) ||
+    null;
   const { handleUpdateNote, handleTogglePin, handleMoveNoteToFolder } = useNotesMutateActions({
     notes, setNotes, selectedNoteId, queueNoteSync, userId,
   });

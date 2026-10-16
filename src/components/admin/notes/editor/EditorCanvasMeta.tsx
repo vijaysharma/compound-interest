@@ -55,9 +55,13 @@ export const EditorCanvasMeta: React.FC<EditorCanvasMetaProps> = ({
           <span>
             {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} characters
           </span>
-          <span className={`${styles.saveStatus} ${isSaving ? styles.saving : ''}`}>
-            {isSaving ? 'Saving...' : 'Saved'}
-          </span>
+          {isTrash ? (
+            <span className={styles.saveStatus}>Read Only</span>
+          ) : (
+            <span className={`${styles.saveStatus} ${isSaving ? styles.saving : ''}`}>
+              {isSaving ? 'Saving...' : 'Saved'}
+            </span>
+          )}
         </div>
       </div>
       <input
