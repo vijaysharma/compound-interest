@@ -1135,6 +1135,12 @@
     color: var(--color-primary);
     opacity: 1;
   }
+
+  &.unsaved {
+    color: var(--color-warning-text, var(--color-warning));
+    opacity: 1;
+    font-weight: 600;
+  }
 }
 
 .tagRowIcon {

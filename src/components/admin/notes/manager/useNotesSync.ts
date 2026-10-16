@@ -5,7 +5,7 @@ import { savePendingNotes } from './notesSaver';
 import { getInitialCustomFolders } from './notesLoader';
 import { useNotesSyncLifecycle } from './useNotesSyncLifecycle';
 import { removeLocalDraft } from './notesDraftStorage';
-const SAVE_DEBOUNCE_MS = 2_500;
+const SAVE_DEBOUNCE_MS = 3_000;
 interface UseNotesSyncProps {
   token: string;
   userId: string;
@@ -29,6 +29,8 @@ export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true,
   useEffect(() => { notesRef.current = notes; }, [notes]);
   const foldersKeyRef = useRef(foldersKey);
   useEffect(() => { foldersKeyRef.current = foldersKey; }, [foldersKey]);
+  const autoSaveEnabledRef = useRef(autoSaveEnabled);
+  useEffect(() => { autoSaveEnabledRef.current = autoSaveEnabled; }, [autoSaveEnabled]);
   const savePendingRef = useRef<Set<string>>(new Set());
   const locallyDeletedRef = useRef<Set<string>>(new Set());
   const unconfirmedCreatesRef = useRef<Set<string>>(new Set());
@@ -93,13 +95,19 @@ export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true,
   const queueNoteSync = useCallback((noteId: string) => {
     savePendingRef.current.add(noteId);
     setUnsyncedCount((prev) => (prev === savePendingRef.current.size ? prev : savePendingRef.current.size));
-    if (!autoSaveEnabled) return;
+    if (!autoSaveEnabledRef.current) {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+      return;
+    }
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = null;
       void flushPendingSaves();
     }, SAVE_DEBOUNCE_MS);
-  }, [flushPendingSaves, autoSaveEnabled]);
+  }, [flushPendingSaves]);
   useNotesSyncLifecycle({
     token,
     userId,
@@ -118,6 +126,7 @@ export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true,
     setStorageProvider,
     flushPendingSaves,
     onSelectInitialNote,
+    autoSaveEnabled,
   });
   return {
     notes,

@@ -36,23 +36,6 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     });
   }, []);
   const {
-    notes, setNotes, folders, setFolders, foldersKeyRef, loading,
-    syncState, syncError, setReloadKey, saveError, setSaveError,
-    unsyncedCount, setUnsyncedCount, isSaving, storageProvider,
-    setStorageProvider, flushPendingSaves, queueNoteSync,
-    savePendingRef, locallyDeletedRef, unconfirmedCreatesRef,
-  } = useNotesSync({
-    token, userId, userEmail, autoSaveEnabled,
-    onSelectInitialNote: (reconciled) => {
-      setSelectedNoteId((curr) => {
-        const saved = localStorage.getItem(userId !== 'default' ? `quick_notes_${userId}_last_note_id` : 'quick_notes_last_note_id');
-        const target = curr || saved;
-        if (target && reconciled.some((n) => n.id === target)) return target;
-        return reconciled.find((n) => !n.is_trashed)?.id || null;
-      });
-    },
-  });
-  const {
     selectedNoteId, setSelectedNoteId, activeFolder, setActiveFolder,
     activeTag, setActiveTag, searchQuery, setSearchQuery,
     viewMode, setViewMode, sortOption, setSortOption,
@@ -60,7 +43,25 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     isMobile, effectiveMobileScreen,
   } = useNotesNavigation({
     userId,
-    hasSelectedNote: Boolean(notes.length > 0),
+    hasSelectedNote: false,
+  });
+  const handleSelectInitialNote = useCallback((reconciled: Note[]) => {
+    setSelectedNoteId((curr) => {
+      const saved = localStorage.getItem(userId !== 'default' ? `quick_notes_${userId}_last_note_id` : 'quick_notes_last_note_id');
+      const target = curr || saved;
+      if (target && reconciled.some((n) => n.id === target)) return target;
+      return reconciled.find((n) => !n.is_trashed)?.id || null;
+    });
+  }, [userId, setSelectedNoteId]);
+  const {
+    notes, setNotes, folders, setFolders, foldersKeyRef, loading,
+    syncState, syncError, setReloadKey, saveError, setSaveError,
+    unsyncedCount, setUnsyncedCount, isSaving, storageProvider,
+    setStorageProvider, flushPendingSaves, queueNoteSync,
+    savePendingRef, locallyDeletedRef, unconfirmedCreatesRef,
+  } = useNotesSync({
+    token, userId, userEmail, autoSaveEnabled,
+    onSelectInitialNote: handleSelectInitialNote,
   });
   const selectedNote =
     (selectedNoteId ? notes.find((n) => n.id === selectedNoteId) : null) ||
@@ -293,6 +294,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         onOpenSecurityModal={handleOpenSecurityModal} onUnlockSession={handleUnlockSession}
         autoSaveEnabled={autoSaveEnabled} onToggleAutoSave={handleToggleAutoSave}
         onManualSave={handleManualSave} saveSuccessMessage={saveSuccessMessage}
+        isPendingSave={Boolean(selectedNoteId && unsyncedCount > 0)}
         onSelectFolderRequest={handleSelectFolder} onSelectTagRequest={handleSelectTag}
         onBackMobileRequest={handleBackMobile}
       />

@@ -6,17 +6,21 @@ interface EditorCanvasProps {
   note: Note;
   isTrash: boolean;
   isSaving: boolean;
+  isPendingSave?: boolean;
+  autoSaveEnabled?: boolean;
   wordCount: number;
   charCount: number;
   canvasContainerRef: RefObject<HTMLDivElement | null>;
   editorRef: RefObject<HTMLDivElement | null>;
   titleInputRef: RefObject<HTMLInputElement | null>;
+  titleValue?: string;
   newTagInput: string;
   setNewTagInput: (val: string) => void;
   isAddingTag: boolean;
   setIsAddingTag: (val: boolean) => void;
   onCloseMenus: () => void;
   onTitleChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onTitleBlur?: () => void;
   onAddTag: (e: FormEvent) => void;
   onRemoveTag: (tag: string) => void;
   onOpenSecurityModal?: () => void;
@@ -27,9 +31,9 @@ interface EditorCanvasProps {
   onSaveSelection: () => void;
 }
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
-  note, isTrash, isSaving, wordCount, charCount, canvasContainerRef, editorRef,
-  titleInputRef, newTagInput, setNewTagInput, isAddingTag, setIsAddingTag,
-  onCloseMenus, onTitleChange, onAddTag, onRemoveTag, onOpenSecurityModal,
+  note, isTrash, isSaving, isPendingSave, autoSaveEnabled, wordCount, charCount, canvasContainerRef, editorRef,
+  titleInputRef, titleValue, newTagInput, setNewTagInput, isAddingTag, setIsAddingTag,
+  onCloseMenus, onTitleChange, onTitleBlur, onAddTag, onRemoveTag, onOpenSecurityModal,
   onPaste, onInput, onClick, onKeyDown, onSaveSelection,
 }) => {
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -56,10 +60,14 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           note={note}
           isTrash={isTrash}
           isSaving={isSaving}
+          isPendingSave={isPendingSave}
+          autoSaveEnabled={autoSaveEnabled}
           wordCount={wordCount}
           charCount={charCount}
           titleInputRef={titleInputRef}
+          titleValue={titleValue}
           onTitleChange={onTitleChange}
+          onTitleBlur={onTitleBlur}
           newTagInput={newTagInput}
           setNewTagInput={setNewTagInput}
           isAddingTag={isAddingTag}

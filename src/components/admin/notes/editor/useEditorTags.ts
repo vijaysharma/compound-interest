@@ -1,4 +1,4 @@
-import { useState, useCallback, FormEvent, ChangeEvent, MutableRefObject } from 'react';
+import { useState, useCallback, useRef, useEffect, FormEvent, ChangeEvent, MutableRefObject } from 'react';
 import { Note } from '../NotesTypes';
 import { sanitizePlainInput } from '../sanitizeHtml';
 interface UseEditorTagsParams {
@@ -15,16 +15,57 @@ export function useEditorTags({
 }: UseEditorTagsParams) {
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const [titleValue, setTitleValue] = useState(note?.title || '');
+  const titleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingTitleRef = useRef<string | null>(null);
+  const noteIdRef = useRef<string | undefined>(note?.id);
+  const onUpdateNoteRef = useRef(onUpdateNote);
+  useEffect(() => {
+    onUpdateNoteRef.current = onUpdateNote;
+  }, [onUpdateNote]);
+  const flushTitle = useCallback(() => {
+    if (titleTimerRef.current) {
+      clearTimeout(titleTimerRef.current);
+      titleTimerRef.current = null;
+    }
+    if (pendingTitleRef.current !== null && noteIdRef.current) {
+      const titleToSave = pendingTitleRef.current;
+      pendingTitleRef.current = null;
+      onUpdateNoteRef.current({ title: titleToSave }, noteIdRef.current);
+    }
+  }, []);
+  useEffect(() => {
+    if (note?.id !== noteIdRef.current) {
+      flushTitle();
+      noteIdRef.current = note?.id;
+      setTitleValue(note?.title || '');
+    } else if (pendingTitleRef.current === null && (note?.title || '') !== titleValue) {
+      setTitleValue(note?.title || '');
+    }
+  }, [note?.id, note?.title, flushTitle, titleValue]);
+  useEffect(() => {
+    return () => {
+      flushTitle();
+    };
+  }, [flushTitle]);
   const handleTitleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      if (!note) return;
-      const newTitle = sanitizePlainInput(e.target.value, 250, false);
+      const rawVal = e.target.value;
+      const newTitle = sanitizePlainInput(rawVal, 250, false);
+      setTitleValue(newTitle);
+      pendingTitleRef.current = newTitle;
       hasManualTitleRef.current = Boolean(newTitle.trim());
-      calculateStats(newTitle + ' ' + (note.content || ''));
-      onUpdateNote({ title: newTitle });
+      calculateStats(newTitle + ' ' + (note?.content || ''));
+      if (titleTimerRef.current) clearTimeout(titleTimerRef.current);
+      titleTimerRef.current = setTimeout(() => {
+        flushTitle();
+      }, 350);
     },
-    [note, hasManualTitleRef, calculateStats, onUpdateNote]
+    [note?.content, hasManualTitleRef, calculateStats, flushTitle]
   );
+  const handleTitleBlur = useCallback(() => {
+    flushTitle();
+  }, [flushTitle]);
   const handleAddTag = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
@@ -52,11 +93,13 @@ export function useEditorTags({
     [note, onUpdateNote]
   );
   return {
+    titleValue,
     newTagInput,
     setNewTagInput,
     isAddingTag,
     setIsAddingTag,
     handleTitleChange,
+    handleTitleBlur,
     handleAddTag,
     handleRemoveTag,
   };

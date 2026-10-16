@@ -6,10 +6,14 @@ interface EditorCanvasMetaProps {
   note: Note;
   isTrash: boolean;
   isSaving: boolean;
+  isPendingSave?: boolean;
+  autoSaveEnabled?: boolean;
   wordCount: number;
   charCount: number;
   titleInputRef: RefObject<HTMLInputElement | null>;
+  titleValue?: string;
   onTitleChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onTitleBlur?: () => void;
   newTagInput: string;
   setNewTagInput: (val: string) => void;
   isAddingTag: boolean;
@@ -22,10 +26,14 @@ export const EditorCanvasMeta: React.FC<EditorCanvasMetaProps> = ({
   note,
   isTrash,
   isSaving,
+  isPendingSave,
+  autoSaveEnabled,
   wordCount,
   charCount,
   titleInputRef,
+  titleValue,
   onTitleChange,
+  onTitleBlur,
   newTagInput,
   setNewTagInput,
   isAddingTag,
@@ -57,10 +65,12 @@ export const EditorCanvasMeta: React.FC<EditorCanvasMetaProps> = ({
           </span>
           {isTrash ? (
             <span className={styles.saveStatus}>Read Only</span>
+          ) : isSaving ? (
+            <span className={`${styles.saveStatus} ${styles.saving}`}>Saving...</span>
+          ) : !autoSaveEnabled && isPendingSave ? (
+            <span className={`${styles.saveStatus} ${styles.unsaved}`}>Unsaved changes</span>
           ) : (
-            <span className={`${styles.saveStatus} ${isSaving ? styles.saving : ''}`}>
-              {isSaving ? 'Saving...' : 'Saved'}
-            </span>
+            <span className={styles.saveStatus}>Saved</span>
           )}
         </div>
       </div>
@@ -70,8 +80,9 @@ export const EditorCanvasMeta: React.FC<EditorCanvasMetaProps> = ({
         disabled={isTrash}
         placeholder="Title"
         maxLength={250}
-        value={note.title || ''}
+        value={titleValue ?? note.title ?? ''}
         onChange={onTitleChange}
+        onBlur={onTitleBlur}
         className={styles.titleInput}
       />
       <div className={styles.tagsRow}>

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Note, SyncState } from '../NotesTypes';
 import { loadAndDecryptNotes } from './notesLoader';
 import { reconcileNotesWithLocalDrafts } from './notesDraftStorage';
@@ -22,6 +22,7 @@ interface UseNotesSyncLifecycleProps {
   setStorageProvider: (p: 'vercel_blob' | 'database_fallback' | null) => void;
   flushPendingSaves: () => Promise<void>;
   onSelectInitialNote: (reconciled: Note[]) => void;
+  autoSaveEnabled?: boolean;
 }
 export function useNotesSyncLifecycle({
   token,
@@ -41,7 +42,16 @@ export function useNotesSyncLifecycle({
   setStorageProvider,
   flushPendingSaves,
   onSelectInitialNote,
+  autoSaveEnabled = true,
 }: UseNotesSyncLifecycleProps) {
+  const onSelectInitialNoteRef = useRef(onSelectInitialNote);
+  useEffect(() => {
+    onSelectInitialNoteRef.current = onSelectInitialNote;
+  }, [onSelectInitialNote]);
+  const autoSaveEnabledRef = useRef(autoSaveEnabled);
+  useEffect(() => {
+    autoSaveEnabledRef.current = autoSaveEnabled;
+  }, [autoSaveEnabled]);
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
@@ -68,14 +78,14 @@ export function useNotesSyncLifecycle({
         );
         setNotes([...unsaved, ...reconciled]);
         setUnsyncedCount(savePendingRef.current.size);
-        if (savePendingRef.current.size > 0) void flushPendingSaves();
+        if (autoSaveEnabledRef.current && savePendingRef.current.size > 0) void flushPendingSaves();
         const fetchedFolders = reconciled.map((n) => n.folder).filter(Boolean);
         setFolders((prev) => {
           const combined = Array.from(new Set([...prev, ...fetchedFolders]));
           localStorage.setItem(foldersKeyRef.current, JSON.stringify(combined));
           return combined;
         });
-        onSelectInitialNote(reconciled);
+        onSelectInitialNoteRef.current(reconciled);
         if (isMounted) setSyncState('synced');
       } catch (err) {
         if (isMounted) {
@@ -90,16 +100,18 @@ export function useNotesSyncLifecycle({
     return () => {
       isMounted = false;
     };
-  }, [token, userId, userEmail, reloadKey, flushPendingSaves, onSelectInitialNote, foldersKeyRef, locallyDeletedRef, notesRef, savePendingRef, setFolders, setLoading, setNotes, setStorageProvider, setSyncError, setSyncState, setUnsyncedCount]);
+  }, [token, userId, userEmail, reloadKey, flushPendingSaves, foldersKeyRef, locallyDeletedRef, notesRef, savePendingRef, setFolders, setLoading, setNotes, setStorageProvider, setSyncError, setSyncState, setUnsyncedCount]);
   useEffect(() => {
     if (!token) return;
     const id = setInterval(() => {
-      if (savePendingRef.current.size > 0) void flushPendingSaves();
+      if (autoSaveEnabledRef.current && savePendingRef.current.size > 0) void flushPendingSaves();
     }, SAVE_SWEEP_MS);
     return () => clearInterval(id);
   }, [token, flushPendingSaves, savePendingRef]);
   useEffect(() => {
-    const flush = () => void flushPendingSaves();
+    const flush = () => {
+      if (autoSaveEnabledRef.current && savePendingRef.current.size > 0) void flushPendingSaves();
+    };
     const handleVis = () => {
       if (document.visibilityState === 'hidden') flush();
     };

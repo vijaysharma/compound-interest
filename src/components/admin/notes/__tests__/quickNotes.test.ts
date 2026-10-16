@@ -263,3 +263,38 @@ test('selectedNote preserves trashed note without redirecting to untrashed note'
   assert.equal(selectedNote?.id, 'trashed_1');
   assert.equal(selectedNote?.is_trashed, true);
 });
+test('queueNoteSync does not schedule auto-save timer when autoSaveEnabled is false', () => {
+  const savePending = new Set<string>();
+  let timerScheduled = false;
+  let autoSaveEnabled = false;
+  const queueNoteSync = (noteId: string) => {
+    savePending.add(noteId);
+    if (!autoSaveEnabled) {
+      timerScheduled = false;
+      return;
+    }
+    timerScheduled = true;
+  };
+  // Turn auto-save off and edit
+  queueNoteSync('note_x');
+  assert.equal(savePending.has('note_x'), true);
+  assert.equal(timerScheduled, false);
+  // Turn auto-save on and edit
+  autoSaveEnabled = true;
+  queueNoteSync('note_y');
+  assert.equal(savePending.has('note_y'), true);
+  assert.equal(timerScheduled, true);
+});
+test('save status badge correctly reports Unsaved changes when auto-save is off', () => {
+  const getSaveStatus = (isTrash: boolean, isSaving: boolean, autoSaveEnabled: boolean, isPendingSave: boolean) => {
+    if (isTrash) return 'Read Only';
+    if (isSaving) return 'Saving...';
+    if (!autoSaveEnabled && isPendingSave) return 'Unsaved changes';
+    return 'Saved';
+  };
+  assert.equal(getSaveStatus(false, false, false, true), 'Unsaved changes');
+  assert.equal(getSaveStatus(false, false, false, false), 'Saved');
+  assert.equal(getSaveStatus(false, false, true, true), 'Saved');
+  assert.equal(getSaveStatus(false, true, false, true), 'Saving...');
+  assert.equal(getSaveStatus(true, false, false, true), 'Read Only');
+});

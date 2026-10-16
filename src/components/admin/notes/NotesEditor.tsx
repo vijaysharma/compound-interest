@@ -98,16 +98,20 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
         onDeleteTable={state.listAndTable.deleteTable} onClose={() => state.listAndTable.setActiveTable(null)}
       />
       <EditorCanvas
-        note={note} isTrash={isTrash} isSaving={isSaving} wordCount={state.content.wordCount}
+        note={note} isTrash={isTrash} isSaving={isSaving} isPendingSave={props.isPendingSave}
+        autoSaveEnabled={props.autoSaveEnabled} wordCount={state.content.wordCount}
         charCount={state.content.charCount} canvasContainerRef={state.canvasContainerRef}
         editorRef={state.editorRef} titleInputRef={state.titleInputRef}
+        titleValue={state.tags.titleValue}
         newTagInput={state.tags.newTagInput} setNewTagInput={state.tags.setNewTagInput}
         isAddingTag={state.tags.isAddingTag} setIsAddingTag={state.tags.setIsAddingTag}
         onCloseMenus={() => {
           if (activeMobileMenu) setActiveMobileMenu(null);
           if (activeDropdown) setActiveDropdown(null);
         }}
-        onTitleChange={state.tags.handleTitleChange} onAddTag={state.tags.handleAddTag}
+        onTitleChange={state.tags.handleTitleChange}
+        onTitleBlur={state.tags.handleTitleBlur}
+        onAddTag={state.tags.handleAddTag}
         onRemoveTag={state.tags.handleRemoveTag} onOpenSecurityModal={onOpenSecurityModal}
         onPaste={state.content.handlePaste} onInput={() => state.content.handleContentChange()}
         onClick={state.checklist.handleEditorClick} onKeyDown={state.keyboard.handleKeyDown}
