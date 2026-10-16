@@ -1,24 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { fetchExchangeRates } from '../../data/api_data';
 import { DEFAULT_EXCHANGE_RATES } from '../../data/default_exchange_rates';
-import { buildCountryDataMap, PRIORITY_COUNTRIES } from './currencyDataUtils';
+import { buildCountryDataMap, PRIORITY_COUNTRIES, computePresetDates, type GraphPresetType } from './currencyDataUtils';
 import { getHistoricalRatesAction, type CurrencyHistoricalPoint } from '@/actions/data';
-export type GraphPresetType = '7D' | '1M' | '3M' | '6M' | '1Y' | 'custom';
-function computePresetDates(preset: '7D' | '1M' | '3M' | '6M' | '1Y'): { start: string; end: string } {
-  const now = new Date();
-  const end = now.toISOString().slice(0, 10);
-  const startD = new Date();
-  const daysMap: Record<string, number> = {
-    '7D': 7,
-    '1M': 30,
-    '3M': 90,
-    '6M': 180,
-    '1Y': 365,
-  };
-  startD.setDate(now.getDate() - (daysMap[preset] || 30));
-  const start = startD.toISOString().slice(0, 10);
-  return { start, end };
-}
+
+export { computePresetDates, type GraphPresetType };
 export function useCurrencyConverter() {
   const [rates, setRates] = useState<Record<string, number>>(DEFAULT_EXCHANGE_RATES);
   const [loading, setLoading] = useState(true);
@@ -123,7 +109,7 @@ export function useCurrencyConverter() {
     setSrcCountry(tgtCountry);
     setTgtCountry(srcCountry);
   };
-  const handleSelectGraphPreset = useCallback((preset: '7D' | '1M' | '3M' | '6M' | '1Y') => {
+  const handleSelectGraphPreset = useCallback((preset: '7D' | '1M' | '3M' | '6M' | '1Y' | '5Y' | '10Y') => {
     setGraphPreset(preset);
     const { start, end } = computePresetDates(preset);
     setGraphStartDate(start);
@@ -231,7 +217,8 @@ export function useCurrencyConverter() {
     inverseRate,
     convertedAmount,
     historicalPoints,
-    loadingHistory: loadingHistory || loadingCustomDate,
+    loadingHistory,
+    loadingCustomDate,
     selectedDate,
     setSelectedDate,
     rateDate,

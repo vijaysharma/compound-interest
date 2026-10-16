@@ -48,7 +48,7 @@ export async function handleGetHistoricalRates(
       : `https://api.frankfurter.dev/v1/${startIso}..${endIso}?base=${cleanBase}&symbols=${cleanTarget}`;
     const res = await fetch(url, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(10000),
     });
     if (res.ok) {
       const data = (await res.json()) as {
@@ -72,6 +72,17 @@ export async function handleGetHistoricalRates(
             }))
             .filter((p) => p.rate > 0)
             .sort((a, b) => a.date.localeCompare(b.date));
+          if (points.length > 500) {
+            const stride = Math.ceil(points.length / 350);
+            const sampled: CurrencyHistoricalPoint[] = [];
+            for (let i = 0; i < points.length; i += stride) {
+              sampled.push(points[i]);
+            }
+            if (sampled[sampled.length - 1].date !== points[points.length - 1].date) {
+              sampled.push(points[points.length - 1]);
+            }
+            points = sampled;
+          }
         }
         if (points.length > 0) {
           redisSet(cacheKey, points, 12 * 3600).catch(() => {});

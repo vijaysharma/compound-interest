@@ -119,3 +119,21 @@ export const PRIORITY_COUNTRIES = [
   'South Korea',
   'Russia',
 ];
+
+export type GraphPresetType = '7D' | '1M' | '3M' | '6M' | '1Y' | '5Y' | '10Y' | 'custom';
+
+export function computePresetDates(preset: '7D' | '1M' | '3M' | '6M' | '1Y' | '5Y' | '10Y'): { start: string; end: string } {
+  const now = new Date();
+  const end = now.toISOString().slice(0, 10);
+  const startD = new Date(now);
+  if (preset === '7D') startD.setDate(now.getDate() - 7);
+  else if (preset === '1M') startD.setMonth(now.getMonth() - 1);
+  else if (preset === '3M') startD.setMonth(now.getMonth() - 3);
+  else if (preset === '6M') startD.setMonth(now.getMonth() - 6);
+  else if (preset === '1Y') startD.setFullYear(now.getFullYear() - 1);
+  else if (preset === '5Y') startD.setFullYear(now.getFullYear() - 5);
+  else if (preset === '10Y') startD.setFullYear(now.getFullYear() - 10);
+  else startD.setDate(now.getDate() - 30);
+  const start = startD.toISOString().slice(0, 10);
+  return { start, end };
+}

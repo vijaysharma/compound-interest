@@ -31,6 +31,7 @@ const CurrencyConverter = () => {
     convertedAmount,
     historicalPoints,
     loadingHistory,
+    loadingCustomDate,
     selectedDate,
     setSelectedDate,
     rateDate,
@@ -81,7 +82,7 @@ const CurrencyConverter = () => {
           inverseRate={inverseRate}
           lastRefreshed={lastRefreshed}
           handleRefresh={handleRefresh}
-          loading={loading}
+          loading={loading || loadingCustomDate}
           selectedDate={selectedDate}
           rateDate={rateDate}
         />

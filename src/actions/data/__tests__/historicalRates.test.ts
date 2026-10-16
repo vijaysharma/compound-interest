@@ -71,3 +71,42 @@ test('handleGetHistoricalRates parses date-range Frankfurter response format', a
     globalThis.fetch = originalFetch;
   }
 });
+test('handleGetHistoricalRates downsamples large multi-year series over 500 points', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => {
+      const simulatedRates: Record<string, { INR: number }> = {};
+      for (let i = 0; i < 1200; i++) {
+        const dateStr = `2020-01-01-${String(i).padStart(4, '0')}`;
+        simulatedRates[dateStr] = { INR: 70 + (i * 0.01) };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          amount: 1,
+          base: 'USD',
+          start_date: '2020-01-01',
+          end_date: '2025-01-01',
+          rates: simulatedRates,
+        }),
+      } as unknown as Response;
+    };
+    const res = await handleGetHistoricalRates('USD', 'INR', 1826, '2020-01-01', '2025-01-01');
+    assert.equal(res.success, true);
+    assert.ok(res.points.length <= 500, `Expected <= 500 points, got ${res.points.length}`);
+    assert.ok(res.points.length > 200, `Expected > 200 points, got ${res.points.length}`);
+    assert.equal(res.points[0].date, '2020-01-01-0000');
+    assert.equal(res.points[res.points.length - 1].date, '2020-01-01-1199');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+test('computePresetDates produces correct 5Y and 10Y start years', async () => {
+  const { computePresetDates } = await import('@/views/currency-converter/currencyDataUtils');
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const res5Y = computePresetDates('5Y');
+  assert.equal(parseInt(res5Y.start.slice(0, 4), 10), currentYear - 5);
+  const res10Y = computePresetDates('10Y');
+  assert.equal(parseInt(res10Y.start.slice(0, 4), 10), currentYear - 10);
+});
