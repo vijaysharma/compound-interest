@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Note, extractHashtags } from './NotesTypes';
+import { Note } from './NotesTypes';
 import styles from './NotesSidebar.module.scss';
 import { SidebarHeader } from './sidebar/SidebarHeader';
 import { SidebarSystemFolders } from './sidebar/SidebarSystemFolders';
@@ -58,9 +58,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   notes
     .filter((n) => !n.is_trashed)
     .forEach((note) => {
-      const hashtags = extractHashtags(note.title + ' ' + note.content);
-      const combined = Array.from(new Set([...(note.tags || []), ...hashtags]));
-      combined.forEach((t) => {
+      (note.tags || []).forEach((t) => {
         const clean = t.toLowerCase();
         tagCounts[clean] = (tagCounts[clean] || 0) + 1;
       });

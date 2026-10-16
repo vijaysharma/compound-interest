@@ -54,8 +54,13 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const { handleDeleteNote, handlePermanentDelete, handleRestoreNote, handleEmptyTrash } = useNotesDeleteActions({
     notes, setNotes, selectedNoteId, setSelectedNoteId, setMobileScreen,
     activeFolder, token, setSaveError, savePendingRef, locallyDeletedRef,
-    setUnsyncedCount, flushPendingSaves, queueNoteSync,
+    setUnsyncedCount, flushPendingSaves, queueNoteSync, userId,
   });
+  useEffect(() => {
+    if (!activeTag) return;
+    const hasTag = notes.some((n) => !n.is_trashed && (n.tags || []).some((t) => t.toLowerCase() === activeTag.toLowerCase()));
+    if (!hasTag) setActiveTag(null);
+  }, [notes, activeTag, setActiveTag]);
   const {
     unlockedNotes, isLockModalOpen, setIsLockModalOpen, isBackupModalOpen,
     setIsBackupModalOpen, isSecurityModalOpen, setIsSecurityModalOpen,

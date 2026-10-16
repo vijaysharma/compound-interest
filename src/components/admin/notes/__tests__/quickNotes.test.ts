@@ -15,7 +15,6 @@ test('sanitizePlainInput allows spaces when trim is false', () => {
   assert.equal(sanitizePlainInput('<b>Bold</b> Title \0', 250, false), 'Bold Title ');
 });
 test('reconcileNotesWithLocalDrafts preserves user edits on page refresh', () => {
-  // Mock localStorage for test environment
   const mockStorage: Record<string, string> = {};
   globalThis.localStorage = {
     getItem: (key: string) => mockStorage[key] ?? null,
@@ -40,7 +39,6 @@ test('reconcileNotesWithLocalDrafts preserves user edits on page refresh', () =>
       updated_at: '2026-10-16T10:00:00.000Z',
     },
   ];
-  // Simulate local draft saved before refresh with latest edits
   const draftNote: Note = {
     id: 'note_1',
     title: 'New Title With Spaces ',
@@ -61,4 +59,96 @@ test('reconcileNotesWithLocalDrafts preserves user edits on page refresh', () =>
   assert.equal(reconciled[0].title, 'New Title With Spaces ');
   assert.equal(reconciled[0].content, '<p>New typed content that was unsaved on refresh</p>');
   assert.deepEqual(unsavedDraftIds, ['note_1']);
+});
+test('reconcileNotesWithLocalDrafts preserves tag removal across refresh', () => {
+  const mockStorage: Record<string, string> = {};
+  globalThis.localStorage = {
+    getItem: (key: string) => mockStorage[key] ?? null,
+    setItem: (key: string, val: string) => { mockStorage[key] = String(val); },
+    removeItem: (key: string) => { delete mockStorage[key]; },
+    clear: () => { for (const k of Object.keys(mockStorage)) delete mockStorage[k]; },
+    key: (i: number) => Object.keys(mockStorage)[i] ?? null,
+    length: 0,
+  };
+  const userId = 'user_123';
+  const serverNotes: Note[] = [
+    {
+      id: 'note_tag_1',
+      title: 'Note with Tag',
+      content: '<p>Content</p>',
+      folder: 'Notes',
+      is_pinned: false,
+      is_locked: false,
+      is_trashed: false,
+      tags: ['work', 'urgent'],
+      created_at: '2026-10-16T10:00:00.000Z',
+      updated_at: '2026-10-16T10:00:00.000Z',
+    },
+  ];
+  // Draft has tag 'urgent' removed (only 'work' remains)
+  const draftNote: Note = {
+    id: 'note_tag_1',
+    title: 'Note with Tag',
+    content: '<p>Content</p>',
+    folder: 'Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: false,
+    tags: ['work'],
+    created_at: '2026-10-16T10:00:00.000Z',
+    updated_at: '2026-10-16T10:02:00.000Z',
+  };
+  mockStorage[`quick_notes_drafts_${userId}_v1`] = JSON.stringify({
+    note_tag_1: draftNote,
+  });
+  const { reconciled, unsavedDraftIds } = reconcileNotesWithLocalDrafts(userId, serverNotes);
+  assert.equal(reconciled.length, 1);
+  assert.deepEqual(reconciled[0].tags, ['work']);
+  assert.deepEqual(unsavedDraftIds, ['note_tag_1']);
+});
+test('reconcileNotesWithLocalDrafts preserves trashed state across refresh', () => {
+  const mockStorage: Record<string, string> = {};
+  globalThis.localStorage = {
+    getItem: (key: string) => mockStorage[key] ?? null,
+    setItem: (key: string, val: string) => { mockStorage[key] = String(val); },
+    removeItem: (key: string) => { delete mockStorage[key]; },
+    clear: () => { for (const k of Object.keys(mockStorage)) delete mockStorage[k]; },
+    key: (i: number) => Object.keys(mockStorage)[i] ?? null,
+    length: 0,
+  };
+  const userId = 'user_123';
+  const serverNotes: Note[] = [
+    {
+      id: 'note_trash_1',
+      title: 'Active on Server',
+      content: '<p>Content</p>',
+      folder: 'Notes',
+      is_pinned: false,
+      is_locked: false,
+      is_trashed: false,
+      tags: [],
+      created_at: '2026-10-16T10:00:00.000Z',
+      updated_at: '2026-10-16T10:00:00.000Z',
+    },
+  ];
+  // Note was trashed locally
+  const draftNote: Note = {
+    id: 'note_trash_1',
+    title: 'Active on Server',
+    content: '<p>Content</p>',
+    folder: 'Notes',
+    is_pinned: false,
+    is_locked: false,
+    is_trashed: true,
+    tags: [],
+    created_at: '2026-10-16T10:00:00.000Z',
+    updated_at: '2026-10-16T10:03:00.000Z',
+  };
+  mockStorage[`quick_notes_drafts_${userId}_v1`] = JSON.stringify({
+    note_trash_1: draftNote,
+  });
+  const { reconciled, unsavedDraftIds } = reconcileNotesWithLocalDrafts(userId, serverNotes);
+  assert.equal(reconciled.length, 1);
+  assert.equal(reconciled[0].is_trashed, true);
+  assert.deepEqual(unsavedDraftIds, ['note_trash_1']);
 });

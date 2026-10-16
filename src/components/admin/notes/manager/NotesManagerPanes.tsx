@@ -3,7 +3,7 @@ import React from 'react';
 import { NotesSidebar } from '../NotesSidebar';
 import { NotesList } from '../NotesList';
 import { NotesEditor } from '../NotesEditor';
-import { Note, ViewMode, SortOption, SYSTEM_FOLDERS, extractHashtags } from '../NotesTypes';
+import { Note, ViewMode, SortOption, SYSTEM_FOLDERS } from '../NotesTypes';
 import styles from '../QuickNotesManager.module.scss';
 interface NotesManagerPanesProps {
   notes: Note[];
@@ -75,7 +75,7 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
             setActiveTag(t);
             if (isMobile) setMobileScreen('list');
             else if (t) {
-              const tn = notes.filter((n) => !n.is_trashed && new Set([...(n.tags || []), ...extractHashtags(n.title + ' ' + n.content)].map((x) => x.toLowerCase())).has(t.toLowerCase()));
+              const tn = notes.filter((n) => !n.is_trashed && (n.tags || []).some((x) => x.toLowerCase() === t.toLowerCase()));
               if (!tn.some((n) => n.id === selectedNoteId)) setSelectedNoteId(tn[0]?.id || null);
             }
           }}

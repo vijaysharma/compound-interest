@@ -39,6 +39,17 @@ export function removeLocalDraft(userId: string, noteId: string): void {
     // Ignore storage errors
   }
 }
+function hasDraftDiff(draft: Note, serverNote: Note): boolean {
+  if (draft.title !== serverNote.title) return true;
+  if (draft.content !== serverNote.content) return true;
+  if (draft.folder !== serverNote.folder) return true;
+  if (Boolean(draft.is_pinned) !== Boolean(serverNote.is_pinned)) return true;
+  if (Boolean(draft.is_trashed) !== Boolean(serverNote.is_trashed)) return true;
+  const draftTags = (draft.tags || []).slice().sort().join(',');
+  const serverTags = (serverNote.tags || []).slice().sort().join(',');
+  if (draftTags !== serverTags) return true;
+  return false;
+}
 export function reconcileNotesWithLocalDrafts(
   userId: string,
   serverNotes: Note[]
@@ -61,11 +72,11 @@ export function reconcileNotesWithLocalDrafts(
     } else {
       const serverTime = new Date(serverNote.updated_at || serverNote.created_at || 0).getTime();
       const draftTime = new Date(draft.updated_at || draft.created_at || 0).getTime();
-      const hasContentDiff = draft.content !== serverNote.content || draft.title !== serverNote.title;
-      if (draftTime >= serverTime && hasContentDiff) {
+      const diff = hasDraftDiff(draft, serverNote);
+      if (draftTime >= serverTime && diff) {
         serverMap.set(id, { ...serverNote, ...draft });
         unsavedDraftIds.push(id);
-      } else if (draftTime < serverTime && !hasContentDiff) {
+      } else if (draftTime < serverTime || !diff) {
         removeLocalDraft(userId, id);
       }
     }

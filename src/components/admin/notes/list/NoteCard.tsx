@@ -6,7 +6,6 @@ import {
   Note,
   formatNoteDate,
   extractSnippet,
-  extractHashtags,
   deriveAutoTitleFromHtml,
 } from '../NotesTypes';
 import styles from '../NotesList.module.scss';
@@ -36,8 +35,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const title = note.title?.trim() || deriveAutoTitleFromHtml(note.content) || 'New Note';
   const snippet = note.is_locked ? 'Locked Note' : extractSnippet(note.content);
   const dateFormatted = formatNoteDate(note.updated_at || note.created_at);
-  const hashtags = extractHashtags(note.title + ' ' + note.content);
-  const noteTags = Array.from(new Set([...(note.tags || []), ...hashtags])).slice(0, 3);
+  const noteTags = (note.tags || []).slice(0, 3);
   const displayFolder = note.folder || 'Quick Notes';
   return (
     <div

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Note, SortOption, SYSTEM_FOLDERS, extractHashtags, deriveAutoTitleFromHtml } from '../NotesTypes';
+import { Note, SortOption, SYSTEM_FOLDERS, deriveAutoTitleFromHtml } from '../NotesTypes';
 interface UseNotesListFilterProps {
   notes: Note[];
   activeFolder: string;
@@ -30,9 +30,8 @@ export function useNotesListFilter({
         }
       }
       if (activeTag) {
-        const hashtags = extractHashtags(note.title + ' ' + note.content);
-        const combined = new Set([...(note.tags || []), ...hashtags].map((t) => t.toLowerCase()));
-        if (!combined.has(activeTag.toLowerCase())) return false;
+        const hasTag = (note.tags || []).some((t) => t.toLowerCase() === activeTag.toLowerCase());
+        if (!hasTag) return false;
       }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();

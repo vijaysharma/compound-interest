@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { Note, SYSTEM_FOLDERS } from '../NotesTypes';
 import { deleteNoteAction, emptyTrashAction } from '@/actions/notes';
+import { saveLocalDraft, removeLocalDraft } from './notesDraftStorage';
 interface UseNotesDeleteActionsProps {
   notes: Note[];
   setNotes: React.Dispatch<React.SetStateAction<Note[]>>;
@@ -16,6 +17,7 @@ interface UseNotesDeleteActionsProps {
   setUnsyncedCount: (count: number) => void;
   flushPendingSaves: () => Promise<void>;
   queueNoteSync: (id: string) => void;
+  userId?: string;
 }
 export function useNotesDeleteActions({
   notes,
@@ -31,6 +33,7 @@ export function useNotesDeleteActions({
   setUnsyncedCount,
   flushPendingSaves,
   queueNoteSync,
+  userId,
 }: UseNotesDeleteActionsProps) {
   const handlePermanentDelete = useCallback(
     async (id?: string) => {
@@ -38,6 +41,9 @@ export function useNotesDeleteActions({
       if (!targetId) return;
       savePendingRef.current.delete(targetId);
       locallyDeletedRef.current.add(targetId);
+      if (userId) {
+        removeLocalDraft(userId, targetId);
+      }
       setUnsyncedCount(savePendingRef.current.size);
       if (savePendingRef.current.size > 0) await flushPendingSaves();
       setNotes((prev) => prev.filter((n) => n.id !== targetId));
@@ -63,44 +69,65 @@ export function useNotesDeleteActions({
         );
       }
     },
-    [notes, selectedNoteId, token, flushPendingSaves, activeFolder, savePendingRef, locallyDeletedRef, setNotes, setSelectedNoteId, setMobileScreen, setSaveError, setUnsyncedCount]
+    [notes, selectedNoteId, token, flushPendingSaves, activeFolder, savePendingRef, locallyDeletedRef, setNotes, setSelectedNoteId, setMobileScreen, setSaveError, setUnsyncedCount, userId]
   );
   const handleDeleteNote = useCallback(
-    (id?: string, e?: React.MouseEvent) => {
+    async (id?: string, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
       const targetId = id || selectedNoteId;
       if (!targetId) return;
       const target = notes.find((n) => n.id === targetId);
       if (!target) return;
       if (target.is_trashed) {
-        handlePermanentDelete(targetId);
+        await handlePermanentDelete(targetId);
         return;
       }
-      if (savePendingRef.current.size > 0) void flushPendingSaves();
+      savePendingRef.current.delete(targetId);
+      setUnsyncedCount(savePendingRef.current.size);
       const updatedTime = new Date().toISOString();
-      setNotes((prev) => prev.map((n) => (n.id === targetId ? { ...n, is_trashed: true, updated_at: updatedTime } : n)));
+      const trashedNote: Note = { ...target, is_trashed: true, updated_at: updatedTime };
+      setNotes((prev) => prev.map((n) => (n.id === targetId ? trashedNote : n)));
+      if (userId) {
+        saveLocalDraft(userId, trashedNote);
+      }
       if (selectedNoteId === targetId) {
         const remaining = notes.filter((n) => n.id !== targetId && !n.is_trashed);
         setSelectedNoteId(remaining.length > 0 ? remaining[0].id : null);
         setMobileScreen('list');
       }
-      queueNoteSync(targetId);
-      void flushPendingSaves();
+      if (!token) {
+        setSaveError('Not signed in — note moved to trash locally only.');
+        return;
+      }
+      try {
+        await deleteNoteAction({ id: targetId }, token);
+        if (userId) {
+          removeLocalDraft(userId, targetId);
+        }
+      } catch (err) {
+        setSaveError('Could not trash note on the server: ' + (err instanceof Error ? err.message : 'Unknown error'));
+        queueNoteSync(targetId);
+      }
     },
-    [notes, selectedNoteId, queueNoteSync, handlePermanentDelete, flushPendingSaves, savePendingRef, setNotes, setSelectedNoteId, setMobileScreen]
+    [notes, selectedNoteId, queueNoteSync, handlePermanentDelete, savePendingRef, setNotes, setSelectedNoteId, setMobileScreen, token, userId, setSaveError, setUnsyncedCount]
   );
   const handleRestoreNote = useCallback(
     (id?: string, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
       const targetId = id || selectedNoteId;
       if (!targetId) return;
-      if (savePendingRef.current.size > 0) void flushPendingSaves();
+      const target = notes.find((n) => n.id === targetId);
+      if (!target) return;
       const updatedTime = new Date().toISOString();
-      setNotes((prev) => prev.map((n) => (n.id === targetId ? { ...n, is_trashed: false, updated_at: updatedTime } : n)));
+      const restoredNote: Note = { ...target, is_trashed: false, updated_at: updatedTime };
+      setNotes((prev) => prev.map((n) => (n.id === targetId ? restoredNote : n)));
+      if (userId) {
+        saveLocalDraft(userId, restoredNote);
+      }
       queueNoteSync(targetId);
       void flushPendingSaves();
     },
-    [selectedNoteId, queueNoteSync, flushPendingSaves, savePendingRef, setNotes]
+    [notes, selectedNoteId, queueNoteSync, flushPendingSaves, setNotes, userId]
   );
   const handleEmptyTrash = useCallback(async () => {
     if (!window.confirm('Permanently delete all notes in Recently Deleted? This cannot be undone.')) return;
@@ -108,6 +135,7 @@ export function useNotesDeleteActions({
       prev.filter((n) => n.is_trashed).forEach((n) => {
         locallyDeletedRef.current.add(n.id);
         savePendingRef.current.delete(n.id);
+        if (userId) removeLocalDraft(userId, n.id);
       });
       setUnsyncedCount(savePendingRef.current.size);
       return prev.filter((n) => !n.is_trashed);
@@ -122,7 +150,7 @@ export function useNotesDeleteActions({
     } catch (err) {
       setSaveError('Could not empty trash on the server: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
-  }, [token, locallyDeletedRef, savePendingRef, setNotes, setSelectedNoteId, setSaveError, setUnsyncedCount]);
+  }, [token, locallyDeletedRef, savePendingRef, setNotes, setSelectedNoteId, setSaveError, setUnsyncedCount, userId]);
   return {
     handleDeleteNote,
     handlePermanentDelete,
