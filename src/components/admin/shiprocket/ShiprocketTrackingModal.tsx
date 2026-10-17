@@ -31,29 +31,21 @@ export const ShiprocketTrackingModal: React.FC<ShiprocketTrackingModalProps> = R
             <>
               <div className={styles.trackingMetaRow}>
                 <div>
-                  <div className={styles.metaLabel}>
-                    Current Status
-                  </div>
+                  <div className={styles.metaLabel}>Current Status</div>
                   <div className={styles.metaValueLg}>
                     {trackingData.shipment_track?.[0]?.current_status || 'In Transit'}
                   </div>
                 </div>
                 <div>
-                  <div className={styles.metaLabel}>
-                    Courier Partner
-                  </div>
+                  <div className={styles.metaLabel}>Courier Partner</div>
                   <div className={styles.metaValue}>
                     {trackingData.shipment_track?.[0]?.courier_name || 'Shiprocket Partner'}
                   </div>
                 </div>
                 {trackingData.shipment_track?.[0]?.edd && (
                   <div>
-                    <div className={styles.metaLabel}>
-                      Estimated Delivery Date
-                    </div>
-                    <div className={styles.metaValueLg}>
-                      {trackingData.shipment_track[0].edd}
-                    </div>
+                    <div className={styles.metaLabel}>Estimated Delivery Date</div>
+                    <div className={styles.metaValueLg}>{trackingData.shipment_track[0].edd}</div>
                   </div>
                 )}
               </div>
@@ -70,13 +62,16 @@ export const ShiprocketTrackingModal: React.FC<ShiprocketTrackingModalProps> = R
                 </div>
               )}
               <div className={styles.timeline}>
-                {trackingData.shipment_track_activities && trackingData.shipment_track_activities.length > 0 ? (
+                {trackingData.shipment_track_activities &&
+                trackingData.shipment_track_activities.length > 0 ? (
                   trackingData.shipment_track_activities.map((act, i) => (
                     <div key={i} className={styles.timelineItem}>
                       <div className={styles.timelineDot} />
                       <div className={styles.timelineTime}>{act.date}</div>
                       <div className={styles.timelineActivity}>{act.activity}</div>
-                      {act.location && <div className={styles.timelineLocation}>{act.location}</div>}
+                      {act.location && (
+                        <div className={styles.timelineLocation}>{act.location}</div>
+                      )}
                     </div>
                   ))
                 ) : (

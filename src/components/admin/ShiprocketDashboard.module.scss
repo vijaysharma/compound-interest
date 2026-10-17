@@ -1689,3 +1689,17 @@
     animation: none;
   }
 }
+.linkBtn {
+  @include button-reset;
+  display: inline-block;
+  padding: 0 0.5rem;
+  font-size: $fs-small;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: underline;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

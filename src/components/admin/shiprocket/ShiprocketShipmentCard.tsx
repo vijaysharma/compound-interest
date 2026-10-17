@@ -81,13 +81,33 @@ export const ShiprocketShipmentCard: React.FC<ShiprocketShipmentCardProps> = Rea
                 <strong>Weight:</strong> {primaryShipment?.weight || order.others?.weight || '0.5'}{' '}
                 kg
               </div>
-              {(primaryShipment?.estimated_delivery_date || primaryShipment?.etd) && (
+              {primaryShipment?.delivered_date ? (
                 <div>
-                  <strong>Est. Delivery:</strong>{' '}
+                  <strong>Delivered:</strong>
                   <span className={styles.statusGreen}>
-                    {primaryShipment.estimated_delivery_date || primaryShipment.etd}
+                    {' '}
+                    {primaryShipment.delivered_date}{' '}
+                    {primaryShipment?.pod ? (
+                      <a
+                        className={styles.linkBtn}
+                        href={primaryShipment.pod}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        View POD
+                      </a>
+                    ) : null}
                   </span>
                 </div>
+              ) : (
+                (primaryShipment?.estimated_delivery_date || primaryShipment?.etd) && (
+                  <div>
+                    <strong>Est. Delivery:</strong>
+                    <span className={styles.statusGreen}>
+                      {primaryShipment.estimated_delivery_date || primaryShipment?.etd}
+                    </span>
+                  </div>
+                )
               )}
             </div>
           </div>

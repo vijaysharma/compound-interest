@@ -1,6 +1,15 @@
 'use client';
 import React, { useMemo, useState } from 'react';
-import { FiSend, FiX, FiChevronRight, FiStar, FiCheckCircle, FiPrinter, FiCalendar, FiFileText } from 'react-icons/fi';
+import {
+  FiSend,
+  FiX,
+  FiChevronRight,
+  FiStar,
+  FiCheckCircle,
+  FiPrinter,
+  FiCalendar,
+  FiFileText,
+} from 'react-icons/fi';
 import type { ShiprocketOrder, ShiprocketCourierRate } from './types';
 import type { AssignedShipment } from './useShiprocketModals';
 import styles from '../ShiprocketDashboard.module.scss';
@@ -75,7 +84,8 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
         >
           <div data-dialog-header className={styles.modalHeader}>
             <h3 data-dialog-title className={styles.modalTitle}>
-              <FiSend /> {assignedShipment ? 'Schedule Pickup' : 'Choose Courier'} · Order #{order.id}
+              <FiSend /> {assignedShipment ? 'Schedule Pickup' : 'Choose Courier'} · Order #
+              {order.id}
             </h3>
             <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
               <FiX />
@@ -84,10 +94,12 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
           <div className={styles.modalBody}>
             <div className={styles.shipModalSummary}>
               <div>
-                <strong>Customer:</strong> {order.customer_name} ({order.customer_city}, {order.customer_pincode})
+                <strong>Customer:</strong> {order.customer_name} ({order.customer_city},{' '}
+                {order.customer_pincode})
               </div>
               <div>
-                <strong>Weight:</strong> {order.shipments?.[0]?.weight || order.others?.weight || '0.5'} kg •{' '}
+                <strong>Weight:</strong>{' '}
+                {order.shipments?.[0]?.weight || order.others?.weight || '0.5'} kg •{' '}
                 {order.payment_method || 'Prepaid'}
               </div>
             </div>
@@ -117,10 +129,16 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                 </div>
                 {scheduledPickupDate ? (
                   <div className={`${styles.alert} ${styles.alertSuccess}`} role="status">
-                    <FiCheckCircle aria-hidden="true" style={{ flexShrink: 0, fontSize: '1.25rem' }} />
+                    <FiCheckCircle
+                      aria-hidden="true"
+                      style={{ flexShrink: 0, fontSize: '1.25rem' }}
+                    />
                     <div>
                       <strong>Pickup Scheduled Successfully!</strong>
-                      <div>Scheduled for {scheduledPickupDate}. You can print the shipping label, download the manifest, or view this shipment in your orders list.</div>
+                      <div>
+                        Scheduled for {scheduledPickupDate}. You can print the shipping label,
+                        download the manifest, or view this shipment in your orders list.
+                      </div>
                     </div>
                   </div>
                 ) : null}
@@ -153,22 +171,14 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                           <FiFileText /> {printingManifest ? 'Preparing…' : 'Download Manifest'}
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className={styles.outlineBtn}
-                        onClick={onClose}
-                      >
+                      <button type="button" className={styles.outlineBtn} onClick={onClose}>
                         Schedule Later
                       </button>
                     </>
                   ) : (
                     <>
                       {onViewOrders && (
-                        <button
-                          type="button"
-                          className={styles.primaryBtn}
-                          onClick={onViewOrders}
-                        >
+                        <button type="button" className={styles.primaryBtn} onClick={onViewOrders}>
                           Go to Orders (Shipments) <FiChevronRight />
                         </button>
                       )}
@@ -214,7 +224,8 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                 ) : sortedCouriers.length === 0 ? (
                   <div className={styles.emptyState}>
                     <p className={styles.emptyDesc}>
-                      No couriers returned for this route. Check the delivery pincode, or let Shiprocket assign one.
+                      No couriers returned for this route. Check the delivery pincode, or let
+                      Shiprocket assign one.
                     </p>
                   </div>
                 ) : (
@@ -231,7 +242,9 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                               <span className={styles.courierTag}>Top rated</span>
                             )}
                           </span>
-                          <span className={styles.courierEtd}>Estimated Delivery: {c.etd || '2-4 days'}</span>
+                          <span className={styles.courierEtd}>
+                            Estimated Delivery: {c.etd || '2-4 days'}
+                          </span>
                           <span className={styles.courierRating}>
                             <FiStar aria-hidden="true" /> {c.rating || '4.0'}
                           </span>
@@ -241,7 +254,8 @@ export const ShiprocketCourierModal: React.FC<ShiprocketCourierModalProps> = Rea
                           <button
                             className={styles.primaryBtn}
                             onClick={() => {
-                              if (primaryShipmentId) onAssignCourier(primaryShipmentId, c.courier_company_id);
+                              if (primaryShipmentId)
+                                onAssignCourier(primaryShipmentId, c.courier_company_id);
                             }}
                             disabled={assigningCourier || !primaryShipmentId}
                           >
