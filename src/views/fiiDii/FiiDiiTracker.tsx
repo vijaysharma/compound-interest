@@ -103,7 +103,7 @@ export const FiiDiiTracker: React.FC = () => {
     };
   }, [baseData, adjustmentMode, viewMode, interval]);
   return (
-    <main className={` ${styles.container} fii-dii-tracker`}>
+    <main className={`${styles.container} fii-dii-tracker`}>
       <header className={styles.header}>
         <div className={styles.headerBadge}>
           <span>Institutional Activity</span>
