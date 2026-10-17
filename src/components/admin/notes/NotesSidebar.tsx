@@ -50,22 +50,24 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   isMobileScreen,
 }) => {
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
-  const allCount = notes.filter((n) => !n.is_trashed).length;
-  const quickNotesCount = notes.filter((n) => !n.is_trashed && n.folder === 'Quick Notes').length;
-  const pinnedCount = notes.filter((n) => !n.is_trashed && n.is_pinned).length;
-  const getFolderCount = (folderName: string) => {
-    return notes.filter((n) => !n.is_trashed && n.folder === folderName).length;
-  };
-  const tagCounts: Record<string, number> = {};
-  notes
-    .filter((n) => !n.is_trashed)
-    .forEach((note) => {
-      (note.tags || []).forEach((t) => {
-        const clean = t.toLowerCase();
-        tagCounts[clean] = (tagCounts[clean] || 0) + 1;
-      });
-    });
-  const allTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+  const folderCounts = new Map<string, number>();
+  const tagCounts = new Map<string, number>();
+  let allCount = 0;
+  let quickNotesCount = 0;
+  let pinnedCount = 0;
+  for (const note of notes) {
+    if (note.is_trashed) continue;
+    allCount += 1;
+    if (note.folder) folderCounts.set(note.folder, (folderCounts.get(note.folder) || 0) + 1);
+    if (note.folder === 'Quick Notes') quickNotesCount += 1;
+    if (note.is_pinned) pinnedCount += 1;
+    for (const tag of note.tags || []) {
+      const clean = tag.toLowerCase();
+      tagCounts.set(clean, (tagCounts.get(clean) || 0) + 1);
+    }
+  }
+  const getFolderCount = (folderName: string) => folderCounts.get(folderName) || 0;
+  const allTags = Array.from(tagCounts).sort((a, b) => b[1] - a[1]);
   const handleFolderDrop = (e: React.DragEvent, targetFolder: string) => {
     e.preventDefault();
     const noteId = e.dataTransfer.getData('text/plain');
