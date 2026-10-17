@@ -44,7 +44,7 @@ const CurrencyConverter = () => {
     handleSwapCountries,
   } = useCurrencyConverter();
   return (
-    <main className={styles.container}>
+    <main className={`${styles.container} currency-converter`}>
       <SEOHead
         title="Currency Converter — Live Foreign Exchange Rates India 2026"
         description="Free real-time currency converter with live mid-market forex rates for 160+ currencies including USD to INR, EUR to INR, GBP to INR, AED to INR. 100% private."
@@ -54,53 +54,55 @@ const CurrencyConverter = () => {
       />
       <CurrencyConverterHeader />
       <div className={styles.converterSection}>
-        <CurrencyInputsCol
-          srcCountry={srcCountry}
-          tgtCountry={tgtCountry}
-          availableCountries={availableCountries}
-          countryData={countryData}
-          setSrcCountry={setSrcCountry}
-          setTgtCountry={setTgtCountry}
-          handleSwapCountries={handleSwapCountries}
-          amount={amount}
-          setAmount={setAmount}
-          sourceCurrency={sourceCurrency}
-          error={error}
-          handleRefresh={handleRefresh}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          rateDate={rateDate}
-        />
-        <CurrencyResultsCol
-          exchangeRate={exchangeRate}
-          convertedAmount={convertedAmount}
-          targetCurrency={targetCurrency}
-          sourceCurrency={sourceCurrency}
-          numericAmount={numericAmount}
-          srcCountry={srcCountry}
-          tgtCountry={tgtCountry}
-          inverseRate={inverseRate}
-          lastRefreshed={lastRefreshed}
-          handleRefresh={handleRefresh}
-          loading={loading || loadingCustomDate}
-          selectedDate={selectedDate}
-          rateDate={rateDate}
-        />
-      </div>
-      <div className={styles.converterSection}>
-        <CurrencyHistoryChart
-          sourceCurrency={sourceCurrency}
-          targetCurrency={targetCurrency}
-          points={historicalPoints}
-          loading={loadingHistory}
-          graphPreset={graphPreset}
-          graphStartDate={graphStartDate}
-          graphEndDate={graphEndDate}
-          onSelectGraphPreset={handleSelectGraphPreset}
-          onCustomGraphDates={handleCustomGraphDates}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-        />
+        <div className={styles.inputConverterSection}>
+          <CurrencyInputsCol
+            srcCountry={srcCountry}
+            tgtCountry={tgtCountry}
+            availableCountries={availableCountries}
+            countryData={countryData}
+            setSrcCountry={setSrcCountry}
+            setTgtCountry={setTgtCountry}
+            handleSwapCountries={handleSwapCountries}
+            amount={amount}
+            setAmount={setAmount}
+            sourceCurrency={sourceCurrency}
+            error={error}
+            handleRefresh={handleRefresh}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            rateDate={rateDate}
+          />
+          <CurrencyResultsCol
+            exchangeRate={exchangeRate}
+            convertedAmount={convertedAmount}
+            targetCurrency={targetCurrency}
+            sourceCurrency={sourceCurrency}
+            numericAmount={numericAmount}
+            srcCountry={srcCountry}
+            tgtCountry={tgtCountry}
+            inverseRate={inverseRate}
+            lastRefreshed={lastRefreshed}
+            handleRefresh={handleRefresh}
+            loading={loading || loadingCustomDate}
+            selectedDate={selectedDate}
+            rateDate={rateDate}
+          />
+        </div>
+        <div className={styles.chartConverterSection}>
+          <CurrencyHistoryChart
+            sourceCurrency={sourceCurrency}
+            targetCurrency={targetCurrency}
+            points={historicalPoints}
+            loading={loadingHistory}
+            graphPreset={graphPreset}
+            graphStartDate={graphStartDate}
+            graphEndDate={graphEndDate}
+            onSelectGraphPreset={handleSelectGraphPreset}
+            onCustomGraphDates={handleCustomGraphDates}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+          />
+        </div>
       </div>
       <CalculatorContentSection
         title="Live Foreign Exchange (Forex) Rates & Currency Conversion"

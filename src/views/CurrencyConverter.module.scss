@@ -3,17 +3,11 @@
 
 .container {
   width: 100%;
-  max-width: 56rem;
   margin-inline: auto;
   padding: 0.25rem;
 
   @include tablet-up {
-    max-width: 68rem;
-    padding: 0.5rem 1rem;
-  }
-
-  @include desktop-up {
-    max-width: 76rem;
+    padding: 1.25rem 1.5rem;
   }
 }
 
@@ -61,18 +55,25 @@
 }
 
 .converterSection {
-  display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.625rem;
+  width: 100%;
+  display: flex;
 
   @include tablet-up {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     gap: 1.25rem;
     align-items: start;
     margin-bottom: 1.5rem;
   }
+}
+.inputConverterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.chartConverterSection {
 }
 
 .inputsCol {
@@ -331,14 +332,9 @@
 }
 
 .chartCard {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 12px);
-  padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .chartHeader {

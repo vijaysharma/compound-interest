@@ -42,11 +42,47 @@ export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
   const todayIso = new Date().toISOString().slice(0, 10);
   return (
     <div className={styles.inputsCol}>
+      <div className={styles.datePickerContainer}>
+        <label className={styles.datePickerLabel} htmlFor="conversion-date-input">
+          <FiCalendar className={styles.dateIcon} />
+          <span>Conversion Date {rateDate ? `(${rateDate})` : ''}</span>
+        </label>
+        <div className={styles.datePickerInputWrapper}>
+          <input
+            id="conversion-date-input"
+            type="date"
+            value={selectedDate || todayIso}
+            max={todayIso}
+            min="1999-01-04"
+            onChange={(e) => onSelectDate(e.target.value)}
+            className={styles.dateInput}
+            aria-label="Conversion date"
+          />
+          {selectedDate && selectedDate !== todayIso && (
+            <button
+              type="button"
+              onClick={() => onSelectDate('')}
+              className={styles.resetDateBtn}
+              title="Reset to today / latest rates"
+            >
+              Reset to Today
+            </button>
+          )}
+        </div>
+      </div>
+      {error && (
+        <div className={styles.errorAlert}>
+          <span>{error}</span>
+          <button type="button" onClick={() => void handleRefresh()} className={styles.retryBtn}>
+            Retry
+          </button>
+        </div>
+      )}
       <ValuePicker
         variant="paired"
         sourceBadgeText="Source"
         targetBadgeText="Target"
-        sourceSlot={(
+        sourceSlot={
           <CountrySelect
             label="source"
             value={srcCountry}
@@ -54,8 +90,8 @@ export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
             onChange={setSrcCountry}
             getSecondaryText={(country) => countryData.get(country)?.code}
           />
-        )}
-        targetSlot={(
+        }
+        targetSlot={
           <CountrySelect
             label="target"
             value={tgtCountry}
@@ -63,7 +99,7 @@ export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
             onChange={setTgtCountry}
             getSecondaryText={(country) => countryData.get(country)?.code}
           />
-        )}
+        }
       />
       <div className={styles.swapRow}>
         <button type="button" onClick={handleSwapCountries} className={styles.swapBtn}>
@@ -100,47 +136,8 @@ export const CurrencyInputsCol: React.FC<CurrencyInputsColProps> = ({
         symbol={sourceCurrency.symbol}
         locale={sourceCurrency.locale}
         tabSize="sm"
+        singleRow={true}
       />
-      <div className={styles.datePickerContainer}>
-        <label className={styles.datePickerLabel} htmlFor="conversion-date-input">
-          <FiCalendar className={styles.dateIcon} />
-          <span>Conversion Date {rateDate ? `(${rateDate})` : ''}</span>
-        </label>
-        <div className={styles.datePickerInputWrapper}>
-          <input
-            id="conversion-date-input"
-            type="date"
-            value={selectedDate || todayIso}
-            max={todayIso}
-            min="1999-01-04"
-            onChange={(e) => onSelectDate(e.target.value)}
-            className={styles.dateInput}
-            aria-label="Conversion date"
-          />
-          {selectedDate && selectedDate !== todayIso && (
-            <button
-              type="button"
-              onClick={() => onSelectDate('')}
-              className={styles.resetDateBtn}
-              title="Reset to today / latest rates"
-            >
-              Reset to Today
-            </button>
-          )}
-        </div>
-      </div>
-      {error && (
-        <div className={styles.errorAlert}>
-          <span>{error}</span>
-          <button
-            type="button"
-            onClick={() => void handleRefresh()}
-            className={styles.retryBtn}
-          >
-            Retry
-          </button>
-        </div>
-      )}
     </div>
   );
 };

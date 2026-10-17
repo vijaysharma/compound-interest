@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from '@/navigation';
-import { FiTrendingUp, FiRefreshCw, FiInfo, FiArrowRight } from 'react-icons/fi';
+import { FiTrendingUp, FiRefreshCw } from 'react-icons/fi';
 import DisplayCard from '../../components/DisplayCard';
 import { CountryCurrencyInfo } from './currencyDataUtils';
 import styles from '../CurrencyConverter.module.scss';
@@ -64,13 +63,13 @@ export const CurrencyResultsCol: React.FC<CurrencyResultsColProps> = ({
             </>
           )}
           {selectedDate && (
-            <span className={styles.historicalBadge}>
-              Rate as of {rateDate || selectedDate}
-            </span>
+            <span className={styles.historicalBadge}>Rate as of {rateDate || selectedDate}</span>
           )}
         </div>
         <div className={styles.rateRight}>
-          <span>{selectedDate ? `Date: ${rateDate || selectedDate}` : `Updated: ${lastRefreshed}`}</span>
+          <span>
+            {selectedDate ? `Date: ${rateDate || selectedDate}` : `Updated: ${lastRefreshed}`}
+          </span>
           <button
             type="button"
             onClick={() => void handleRefresh()}
@@ -81,26 +80,6 @@ export const CurrencyResultsCol: React.FC<CurrencyResultsColProps> = ({
           >
             <FiRefreshCw className={loading ? styles.spinning : ''} />
           </button>
-        </div>
-      </div>
-      <div className={`${styles.promoCard} ${styles.marginZero}`}>
-        <div className={styles.promoInner}>
-          <div className={styles.promoIconBox}>
-            <FiInfo />
-          </div>
-          <div>
-            <h3 className={styles.promoTitle}>
-              Need to compare purchasing power instead of exchange rates?
-            </h3>
-            <p className={styles.promoDesc}>
-              Nominal exchange rates don&apos;t account for local costs of living. Use our
-              Purchasing Power Parity (PPP) calculator to see real living standard equivalents.
-            </p>
-            <Link to="/ppp-calculator" className={styles.promoLink}>
-              <span>Compare salaries using PPP Calculator</span>
-              <FiArrowRight />
-            </Link>
-          </div>
         </div>
       </div>
     </div>

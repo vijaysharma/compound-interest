@@ -39,9 +39,10 @@ export const CurrencyHistoryChart: React.FC<CurrencyHistoryChartProps> = ({
   onSelectDate,
 }) => {
   const todayIso = new Date().toISOString().slice(0, 10);
-  const rangeTitle = graphPreset === 'custom'
-    ? `${graphStartDate} to ${graphEndDate}`
-    : `${graphPreset} Rate Trajectory`;
+  const rangeTitle =
+    graphPreset === 'custom'
+      ? `${graphStartDate} to ${graphEndDate}`
+      : `${graphPreset} Rate Trajectory`;
   const hasPoints = points && points.length > 0;
   const rates = hasPoints ? points.map((p) => p.rate) : [];
   const minRate = rates.length > 0 ? Math.min(...rates) : 0;
@@ -64,13 +65,15 @@ export const CurrencyHistoryChart: React.FC<CurrencyHistoryChartProps> = ({
             {loading
               ? 'Loading historical exchange rates...'
               : hasPoints
-              ? `Daily closing rates (${points.length} data points). Click any point to convert on that date.`
-              : 'No historical rate trajectory available for this range or currency pair.'}
+                ? `Daily closing rates (${points.length} data points). Click any point to convert on that date.`
+                : 'No historical rate trajectory available for this range or currency pair.'}
             {!loading && selectedDate ? ` (Active date: ${selectedDate})` : ''}
           </span>
         </div>
         {!loading && hasPoints && (
-          <div className={`${styles.changeBadge} ${isPositive ? styles.changePos : styles.changeNeg}`}>
+          <div
+            className={`${styles.changeBadge} ${isPositive ? styles.changePos : styles.changeNeg}`}
+          >
             {isPositive ? '+' : ''}
             {changePercent.toFixed(2)}%
           </div>
@@ -123,19 +126,27 @@ export const CurrencyHistoryChart: React.FC<CurrencyHistoryChartProps> = ({
         </div>
       ) : (
         <div className={styles.chartWrapper}>
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={440}>
             <LineChart
               data={points}
               margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
               onClick={(state) => {
-                const payloadState = state as unknown as { activePayload?: Array<{ payload?: { date?: string } }>; activeLabel?: string };
-                const clickedDate = payloadState?.activePayload?.[0]?.payload?.date || payloadState?.activeLabel;
+                const payloadState = state as unknown as {
+                  activePayload?: Array<{ payload?: { date?: string } }>;
+                  activeLabel?: string;
+                };
+                const clickedDate =
+                  payloadState?.activePayload?.[0]?.payload?.date || payloadState?.activeLabel;
                 if (clickedDate && onSelectDate) {
                   onSelectDate(clickedDate);
                 }
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(148, 163, 184, 0.2)"
+                vertical={false}
+              />
               <XAxis
                 dataKey="date"
                 stroke="#94a3b8"
