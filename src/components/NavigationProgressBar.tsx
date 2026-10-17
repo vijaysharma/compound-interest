@@ -164,7 +164,10 @@ export function NavigationProgressBar() {
     const handlePageShow = (e: PageTransitionEvent) => {
       if (e.persisted) done();
     };
-    const handlePopState = () => start();
+    const handlePopState = () => {
+      const currentRoute = window.location.pathname + window.location.search;
+      if (currentRoute !== prevRouteRef.current) start();
+    };
     const handlePointerAction = (e: MouseEvent | PointerEvent) => {
       if (e.button !== 0 || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       if (e.defaultPrevented) return;
