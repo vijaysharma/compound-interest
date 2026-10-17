@@ -110,3 +110,62 @@ test('computePresetDates produces correct 5Y and 10Y start years', async () => {
   const res10Y = computePresetDates('10Y');
   assert.equal(parseInt(res10Y.start.slice(0, 4), 10), currentYear - 10);
 });
+test('handleGetHistoricalRates triangulates rates for non-Frankfurter currencies like AED against INR', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url: string | URL | Request) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('api.frankfurter.dev/v1/2026-03-01..2026-03-02') && urlStr.includes('base=USD&symbols=INR')) {
+        return {
+          ok: true,
+          json: async () => ({
+            amount: 1,
+            base: 'USD',
+            start_date: '2026-03-01',
+            end_date: '2026-03-02',
+            rates: {
+              '2026-03-01': { INR: 91.8125 }, // 91.8125 / 3.6725 = 25.0
+              '2026-03-02': { INR: 95.485 }, // 95.485 / 3.6725 = 26.0
+            },
+          }),
+        } as unknown as Response;
+      }
+      return { ok: false } as unknown as Response;
+    };
+    const res = await handleGetHistoricalRates('AED', 'INR', 2, '2026-03-01', '2026-03-02');
+    assert.equal(res.success, true);
+    assert.equal(res.base, 'AED');
+    assert.equal(res.target, 'INR');
+    assert.equal(res.points.length, 2);
+    assert.equal(Math.round(res.points[0].rate), 25);
+    assert.equal(Math.round(res.points[1].rate), 26);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+test('handleGetHistoricalRates falls back to @fawazahmed0 currency-api for non-Frankfurter pairs', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url: string | URL | Request) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('currency-api') && urlStr.includes('currencies/usd.min.json')) {
+        return {
+          ok: true,
+          json: async () => ({
+            date: '2025-01-01',
+            usd: { pkr: 278.5 },
+          }),
+        } as unknown as Response;
+      }
+      return { ok: false } as unknown as Response;
+    };
+    const res = await handleGetHistoricalRates('USD', 'PKR', 1, '2025-01-01', '2025-01-01');
+    assert.equal(res.success, true);
+    assert.equal(res.base, 'USD');
+    assert.equal(res.target, 'PKR');
+    assert.equal(res.points.length, 1);
+    assert.equal(res.points[0].rate, 278.5);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

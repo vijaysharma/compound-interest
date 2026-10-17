@@ -3,7 +3,6 @@ import { fetchExchangeRates } from '../../data/api_data';
 import { DEFAULT_EXCHANGE_RATES } from '../../data/default_exchange_rates';
 import { buildCountryDataMap, PRIORITY_COUNTRIES, computePresetDates, type GraphPresetType } from './currencyDataUtils';
 import { getHistoricalRatesAction, type CurrencyHistoricalPoint } from '@/actions/data';
-
 export { computePresetDates, type GraphPresetType };
 export function useCurrencyConverter() {
   const [rates, setRates] = useState<Record<string, number>>(DEFAULT_EXCHANGE_RATES);

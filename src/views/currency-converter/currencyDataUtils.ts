@@ -119,9 +119,7 @@ export const PRIORITY_COUNTRIES = [
   'South Korea',
   'Russia',
 ];
-
 export type GraphPresetType = '7D' | '1M' | '3M' | '6M' | '1Y' | '5Y' | '10Y' | 'custom';
-
 export function computePresetDates(preset: '7D' | '1M' | '3M' | '6M' | '1Y' | '5Y' | '10Y'): { start: string; end: string } {
   const now = new Date();
   const end = now.toISOString().slice(0, 10);
