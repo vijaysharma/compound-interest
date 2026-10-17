@@ -368,6 +368,11 @@
   font-weight: 500;
   transition: background-color, color, border-color, box-shadow, transform;
   transition-duration: 0.15s;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
 
   &:hover,
   &:focus-within {
@@ -377,9 +382,6 @@
       display: flex;
     }
 
-    .navCount {
-      display: none;
-    }
   }
 
   @media (hover: none), (pointer: coarse) {
@@ -387,9 +389,6 @@
       display: flex;
     }
 
-    .navCount {
-      display: none;
-    }
   }
 
   &.navItemActive {

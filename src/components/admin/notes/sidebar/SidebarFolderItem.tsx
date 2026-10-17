@@ -1,11 +1,9 @@
 'use client';
 import React from 'react';
-import { FiFolder, FiTrash2, FiEdit2, FiX, FiCheck, FiChevronUp, FiChevronDown } from 'react-icons/fi';
+import { FiFolder, FiTrash2, FiEdit2, FiX, FiCheck } from 'react-icons/fi';
 import styles from '../NotesSidebar.module.scss';
 interface SidebarFolderItemProps {
   folder: string;
-  index: number;
-  totalFolders: number;
   isEditing: boolean;
   isCurrent: boolean;
   isDragOver: boolean;
@@ -18,16 +16,13 @@ interface SidebarFolderItemProps {
   onSelectFolder: (folder: string) => void;
   onSelectTag: (tag: string | null) => void;
   onDeleteFolder: (folder: string) => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
+  onReorder: (sourceFolder: string, targetFolder: string) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
 }
 export const SidebarFolderItem: React.FC<SidebarFolderItemProps> = ({
   folder,
-  index,
-  totalFolders,
   isEditing,
   isCurrent,
   isDragOver,
@@ -40,8 +35,7 @@ export const SidebarFolderItem: React.FC<SidebarFolderItemProps> = ({
   onSelectFolder,
   onSelectTag,
   onDeleteFolder,
-  onMoveUp,
-  onMoveDown,
+  onReorder,
   onDragOver,
   onDragLeave,
   onDrop,
@@ -78,9 +72,28 @@ export const SidebarFolderItem: React.FC<SidebarFolderItemProps> = ({
   }
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        if ((e.target as HTMLElement).closest('button, input')) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('application/x-quick-notes-folder', folder);
+      }}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
-      onDrop={onDrop}
+      onDrop={(e) => {
+        const sourceFolder = e.dataTransfer.getData('application/x-quick-notes-folder');
+        if (sourceFolder) {
+          e.preventDefault();
+          e.stopPropagation();
+          onReorder(sourceFolder, folder);
+          onDragLeave();
+          return;
+        }
+        onDrop(e);
+      }}
       className={`${styles.folderRow} ${
         isDragOver
           ? styles.dragOver
@@ -107,34 +120,6 @@ export const SidebarFolderItem: React.FC<SidebarFolderItemProps> = ({
           {count}
         </span>
         <div className={styles.folderHoverActions}>
-          {onMoveUp && index > 0 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveUp();
-              }}
-              className={styles.actionIcon}
-              title="Move folder up"
-              aria-label="Move folder up"
-            >
-              <FiChevronUp size={12} />
-            </button>
-          )}
-          {onMoveDown && index < totalFolders - 1 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoveDown();
-              }}
-              className={styles.actionIcon}
-              title="Move folder down"
-              aria-label="Move folder down"
-            >
-              <FiChevronDown size={12} />
-            </button>
-          )}
           <button
             type="button"
             onClick={(e) => {

@@ -2,12 +2,7 @@
 import React from 'react';
 import { FiFolder } from 'react-icons/fi';
 import { BsPinFill, BsLockFill } from 'react-icons/bs';
-import {
-  Note,
-  formatNoteDate,
-  extractSnippet,
-  deriveAutoTitleFromHtml,
-} from '../NotesTypes';
+import { Note, formatNoteDate, extractSnippet, deriveAutoTitleFromHtml } from '../NotesTypes';
 import styles from '../NotesList.module.scss';
 import { NoteCardActions } from './NoteCardActions';
 interface NoteCardProps {
@@ -48,7 +43,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       className={`${styles.noteCard} ${isSelected ? styles.noteCardSelected : ''}`}
     >
       <div className={styles.cardHeader}>
-        <h3 className={`${styles.cardTitle} ${isSelected ? styles.cardTitleSelected : ''}`}>
+        <h3
+          title={title}
+          className={`${styles.cardTitle} ${isSelected ? styles.cardTitleSelected : ''}`}
+        >
           {title}
         </h3>
         <div className={styles.cardHeaderIcons}>

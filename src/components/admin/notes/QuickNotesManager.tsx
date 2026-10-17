@@ -225,7 +225,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const {
     unlockedNotes, isLockModalOpen, setIsLockModalOpen, isBackupModalOpen,
     setIsBackupModalOpen, isSecurityModalOpen, setIsSecurityModalOpen,
-    handleCreateFolder, handleRenameFolder, handleDeleteFolder, handleMoveFolder,
+    handleCreateFolder, handleRenameFolder, handleDeleteFolder, handleReorderFolders,
     handleSetLockPassword, handleRemoveLock, handleUnlockSession, handleRestoreSuccess,
   } = useNotesFolderLockActions({
     folders, setFolders, foldersKeyRef, activeFolder, setActiveFolder,
@@ -287,7 +287,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         onTogglePin={handleTogglePin} onDeleteNote={handleDeleteNote} onPermanentDelete={handlePermanentDelete}
         onRestoreNote={handleRestoreNote} onEmptyTrash={handleEmptyTrash} onMoveNoteToFolder={handleMoveNoteToFolder}
         onCreateFolder={handleCreateFolder} onRenameFolder={handleRenameFolder} onDeleteFolder={handleDeleteFolder}
-        onMoveFolder={handleMoveFolder}
+        onReorderFolders={handleReorderFolders}
         onOpenLockModal={() => setIsLockModalOpen(true)} onOpenBackupModal={() => setIsBackupModalOpen(true)}
         onOpenSecurityModal={handleOpenSecurityModal} onUnlockSession={handleUnlockSession}
         autoSaveEnabled={autoSaveEnabled} onToggleAutoSave={handleToggleAutoSave}

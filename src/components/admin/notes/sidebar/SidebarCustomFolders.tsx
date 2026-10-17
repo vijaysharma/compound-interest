@@ -14,7 +14,7 @@ interface SidebarCustomFoldersProps {
   onCreateFolder: (name: string) => void;
   onRenameFolder: (oldName: string, newName: string) => void;
   onDeleteFolder: (name: string) => void;
-  onMoveFolder?: (folderName: string, direction: 'up' | 'down') => void;
+  onReorderFolders?: (folders: string[]) => void;
   onFolderDrop: (e: React.DragEvent, targetFolder: string) => void;
   getFolderCount: (folderName: string) => number;
 }
@@ -29,7 +29,7 @@ export const SidebarCustomFolders: React.FC<SidebarCustomFoldersProps> = ({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
-  onMoveFolder,
+  onReorderFolders,
   onFolderDrop,
   getFolderCount,
 }) => {
@@ -99,12 +99,10 @@ export const SidebarCustomFolders: React.FC<SidebarCustomFoldersProps> = ({
               </button>
             </form>
           )}
-          {folders.map((folder, idx) => (
+          {folders.map((folder) => (
             <SidebarFolderItem
               key={folder}
               folder={folder}
-              index={idx}
-              totalFolders={folders.length}
               isEditing={editingFolder === folder}
               isCurrent={activeFolder === folder && !activeTag}
               isDragOver={dragOverFolder === folder}
@@ -120,8 +118,16 @@ export const SidebarCustomFolders: React.FC<SidebarCustomFoldersProps> = ({
               onSelectFolder={onSelectFolder}
               onSelectTag={onSelectTag}
               onDeleteFolder={onDeleteFolder}
-              onMoveUp={() => onMoveFolder?.(folder, 'up')}
-              onMoveDown={() => onMoveFolder?.(folder, 'down')}
+              onReorder={(sourceFolder, targetFolder) => {
+                if (!onReorderFolders || sourceFolder === targetFolder) return;
+                const reordered = [...folders];
+                const sourceIndex = reordered.indexOf(sourceFolder);
+                const targetIndex = reordered.indexOf(targetFolder);
+                if (sourceIndex < 0 || targetIndex < 0) return;
+                const [movedFolder] = reordered.splice(sourceIndex, 1);
+                reordered.splice(targetIndex, 0, movedFolder);
+                onReorderFolders(reordered);
+              }}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';

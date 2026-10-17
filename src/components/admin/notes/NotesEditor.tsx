@@ -114,6 +114,11 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
         onClick={state.checklist.handleEditorClick} onKeyDown={state.keyboard.handleKeyDown}
         onSaveSelection={state.selection.saveSelection}
       />
+      {isTrash && isMobileScreen && onBackMobile && (
+        <button type="button" onClick={onBackMobile} className={styles.trashDoneBtn}>
+          Done
+        </button>
+      )}
       {(activeMobileMenu || (isMobileScreen && activeDropdown)) && (
         <div className={styles.mobileBackdrop} onClick={() => { setActiveMobileMenu(null); setActiveDropdown(null); }} />
       )}

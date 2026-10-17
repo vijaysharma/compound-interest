@@ -669,6 +669,25 @@
   font-weight: 500;
 }
 
+.trashDoneBtn {
+  width: calc(100% - 1.5rem);
+  min-height: 44px;
+  margin: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 0 0 auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
 // Table tools
 .tableToolsBar {
   background-color: var(--color-bg-secondary);
