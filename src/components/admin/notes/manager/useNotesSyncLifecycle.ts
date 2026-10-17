@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { Note, SyncState } from '../NotesTypes';
-import { loadAndDecryptNotes } from './notesLoader';
+import { loadAndDecryptNotes, cacheDecryptedNotes } from './notesLoader';
 import { reconcileNotesWithLocalDrafts } from './notesDraftStorage';
 const SAVE_SWEEP_MS = 15_000;
 interface UseNotesSyncLifecycleProps {
@@ -76,7 +76,9 @@ export function useNotesSyncLifecycle({
         const unsaved = notesRef.current.filter(
           (n) => savePendingRef.current.has(n.id) && !reconciled.some((r) => r.id === n.id)
         );
-        setNotes([...unsaved, ...reconciled]);
+        const fullNotes = [...unsaved, ...reconciled];
+        setNotes(fullNotes);
+        cacheDecryptedNotes(userId, fullNotes);
         setUnsyncedCount(savePendingRef.current.size);
         if (autoSaveEnabledRef.current && savePendingRef.current.size > 0) void flushPendingSaves();
         const fetchedFolders = reconciled.map((n) => n.folder).filter(Boolean);

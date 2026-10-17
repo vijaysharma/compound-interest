@@ -41,6 +41,7 @@ interface NotesManagerPanesProps {
   onCreateFolder: (name: string) => void;
   onRenameFolder: (oldName: string, newName: string) => void;
   onDeleteFolder: (name: string) => void;
+  onMoveFolder?: (folderName: string, direction: 'up' | 'down') => void;
   onOpenLockModal: () => void;
   onOpenBackupModal: () => void;
   onOpenSecurityModal: () => void;
@@ -62,7 +63,7 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
   effectiveMobileScreen, setMobileScreen, isSaving, unlockedNotes, onSelectNote,
   onNewNote, onDuplicateNote, onUpdateNote, onTogglePin, onDeleteNote,
   onPermanentDelete, onRestoreNote, onEmptyTrash, onMoveNoteToFolder,
-  onCreateFolder, onRenameFolder, onDeleteFolder, onOpenLockModal,
+  onCreateFolder, onRenameFolder, onDeleteFolder, onMoveFolder, onOpenLockModal,
   onOpenBackupModal, onOpenSecurityModal, onUnlockSession,
   autoSaveEnabled, onToggleAutoSave, onManualSave, saveSuccessMessage,
   isPendingSave, saveError,
@@ -101,6 +102,7 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
           }}
           onCreateFolder={onCreateFolder} onRenameFolder={onRenameFolder}
           onDeleteFolder={onDeleteFolder} onMoveNoteToFolder={onMoveNoteToFolder}
+          onMoveFolder={onMoveFolder}
           isOpen={isMobile ? effectiveMobileScreen === 'folders' : isSidebarOpen}
           onClose={() => isMobile ? setMobileScreen('list') : setIsSidebarOpen(false)}
           onCloseMobile={() => setMobileScreen('list')} onOpenBackupModal={onOpenBackupModal}

@@ -5,7 +5,7 @@ import {
   isPaidUser,
 } from '@/lib/db';
 import { deleteNoteBlobs, isBlobConfigured, putNoteBlob } from '@/lib/blob';
-import { RestoreNotesBackupInput } from './types';
+import type { RestoreNotesBackupInput } from './types';
 import {
   parseTags,
   sanitizeServerContent,

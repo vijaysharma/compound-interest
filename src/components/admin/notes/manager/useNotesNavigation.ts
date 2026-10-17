@@ -5,9 +5,8 @@ import { useNotesPersistence } from './useNotesPersistence';
 import { useMobileBackHandler } from './useMobileBackHandler';
 interface UseNotesNavigationProps {
   userId: string;
-  hasSelectedNote: boolean;
 }
-export function useNotesNavigation({ userId, hasSelectedNote }: UseNotesNavigationProps) {
+export function useNotesNavigation({ userId }: UseNotesNavigationProps) {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(() => {
     try {
       return localStorage.getItem(
@@ -87,8 +86,9 @@ export function useNotesNavigation({ userId, hasSelectedNote }: UseNotesNavigati
     mobileScreen,
     setMobileScreen,
   });
+  const hasNote = Boolean(selectedNoteId);
   const effectiveMobileScreen: 'folders' | 'list' | 'editor' =
-    isMobile && mobileScreen === 'editor' && !hasSelectedNote ? 'list' : mobileScreen;
+    isMobile && mobileScreen === 'editor' && !hasNote ? 'list' : mobileScreen;
   return {
     selectedNoteId,
     setSelectedNoteId,

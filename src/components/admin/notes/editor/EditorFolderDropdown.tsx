@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiFolder, FiFolderPlus } from 'react-icons/fi';
+import { FiFolder, FiFolderPlus, FiChevronDown } from 'react-icons/fi';
 import styles from '../NotesEditor.module.scss';
 import { DropdownType, MobileMenuType } from './types';
 interface EditorFolderDropdownProps {
@@ -31,9 +31,11 @@ export const EditorFolderDropdown: React.FC<EditorFolderDropdownProps> = ({
         }}
         className={`${styles.folderSelector} ${isOpen ? styles.active : ''}`}
         title="Move to another folder"
+        aria-label={`Folder: ${currentFolder}. Click to move note.`}
       >
         <FiFolder size={14} color="var(--color-primary)" className={styles.flexShrink0} />
         <span className={styles.truncateMax140}>{currentFolder}</span>
+        <FiChevronDown size={12} className={styles.flexShrink0} style={{ opacity: 0.6 }} />
       </button>
       {isOpen && (
         <ul className={`${styles.dropdownMenu} ${styles.alignLeft}`}>

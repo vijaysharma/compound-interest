@@ -6,7 +6,7 @@ import {
 } from '@/lib/db';
 import { readNoteBlob } from '@/lib/blob';
 import { redisGet, redisSet } from '@/lib/redis';
-import { NoteItem, NoteRow } from './types';
+import type { NoteItem, NoteRow } from './types';
 import { parseTags } from './sanitizeUtils';
 export async function handleGetNotes(
   options: { include_trashed?: boolean } = {},

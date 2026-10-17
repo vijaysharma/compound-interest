@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Note, SyncState } from '../NotesTypes';
 import { savePendingNotes } from './notesSaver';
-import { getInitialCustomFolders } from './notesLoader';
+import { getInitialCustomFolders, getInitialCachedNotes } from './notesLoader';
 import { useNotesSyncLifecycle } from './useNotesSyncLifecycle';
 import { removeLocalDraft } from './notesDraftStorage';
 const SAVE_DEBOUNCE_MS = 3_000;
@@ -15,7 +15,7 @@ interface UseNotesSyncProps {
 }
 export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true, onSelectInitialNote }: UseNotesSyncProps) {
   const foldersKey = `quick_notes_custom_folders_${userId}_v2`;
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>(() => getInitialCachedNotes(userId));
   const [folders, setFolders] = useState<string[]>(() => getInitialCustomFolders(userId));
   const [loading, setLoading] = useState<boolean>(() => notes.length === 0);
   const [syncState, setSyncState] = useState<SyncState>('syncing');

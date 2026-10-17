@@ -42,7 +42,6 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     isMobile, effectiveMobileScreen,
   } = useNotesNavigation({
     userId,
-    hasSelectedNote: false,
   });
   const handleSelectInitialNote = useCallback((reconciled: Note[]) => {
     setSelectedNoteId((curr) => {
@@ -226,7 +225,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const {
     unlockedNotes, isLockModalOpen, setIsLockModalOpen, isBackupModalOpen,
     setIsBackupModalOpen, isSecurityModalOpen, setIsSecurityModalOpen,
-    handleCreateFolder, handleRenameFolder, handleDeleteFolder,
+    handleCreateFolder, handleRenameFolder, handleDeleteFolder, handleMoveFolder,
     handleSetLockPassword, handleRemoveLock, handleUnlockSession, handleRestoreSuccess,
   } = useNotesFolderLockActions({
     folders, setFolders, foldersKeyRef, activeFolder, setActiveFolder,
@@ -270,7 +269,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   }, [storageProvider, token, setStorageProvider, setIsSecurityModalOpen]);
   return (
     <div className={`${styles.container} quick-notes-theme`}>
-      {loading && notes.length === 0 && (
+      {loading && notes.length === 0 && !isMobile && (
         <div className={styles.loadingOverlay}>
           <span className={styles.spinner}></span>
         </div>
@@ -288,6 +287,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         onTogglePin={handleTogglePin} onDeleteNote={handleDeleteNote} onPermanentDelete={handlePermanentDelete}
         onRestoreNote={handleRestoreNote} onEmptyTrash={handleEmptyTrash} onMoveNoteToFolder={handleMoveNoteToFolder}
         onCreateFolder={handleCreateFolder} onRenameFolder={handleRenameFolder} onDeleteFolder={handleDeleteFolder}
+        onMoveFolder={handleMoveFolder}
         onOpenLockModal={() => setIsLockModalOpen(true)} onOpenBackupModal={() => setIsBackupModalOpen(true)}
         onOpenSecurityModal={handleOpenSecurityModal} onUnlockSession={handleUnlockSession}
         autoSaveEnabled={autoSaveEnabled} onToggleAutoSave={handleToggleAutoSave}

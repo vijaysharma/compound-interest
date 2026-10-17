@@ -1,4 +1,4 @@
-import { Note, DEFAULT_CUSTOM_FOLDERS } from '../NotesTypes';
+import { type Note, DEFAULT_CUSTOM_FOLDERS } from '../NotesTypes';
 import { getUserEncryptionKey, decryptText, encryptText, isEncrypted } from '../NotesCrypto';
 import { getNotesAction, getNotesStorageStatusAction, updateNoteAction } from '@/actions/notes';
 interface LoadNotesResult {
@@ -15,22 +15,43 @@ export function getInitialCustomFolders(userId: string): string[] {
     return DEFAULT_CUSTOM_FOLDERS;
   }
 }
+const NOTES_CACHE_VERSION = 'v2';
+export function getInitialCachedNotes(userId: string): Note[] {
+  if (typeof window === 'undefined' && typeof globalThis.localStorage === 'undefined') return [];
+  try {
+    const key = `quick_notes_${userId || 'default'}_notes_cache_${NOTES_CACHE_VERSION}`;
+    const raw = globalThis.localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Note[]) : [];
+  } catch {
+    return [];
+  }
+}
+export function cacheDecryptedNotes(userId: string, notes: Note[]): void {
+  if (typeof window === 'undefined' && typeof globalThis.localStorage === 'undefined') return;
+  try {
+    const key = `quick_notes_${userId || 'default'}_notes_cache_${NOTES_CACHE_VERSION}`;
+    globalThis.localStorage.setItem(key, JSON.stringify(notes));
+  } catch {
+    // Quota exceeded or storage unavailable
+  }
+}
 export async function loadAndDecryptNotes(
   token: string,
   userId: string,
   userEmail: string
 ): Promise<LoadNotesResult> {
-  const key = await getUserEncryptionKey(userId, userEmail);
-  const rawData = (await getNotesAction({ include_trashed: true }, token)) as unknown as Note[];
-  let storageProvider: 'vercel_blob' | 'database_fallback' | null = null;
-  try {
-    const statusRes = await getNotesStorageStatusAction().catch(() => null);
-    if (statusRes?.storage_provider) {
-      storageProvider = statusRes.storage_provider as 'vercel_blob' | 'database_fallback';
-    }
-  } catch {
-    // Ignore storage status check failure
-  }
+  const [key, rawDataResult, statusRes] = await Promise.all([
+    getUserEncryptionKey(userId, userEmail),
+    getNotesAction({ include_trashed: true }, token).catch(() => [] as Note[]),
+    getNotesStorageStatusAction().catch(() => null),
+  ]);
+  const rawData = (rawDataResult || []) as unknown as Note[];
+  const storageProvider: 'vercel_blob' | 'database_fallback' | null =
+    statusRes?.storage_provider === 'vercel_blob' || statusRes?.storage_provider === 'database_fallback'
+      ? statusRes.storage_provider
+      : null;
   const decryptedNotes: Note[] = await Promise.all(
     (rawData || []).map(async (n) => ({
       ...n,

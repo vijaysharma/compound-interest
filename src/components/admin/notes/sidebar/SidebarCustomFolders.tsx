@@ -14,6 +14,7 @@ interface SidebarCustomFoldersProps {
   onCreateFolder: (name: string) => void;
   onRenameFolder: (oldName: string, newName: string) => void;
   onDeleteFolder: (name: string) => void;
+  onMoveFolder?: (folderName: string, direction: 'up' | 'down') => void;
   onFolderDrop: (e: React.DragEvent, targetFolder: string) => void;
   getFolderCount: (folderName: string) => number;
 }
@@ -28,6 +29,7 @@ export const SidebarCustomFolders: React.FC<SidebarCustomFoldersProps> = ({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
+  onMoveFolder,
   onFolderDrop,
   getFolderCount,
 }) => {
@@ -97,10 +99,12 @@ export const SidebarCustomFolders: React.FC<SidebarCustomFoldersProps> = ({
               </button>
             </form>
           )}
-          {folders.map((folder) => (
+          {folders.map((folder, idx) => (
             <SidebarFolderItem
               key={folder}
               folder={folder}
+              index={idx}
+              totalFolders={folders.length}
               isEditing={editingFolder === folder}
               isCurrent={activeFolder === folder && !activeTag}
               isDragOver={dragOverFolder === folder}
@@ -116,6 +120,8 @@ export const SidebarCustomFolders: React.FC<SidebarCustomFoldersProps> = ({
               onSelectFolder={onSelectFolder}
               onSelectTag={onSelectTag}
               onDeleteFolder={onDeleteFolder}
+              onMoveUp={() => onMoveFolder?.(folder, 'up')}
+              onMoveDown={() => onMoveFolder?.(folder, 'down')}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';

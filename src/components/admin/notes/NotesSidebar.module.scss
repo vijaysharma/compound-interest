@@ -369,9 +369,20 @@
   transition: background-color, color, border-color, box-shadow, transform;
   transition-duration: 0.15s;
 
-  &:hover {
+  &:hover,
+  &:focus-within {
     background: var(--color-bg-secondary);
 
+    .folderHoverActions {
+      display: flex;
+    }
+
+    .navCount {
+      display: none;
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
     .folderHoverActions {
       display: flex;
     }

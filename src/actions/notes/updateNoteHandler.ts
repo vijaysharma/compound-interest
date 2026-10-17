@@ -5,7 +5,7 @@ import {
   isPaidUser,
 } from '@/lib/db';
 import { deleteNoteBlobs, putNoteBlob } from '@/lib/blob';
-import { UpdateNoteInput } from './types';
+import type { UpdateNoteInput } from './types';
 import {
   parseTags,
   sanitizeServerContent,

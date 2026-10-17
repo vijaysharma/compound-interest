@@ -1,5 +1,5 @@
 'use server';
-import { NoteItem, CreateNoteInput, UpdateNoteInput, RestoreNotesBackupInput } from './notes/types';
+import type { NoteItem, CreateNoteInput, UpdateNoteInput, RestoreNotesBackupInput } from './notes/types';
 import { handleGetNotes } from './notes/getNotesHandler';
 import { handleCreateNote } from './notes/createNoteHandler';
 import { handleUpdateNote } from './notes/updateNoteHandler';

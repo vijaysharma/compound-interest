@@ -63,6 +63,21 @@ export function useNotesFolderLockActions({
     setNotes((prev) => prev.map((n) => (n.folder === name ? { ...n, folder: 'Quick Notes' } : n)));
     notes.filter((n) => n.folder === name).forEach((n) => queueNoteSync(n.id));
   };
+  const handleMoveFolder = (folderName: string, direction: 'up' | 'down') => {
+    const idx = folders.indexOf(folderName);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= folders.length) return;
+    const next = [...folders];
+    const [moved] = next.splice(idx, 1);
+    next.splice(targetIdx, 0, moved);
+    setFolders(next);
+    localStorage.setItem(foldersKeyRef.current, JSON.stringify(next));
+  };
+  const handleReorderFolders = (newFolders: string[]) => {
+    setFolders(newFolders);
+    localStorage.setItem(foldersKeyRef.current, JSON.stringify(newFolders));
+  };
   const handleSetLockPassword = (hash: string) => {
     if (!selectedNoteId) return;
     handleUpdateNote({ is_locked: true, lock_password_hash: hash });
@@ -104,6 +119,8 @@ export function useNotesFolderLockActions({
     handleCreateFolder,
     handleRenameFolder,
     handleDeleteFolder,
+    handleMoveFolder,
+    handleReorderFolders,
     handleSetLockPassword,
     handleRemoveLock,
     handleUnlockSession,

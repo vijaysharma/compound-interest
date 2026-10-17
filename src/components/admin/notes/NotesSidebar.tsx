@@ -18,6 +18,7 @@ interface NotesSidebarProps {
   onCreateFolder: (name: string) => void;
   onRenameFolder: (oldName: string, newName: string) => void;
   onDeleteFolder: (name: string) => void;
+  onMoveFolder?: (folderName: string, direction: 'up' | 'down') => void;
   onMoveNoteToFolder?: (noteId: string, folder: string) => void;
   isOpen: boolean;
   onClose?: () => void;
@@ -38,6 +39,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
+  onMoveFolder,
   onMoveNoteToFolder,
   isOpen,
   onClose,
@@ -108,6 +110,7 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
           onCreateFolder={onCreateFolder}
           onRenameFolder={onRenameFolder}
           onDeleteFolder={onDeleteFolder}
+          onMoveFolder={onMoveFolder}
           onFolderDrop={handleFolderDrop}
           getFolderCount={getFolderCount}
         />

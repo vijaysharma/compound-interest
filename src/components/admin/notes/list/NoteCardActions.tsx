@@ -27,38 +27,46 @@ export const NoteCardActions: React.FC<NoteCardActionsProps> = ({
       {!isTrash ? (
         <>
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onOpenMoveModal(note);
             }}
             className={styles.floatingBtn}
             title="Move to Folder"
+            aria-label="Move to Folder"
           >
-            <FiFolder size={12} />
+            <FiFolder size={14} />
           </button>
           <button
+            type="button"
             onClick={(e) => onTogglePin(note.id, e)}
             className={`${styles.floatingBtn} ${note.is_pinned ? styles.pinnedFloatingBtn : ''}`}
             title={note.is_pinned ? 'Unpin' : 'Pin to top'}
+            aria-label={note.is_pinned ? 'Unpin' : 'Pin to top'}
           >
-            {note.is_pinned ? <BsPinFill size={12} /> : <BsPin size={12} />}
+            {note.is_pinned ? <BsPinFill size={14} /> : <BsPin size={14} />}
           </button>
           <button
+            type="button"
             onClick={(e) => onDuplicateNote(note, e)}
             className={styles.floatingBtn}
             title="Duplicate note"
+            aria-label="Duplicate note"
           >
-            <FiCopy size={12} />
+            <FiCopy size={14} />
           </button>
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onOpenDeleteModal(note);
             }}
             className={`${styles.floatingBtn} ${styles.danger}`}
             title="Move to Trash"
+            aria-label="Move to Trash"
           >
-            <FiTrash2 size={12} />
+            <FiTrash2 size={14} />
           </button>
         </>
       ) : (

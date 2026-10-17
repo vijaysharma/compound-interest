@@ -298,3 +298,75 @@ test('save status badge correctly reports Unsaved changes when auto-save is off'
   assert.equal(getSaveStatus(false, true, false, true), 'Saving...');
   assert.equal(getSaveStatus(true, false, false, true), 'Read Only');
 });
+test('getInitialCachedNotes reads persisted notes from localStorage for zero-latency load', async () => {
+  const { getInitialCachedNotes, cacheDecryptedNotes } = await import('../manager/notesLoader');
+  const mockStorage: Record<string, string> = {};
+  globalThis.localStorage = {
+    getItem: (key: string) => mockStorage[key] ?? null,
+    setItem: (key: string, val: string) => { mockStorage[key] = String(val); },
+    removeItem: (key: string) => { delete mockStorage[key]; },
+    clear: () => { for (const k of Object.keys(mockStorage)) delete mockStorage[k]; },
+    key: (i: number) => Object.keys(mockStorage)[i] ?? null,
+    length: 0,
+  };
+  const userId = 'user_cache_test';
+  const testNotes: Note[] = [
+    {
+      id: 'cached_1',
+      title: 'Fast Loaded Note',
+      content: '<p>Immediate content</p>',
+      folder: 'Quick Notes',
+      is_pinned: false,
+      is_locked: false,
+      is_trashed: false,
+      tags: [],
+      created_at: '2026-10-17T10:00:00.000Z',
+      updated_at: '2026-10-17T10:00:00.000Z',
+    },
+  ];
+  cacheDecryptedNotes(userId, testNotes);
+  const loaded = getInitialCachedNotes(userId);
+  assert.equal(loaded.length, 1);
+  assert.equal(loaded[0].id, 'cached_1');
+  assert.equal(loaded[0].title, 'Fast Loaded Note');
+});
+test('effectiveMobileScreen transitions to editor when a note is selected on mobile', () => {
+  const computeMobileScreen = (
+    isMobile: boolean,
+    mobileScreen: 'folders' | 'list' | 'editor',
+    selectedNoteId: string | null
+  ) => {
+    const hasNote = Boolean(selectedNoteId);
+    return isMobile && mobileScreen === 'editor' && !hasNote ? 'list' : mobileScreen;
+  };
+  // When mobile user taps a note, mobileScreen becomes 'editor' and selectedNoteId is non-null
+  assert.equal(computeMobileScreen(true, 'editor', 'note_123'), 'editor');
+  // If no note is selected and user somehow landed on editor, fall back to 'list'
+  assert.equal(computeMobileScreen(true, 'editor', null), 'list');
+  // Folders screen stays on folders
+  assert.equal(computeMobileScreen(true, 'folders', null), 'folders');
+  // List screen stays on list
+  assert.equal(computeMobileScreen(true, 'list', null), 'list');
+});
+test('folder reordering moves folders up and down correctly', () => {
+  const folders = ['Work', 'Personal', 'Projects', 'Archive'];
+  const moveFolder = (list: string[], folderName: string, direction: 'up' | 'down') => {
+    const idx = list.indexOf(folderName);
+    if (idx === -1) return list;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= list.length) return list;
+    const next = [...list];
+    const [moved] = next.splice(idx, 1);
+    next.splice(targetIdx, 0, moved);
+    return next;
+  };
+  // Move 'Personal' up
+  const movedUp = moveFolder(folders, 'Personal', 'up');
+  assert.deepEqual(movedUp, ['Personal', 'Work', 'Projects', 'Archive']);
+  // Move 'Work' down
+  const movedDown = moveFolder(movedUp, 'Work', 'down');
+  assert.deepEqual(movedDown, ['Personal', 'Projects', 'Work', 'Archive']);
+  // Out of bounds checks
+  assert.deepEqual(moveFolder(folders, 'Work', 'up'), folders);
+  assert.deepEqual(moveFolder(folders, 'Archive', 'down'), folders);
+});
