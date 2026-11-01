@@ -162,6 +162,20 @@ export async function applyCoreMigrations(sql: Query): Promise<void> {
     await sql`UPDATE shiprocket_customers SET edited_at = updated_at WHERE edited_at IS NULL`;
   }
 
+  // Sync Progress Tracking
+  await sql`
+    CREATE TABLE IF NOT EXISTS sync_progress (
+      id TEXT PRIMARY KEY,
+      job_type TEXT NOT NULL,
+      status TEXT NOT NULL,
+      total_items INT DEFAULT 0,
+      processed_items INT DEFAULT 0,
+      errors TEXT[],
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS sync_progress_job_type_idx ON sync_progress (job_type)`;
+
   // PPF Actual Investment Records
   await sql`
     CREATE TABLE IF NOT EXISTS ppf_investments (

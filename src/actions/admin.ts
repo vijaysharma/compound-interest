@@ -158,7 +158,7 @@ export async function updateShiprocketAccountAction(
   return fn(input, token);
 }
 export async function listShiprocketCustomersAction(
-  options?: Parameters<typeof import('./admin/shiprocketCustomerManager').listShiprocketCustomersAction>[0],
+  options: Parameters<typeof import('./admin/shiprocketCustomerManager').listShiprocketCustomersAction>[0] = {},
   token?: string | null
 ) {
   const { listShiprocketCustomersAction: fn } = await import('./admin/shiprocketCustomerManager');

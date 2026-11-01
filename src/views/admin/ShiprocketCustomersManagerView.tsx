@@ -299,26 +299,60 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setSyncing(true);
     setAlert(null);
     try {
-      const res = await syncHistoricalCustomersAction(
+      // Start the sync job - returns immediately with job ID
+      const jobResult = await syncHistoricalCustomersAction(
         {
           from: syncFrom || undefined,
           to: syncTo || undefined,
         },
         token
       );
-      if (res.success) {
-        const errorText =
-          res.errors && res.errors.length > 0 ? ` (Warnings: ${res.errors.join('; ')})` : '';
-        setAlert({
-          type:
-            res.totalSynced > 0
-              ? 'success'
-              : res.errors && res.errors.length > 0
-                ? 'error'
-                : 'success',
-          text: `${res.message}${errorText}`,
-        });
-        fetchCustomers();
+      const jobId = jobResult.jobId;
+
+      // Process batches until complete
+      let syncComplete = false;
+      let batchCount = 0;
+
+      while (!syncComplete) {
+        batchCount++;
+        const progress = await syncHistoricalCustomersAction(
+          {
+            from: syncFrom || undefined,
+            to: syncTo || undefined,
+            jobId,
+          },
+          token
+        );
+
+        if (!progress.status) {
+          // First batch hasn't started yet, wait and retry
+          await new Promise(resolve => setTimeout(resolve, 500));
+          continue;
+        }
+
+        if (progress.status === 'completed') {
+          setAlert({
+            type: 'success',
+            text: `${(progress.processed_items ?? 0) > 0 ? `Synced ${progress.processed_items} customer records` : 'No new records'}${progress.errors && progress.errors.length > 0 ? ` (Warnings: ${progress.errors.join('; ')})` : ''}`,
+          });
+          syncComplete = true;
+          fetchCustomers();
+        } else if (progress.status === 'failed') {
+          setAlert({
+            type: 'error',
+            text: `Sync failed: ${progress.errors?.join('; ') || 'Unknown error'}`,
+          });
+          syncComplete = true;
+        } else if (progress.status === 'cancelled') {
+          setAlert({
+            type: 'error',
+            text: 'Sync was cancelled',
+          });
+          syncComplete = true;
+        } else if (progress.status === 'in_progress') {
+          // Continue processing next batch after short delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sync failed';
@@ -331,20 +365,45 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     setSyncing(true);
     setAlert(null);
     try {
-      const res = await syncHistoricalCustomersAction({}, token);
-      if (res.success) {
-        const errorText =
-          res.errors && res.errors.length > 0 ? ` (Warnings: ${res.errors.join('; ')})` : '';
-        setAlert({
-          type:
-            res.totalSynced > 0
-              ? 'success'
-              : res.errors && res.errors.length > 0
-                ? 'error'
-                : 'success',
-          text: `${res.message}${errorText}`,
-        });
-        fetchCustomers();
+      // Start the sync job - returns immediately with job ID
+      const jobResult = await syncHistoricalCustomersAction({}, token);
+      const jobId = jobResult.jobId;
+
+      // Process batches until complete
+      let syncComplete = false;
+
+      while (!syncComplete) {
+        const progress = await syncHistoricalCustomersAction({ jobId }, token);
+
+        if (!progress.status) {
+          // First batch hasn't started yet, wait and retry
+          await new Promise(resolve => setTimeout(resolve, 500));
+          continue;
+        }
+
+        if (progress.status === 'completed') {
+          setAlert({
+            type: 'success',
+            text: `${(progress.processed_items ?? 0) > 0 ? `Synced ${progress.processed_items} customer records` : 'No new records'}${progress.errors && progress.errors.length > 0 ? ` (Warnings: ${progress.errors.join('; ')})` : ''}`,
+          });
+          syncComplete = true;
+          fetchCustomers();
+        } else if (progress.status === 'failed') {
+          setAlert({
+            type: 'error',
+            text: `Sync failed: ${progress.errors?.join('; ') || 'Unknown error'}`,
+          });
+          syncComplete = true;
+        } else if (progress.status === 'cancelled') {
+          setAlert({
+            type: 'error',
+            text: 'Sync was cancelled',
+          });
+          syncComplete = true;
+        } else if (progress.status === 'in_progress') {
+          // Continue processing next batch after short delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sync failed';
