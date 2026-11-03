@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getDb, ensureTables } from '@/lib/db';
 import {
@@ -17,10 +18,11 @@ export const maxDuration = 30;
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
-  const authHeader = req.headers.get('authorization');
-  if (authHeader === `Bearer ${secret}`) return true;
-  const url = new URL(req.url);
-  return url.searchParams.get('key') === secret;
+  const authHeader = req.headers.get('authorization') ?? '';
+  const expected = Buffer.from(`Bearer ${secret}`);
+  const received = Buffer.from(authHeader);
+  if (expected.length !== received.length) return false;
+  return timingSafeEqual(expected, received);
 }
 export async function GET(req: Request): Promise<NextResponse> {
   const startedAt = Date.now();

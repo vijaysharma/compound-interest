@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getActiveSchemeCodeSet } from '@/lib/amfi/trackedSchemes';
 import { fetchTradingDayWithFallback } from '@/lib/amfi/amfiSingleDayFetcher';
@@ -7,8 +8,11 @@ export const maxDuration = 30;
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
-  const authHeader = req.headers.get('authorization');
-  return authHeader === `Bearer ${secret}`;
+  const authHeader = req.headers.get('authorization') ?? '';
+  const expected = Buffer.from(`Bearer ${secret}`);
+  const received = Buffer.from(authHeader);
+  if (expected.length !== received.length) return false;
+  return timingSafeEqual(expected, received);
 }
 export async function GET(req: Request): Promise<NextResponse> {
   const startedAt = Date.now();

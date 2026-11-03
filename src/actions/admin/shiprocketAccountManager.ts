@@ -98,9 +98,14 @@ export async function listShiprocketAccountsAction(
           }
         })
       );
+      // Strip sensitive third-party bearer tokens before caching or returning to client
+      const safeAccounts = accounts.map((acc) => ({
+        ...acc,
+        auth_token: undefined,
+      }));
       return {
         success: true,
-        accounts,
+        accounts: safeAccounts,
       };
     },
     { bypassCache: forceRefresh }

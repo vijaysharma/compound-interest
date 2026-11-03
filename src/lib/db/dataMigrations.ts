@@ -123,6 +123,7 @@ export async function applyDataMigrations(sql: Query, schemaVersion: number): Pr
   await sql`CREATE INDEX IF NOT EXISTS admin_notes_created_at_idx ON admin_notes (created_at DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS admin_notes_updated_at_idx ON admin_notes (updated_at DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS admin_notes_user_id_idx ON admin_notes (user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS admin_notes_user_listing_idx ON admin_notes (user_id, is_trashed, is_pinned DESC, updated_at DESC)`;
   await sql`
     CREATE TABLE IF NOT EXISTS schema_meta (
       id INT PRIMARY KEY,

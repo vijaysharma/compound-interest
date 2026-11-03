@@ -153,6 +153,15 @@ export async function handleGetHistoricalRates(
 ): Promise<{ success: boolean; base: string; target: string; points: CurrencyHistoricalPoint[] }> {
   const cleanBase = (base || 'USD').toUpperCase().trim();
   const cleanTarget = (target || 'INR').toUpperCase().trim();
+  if (!/^[A-Z]{3,5}$/.test(cleanBase) || !/^[A-Z]{3,5}$/.test(cleanTarget)) {
+    throw new Error('Invalid currency code format');
+  }
+  if (startDateStr && !/^\d{4}-\d{2}-\d{2}$/.test(startDateStr.trim())) {
+    throw new Error('Invalid startDate format');
+  }
+  if (endDateStr && !/^\d{4}-\d{2}-\d{2}$/.test(endDateStr.trim())) {
+    throw new Error('Invalid endDate format');
+  }
   if (cleanBase === cleanTarget) {
     const today = new Date().toISOString().slice(0, 10);
     return {

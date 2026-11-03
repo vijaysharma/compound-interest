@@ -18,6 +18,7 @@ import {
   invalidateShiprocketCustomersCache,
   SR_CACHE_TTL,
 } from '@/lib/shiprocketCache';
+import { filterAndPaginateCustomers } from './shiprocketCustomerFilter';
 
 // Maximum number of orders to process per sync batch
 const ORDERS_PER_BATCH = 20;
@@ -345,83 +346,16 @@ export async function listShiprocketCustomersAction(
     throw new Error('Unauthorized');
   }
 
-  const {
-    search = '',
-    sortBy = 'customer_name',
-    sortOrder = 'asc',
-    page = 1,
-    perPage = 25,
-  } = options;
-
-  const offset = (page - 1) * perPage;
-  const searchTerm = search ? `%${search}%` : null;
-
-  // Fetch all customers (small list, suitable for in-memory sort)
-  const allRows = (await sql`SELECT * FROM shiprocket_customers`) as unknown as DbShiprocketCustomer[];
-
-  // Filter by search term
-  let filtered = allRows;
-  if (searchTerm) {
-    const term = searchTerm.toLowerCase();
-    filtered = allRows.filter(
-      (c) =>
-        c.customer_name.toLowerCase().includes(term) ||
-        c.customer_phone?.toLowerCase().includes(term) ||
-        c.customer_email?.toLowerCase().includes(term) ||
-        c.customer_address.toLowerCase().includes(term) ||
-        c.customer_city.toLowerCase().includes(term) ||
-        c.customer_pincode.includes(term)
-    );
-  }
-
-  const total = filtered.length;
-
-  // Sort in memory
-  const sortFn = (a: DbShiprocketCustomer, b: DbShiprocketCustomer) => {
-    let aVal: unknown = 0;
-    let bVal: unknown = 0;
-    const validSort = ['name', 'phone', 'city', 'state', 'pincode', 'orders', 'updated_at', 'created_at'].includes(
-      sortBy
-    )
-      ? sortBy
-      : 'name';
-
-    if (validSort === 'name') {
-      aVal = a.customer_name;
-      bVal = b.customer_name;
-    } else if (validSort === 'phone') {
-      aVal = a.customer_phone;
-      bVal = b.customer_phone;
-    } else if (validSort === 'city') {
-      aVal = a.customer_city;
-      bVal = b.customer_city;
-    } else if (validSort === 'state') {
-      aVal = a.customer_state;
-      bVal = b.customer_state;
-    } else if (validSort === 'pincode') {
-      aVal = a.customer_pincode;
-      bVal = b.customer_pincode;
-    } else if (validSort === 'orders') {
-      aVal = a.total_orders || 0;
-      bVal = b.total_orders || 0;
-    } else if (validSort === 'updated_at') {
-      aVal = new Date(a.updated_at).getTime();
-      bVal = new Date(b.updated_at).getTime();
-    } else if (validSort === 'created_at') {
-      aVal = new Date(a.created_at).getTime();
-      bVal = new Date(b.created_at).getTime();
+  // Fetch all customers with caching (invalidated on sync, save, merge, and delete)
+  const allRows = await withShiprocketCache<DbShiprocketCustomer[]>(
+    'sr:cust:all',
+    SR_CACHE_TTL.CUSTOMERS_LIST,
+    async () => {
+      return (await sql`SELECT * FROM shiprocket_customers`) as unknown as DbShiprocketCustomer[];
     }
+  );
 
-    const cmp =
-      typeof aVal === 'string' && typeof bVal === 'string'
-        ? aVal.localeCompare(bVal)
-        : Number(aVal) - Number(bVal);
-
-    return sortOrder === 'desc' ? -cmp : cmp;
-  };
-
-  filtered.sort(sortFn);
-  const customers = filtered.slice(offset, offset + perPage);
+  const { customers, total } = filterAndPaginateCustomers(allRows, options);
 
   return {
     success: true,

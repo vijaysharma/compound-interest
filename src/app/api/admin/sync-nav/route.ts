@@ -1,7 +1,28 @@
+import { timingSafeEqual } from 'node:crypto';
 import { checkDateExistsInDb, upsertWhitelistedNavBatch, updateRedisNavCache } from '@/lib/amfi/amfiNavStorage';
 import { getActiveSchemeCodeSet } from '@/lib/amfi/trackedSchemes';
 import { fetchTradingDayWithFallback } from '@/lib/amfi/amfiSingleDayFetcher';
 import type { SingleDaySyncResult } from '@/lib/amfi/amfiNavTypes';
+import { getDb, isAuthorizedUser } from '@/lib/db';
+
+async function isAuthorized(req: Request): Promise<boolean> {
+  const authHeader = req.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader) {
+    const expected = Buffer.from(`Bearer ${cronSecret}`);
+    const received = Buffer.from(authHeader);
+    if (expected.length === received.length && timingSafeEqual(expected, received)) {
+      return true;
+    }
+  }
+  try {
+    const sql = getDb();
+    return await isAuthorizedUser(authHeader, sql);
+  } catch {
+    return false;
+  }
+}
+
 async function resolveRequestedDate(req: Request): Promise<string> {
   const url = new URL(req.url);
   const queryDate = url.searchParams.get('date');
@@ -19,6 +40,9 @@ async function resolveRequestedDate(req: Request): Promise<string> {
   return d.toISOString().slice(0, 10);
 }
 export async function POST(req: Request): Promise<Response> {
+  if (!(await isAuthorized(req))) {
+    return Response.json({ error: 'Unauthorized: Admin access required' }, { status: 401 });
+  }
   const targetDate = await resolveRequestedDate(req);
   const existingCount = await checkDateExistsInDb(targetDate);
   if (existingCount > 0) {

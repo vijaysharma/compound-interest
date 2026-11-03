@@ -47,4 +47,5 @@ export async function applyStateAndLeaderboardMigrations(sql: Query): Promise<vo
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS game_sessions_started_idx ON game_sessions (started_at)`;
+  await sql`CREATE INDEX IF NOT EXISTS game_sessions_owner_consumed_idx ON game_sessions (owner_id, consumed_at)`;
 }

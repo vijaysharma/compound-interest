@@ -53,6 +53,11 @@ export async function handleSignupWithGooglePassword(data: {
   `) as DbUser[];
   let user: DbUser;
   if (existingUsers.length > 0) {
+    if (!isGoogleVerified) {
+      throw new Error(
+        'An account with this email already exists. Please sign in with your password or use Google sign-in.'
+      );
+    }
     const existing = existingUsers[0];
     const finalRole = isGoogleVerified && matchesAdmin ? 'admin' : existing.role;
     const finalProviderId = verifiedGoogleSub || existing.provider_id || null;

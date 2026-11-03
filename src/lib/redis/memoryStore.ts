@@ -4,6 +4,9 @@ interface CacheEntry<T> {
 }
 const inMemoryStore = new Map<string, CacheEntry<unknown>>();
 const MAX_MEMORY_ITEMS = 500;
+let writeCounter = 0;
+const PRUNE_WRITE_INTERVAL = 50;
+
 export function pruneMemoryStore(): void {
   const now = Date.now();
   for (const [k, v] of inMemoryStore.entries()) {
@@ -12,10 +15,20 @@ export function pruneMemoryStore(): void {
     }
   }
   if (inMemoryStore.size > MAX_MEMORY_ITEMS) {
-    const keysToDelete = Array.from(inMemoryStore.keys()).slice(0, 100);
-    for (const k of keysToDelete) {
+    let evicted = 0;
+    for (const k of inMemoryStore.keys()) {
       inMemoryStore.delete(k);
+      evicted++;
+      if (evicted >= 100) break;
     }
+  }
+}
+
+function maybePrune(): void {
+  writeCounter++;
+  if (inMemoryStore.size >= MAX_MEMORY_ITEMS || writeCounter >= PRUNE_WRITE_INTERVAL) {
+    writeCounter = 0;
+    pruneMemoryStore();
   }
 }
 export function memoryGet<T>(key: string): T | null {
@@ -44,7 +57,7 @@ export function memoryMGet<T>(keys: string[]): Record<string, T | null> {
   return result;
 }
 export function memorySet(key: string, value: unknown, ttlSeconds = 3600): void {
-  pruneMemoryStore();
+  maybePrune();
   inMemoryStore.set(key, {
     value,
     expiresAt: Date.now() + ttlSeconds * 1000,
@@ -82,7 +95,7 @@ export function memoryIncr(key: string, ttlSeconds?: number): number {
 export function memorySetNX(key: string, value: unknown, ttlSeconds: number): boolean {
   const existing = inMemoryStore.get(key);
   if (existing && existing.expiresAt > Date.now()) return false;
-  pruneMemoryStore();
+  maybePrune();
   inMemoryStore.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 });
   return true;
 }

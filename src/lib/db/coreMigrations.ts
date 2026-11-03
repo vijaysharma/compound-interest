@@ -72,8 +72,12 @@ export async function applyCoreMigrations(sql: Query): Promise<void> {
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS users_email_idx ON users (email)`;
+  await sql`CREATE INDEX IF NOT EXISTS users_created_at_idx ON users (created_at DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS user_sessions_user_id_idx ON user_sessions (user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS user_sessions_expires_at_idx ON user_sessions (expires_at)`;
   await sql`CREATE INDEX IF NOT EXISTS payment_submissions_user_id_idx ON payment_submissions (user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS payment_submissions_utr_ref_idx ON payment_submissions (utr_ref)`;
+  await sql`CREATE INDEX IF NOT EXISTS payment_submissions_created_at_idx ON payment_submissions (created_at DESC)`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS user_alias VARCHAR(32)`;
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS users_alias_uniq ON users (user_alias) WHERE user_alias IS NOT NULL`;
   await sql`

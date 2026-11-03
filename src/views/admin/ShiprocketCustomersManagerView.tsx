@@ -54,7 +54,16 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
+    const timer = setTimeout(() => {
+      const trimmed = searchInput.trim();
+      setSearch((prev) => {
+        if (prev !== trimmed) {
+          setPage(1);
+          return trimmed;
+        }
+        return prev;
+      });
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
   const [sortBy, setSortBy] = useState<
@@ -932,13 +941,26 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
             className={styles.searchInput}
             placeholder="Search by name, phone, alt. phone, email, address, city, pincode..."
             value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => setSearchInput(e.target.value)}
             aria-busy={loading}
+            aria-label="Search customers by name, phone, email, address, city or pincode"
           />
-          {loading && searchInput.trim() && <span className={styles.searchStatus}>Searching…</span>}
+          {loading && searchInput.trim() ? (
+            <span className={styles.searchStatus}>Searching…</span>
+          ) : searchInput ? (
+            <button
+              type="button"
+              className={styles.clearBtn}
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setPage(1);
+              }}
+              aria-label="Clear search"
+            >
+              <FiX size={14} />
+            </button>
+          ) : null}
         </div>
         <div className={styles.filterControlsRight}>
           <select
@@ -972,9 +994,23 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
               ? 'No customer records match your search criteria.'
               : 'No customer data has been stored yet. Click "Sync Now" above to pull historical orders across all accounts, or add records manually.'}
           </p>
-          <button type="button" className={styles.primaryBtn} onClick={() => setShowForm(true)}>
-            <FiPlus /> Add First Customer
-          </button>
+          {search ? (
+            <button
+              type="button"
+              className={styles.outlineBtn}
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setPage(1);
+              }}
+            >
+              Clear Search
+            </button>
+          ) : (
+            <button type="button" className={styles.primaryBtn} onClick={() => setShowForm(true)}>
+              <FiPlus /> Add First Customer
+            </button>
+          )}
         </div>
       ) : (
         <>

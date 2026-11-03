@@ -169,3 +169,22 @@ test('handleGetHistoricalRates falls back to @fawazahmed0 currency-api for non-F
     globalThis.fetch = originalFetch;
   }
 });
+
+test('handleGetHistoricalRates rejects invalid currency codes and malformed dates', async () => {
+  await assert.rejects(
+    () => handleGetHistoricalRates('../../evil', 'INR'),
+    /Invalid currency code format/
+  );
+  await assert.rejects(
+    () => handleGetHistoricalRates('USD', 'IN', 30),
+    /Invalid currency code format/
+  );
+  await assert.rejects(
+    () => handleGetHistoricalRates('USD', 'INR', 30, 'invalid-date'),
+    /Invalid startDate format/
+  );
+  await assert.rejects(
+    () => handleGetHistoricalRates('USD', 'INR', 30, '2026-01-01', '../../malicious'),
+    /Invalid endDate format/
+  );
+});

@@ -1,6 +1,7 @@
-import { DbUser, FREE_USAGE_LIMIT, isUserBlocked, getDb } from '@/lib/db';
-import { AuthUser } from '@/types/auth';
+import { type DbUser, FREE_USAGE_LIMIT, isUserBlocked, getDb } from '@/lib/db';
+import type { AuthUser } from '@/types/auth';
 export interface GoogleTokenInfo {
+  aud?: string;
   email?: string;
   name?: string;
   picture?: string;
@@ -33,7 +34,16 @@ export async function verifyGoogleToken(credential: string): Promise<GoogleToken
       { signal: AbortSignal.timeout(6000) }
     );
     if (verifyRes.ok) {
-      return (await verifyRes.json()) as GoogleTokenInfo;
+      const info = (await verifyRes.json()) as GoogleTokenInfo;
+      const expectedAud =
+        process.env.GOOGLE_CLIENT_ID ||
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+        process.env.NEXT_PUBLIC_VITE_GOOGLE_CLIENT_ID;
+      if (expectedAud && info.aud && info.aud !== expectedAud) {
+        console.warn('Google token audience mismatch');
+        return null;
+      }
+      return info;
     }
   } catch (err) {
     console.warn('Google credential verification error:', err);
