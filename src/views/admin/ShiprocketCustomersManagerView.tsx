@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from '@/navigation';
 import {
   FiUsers,
@@ -25,25 +26,40 @@ import {
 } from 'react-icons/fi';
 import {
   listShiprocketCustomersAction,
+  listShiprocketAccountsAction,
   saveShiprocketCustomerAction,
   deleteShiprocketCustomerAction,
   syncHistoricalCustomersAction,
   mergeShiprocketCustomersAction,
 } from '@/actions/admin';
-import type { ShiprocketCustomer } from '@/types/shiprocket';
+import type { ShiprocketCustomer, ShiprocketAccountProfile } from '@/types/shiprocket';
 import {
   usePincodeAutofill,
   type PincodePlace,
 } from '@/components/admin/shiprocket/usePincodeAutofill';
+import {
+  buildOrderPrefillFromCustomer,
+  saveOrderPrefill,
+} from '@/components/admin/shiprocket/shiprocketOrderPrefill';
 import styles from './ShiprocketCustomers.module.scss';
 interface Props {
   token: string;
 }
 export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
+  const router = useRouter();
+  const [accounts, setAccounts] = useState<ShiprocketAccountProfile[]>([]);
   const [customers, setCustomers] = useState<ShiprocketCustomer[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    listShiprocketAccountsAction(token)
+      .then((res) => {
+        if (res.success && res.accounts) setAccounts(res.accounts);
+      })
+      .catch(() => {});
+  }, [token]);
   // Sync state: default to 2023-01-01 till today
   const [syncing, setSyncing] = useState(false);
   const [syncFrom, setSyncFrom] = useState('2023-01-01');
@@ -142,6 +158,27 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
+  const handleCreateOrder = useCallback((cust: ShiprocketCustomer) => {
+    const activeAccount = accounts.find((a) => a.is_active) || accounts[0];
+    const matchedAccount = cust.source_account_ids?.[0]
+      ? accounts.find((a) => a.id === cust.source_account_ids![0]) || activeAccount
+      : activeAccount;
+    const contactEmail = matchedAccount?.contact_email || '';
+
+    const prefill = buildOrderPrefillFromCustomer(cust, contactEmail);
+    saveOrderPrefill(prefill);
+
+    const params = new URLSearchParams({ tab: 'create' });
+    if (prefill.name) params.set('name', prefill.name);
+    if (prefill.phone) params.set('phone', prefill.phone);
+    if (prefill.city) params.set('city', prefill.city);
+    if (prefill.state) params.set('state', prefill.state);
+    if (prefill.pincode) params.set('pincode', prefill.pincode);
+    if (prefill.email) params.set('email', prefill.email);
+
+    router.push(`/admin/shiprocket?${params.toString()}`);
+  }, [accounts, router]);
+
   const resetForm = () => {
     setEditId(null);
     setName('');
@@ -1129,6 +1166,14 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                       <div className={`${styles.actionBtnsRow} ${styles.actionBtnsRowEnd}`}>
                         <button
                           type="button"
+                          className={styles.createOrderBtnSmall}
+                          onClick={() => handleCreateOrder(cust)}
+                          title="Create Order in Shiprocket"
+                        >
+                          <FiPlus /> Create Order
+                        </button>
+                        <button
+                          type="button"
                           className={styles.mergeBtnSmall}
                           onClick={() => handleOpenMerge(cust)}
                           title="Merge Customer"
@@ -1223,6 +1268,14 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
                   </div>
                 </div>
                 <div className={styles.customerFooter}>
+                  <button
+                    type="button"
+                    className={`${styles.actionBtn} ${styles.actionPrimary}`}
+                    onClick={() => handleCreateOrder(cust)}
+                    title="Create Order in Shiprocket"
+                  >
+                    <FiPlus /> Create Order
+                  </button>
                   <button
                     type="button"
                     className={styles.actionBtn}

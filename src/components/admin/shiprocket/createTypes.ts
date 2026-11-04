@@ -1,4 +1,5 @@
 import type { ShiprocketAccountData, ShiprocketOrder } from './types';
+import type { OrderPrefillData } from './shiprocketOrderPrefill';
 export interface ShiprocketCreateTabProps {
   account: ShiprocketAccountData | null;
   orders: ShiprocketOrder[];
@@ -28,6 +29,7 @@ export interface ShiprocketCreateTabProps {
   onCancel: () => void;
   onResetForm?: () => void;
   resetCreateForm?: () => void;
+  applyCustomerPrefill?: (prefill: Partial<OrderPrefillData>, accountContactEmail?: string | null) => void;
   onOpenShipModal: (order: ShiprocketOrder) => void;
   onPickupLocChange: (val: string) => void;
   onPaymentModeChange: (val: 'Prepaid' | 'COD') => void;

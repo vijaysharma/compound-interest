@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { getPostcodeDetailsAction, createShiprocketOrderAction } from '../../../actions/admin';
 import type { ShiprocketAccountData, AlertMessage, ShiprocketOrder } from './types';
 import type { CreatedOrderResult } from './createTypes';
+import { formatAccountContactEmail, type OrderPrefillData } from './shiprocketOrderPrefill';
 export function useShiprocketCreateOrder(
   token: string,
   account: ShiprocketAccountData | null,
@@ -31,6 +32,33 @@ export function useShiprocketCreateOrder(
   const [paymentMode, setPaymentMode] = useState<'Prepaid' | 'COD'>('Prepaid');
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [createdOrderResult, setCreatedOrderResult] = useState<CreatedOrderResult | null>(null);
+  const wasPrefilledRef = useRef(false);
+
+  useEffect(() => {
+    if (wasPrefilledRef.current && !custEmail && account?.profile?.contact_email) {
+      setCustEmail(formatAccountContactEmail(account.profile.contact_email));
+    }
+  }, [account?.profile?.contact_email, custEmail]);
+
+  const applyCustomerPrefill = useCallback((
+    prefill: Partial<OrderPrefillData>,
+    accountContactEmail?: string | null
+  ) => {
+    wasPrefilledRef.current = true;
+    if (prefill.name) setCustName(prefill.name);
+    if (prefill.phone) setCustPhone(prefill.phone.replace(/\D/g, '').slice(-10));
+    if (prefill.address) setCustAddress(prefill.address);
+    if (prefill.address2) setCustAddress2(prefill.address2);
+    if (prefill.pincode) setCustPincode(prefill.pincode);
+    if (prefill.city) setCustCity(prefill.city);
+    if (prefill.state) setCustState(prefill.state);
+
+    const emailToSet = prefill.email || formatAccountContactEmail(accountContactEmail);
+    if (emailToSet) {
+      setCustEmail(emailToSet);
+    }
+    setCreatedOrderResult(null);
+  }, []);
 
   const handleAddItem = useCallback(() => {
     setItems((prev) => [...prev, { name: '', sku: '', units: '1', selling_price: '0' }]);
@@ -186,6 +214,7 @@ export function useShiprocketCreateOrder(
   ]);
 
   const resetCreateForm = useCallback(() => {
+    wasPrefilledRef.current = false;
     setCustName('');
     setCustPhone('');
     setCustEmail('');
@@ -214,6 +243,6 @@ export function useShiprocketCreateOrder(
     onAddItem: handleAddItem, onRemoveItem: handleRemoveItem, onItemChange: handleItemChange,
     paymentMode, setPaymentMode, creatingOrder,
     createdOrderResult, setCreatedOrderResult, volumetricWeight, appliedWeight, handleCreateOrder,
-    resetCreateForm,
+    resetCreateForm, applyCustomerPrefill,
   };
 }

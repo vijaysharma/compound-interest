@@ -1,11 +1,12 @@
 'use client';
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import type { TabType, OrderItemActionHandlers, ShiprocketOrder } from './shiprocket/types';
 import { useShiprocketData } from './shiprocket/useShiprocketData';
 import { useShiprocketModals } from './shiprocket/useShiprocketModals';
 import { useShiprocketCreateOrder } from './shiprocket/useShiprocketCreateOrder';
 import { useShiprocketFilter } from './shiprocket/useShiprocketFilter';
+import { loadOrderPrefill, clearOrderPrefill } from './shiprocket/shiprocketOrderPrefill';
 import { ShiprocketHeader } from './shiprocket/ShiprocketHeader';
 import { ShiprocketStats } from './shiprocket/ShiprocketStats';
 import { ShiprocketTabsNav } from './shiprocket/ShiprocketTabsNav';
@@ -48,6 +49,44 @@ const ShiprocketDashboard: React.FC<Props> = ({ token }) => {
     data.setAlertMsg
   );
   const filter = useShiprocketFilter(data.orders);
+  const prefillHandled = useRef(false);
+
+  useEffect(() => {
+    if (prefillHandled.current || typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const tabParam = searchParams.get('tab');
+    const storedPrefill = loadOrderPrefill();
+
+    if (tabParam === 'create' || storedPrefill) {
+      prefillHandled.current = true;
+      setActiveTab('create');
+      createForm.setCreatedOrderResult(null);
+
+      const prefillToApply = storedPrefill || {
+        name: searchParams.get('name') || '',
+        phone: searchParams.get('phone') || '',
+        email: searchParams.get('email') || '',
+        address: searchParams.get('address') || '',
+        address2: searchParams.get('address2') || '',
+        pincode: searchParams.get('pincode') || '',
+        city: searchParams.get('city') || '',
+        state: searchParams.get('state') || '',
+      };
+
+      if (
+        prefillToApply.name ||
+        prefillToApply.phone ||
+        prefillToApply.pincode ||
+        prefillToApply.address
+      ) {
+        createForm.applyCustomerPrefill(
+          prefillToApply,
+          data.account?.profile?.contact_email
+        );
+        clearOrderPrefill();
+      }
+    }
+  }, [createForm.applyCustomerPrefill, createForm.setCreatedOrderResult, data.account?.profile?.contact_email]);
   const itemActions: OrderItemActionHandlers = useMemo(
     () => ({
       onCopyAwb: data.handleCopyAwb,

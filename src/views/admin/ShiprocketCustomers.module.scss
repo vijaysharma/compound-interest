@@ -434,6 +434,16 @@
     border-color: var(--color-primary);
     color: var(--color-primary);
   }
+  &.actionPrimary {
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    border-color: var(--color-primary);
+    font-weight: 600;
+    &:hover {
+      opacity: 0.9;
+      color: var(--color-primary-content);
+    }
+  }
   &.actionDanger {
     color: var(--color-error);
     border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
@@ -527,6 +537,26 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.createOrderBtnSmall {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  border: 1px solid var(--color-primary);
+  padding: 0.3rem 0.65rem;
+  font-size: $fs-caption;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  transition: all 0.15s;
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
 }
 
 .editBtnSmall {
@@ -1012,6 +1042,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
+  }
+
+  .actionPrimary {
+    grid-column: 1 / -1;
   }
 
   .actionBtn {
