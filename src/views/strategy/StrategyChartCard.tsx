@@ -1,6 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
-import Chart, { type ChartDataset } from '../../components/Chart';
+import dynamic from 'next/dynamic';
+import type { ChartDataset } from '../../components/Chart';
 import JoinedButtonGroup from '../../components/JoinedButtonGroup';
 import { ChartDataTable } from './ChartDataTable';
 import { formatRupees } from './money';
@@ -11,6 +12,15 @@ import { buildStrategyDatasets } from './strategyChartDatasets';
 import type { StrategyProjection } from './useStrategyProjection';
 import type { StrategyConfig, StrategyResult } from './types';
 import styles from './StrategyCalculator.module.scss';
+
+const Chart = dynamic(() => import('../../components/Chart'), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.chart} style={{ minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      Loading chart…
+    </div>
+  ),
+});
 interface StrategyChartCardProps {
   config: StrategyConfig;
   result: StrategyResult;

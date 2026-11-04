@@ -3,12 +3,13 @@ import { DEFAULT_PPP_RECORDS } from '@/data/default_ppp_data';
 import { redisGet, redisSet } from '@/lib/redis';
 import { PPP_DB_TTL_MS, WORLD_BANK_PPP_API, memoryState } from './constants';
 export async function handleGetPPPData(): Promise<unknown> {
-  const redisPpp = await redisGet('cache:ppp:worldbank');
-  if (redisPpp) {
-    return redisPpp;
-  }
   if (memoryState.pppData && Date.now() - memoryState.pppData.timestamp < 30 * 60 * 1000) {
     return memoryState.pppData.data;
+  }
+  const redisPpp = await redisGet('cache:ppp:worldbank');
+  if (redisPpp) {
+    memoryState.pppData = { data: redisPpp, timestamp: Date.now() };
+    return redisPpp;
   }
   let storedPayload: unknown = null;
   try {
@@ -69,12 +70,13 @@ export async function handleGetPPPData(): Promise<unknown> {
   return DEFAULT_PPP_RECORDS;
 }
 export async function handleGetIMFInflation(): Promise<unknown> {
-  const redisImf = await redisGet('cache:inflation:imf');
-  if (redisImf) {
-    return redisImf;
-  }
   if (memoryState.imfData && Date.now() - memoryState.imfData.timestamp < 30 * 60 * 1000) {
     return memoryState.imfData.data;
+  }
+  const redisImf = await redisGet('cache:inflation:imf');
+  if (redisImf) {
+    memoryState.imfData = { data: redisImf, timestamp: Date.now() };
+    return redisImf;
   }
   try {
     const sql = getDb();

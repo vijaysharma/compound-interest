@@ -7,9 +7,17 @@ import { currencyFaqs } from '../data/seo/currencyConverterData';
 import { useCurrencyConverter } from './currency-converter/useCurrencyConverter';
 import { CurrencyConverterHeader } from './currency-converter/CurrencyConverterHeader';
 import { CurrencyInputsCol } from './currency-converter/CurrencyInputsCol';
+import dynamic from 'next/dynamic';
 import { CurrencyResultsCol } from './currency-converter/CurrencyResultsCol';
-import { CurrencyHistoryChart } from './currency-converter/CurrencyHistoryChart';
 import styles from './CurrencyConverter.module.scss';
+
+const CurrencyHistoryChart = dynamic(
+  () => import('./currency-converter/CurrencyHistoryChart').then((m) => ({ default: m.CurrencyHistoryChart })),
+  {
+    ssr: false,
+    loading: () => <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading history chart…</div>,
+  }
+);
 const CurrencyConverter = () => {
   const {
     loading,

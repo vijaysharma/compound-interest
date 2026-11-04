@@ -5,6 +5,10 @@ import {
   SEARCH_IN_MEMORY_TTL_MS,
   mfSearchCache,
 } from './constants';
+
+let allSchemesMemory: { data: Array<{ schemeCode: number; schemeName: string }>; expiresAt: number } | null = null;
+const ALL_SCHEMES_IN_MEMORY_TTL_MS = 30 * 60 * 1000; // 30 mins
+
 export async function handleSearchMutualFunds(
   searchQuery = ''
 ): Promise<Array<{ schemeCode: number; schemeName: string }>> {
@@ -15,6 +19,14 @@ export async function handleSearchMutualFunds(
   if (cached && cached.expiresAt > Date.now()) {
     return cached.data as Array<{ schemeCode: number; schemeName: string }>;
   }
+  const terms = search.toLowerCase().split(/\s+/).filter(Boolean);
+  if (allSchemesMemory && allSchemesMemory.expiresAt > Date.now() && allSchemesMemory.data.length > 0) {
+    const filtered = allSchemesMemory.data
+      .filter((s) => terms.every((t) => s.schemeName.toLowerCase().includes(t)))
+      .slice(0, 200);
+    mfSearchCache.set(cacheKey, { expiresAt: Date.now() + SEARCH_IN_MEMORY_TTL_MS, data: filtered });
+    return filtered;
+  }
   const redisCached = await redisGet<Array<{ schemeCode: number; schemeName: string }>>(
     'cache:mf:search:' + cacheKey
   );
@@ -24,7 +36,7 @@ export async function handleSearchMutualFunds(
   }
   const allSchemesRedis = await redisGet<Array<{ schemeCode: number; schemeName: string }>>('cache:mf:all_schemes');
   if (allSchemesRedis && Array.isArray(allSchemesRedis) && allSchemesRedis.length > 0) {
-    const terms = search.toLowerCase().split(/\s+/).filter(Boolean);
+    allSchemesMemory = { data: allSchemesRedis, expiresAt: Date.now() + ALL_SCHEMES_IN_MEMORY_TTL_MS };
     const filtered = allSchemesRedis
       .filter((s) => terms.every((t) => s.schemeName.toLowerCase().includes(t)))
       .slice(0, 200);

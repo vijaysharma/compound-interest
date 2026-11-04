@@ -39,6 +39,7 @@ export function useAuthSession() {
       if (cached) {
         try {
           setUser(JSON.parse(cached) as AuthUser);
+          setLoading(false);
         } catch {
           // ignore
         }

@@ -5,9 +5,11 @@ import {
   isPaidUser,
 } from '@/lib/db';
 import { readNoteBlob } from '@/lib/blob';
-import { redisGet, redisSet } from '@/lib/redis';
+import { redisMGet, redisSet } from '@/lib/redis';
 import type { NoteItem, NoteRow } from './types';
 import { parseTags } from './sanitizeUtils';
+
+const noteContentMemoryCache = new Map<string, string>();
 export async function handleGetNotes(
   options: { include_trashed?: boolean } = {},
   token?: string | null
@@ -61,19 +63,43 @@ export async function handleGetNotes(
           ORDER BY is_pinned DESC, updated_at DESC, created_at DESC
           LIMIT 500
         `) as NoteRow[];
+  // Batch resolve note contents for notes with blobs
+  const notesWithBlob = rows.filter((r) => Boolean(r.blob_url));
+  const keysToFetch: string[] = [];
+  const keyToNoteMap = new Map<string, NoteRow>();
+
+  for (const note of notesWithBlob) {
+    const key = `cache:note:${note.id}:${note.updated_at}`;
+    if (!noteContentMemoryCache.has(key)) {
+      keysToFetch.push(key);
+      keyToNoteMap.set(key, note);
+    }
+  }
+
+  if (keysToFetch.length > 0) {
+    const batchCached = await redisMGet<string>(keysToFetch);
+    for (const key of keysToFetch) {
+      const val = batchCached[key];
+      if (val !== null && val !== undefined) {
+        noteContentMemoryCache.set(key, val);
+      }
+    }
+  }
+
   const formatted: NoteItem[] = await Promise.all(
     rows.map(async (note) => {
       let noteContent = '';
       let contentUnavailable = false;
       if (note.blob_url) {
         const cacheKey = `cache:note:${note.id}:${note.updated_at}`;
-        const cachedContent = await redisGet<string>(cacheKey);
-        if (cachedContent !== null) {
-          noteContent = cachedContent;
+        const memoryContent = noteContentMemoryCache.get(cacheKey);
+        if (memoryContent !== undefined) {
+          noteContent = memoryContent;
         } else {
           const fromBlob = await readNoteBlob(note.blob_url);
           if (fromBlob !== null) {
             noteContent = fromBlob;
+            noteContentMemoryCache.set(cacheKey, fromBlob);
             redisSet(cacheKey, fromBlob, 86400 * 7).catch(() => {});
           } else if (note.content) {
             noteContent = note.content;

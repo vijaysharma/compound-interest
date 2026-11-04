@@ -24,10 +24,17 @@ export async function GET(
   }
   const rows = await getNavHistory(cleanCode, startDate, endDate);
   const payload = stored.payload as { meta?: unknown; latest_nav_date?: string };
-  return Response.json({
-    meta: payload?.meta ?? { scheme_code: cleanCode },
-    data: rows,
-    latest_nav_date: stored.latest ?? payload?.latest_nav_date ?? null,
-    source: 'Official AMFI (Association of Mutual Funds in India)',
-  });
+  return Response.json(
+    {
+      meta: payload?.meta ?? { scheme_code: cleanCode },
+      data: rows,
+      latest_nav_date: stored.latest ?? payload?.latest_nav_date ?? null,
+      source: 'Official AMFI (Association of Mutual Funds in India)',
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
+      },
+    }
+  );
 }

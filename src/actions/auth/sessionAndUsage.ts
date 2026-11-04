@@ -7,11 +7,18 @@ import {
 } from '@/lib/db';
 import { AuthUser } from '@/types/auth';
 import { mapToAuthUser } from './authHelpers';
+const sessionUserCache = new Map<string, { user: AuthUser; expiresAt: number }>();
+const SESSION_CACHE_TTL_MS = 60 * 1000; // 60s fast in-memory session cache
+
 export async function handleGetMe(token?: string | null): Promise<{ user: AuthUser } | null> {
   if (!token) return null;
+  const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+  const cached = sessionUserCache.get(cleanToken);
+  if (cached && cached.expiresAt > Date.now()) {
+    return { user: cached.user };
+  }
   const sql = getDb();
   await ensureTables(sql);
-  const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
   const rows = (await sql`
     SELECT
       u.id, u.email, u.password_hash, u.password_salt, u.name, u.picture,
@@ -24,8 +31,13 @@ export async function handleGetMe(token?: string | null): Promise<{ user: AuthUs
     JOIN users u ON u.id = s.user_id
     WHERE s.token = ${cleanToken} AND s.expires_at > NOW()
   `) as DbUser[];
-  if (rows.length === 0) return null;
-  return { user: mapToAuthUser(rows[0]) };
+  if (rows.length === 0) {
+    sessionUserCache.delete(cleanToken);
+    return null;
+  }
+  const user = mapToAuthUser(rows[0]);
+  sessionUserCache.set(cleanToken, { user, expiresAt: Date.now() + SESSION_CACHE_TTL_MS });
+  return { user };
 }
 export async function handleTrackUsage(
   token: string | null | undefined,
@@ -110,6 +122,7 @@ export async function handleTrackUsage(
 export async function handleLogout(token?: string | null): Promise<void> {
   if (!token) return;
   const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+  sessionUserCache.delete(cleanToken);
   const sql = getDb();
   await ensureTables(sql);
   await sql`DELETE FROM user_sessions WHERE token = ${cleanToken}`;

@@ -1,5 +1,6 @@
 'use server';
 import { getDb, ensureTables } from '@/lib/db';
+import { redisGet, redisSet } from '@/lib/redis';
 import {
   queryFIIDIIRange,
   upsertInstitutionalFlow,
@@ -30,6 +31,11 @@ export interface GetFIIDIIDataParams {
   endDate?: string;
   aggregation?: 'daily' | 'monthly';
 }
+
+const fiiDiiMemoryCache = new Map<string, { data: FIIDIIDataResponse; expiresAt: number }>();
+const FII_DII_MEM_TTL_MS = 15 * 60 * 1000; // 15 mins
+const FII_DII_REDIS_TTL_SECONDS = 3600; // 1 hour
+
 export async function getFIIDIIDataAction(
   params: GetFIIDIIDataParams = {}
 ): Promise<FIIDIIDataResponse> {
@@ -58,6 +64,18 @@ export async function getFIIDIIDataAction(
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
   const wantsDailyOrWeekly = interval === 'daily' || interval === 'weekly';
   const aggregation = params.aggregation || (isMultiYear && !wantsDailyOrWeekly ? 'monthly' : 'daily');
+
+  const cacheKey = `fii_dii:${timeframe}:${interval}:${adjustmentMode}:${viewMode}:${aggregation}:${startDate || ''}:${endDate || ''}`;
+  const memCached = fiiDiiMemoryCache.get(cacheKey);
+  if (memCached && memCached.expiresAt > Date.now()) {
+    return memCached.data;
+  }
+  const redisCached = await redisGet<FIIDIIDataResponse>(cacheKey);
+  if (redisCached && typeof redisCached === 'object' && redisCached.summary) {
+    fiiDiiMemoryCache.set(cacheKey, { data: redisCached, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
+    return redisCached;
+  }
+
   const sql = getDb();
   await ensureTables(sql);
   // Auto-heal: If today's market has published data (>18:00 IST) and DB doesn't have it yet, sync now
@@ -69,6 +87,7 @@ export async function getFIIDIIDataAction(
     if (latestDbDate && latestDbDate < maxEligibleDate) {
       const live = await fetchNSELiveFiiDii();
       if (live && live.tradeDate === maxEligibleDate) {
+        fiiDiiMemoryCache.clear();
         await upsertInstitutionalFlow(sql, live);
         const [niftyPrices, sensexPrices] = await Promise.all([
           fetchYahooIndexPrices('^NSEI', '5d'),
@@ -102,21 +121,23 @@ export async function getFIIDIIDataAction(
     latestDailyFlow
   );
   const withLatest = { ...processed, actualLatestDate };
+  let finalResult = withLatest;
   // If a specific interval was requested and not already monthly
   if (interval !== 'daily' && aggregation === 'daily') {
     const aggregatedPoints = aggregatePointsByInterval(processed.points, interval);
-    return {
+    finalResult = {
       ...withLatest,
       points: aggregatedPoints,
     };
-  }
-  // If aggregation was monthly and interval is quarterly, halfyearly, or yearly
-  if (aggregation === 'monthly' && (interval === 'quarterly' || interval === 'halfyearly' || interval === 'yearly')) {
+  } else if (aggregation === 'monthly' && (interval === 'quarterly' || interval === 'halfyearly' || interval === 'yearly')) {
+    // If aggregation was monthly and interval is quarterly, halfyearly, or yearly
     const aggregatedPoints = aggregatePointsByInterval(processed.points, interval);
-    return {
+    finalResult = {
       ...withLatest,
       points: aggregatedPoints,
     };
   }
-  return withLatest;
+  fiiDiiMemoryCache.set(cacheKey, { data: finalResult, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
+  redisSet(cacheKey, finalResult, FII_DII_REDIS_TTL_SECONDS).catch(() => {});
+  return finalResult;
 }

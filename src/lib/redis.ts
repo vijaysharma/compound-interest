@@ -19,19 +19,36 @@ import {
 } from './redis/memoryStore';
 
 export { isRedisConfigured };
+
+const inFlightGets = new Map<string, Promise<unknown>>();
+
 /**
  * Upstash is the source of truth whenever it answers; the in-process store is only a fallback for
  * when it is unconfigured or unreachable. Serving the in-process copy first went stale across
  * serverless instances: an invalidation clears Upstash and the memory of the one instance that
  * ran it, so every other warm instance kept returning the old value (and a read-through copy was
  * held for the default hour rather than the key's own TTL).
+ *
+ * In-flight requests for the same key are deduplicated to avoid duplicate network roundtrips.
  */
 export async function redisGet<T>(key: string): Promise<T | null> {
-  const upstash = await upstashGet<T>(key);
-  if (upstash.success) {
-    return upstash.data ?? null;
+  const existing = inFlightGets.get(key);
+  if (existing) {
+    return existing as Promise<T | null>;
   }
-  return memoryGet<T>(key);
+  const promise = (async () => {
+    try {
+      const upstash = await upstashGet<T>(key);
+      if (upstash.success) {
+        return upstash.data ?? null;
+      }
+      return memoryGet<T>(key);
+    } finally {
+      inFlightGets.delete(key);
+    }
+  })();
+  inFlightGets.set(key, promise);
+  return promise as Promise<T | null>;
 }
 export async function redisMGet<T>(keys: string[]): Promise<Record<string, T | null>> {
   if (!keys || keys.length === 0) return {};

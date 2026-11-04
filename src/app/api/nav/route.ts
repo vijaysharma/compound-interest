@@ -13,17 +13,24 @@ export async function GET(): Promise<Response> {
   } catch {
     // DB query fallback
   }
-  return Response.json({
-    service: 'Indian Mutual Fund NAV API',
-    provider: 'Rupee Calculator',
-    source: 'Official AMFI (Association of Mutual Funds in India)',
-    market_watermark_date: watermark?.date ?? null,
-    total_schemes_directory: directoryCount,
-    total_schemes_with_nav: navCount,
-    documentation: {
-      single_scheme: '/api/nav/:schemeCode',
-      filtered_range: '/api/nav/:schemeCode?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD',
-      example: '/api/nav/122639',
+  return Response.json(
+    {
+      service: 'Indian Mutual Fund NAV API',
+      provider: 'Rupee Calculator',
+      source: 'Official AMFI (Association of Mutual Funds in India)',
+      market_watermark_date: watermark?.date ?? null,
+      total_schemes_directory: directoryCount,
+      total_schemes_with_nav: navCount,
+      documentation: {
+        single_scheme: '/api/nav/:schemeCode',
+        filtered_range: '/api/nav/:schemeCode?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD',
+        example: '/api/nav/122639',
+      },
     },
-  });
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+      },
+    }
+  );
 }

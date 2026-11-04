@@ -7,19 +7,20 @@ export async function handleGetExchangeRates(): Promise<{
   base_code: string;
   rates: Record<string, number>;
 }> {
-  const redisRates = await redisGet<Record<string, number>>('cache:rates:usd');
-  if (redisRates) {
-    return {
-      result: 'success',
-      base_code: 'USD',
-      rates: redisRates,
-    };
-  }
   if (memoryState.exchangeRates && Date.now() - memoryState.exchangeRates.timestamp < 10 * 60 * 1000) {
     return {
       result: 'success',
       base_code: 'USD',
       rates: memoryState.exchangeRates.rates,
+    };
+  }
+  const redisRates = await redisGet<Record<string, number>>('cache:rates:usd');
+  if (redisRates) {
+    memoryState.exchangeRates = { rates: redisRates, timestamp: Date.now() };
+    return {
+      result: 'success',
+      base_code: 'USD',
+      rates: redisRates,
     };
   }
   let storedPayload: { rates?: Record<string, number> } | null = null;
