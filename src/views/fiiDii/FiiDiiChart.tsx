@@ -266,57 +266,59 @@ export const FiiDiiChart: React.FC<FiiDiiChartProps> = ({
               })}
             </div>
           </div>
-          {/* 2. Duration Chips */}
-          <div
-            className={styles.chartControlGroup}
-            role="group"
-            aria-label="Select duration timeframe"
-          >
-            <span className={styles.chartControlLabel}>Duration:</span>
-            <div className={styles.chartTimeframeChips}>
-              {QUICK_TFS.map((tf) => {
-                const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
-                return (
-                  <button
-                    key={tf}
-                    type="button"
-                    className={`${styles.chartTfChip} ${isActive ? styles.chartTfChipActive : ''}`}
-                    onClick={() => onTimeframeChange(tf)}
-                    disabled={isLoading}
-                    title={`View past ${tf}`}
-                  >
-                    {tf}
-                  </button>
-                );
-              })}
+          {/* 2. Duration & Financial Year aligned in a single row on web view */}
+          <div className={styles.durationAndFyRow}>
+            <div
+              className={styles.chartControlGroup}
+              role="group"
+              aria-label="Select duration timeframe"
+            >
+              <span className={styles.chartControlLabel}>Duration:</span>
+              <div className={styles.chartTimeframeChips}>
+                {QUICK_TFS.map((tf) => {
+                  const isActive = timeframe === tf || (tf === 'ALL' && timeframe === 'MAX');
+                  return (
+                    <button
+                      key={tf}
+                      type="button"
+                      className={`${styles.chartTfChip} ${isActive ? styles.chartTfChipActive : ''}`}
+                      onClick={() => onTimeframeChange(tf)}
+                      disabled={isLoading}
+                      title={`View past ${tf}`}
+                    >
+                      {tf}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          {/* 3. FY Dropdown on dedicated row on mobile / responsive wrap */}
-          <div className={styles.fyDropdownRow}>
-            <span className={styles.fyRowLabel}>Financial Year:</span>
-            {/* Native select stays transparent on top (16px, so iOS won't zoom on focus);
-                the visible label underneath uses the chip type scale. */}
-            <div className={`${styles.fyDropdownWrap} ${isFyActive ? styles.fySelectActive : ''}`}>
-              <span className={styles.fySelectLabel} aria-hidden="true">
-                {fyOptions.find((opt) => opt.value === timeframe)?.label ?? 'Select FY (Apr–Mar)'}
-              </span>
-              <FiChevronDown size={12} aria-hidden="true" />
-              <select
-                className={styles.fySelect}
-                value={isFyActive ? String(timeframe) : ''}
-                onChange={(e) => {
-                  if (e.target.value) onTimeframeChange(e.target.value as Timeframe);
-                }}
-                disabled={isLoading}
-                aria-label="Select Financial Year"
-              >
-                <option value="">Select Indian FY (Apr–Mar)</option>
-                {fyOptions.map((opt) => (
-                  <option key={String(opt.value)} value={String(opt.value)}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+            {/* 3. FY Dropdown */}
+            <div className={styles.fyDropdownRow}>
+              <span className={styles.fyRowLabel}>Financial Year:</span>
+              {/* Native select stays transparent on top (16px, so iOS won't zoom on focus);
+                  the visible label underneath uses the chip type scale. */}
+              <div className={`${styles.fyDropdownWrap} ${isFyActive ? styles.fySelectActive : ''}`}>
+                <span className={styles.fySelectLabel} aria-hidden="true">
+                  {fyOptions.find((opt) => opt.value === timeframe)?.label ?? 'Select FY (Apr–Mar)'}
+                </span>
+                <FiChevronDown size={12} aria-hidden="true" />
+                <select
+                  className={styles.fySelect}
+                  value={isFyActive ? String(timeframe) : ''}
+                  onChange={(e) => {
+                    if (e.target.value) onTimeframeChange(e.target.value as Timeframe);
+                  }}
+                  disabled={isLoading}
+                  aria-label="Select Financial Year"
+                >
+                  <option value="">Select Indian FY (Apr–Mar)</option>
+                  {fyOptions.map((opt) => (
+                    <option key={String(opt.value)} value={String(opt.value)}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>

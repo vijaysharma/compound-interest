@@ -1,6 +1,6 @@
 'use server';
 import { getDb, ensureTables } from '@/lib/db';
-import { redisGet, redisSet } from '@/lib/redis';
+import { redisGet, redisSet, redisDelPattern } from '@/lib/redis';
 import {
   queryFIIDIIRange,
   upsertInstitutionalFlow,
@@ -31,11 +31,9 @@ export interface GetFIIDIIDataParams {
   endDate?: string;
   aggregation?: 'daily' | 'monthly';
 }
-
 const fiiDiiMemoryCache = new Map<string, { data: FIIDIIDataResponse; expiresAt: number }>();
 const FII_DII_MEM_TTL_MS = 15 * 60 * 1000; // 15 mins
 const FII_DII_REDIS_TTL_SECONDS = 3600; // 1 hour
-
 export async function getFIIDIIDataAction(
   params: GetFIIDIIDataParams = {}
 ): Promise<FIIDIIDataResponse> {
@@ -64,42 +62,68 @@ export async function getFIIDIIDataAction(
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
   const wantsDailyOrWeekly = interval === 'daily' || interval === 'weekly';
   const aggregation = params.aggregation || (isMultiYear && !wantsDailyOrWeekly ? 'monthly' : 'daily');
-
   const cacheKey = `fii_dii:${timeframe}:${interval}:${adjustmentMode}:${viewMode}:${aggregation}:${startDate || ''}:${endDate || ''}`;
   const memCached = fiiDiiMemoryCache.get(cacheKey);
   if (memCached && memCached.expiresAt > Date.now()) {
-    return memCached.data;
+    const lastPoint = memCached.data.points?.[memCached.data.points.length - 1];
+    if (!lastPoint || (lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined)) {
+      return memCached.data;
+    }
   }
   const redisCached = await redisGet<FIIDIIDataResponse>(cacheKey);
   if (redisCached && typeof redisCached === 'object' && redisCached.summary) {
-    fiiDiiMemoryCache.set(cacheKey, { data: redisCached, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
-    return redisCached;
+    const lastPoint = redisCached.points?.[redisCached.points.length - 1];
+    const isCachedIndexValid = lastPoint ? lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined : true;
+    if (isCachedIndexValid) {
+      fiiDiiMemoryCache.set(cacheKey, { data: redisCached, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
+      return redisCached;
+    }
   }
-
   const sql = getDb();
   await ensureTables(sql);
-  // Auto-heal: If today's market has published data (>18:00 IST) and DB doesn't have it yet, sync now
+  // Auto-heal: Ensure both institutional flows and index prices are kept up-to-date
   try {
-    const latestDbRow = (await sql`
-      SELECT trade_date::text FROM institutional_flows ORDER BY trade_date DESC LIMIT 1
-    `) as Array<{ trade_date: string }>;
-    const latestDbDate = latestDbRow[0]?.trade_date;
-    if (latestDbDate && latestDbDate < maxEligibleDate) {
-      const live = await fetchNSELiveFiiDii();
-      if (live && live.tradeDate === maxEligibleDate) {
-        fiiDiiMemoryCache.clear();
-        await upsertInstitutionalFlow(sql, live);
+    const [latestFlowRows, latestNiftyRows] = (await Promise.all([
+      sql`SELECT trade_date::text FROM institutional_flows ORDER BY trade_date DESC LIMIT 1`,
+      sql`SELECT trade_date::text FROM index_prices WHERE index_name = 'NIFTY50' ORDER BY trade_date DESC LIMIT 1`,
+    ])) as [Array<{ trade_date: string }>, Array<{ trade_date: string }>];
+    const latestFlowDate = latestFlowRows[0]?.trade_date;
+    const latestNiftyDate = latestNiftyRows[0]?.trade_date;
+    let shouldInvalidate = false;
+    // 1. Sync institutional flows if market closed and DB is behind
+    if (latestFlowDate && latestFlowDate < maxEligibleDate) {
+      try {
+        const live = await fetchNSELiveFiiDii();
+        if (live && live.tradeDate === maxEligibleDate) {
+          await upsertInstitutionalFlow(sql, live);
+          shouldInvalidate = true;
+        }
+      } catch (flowErr) {
+        console.warn('[FII/DII] Auto-heal flow sync warning:', flowErr);
+      }
+    }
+    // 2. Sync index prices independently (from Yahoo Finance) if lagging behind flows or eligible date
+    const targetIndexDate = latestFlowDate && latestFlowDate > maxEligibleDate ? latestFlowDate : maxEligibleDate;
+    if (!latestNiftyDate || latestNiftyDate < targetIndexDate) {
+      try {
         const [niftyPrices, sensexPrices] = await Promise.all([
           fetchYahooIndexPrices('^NSEI', '5d'),
           fetchYahooIndexPrices('^BSESN', '5d'),
         ]);
-        const validNifty = niftyPrices.filter((p) => p.tradeDate <= maxEligibleDate);
-        const validSensex = sensexPrices.filter((p) => p.tradeDate <= maxEligibleDate);
-        await Promise.all([
-          upsertIndexPricesBatch(sql, 'NIFTY50', validNifty),
-          upsertIndexPricesBatch(sql, 'SENSEX', validSensex),
-        ]);
+        if (niftyPrices.length > 0 || sensexPrices.length > 0) {
+          await Promise.all([
+            upsertIndexPricesBatch(sql, 'NIFTY50', niftyPrices),
+            upsertIndexPricesBatch(sql, 'SENSEX', sensexPrices),
+          ]);
+          shouldInvalidate = true;
+        }
+      } catch (indexErr) {
+        console.warn('[FII/DII] Auto-heal index sync warning:', indexErr);
       }
+    }
+    if (shouldInvalidate) {
+      fiiDiiMemoryCache.clear();
+      await redisDelPattern('fii_dii:*').catch(() => {});
     }
   } catch (err) {
     console.warn('[FII/DII] Auto-heal sync error:', err);

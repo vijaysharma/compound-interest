@@ -11,7 +11,6 @@ export const FLOW_INTERVALS: { key: FlowInterval; label: string }[] = [
   { key: 'halfyearly', label: 'Half-Yearly' },
   { key: 'yearly', label: 'Yearly' },
 ];
-
 /**
  * Returns whether a given aggregation interval is logical / permitted for the selected timeframe.
  * If timeframe duration is shorter than the interval, it returns false.
@@ -78,6 +77,8 @@ export interface FIIDIISummary {
   pppLatest: number;
   adjustmentMode: AdjustmentMode;
   viewMode: ViewMode;
+  /** Real max trade_date of the index prices series, reflecting the benchmark as-of date */
+  latestIndexDate?: string;
 }
 export interface FIIDIIDataResponse {
   points: ProcessedFIIDIIPoint[];
@@ -213,11 +214,13 @@ export function processFIIDIIData(
   const totalDiiNet = Math.round(runningDiiNet * 100) / 100;
   let latestNifty: number | null = null;
   let niftyPeriodChangePercent: number | null = null;
+  let latestIndexDate: string | undefined = undefined;
   const niftyPoints = points.filter((p) => p.niftyClose !== null && p.niftyClose !== undefined);
   if (niftyPoints.length > 0) {
     const firstN = niftyPoints[0].niftyClose!;
     const lastN = niftyPoints[niftyPoints.length - 1].niftyClose!;
     latestNifty = lastN;
+    latestIndexDate = niftyPoints[niftyPoints.length - 1].tradeDate;
     if (firstN > 0) {
       niftyPeriodChangePercent = Math.round(((lastN - firstN) / firstN) * 10000) / 100;
     }
@@ -229,6 +232,9 @@ export function processFIIDIIData(
     const firstS = sensexPoints[0].sensexClose!;
     const lastS = sensexPoints[sensexPoints.length - 1].sensexClose!;
     latestSensex = lastS;
+    if (!latestIndexDate) {
+      latestIndexDate = sensexPoints[sensexPoints.length - 1].tradeDate;
+    }
     if (firstS > 0) {
       sensexPeriodChangePercent = Math.round(((lastS - firstS) / firstS) * 10000) / 100;
     }
@@ -254,6 +260,7 @@ export function processFIIDIIData(
       pppLatest,
       adjustmentMode,
       viewMode,
+      latestIndexDate,
     },
     isMonthly,
   };
@@ -302,10 +309,14 @@ export function adjustFIIDIIPoints(
   const niftyPoints = points.filter((pt) => pt.niftyClose !== null && pt.niftyClose !== undefined);
   let latestNifty: number | null = null;
   let niftyPeriodChangePercent: number | null = null;
+  let latestIndexDate = baseSummary?.latestIndexDate;
   if (niftyPoints.length > 0) {
     const firstN = niftyPoints[0].niftyClose!;
     const lastN = niftyPoints[niftyPoints.length - 1].niftyClose!;
     latestNifty = lastN;
+    if (!latestIndexDate) {
+      latestIndexDate = niftyPoints[niftyPoints.length - 1].tradeDate;
+    }
     if (firstN > 0) {
       niftyPeriodChangePercent = Math.round(((lastN - firstN) / firstN) * 10000) / 100;
     }
@@ -317,6 +328,9 @@ export function adjustFIIDIIPoints(
     const firstS = sensexPoints[0].sensexClose!;
     const lastS = sensexPoints[sensexPoints.length - 1].sensexClose!;
     latestSensex = lastS;
+    if (!latestIndexDate) {
+      latestIndexDate = sensexPoints[sensexPoints.length - 1].tradeDate;
+    }
     if (firstS > 0) {
       sensexPeriodChangePercent = Math.round(((lastS - firstS) / firstS) * 10000) / 100;
     }
@@ -354,6 +368,7 @@ export function adjustFIIDIIPoints(
       pppLatest,
       adjustmentMode,
       viewMode,
+      latestIndexDate,
     },
   };
 }

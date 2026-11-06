@@ -130,8 +130,6 @@ export const FiiDiiTracker: React.FC = () => {
         setAdjustmentMode={setAdjustmentMode}
         viewMode={viewMode}
         setViewMode={setViewMode}
-        chartType={chartType}
-        setChartType={setChartType}
         showFii={showFii}
         setShowFii={handleToggleFii}
         showDii={showDii}

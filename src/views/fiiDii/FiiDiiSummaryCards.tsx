@@ -66,12 +66,15 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
     latestSensex,
     sensexPeriodChangePercent,
     adjustmentMode,
+    latestIndexDate,
   } = summary;
   // "Latest" cards always show nominal raw daily flows — stable across adjustment mode switches
   const latestFiiNet = nominalSummary?.nominalLatestFiiNet ?? summary.nominalLatestFiiNet;
   const latestDiiNet = nominalSummary?.nominalLatestDiiNet ?? summary.nominalLatestDiiNet;
   // actualLatestDate is the real DB max trade_date — prevents monthly agg showing "1 Sep" instead of "28 Sep"
   const latestDateDisplay = actualLatestDate ?? nominalSummary?.latestDate ?? latestDate;
+  const indexDateDisplay =
+    latestIndexDate ?? nominalSummary?.latestIndexDate ?? actualLatestDate ?? latestDateDisplay;
   const unitLabel =
     adjustmentMode === 'ppp' ? '$M (PPP)' : adjustmentMode === 'inflation' ? '₹ Cr (Real)' : '₹ Cr';
   const formatAmount = (num: number) => {
@@ -90,9 +93,9 @@ export const FiiDiiSummaryCards: React.FC<FiiDiiSummaryCardsProps> = ({
         <div className={`${styles.summaryCard}${refreshCls}`}>
           <div className={styles.cardHeader}>
             <span className={styles.cardTitle}>Index Benchmarks</span>
-            <span className={styles.cardDate}>Closing</span>
+            <span className={styles.cardTag}>{fmtDate(indexDateDisplay)}</span>
           </div>
-          <div className={styles.cardDateRange}>{periodLabel}</div>
+          <div className={styles.cardDateRange}>Closing • {periodLabel}</div>
           {/* <div className={styles.cardSplitRow}> */}
           <div>
             <span className={styles.splitLabel}>Nifty 50:</span>

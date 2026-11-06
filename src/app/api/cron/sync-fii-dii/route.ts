@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getDb, ensureTables } from '@/lib/db';
+import { redisDelPattern } from '@/lib/redis';
 import {
   fetchNSELiveFiiDii,
   fetchYahooIndexPrices,
@@ -38,6 +39,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     const liveFlow = await fetchNSELiveFiiDii();
     if (liveFlow && liveFlow.tradeDate <= maxEligibleDate) {
       await upsertInstitutionalFlow(sql, liveFlow);
+      await redisDelPattern('fii_dii:*').catch(() => {});
       results.flow = {
         tradeDate: liveFlow.tradeDate,
         fiiNetCrores: liveFlow.fiiNetCrores,
@@ -54,23 +56,24 @@ export async function GET(req: Request): Promise<NextResponse> {
   } catch (err) {
     results.flow = { error: err instanceof Error ? err.message : String(err) };
   }
-  // 2. Fetch & Upsert Recent Index Prices (Nifty 50 and Sensex) clamped to closed days
+  // 2. Fetch & Upsert Recent Index Prices (Nifty 50 and Sensex)
   try {
     const [niftyPrices, sensexPrices] = await Promise.all([
       fetchYahooIndexPrices('^NSEI', '5d'),
       fetchYahooIndexPrices('^BSESN', '5d'),
     ]);
-    const validNifty = niftyPrices.filter((p) => p.tradeDate <= maxEligibleDate);
-    const validSensex = sensexPrices.filter((p) => p.tradeDate <= maxEligibleDate);
     const [niftyCount, sensexCount] = await Promise.all([
-      upsertIndexPricesBatch(sql, 'NIFTY50', validNifty),
-      upsertIndexPricesBatch(sql, 'SENSEX', validSensex),
+      upsertIndexPricesBatch(sql, 'NIFTY50', niftyPrices),
+      upsertIndexPricesBatch(sql, 'SENSEX', sensexPrices),
     ]);
+    if (niftyCount > 0 || sensexCount > 0) {
+      await redisDelPattern('fii_dii:*').catch(() => {});
+    }
     results.indices = {
       niftyCount,
       sensexCount,
-      latestNifty: validNifty[validNifty.length - 1],
-      latestSensex: validSensex[validSensex.length - 1],
+      latestNifty: niftyPrices[niftyPrices.length - 1],
+      latestSensex: sensexPrices[sensexPrices.length - 1],
     };
   } catch (err) {
     results.indices = { error: err instanceof Error ? err.message : String(err) };

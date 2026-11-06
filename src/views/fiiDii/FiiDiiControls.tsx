@@ -2,15 +2,12 @@
 import React from 'react';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import type { AdjustmentMode, ViewMode } from '@/lib/fiiDii/fiiDiiCalculations';
-import type { ChartType } from './FiiDiiChart';
 import styles from './FiiDiiTracker.module.scss';
 interface FiiDiiControlsProps {
   adjustmentMode: AdjustmentMode;
   setAdjustmentMode: (m: AdjustmentMode) => void;
   viewMode: ViewMode;
   setViewMode: (v: ViewMode) => void;
-  chartType?: ChartType;
-  setChartType?: (c: ChartType) => void;
   showFii: boolean;
   setShowFii: (s: boolean) => void;
   showDii: boolean;
@@ -53,8 +50,6 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
   setAdjustmentMode,
   viewMode,
   setViewMode,
-  chartType,
-  setChartType,
   showFii,
   setShowFii,
   showDii,
@@ -89,29 +84,6 @@ export const FiiDiiControls: React.FC<FiiDiiControlsProps> = ({
             </button>
           </div>
         </div>
-        {chartType && setChartType && (
-          <div className={styles.controlGroup}>
-            <span className={styles.controlLabel}>Chart:</span>
-            <div className={styles.segmentedControl}>
-              <button
-                type="button"
-                className={`${styles.segmentBtn} ${chartType === 'bar' ? styles.segmentBtnActive : ''}`}
-                onClick={() => setChartType('bar')}
-                disabled={isLoading}
-              >
-                Bar
-              </button>
-              <button
-                type="button"
-                className={`${styles.segmentBtn} ${chartType === 'line' ? styles.segmentBtnActive : ''}`}
-                onClick={() => setChartType('line')}
-                disabled={isLoading}
-              >
-                Line
-              </button>
-            </div>
-          </div>
-        )}
       </div>
       <div className={styles.controlGroup}>
         <span className={styles.controlLabel}>Adjustment:</span>

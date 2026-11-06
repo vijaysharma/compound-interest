@@ -632,6 +632,20 @@
   }
 }
 
+.durationAndFyRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.85rem;
+    width: auto;
+  }
+}
+
 .chartControlGroup {
   display: flex;
   align-items: center;
@@ -707,6 +721,11 @@
   align-items: center;
   gap: 0.4rem;
   width: 100%;
+
+  @include tablet-up {
+    width: auto;
+    flex-shrink: 0;
+  }
 }
 
 .fyRowLabel {
@@ -715,6 +734,7 @@
   text-transform: uppercase;
   color: var(--color-text-muted, #94a3b8);
   min-width: 52px;
+  white-space: nowrap;
 }
 
 .chartSubTitle {
@@ -1249,6 +1269,12 @@
   }
   .chipTextAbbr {
     display: inline;
+  }
+  .durationAndFyRow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
   }
   .fyDropdownRow {
     display: flex;
