@@ -39,7 +39,10 @@ export async function GET(req: Request): Promise<NextResponse> {
     const liveFlow = await fetchNSELiveFiiDii();
     if (liveFlow && liveFlow.tradeDate <= maxEligibleDate) {
       await upsertInstitutionalFlow(sql, liveFlow);
-      await redisDelPattern('fii_dii:*').catch(() => {});
+      await Promise.all([
+        redisDelPattern('fii_dii:*').catch(() => {}),
+        redisDelPattern('fii-dii:*').catch(() => {}),
+      ]);
       results.flow = {
         tradeDate: liveFlow.tradeDate,
         fiiNetCrores: liveFlow.fiiNetCrores,
@@ -67,7 +70,10 @@ export async function GET(req: Request): Promise<NextResponse> {
       upsertIndexPricesBatch(sql, 'SENSEX', sensexPrices),
     ]);
     if (niftyCount > 0 || sensexCount > 0) {
-      await redisDelPattern('fii_dii:*').catch(() => {});
+      await Promise.all([
+        redisDelPattern('fii_dii:*').catch(() => {}),
+        redisDelPattern('fii-dii:*').catch(() => {}),
+      ]);
     }
     results.indices = {
       niftyCount,

@@ -64,20 +64,17 @@ export async function getFIIDIIDataAction(
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
   const wantsDailyOrWeekly = interval === 'daily' || interval === 'weekly';
   const aggregation = params.aggregation || (isMultiYear && !wantsDailyOrWeekly ? 'monthly' : 'daily');
+  const isCurrentTradingPeriod = endDate >= todayIST;
   const cacheKey = `fii_dii:${timeframe}:${interval}:${adjustmentMode}:${viewMode}:${aggregation}:${startDate || ''}:${endDate || ''}`;
-  const memCached = fiiDiiMemoryCache.get(cacheKey);
-  if (memCached && memCached.expiresAt > Date.now()) {
-    const lastPoint = memCached.data.points?.[memCached.data.points.length - 1];
-    const lastIndex = memCached.data.summary?.latestIndexDate ?? lastPoint?.tradeDate;
-    if (lastPoint && lastIndex && lastIndex >= todayIST && lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined) {
+  // Only serve from cache for closed historical periods. For current trading periods ending today,
+  // bypass cache so every page reload pulls fresh index benchmark and flow data.
+  if (!isCurrentTradingPeriod) {
+    const memCached = fiiDiiMemoryCache.get(cacheKey);
+    if (memCached && memCached.expiresAt > Date.now()) {
       return memCached.data;
     }
-  }
-  const redisCached = await redisGet<FIIDIIDataResponse>(cacheKey);
-  if (redisCached && typeof redisCached === 'object' && redisCached.summary) {
-    const lastPoint = redisCached.points?.[redisCached.points.length - 1];
-    const lastIndex = redisCached.summary?.latestIndexDate ?? lastPoint?.tradeDate;
-    if (lastPoint && lastIndex && lastIndex >= todayIST && lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined) {
+    const redisCached = await redisGet<FIIDIIDataResponse>(cacheKey);
+    if (redisCached && typeof redisCached === 'object' && redisCached.summary) {
       fiiDiiMemoryCache.set(cacheKey, { data: redisCached, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
       return redisCached;
     }
@@ -105,8 +102,8 @@ export async function getFIIDIIDataAction(
         console.warn('[FII/DII] Auto-heal flow sync warning:', flowErr);
       }
     }
-    // 2. Sync index prices independently (from Yahoo Finance) if lagging behind today
-    if (!latestNiftyDate || latestNiftyDate < todayIST) {
+    // 2. Fetch latest index prices from Yahoo Finance so each reload reflects the latest available data
+    if (isCurrentTradingPeriod || !latestNiftyDate || latestNiftyDate < todayIST) {
       try {
         const [niftyPrices, sensexPrices] = await Promise.all([
           fetchYahooIndexPrices('^NSEI', '5d'),
@@ -125,7 +122,10 @@ export async function getFIIDIIDataAction(
     }
     if (shouldInvalidate) {
       fiiDiiMemoryCache.clear();
-      await redisDelPattern('fii_dii:*').catch(() => {});
+      await Promise.all([
+        redisDelPattern('fii_dii:*').catch(() => {}),
+        redisDelPattern('fii-dii:*').catch(() => {}),
+      ]);
     }
   } catch (err) {
     console.warn('[FII/DII] Auto-heal sync error:', err);
@@ -163,7 +163,9 @@ export async function getFIIDIIDataAction(
       points: aggregatedPoints,
     };
   }
-  fiiDiiMemoryCache.set(cacheKey, { data: finalResult, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
-  redisSet(cacheKey, finalResult, FII_DII_REDIS_TTL_SECONDS).catch(() => {});
+  if (!isCurrentTradingPeriod) {
+    fiiDiiMemoryCache.set(cacheKey, { data: finalResult, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
+    redisSet(cacheKey, finalResult, FII_DII_REDIS_TTL_SECONDS).catch(() => {});
+  }
   return finalResult;
 }

@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
+import { getFIIDIIDataAction } from '@/actions/fiiDii';
 import { FiiDiiTracker } from '@/views/fiiDii/FiiDiiTracker';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const metadata: Metadata = {
   title: 'FII & DII Tracker | Historical Institutional Flows, Nifty 50 & Sensex',
   description:
@@ -15,6 +18,12 @@ export const metadata: Metadata = {
     'NSE FII DII daily net',
   ],
 };
-export default function FiiDiiPage() {
-  return <FiiDiiTracker />;
+export default async function FiiDiiPage() {
+  let initialData = null;
+  try {
+    initialData = await getFIIDIIDataAction({ timeframe: '1Y', interval: 'daily' });
+  } catch (err) {
+    console.error('[FiiDiiPage] Failed to load initial FII/DII data:', err);
+  }
+  return <FiiDiiTracker initialData={initialData} />;
 }

@@ -56,6 +56,19 @@ export function getTodayISTDate(now = new Date()): string {
   return istFormatter.format(now);
 }
 /**
+ * Formats a UNIX timestamp (seconds) into Indian Standard Time (Asia/Kolkata) as YYYY-MM-DD.
+ */
+export function formatTimestampToIST(timestampSeconds: number): string {
+  const date = new Date(timestampSeconds * 1000);
+  const istFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return istFormatter.format(date);
+}
+/**
  * Returns the latest trading date (YYYY-MM-DD) for which official FII/DII data can be expected.
  * In IST (UTC+5:30), daily FII/DII reports are published by NSE/BSE only after 18:00 (6:00 PM IST) on weekdays.
  * If called before 18:00 IST on a weekday, today's market has not closed or published data, so cutoff is yesterday.
@@ -183,7 +196,7 @@ export async function fetchYahooIndexPrices(
       'User-Agent': 'Mozilla/5.0 (compatible; RupeeCalcBot/1.0)',
       Accept: 'application/json',
     },
-    next: { revalidate: 3600 },
+    cache: 'no-store',
   });
   if (!res.ok) {
     throw new Error(`Yahoo Finance failed for ${symbol} with status ${res.status}`);
@@ -195,10 +208,17 @@ export async function fetchYahooIndexPrices(
   const closes: (number | null)[] = result.indicators?.quote?.[0]?.close || [];
   const points: IndexPricePoint[] = [];
   for (let i = 0; i < timestamps.length; i++) {
-    const close = closes[i];
+    let close = closes[i];
+    if (
+      (close === null || close === undefined || !Number.isFinite(close) || close <= 0) &&
+      i === timestamps.length - 1 &&
+      typeof result.meta?.regularMarketPrice === 'number' &&
+      result.meta.regularMarketPrice > 0
+    ) {
+      close = result.meta.regularMarketPrice;
+    }
     if (close !== null && close !== undefined && Number.isFinite(close) && close > 0) {
-      const d = new Date(timestamps[i] * 1000);
-      const tradeDate = d.toISOString().slice(0, 10);
+      const tradeDate = formatTimestampToIST(timestamps[i]);
       points.push({
         tradeDate,
         closePrice: Math.round(close * 100) / 100,

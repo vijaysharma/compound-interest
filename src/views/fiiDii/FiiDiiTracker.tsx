@@ -24,7 +24,10 @@ const FiiDiiChart = dynamic(
     loading: () => <div className={styles.chartLoading}>Loading chart…</div>,
   }
 );
-export const FiiDiiTracker: React.FC = () => {
+interface FiiDiiTrackerProps {
+  initialData?: FIIDIIDataResponse | null;
+}
+export const FiiDiiTracker: React.FC<FiiDiiTrackerProps> = ({ initialData }) => {
   const [timeframe, setTimeframe] = useState<Timeframe>('1Y');
   const [interval, setInterval] = useState<FlowInterval>('daily');
   const [adjustmentMode, setAdjustmentMode] = useState<AdjustmentMode>('nominal');
@@ -34,11 +37,11 @@ export const FiiDiiTracker: React.FC = () => {
   const [showDii, setShowDii] = useState<boolean>(true);
   const [showNifty, setShowNifty] = useState<boolean>(true);
   const [showSensex, setShowSensex] = useState<boolean>(false);
-  const [baseData, setBaseData] = useState<FIIDIIDataResponse | null>(null);
+  const [baseData, setBaseData] = useState<FIIDIIDataResponse | null>(initialData ?? null);
   // Key of the request whose response is currently in `baseData`; pending while it lags the
   // selected timeframe/interval.
   const requestKey = `${timeframe}|${interval}`;
-  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [loadedKey, setLoadedKey] = useState<string | null>(initialData ? '1Y|daily' : null);
   const isPending = loadedKey !== requestKey;
   const hasLoadedInitially = baseData !== null;
   const isMultiYear = timeframe === 'ALL' || timeframe === 'MAX';
@@ -66,8 +69,11 @@ export const FiiDiiTracker: React.FC = () => {
   // Deliberately not wrapped in startTransition: React entangles pending async transitions, so
   // a slow fetch held there would block every <Link> navigation until it resolved.
   useEffect(() => {
-    let cancelled = false;
     const key = `${timeframe}|${interval}`;
+    if (initialData && key === '1Y|daily' && baseData === initialData) {
+      return;
+    }
+    let cancelled = false;
     getFIIDIIDataAction({ timeframe, interval })
       .then((res) => {
         if (cancelled) return;
@@ -82,7 +88,7 @@ export const FiiDiiTracker: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [timeframe, interval]);
+  }, [timeframe, interval, initialData, baseData]);
   // Client-side memoized instant recalculation when switching adjustment, view modes, or interval
   const displayData = useMemo(() => {
     if (!baseData) return null;
