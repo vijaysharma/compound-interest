@@ -150,17 +150,25 @@ export function processFIIDIIData(
   for (const p of sensex) {
     sensexMap.set(p.trade_date, Number(p.close_price));
   }
+  // Collect all unique trade dates across flows, nifty, and sensex in chronological order
+  const allDateSet = new Set<string>();
+  for (const f of flows) allDateSet.add(f.trade_date);
+  for (const p of nifty) allDateSet.add(p.trade_date);
+  for (const p of sensex) allDateSet.add(p.trade_date);
+  const sortedDates = Array.from(allDateSet).sort();
+  const flowMap = new Map<string, DbInstitutionalFlow>();
+  for (const f of flows) flowMap.set(f.trade_date, f);
   let runningFiiNet = 0;
   let runningDiiNet = 0;
   const points: ProcessedFIIDIIPoint[] = [];
-  for (const row of flows) {
-    const tradeDate = row.trade_date;
-    const fiiBuy = Number(row.fii_buy_crores);
-    const fiiSell = Number(row.fii_sell_crores);
-    const nominalFiiNet = Number(row.fii_net_crores) || fiiBuy - fiiSell;
-    const diiBuy = Number(row.dii_buy_crores);
-    const diiSell = Number(row.dii_sell_crores);
-    const nominalDiiNet = Number(row.dii_net_crores) || diiBuy - diiSell;
+  for (const tradeDate of sortedDates) {
+    const row = flowMap.get(tradeDate);
+    const fiiBuy = row ? Number(row.fii_buy_crores) : 0;
+    const fiiSell = row ? Number(row.fii_sell_crores) : 0;
+    const nominalFiiNet = row ? (Number(row.fii_net_crores) || fiiBuy - fiiSell) : 0;
+    const diiBuy = row ? Number(row.dii_buy_crores) : 0;
+    const diiSell = row ? Number(row.dii_sell_crores) : 0;
+    const nominalDiiNet = row ? (Number(row.dii_net_crores) || diiBuy - diiSell) : 0;
     const { cpi, ppp } = findMacroFactors(tradeDate, sortedMacros);
     let displayFiiNet = nominalFiiNet;
     let displayDiiNet = nominalDiiNet;
@@ -197,9 +205,9 @@ export function processFIIDIIData(
   // Summary calculation
   const totalPeriodDays = points.length;
   const latestPoint = points[points.length - 1];
-  const latestDate = latestDailyFlow ? String(latestDailyFlow.trade_date) : (latestPoint ? latestPoint.tradeDate : '');
   const periodStart = points.length > 0 ? points[0].tradeDate : '';
-  const periodEnd = latestDailyFlow ? String(latestDailyFlow.trade_date) : latestDate;
+  const periodEnd = latestPoint ? latestPoint.tradeDate : (latestDailyFlow ? String(latestDailyFlow.trade_date) : '');
+  const latestDate = periodEnd;
   const rawNominalFii = latestDailyFlow
     ? Number(latestDailyFlow.fii_net_crores)
     : (latestPoint ? latestPoint.nominalFiiNet : 0);

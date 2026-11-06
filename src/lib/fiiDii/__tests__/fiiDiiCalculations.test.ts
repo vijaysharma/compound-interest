@@ -69,3 +69,52 @@ test('processFIIDIIData extracts latest index benchmarks and dates correctly', (
   assert.equal(adjusted.summary.latestNifty, 24500);
   assert.equal(adjusted.summary.latestSensex, 79500);
 });
+test('processFIIDIIData handles index data when flows are not yet published for today', () => {
+  const flows: DbInstitutionalFlow[] = [
+    {
+      trade_date: '2026-11-04',
+      fii_buy_crores: '20000',
+      fii_sell_crores: '15000',
+      fii_net_crores: '5000',
+      dii_buy_crores: '15000',
+      dii_sell_crores: '18000',
+      dii_net_crores: '-3000',
+    },
+    {
+      trade_date: '2026-11-05',
+      fii_buy_crores: '25000',
+      fii_sell_crores: '18000',
+      fii_net_crores: '7000',
+      dii_buy_crores: '16000',
+      dii_sell_crores: '19000',
+      dii_net_crores: '-3000',
+    },
+  ];
+  const nifty: DbIndexPrice[] = [
+    { trade_date: '2026-11-04', index_name: 'NIFTY50', close_price: '24000.00' },
+    { trade_date: '2026-11-05', index_name: 'NIFTY50', close_price: '24500.00' },
+    { trade_date: '2026-11-06', index_name: 'NIFTY50', close_price: '24938.90' },
+  ];
+  const sensex: DbIndexPrice[] = [
+    { trade_date: '2026-11-04', index_name: 'SENSEX', close_price: '78000.00' },
+    { trade_date: '2026-11-05', index_name: 'SENSEX', close_price: '79500.00' },
+    { trade_date: '2026-11-06', index_name: 'SENSEX', close_price: '80753.81' },
+  ];
+  const macros: DbMacroIndicator[] = [
+    { record_date: '2026-01-01', cpi_index: '200.0', ppp_factor: '24.0' },
+  ];
+  const result = processFIIDIIData(flows, nifty, sensex, macros, 'nominal', 'daily', false, flows[1]);
+  assert.equal(result.summary.latestDate, '2026-11-06');
+  assert.equal(result.summary.latestIndexDate, '2026-11-06');
+  assert.equal(result.summary.latestNifty, 24938.9);
+  assert.equal(result.summary.latestSensex, 80753.81);
+  assert.equal(result.summary.periodEnd, '2026-11-06');
+  assert.equal(result.summary.nominalLatestFiiNet, 7000);
+  assert.equal(result.summary.nominalLatestDiiNet, -3000);
+  assert.equal(result.points.length, 3);
+  assert.equal(result.points[2].tradeDate, '2026-11-06');
+  assert.equal(result.points[2].fiiNet, 0);
+  assert.equal(result.points[2].diiNet, 0);
+  assert.equal(result.points[2].niftyClose, 24938.9);
+  assert.equal(result.points[2].sensexClose, 80753.81);
+});

@@ -44,6 +44,18 @@ export function parseNseDate(dateStr: string): string {
   return new Date(trimmed).toISOString().slice(0, 10);
 }
 /**
+ * Returns today's calendar date in Indian Standard Time (Asia/Kolkata) as YYYY-MM-DD.
+ */
+export function getTodayISTDate(now = new Date()): string {
+  const istFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return istFormatter.format(now);
+}
+/**
  * Returns the latest trading date (YYYY-MM-DD) for which official FII/DII data can be expected.
  * In IST (UTC+5:30), daily FII/DII reports are published by NSE/BSE only after 18:00 (6:00 PM IST) on weekdays.
  * If called before 18:00 IST on a weekday, today's market has not closed or published data, so cutoff is yesterday.

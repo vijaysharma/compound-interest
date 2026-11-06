@@ -7,6 +7,7 @@ import {
   upsertIndexPricesBatch,
 } from '@/lib/fiiDii/fiiDiiRepository';
 import {
+  getTodayISTDate,
   getLatestEligibleFiiDiiDate,
   fetchNSELiveFiiDii,
   fetchYahooIndexPrices,
@@ -32,8 +33,8 @@ export interface GetFIIDIIDataParams {
   aggregation?: 'daily' | 'monthly';
 }
 const fiiDiiMemoryCache = new Map<string, { data: FIIDIIDataResponse; expiresAt: number }>();
-const FII_DII_MEM_TTL_MS = 15 * 60 * 1000; // 15 mins
-const FII_DII_REDIS_TTL_SECONDS = 3600; // 1 hour
+const FII_DII_MEM_TTL_MS = 5 * 60 * 1000; // 5 mins
+const FII_DII_REDIS_TTL_SECONDS = 300; // 5 mins
 export async function getFIIDIIDataAction(
   params: GetFIIDIIDataParams = {}
 ): Promise<FIIDIIDataResponse> {
@@ -41,11 +42,12 @@ export async function getFIIDIIDataAction(
   const adjustmentMode = params.adjustmentMode || 'nominal';
   const viewMode = params.viewMode || 'daily';
   const interval: FlowInterval = params.interval || 'daily';
-  // Enforce cutoff: today's data is only eligible after 6:00 PM IST (18:00 IST)
-  const maxEligibleDate = getLatestEligibleFiiDiiDate();
+  // Use today's calendar date in IST as the current boundary, allowing index prices from today
+  const todayIST = getTodayISTDate();
+  const maxEligibleFiiDiiDate = getLatestEligibleFiiDiiDate();
   let endDate = params.endDate
-    ? (params.endDate > maxEligibleDate ? maxEligibleDate : params.endDate)
-    : maxEligibleDate;
+    ? (params.endDate > todayIST ? todayIST : params.endDate)
+    : todayIST;
   if (typeof timeframe === 'string' && timeframe.startsWith('FY')) {
     const fyEnd = getFinancialYearRange(timeframe).end;
     if (endDate > fyEnd) endDate = fyEnd;
@@ -66,15 +68,16 @@ export async function getFIIDIIDataAction(
   const memCached = fiiDiiMemoryCache.get(cacheKey);
   if (memCached && memCached.expiresAt > Date.now()) {
     const lastPoint = memCached.data.points?.[memCached.data.points.length - 1];
-    if (!lastPoint || (lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined)) {
+    const lastIndex = memCached.data.summary?.latestIndexDate ?? lastPoint?.tradeDate;
+    if (lastPoint && lastIndex && lastIndex >= todayIST && lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined) {
       return memCached.data;
     }
   }
   const redisCached = await redisGet<FIIDIIDataResponse>(cacheKey);
   if (redisCached && typeof redisCached === 'object' && redisCached.summary) {
     const lastPoint = redisCached.points?.[redisCached.points.length - 1];
-    const isCachedIndexValid = lastPoint ? lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined : true;
-    if (isCachedIndexValid) {
+    const lastIndex = redisCached.summary?.latestIndexDate ?? lastPoint?.tradeDate;
+    if (lastPoint && lastIndex && lastIndex >= todayIST && lastPoint.niftyClose !== null && lastPoint.niftyClose !== undefined) {
       fiiDiiMemoryCache.set(cacheKey, { data: redisCached, expiresAt: Date.now() + FII_DII_MEM_TTL_MS });
       return redisCached;
     }
@@ -90,11 +93,11 @@ export async function getFIIDIIDataAction(
     const latestFlowDate = latestFlowRows[0]?.trade_date;
     const latestNiftyDate = latestNiftyRows[0]?.trade_date;
     let shouldInvalidate = false;
-    // 1. Sync institutional flows if market closed and DB is behind
-    if (latestFlowDate && latestFlowDate < maxEligibleDate) {
+    // 1. Sync institutional flows if market closed and DB is behind official publication
+    if (latestFlowDate && latestFlowDate < maxEligibleFiiDiiDate) {
       try {
         const live = await fetchNSELiveFiiDii();
-        if (live && live.tradeDate === maxEligibleDate) {
+        if (live && live.tradeDate === maxEligibleFiiDiiDate) {
           await upsertInstitutionalFlow(sql, live);
           shouldInvalidate = true;
         }
@@ -102,9 +105,8 @@ export async function getFIIDIIDataAction(
         console.warn('[FII/DII] Auto-heal flow sync warning:', flowErr);
       }
     }
-    // 2. Sync index prices independently (from Yahoo Finance) if lagging behind flows or eligible date
-    const targetIndexDate = latestFlowDate && latestFlowDate > maxEligibleDate ? latestFlowDate : maxEligibleDate;
-    if (!latestNiftyDate || latestNiftyDate < targetIndexDate) {
+    // 2. Sync index prices independently (from Yahoo Finance) if lagging behind today
+    if (!latestNiftyDate || latestNiftyDate < todayIST) {
       try {
         const [niftyPrices, sensexPrices] = await Promise.all([
           fetchYahooIndexPrices('^NSEI', '5d'),
