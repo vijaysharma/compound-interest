@@ -16,6 +16,11 @@ export interface Note {
    * never syncs an empty body back over the real one.
    */
   content_unavailable?: boolean;
+  /**
+   * Set when client localStorage quota was exceeded and the local draft
+   * had to drop its body content to preserve note metadata.
+   */
+  is_draft_body_lost?: boolean;
 }
 export type ViewMode = 'list' | 'gallery';
 export type SortOption = 'updated_desc' | 'created_desc' | 'title_asc';

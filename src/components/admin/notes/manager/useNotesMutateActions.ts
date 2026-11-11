@@ -29,7 +29,7 @@ export function useNotesMutateActions({
         prevNotes.map((n) => {
           if (n.id === idToUpdate) {
             const merged = { ...n, ...payload };
-            if (userId) saveLocalDraft(userId, merged);
+            saveLocalDraft(userId || 'default', merged);
             return merged;
           }
           return n;

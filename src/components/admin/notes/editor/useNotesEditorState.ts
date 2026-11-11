@@ -12,13 +12,14 @@ import { useEditorTags } from './useEditorTags';
 import { useEditorExport } from './useEditorExport';
 import { useEditorViewport } from './useEditorViewport';
 export function useNotesEditorState(props: NotesEditorProps) {
-  const { note, onUpdateNote } = props;
+  const { note, onUpdateNote, onResetSaveStatus } = props;
   const editorRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const saveSelectionRef = useRef<() => void>(() => {});
+  const restoreSelectionRef = useRef<() => void>(() => {});
   const handleContentChangeRef = useRef<(force?: boolean) => void>(() => {});
   const propagation = useEditorPropagation({ noteId: note?.id, onUpdateNote });
   const history = useEditorHistory({
@@ -35,6 +36,8 @@ export function useNotesEditorState(props: NotesEditorProps) {
     lastSnapshotTimeRef: history.lastSnapshotTimeRef,
     pushSnapshot: history.pushSnapshot,
     schedulePropagation: propagation.schedulePropagation,
+    onResetSaveStatus,
+    restoreSelection: () => restoreSelectionRef.current(),
   });
   const selection = useEditorSelection({
     editorRef,
@@ -42,6 +45,7 @@ export function useNotesEditorState(props: NotesEditorProps) {
   });
   useEffect(() => {
     saveSelectionRef.current = selection.saveSelection;
+    restoreSelectionRef.current = selection.restoreSelection;
     handleContentChangeRef.current = content.handleContentChange;
   });
   const formatting = useEditorFormatting({
@@ -74,6 +78,7 @@ export function useNotesEditorState(props: NotesEditorProps) {
     handleIndent: formatting.handleIndent,
     handleOutdent: formatting.handleOutdent,
     handleContentChange: content.handleContentChange,
+    pasteAsPlainNextRef: content.pasteAsPlainNextRef,
     handleSave: () => {
       content.handleContentChange(true);
       propagation.flushPropagation();

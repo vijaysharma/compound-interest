@@ -70,14 +70,18 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
           currentFontSize={state.content.currentFontSize} activeDropdown={activeDropdown}
           setActiveDropdown={setActiveDropdown} onUndo={state.history.handleUndo}
           onRedo={state.history.handleRedo} onExecCmd={state.formatting.execCmd}
-          onApplyFontSize={state.formatting.applyFontSize} onApplyTextColor={state.formatting.applyTextColor}
+          onApplyFontSize={state.formatting.applyFontSize}
+          onApplyLineHeight={state.formatting.applyLineHeight}
+          onApplyTextColor={state.formatting.applyTextColor}
           onApplyHighlightColor={state.formatting.applyHighlightColor}
           onApplyHighlighter={state.formatting.applyHighlighter}
           onInsertChecklistItem={state.checklist.insertChecklistItem}
           onInsertList={state.listAndTable.handleInsertList} onIndent={state.formatting.handleIndent}
           onOutdent={state.formatting.handleOutdent} onInsertTable={state.listAndTable.insertTable}
           onInsertLink={state.formatting.insertLink} onSelectAll={state.selection.handleSelectAll}
-          onCopySelection={state.exportOps.handleCopySelection} copySuccess={state.exportOps.copySuccess}
+          onCopySelection={state.exportOps.handleCopySelection}
+          onPastePlain={state.content.handlePastePlain}
+          copySuccess={state.exportOps.copySuccess}
         />
       )}
       {isTrash && (
@@ -129,13 +133,25 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
           setActiveMobileMenu={setActiveMobileMenu} copySuccess={state.exportOps.copySuccess}
           onUndo={state.history.handleUndo} onRedo={state.history.handleRedo}
           onExecCmd={state.formatting.execCmd} onApplyFontSize={state.formatting.applyFontSize}
+          onApplyLineHeight={state.formatting.applyLineHeight}
           onApplyTextColor={state.formatting.applyTextColor}
           onApplyHighlightColor={state.formatting.applyHighlightColor}
+          onApplyHighlighter={state.formatting.applyHighlighter}
           onInsertChecklistItem={state.checklist.insertChecklistItem}
           onInsertList={state.listAndTable.handleInsertList} onIndent={state.formatting.handleIndent}
           onOutdent={state.formatting.handleOutdent} onInsertTable={state.listAndTable.insertTable}
           onInsertLink={state.formatting.insertLink} onSelectAll={state.selection.handleSelectAll}
-          onCopySelection={state.exportOps.handleCopySelection} onBackMobile={onBackMobile}
+          onCopySelection={state.exportOps.handleCopySelection}
+          onPastePlain={state.content.handlePastePlain}
+          isPlainPasteArmed={state.content.isPlainPasteArmed}
+          onConfirmPlainPaste={state.content.handlePastePlain}
+          onCancelPlainPaste={() => state.content.togglePlainPasteArmed(false)}
+          onBackMobile={onBackMobile}
+          onManualSave={onManualSave}
+          isSaving={isSaving}
+          isPendingSave={props.isPendingSave}
+          saveSuccessMessage={saveSuccessMessage}
+          saveError={props.saveError}
         />
       )}
       <EditorModals

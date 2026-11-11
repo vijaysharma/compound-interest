@@ -87,8 +87,21 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const { handleUpdateNote, handleTogglePin, handleMoveNoteToFolder } = useNotesMutateActions({
     notes, setNotes, selectedNoteId, queueNoteSync, userId,
   });
+  const handleResetSaveStatus = useCallback(() => {
+    setSaveSuccessMessage((prev) => {
+      if (prev) {
+        if (saveSuccessTimerRef.current) {
+          clearTimeout(saveSuccessTimerRef.current);
+          saveSuccessTimerRef.current = null;
+        }
+        return null;
+      }
+      return prev;
+    });
+  }, []);
   const handleUpdateNoteWithSnapshot = useCallback(
     (updatedFields: Partial<Note>, targetId?: string) => {
+      handleResetSaveStatus();
       const id = targetId || selectedNoteId;
       if (id && !cleanNotesRef.current.has(id)) {
         const existing = notes.find((n) => n.id === id);
@@ -114,17 +127,15 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const [pendingNav, setPendingNav] = useState<(() => void) | null>(null);
   const requestNavigation = useCallback(
     (action: () => void) => {
-      if (!autoSaveEnabled && selectedNoteId && savePendingRef.current.has(selectedNoteId)) {
+      const isDirty = Boolean(selectedNoteId && savePendingRef.current.has(selectedNoteId));
+      if (isDirty) {
         setPendingNav(() => action);
         setIsUnsavedModalOpen(true);
         return;
       }
-      if (savePendingRef.current.size > 0 && autoSaveEnabled) {
-        void flushPendingSaves();
-      }
       action();
     },
-    [autoSaveEnabled, selectedNoteId, savePendingRef, flushPendingSaves]
+    [selectedNoteId, savePendingRef]
   );
   const handleCloseUnsavedModal = useCallback(() => {
     setIsUnsavedModalOpen(false);
@@ -133,7 +144,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
   const handleDiscardUnsavedChanges = useCallback(() => {
     if (selectedNoteId) {
       savePendingRef.current.delete(selectedNoteId);
-      removeLocalDraft(userId, selectedNoteId);
+      removeLocalDraft(userId || 'default', selectedNoteId);
       if (unconfirmedCreatesRef.current.has(selectedNoteId)) {
         unconfirmedCreatesRef.current.delete(selectedNoteId);
         setNotes((prev) => prev.filter((n) => n.id !== selectedNoteId));
@@ -148,11 +159,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
       }
       setUnsyncedCount(savePendingRef.current.size);
     }
-    const nextAction = pendingNav;
+    // Stay on current page and clear dirty state; user re-triggers navigation manually.
     setIsUnsavedModalOpen(false);
     setPendingNav(null);
-    if (nextAction) nextAction();
-  }, [selectedNoteId, savePendingRef, userId, unconfirmedCreatesRef, setNotes, cleanNotesRef, setReloadKey, setUnsyncedCount, pendingNav]);
+  }, [selectedNoteId, savePendingRef, userId, unconfirmedCreatesRef, setNotes, cleanNotesRef, setReloadKey, setUnsyncedCount]);
   const handleSaveAndProceedUnsavedChanges = useCallback(async () => {
     await flushPendingSaves();
     if (selectedNoteId) {
@@ -163,11 +173,10 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     saveSuccessTimerRef.current = setTimeout(() => {
       setSaveSuccessMessage(null);
     }, 3000);
-    const nextAction = pendingNav;
+    // Stay on current page and clear dirty state; user re-triggers navigation manually.
     setIsUnsavedModalOpen(false);
     setPendingNav(null);
-    if (nextAction) nextAction();
-  }, [flushPendingSaves, selectedNoteId, pendingNav]);
+  }, [flushPendingSaves, selectedNoteId]);
   const handleSelectNote = useCallback((note: { id: string }) => {
     if (note.id === selectedNoteId) {
       setMobileScreen('editor');
@@ -259,6 +268,39 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [savePendingRef]);
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (!selectedNoteId || !savePendingRef.current.has(selectedNoteId)) return;
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest('a');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      requestNavigation(() => {
+        window.location.href = anchor.href;
+      });
+    };
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => {
+      document.removeEventListener('click', handleDocumentClick, true);
+    };
+  }, [selectedNoteId, savePendingRef, requestNavigation]);
+  useEffect(() => {
+    const handlePopState = () => {
+      if (selectedNoteId && savePendingRef.current.has(selectedNoteId)) {
+        window.history.pushState(null, '', window.location.href);
+        requestNavigation(() => {
+          window.history.back();
+        });
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [selectedNoteId, savePendingRef, requestNavigation]);
   const handleOpenSecurityModal = useCallback(() => {
     setIsSecurityModalOpen(true);
     if (!storageProvider && token) {
@@ -292,6 +334,7 @@ export const QuickNotesManager: React.FC<{ token: string }> = ({ token }) => {
         onOpenSecurityModal={handleOpenSecurityModal} onUnlockSession={handleUnlockSession}
         autoSaveEnabled={autoSaveEnabled} onToggleAutoSave={handleToggleAutoSave}
         onManualSave={handleManualSave} saveSuccessMessage={saveSuccessMessage}
+        onResetSaveStatus={handleResetSaveStatus}
         isPendingSave={Boolean(selectedNoteId && unsyncedCount > 0)}
         saveError={saveError}
         onSelectFolderRequest={handleSelectFolder} onSelectTagRequest={handleSelectTag}

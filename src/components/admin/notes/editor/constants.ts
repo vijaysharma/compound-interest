@@ -6,6 +6,21 @@ export const FONT_SIZES = [
   { label: 'Large', size: '22px', cmdVal: '5' },
   { label: 'Huge', size: '28px', cmdVal: '6' },
 ];
+
+export interface LineHeightOption {
+  label: string;
+  value: string;
+}
+
+export const LINE_HEIGHTS: LineHeightOption[] = [
+  { label: 'Single (1.0)', value: '1.0' },
+  { label: 'Tight (1.2)', value: '1.2' },
+  { label: 'Compact (1.4)', value: '1.4' },
+  { label: 'Normal (1.6)', value: '1.6' },
+  { label: 'Relaxed (1.8)', value: '1.8' },
+  { label: 'Double (2.0)', value: '2.0' },
+  { label: 'Loose (2.5)', value: '2.5' },
+];
 export function detectContentFontSize(html: string): string | null {
   if (!html) return null;
   const styleMatch = /style=["'][^"']*font-size:\s*(\d+px)[^"']*["']/i.exec(html);

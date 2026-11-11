@@ -89,8 +89,7 @@ body:has(.quick-notes-theme) {
 
 .qn-checklist-content:empty::before {
   content: '\200B';
-  display: inline-block;
-  width: 0;
+  display: inline;
 }
 
 /* Multi-level Todo Indentation */
@@ -175,18 +174,20 @@ body:has(.quick-notes-theme) {
   word-break: break-word;
   overflow-wrap: break-word;
   user-select: text;
-  -webkit-user-select: text;
+  -webkit-user-select: auto;
   -webkit-touch-callout: default;
-  touch-action: manipulation;
-  caret-color: var(--color-primary, #6e0b75);
+  touch-action: auto;
+  caret-color: var(--color-primary, currentColor);
   cursor: text;
-  padding-bottom: clamp(10rem, 35vh, 25rem);
+  padding-bottom: 2.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .qn-note-canvas * {
   user-select: text;
-  -webkit-user-select: text;
-  caret-color: var(--color-primary, #6e0b75);
+  -webkit-user-select: auto;
+  caret-color: var(--color-primary, currentColor);
 }
 
 .qn-note-canvas::selection,
@@ -219,8 +220,7 @@ body:has(.quick-notes-theme) {
 .qn-note-canvas p:empty::before,
 .qn-note-canvas div:not(.qn-checklist-item):empty::before {
   content: '\200B';
-  display: inline-block;
-  width: 0;
+  display: inline;
 }
 
 .qn-note-canvas div:not(.qn-checklist-item):not(.qn-table):not(.dropdown) {

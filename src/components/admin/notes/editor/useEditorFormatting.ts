@@ -1,6 +1,7 @@
 import { RefObject, useCallback } from 'react';
 import { isSafeUrl } from '../sanitizeHtml';
 import { applyCollapsedFontSize, applySelectedFontSize } from './fontSizeUtils';
+import { applySelectedLineHeight } from './lineHeightUtils';
 import { handleEditorIndent, handleEditorOutdent } from './editorIndentUtils';
 interface UseEditorFormattingParams {
   editorRef: RefObject<HTMLDivElement | null>;
@@ -121,9 +122,27 @@ export function useEditorFormatting({
   const handleOutdent = useCallback(() => {
     handleEditorOutdent(editorRef, execCmd, handleContentChange);
   }, [editorRef, execCmd, handleContentChange]);
+  const applyLineHeight = useCallback(
+    (lineHeight: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      restoreSelection();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
+        return;
+      }
+      const applied = applySelectedLineHeight(editor, sel, lineHeight);
+      if (applied) {
+        saveSelection();
+        handleContentChange(true);
+      }
+    },
+    [editorRef, restoreSelection, saveSelection, handleContentChange]
+  );
   return {
     execCmd,
     applyFontSize,
+    applyLineHeight,
     applyTextColor,
     applyHighlightColor,
     applyHighlighter,

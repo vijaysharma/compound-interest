@@ -50,6 +50,7 @@ interface NotesManagerPanesProps {
   onToggleAutoSave?: () => void;
   onManualSave?: () => void;
   saveSuccessMessage?: string | null;
+  onResetSaveStatus?: () => void;
   isPendingSave?: boolean;
   saveError?: string;
   onSelectFolderRequest?: (folder: string) => void;
@@ -65,7 +66,7 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
   onPermanentDelete, onRestoreNote, onEmptyTrash, onMoveNoteToFolder,
   onCreateFolder, onRenameFolder, onDeleteFolder, onReorderFolders, onOpenLockModal,
   onOpenBackupModal, onOpenSecurityModal, onUnlockSession,
-  autoSaveEnabled, onToggleAutoSave, onManualSave, saveSuccessMessage,
+  autoSaveEnabled, onToggleAutoSave, onManualSave, saveSuccessMessage, onResetSaveStatus,
   isPendingSave, saveError,
   onSelectFolderRequest, onSelectTagRequest, onBackMobileRequest,
 }) => {
@@ -138,6 +139,7 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
           isMobileScreen={isMobile && effectiveMobileScreen === 'editor'}
           onManualSave={onManualSave} autoSaveEnabled={autoSaveEnabled}
           onToggleAutoSave={onToggleAutoSave} saveSuccessMessage={saveSuccessMessage}
+          onResetSaveStatus={onResetSaveStatus}
           isPendingSave={isPendingSave}
           saveError={saveError}
         />

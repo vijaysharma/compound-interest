@@ -25,10 +25,11 @@ export interface NotesEditorProps {
   autoSaveEnabled?: boolean;
   onToggleAutoSave?: () => void;
   saveSuccessMessage?: string | null;
+  onResetSaveStatus?: () => void;
   isPendingSave?: boolean;
   saveError?: string;
 }
-export type DropdownType = 'folder' | 'share' | 'format' | 'fontSize' | 'palette' | null;
+export type DropdownType = 'folder' | 'share' | 'format' | 'fontSize' | 'lineHeight' | 'palette' | null;
 export type MobileMenuType = 'format' | 'palette' | 'lists' | 'more' | null;
 export type ViewportState = {
   height: number;

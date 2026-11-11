@@ -101,9 +101,11 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }}
           onKeyUp={onSaveSelection}
           onMouseUp={onSaveSelection}
+          onTouchEnd={onSaveSelection}
           className={`${styles.editorCanvas} qn-note-canvas`}
           data-placeholder="Start typing or tap the checklist button below..."
         />
+        <div className={styles.canvasBottomSpacer} aria-hidden="true" />
       </div>
     </div>
   );

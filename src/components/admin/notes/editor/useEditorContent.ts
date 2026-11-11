@@ -2,6 +2,7 @@ import { RefObject, useState, useEffect, useRef, useCallback, MutableRefObject }
 import { Note } from '../NotesTypes';
 import { sanitizeNoteHtml } from '../sanitizeHtml';
 import { detectContentFontSize } from './constants';
+import { stripHtmlToPlainText, formatPlainTextToHtml } from './plainTextPasteUtils';
 interface UseEditorContentParams {
   note: Note | null;
   editorRef: RefObject<HTMLDivElement | null>;
@@ -11,6 +12,8 @@ interface UseEditorContentParams {
   lastSnapshotTimeRef: MutableRefObject<number>;
   pushSnapshot: (forceNew?: boolean) => void;
   schedulePropagation: (updates: Partial<Note>) => void;
+  onResetSaveStatus?: () => void;
+  restoreSelection?: () => void;
 }
 export function useEditorContent({
   note,
@@ -21,8 +24,16 @@ export function useEditorContent({
   lastSnapshotTimeRef,
   pushSnapshot,
   schedulePropagation,
+  onResetSaveStatus,
+  restoreSelection,
 }: UseEditorContentParams) {
   const hasManualTitleRef = useRef<boolean>(false);
+  const [isPlainPasteArmed, setIsPlainPasteArmed] = useState<boolean>(false);
+  const pasteAsPlainNextRef = useRef<boolean>(false);
+  const setPlainPasteArmed = useCallback((armed: boolean) => {
+    pasteAsPlainNextRef.current = armed;
+    setIsPlainPasteArmed(armed);
+  }, []);
   const lastLoadedNoteIdRef = useRef<string | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -78,6 +89,7 @@ export function useEditorContent({
   }, [note?.id, calculateStats, note?.title, note, editorRef, historyStackRef, historyIndexRef, lastSnapshotTimeRef]);
   const handleContentChange = useCallback((forceNewHistory?: boolean | React.SyntheticEvent) => {
     if (!editorRef.current || !note) return;
+    onResetSaveStatus?.();
     const html = editorRef.current.innerHTML;
     const isBlank = !html || html === '<p><br></p>' || html === '<br>' || html === '<div><br></div>';
     editorRef.current.setAttribute('data-empty', String(isBlank));
@@ -88,39 +100,111 @@ export function useEditorContent({
     calculateStats((note.title || '') + ' ' + html);
     const updates: Partial<Note> = { content: html };
     schedulePropagation(updates);
-  }, [note, editorRef, isUndoRedoRef, pushSnapshot, calculateStats, schedulePropagation]);
+  }, [note, editorRef, isUndoRedoRef, pushSnapshot, calculateStats, schedulePropagation, onResetSaveStatus]);
   const handlePaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
+    const isPlain = pasteAsPlainNextRef.current || (e.nativeEvent as unknown as KeyboardEvent)?.shiftKey;
+    setPlainPasteArmed(false);
     const clipboardData = e.clipboardData;
     const htmlData = clipboardData.getData('text/html');
     const textData = clipboardData.getData('text/plain');
-    if (htmlData) {
-      const cleanHtml = sanitizeNoteHtml(htmlData);
-      document.execCommand('insertHTML', false, cleanHtml);
-    } else if (textData) {
-      if (textData.includes('\n')) {
-        const lines = textData.split(/\r?\n/);
-        const html = lines
-          .map((line) => {
-            const escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return `<p>${escaped || '<br>'}</p>`;
-          })
-          .join('');
-        document.execCommand('insertHTML', false, html);
-      } else {
-        document.execCommand('insertText', false, textData);
+
+    if (isPlain) {
+      // Paste as plain text: strip all formatting and HTML tags
+      const plain = textData || stripHtmlToPlainText(htmlData);
+      if (plain) {
+        if (plain.includes('\n')) {
+          const html = formatPlainTextToHtml(plain);
+          document.execCommand('insertHTML', false, html);
+        } else {
+          // Note: document.execCommand('insertText') is intentionally used despite MDN
+          // deprecation because iOS Safari has no reliable modern replacement for this
+          // restore-and-insert flow with rich contenteditable undo stacks.
+          document.execCommand('insertText', false, plain);
+        }
+      }
+    } else {
+      // Default paste behavior unchanged
+      if (htmlData) {
+        const cleanHtml = sanitizeNoteHtml(htmlData);
+        document.execCommand('insertHTML', false, cleanHtml);
+      } else if (textData) {
+        if (textData.includes('\n')) {
+          const html = formatPlainTextToHtml(textData);
+          document.execCommand('insertHTML', false, html);
+        } else {
+          document.execCommand('insertText', false, textData);
+        }
       }
     }
     handleContentChange(true);
-  }, [handleContentChange]);
+  }, [handleContentChange, setPlainPasteArmed]);
+  const handlePastePlain = useCallback(async (customText?: string) => {
+    if (customText !== undefined) {
+      restoreSelection?.();
+      editorRef.current?.focus();
+      const plain = stripHtmlToPlainText(customText);
+      if (plain) {
+        if (plain.includes('\n')) {
+          const html = formatPlainTextToHtml(plain);
+          document.execCommand('insertHTML', false, html);
+        } else {
+          // Note: document.execCommand('insertText') is intentionally used despite MDN
+          // deprecation because iOS Safari has no reliable modern replacement for this
+          // restore-and-insert flow with rich contenteditable undo stacks.
+          document.execCommand('insertText', false, plain);
+        }
+      }
+      handleContentChange(true);
+      setPlainPasteArmed(false);
+      return;
+    }
+
+    // Toggle off if already armed
+    if (isPlainPasteArmed) {
+      setPlainPasteArmed(false);
+      return;
+    }
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          setPlainPasteArmed(false);
+          const editor = editorRef.current;
+          if (editor) {
+            editor.focus();
+          }
+          if (text.includes('\n')) {
+            const html = formatPlainTextToHtml(text);
+            document.execCommand('insertHTML', false, html);
+          } else {
+            document.execCommand('insertText', false, text);
+          }
+          handleContentChange(true);
+          return;
+        }
+      }
+    } catch {
+      // Permission denied or clipboard.readText unsupported without user gesture on iOS Safari
+    }
+
+    // Arm visible plain-paste toggle state on iOS Safari (stays armed until tapped off or paste occurs)
+    setPlainPasteArmed(true);
+    editorRef.current?.focus();
+  }, [editorRef, handleContentChange, isPlainPasteArmed, setPlainPasteArmed]);
   return {
     wordCount,
     charCount,
     currentFontSize,
     setCurrentFontSize,
     hasManualTitleRef,
+    pasteAsPlainNextRef,
+    isPlainPasteArmed,
+    togglePlainPasteArmed: setPlainPasteArmed,
     calculateStats,
     handleContentChange,
     handlePaste,
+    handlePastePlain,
   };
 }

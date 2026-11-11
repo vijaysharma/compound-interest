@@ -2,6 +2,7 @@ import React from 'react';
 import { FiBold, FiItalic, FiUnderline, FiX } from 'react-icons/fi';
 import { BsTypeStrikethrough } from 'react-icons/bs';
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from './constants';
+import { MobileButton } from './MobileButton';
 import styles from '../NotesEditor.module.scss';
 interface EditorMobilePalettePopupProps {
   onExecCmd: (cmd: string) => void;
@@ -20,34 +21,31 @@ export const EditorMobilePalettePopup: React.FC<EditorMobilePalettePopupProps> =
       <div className={styles.mobileStylesHeader}>
         <span className={`${styles.dropdownTitle} ${styles.dropdownTitleNoPad}`}>Styles</span>
         <div className={styles.flexGap025}>
-          <button type="button" onClick={() => onExecCmd('bold')} className={styles.toolbarBtn} title="Bold">
+          <MobileButton action={() => onExecCmd('bold')} className={styles.toolbarBtn} title="Bold">
             <FiBold size={14} />
-          </button>
-          <button type="button" onClick={() => onExecCmd('italic')} className={styles.toolbarBtn} title="Italic">
+          </MobileButton>
+          <MobileButton action={() => onExecCmd('italic')} className={styles.toolbarBtn} title="Italic">
             <FiItalic size={14} />
-          </button>
-          <button type="button" onClick={() => onExecCmd('underline')} className={styles.toolbarBtn} title="Underline">
+          </MobileButton>
+          <MobileButton action={() => onExecCmd('underline')} className={styles.toolbarBtn} title="Underline">
             <FiUnderline size={14} />
-          </button>
-          <button type="button" onClick={() => onExecCmd('strikeThrough')} className={styles.toolbarBtn} title="Strikethrough">
+          </MobileButton>
+          <MobileButton action={() => onExecCmd('strikeThrough')} className={styles.toolbarBtn} title="Strikethrough">
             <BsTypeStrikethrough size={14} />
-          </button>
+          </MobileButton>
         </div>
       </div>
       <div className={`${styles.dropdownTitle} ${styles.dropdownTitlePadY}`}>Text Color</div>
       <div className={styles.mobileColorGrid5}>
         {TEXT_COLORS.map((c) => (
-          <button
+          <MobileButton
             key={c.value}
-            type="button"
-            onClick={() => {
+            action={() => {
               onApplyTextColor(c.value);
               onClose();
             }}
             className={styles.colorSwatch}
-            ref={(el) => {
-              if (el) el.style.backgroundColor = c.value === 'inherit' ? 'var(--color-heading)' : c.value;
-            }}
+            style={{ backgroundColor: c.value === 'inherit' ? 'var(--color-heading)' : c.value }}
             title={c.label}
           />
         ))}
@@ -56,21 +54,18 @@ export const EditorMobilePalettePopup: React.FC<EditorMobilePalettePopupProps> =
       <div className={`${styles.dropdownTitle} ${styles.dropdownTitlePadY}`}>Highlight</div>
       <div className={styles.highlightGrid4}>
         {HIGHLIGHT_COLORS.map((c) => (
-          <button
+          <MobileButton
             key={c.value}
-            type="button"
-            onClick={() => {
+            action={() => {
               onApplyHighlightColor(c.value);
               onClose();
             }}
             className={styles.colorSwatch}
-            ref={(el) => {
-              if (el) el.style.backgroundColor = c.value === 'transparent' ? 'transparent' : c.value;
-            }}
+            style={{ backgroundColor: c.value === 'transparent' ? 'transparent' : c.value }}
             title={c.label}
           >
             {c.value === 'transparent' ? <FiX size={12} /> : null}
-          </button>
+          </MobileButton>
         ))}
       </div>
     </div>

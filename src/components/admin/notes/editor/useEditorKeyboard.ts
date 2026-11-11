@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, MutableRefObject } from 'react';
 import { handleChecklistEnter } from './checklistEnterHandler';
 interface UseEditorKeyboardParams {
   handleUndo: () => void;
@@ -9,6 +9,7 @@ interface UseEditorKeyboardParams {
   handleOutdent: () => void;
   handleContentChange: (forceNewHistory?: boolean) => void;
   handleSave?: () => void;
+  pasteAsPlainNextRef?: MutableRefObject<boolean>;
 }
 export function useEditorKeyboard({
   handleUndo,
@@ -19,11 +20,19 @@ export function useEditorKeyboard({
   handleOutdent,
   handleContentChange,
   handleSave,
+  pasteAsPlainNextRef,
 }: UseEditorKeyboardParams) {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       const isMeta = e.metaKey || e.ctrlKey;
       if (isMeta) {
+        if (e.shiftKey && (e.key === 'v' || e.key === 'V')) {
+          if (pasteAsPlainNextRef) {
+            pasteAsPlainNextRef.current = true;
+          }
+          // Allow the browser to fire the native paste event so handlePaste intercepts it
+          return;
+        }
         if ((e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
           e.preventDefault();
           handleUndo();
@@ -97,6 +106,7 @@ export function useEditorKeyboard({
       handleOutdent,
       handleContentChange,
       handleSave,
+      pasteAsPlainNextRef,
     ]
   );
   return { handleKeyDown };

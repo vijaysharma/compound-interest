@@ -734,7 +734,7 @@
 .canvasContainer {
   flex: 1 1 0%;
   overflow-y: auto;
-  padding: 0.75rem;
+  padding: 0.75rem 0.75rem 2.5rem 0.75rem;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -742,9 +742,12 @@
   cursor: text;
   overscroll-behavior: contain;
   box-sizing: border-box;
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto;
 
   @include tablet-up {
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 2.5rem 1.5rem;
   }
 }
 
@@ -757,6 +760,9 @@
   flex-direction: column;
   min-height: 100%;
   box-sizing: border-box;
+  padding-bottom: 2.5rem;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .metaRow {
@@ -934,33 +940,59 @@
   cursor: text;
   min-height: 160px;
   box-sizing: border-box;
+  padding-bottom: 2.5rem;
+  user-select: text;
+  -webkit-user-select: auto;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 
   @include tablet-up {
     min-height: 300px;
   }
 }
 
+.canvasBottomSpacer {
+  height: 2.5rem;
+  min-height: 2.5rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 // Mobile bottom toolbar
 .mobileBar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   user-select: none;
   flex-shrink: 0;
   width: 100%;
-  gap: 0.25rem;
   min-height: 44px;
   border-top: 1px solid var(--color-border);
   background-color: var(--color-bg);
   box-sizing: border-box;
-  // Positioned so the z-index actually applies and so .mobilePopup anchors to
-  // this bar. Previously static, which left the popup resolving its
-  // `bottom: 100%` against the editor container instead.
   position: relative;
   z-index: 40;
-  padding: 0.25rem 0.5rem;
+  padding: 0;
 
   @include laptop-up {
+    display: none;
+  }
+}
+
+.mobileBarScrollTrack {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.35rem 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
     display: none;
   }
 }
@@ -969,15 +1001,25 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
-  min-width: 34px;
+  min-height: 38px;
+  min-width: 38px;
+  padding: 0.25rem 0.4rem;
   border-radius: 8px;
   border: none;
   background: transparent;
   color: var(--color-text);
   cursor: pointer;
-  transition: background-color, color, border-color, box-shadow, transform;
-  transition-duration: 0.12s;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  transition: background-color 0.12s, color 0.12s;
+
+  &:hover {
+    background-color: var(--color-bg-secondary, rgba(150, 150, 150, 0.1));
+  }
+
+  &:active {
+    background-color: var(--color-bg-tertiary, rgba(150, 150, 150, 0.2));
+  }
 
   &.active {
     background-color: rgba(110, 11, 117, 0.12);
@@ -987,6 +1029,51 @@
 
   &.primary {
     color: var(--color-primary);
+  }
+}
+
+.mobileSaveBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: $fs-caption;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  min-height: 38px;
+  min-width: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: color-mix(in srgb, var(--color-base-200) 65%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &.hasUnsaved {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  &.savedSuccess {
+    background-color: var(--color-profit-surface, rgba(34, 197, 94, 0.12));
+    border-color: rgba(34, 197, 94, 0.35);
+    color: var(--color-success);
+  }
+
+  &.saving {
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    cursor: wait;
+  }
+
+  &.saveError {
+    background-color: var(--color-loss-surface, rgba(239, 68, 68, 0.12));
+    border-color: rgba(239, 68, 68, 0.35);
+    color: var(--color-danger);
   }
 }
 
@@ -1040,6 +1127,116 @@
   border: none;
   cursor: pointer;
   min-height: 30px;
+}
+
+.mobilePlainPastePopup {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0.5rem;
+  right: 0.5rem;
+  z-index: 55;
+  padding: 0.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  background-color: var(--color-bg);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.mobilePlainPasteHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.mobilePlainPasteTitle {
+  font-size: $fs-caption;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.mobilePlainPasteClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+
+  &:hover {
+    background-color: var(--color-bg-secondary);
+  }
+}
+
+.mobilePlainPasteHelp {
+  font-size: $fs-caption;
+  color: var(--color-text-secondary);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.35;
+}
+
+.mobilePlainPasteTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary, rgba(150, 150, 150, 0.05));
+  color: var(--color-text);
+  font-size: $fs-body; // 16px to prevent iOS Safari auto-zoom
+  line-height: 1.4;
+  resize: none;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
+}
+
+.mobilePlainPasteActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mobilePlainPasteSubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.75rem;
+  font-size: $fs-caption;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  cursor: pointer;
+  min-height: 36px;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.mobilePlainPasteCancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.75rem;
+  font-size: $fs-caption;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  min-height: 36px;
 }
 
 .lockedTopBarLeft {

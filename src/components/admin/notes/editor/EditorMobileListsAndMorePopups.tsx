@@ -4,6 +4,7 @@ import {
   BsListUl, BsListOl, BsTextIndentRight, BsTextIndentLeft,
   BsTable, BsQuote, BsCheck2All,
 } from 'react-icons/bs';
+import { MobileButton } from './MobileButton';
 import styles from '../NotesEditor.module.scss';
 import { MobileMenuType } from './types';
 interface EditorMobileListsAndMorePopupsProps {
@@ -36,25 +37,25 @@ export const EditorMobileListsAndMorePopups: React.FC<EditorMobileListsAndMorePo
     return (
       <ul className={`${styles.mobilePopup} ${styles.alignLeft}`}>
         <li>
-          <button type="button" onClick={() => { onInsertList('ul'); onClose(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onInsertList('ul'); onClose(); }} className={styles.dropdownItem}>
             <BsListUl size={14} /> Bulleted List
-          </button>
+          </MobileButton>
         </li>
         <li>
-          <button type="button" onClick={() => { onInsertList('ol'); onClose(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onInsertList('ol'); onClose(); }} className={styles.dropdownItem}>
             <BsListOl size={14} /> Numbered List
-          </button>
+          </MobileButton>
         </li>
         <li className={styles.dropdownDivider} />
         <li>
-          <button type="button" onClick={() => { onIndent(); onClose(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onIndent(); onClose(); }} className={styles.dropdownItem}>
             <BsTextIndentRight size={14} /> Indent
-          </button>
+          </MobileButton>
         </li>
         <li>
-          <button type="button" onClick={() => { onOutdent(); onClose(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onOutdent(); onClose(); }} className={styles.dropdownItem}>
             <BsTextIndentLeft size={14} /> Outdent
-          </button>
+          </MobileButton>
         </li>
       </ul>
     );
@@ -63,36 +64,36 @@ export const EditorMobileListsAndMorePopups: React.FC<EditorMobileListsAndMorePo
     return (
       <ul className={`${styles.mobilePopup} ${styles.alignRight}`}>
         <li>
-          <button type="button" onClick={() => { onClose(); onInsertTable(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onClose(); onInsertTable(); }} className={styles.dropdownItem}>
             <BsTable size={14} /> Insert Table
-          </button>
+          </MobileButton>
         </li>
         <li>
-          <button type="button" onClick={() => { onClose(); onInsertLink(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onClose(); onInsertLink(); }} className={styles.dropdownItem}>
             <FiLink size={14} /> Insert Link
-          </button>
+          </MobileButton>
         </li>
         <li>
-          <button type="button" onClick={() => { onExecCmd('formatBlock', '<blockquote>'); onClose(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onExecCmd('formatBlock', '<blockquote>'); onClose(); }} className={styles.dropdownItem}>
             <BsQuote size={14} /> Quote
-          </button>
+          </MobileButton>
         </li>
         <li>
-          <button type="button" onClick={() => { onExecCmd('formatBlock', '<pre>'); onClose(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onExecCmd('formatBlock', '<pre>'); onClose(); }} className={styles.dropdownItem}>
             <FiCode size={14} /> Code Block
-          </button>
+          </MobileButton>
         </li>
         <li className={styles.dropdownDivider} />
         <li>
-          <button type="button" onClick={() => { onClose(); onSelectAll(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { onClose(); onSelectAll(); }} className={styles.dropdownItem}>
             <BsCheck2All size={14} /> Select All
-          </button>
+          </MobileButton>
         </li>
         <li>
-          <button type="button" onClick={() => { void onCopySelection(); onClose(); }} className={styles.dropdownItem}>
+          <MobileButton action={() => { void onCopySelection(); onClose(); }} className={styles.dropdownItem}>
             {copySuccess ? <FiCheck size={14} color="var(--color-success)" /> : <FiCopy size={14} />}
             {copySuccess ? 'Copied!' : 'Copy'}
-          </button>
+          </MobileButton>
         </li>
       </ul>
     );

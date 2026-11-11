@@ -2,6 +2,7 @@ import React from 'react';
 import { FiMoreHorizontal } from 'react-icons/fi';
 import { BsListUl } from 'react-icons/bs';
 import { MobileMenuType } from './types';
+import { MobileButton } from './MobileButton';
 import { EditorMobileListsAndMorePopups } from './EditorMobileListsAndMorePopups';
 import styles from '../NotesEditor.module.scss';
 interface EditorMobileExtraToolsProps {
@@ -33,14 +34,14 @@ export const EditorMobileExtraTools: React.FC<EditorMobileExtraToolsProps> = ({
   return (
     <>
       <div className={styles.relativeBox}>
-        <button
-          type="button"
-          onClick={() => setActiveMobileMenu(activeMobileMenu === 'lists' ? null : 'lists')}
+        <MobileButton
+          action={() => setActiveMobileMenu(activeMobileMenu === 'lists' ? null : 'lists')}
           className={`${styles.mobileBarBtn} ${activeMobileMenu === 'lists' ? styles.active : ''}`}
           title="Lists & Indentation"
+          aria-label="Lists & Indentation"
         >
           <BsListUl size={16} />
-        </button>
+        </MobileButton>
         {activeMobileMenu === 'lists' && (
           <EditorMobileListsAndMorePopups
             activeMobileMenu="lists"
@@ -58,14 +59,14 @@ export const EditorMobileExtraTools: React.FC<EditorMobileExtraToolsProps> = ({
         )}
       </div>
       <div className={styles.relativeBox}>
-        <button
-          type="button"
-          onClick={() => setActiveMobileMenu(activeMobileMenu === 'more' ? null : 'more')}
+        <MobileButton
+          action={() => setActiveMobileMenu(activeMobileMenu === 'more' ? null : 'more')}
           className={`${styles.mobileBarBtn} ${activeMobileMenu === 'more' ? styles.active : ''}`}
           title="More Tools"
+          aria-label="More Tools"
         >
           <FiMoreHorizontal size={16} />
-        </button>
+        </MobileButton>
         {activeMobileMenu === 'more' && (
           <EditorMobileListsAndMorePopups
             activeMobileMenu="more"

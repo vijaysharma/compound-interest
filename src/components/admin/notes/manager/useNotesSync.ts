@@ -4,7 +4,7 @@ import { Note, SyncState } from '../NotesTypes';
 import { savePendingNotes } from './notesSaver';
 import { getInitialCustomFolders, getInitialCachedNotes } from './notesLoader';
 import { useNotesSyncLifecycle } from './useNotesSyncLifecycle';
-import { removeLocalDraft } from './notesDraftStorage';
+import { removeLocalDraft, reconcileNotesWithLocalDrafts } from './notesDraftStorage';
 const SAVE_DEBOUNCE_MS = 3_000;
 interface UseNotesSyncProps {
   token: string;
@@ -13,16 +13,30 @@ interface UseNotesSyncProps {
   autoSaveEnabled?: boolean;
   onSelectInitialNote: (reconciled: Note[]) => void;
 }
+/**
+ * Note Sync Hook & Conflict Policy:
+ * - Local drafts take precedence on client boot via timestamp-guarded last-writer-wins
+ *   (reconcileNotesWithLocalDrafts).
+ * - Changes are flushed to localStorage on visibilitychange=hidden and pagehide so fast
+ *   app-kill on mobile does not drop in-flight keystrokes.
+ * - Server saves clear matching local drafts upon 200 OK.
+ */
 export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true, onSelectInitialNote }: UseNotesSyncProps) {
   const foldersKey = `quick_notes_custom_folders_${userId}_v2`;
-  const [notes, setNotes] = useState<Note[]>(() => getInitialCachedNotes(userId));
+  const initialPendingIds = useRef<string[]>([]);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    const cached = getInitialCachedNotes(userId);
+    const { reconciled, unsavedDraftIds } = reconcileNotesWithLocalDrafts(userId, cached);
+    initialPendingIds.current = unsavedDraftIds;
+    return reconciled;
+  });
   const [folders, setFolders] = useState<string[]>(() => getInitialCustomFolders(userId));
   const [loading, setLoading] = useState<boolean>(() => notes.length === 0);
   const [syncState, setSyncState] = useState<SyncState>('syncing');
   const [syncError, setSyncError] = useState<string>('');
   const [reloadKey, setReloadKey] = useState(0);
   const [saveError, setSaveError] = useState<string>('');
-  const [unsyncedCount, setUnsyncedCount] = useState<number>(0);
+  const [unsyncedCount, setUnsyncedCount] = useState<number>(() => initialPendingIds.current.length);
   const [isSaving, setIsSaving] = useState(false);
   const [storageProvider, setStorageProvider] = useState<'vercel_blob' | 'database_fallback' | null>(null);
   const notesRef = useRef<Note[]>(notes);
@@ -31,7 +45,7 @@ export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true,
   useEffect(() => { foldersKeyRef.current = foldersKey; }, [foldersKey]);
   const autoSaveEnabledRef = useRef(autoSaveEnabled);
   useEffect(() => { autoSaveEnabledRef.current = autoSaveEnabled; }, [autoSaveEnabled]);
-  const savePendingRef = useRef<Set<string>>(new Set());
+  const savePendingRef = useRef<Set<string>>(new Set(initialPendingIds.current));
   const locallyDeletedRef = useRef<Set<string>>(new Set());
   const unconfirmedCreatesRef = useRef<Set<string>>(new Set());
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -61,7 +75,7 @@ export function useNotesSync({ token, userId, userEmail, autoSaveEnabled = true,
       });
       savedIds.forEach((id) => {
         savePendingRef.current.delete(id);
-        removeLocalDraft(userId, id);
+        removeLocalDraft(userId || 'default', id);
       });
       if (savedNotes.length > 0) {
         const updateMap = new Map(savedNotes.filter((s) => s.updated_at).map((s) => [s.id, s.updated_at!]));

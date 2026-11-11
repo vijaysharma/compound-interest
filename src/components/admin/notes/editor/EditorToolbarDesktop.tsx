@@ -3,11 +3,12 @@ import { FiBold, FiItalic, FiUnderline, FiCode, FiLink, FiCopy, FiCheck } from '
 import {
   BsCardChecklist, BsTypeStrikethrough, BsHighlighter, BsListUl, BsListOl,
   BsTextIndentLeft, BsTextIndentRight, BsTable, BsQuote, BsCheck2All,
-  BsArrowCounterclockwise, BsArrowClockwise,
+  BsArrowCounterclockwise, BsArrowClockwise, BsClipboard,
 } from 'react-icons/bs';
 import { DropdownType } from './types';
 import { EditorHeadingDropdown } from './EditorHeadingDropdown';
 import { EditorFontAndColorDropdowns } from './EditorFontAndColorDropdowns';
+import { EditorLineHeightDropdown } from './EditorLineHeightDropdown';
 import styles from '../NotesEditor.module.scss';
 interface EditorToolbarDesktopProps {
   currentFontSize: string;
@@ -17,6 +18,7 @@ interface EditorToolbarDesktopProps {
   onRedo: () => void;
   onExecCmd: (cmd: string, val?: string) => void;
   onApplyFontSize: (size: string, cmdVal: string) => void;
+  onApplyLineHeight: (lineHeight: string) => void;
   onApplyTextColor: (color: string) => void;
   onApplyHighlightColor: (color: string) => void;
   onApplyHighlighter: () => void;
@@ -28,13 +30,14 @@ interface EditorToolbarDesktopProps {
   onInsertLink: () => void;
   onSelectAll: () => void;
   onCopySelection: () => void;
+  onPastePlain: () => void;
   copySuccess: boolean;
 }
 export const EditorToolbarDesktop: React.FC<EditorToolbarDesktopProps> = ({
   currentFontSize, activeDropdown, setActiveDropdown, onUndo, onRedo,
-  onExecCmd, onApplyFontSize, onApplyTextColor, onApplyHighlightColor,
+  onExecCmd, onApplyFontSize, onApplyLineHeight, onApplyTextColor, onApplyHighlightColor,
   onApplyHighlighter, onInsertChecklistItem, onInsertList, onIndent,
-  onOutdent, onInsertTable, onInsertLink, onSelectAll, onCopySelection, copySuccess,
+  onOutdent, onInsertTable, onInsertLink, onSelectAll, onCopySelection, onPastePlain, copySuccess,
 }) => {
   return (
     <div className={styles.desktopToolbar}>
@@ -53,6 +56,11 @@ export const EditorToolbarDesktop: React.FC<EditorToolbarDesktopProps> = ({
         onApplyFontSize={onApplyFontSize}
         onApplyTextColor={onApplyTextColor}
         onApplyHighlightColor={onApplyHighlightColor}
+      />
+      <EditorLineHeightDropdown
+        activeDropdown={activeDropdown}
+        setActiveDropdown={setActiveDropdown}
+        onApplyLineHeight={onApplyLineHeight}
       />
       <div className={styles.toolbarDivider} />
       <button onMouseDown={(e) => e.preventDefault()} onClick={onInsertChecklistItem} className={`${styles.toolbarBtn} ${styles.primary}`} title="Add Checklist Item (Cmd+Shift+L)">
@@ -104,6 +112,9 @@ export const EditorToolbarDesktop: React.FC<EditorToolbarDesktopProps> = ({
       </button>
       <button onMouseDown={(e) => e.preventDefault()} onClick={onCopySelection} className={styles.toolbarBtn} title="Copy Selected Text">
         {copySuccess ? <FiCheck size={14} color="var(--color-success)" /> : <FiCopy size={14} />}
+      </button>
+      <button onMouseDown={(e) => e.preventDefault()} onClick={onPastePlain} className={styles.toolbarBtn} title="Paste as Plain Text (Cmd+Shift+V)">
+        <BsClipboard size={14} />
       </button>
     </div>
   );
