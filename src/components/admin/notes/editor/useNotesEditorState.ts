@@ -56,6 +56,7 @@ export function useNotesEditorState(props: NotesEditorProps) {
     saveSelection: selection.saveSelection,
     restoreSelection: selection.restoreSelection,
     handleContentChange: content.handleContentChange,
+    savedRangeRef: selection.savedRangeRef,
   });
   const listAndTable = useEditorListAndTable({
     editorRef,

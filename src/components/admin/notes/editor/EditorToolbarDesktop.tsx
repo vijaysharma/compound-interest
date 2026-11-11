@@ -3,12 +3,13 @@ import { FiBold, FiItalic, FiUnderline, FiCode, FiLink, FiCopy, FiCheck } from '
 import {
   BsCardChecklist, BsTypeStrikethrough, BsHighlighter, BsListUl, BsListOl,
   BsTextIndentLeft, BsTextIndentRight, BsTable, BsQuote, BsCheck2All,
-  BsArrowCounterclockwise, BsArrowClockwise, BsClipboard,
+  BsArrowCounterclockwise, BsArrowClockwise, BsClipboardCheck,
 } from 'react-icons/bs';
 import { DropdownType } from './types';
 import { EditorHeadingDropdown } from './EditorHeadingDropdown';
 import { EditorFontAndColorDropdowns } from './EditorFontAndColorDropdowns';
 import { EditorLineHeightDropdown } from './EditorLineHeightDropdown';
+import { EditorPasteDropdown } from './EditorPasteDropdown';
 import styles from '../NotesEditor.module.scss';
 interface EditorToolbarDesktopProps {
   currentFontSize: string;
@@ -30,6 +31,7 @@ interface EditorToolbarDesktopProps {
   onInsertLink: () => void;
   onSelectAll: () => void;
   onCopySelection: () => void;
+  onPasteRich: () => void;
   onPastePlain: () => void;
   copySuccess: boolean;
 }
@@ -37,7 +39,7 @@ export const EditorToolbarDesktop: React.FC<EditorToolbarDesktopProps> = ({
   currentFontSize, activeDropdown, setActiveDropdown, onUndo, onRedo,
   onExecCmd, onApplyFontSize, onApplyLineHeight, onApplyTextColor, onApplyHighlightColor,
   onApplyHighlighter, onInsertChecklistItem, onInsertList, onIndent,
-  onOutdent, onInsertTable, onInsertLink, onSelectAll, onCopySelection, onPastePlain, copySuccess,
+  onOutdent, onInsertTable, onInsertLink, onSelectAll, onCopySelection, onPasteRich, onPastePlain, copySuccess,
 }) => {
   return (
     <div className={styles.desktopToolbar}>
@@ -113,8 +115,23 @@ export const EditorToolbarDesktop: React.FC<EditorToolbarDesktopProps> = ({
       <button onMouseDown={(e) => e.preventDefault()} onClick={onCopySelection} className={styles.toolbarBtn} title="Copy Selected Text">
         {copySuccess ? <FiCheck size={14} color="var(--color-success)" /> : <FiCopy size={14} />}
       </button>
-      <button onMouseDown={(e) => e.preventDefault()} onClick={onPastePlain} className={styles.toolbarBtn} title="Paste as Plain Text (Cmd+Shift+V)">
-        <BsClipboard size={14} />
+      <EditorPasteDropdown
+        activeDropdown={activeDropdown}
+        setActiveDropdown={setActiveDropdown}
+        onPasteRich={onPasteRich}
+        onPastePlain={onPastePlain}
+      />
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onTouchStart={(e) => e.preventDefault()}
+        onClick={onPastePlain}
+        className={styles.toolbarSelectBtn}
+        title="Paste as Plain Text without formatting (Cmd+Shift+V)"
+        aria-label="Paste as Plain Text (Cmd+Shift+V)"
+      >
+        <BsClipboardCheck size={14} className={styles.iconMr025} />
+        <span>Plain</span>
       </button>
     </div>
   );

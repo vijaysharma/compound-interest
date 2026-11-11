@@ -29,8 +29,8 @@ export interface NotesEditorProps {
   isPendingSave?: boolean;
   saveError?: string;
 }
-export type DropdownType = 'folder' | 'share' | 'format' | 'fontSize' | 'lineHeight' | 'palette' | null;
-export type MobileMenuType = 'format' | 'palette' | 'lists' | 'more' | null;
+export type DropdownType = 'folder' | 'share' | 'format' | 'fontSize' | 'lineHeight' | 'palette' | 'paste' | null;
+export type MobileMenuType = 'format' | 'palette' | 'lists' | 'more' | 'paste' | null;
 export type ViewportState = {
   height: number;
   offsetTop: number;

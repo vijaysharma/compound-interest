@@ -1,7 +1,7 @@
 import { RefObject, useCallback } from 'react';
 import { isSafeUrl } from '../sanitizeHtml';
 import { applyCollapsedFontSize, applySelectedFontSize } from './fontSizeUtils';
-import { applySelectedLineHeight } from './lineHeightUtils';
+import { applySelectedLineHeight, isRangeInEditor } from './lineHeightUtils';
 import { handleEditorIndent, handleEditorOutdent } from './editorIndentUtils';
 interface UseEditorFormattingParams {
   editorRef: RefObject<HTMLDivElement | null>;
@@ -11,6 +11,7 @@ interface UseEditorFormattingParams {
   saveSelection: () => void;
   restoreSelection: () => void;
   handleContentChange: (forceNewHistory?: boolean) => void;
+  savedRangeRef?: RefObject<Range | null>;
 }
 export function useEditorFormatting({
   editorRef,
@@ -20,6 +21,7 @@ export function useEditorFormatting({
   saveSelection,
   restoreSelection,
   handleContentChange,
+  savedRangeRef,
 }: UseEditorFormattingParams) {
   const execCmd = useCallback(
     (cmd: string, value: string | undefined = undefined) => {
@@ -126,18 +128,63 @@ export function useEditorFormatting({
     (lineHeight: string) => {
       const editor = editorRef.current;
       if (!editor) return;
-      restoreSelection();
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
-        return;
+
+      // 1. Capture live selection first
+      const liveSel = typeof window !== 'undefined' ? window.getSelection() : null;
+      let range: Range | null = liveSel && liveSel.rangeCount > 0 ? liveSel.getRangeAt(0) : null;
+
+      // 2. Check if range is uncollapsed and both ends are inside editor
+      const isLiveValidUncollapsed = Boolean(
+        range &&
+        !range.collapsed &&
+        liveSel?.anchorNode &&
+        editor.contains(liveSel.anchorNode) &&
+        editor.contains(range.startContainer) &&
+        editor.contains(range.endContainer) &&
+        (range.startContainer as any).isConnected !== false &&
+        (range.endContainer as any).isConnected !== false
+      );
+
+      // If range is null, collapsed, or outside editor:
+      // Try to restore from savedRangeRef.current, BUT ONLY if it passes isRangeInEditor
+      if (!isLiveValidUncollapsed) {
+        if (savedRangeRef?.current && isRangeInEditor(savedRangeRef.current, editor)) {
+          if (liveSel) {
+            try {
+              liveSel.removeAllRanges();
+              const clone = savedRangeRef.current.cloneRange();
+              liveSel.addRange(clone);
+              range = clone;
+            } catch {
+              // ignore
+            }
+          }
+        }
       }
-      const applied = applySelectedLineHeight(editor, sel, lineHeight);
+
+      // If still null or outside editor, focus editor
+      if (!range || !editor.contains(range.startContainer)) {
+        editor.focus();
+        const refreshedSel = typeof window !== 'undefined' ? window.getSelection() : null;
+        range = refreshedSel && refreshedSel.rangeCount > 0 ? refreshedSel.getRangeAt(0) : null;
+      }
+
+      if (!liveSel || !range) return;
+
+      const applied = applySelectedLineHeight(editor, liveSel, lineHeight, range);
       if (applied) {
         saveSelection();
+        if (savedRangeRef && liveSel.rangeCount > 0) {
+          try {
+            savedRangeRef.current = liveSel.getRangeAt(0).cloneRange();
+          } catch {
+            // ignore
+          }
+        }
         handleContentChange(true);
       }
     },
-    [editorRef, restoreSelection, saveSelection, handleContentChange]
+    [editorRef, restoreSelection, saveSelection, handleContentChange, savedRangeRef]
   );
   return {
     execCmd,

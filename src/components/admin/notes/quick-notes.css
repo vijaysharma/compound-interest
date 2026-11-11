@@ -167,7 +167,6 @@ body:has(.quick-notes-theme) {
 .qn-note-canvas {
   font-family: inherit;
   font-size: var(--qn-canvas-font-size, 16px);
-  line-height: 1.6;
   flex: 1;
   display: block;
   width: 100%;
@@ -212,8 +211,6 @@ body:has(.quick-notes-theme) {
 .qn-note-canvas p {
   font-size: inherit;
   margin: 0.35rem 0;
-  line-height: 1.6;
-  min-height: 1.6em;
   display: block;
 }
 
@@ -225,14 +222,10 @@ body:has(.quick-notes-theme) {
 
 .qn-note-canvas div:not(.qn-checklist-item):not(.qn-table):not(.dropdown) {
   font-size: inherit;
-  line-height: 1.6;
-  min-height: 1.6em;
 }
 
 .qn-note-canvas li {
   font-size: inherit;
-  line-height: 1.6;
-  min-height: 1.6em;
 }
 
 .qn-note-canvas span:not([style*="font-size"]) {

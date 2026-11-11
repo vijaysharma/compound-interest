@@ -385,29 +385,69 @@ test('formatPlainTextToHtml escapes entities and wraps lines into plain paragrap
   assert.equal(html, '<p>First line &amp; more</p><p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
 });
 
-test('applySelectedLineHeight does not apply when selection is collapsed', async () => {
+test('applySelectedLineHeight returns false when rangeCount is 0 or selection missing', async () => {
   const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
   const mockEditor = { contains: () => true } as unknown as HTMLElement;
   const mockSel = {
-    rangeCount: 1,
+    rangeCount: 0,
     isCollapsed: true,
   } as unknown as Selection;
   const result = applySelectedLineHeight(mockEditor, mockSel, '1.8');
   assert.equal(result, false);
 });
 
-test('applySelectedLineHeight wraps selected fragment in an inline span with line-height', async () => {
+test('applySelectedLineHeight applies line-height to enclosing block when selection is collapsed', async () => {
   const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
-  let insertedNode: any = null;
-  const mockFragment = {
+  const mockBlock = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {} as any,
     querySelectorAll: () => [],
-    appendChild: () => {},
+    parentNode: null as any,
   };
+  const mockEditor = {
+    contains: () => true,
+    firstElementChild: mockBlock,
+  } as unknown as HTMLElement;
+  mockBlock.parentNode = mockEditor;
+
   const mockRange = {
-    commonAncestorContainer: {},
-    extractContents: () => mockFragment,
-    insertNode: (node: any) => { insertedNode = node; },
-    selectNodeContents: () => {},
+    startContainer: mockBlock,
+    commonAncestorContainer: mockBlock,
+    collapsed: true,
+  };
+  const mockSel = {
+    rangeCount: 1,
+    isCollapsed: true,
+    getRangeAt: () => mockRange,
+  } as unknown as Selection;
+
+  const result = applySelectedLineHeight(mockEditor, mockSel, '1.8');
+  assert.equal(result, true);
+  assert.equal(mockBlock.style.lineHeight, '1.8');
+});
+
+test('applySelectedLineHeight applies line-height to paragraph on text selection without introducing spans', async () => {
+  const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
+  const mockBlock = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {} as any,
+    querySelectorAll: () => [],
+    parentNode: null as any,
+  };
+  const mockEditor = {
+    contains: () => true,
+    firstElementChild: mockBlock,
+    querySelector: () => mockBlock,
+  } as unknown as HTMLElement;
+  mockBlock.parentNode = mockEditor;
+
+  const mockRange = {
+    startContainer: mockBlock,
+    endContainer: mockBlock,
+    commonAncestorContainer: mockBlock,
+    collapsed: false,
   };
   const mockSel = {
     rangeCount: 1,
@@ -416,32 +456,13 @@ test('applySelectedLineHeight wraps selected fragment in an inline span with lin
     removeAllRanges: () => {},
     addRange: () => {},
   } as unknown as Selection;
-  const mockEditor = {
-    contains: () => true,
-  } as unknown as HTMLElement;
-  const originalCreateElement = globalThis.document?.createElement;
-  const originalCreateRange = globalThis.document?.createRange;
-  globalThis.document = {
-    ...globalThis.document,
-    createElement: (tag: string) => ({
-      tagName: tag.toUpperCase(),
-      style: {},
-      appendChild: () => {},
-      removeAttribute: () => {},
-      getAttribute: () => null,
-    } as any),
-    createRange: () => ({
-      selectNodeContents: () => {},
-    } as any),
-  } as any;
-  try {
-    const result = applySelectedLineHeight(mockEditor, mockSel, '2.0');
-    assert.equal(result, true);
-    assert.equal(insertedNode?.style?.lineHeight, '2.0');
-  } finally {
-    if (originalCreateElement) globalThis.document.createElement = originalCreateElement;
-    if (originalCreateRange) globalThis.document.createRange = originalCreateRange;
-  }
+
+  const result = applySelectedLineHeight(mockEditor, mockSel, '2.0');
+  assert.equal(result, true);
+  assert.equal(mockBlock.style.lineHeight, '2.0');
+  // Margin remains untouched (inter-paragraph spacing independent)
+  assert.equal(mockBlock.style.margin, undefined);
+  assert.equal(mockBlock.style.marginBottom, undefined);
 });
 
 test('navigation dirty guard: intercepts dirty note and stays on page after Discard and Save', () => {
@@ -797,7 +818,7 @@ test('iOS Safari reload draft restoration on mount preserves unsaved changes', a
   assert.deepEqual(postSave.unsavedDraftIds, []);
 });
 
-test('partial-overlap line-height span replacement clears conflicting inner span line-height', async () => {
+test('line-height clears conflicting inner span line-height on enclosing paragraph', async () => {
   const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
 
   const innerSpan: any = {
@@ -807,22 +828,33 @@ test('partial-overlap line-height span replacement clears conflicting inner span
     removeAttribute: () => {},
   };
 
-  const mockFragment: any = {
+  const mockBlock: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
     querySelectorAll: (selector: string) => {
       if (selector.includes('span[style*="line-height"]')) {
         return [innerSpan];
       }
       return [];
     },
-    appendChild: () => {},
+    parentNode: null,
   };
 
-  let insertedSpan: any = null;
+  const mockEditor = {
+    contains: () => true,
+    firstElementChild: mockBlock,
+    querySelector: () => mockBlock,
+  } as unknown as HTMLElement;
+  mockBlock.parentNode = mockEditor;
+
   const mockRange = {
-    commonAncestorContainer: {},
-    extractContents: () => mockFragment,
-    insertNode: (node: any) => { insertedSpan = node; },
-    selectNodeContents: () => {},
+    startContainer: mockBlock,
+    endContainer: mockBlock,
+    commonAncestorContainer: mockBlock,
+    startOffset: 0,
+    endOffset: 0,
+    collapsed: false,
   };
 
   const mockSel = {
@@ -833,35 +865,72 @@ test('partial-overlap line-height span replacement clears conflicting inner span
     addRange: () => {},
   } as unknown as Selection;
 
+  const success = applySelectedLineHeight(mockEditor, mockSel, '1.75');
+  assert.equal(success, true);
+  assert.equal(mockBlock.style.lineHeight, '1.75');
+  // Conflicting inner span line-height was cleared so parent paragraph 1.75 applies cleanly
+  assert.equal(innerSpan.style.lineHeight, '');
+  // Inter-paragraph margins remain untouched
+  assert.equal(mockBlock.style.margin, undefined);
+  assert.equal(mockBlock.style.marginBottom, undefined);
+});
+
+test('intra-paragraph line spacing applies to multi-paragraph selection without touching margins or introducing spans', async () => {
+  const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
+
+  const p1: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
+    querySelectorAll: () => [],
+    parentNode: null,
+  };
+
+  const p2: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
+    querySelectorAll: () => [],
+    parentNode: null,
+  };
+
+  const allBlocks = [p1, p2];
   const mockEditor = {
     contains: () => true,
+    firstElementChild: p1,
+    querySelector: () => p1,
+    querySelectorAll: () => allBlocks,
   } as unknown as HTMLElement;
+  p1.parentNode = mockEditor;
+  p2.parentNode = mockEditor;
 
-  const originalCreateElement = globalThis.document?.createElement;
-  const originalCreateRange = globalThis.document?.createRange;
+  const mockRange = {
+    startContainer: p1,
+    endContainer: p2,
+    commonAncestorContainer: mockEditor,
+    startOffset: 0,
+    endOffset: 0,
+    collapsed: false,
+  };
 
-  globalThis.document = {
-    ...globalThis.document,
-    createElement: (tag: string) => ({
-      tagName: tag.toUpperCase(),
-      style: {},
-      appendChild: () => {},
-    } as any),
-    createRange: () => ({
-      selectNodeContents: () => {},
-    } as any),
-  } as any;
+  const mockSel = {
+    rangeCount: 1,
+    isCollapsed: false,
+    getRangeAt: () => mockRange,
+    removeAllRanges: () => {},
+    addRange: () => {},
+  } as unknown as Selection;
 
-  try {
-    const success = applySelectedLineHeight(mockEditor, mockSel, '1.75');
-    assert.equal(success, true);
-    assert.equal(insertedSpan?.style?.lineHeight, '1.75');
-    // Inner span's conflicting line-height was cleared so parent 1.75 applies cleanly
-    assert.equal(innerSpan.style.lineHeight, '');
-  } finally {
-    if (originalCreateElement) globalThis.document.createElement = originalCreateElement;
-    if (originalCreateRange) globalThis.document.createRange = originalCreateRange;
-  }
+  const success = applySelectedLineHeight(mockEditor, mockSel, '2.0');
+  assert.equal(success, true);
+  // Each paragraph gets intra-paragraph line-height 2.0
+  assert.equal(p1.style.lineHeight, '2.0');
+  assert.equal(p2.style.lineHeight, '2.0');
+  // Inter-paragraph margins remain untouched
+  assert.equal(p1.style.margin, undefined);
+  assert.equal(p1.style.marginBottom, undefined);
+  assert.equal(p2.style.margin, undefined);
+  assert.equal(p2.style.marginBottom, undefined);
 });
 
 test('saveLocalDraft handles QuotaExceededError by persisting metadata-only fallback with is_draft_body_lost', async () => {
@@ -925,7 +994,516 @@ test('saveLocalDraft handles QuotaExceededError by persisting metadata-only fall
   assert.deepEqual(unsavedDraftIds, ['heavy_note_1']);
 });
 
+test('applySelectedLineHeight handles all standard numeric LINE_HEIGHTS values', async () => {
+  const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
+  const { LINE_HEIGHTS } = await import('../editor/constants');
 
+  for (const lh of LINE_HEIGHTS) {
+    const mockBlock = {
+      tagName: 'P',
+      nodeType: 1,
+      style: {} as any,
+      querySelectorAll: () => [],
+      parentNode: null as any,
+    };
+    const mockEditor = {
+      contains: () => true,
+      firstElementChild: mockBlock,
+    } as unknown as HTMLElement;
+    mockBlock.parentNode = mockEditor;
+
+    const mockRange = {
+      startContainer: mockBlock,
+      commonAncestorContainer: mockBlock,
+      collapsed: true,
+    };
+    const mockSel = {
+      rangeCount: 1,
+      isCollapsed: true,
+      getRangeAt: () => mockRange,
+    } as unknown as Selection;
+
+    const applied = applySelectedLineHeight(mockEditor, mockSel, lh.value);
+    assert.equal(applied, true);
+    assert.equal(mockBlock.style.lineHeight, lh.value);
+  }
+});
+
+test('EditorLineHeightDropdown trigger button prevents focus loss with onMouseDown and onTouchStart', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const fileContent = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/editor/EditorLineHeightDropdown.tsx'),
+    'utf-8'
+  );
+  // Verify trigger button includes onMouseDown preventDefault and onTouchStart preventDefault
+  assert.ok(fileContent.includes('onMouseDown={(e) => e.preventDefault()}'));
+  assert.ok(fileContent.includes('onTouchStart={(e) => e.preventDefault()}'));
+  assert.ok(fileContent.includes('title="Line Height (Selection or Paragraph)"'));
+});
+
+test('EditorPasteDropdown renders Paste (with formatting) and Paste as Plain Text buttons with handlers', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const fileContent = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/editor/EditorPasteDropdown.tsx'),
+    'utf-8'
+  );
+  assert.ok(fileContent.includes('Paste (with formatting)'));
+  assert.ok(fileContent.includes('Paste as Plain Text'));
+  assert.ok(fileContent.includes('onPasteRich'));
+  assert.ok(fileContent.includes('onPastePlain'));
+  assert.ok(fileContent.includes('onMouseDown={(e) => e.preventDefault()}'));
+  assert.ok(fileContent.includes('onTouchStart={(e) => e.preventDefault()}'));
+});
+
+test('EditorToolbarDesktop renders visible Paste dropdown and Paste Plain button', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const fileContent = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/editor/EditorToolbarDesktop.tsx'),
+    'utf-8'
+  );
+  assert.ok(fileContent.includes('<EditorPasteDropdown'));
+  assert.ok(fileContent.includes('onPasteRich={onPasteRich}'));
+  assert.ok(fileContent.includes('onPastePlain={onPastePlain}'));
+  assert.ok(fileContent.includes('<span>Plain</span>'));
+  assert.ok(fileContent.includes('title="Paste as Plain Text without formatting (Cmd+Shift+V)"'));
+});
+
+test('EditorToolbarMobile renders Paste options popup with formatted and plain choices', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const fileContent = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/editor/EditorToolbarMobile.tsx'),
+    'utf-8'
+  );
+  assert.ok(fileContent.includes("activeMobileMenu === 'paste' && !isPlainPasteArmed"));
+  assert.ok(fileContent.includes('Paste (with formatting)'));
+  assert.ok(fileContent.includes('Paste as Plain Text'));
+  assert.ok(fileContent.includes('onPasteRich'));
+  assert.ok(fileContent.includes('onPastePlain'));
+});
+
+test('plain-paste and rich-paste clipboard handling: executes appropriate insertion logic', async () => {
+  const { stripHtmlToPlainText, formatPlainTextToHtml } = await import('../editor/plainTextPasteUtils');
+  
+  // Rich HTML content
+  const sampleHtml = '<b>Important</b> <p>Formatted text</p>';
+  // Plain paste strips all HTML tags
+  const plainText = stripHtmlToPlainText(sampleHtml);
+  assert.equal(plainText, 'Important Formatted text');
+
+  // Multiline plain text is formatted to paragraphs
+  const multiline = 'Line 1\nLine 2';
+  const htmlResult = formatPlainTextToHtml(multiline);
+  assert.equal(htmlResult, '<p>Line 1</p><p>Line 2</p>');
+});
+
+test('sanitizeNoteHtml preserves bold, links, and lists from MS Word while stripping mso-* junk and o:p', async () => {
+  const { sanitizeNoteHtml } = await import('../sanitizeHtml');
+
+  const wordHtml = `
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Normal</w:View></w:WordDocument></xml><![endif]-->
+    <p class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;font-weight:bold;line-height:1.5">
+      <b>Bold Word Text</b>
+      <a href="https://example.com" style="mso-bidi-font-weight:normal;color:#0563c1">Word Link</a>
+      <o:p>&nbsp;</o:p>
+    </p>
+    <ul>
+      <li class="MsoListParagraph" style="mso-list:l0 level1 lfo1">List Item 1<o:p></o:p></li>
+      <li class="MsoListParagraph" style="mso-list:l0 level1 lfo1">List Item 2</li>
+    </ul>
+  `;
+
+  const cleaned = sanitizeNoteHtml(wordHtml);
+
+  // Bold text preserved
+  assert.ok(cleaned.includes('Bold Word Text'));
+  assert.ok(cleaned.includes('<b>Bold Word Text</b>') || cleaned.includes('font-weight:bold') || cleaned.includes('font-weight: bold'));
+  // Link preserved with href
+  assert.ok(cleaned.includes('href="https://example.com"'));
+  assert.ok(cleaned.includes('Word Link'));
+  // List preserved
+  assert.ok(cleaned.includes('<ul>'));
+  assert.ok(cleaned.includes('List Item 1'));
+  assert.ok(cleaned.includes('List Item 2'));
+  assert.ok(cleaned.includes('</li>'));
+  // Word junk stripped
+  assert.ok(!cleaned.includes('mso-'));
+  assert.ok(!cleaned.includes('<o:p>'));
+  assert.ok(!cleaned.includes('</o:p>'));
+  assert.ok(!cleaned.includes('<xml>'));
+  assert.ok(!cleaned.includes('<!--[if'));
+});
+
+test('sanitizeNoteHtml preserves bold, links, and formatting from Google Docs clipboard HTML', async () => {
+  const { sanitizeNoteHtml } = await import('../sanitizeHtml');
+
+  const docsHtml = `
+    <b style="font-weight:normal;" id="docs-internal-guid-12345">
+      <p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;">
+        <span style="font-weight:700;color:#000000;">Google Docs Bold Text</span>
+        <span> and </span>
+        <a href="https://docs.google.com"><span style="color:#1155cc;text-decoration:underline;">Docs Link</span></a>
+      </p>
+      <ul>
+        <li><span style="font-weight:400;">Docs list item</span></li>
+      </ul>
+    </b>
+  `;
+
+  const cleaned = sanitizeNoteHtml(docsHtml);
+
+  // Bold text preserved with font-weight:700
+  assert.ok(cleaned.includes('Google Docs Bold Text'));
+  assert.ok(cleaned.includes('font-weight:700') || cleaned.includes('font-weight: 700') || cleaned.includes('<b>'));
+  // Link preserved with href
+  assert.ok(cleaned.includes('href="https://docs.google.com"'));
+  assert.ok(cleaned.includes('Docs Link'));
+  // List preserved
+  assert.ok(cleaned.includes('<ul>'));
+  assert.ok(cleaned.includes('<li>'));
+  assert.ok(cleaned.includes('Docs list item'));
+});
+
+test('applySelectedLineHeight applies to enclosing block for non-collapsed selection without inline-block wrapping', async () => {
+  const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
+
+  const mockBlock = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {} as any,
+    querySelectorAll: () => [],
+    parentNode: null as any,
+  };
+  const mockEditor = {
+    contains: () => true,
+    firstElementChild: mockBlock,
+  } as unknown as HTMLElement;
+  mockBlock.parentNode = mockEditor;
+
+  // Non-collapsed multi-word selection inside a single paragraph
+  const mockRange = {
+    startContainer: mockBlock,
+    endContainer: mockBlock,
+    commonAncestorContainer: mockBlock,
+    collapsed: false,
+    extractContents: () => ({ querySelectorAll: () => [], appendChild: () => {} }),
+    insertNode: () => {},
+  };
+  const mockSel = {
+    rangeCount: 1,
+    isCollapsed: false,
+    getRangeAt: () => mockRange,
+  } as unknown as Selection;
+
+  const result = applySelectedLineHeight(mockEditor, mockSel, '2.0');
+  assert.equal(result, true);
+  // Applied directly to enclosing block so text wraps across lines naturally without inline-block constraint
+  assert.equal(mockBlock.style.lineHeight, '2.0');
+});
+
+test('intra-paragraph line spacing acceptance: paragraph with wrapped lines gets line-height on <p> with margins untouched and zero spans', async () => {
+  const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
+
+  // Paragraph long enough to wrap onto multiple lines in contenteditable
+  let spanInserted = false;
+  const mockParagraph: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
+    querySelectorAll: (selector: string) => {
+      if (selector.includes('span')) {
+        return spanInserted ? [{ tagName: 'SPAN' }] : [];
+      }
+      return [];
+    },
+    parentNode: null,
+  };
+
+  const textNode = {
+    nodeType: 3,
+    textContent: 'This is a long paragraph designed to wrap onto 3+ lines in the editor view.',
+    parentNode: mockParagraph,
+  };
+
+  const mockEditor: any = {
+    contains: (node: any) => node === mockParagraph || node === textNode,
+    firstElementChild: mockParagraph,
+    querySelector: () => mockParagraph,
+  };
+  mockParagraph.parentNode = mockEditor;
+
+  // Caret placed anywhere inside the wrapped paragraph (collapsed selection on textNode)
+  const mockRange = {
+    startContainer: textNode,
+    startOffset: 15,
+    endContainer: textNode,
+    endOffset: 15,
+    commonAncestorContainer: textNode,
+    collapsed: true,
+  };
+
+  const mockSel = {
+    rangeCount: 1,
+    isCollapsed: true,
+    getRangeAt: () => mockRange,
+    removeAllRanges: () => {},
+    addRange: () => {},
+  } as unknown as Selection;
+
+  // Select line-height 2.0 from dropdown
+  const success = applySelectedLineHeight(mockEditor, mockSel, '2.0');
+
+  // 1. applySelectedLineHeight succeeded
+  assert.equal(success, true);
+  // 2. Intra-paragraph spacing: style is on the <p> itself (wrapped lines spaced at 2.0)
+  assert.equal(mockParagraph.style.lineHeight, '2.0');
+  // 3. Inter-paragraph spacing: margins between paragraphs remain completely untouched
+  assert.equal(mockParagraph.style.margin, undefined);
+  assert.equal(mockParagraph.style.marginTop, undefined);
+  assert.equal(mockParagraph.style.marginBottom, undefined);
+  // 4. Zero <span> wrapping introduced
+  assert.equal(spanInserted, false);
+});
+
+test('subsequent line-height dropdown changes update <p> style (e.g. 1.2 -> 2.0 -> 0.8) without getting stuck', async () => {
+  const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
+
+  const mockParagraph: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
+    setAttribute: (k: string, v: string) => { mockParagraph.attributes = { ...mockParagraph.attributes, [k]: v }; },
+    querySelectorAll: () => [],
+    parentNode: null,
+  };
+
+  const textNode = {
+    nodeType: 3,
+    textContent: 'Testing subsequent line height changes',
+    parentNode: mockParagraph,
+  };
+
+  const mockEditor: any = {
+    contains: (node: any) => node === mockParagraph || node === textNode,
+    firstElementChild: mockParagraph,
+    querySelector: () => mockParagraph,
+  };
+  mockParagraph.parentNode = mockEditor;
+
+  const mockRange = {
+    startContainer: textNode,
+    startOffset: 5,
+    endContainer: textNode,
+    endOffset: 5,
+    commonAncestorContainer: textNode,
+    collapsed: true,
+  };
+
+  const mockSel = {
+    rangeCount: 1,
+    isCollapsed: true,
+    getRangeAt: () => mockRange,
+    removeAllRanges: () => {},
+    addRange: () => {},
+  } as unknown as Selection;
+
+  // 1st change: choose 1.2
+  const res1 = applySelectedLineHeight(mockEditor, mockSel, '1.2');
+  assert.equal(res1, true);
+  assert.equal(mockParagraph.style.lineHeight, '1.2');
+
+  // 2nd change: choose 2.0 (subsequent change)
+  const res2 = applySelectedLineHeight(mockEditor, mockSel, '2.0');
+  assert.equal(res2, true);
+  assert.equal(mockParagraph.style.lineHeight, '2.0');
+
+  // 3rd change: choose 0.8 (sub-1.6 tight spacing)
+  const res3 = applySelectedLineHeight(mockEditor, mockSel, '0.8');
+  assert.equal(res3, true);
+  assert.equal(mockParagraph.style.lineHeight, '0.8');
+});
+
+test('sanitizeNoteHtml preserves line-height style without truncating it into line-', async () => {
+  const { sanitizeNoteHtml } = await import('../sanitizeHtml');
+
+  const htmlWithLineHeight = '<p style="line-height: 1.2; color: #333333;">Tight text</p>';
+  const sanitized = sanitizeNoteHtml(htmlWithLineHeight);
+
+  assert.ok(sanitized.includes('line-height: 1.2') || sanitized.includes('line-height:1.2'));
+  assert.ok(!sanitized.includes('style="line-"'));
+  assert.ok(!sanitized.includes('style="line- "'));
+});
+
+test('quick-notes.css does not clamp line-height with min-height: 1.6em on .qn-note-canvas p', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const cssContent = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/quick-notes.css'),
+    'utf-8'
+  );
+
+  // Assert .qn-note-canvas p does not contain min-height: 1.6em or line-height: 1.6
+  const pRuleMatch = /\.qn-note-canvas\s+p\s*\{([^}]+)\}/.exec(cssContent);
+  assert.ok(pRuleMatch, 'p rule must exist');
+  assert.ok(!pRuleMatch[1].includes('min-height: 1.6em'));
+  assert.ok(!pRuleMatch[1].includes('line-height: 1.6'));
+});
+
+test('isRangeInEditor verifies uncollapsed range inside editor boundaries', async () => {
+  const { isRangeInEditor } = await import('../editor/lineHeightUtils');
+
+  const p1: any = { nodeType: 1 };
+  const p2: any = { nodeType: 1 };
+  const mockEditor: any = {
+    contains: (node: any) => node === p1 || node === p2,
+  };
+
+  const validRange: any = {
+    collapsed: false,
+    startContainer: p1,
+    endContainer: p2,
+  };
+  assert.equal(isRangeInEditor(validRange, mockEditor), true);
+
+  const collapsedRange: any = {
+    collapsed: true,
+    startContainer: p1,
+    endContainer: p1,
+  };
+  assert.equal(isRangeInEditor(collapsedRange, mockEditor), false);
+
+  const outsideNode: any = { nodeType: 1 };
+  const outsideRange: any = {
+    collapsed: false,
+    startContainer: p1,
+    endContainer: outsideNode,
+  };
+  assert.equal(isRangeInEditor(outsideRange, mockEditor), false);
+});
+
+test('getBlocksInRange returns all blocks intersecting multi-paragraph range', async () => {
+  const { getBlocksInRange } = await import('../editor/lineHeightUtils');
+
+  const pA: any = { tagName: 'P', nodeType: 1, classList: { contains: () => false }, querySelectorAll: () => [] };
+  const pB: any = { tagName: 'P', nodeType: 1, classList: { contains: () => false }, querySelectorAll: () => [] };
+  const pC: any = { tagName: 'P', nodeType: 1, classList: { contains: () => false }, querySelectorAll: () => [] };
+  const allBlocks = [pA, pB, pC];
+
+  const mockEditor: any = {
+    contains: () => true,
+    querySelectorAll: () => allBlocks,
+  };
+
+  const textA: any = { nodeType: 3, parentNode: pA };
+  const textC: any = { nodeType: 3, parentNode: pC };
+
+  const rangeAcrossAtoC: any = {
+    collapsed: false,
+    startContainer: textA,
+    startOffset: 5,
+    endContainer: textC,
+    endOffset: 10,
+    intersectsNode: (node: any) => node === pA || node === pB || node === pC,
+  };
+
+  const blocks = getBlocksInRange(rangeAcrossAtoC, mockEditor);
+  assert.equal(blocks.length, 3);
+  assert.equal(blocks[0], pA);
+  assert.equal(blocks[1], pB);
+  assert.equal(blocks[2], pC);
+});
+
+test('multi-paragraph selection: subsequent dropdown choices (2.0 -> 1.5 -> 1.0 -> 2.5) update ALL paragraphs and preserve selection range', async () => {
+  const { applySelectedLineHeight } = await import('../editor/lineHeightUtils');
+
+  const pA: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
+    setAttribute: (k: string, v: string) => { pA.attributes = { ...pA.attributes, [k]: v }; },
+    querySelectorAll: () => [],
+    dataset: {},
+  };
+  const pB: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
+    setAttribute: (k: string, v: string) => { pB.attributes = { ...pB.attributes, [k]: v }; },
+    querySelectorAll: () => [],
+    dataset: {},
+  };
+  const pC: any = {
+    tagName: 'P',
+    nodeType: 1,
+    style: {},
+    setAttribute: (k: string, v: string) => { pC.attributes = { ...pC.attributes, [k]: v }; },
+    querySelectorAll: () => [],
+    dataset: {},
+  };
+
+  const textA: any = { nodeType: 3, parentNode: pA, textContent: 'Paragraph A text' };
+  const textC: any = { nodeType: 3, parentNode: pC, textContent: 'Paragraph C text' };
+
+  const allBlocks = [pA, pB, pC];
+  const mockEditor: any = {
+    contains: (node: any) => allBlocks.includes(node) || node === textA || node === textC,
+    querySelectorAll: () => allBlocks,
+  };
+
+  let activeRange: any = {
+    collapsed: false,
+    startContainer: textA,
+    startOffset: 5,
+    endContainer: textC,
+    endOffset: 8,
+    cloneRange: function () {
+      return {
+        ...this,
+        cloneRange: this.cloneRange,
+      };
+    },
+    intersectsNode: (node: any) => allBlocks.includes(node),
+  };
+
+  const mockSel: any = {
+    rangeCount: 1,
+    isCollapsed: false,
+    getRangeAt: () => activeRange,
+    removeAllRanges: () => {},
+    addRange: (r: any) => { activeRange = r; },
+  };
+
+  // Choice 1: choose 2.0 -> all 3 paragraphs update
+  const success1 = applySelectedLineHeight(mockEditor, mockSel, '2.0', activeRange);
+  assert.equal(success1, true);
+  assert.equal(pA.style.lineHeight, '2.0');
+  assert.equal(pB.style.lineHeight, '2.0');
+  assert.equal(pC.style.lineHeight, '2.0');
+
+  // Choice 2: choose 1.5 -> all 3 paragraphs update (NOT collapsed to only first paragraph)
+  const success2 = applySelectedLineHeight(mockEditor, mockSel, '1.5', activeRange);
+  assert.equal(success2, true);
+  assert.equal(pA.style.lineHeight, '1.5');
+  assert.equal(pB.style.lineHeight, '1.5');
+  assert.equal(pC.style.lineHeight, '1.5');
+
+  // Choice 3: choose 1.0 -> all 3 paragraphs update
+  const success3 = applySelectedLineHeight(mockEditor, mockSel, '1.0', activeRange);
+  assert.equal(success3, true);
+  assert.equal(pA.style.lineHeight, '1.0');
+  assert.equal(pB.style.lineHeight, '1.0');
+  assert.equal(pC.style.lineHeight, '1.0');
+
+  // Choice 4: choose 2.5 -> all 3 paragraphs update
+  const success4 = applySelectedLineHeight(mockEditor, mockSel, '2.5', activeRange);
+  assert.equal(success4, true);
+  assert.equal(pA.style.lineHeight, '2.5');
+  assert.equal(pB.style.lineHeight, '2.5');
+  assert.equal(pC.style.lineHeight, '2.5');
+});
 
 
 

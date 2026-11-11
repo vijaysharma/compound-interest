@@ -69,6 +69,13 @@ export function useEditorContent({
       const rawHtml = note.content && note.content.trim() ? note.content : '<p><br></p>';
       const initialHtml = sanitizeNoteHtml(rawHtml);
       editorRef.current.innerHTML = initialHtml;
+      const lhBlocks = editorRef.current.querySelectorAll<HTMLElement>('[data-line-height]');
+      lhBlocks.forEach((b) => {
+        const val = b.getAttribute('data-line-height');
+        if (val && !b.style.lineHeight) {
+          b.style.lineHeight = val;
+        }
+      });
       const isBlank = !note.content || !note.content.trim() || initialHtml === '<p><br></p>';
       editorRef.current.setAttribute('data-empty', String(isBlank));
       lastLoadedNoteIdRef.current = note.id;
@@ -192,7 +199,50 @@ export function useEditorContent({
     // Arm visible plain-paste toggle state on iOS Safari (stays armed until tapped off or paste occurs)
     setPlainPasteArmed(true);
     editorRef.current?.focus();
-  }, [editorRef, handleContentChange, isPlainPasteArmed, setPlainPasteArmed]);
+  }, [editorRef, handleContentChange, isPlainPasteArmed, restoreSelection, setPlainPasteArmed]);
+  const handlePasteRich = useCallback(async () => {
+    restoreSelection?.();
+    const editor = editorRef.current;
+    if (editor) {
+      editor.focus();
+    }
+    setPlainPasteArmed(false);
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.read) {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          if (item.types.includes('text/html')) {
+            const blob = await item.getType('text/html');
+            const html = await blob.text();
+            if (html) {
+              const cleanHtml = sanitizeNoteHtml(html);
+              document.execCommand('insertHTML', false, cleanHtml);
+              handleContentChange(true);
+              return;
+            }
+          }
+        }
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          if (text.includes('\n')) {
+            const html = formatPlainTextToHtml(text);
+            document.execCommand('insertHTML', false, html);
+          } else {
+            document.execCommand('insertText', false, text);
+          }
+          handleContentChange(true);
+          return;
+        }
+      }
+    } catch {
+      // Clipboard permission denied, insecure context, or browser security blocks read (e.g. Firefox)
+    }
+    if (typeof alert === 'function') {
+      alert('Clipboard permission denied or unavailable — please use Cmd+V (or Ctrl+V) to paste with formatting.');
+    }
+  }, [editorRef, handleContentChange, restoreSelection, setPlainPasteArmed]);
   return {
     wordCount,
     charCount,
@@ -206,5 +256,6 @@ export function useEditorContent({
     handleContentChange,
     handlePaste,
     handlePastePlain,
+    handlePasteRich,
   };
 }

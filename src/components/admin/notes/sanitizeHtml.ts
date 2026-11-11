@@ -10,8 +10,18 @@ export function sanitizePlainInput(input: unknown, maxLength = 250, trim = true)
 }
 export function sanitizeNoteHtml(html: string): string {
   if (!html || typeof html !== 'string') return '';
+  // Pre-strip Microsoft Office/Word XML, comments, and empty o:p elements
+  const preprocessed = html
+    .replace(/<!--\[if[\s\S]*?<!\[endif\]-->/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<xml\b[\s\S]*?<\/xml>/gi, '')
+    .replace(/<o:p\b[^>]*>[\s\S]*?<\/o:p>/gi, (match) => {
+      const inner = match.replace(/<\/?o:p[^>]*>/gi, '').replace(/&nbsp;|\s/g, '');
+      return inner ? match.replace(/<\/?o:p[^>]*>/gi, '') : '';
+    });
+
   if (typeof DOMParser === 'undefined') {
-    return html
+    return preprocessed
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
       .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
@@ -22,11 +32,12 @@ export function sanitizeNoteHtml(html: string): string {
       .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
       .replace(/\bon\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
       .replace(/\bstyle\s*=\s*['"][^'"]*(?:expression|behavior|javascript|-moz-binding|url)[^'"]*['"]/gi, '')
+      .replace(/\bmso-[^;"]+;?/gi, '')
       .replace(/href\s*=\s*['"]?(?:javascript|data|vbscript):[^'">\s]*/gi, 'href="#"');
   }
   try {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const doc = parser.parseFromString(preprocessed, 'text/html');
     const childNodes = Array.from(doc.body.childNodes);
     for (const child of childNodes) {
       cleanNode(child);

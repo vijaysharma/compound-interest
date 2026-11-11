@@ -27,6 +27,8 @@ export const EditorFontAndColorDropdowns: React.FC<EditorFontAndColorDropdownsPr
       <div className={styles.dropdownContainer}>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()}
           onClick={() => setActiveDropdown(isFontSizeOpen ? null : 'fontSize')}
           className={`${styles.toolbarSelectBtn} ${isFontSizeOpen ? styles.active : ''}`}
           title={`Font size: ${FONT_SIZES.find((f) => f.size === currentFontSize)?.label || 'Normal'} (${currentFontSize})`}
@@ -64,6 +66,8 @@ export const EditorFontAndColorDropdowns: React.FC<EditorFontAndColorDropdownsPr
       <div className={styles.dropdownContainer}>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()}
           onClick={() => setActiveDropdown(isPaletteOpen ? null : 'palette')}
           className={`${styles.toolbarBtn} ${styles.primary} ${isPaletteOpen ? styles.active : ''}`}
           title="Color & Highlight"

@@ -16,6 +16,8 @@ export const EditorHeadingDropdown: React.FC<EditorHeadingDropdownProps> = ({
     <div className={styles.dropdownContainer}>
       <button
         type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onTouchStart={(e) => e.preventDefault()}
         onClick={() => setActiveDropdown(isOpen ? null : 'format')}
         className={`${styles.toolbarSelectBtn} ${isOpen ? styles.active : ''}`}
         title="Heading style"

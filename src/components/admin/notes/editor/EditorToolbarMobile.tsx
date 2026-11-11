@@ -4,7 +4,7 @@ import {
 } from 'react-icons/fi';
 import {
   BsCardChecklist, BsPalette, BsTypeStrikethrough, BsHighlighter,
-  BsArrowCounterclockwise, BsArrowClockwise, BsClipboard,
+  BsArrowCounterclockwise, BsArrowClockwise, BsClipboard, BsClipboardCheck,
 } from 'react-icons/bs';
 import { MobileMenuType, ViewportState } from './types';
 import { MobileButton } from './MobileButton';
@@ -38,6 +38,7 @@ interface EditorToolbarMobileProps {
   onInsertLink: () => void;
   onSelectAll: () => void;
   onCopySelection: () => void;
+  onPasteRich: () => void;
   onPastePlain: () => void;
   isPlainPasteArmed?: boolean;
   onConfirmPlainPaste?: (text: string) => void;
@@ -55,7 +56,7 @@ export const EditorToolbarMobile: React.FC<EditorToolbarMobileProps> = ({
   copySuccess, onUndo, onRedo, onExecCmd, onApplyFontSize, onApplyLineHeight,
   onApplyTextColor, onApplyHighlightColor, onApplyHighlighter, onInsertChecklistItem,
   onInsertList, onIndent, onOutdent, onInsertTable, onInsertLink, onSelectAll,
-  onCopySelection, onPastePlain, isPlainPasteArmed, onConfirmPlainPaste,
+  onCopySelection, onPasteRich, onPastePlain, isPlainPasteArmed, onConfirmPlainPaste,
   onCancelPlainPaste, onBackMobile, onManualSave, isSaving,
   isPendingSave, saveSuccessMessage, saveError,
 }) => {
@@ -92,6 +93,51 @@ export const EditorToolbarMobile: React.FC<EditorToolbarMobileProps> = ({
           onApplyHighlightColor={onApplyHighlightColor}
           onClose={() => setActiveMobileMenu(null)}
         />
+      )}
+      {activeMobileMenu === 'paste' && !isPlainPasteArmed && (
+        <div className={styles.mobilePlainPastePopup}>
+          <div className={styles.mobilePlainPasteHeader}>
+            <span className={styles.mobilePlainPasteTitle}>Paste Options</span>
+            <button
+              type="button"
+              className={styles.mobilePlainPasteClose}
+              onClick={() => setActiveMobileMenu(null)}
+              aria-label="Close"
+            >
+              <FiX size={16} />
+            </button>
+          </div>
+          <div className={styles.mobilePasteMenuBody}>
+            <button
+              type="button"
+              className={styles.mobilePasteOptionBtn}
+              onClick={() => {
+                setActiveMobileMenu(null);
+                onPasteRich();
+              }}
+            >
+              <BsClipboard size={18} className={styles.iconMr025} />
+              <div className={styles.dropdownItemCol}>
+                <span className={styles.fw600}>Paste (with formatting)</span>
+                <span className={styles.dropdownItemSub}>Keep styles, links, and bold text</span>
+              </div>
+            </button>
+            <button
+              type="button"
+              className={styles.mobilePasteOptionBtn}
+              onClick={() => {
+                setActiveMobileMenu(null);
+                onPastePlain();
+              }}
+            >
+              <BsClipboardCheck size={18} className={styles.iconMr025} />
+              <div className={styles.dropdownItemCol}>
+                <span className={styles.fw600}>Paste as Plain Text</span>
+                <span className={styles.dropdownItemSub}>Strip all formatting and tags</span>
+              </div>
+            </button>
+          </div>
+        </div>
       )}
       {isPlainPasteArmed && (
         <div className={styles.mobilePlainPastePopup}>
@@ -266,10 +312,10 @@ export const EditorToolbarMobile: React.FC<EditorToolbarMobileProps> = ({
         </MobileButton>
 
         <MobileButton
-          action={onPastePlain}
-          className={`${styles.mobileBarBtn} ${isPlainPasteArmed ? styles.active : ''}`}
-          title={isPlainPasteArmed ? 'Plain paste armed (tap to cancel or paste)' : 'Paste as Plain Text'}
-          aria-label="Paste as Plain Text"
+          action={() => setActiveMobileMenu(activeMobileMenu === 'paste' ? null : 'paste')}
+          className={`${styles.mobileBarBtn} ${activeMobileMenu === 'paste' || isPlainPasteArmed ? styles.active : ''}`}
+          title="Paste options (Keep formatting or plain text)"
+          aria-label="Paste options"
         >
           <BsClipboard size={16} />
         </MobileButton>

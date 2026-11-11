@@ -80,6 +80,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
           onOutdent={state.formatting.handleOutdent} onInsertTable={state.listAndTable.insertTable}
           onInsertLink={state.formatting.insertLink} onSelectAll={state.selection.handleSelectAll}
           onCopySelection={state.exportOps.handleCopySelection}
+          onPasteRich={state.content.handlePasteRich}
           onPastePlain={state.content.handlePastePlain}
           copySuccess={state.exportOps.copySuccess}
         />
@@ -142,6 +143,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
           onOutdent={state.formatting.handleOutdent} onInsertTable={state.listAndTable.insertTable}
           onInsertLink={state.formatting.insertLink} onSelectAll={state.selection.handleSelectAll}
           onCopySelection={state.exportOps.handleCopySelection}
+          onPasteRich={state.content.handlePasteRich}
           onPastePlain={state.content.handlePastePlain}
           isPlainPasteArmed={state.content.isPlainPasteArmed}
           onConfirmPlainPaste={state.content.handlePastePlain}

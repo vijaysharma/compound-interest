@@ -547,6 +547,21 @@
   }
 }
 
+.dropdownItemCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 1 1 auto;
+}
+
+.dropdownItemSub {
+  font-size: $fs-caption;
+  color: var(--color-text-secondary);
+  font-weight: normal;
+  line-height: 1.2;
+}
+
 .dropdownDivider {
   height: 1px;
   background-color: var(--color-border);
@@ -936,7 +951,6 @@
   width: 100%;
   outline: none;
   color: var(--color-text);
-  line-height: 1.6;
   cursor: text;
   min-height: 160px;
   box-sizing: border-box;
@@ -1237,6 +1251,33 @@
   color: var(--color-text);
   cursor: pointer;
   min-height: 36px;
+}
+
+.mobilePasteMenuBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mobilePasteOptionBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  background-color: var(--color-bg-secondary, rgba(150, 150, 150, 0.05));
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s;
+  min-height: 44px;
+
+  &:hover {
+    background-color: var(--color-bg-secondary);
+  }
 }
 
 .lockedTopBarLeft {

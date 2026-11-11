@@ -75,7 +75,8 @@ export function cleanNode(node: Node): void {
           el.removeAttribute('style');
         } else {
           const cleanedStyle = val
-            .replace(/(user-select|pointer-events|-webkit-user-select|-moz-user-select|position|overflow|max-height|height)\s*:\s*[^;]+;?/gi, '')
+            .replace(/(?<![a-zA-Z0-9_-])(user-select|pointer-events|-webkit-user-select|-moz-user-select|position|overflow|max-height|height)\s*:\s*[^;]+;?/gi, '')
+            .replace(/\bmso-[^;]+;?/gi, '')
             .trim();
           if (cleanedStyle) {
             el.setAttribute('style', cleanedStyle);
@@ -100,6 +101,19 @@ export function cleanNode(node: Node): void {
       }
       if (name === 'action' || name === 'formaction' || name === 'xlink:href') {
         el.removeAttribute(attr.name);
+      }
+    }
+    // Unwrap plain/attribute-less spans (e.g. Word/Docs nested-span wrappers without styles)
+    if (tagName === 'SPAN' && el.attributes.length === 0) {
+      const parent = el.parentNode;
+      if (parent) {
+        const children = Array.from(el.childNodes);
+        for (const child of children) {
+          parent.insertBefore(child, el);
+          cleanNode(child);
+        }
+        parent.removeChild(el);
+        return;
       }
     }
   }

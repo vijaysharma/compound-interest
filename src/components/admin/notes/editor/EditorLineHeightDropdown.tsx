@@ -21,9 +21,11 @@ export const EditorLineHeightDropdown: React.FC<EditorLineHeightDropdownProps> =
     <div className={styles.dropdownContainer}>
       <button
         type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onTouchStart={(e) => e.preventDefault()}
         onClick={() => setActiveDropdown(isOpen ? null : 'lineHeight')}
         className={`${styles.toolbarSelectBtn} ${isOpen ? styles.active : ''}`}
-        title="Line Height (Selected Text)"
+        title="Line Height (Selection or Paragraph)"
         aria-label="Line Height"
       >
         <MdFormatLineSpacing size={14} className={styles.iconMr025} />
@@ -38,6 +40,7 @@ export const EditorLineHeightDropdown: React.FC<EditorLineHeightDropdownProps> =
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={(e) => e.preventDefault()}
                 onClick={() => {
                   onApplyLineHeight(lh.value);
                   setActiveDropdown(null);

@@ -13,6 +13,7 @@ export interface LineHeightOption {
 }
 
 export const LINE_HEIGHTS: LineHeightOption[] = [
+  { label: 'Tighter (0.8)', value: '0.8' },
   { label: 'Single (1.0)', value: '1.0' },
   { label: 'Tight (1.2)', value: '1.2' },
   { label: 'Compact (1.4)', value: '1.4' },
