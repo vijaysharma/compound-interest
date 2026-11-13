@@ -1,4 +1,4 @@
-import { Note } from '../NotesTypes';
+import type { Note } from '../NotesTypes';
 export interface NotesEditorProps {
   note: Note | null;
   folders: string[];

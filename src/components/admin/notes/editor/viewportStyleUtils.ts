@@ -1,4 +1,4 @@
-import { ViewportState } from './types';
+import type { ViewportState } from './types';
 export function applyContainerViewportStyles(
   el: HTMLDivElement | null,
   isMobileScreen?: boolean,
