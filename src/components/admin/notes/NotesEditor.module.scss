@@ -798,14 +798,12 @@
   flex: 1 1 0%;
   min-height: 0;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   padding: 0.75rem 0.75rem 150px 0.75rem;
   overflow-anchor: none;
   display: flex;
   flex-direction: column;
   width: 100%;
   cursor: text;
-  overscroll-behavior: contain;
   box-sizing: border-box;
   user-select: text;
   -webkit-user-select: text;
@@ -1055,7 +1053,6 @@
   box-sizing: border-box;
   width: 100%;
   touch-action: pan-x;
-  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 
   &::-webkit-scrollbar {

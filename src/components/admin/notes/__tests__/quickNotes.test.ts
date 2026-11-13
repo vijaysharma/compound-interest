@@ -1769,12 +1769,11 @@ test('Mobile header Flexbox layout: NotesEditor.module.scss strictly enforces le
   assert.ok(!backBtnMatch[1].includes('position: absolute'), 'backBtn must NOT use position: absolute');
   assert.ok(!backBtnMatch[1].includes('margin-left: -'), 'backBtn must NOT use negative margin-left');
 
-  // Assert canvasContainer scroll rules (flex: 1 1 0%, min-height: 0, overflow-y: auto, -webkit-overflow-scrolling: touch, 150px bottom padding)
+  // Assert canvasContainer scroll rules (flex: 1 1 0%, min-height: 0, overflow-y: auto, 150px bottom padding)
   const canvasMatch = /\.canvasContainer\s*\{([^}]+)\}/.exec(scss);
   assert.ok(canvasMatch, '.canvasContainer rule must exist');
   assert.ok(canvasMatch[1].includes('min-height: 0'), 'canvasContainer must have min-height: 0');
   assert.ok(canvasMatch[1].includes('overflow-y: auto'), 'canvasContainer must have overflow-y: auto');
-  assert.ok(canvasMatch[1].includes('-webkit-overflow-scrolling: touch'), 'canvasContainer must have -webkit-overflow-scrolling: touch');
   assert.ok(canvasMatch[1].includes('150px'), 'canvasContainer must have 150px padding-bottom for toolbar clearance');
 });
 
@@ -1813,7 +1812,6 @@ test('Mobile flexbox height constraints: Folders, Notes list, and Editor panes s
   assert.ok(sidebarScrollMatch, '.scrollContent rule must exist in NotesSidebar');
   assert.ok(sidebarScrollMatch[1].includes('min-height: 0'), 'NotesSidebar .scrollContent must have min-height: 0');
   assert.ok(sidebarScrollMatch[1].includes('overflow-y: auto'), 'NotesSidebar .scrollContent must have overflow-y: auto');
-  assert.ok(sidebarScrollMatch[1].includes('-webkit-overflow-scrolling: touch'), 'NotesSidebar .scrollContent must have touch scrolling');
 
   // NotesList.module.scss listContent rules
   const listScss = fs.readFileSync(
@@ -1824,7 +1822,6 @@ test('Mobile flexbox height constraints: Folders, Notes list, and Editor panes s
   assert.ok(listScrollMatch, '.listContent rule must exist in NotesList');
   assert.ok(listScrollMatch[1].includes('min-height: 0'), 'NotesList .listContent must have min-height: 0');
   assert.ok(listScrollMatch[1].includes('overflow-y: auto'), 'NotesList .listContent must have overflow-y: auto');
-  assert.ok(listScrollMatch[1].includes('-webkit-overflow-scrolling: touch'), 'NotesList .listContent must have touch scrolling');
 });
 
 

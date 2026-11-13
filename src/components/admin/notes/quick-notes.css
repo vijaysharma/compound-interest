@@ -3,7 +3,6 @@
 html:has(.quick-notes-theme),
 body:has(.quick-notes-theme) {
   height: 100dvh;
-  overscroll-behavior: none;
 }
 
 .quick-notes-theme {
