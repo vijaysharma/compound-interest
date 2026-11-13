@@ -1714,6 +1714,31 @@ test('iOS WebKit Bug 3: scrollSelectionIntoView uses temp span, calls scrollInto
   }
 });
 
+test('Mobile cursor fix: applyContainerViewportStyles avoids position: fixed on mobile view', async () => {
+  const { applyContainerViewportStyles } = await import('../editor/viewportStyleUtils');
 
+  const el = {
+    style: {
+      position: '',
+      left: '',
+      right: '',
+      top: '',
+      height: '',
+      zIndex: '',
+      maxHeight: '',
+    },
+  } as any;
 
+  // On mobile screen with viewportState
+  applyContainerViewportStyles(el, true, { height: 500, offsetTop: 20 });
+  assert.notEqual(el.style.position, 'fixed', 'position must NOT be fixed to prevent iOS WebKit caret hiding bug');
+  assert.equal(el.style.top, '20px', 'top should track visualViewport offsetTop');
+  assert.equal(el.style.height, '500px', 'height should track visualViewport height');
+  assert.equal(el.style.zIndex, '40');
+
+  // On desktop / non-mobile
+  applyContainerViewportStyles(el, false, null);
+  assert.equal(el.style.height, '100%');
+  assert.equal(el.style.maxHeight, '100%');
+});
 

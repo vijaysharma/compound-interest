@@ -953,13 +953,13 @@
   width: 100%;
   outline: none;
   color: var(--color-text);
-  caret-color: var(--color-primary, #6d0b74);
+  caret-color: var(--color-primary, #6d0b74) !important;
   cursor: text;
   min-height: 160px;
   box-sizing: border-box;
   padding-bottom: 2.5rem;
-  user-select: text;
-  -webkit-user-select: auto;
+  user-select: text !important;
+  -webkit-user-select: text !important;
   pointer-events: auto;
   position: relative;
   z-index: 1;

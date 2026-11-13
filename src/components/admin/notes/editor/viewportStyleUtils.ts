@@ -6,7 +6,6 @@ export function applyContainerViewportStyles(
 ): void {
   if (!el) return;
   if (isMobileScreen && viewportState) {
-    el.style.position = 'fixed';
     el.style.left = '0';
     el.style.right = '0';
     el.style.top = `${viewportState.offsetTop}px`;
@@ -14,7 +13,6 @@ export function applyContainerViewportStyles(
     el.style.zIndex = '40';
     el.style.maxHeight = '';
   } else {
-    el.style.position = '';
     el.style.left = '';
     el.style.right = '';
     el.style.top = '';

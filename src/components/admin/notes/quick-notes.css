@@ -83,7 +83,7 @@ body:has(.quick-notes-theme) {
   outline: none;
   min-height: 1.5em;
   line-height: 1.5;
-  caret-color: var(--color-primary, #6d0b74);
+  caret-color: var(--color-primary, #6d0b74) !important;
   word-break: break-word;
 }
 
@@ -172,11 +172,11 @@ body:has(.quick-notes-theme) {
   width: 100%;
   word-break: break-word;
   overflow-wrap: break-word;
-  user-select: text;
-  -webkit-user-select: auto;
+  user-select: text !important;
+  -webkit-user-select: text !important;
   -webkit-touch-callout: default;
   touch-action: auto;
-  caret-color: var(--color-primary, #6d0b74);
+  caret-color: var(--color-primary, #6d0b74) !important;
   cursor: text;
   padding-bottom: 2.5rem;
   position: relative;
@@ -186,9 +186,9 @@ body:has(.quick-notes-theme) {
 }
 
 .qn-note-canvas * {
-  user-select: text;
-  -webkit-user-select: auto;
-  caret-color: var(--color-primary, #6d0b74);
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  caret-color: var(--color-primary, #6d0b74) !important;
 }
 
 .qn-note-canvas::selection,
