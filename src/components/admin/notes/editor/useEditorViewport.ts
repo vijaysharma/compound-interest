@@ -53,7 +53,7 @@ export function useEditorViewport({
         return { height, offsetTop };
       });
       if (editorRef.current && (document.activeElement === editorRef.current || editorRef.current.contains(document.activeElement))) {
-        scrollSelectionIntoView(editorRef.current, canvasContainerRef.current, { block: 'center' });
+        scrollSelectionIntoView(editorRef.current, canvasContainerRef.current, { block: 'nearest' });
       }
     };
     handleViewportChange();
@@ -65,49 +65,6 @@ export function useEditorViewport({
     };
   }, [editorRef, canvasContainerRef]);
 
-  // Mitigation for iOS 18 WebKit scroll-anchoring regression on contenteditable
-  useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor || typeof window === 'undefined') return;
-
-    let rafId: number | null = null;
-    let t1: ReturnType<typeof setTimeout> | null = null;
-    let t2: ReturnType<typeof setTimeout> | null = null;
-
-    const restoreScroll = () => {
-      const activeEl = document.activeElement;
-      if (activeEl === editor || editor.contains(activeEl)) {
-        scrollSelectionIntoView(editor, canvasContainerRef.current, { block: 'center' });
-      }
-    };
-
-    const handleFocus = () => {
-      restoreScroll();
-      t1 = setTimeout(restoreScroll, 60);
-      t2 = setTimeout(restoreScroll, 180);
-    };
-
-    const handleSelectionChange = () => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        restoreScroll();
-      });
-    };
-
-    editor.addEventListener('focus', handleFocus);
-    editor.addEventListener('focusin', handleFocus);
-    document.addEventListener('selectionchange', handleSelectionChange);
-
-    return () => {
-      editor.removeEventListener('focus', handleFocus);
-      editor.removeEventListener('focusin', handleFocus);
-      document.removeEventListener('selectionchange', handleSelectionChange);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      if (t1) clearTimeout(t1);
-      if (t2) clearTimeout(t2);
-    };
-  }, [editorRef, canvasContainerRef]);
   return {
     viewportState,
     activeMobileMenu,

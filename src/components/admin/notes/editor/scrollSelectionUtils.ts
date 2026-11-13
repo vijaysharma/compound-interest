@@ -26,7 +26,7 @@ export function scrollSelectionIntoView(
   if (!sel || sel.rangeCount === 0) return false;
   if (!editor.contains(sel.anchorNode)) return false;
 
-  const block = options.block || 'center';
+  const block = options.block || 'nearest';
   const range = sel.getRangeAt(0);
 
   // Preserve range information to restore after removing the temporary span

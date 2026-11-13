@@ -1624,7 +1624,7 @@ test('iOS WebKit Bug 3: NotesEditor.module.scss sets overflow-anchor: none on ca
   assert.ok(editorMatch[1].includes('caret-color: var(--color-primary, #6d0b74)'), 'editorCanvas must have non-transparent caret-color');
 });
 
-test('iOS WebKit Bug 3: scrollSelectionIntoView uses temp span, calls scrollIntoView center, and restores range', async () => {
+test('iOS WebKit Bug 3: scrollSelectionIntoView uses temp span, calls scrollIntoView nearest, and restores range', async () => {
   const { scrollSelectionIntoView } = await import('../editor/scrollSelectionUtils');
 
   let scrollCalled = false;
@@ -1702,11 +1702,11 @@ test('iOS WebKit Bug 3: scrollSelectionIntoView uses temp span, calls scrollInto
   } as any;
 
   try {
-    const handled = scrollSelectionIntoView(mockEditor, null, { block: 'center' });
+    const handled = scrollSelectionIntoView(mockEditor, null, { block: 'nearest' });
     assert.equal(handled, true, 'scrollSelectionIntoView must succeed');
     assert.equal(tempSpanInserted, true, 'temporary span must be inserted at range');
     assert.equal(scrollCalled, true, 'scrollIntoView must be called on temp span');
-    assert.equal(scrollBlock, 'center', 'scrollIntoView block must be center');
+    assert.equal(scrollBlock, 'nearest', 'scrollIntoView block must be nearest');
     assert.equal(tempSpanRemoved, true, 'temporary span must be removed in finally block');
   } finally {
     globalThis.document = origDocument;
