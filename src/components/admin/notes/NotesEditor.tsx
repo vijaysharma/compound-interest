@@ -64,6 +64,8 @@ export const NotesEditor: React.FC<NotesEditorProps> = (props) => {
         isPendingSave={props.isPendingSave}
         saveSuccessMessage={saveSuccessMessage}
         saveError={props.saveError}
+        titleValue={state.tags.titleValue}
+        onTitleChange={state.tags.handleTitleChange}
       />
       {!isTrash && (
         <EditorToolbarDesktop

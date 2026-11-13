@@ -40,6 +40,8 @@ interface EditorTopBarProps {
   isPendingSave?: boolean;
   saveSuccessMessage?: string | null;
   saveError?: string;
+  titleValue?: string;
+  onTitleChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 export const EditorTopBar: React.FC<EditorTopBarProps> = ({
   note, isTrash, folders, folderTitle, isMobileScreen, isSidebarOpen,
@@ -48,7 +50,7 @@ export const EditorTopBar: React.FC<EditorTopBarProps> = ({
   activeDropdown, setActiveDropdown, setActiveMobileMenu, onDumpToGoogleDrive,
   onDumpToOneDrive, onCopy, onExportMarkdown, onExportText, onPrint, copySuccess,
   onManualSave, autoSaveEnabled, onToggleAutoSave, isSaving,
-  isPendingSave, saveSuccessMessage, saveError,
+  isPendingSave, saveSuccessMessage, saveError, titleValue, onTitleChange,
 }) => {
   const currentFolder = note.folder || 'Quick Notes';
   const allFolderOptions = Array.from(new Set(['Quick Notes', ...folders]));
@@ -86,52 +88,34 @@ export const EditorTopBar: React.FC<EditorTopBarProps> = ({
   }
   return (
     <div className={styles.topBar}>
-      <div className={styles.topBarLeft}>
-        {onBackMobile && (
-          <button onClick={onBackMobile} className={styles.backBtn}>
-            <FiChevronLeft size={20} />
-            <span className={styles.truncateMax100}>{folderTitle || 'Notes'}</span>
-          </button>
-        )}
-        {onToggleSidebar && !isMobileScreen && (
-          <button
-            onClick={onToggleSidebar}
-            className={`${styles.iconBtn} ${isSidebarOpen ? styles.active : ''}`}
-            title={isSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
-            aria-label={isSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
-          >
-            <FiMenu size={16} />
-          </button>
-        )}
-        {!isTrash && (
-          <EditorFolderDropdown
-            currentFolder={currentFolder}
-            allFolderOptions={allFolderOptions}
-            activeDropdown={activeDropdown}
-            setActiveDropdown={setActiveDropdown}
-            setActiveMobileMenu={setActiveMobileMenu}
-            onSelectFolder={(folder) => onUpdateNote({ folder })}
-            onOpenManageFolders={onOpenMoveModal}
-          />
-        )}
-      </div>
-      <div className={styles.topBarRight}>
-        {!isTrash && (
-          <>
-            <div className={styles.saveActionsGroup}>
-              <label
-                className={styles.autoSaveToggle}
-                title={autoSaveEnabled ? 'Auto-save is ON (click to disable)' : 'Auto-save is OFF (click to enable)'}
-              >
-                <input
-                  type="checkbox"
-                  checked={Boolean(autoSaveEnabled)}
-                  onChange={onToggleAutoSave}
-                  className={styles.autoSaveCheckbox}
-                  aria-label="Toggle auto save"
-                />
-                <span className={styles.autoSaveLabel}>Auto-save</span>
-              </label>
+      {isMobileScreen ? (
+        <>
+          <div className={styles.topBarLeft}>
+            {onBackMobile && (
+              <button onClick={onBackMobile} className={styles.backBtn} aria-label="Back">
+                <FiChevronLeft size={22} />
+              </button>
+            )}
+          </div>
+          <div className={styles.topBarMiddle}>
+            {isTrash ? (
+              <span className={styles.topBarNoteTitle} title={note.title || 'Untitled Note'}>
+                {note.title || 'Untitled Note'}
+              </span>
+            ) : (
+              <input
+                type="text"
+                placeholder="Title"
+                maxLength={250}
+                value={titleValue ?? note.title ?? ''}
+                onChange={onTitleChange}
+                className={styles.topBarTitleInput}
+                aria-label="Note Title"
+              />
+            )}
+          </div>
+          <div className={styles.topBarRight}>
+            {!isTrash && (
               <button
                 type="button"
                 onClick={onManualSave}
@@ -143,68 +127,159 @@ export const EditorTopBar: React.FC<EditorTopBarProps> = ({
                 {btnIcon}
                 <span className={styles.saveNoteBtnText}>{btnText}</span>
               </button>
-            </div>
-            <button
-              onClick={onTogglePin}
-              className={`${styles.iconBtn} ${note.is_pinned ? styles.active : ''}`}
-              title={note.is_pinned ? 'Unpin Note' : 'Pin Note'}
-            >
-              {note.is_pinned ? <BsPinFill size={16} /> : <BsPin size={16} />}
-            </button>
-            <button
-              onClick={onOpenLockModal}
-              className={`${styles.iconBtn} ${note.is_locked ? styles.active : ''}`}
-              title={note.is_locked ? 'Lock Settings' : 'Lock Note'}
-            >
-              {note.is_locked ? <FiLock size={16} /> : <FiUnlock size={16} />}
-            </button>
-          </>
-        )}
-        <EditorShareDropdown
-          isTrash={isTrash}
-          copySuccess={copySuccess}
-          activeDropdown={activeDropdown}
-          setActiveDropdown={setActiveDropdown}
-          setActiveMobileMenu={setActiveMobileMenu}
-          onOpenMoveModal={onOpenMoveModal}
-          onDumpToGoogleDrive={onDumpToGoogleDrive}
-          onDumpToOneDrive={onDumpToOneDrive}
-          onOpenBackupModal={onOpenBackupModal}
-          onCopy={onCopy}
-          onExportMarkdown={onExportMarkdown}
-          onExportText={onExportText}
-          onPrint={onPrint}
-          onDuplicateNote={onDuplicateNote}
-        />
-        {isTrash ? (
-          <div className={styles.flexGap025}>
-            <button
-              onClick={onRestoreNote}
-              className={`${styles.btnGhost} ${styles.success} ${styles.btnMinHeight38}`}
-              title="Restore Note"
-            >
-              <FiRotateCcw size={16} className={styles.iconMr025} />
-              Put Back
-            </button>
-            <button
-              onClick={onDeleteRequest}
-              className={`${styles.btnGhost} ${styles.btnDangerMin38}`}
-              title="Delete Permanently"
-            >
-              <FiTrash2 size={16} className={styles.iconMr025} />
-              Delete
-            </button>
+            )}
+            <EditorShareDropdown
+              isTrash={isTrash}
+              copySuccess={copySuccess}
+              activeDropdown={activeDropdown}
+              setActiveDropdown={setActiveDropdown}
+              setActiveMobileMenu={setActiveMobileMenu}
+              onOpenMoveModal={onOpenMoveModal}
+              onDumpToGoogleDrive={onDumpToGoogleDrive}
+              onDumpToOneDrive={onDumpToOneDrive}
+              onOpenBackupModal={onOpenBackupModal}
+              onCopy={onCopy}
+              onExportMarkdown={onExportMarkdown}
+              onExportText={onExportText}
+              onPrint={onPrint}
+              onDuplicateNote={onDuplicateNote}
+            />
+            {isTrash ? (
+              <button
+                onClick={onRestoreNote}
+                className={`${styles.iconBtn} ${styles.success}`}
+                title="Restore Note"
+              >
+                <FiRotateCcw size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={onDeleteRequest}
+                className={`${styles.iconBtn} ${styles.danger}`}
+                title="Move to Trash"
+              >
+                <FiTrash2 size={16} />
+              </button>
+            )}
           </div>
-        ) : (
-          <button
-            onClick={onDeleteRequest}
-            className={`${styles.iconBtn} ${styles.danger}`}
-            title="Move to Trash"
-          >
-            <FiTrash2 size={16} />
-          </button>
-        )}
-      </div>
+        </>
+      ) : (
+        <>
+          <div className={styles.topBarLeft}>
+            {onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className={`${styles.iconBtn} ${isSidebarOpen ? styles.active : ''}`}
+                title={isSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+                aria-label={isSidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+              >
+                <FiMenu size={16} />
+              </button>
+            )}
+            {!isTrash && (
+              <EditorFolderDropdown
+                currentFolder={currentFolder}
+                allFolderOptions={allFolderOptions}
+                activeDropdown={activeDropdown}
+                setActiveDropdown={setActiveDropdown}
+                setActiveMobileMenu={setActiveMobileMenu}
+                onSelectFolder={(folder) => onUpdateNote({ folder })}
+                onOpenManageFolders={onOpenMoveModal}
+              />
+            )}
+          </div>
+          <div className={styles.topBarRight}>
+            {!isTrash && (
+              <>
+                <div className={styles.saveActionsGroup}>
+                  <label
+                    className={styles.autoSaveToggle}
+                    title={autoSaveEnabled ? 'Auto-save is ON (click to disable)' : 'Auto-save is OFF (click to enable)'}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={Boolean(autoSaveEnabled)}
+                      onChange={onToggleAutoSave}
+                      className={styles.autoSaveCheckbox}
+                      aria-label="Toggle auto save"
+                    />
+                    <span className={styles.autoSaveLabel}>Auto-save</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={onManualSave}
+                    disabled={isSaving}
+                    className={btnClass}
+                    title={btnTitle}
+                    aria-label={btnText}
+                  >
+                    {btnIcon}
+                    <span className={styles.saveNoteBtnText}>{btnText}</span>
+                  </button>
+                </div>
+                <button
+                  onClick={onTogglePin}
+                  className={`${styles.iconBtn} ${note.is_pinned ? styles.active : ''}`}
+                  title={note.is_pinned ? 'Unpin Note' : 'Pin Note'}
+                >
+                  {note.is_pinned ? <BsPinFill size={16} /> : <BsPin size={16} />}
+                </button>
+                <button
+                  onClick={onOpenLockModal}
+                  className={`${styles.iconBtn} ${note.is_locked ? styles.active : ''}`}
+                  title={note.is_locked ? 'Lock Settings' : 'Lock Note'}
+                >
+                  {note.is_locked ? <FiLock size={16} /> : <FiUnlock size={16} />}
+                </button>
+              </>
+            )}
+            <EditorShareDropdown
+              isTrash={isTrash}
+              copySuccess={copySuccess}
+              activeDropdown={activeDropdown}
+              setActiveDropdown={setActiveDropdown}
+              setActiveMobileMenu={setActiveMobileMenu}
+              onOpenMoveModal={onOpenMoveModal}
+              onDumpToGoogleDrive={onDumpToGoogleDrive}
+              onDumpToOneDrive={onDumpToOneDrive}
+              onOpenBackupModal={onOpenBackupModal}
+              onCopy={onCopy}
+              onExportMarkdown={onExportMarkdown}
+              onExportText={onExportText}
+              onPrint={onPrint}
+              onDuplicateNote={onDuplicateNote}
+            />
+            {isTrash ? (
+              <div className={styles.flexGap025}>
+                <button
+                  onClick={onRestoreNote}
+                  className={`${styles.btnGhost} ${styles.success} ${styles.btnMinHeight38}`}
+                  title="Restore Note"
+                >
+                  <FiRotateCcw size={16} className={styles.iconMr025} />
+                  Put Back
+                </button>
+                <button
+                  onClick={onDeleteRequest}
+                  className={`${styles.btnGhost} ${styles.btnDangerMin38}`}
+                  title="Delete Permanently"
+                >
+                  <FiTrash2 size={16} className={styles.iconMr025} />
+                  Delete
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onDeleteRequest}
+                className={`${styles.iconBtn} ${styles.danger}`}
+                title="Move to Trash"
+              >
+                <FiTrash2 size={16} />
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

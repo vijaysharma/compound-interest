@@ -1742,3 +1742,39 @@ test('Mobile cursor fix: applyContainerViewportStyles avoids position: fixed on 
   assert.equal(el.style.maxHeight, '100%');
 });
 
+test('Mobile header Flexbox layout: NotesEditor.module.scss strictly enforces left, middle, and right flex rules', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const scss = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/NotesEditor.module.scss'),
+    'utf-8'
+  );
+
+  // Assert topBarMiddle exists with flex: 1 and min-width: 0
+  const middleMatch = /\.topBarMiddle\s*\{([^}]+)\}/.exec(scss);
+  assert.ok(middleMatch, '.topBarMiddle rule must exist');
+  assert.ok(middleMatch[1].includes('flex: 1 1 0%'), 'topBarMiddle must have flex: 1 1 0%');
+  assert.ok(middleMatch[1].includes('min-width: 0'), 'topBarMiddle must have min-width: 0');
+  assert.ok(middleMatch[1].includes('overflow: hidden'), 'topBarMiddle must have overflow: hidden');
+
+  // Assert topBarNoteTitle / topBarTitleInput ellipsis truncation
+  const titleInputMatch = /\.topBarTitleInput\s*\{([^}]+)\}/.exec(scss);
+  assert.ok(titleInputMatch, '.topBarTitleInput rule must exist');
+  assert.ok(titleInputMatch[1].includes('text-overflow: ellipsis'), 'topBarTitleInput must have text-overflow: ellipsis');
+  assert.ok(titleInputMatch[1].includes('white-space: nowrap'), 'topBarTitleInput must have white-space: nowrap');
+
+  // Assert backBtn has no rogue absolute position or negative margin
+  const backBtnMatch = /\.backBtn\s*\{([^}]+)\}/.exec(scss);
+  assert.ok(backBtnMatch, '.backBtn rule must exist');
+  assert.ok(!backBtnMatch[1].includes('position: absolute'), 'backBtn must NOT use position: absolute');
+  assert.ok(!backBtnMatch[1].includes('margin-left: -'), 'backBtn must NOT use negative margin-left');
+
+  // Assert canvasContainer scroll rules (flex: 1 1 0%, min-height: 0, overflow-y: auto, -webkit-overflow-scrolling: touch, 150px bottom padding)
+  const canvasMatch = /\.canvasContainer\s*\{([^}]+)\}/.exec(scss);
+  assert.ok(canvasMatch, '.canvasContainer rule must exist');
+  assert.ok(canvasMatch[1].includes('min-height: 0'), 'canvasContainer must have min-height: 0');
+  assert.ok(canvasMatch[1].includes('overflow-y: auto'), 'canvasContainer must have overflow-y: auto');
+  assert.ok(canvasMatch[1].includes('-webkit-overflow-scrolling: touch'), 'canvasContainer must have -webkit-overflow-scrolling: touch');
+  assert.ok(canvasMatch[1].includes('150px'), 'canvasContainer must have 150px padding-bottom for toolbar clearance');
+});
+
