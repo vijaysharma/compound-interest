@@ -1778,3 +1778,53 @@ test('Mobile header Flexbox layout: NotesEditor.module.scss strictly enforces le
   assert.ok(canvasMatch[1].includes('150px'), 'canvasContainer must have 150px padding-bottom for toolbar clearance');
 });
 
+test('Mobile scroll lock removal: quick-notes.css does NOT lock html/body with overflow: hidden', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const css = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/quick-notes.css'),
+    'utf-8'
+  );
+
+  const themeMatch = /body:has\(\.quick-notes-theme\)\s*\{([^}]+)\}/.exec(css);
+  assert.ok(themeMatch, 'body:has(.quick-notes-theme) rule must exist');
+  assert.ok(!themeMatch[1].includes('overflow: hidden'), 'body must NOT have overflow: hidden to avoid dead global scrolling');
+});
+
+test('Mobile flexbox height constraints: Folders, Notes list, and Editor panes scroll independently', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+
+  // QuickNotesManager.module.scss container rules
+  const managerScss = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/QuickNotesManager.module.scss'),
+    'utf-8'
+  );
+  assert.ok(managerScss.includes('height: 100dvh'), 'QuickNotesManager .container must have height: 100dvh');
+  assert.ok(managerScss.includes('max-height: 100dvh'), 'QuickNotesManager .container must have max-height: 100dvh');
+  assert.ok(managerScss.includes('overflow: hidden'), 'QuickNotesManager .container must have overflow: hidden');
+
+  // NotesSidebar.module.scss scrollContent rules
+  const sidebarScss = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/NotesSidebar.module.scss'),
+    'utf-8'
+  );
+  const sidebarScrollMatch = /\.scrollContent\s*\{([^}]+)\}/.exec(sidebarScss);
+  assert.ok(sidebarScrollMatch, '.scrollContent rule must exist in NotesSidebar');
+  assert.ok(sidebarScrollMatch[1].includes('min-height: 0'), 'NotesSidebar .scrollContent must have min-height: 0');
+  assert.ok(sidebarScrollMatch[1].includes('overflow-y: auto'), 'NotesSidebar .scrollContent must have overflow-y: auto');
+  assert.ok(sidebarScrollMatch[1].includes('-webkit-overflow-scrolling: touch'), 'NotesSidebar .scrollContent must have touch scrolling');
+
+  // NotesList.module.scss listContent rules
+  const listScss = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/NotesList.module.scss'),
+    'utf-8'
+  );
+  const listScrollMatch = /\.listContent\s*\{([^}]+)\}/.exec(listScss);
+  assert.ok(listScrollMatch, '.listContent rule must exist in NotesList');
+  assert.ok(listScrollMatch[1].includes('min-height: 0'), 'NotesList .listContent must have min-height: 0');
+  assert.ok(listScrollMatch[1].includes('overflow-y: auto'), 'NotesList .listContent must have overflow-y: auto');
+  assert.ok(listScrollMatch[1].includes('-webkit-overflow-scrolling: touch'), 'NotesList .listContent must have touch scrolling');
+});
+
+

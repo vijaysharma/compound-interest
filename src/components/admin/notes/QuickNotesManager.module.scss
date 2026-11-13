@@ -5,9 +5,10 @@
   position: relative;
   flex: 1 1 0%;
   width: 100%;
-  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
   display: flex;
-  // overflow: hidden; // Removed to allow content to scroll
+  overflow: hidden;
   background-color: var(--color-bg);
 }
 
@@ -49,7 +50,9 @@
   &.mobileVisible {
     display: flex;
     flex: 1 1 0%;
+    min-height: 0;
     width: 100%;
+    overflow: hidden;
   }
 
   @include laptop-up {
@@ -80,7 +83,9 @@
   &.mobileVisible {
     display: flex;
     flex: 1 1 0%;
+    min-height: 0;
     width: 100%;
+    overflow: hidden;
   }
 
   @include laptop-up {
@@ -125,6 +130,9 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-height: 0;
+    flex: 1 1 0%;
+    overflow: hidden;
   }
 
   @include laptop-up {
