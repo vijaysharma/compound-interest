@@ -83,13 +83,13 @@ body:has(.quick-notes-theme) {
   outline: none;
   min-height: 1.5em;
   line-height: 1.5;
-  caret-color: var(--color-primary, #6e0b75);
+  caret-color: var(--color-primary, #6d0b74);
   word-break: break-word;
 }
 
 .qn-checklist-content:empty::before {
   content: '\200B';
-  display: inline;
+  display: inline !important;
 }
 
 /* Multi-level Todo Indentation */
@@ -176,17 +176,19 @@ body:has(.quick-notes-theme) {
   -webkit-user-select: auto;
   -webkit-touch-callout: default;
   touch-action: auto;
-  caret-color: var(--color-primary, currentColor);
+  caret-color: var(--color-primary, #6d0b74);
   cursor: text;
   padding-bottom: 2.5rem;
   position: relative;
   z-index: 1;
+  overflow: visible;
+  overflow-anchor: none;
 }
 
 .qn-note-canvas * {
   user-select: text;
   -webkit-user-select: auto;
-  caret-color: var(--color-primary, currentColor);
+  caret-color: var(--color-primary, #6d0b74);
 }
 
 .qn-note-canvas::selection,
@@ -214,10 +216,11 @@ body:has(.quick-notes-theme) {
   display: block;
 }
 
+/* WebKit bug #248345: inline-block + ::before breaks caret sizing on iOS Chrome/Safari. Must use display: inline. */
 .qn-note-canvas p:empty::before,
 .qn-note-canvas div:not(.qn-checklist-item):empty::before {
   content: '\200B';
-  display: inline;
+  display: inline !important;
 }
 
 .qn-note-canvas div:not(.qn-checklist-item):not(.qn-table):not(.dropdown) {
@@ -252,6 +255,7 @@ body:has(.quick-notes-theme) {
   color: var(--color-base-content, #888888);
   opacity: 0.35;
   pointer-events: none;
+  display: inline;
 }
 
 .qn-note-canvas h1 {

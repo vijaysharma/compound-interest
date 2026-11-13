@@ -86,8 +86,16 @@ export function cleanNode(node: Node): void {
         }
         continue;
       }
-      if (name === 'contenteditable' && !el.classList.contains('qn-checkbox-circle')) {
-        el.removeAttribute('contenteditable');
+      if (name === 'tabindex') {
+        el.removeAttribute(attr.name);
+        continue;
+      }
+      if (name === 'contenteditable') {
+        if (el.classList.contains('qn-checkbox-circle')) {
+          el.setAttribute('contenteditable', 'false');
+        } else {
+          el.removeAttribute(attr.name);
+        }
         continue;
       }
       if (tagName === 'INPUT') {
@@ -121,4 +129,36 @@ export function cleanNode(node: Node): void {
   for (const child of children) {
     cleanNode(child);
   }
+}
+
+/**
+ * Ensures that the note canvas is the ONLY focusable element.
+ * Strips any tabIndex and independent contenteditable="true" attributes
+ * from child paragraph, span, div, or formatting elements.
+ * Preserves contenteditable="false" ONLY on checklist checkbox circles.
+ */
+export function scrubCanvasChildFocusables(container: HTMLElement | null): void {
+  if (!container) return;
+
+  // Remove tabIndex from all descendant elements
+  const tabIndexed = container.querySelectorAll('[tabindex]');
+  tabIndexed.forEach((el) => {
+    if (el !== container) {
+      el.removeAttribute('tabindex');
+    }
+  });
+
+  // Remove independent contenteditable="true" from any child element
+  // (leaving contenteditable="false" ONLY on .qn-checkbox-circle)
+  const editables = container.querySelectorAll('[contenteditable]');
+  editables.forEach((el) => {
+    if (el === container) return;
+    if (el.classList.contains('qn-checkbox-circle')) {
+      if (el.getAttribute('contenteditable') !== 'false') {
+        el.setAttribute('contenteditable', 'false');
+      }
+    } else {
+      el.removeAttribute('contenteditable');
+    }
+  });
 }

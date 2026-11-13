@@ -1,6 +1,6 @@
 import { RefObject, useState, useEffect, useRef, useCallback, MutableRefObject } from 'react';
 import { Note } from '../NotesTypes';
-import { sanitizeNoteHtml } from '../sanitizeHtml';
+import { sanitizeNoteHtml, scrubCanvasChildFocusables } from '../sanitizeHtml';
 import { detectContentFontSize } from './constants';
 import { stripHtmlToPlainText, formatPlainTextToHtml } from './plainTextPasteUtils';
 interface UseEditorContentParams {
@@ -69,6 +69,7 @@ export function useEditorContent({
       const rawHtml = note.content && note.content.trim() ? note.content : '<p><br></p>';
       const initialHtml = sanitizeNoteHtml(rawHtml);
       editorRef.current.innerHTML = initialHtml;
+      scrubCanvasChildFocusables(editorRef.current);
       const lhBlocks = editorRef.current.querySelectorAll<HTMLElement>('[data-line-height]');
       lhBlocks.forEach((b) => {
         const val = b.getAttribute('data-line-height');
@@ -144,8 +145,9 @@ export function useEditorContent({
         }
       }
     }
+    scrubCanvasChildFocusables(editorRef.current);
     handleContentChange(true);
-  }, [handleContentChange, setPlainPasteArmed]);
+  }, [editorRef, handleContentChange, setPlainPasteArmed]);
   const handlePastePlain = useCallback(async (customText?: string) => {
     if (customText !== undefined) {
       restoreSelection?.();
@@ -162,6 +164,7 @@ export function useEditorContent({
           document.execCommand('insertText', false, plain);
         }
       }
+      scrubCanvasChildFocusables(editorRef.current);
       handleContentChange(true);
       setPlainPasteArmed(false);
       return;
@@ -188,6 +191,7 @@ export function useEditorContent({
           } else {
             document.execCommand('insertText', false, text);
           }
+          scrubCanvasChildFocusables(editorRef.current);
           handleContentChange(true);
           return;
         }
@@ -217,6 +221,7 @@ export function useEditorContent({
             if (html) {
               const cleanHtml = sanitizeNoteHtml(html);
               document.execCommand('insertHTML', false, cleanHtml);
+              scrubCanvasChildFocusables(editorRef.current);
               handleContentChange(true);
               return;
             }
@@ -232,6 +237,7 @@ export function useEditorContent({
           } else {
             document.execCommand('insertText', false, text);
           }
+          scrubCanvasChildFocusables(editorRef.current);
           handleContentChange(true);
           return;
         }

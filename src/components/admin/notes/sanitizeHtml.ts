@@ -1,5 +1,5 @@
-import { cleanNode, isSafeUrl } from './cleanNode';
-export { isSafeUrl };
+import { cleanNode, isSafeUrl, scrubCanvasChildFocusables } from './cleanNode';
+export { isSafeUrl, scrubCanvasChildFocusables };
 export function sanitizePlainInput(input: unknown, maxLength = 250, trim = true): string {
   if (typeof input !== 'string') return '';
   const cleaned = input
@@ -31,6 +31,11 @@ export function sanitizeNoteHtml(html: string): string {
       .replace(/<math\b[^<]*(?:(?!<\/math>)<[^<]*)*<\/math>/gi, '')
       .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
       .replace(/\bon\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
+      .replace(/\btabindex\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
+      .replace(/\bcontenteditable\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
+      .replace(/<span\b([^>]*class=['"][^'"]*qn-checkbox-circle[^'"]*['"][^>]*)>/gi, (match) => {
+        return match.replace(/>$/, ' contenteditable="false">');
+      })
       .replace(/\bstyle\s*=\s*['"][^'"]*(?:expression|behavior|javascript|-moz-binding|url)[^'"]*['"]/gi, '')
       .replace(/\bmso-[^;"]+;?/gi, '')
       .replace(/href\s*=\s*['"]?(?:javascript|data|vbscript):[^'">\s]*/gi, 'href="#"');
@@ -61,6 +66,8 @@ export function sanitizeNoteHtml(html: string): string {
         }
       });
     });
+    // Ensure .qn-note-canvas will be the ONLY focusable element
+    scrubCanvasChildFocusables(doc.body);
     return doc.body.innerHTML;
   } catch {
     return '';

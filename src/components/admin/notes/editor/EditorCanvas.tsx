@@ -1,6 +1,7 @@
-import React, { RefObject, ChangeEvent, FormEvent } from 'react';
+import React, { RefObject, ChangeEvent, FormEvent, useEffect } from 'react';
 import { Note } from '../NotesTypes';
 import { EditorCanvasMeta } from './EditorCanvasMeta';
+import { scrubCanvasChildFocusables } from '../cleanNode';
 import styles from '../NotesEditor.module.scss';
 interface EditorCanvasProps {
   note: Note;
@@ -36,6 +37,48 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   onCloseMenus, onTitleChange, onTitleBlur, onAddTag, onRemoveTag, onOpenSecurityModal,
   onPaste, onInput, onClick, onKeyDown, onSaveSelection,
 }) => {
+  // Guard: Ensure .qn-note-canvas is the ONLY focusable element.
+  // Strips any child tabIndex or independent contenteditable="true" attributes,
+  // resolving iOS WebKit double-tap word selection cancellations (Gutenberg #81042)
+  // and invisible caret bugs.
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || typeof window === 'undefined') return;
+
+    scrubCanvasChildFocusables(editor);
+
+    if (typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver((mutations) => {
+      let shouldScrub = false;
+      for (const m of mutations) {
+        if (m.type === 'attributes') {
+          const target = m.target as HTMLElement;
+          if (target !== editor) {
+            if (target.hasAttribute('tabindex') || target.hasAttribute('contenteditable')) {
+              shouldScrub = true;
+              break;
+            }
+          }
+        } else if (m.type === 'childList' && m.addedNodes.length > 0) {
+          shouldScrub = true;
+          break;
+        }
+      }
+      if (shouldScrub) {
+        scrubCanvasChildFocusables(editor);
+      }
+    });
+
+    observer.observe(editor, {
+      attributes: true,
+      attributeFilter: ['tabindex', 'contenteditable'],
+      childList: true,
+      subtree: true,
+    });
+
+    return () => observer.disconnect();
+  }, [editorRef, note?.id]);
+
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     onCloseMenus();
     const target = e.target as HTMLElement;

@@ -1505,5 +1505,215 @@ test('multi-paragraph selection: subsequent dropdown choices (2.0 -> 1.5 -> 1.0 
   assert.equal(pC.style.lineHeight, '2.5');
 });
 
+test('iOS WebKit Bug 1: scrubCanvasChildFocusables removes tabIndex and contenteditable from child elements', async () => {
+  const { scrubCanvasChildFocusables } = await import('../cleanNode');
+
+  // Build a simulated container with child paragraphs, spans, and checklist circles
+  const container = {
+    querySelectorAll: (selector: string) => {
+      if (selector === '[tabindex]') {
+        return [pWithTabIndex, spanWithTabIndex];
+      }
+      if (selector === '[contenteditable]') {
+        return [pWithContentEditable, checkboxCircle];
+      }
+      return [];
+    },
+  };
+
+  const pWithTabIndex: any = {
+    removeAttribute: (attr: string) => {
+      if (attr === 'tabindex') pWithTabIndex.hasTabIndex = false;
+    },
+    hasTabIndex: true,
+  };
+
+  const spanWithTabIndex: any = {
+    removeAttribute: (attr: string) => {
+      if (attr === 'tabindex') spanWithTabIndex.hasTabIndex = false;
+    },
+    hasTabIndex: true,
+  };
+
+  const pWithContentEditable: any = {
+    classList: { contains: (cls: string) => cls === 'qn-checkbox-circle' ? false : false },
+    removeAttribute: (attr: string) => {
+      if (attr === 'contenteditable') pWithContentEditable.hasContentEditable = false;
+    },
+    hasContentEditable: true,
+  };
+
+  const checkboxCircle: any = {
+    classList: { contains: (cls: string) => cls === 'qn-checkbox-circle' },
+    getAttribute: (attr: string) => attr === 'contenteditable' ? 'true' : null,
+    setAttribute: (attr: string, val: string) => {
+      if (attr === 'contenteditable') checkboxCircle.contentEditableVal = val;
+    },
+    contentEditableVal: 'true',
+  };
+
+  scrubCanvasChildFocusables(container as any);
+
+  assert.equal(pWithTabIndex.hasTabIndex, false, 'tabIndex must be removed from child p');
+  assert.equal(spanWithTabIndex.hasTabIndex, false, 'tabIndex must be removed from child span');
+  assert.equal(pWithContentEditable.hasContentEditable, false, 'contenteditable must be removed from child p');
+  assert.equal(checkboxCircle.contentEditableVal, 'false', 'checkbox circle contenteditable must be false');
+});
+
+test('iOS WebKit Bug 1 & 2: sanitizeNoteHtml strips tabIndex and independent contenteditable="true" attributes', async () => {
+  const { sanitizeNoteHtml } = await import('../sanitizeHtml');
+
+  const dirtyInput = `
+    <p tabindex="0">First paragraph with tabIndex</p>
+    <div tabindex="-1" contenteditable="true">Second block focusable</div>
+    <span contenteditable="true">Pasted span focusable</span>
+    <div class="qn-checklist-item" data-checked="false">
+      <span class="qn-checkbox-circle" contenteditable="true"></span>
+      <div class="qn-checklist-content">Todo item</div>
+    </div>
+  `;
+
+  const cleaned = sanitizeNoteHtml(dirtyInput);
+
+  assert.ok(!cleaned.includes('tabindex'), 'tabindex attributes must be stripped from all child elements');
+  assert.ok(!cleaned.includes('contenteditable="true"'), 'contenteditable="true" must be stripped from child elements');
+  assert.ok(cleaned.includes('contenteditable="false"'), 'checkbox circle must retain contenteditable="false"');
+});
+
+test('iOS WebKit Bug 1 & CSS: quick-notes.css enforces non-transparent caret-color and display: inline on p:empty::before', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const css = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/quick-notes.css'),
+    'utf-8'
+  );
+
+  // Assert non-transparent caret-color fallback
+  assert.ok(css.includes('caret-color: var(--color-primary, #6d0b74)'), 'caret-color must have non-transparent fallback #6d0b74');
+
+  // Assert overflow: visible and overflow-anchor: none on .qn-note-canvas
+  const canvasRuleMatch = /\.qn-note-canvas\s*\{([^}]+)\}/.exec(css);
+  assert.ok(canvasRuleMatch, '.qn-note-canvas rule must exist');
+  assert.ok(canvasRuleMatch[1].includes('overflow: visible'), 'overflow must be visible to prevent caret clipping');
+  assert.ok(canvasRuleMatch[1].includes('overflow-anchor: none'), 'overflow-anchor must be none to prevent iOS 18 scroll jumping');
+
+  // Assert p:empty::before uses display: inline (NOT inline-block) [WebKit #248345]
+  const emptyBeforeMatch = /\.qn-note-canvas\s+p:empty::before[\s\S]*?\{([^}]+)\}/.exec(css);
+  assert.ok(emptyBeforeMatch, 'p:empty::before rule must exist');
+  assert.ok(emptyBeforeMatch[1].includes('display: inline'), 'p:empty::before must use display: inline');
+  assert.ok(!emptyBeforeMatch[1].includes('display: inline-block'), 'p:empty::before must NOT use display: inline-block');
+});
+
+test('iOS WebKit Bug 3: NotesEditor.module.scss sets overflow-anchor: none on canvasContainer and editorCanvas', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const scss = fs.readFileSync(
+    path.resolve(process.cwd(), 'src/components/admin/notes/NotesEditor.module.scss'),
+    'utf-8'
+  );
+
+  // Assert overflow-anchor: none in canvasContainer
+  const containerMatch = /\.canvasContainer\s*\{([^}]+)\}/.exec(scss);
+  assert.ok(containerMatch, '.canvasContainer rule must exist');
+  assert.ok(containerMatch[1].includes('overflow-anchor: none'), 'canvasContainer must have overflow-anchor: none');
+
+  // Assert overflow-anchor: none in editorCanvas
+  const editorMatch = /\.editorCanvas\s*\{([^}]+)\}/.exec(scss);
+  assert.ok(editorMatch, '.editorCanvas rule must exist');
+  assert.ok(editorMatch[1].includes('overflow-anchor: none'), 'editorCanvas must have overflow-anchor: none');
+  assert.ok(editorMatch[1].includes('caret-color: var(--color-primary, #6d0b74)'), 'editorCanvas must have non-transparent caret-color');
+});
+
+test('iOS WebKit Bug 3: scrollSelectionIntoView uses temp span, calls scrollIntoView center, and restores range', async () => {
+  const { scrollSelectionIntoView } = await import('../editor/scrollSelectionUtils');
+
+  let scrollCalled = false;
+  let scrollBlock = '';
+  let tempSpanInserted = false;
+  let tempSpanRemoved = false;
+
+  const mockSpan: any = {
+    textContent: '',
+    style: {},
+    setAttribute: () => {},
+    scrollIntoView: (opts: any) => {
+      scrollCalled = true;
+      scrollBlock = opts?.block;
+    },
+    parentNode: {
+      removeChild: (child: any) => {
+        if (child === mockSpan) tempSpanRemoved = true;
+      },
+      normalize: () => {},
+    },
+  };
+
+  const origDocument = globalThis.document;
+  const origWindow = globalThis.window;
+
+  const textNode: any = {
+    nodeType: 3,
+    textContent: 'Testing tap scroll position',
+    isConnected: true,
+  };
+
+  const mockRange: any = {
+    collapsed: true,
+    startContainer: textNode,
+    startOffset: 8,
+    endContainer: textNode,
+    endOffset: 8,
+    cloneRange: () => ({
+      collapse: () => {},
+      insertNode: (node: any) => {
+        if (node === mockSpan) tempSpanInserted = true;
+      },
+    }),
+  };
+
+  let activeRange: any = mockRange;
+  const mockSel: any = {
+    rangeCount: 1,
+    getRangeAt: () => activeRange,
+    anchorNode: textNode,
+    removeAllRanges: () => {},
+    addRange: (r: any) => { activeRange = r; },
+  };
+
+  const mockEditor: any = {
+    contains: (n: any) => n === textNode,
+  };
+
+  globalThis.document = {
+    ...origDocument,
+    createElement: (tag: string) => {
+      if (tag === 'span') return mockSpan;
+      return origDocument?.createElement ? origDocument.createElement(tag) : {} as any;
+    },
+    createRange: () => ({
+      setStart: (c: any, o: number) => { mockRange.startContainer = c; mockRange.startOffset = o; },
+      collapse: () => {},
+    }),
+  } as any;
+
+  globalThis.window = {
+    ...origWindow,
+    getSelection: () => mockSel,
+  } as any;
+
+  try {
+    const handled = scrollSelectionIntoView(mockEditor, null, { block: 'center' });
+    assert.equal(handled, true, 'scrollSelectionIntoView must succeed');
+    assert.equal(tempSpanInserted, true, 'temporary span must be inserted at range');
+    assert.equal(scrollCalled, true, 'scrollIntoView must be called on temp span');
+    assert.equal(scrollBlock, 'center', 'scrollIntoView block must be center');
+    assert.equal(tempSpanRemoved, true, 'temporary span must be removed in finally block');
+  } finally {
+    globalThis.document = origDocument;
+    globalThis.window = origWindow;
+  }
+});
+
+
 
 
