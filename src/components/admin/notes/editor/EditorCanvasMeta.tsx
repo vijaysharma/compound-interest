@@ -57,7 +57,6 @@ export const EditorCanvasMeta: React.FC<EditorCanvasMetaProps> = ({
               title="Zero-Knowledge AES-256-GCM End-to-End Encrypted: Click for details"
             >
               <FiShield size={12} className={styles.flexShrink0} />
-              <span>E2E Encrypted</span>
             </button>
           )}
           <span>

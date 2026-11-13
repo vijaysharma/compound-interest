@@ -111,6 +111,15 @@
   }
 }
 
+@mixin desktop-down {
+  @media (max-width: #{$bp-desktop - 1px}) {
+    @content;
+  }
+  @container (max-width: #{$bp-desktop - 1px}) {
+    @content;
+  }
+}
+
 // One-off widths. The named mixins above cover every breakpoint token; these
 // take an explicit width for the few places that need a value with no token
 // behind it, and follow the same convention of emitting the viewport query and
@@ -416,7 +425,14 @@
       content: attr(data-label);
       flex: 0 0 auto;
       max-width: 50%;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
       font-size: $fs-small;
       font-weight: 600;
       letter-spacing: normal;
@@ -443,7 +459,6 @@
     > tbody > tr > td[data-full] {
       display: block;
     }
-
   }
 }
 

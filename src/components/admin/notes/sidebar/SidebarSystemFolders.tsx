@@ -29,7 +29,7 @@ export const SidebarSystemFolders: React.FC<SidebarSystemFoldersProps> = ({
   onFolderDrop,
 }) => {
   return (
-    <div className={styles.folderSection}>
+    <div className={styles.folderSection + ' ' + styles.folderCards}>
       <button
         onClick={() => {
           onSelectFolder(SYSTEM_FOLDERS.ALL);

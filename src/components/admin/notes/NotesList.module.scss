@@ -14,7 +14,6 @@
     width: 100%;
     flex: 1 1 0%;
     min-height: 0;
-    padding: 0 0.75rem;
   }
 
   &.desktop {
@@ -588,6 +587,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  @include desktop-down {
+    height: calc(100dvh - 186px);
+    overflow-y: auto;
+  }
 }
 
 .notesSectionHeader {

@@ -1,6 +1,5 @@
 'use client';
 import React from 'react';
-import { FiFolder } from 'react-icons/fi';
 import { BsPinFill, BsLockFill } from 'react-icons/bs';
 import { Note, formatNoteDate, extractSnippet, deriveAutoTitleFromHtml } from '../NotesTypes';
 import styles from '../NotesList.module.scss';
@@ -31,7 +30,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const snippet = note.is_locked ? 'Locked Note' : extractSnippet(note.content);
   const dateFormatted = formatNoteDate(note.updated_at || note.created_at);
   const noteTags = (note.tags || []).slice(0, 3);
-  const displayFolder = note.folder || 'Quick Notes';
   return (
     <div
       draggable={!note.is_trashed}
@@ -69,18 +67,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         <span className={styles.cardSnippet}>{snippet}</span>
       </div>
       <div className={styles.cardTagsRow}>
-        {displayFolder && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isTrash) onOpenMoveModal(note);
-            }}
-            className={styles.folderBadge}
-            title="Click to move folder"
-          >
-            <FiFolder aria-hidden="true" /> {displayFolder}
-          </button>
-        )}
         {noteTags.map((t) => (
           <span key={t} className={styles.tagBadge}>
             #{t}

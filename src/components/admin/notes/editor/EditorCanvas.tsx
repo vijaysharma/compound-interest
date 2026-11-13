@@ -32,10 +32,32 @@ interface EditorCanvasProps {
   onSaveSelection: () => void;
 }
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
-  note, isTrash, isSaving, isPendingSave, autoSaveEnabled, wordCount, charCount, canvasContainerRef, editorRef,
-  titleInputRef, titleValue, newTagInput, setNewTagInput, isAddingTag, setIsAddingTag,
-  onCloseMenus, onTitleChange, onTitleBlur, onAddTag, onRemoveTag, onOpenSecurityModal,
-  onPaste, onInput, onClick, onKeyDown, onSaveSelection,
+  note,
+  isTrash,
+  isSaving,
+  isPendingSave,
+  autoSaveEnabled,
+  wordCount,
+  charCount,
+  canvasContainerRef,
+  editorRef,
+  titleInputRef,
+  titleValue,
+  newTagInput,
+  setNewTagInput,
+  isAddingTag,
+  setIsAddingTag,
+  onCloseMenus,
+  onTitleChange,
+  onTitleBlur,
+  onAddTag,
+  onRemoveTag,
+  onOpenSecurityModal,
+  onPaste,
+  onInput,
+  onClick,
+  onKeyDown,
+  onSaveSelection,
 }) => {
   // Guard: Ensure .qn-note-canvas is the ONLY focusable element.
   // Strips any child tabIndex or independent contenteditable="true" attributes,
@@ -44,9 +66,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor || typeof window === 'undefined') return;
-
     scrubCanvasChildFocusables(editor);
-
     if (typeof MutationObserver === 'undefined') return;
     const observer = new MutationObserver((mutations) => {
       let shouldScrub = false;
@@ -68,17 +88,14 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
         scrubCanvasChildFocusables(editor);
       }
     });
-
     observer.observe(editor, {
       attributes: true,
       attributeFilter: ['tabindex', 'contenteditable'],
       childList: true,
       subtree: true,
     });
-
     return () => observer.disconnect();
   }, [editorRef, note?.id]);
-
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     onCloseMenus();
     const target = e.target as HTMLElement;
@@ -97,7 +114,11 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
     }
   };
   return (
-    <div ref={canvasContainerRef} onClick={handleCanvasClick} className={`${styles.canvasContainer} qn-scrollbar`}>
+    <div
+      ref={canvasContainerRef}
+      onClick={handleCanvasClick}
+      className={`${styles.canvasContainer} qn-scrollbar`}
+    >
       <div className={`${styles.canvasInner} qn-canvas-inner`}>
         <EditorCanvasMeta
           note={note}
@@ -148,7 +169,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           className={`${styles.editorCanvas} qn-note-canvas`}
           data-placeholder="Start typing or tap the checklist button below..."
         />
-        <div className={styles.canvasBottomSpacer} aria-hidden="true" />
       </div>
     </div>
   );

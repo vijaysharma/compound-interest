@@ -1,5 +1,5 @@
-@use '../../../styles/variables' as *;
-@use '../../../styles/mixins' as *;
+@use "../../../styles/variables" as *;
+@use "../../../styles/mixins" as *;
 
 .container {
   flex: 1 1 0%;
@@ -86,7 +86,9 @@
   border: none;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: opacity 0.15s, transform 0.1s;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
 
   &:hover {
     opacity: 0.92;
@@ -115,7 +117,9 @@
   color: var(--color-text);
   border: none;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 
   &:hover {
     background-color: var(--color-bg-secondary, rgba(150, 150, 150, 0.1));
@@ -366,7 +370,11 @@
   border-radius: 8px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:focus-visible {
     outline: 2px solid var(--color-primary);
@@ -374,7 +382,11 @@
   }
 
   &.saved {
-    background-color: color-mix(in srgb, var(--color-base-200) 65%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--color-base-200) 65%,
+      transparent
+    );
     border: 1px solid var(--color-border);
     color: var(--color-text-secondary);
 
@@ -678,14 +690,6 @@
   }
 }
 
-.toolbarDivider {
-  width: 1px;
-  height: 16px;
-  background-color: var(--color-border);
-  margin: 0 0.25rem;
-  flex-shrink: 0;
-}
-
 .palettePopover {
   position: absolute;
   top: calc(100% + 4px);
@@ -798,7 +802,7 @@
   flex: 1 1 0%;
   min-height: 0;
   overflow-y: auto;
-  padding: 0.75rem 0.75rem 150px 0.75rem;
+  padding: 0.25rem;
   overflow-anchor: none;
   display: flex;
   flex-direction: column;
@@ -826,6 +830,9 @@
   padding-bottom: 2.5rem;
   user-select: text;
   -webkit-user-select: text;
+  @include desktop-down {
+    padding-bottom: 0.5rem;
+  }
 }
 
 .metaRow {
@@ -974,7 +981,9 @@
   color: var(--color-text);
   opacity: 0.7;
   cursor: pointer;
-  transition: opacity 0.12s, background-color 0.12s;
+  transition:
+    opacity 0.12s,
+    background-color 0.12s;
 
   &:hover {
     opacity: 1;
@@ -1014,13 +1023,13 @@
   @include tablet-up {
     min-height: 300px;
   }
-}
 
-.canvasBottomSpacer {
-  height: 2.5rem;
-  min-height: 2.5rem;
-  flex-shrink: 0;
-  pointer-events: none;
+  @include desktop-down {
+    flex: none;
+    height: calc(100dvh - 279px - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    padding-bottom: 0;
+  }
 }
 
 // Mobile bottom toolbar
@@ -1047,11 +1056,19 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0.35rem 0.5rem;
+  padding: 0.25rem 0 0;
   box-sizing: border-box;
   width: 100%;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 70px;
+}
+.mobileBarScrollInner {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  padding-bottom: 0.25rem;
+  overflow: auto hidden;
   touch-action: pan-x;
   scrollbar-width: none;
 
@@ -1059,7 +1076,6 @@
     display: none;
   }
 }
-
 .mobileBarBtn {
   display: inline-flex;
   align-items: center;
@@ -1074,7 +1090,9 @@
   cursor: pointer;
   flex-shrink: 0;
   touch-action: manipulation;
-  transition: background-color 0.12s, color 0.12s;
+  transition:
+    background-color 0.12s,
+    color 0.12s;
 
   &:hover {
     background-color: var(--color-bg-secondary, rgba(150, 150, 150, 0.1));
@@ -1113,7 +1131,10 @@
   flex-shrink: 0;
   white-space: nowrap;
   touch-action: manipulation;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 
   &.hasUnsaved {
     background-color: var(--color-primary);
@@ -1481,6 +1502,7 @@
   font-size: $fs-caption;
   color: var(--color-text);
   opacity: 0.5;
+  display: none;
 
   &.saving {
     color: var(--color-primary);
@@ -1491,6 +1513,9 @@
     color: var(--color-warning-text, var(--color-warning));
     opacity: 1;
     font-weight: 600;
+  }
+  @include tablet-up {
+    display: block;
   }
 }
 
