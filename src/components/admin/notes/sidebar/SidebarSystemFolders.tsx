@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { FiFolder } from 'react-icons/fi';
-import { BsPinFill, BsJournalBookmark } from 'react-icons/bs';
+import { BsJournalBookmark } from 'react-icons/bs';
 import { SYSTEM_FOLDERS } from '../NotesTypes';
 import styles from '../NotesSidebar.module.scss';
 interface SidebarSystemFoldersProps {
@@ -9,7 +9,7 @@ interface SidebarSystemFoldersProps {
   activeTag: string | null;
   allCount: number;
   quickNotesCount: number;
-  pinnedCount: number;
+  pinnedCount?: number;
   dragOverFolder: string | null;
   setDragOverFolder: (folder: string | null) => void;
   onSelectFolder: (folder: string) => void;
@@ -21,7 +21,6 @@ export const SidebarSystemFolders: React.FC<SidebarSystemFoldersProps> = ({
   activeTag,
   allCount,
   quickNotesCount,
-  pinnedCount,
   dragOverFolder,
   setDragOverFolder,
   onSelectFolder,
@@ -29,7 +28,7 @@ export const SidebarSystemFolders: React.FC<SidebarSystemFoldersProps> = ({
   onFolderDrop,
 }) => {
   return (
-    <div className={styles.folderSection + ' ' + styles.folderCards}>
+    <div className={styles.folderSection}>
       <button
         onClick={() => {
           onSelectFolder(SYSTEM_FOLDERS.ALL);
@@ -68,19 +67,6 @@ export const SidebarSystemFolders: React.FC<SidebarSystemFoldersProps> = ({
           <span>Quick Notes</span>
         </span>
         <span className={styles.navCount}>{quickNotesCount}</span>
-      </button>
-      <button
-        onClick={() => {
-          onSelectFolder(SYSTEM_FOLDERS.PINNED);
-          onSelectTag(null);
-        }}
-        className={`${styles.navItem} ${activeFolder === SYSTEM_FOLDERS.PINNED && !activeTag ? styles.navItemActive : ''}`}
-      >
-        <span className={styles.navLeft}>
-          <BsPinFill size={16} className={styles.primaryIcon} />
-          <span>Pinned</span>
-        </span>
-        <span className={styles.navCount}>{pinnedCount}</span>
       </button>
     </div>
   );

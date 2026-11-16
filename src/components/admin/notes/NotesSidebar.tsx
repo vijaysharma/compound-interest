@@ -4,6 +4,7 @@ import { Note } from './NotesTypes';
 import styles from './NotesSidebar.module.scss';
 import { SidebarHeader } from './sidebar/SidebarHeader';
 import { SidebarSystemFolders } from './sidebar/SidebarSystemFolders';
+import { SidebarPinnedNotes } from './sidebar/SidebarPinnedNotes';
 import { SidebarCustomFolders } from './sidebar/SidebarCustomFolders';
 import { SidebarTags } from './sidebar/SidebarTags';
 import { SidebarFooter } from './sidebar/SidebarFooter';
@@ -13,8 +14,10 @@ interface NotesSidebarProps {
   folders: string[];
   notes: Note[];
   trashedCount: number;
+  selectedNoteId?: string | null;
   onSelectFolder: (folder: string) => void;
   onSelectTag: (tag: string | null) => void;
+  onSelectNote?: (note: Note) => void;
   onCreateFolder: (name: string) => void;
   onRenameFolder: (oldName: string, newName: string) => void;
   onDeleteFolder: (name: string) => void;
@@ -34,8 +37,10 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
   folders,
   notes,
   trashedCount,
+  selectedNoteId,
   onSelectFolder,
   onSelectTag,
+  onSelectNote,
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
@@ -94,12 +99,16 @@ export const NotesSidebar: React.FC<NotesSidebarProps> = ({
           activeTag={activeTag}
           allCount={allCount}
           quickNotesCount={quickNotesCount}
-          pinnedCount={pinnedCount}
           dragOverFolder={dragOverFolder}
           setDragOverFolder={setDragOverFolder}
           onSelectFolder={onSelectFolder}
           onSelectTag={onSelectTag}
           onFolderDrop={handleFolderDrop}
+        />
+        <SidebarPinnedNotes
+          notes={notes}
+          selectedNoteId={selectedNoteId}
+          onSelectNote={onSelectNote}
         />
         <SidebarCustomFolders
           folders={folders}

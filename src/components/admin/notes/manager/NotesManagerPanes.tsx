@@ -77,6 +77,8 @@ export const NotesManagerPanes: React.FC<NotesManagerPanesProps> = ({
         <NotesSidebar
           activeFolder={activeFolder} activeTag={activeTag} folders={folders} notes={notes}
           trashedCount={trashedCount}
+          selectedNoteId={selectedNoteId}
+          onSelectNote={onSelectNote}
           onSelectFolder={(f) => {
             if (onSelectFolderRequest) {
               onSelectFolderRequest(f);

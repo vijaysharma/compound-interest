@@ -244,16 +244,6 @@
   }
 }
 
-.folderCards {
-  padding: 0.25rem 0.5rem;
-  border-radius: 10px;
-  background: var(--color-bg-secondary);
-  flex-direction: row;
-  .navItem {
-    flex-direction: column;
-  }
-}
-
 .navItemDanger {
   &.navItemActive {
     background: rgba(239, 68, 68, 0.12);
