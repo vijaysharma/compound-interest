@@ -298,7 +298,7 @@ export const ShiprocketCustomersManagerView: React.FC<Props> = ({ token }) => {
     try {
       const res = await saveShiprocketCustomerAction(
         {
-          id: editId || undefined,
+          id: editId && editId !== "$undefined" ? editId : undefined,
           customer_name: name,
           customer_phone: phone,
           customer_phone_2: phone2,
