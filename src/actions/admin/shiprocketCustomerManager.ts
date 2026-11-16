@@ -382,8 +382,10 @@ export async function saveShiprocketCustomerAction(
     id,
     customer_name,
     customer_phone,
+    customer_phone_2,
     customer_email,
     customer_address,
+    customer_address_2,
     customer_city,
     customer_state,
     customer_pincode,
@@ -396,41 +398,56 @@ export async function saveShiprocketCustomerAction(
   const cleanedName = cleanName(customer_name);
   const cleanedPin = cleanPincode(customer_pincode);
   const dedupKey = `${cleanedName}|${cleanedPin}`;
+  const isExisting = Boolean(id && id !== '$undefined' && id.trim() !== '');
 
-  if (id) {
+  if (isExisting) {
     await sql`
       UPDATE shiprocket_customers
       SET
+        dedup_key = ${dedupKey},
         customer_name = ${customer_name},
         customer_phone = ${customer_phone || ''},
+        customer_phone_2 = ${customer_phone_2 || null},
         customer_email = ${customer_email || ''},
         customer_address = ${customer_address},
+        customer_address_2 = ${customer_address_2 || null},
         customer_city = ${customer_city || ''},
         customer_state = ${customer_state || ''},
         customer_pincode = ${cleanedPin},
+        edited_at = NOW(),
         updated_at = NOW()
       WHERE id = ${id}
     `;
   } else {
+    const newId = `cust_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     await sql`
       INSERT INTO shiprocket_customers (
-        dedup_key, customer_name, customer_phone, customer_email,
-        customer_address, customer_city, customer_state, customer_pincode,
-        created_at, updated_at
+        id, dedup_key, customer_name, customer_phone, customer_phone_2, customer_email,
+        customer_address, customer_address_2, customer_city, customer_state, customer_pincode,
+        edited_at, created_at, updated_at
       )
       VALUES (
-        ${dedupKey}, ${customer_name}, ${customer_phone || ''}, ${customer_email || ''},
-        ${customer_address}, ${customer_city || ''}, ${customer_state || ''}, ${cleanedPin},
-        NOW(), NOW()
+        ${newId}, ${dedupKey}, ${customer_name}, ${customer_phone || ''}, ${customer_phone_2 || null}, ${customer_email || ''},
+        ${customer_address}, ${customer_address_2 || null}, ${customer_city || ''}, ${customer_state || ''}, ${cleanedPin},
+        NOW(), NOW(), NOW()
       )
       ON CONFLICT (dedup_key) DO UPDATE SET
         customer_name = ${customer_name},
+        customer_phone = COALESCE(NULLIF(${customer_phone || ''}, ''), shiprocket_customers.customer_phone),
+        customer_phone_2 = COALESCE(NULLIF(${customer_phone_2 || ''}, ''), shiprocket_customers.customer_phone_2),
+        customer_email = COALESCE(NULLIF(${customer_email || ''}, ''), shiprocket_customers.customer_email),
+        customer_address = ${customer_address},
+        customer_address_2 = COALESCE(NULLIF(${customer_address_2 || ''}, ''), shiprocket_customers.customer_address_2),
+        customer_city = COALESCE(NULLIF(${customer_city || ''}, ''), shiprocket_customers.customer_city),
+        customer_state = COALESCE(NULLIF(${customer_state || ''}, ''), shiprocket_customers.customer_state),
+        customer_pincode = ${cleanedPin},
+        edited_at = NOW(),
         updated_at = NOW()
     `;
   }
 
   await invalidateShiprocketCustomersCache();
-  return { success: true, message: id ? 'Customer updated' : 'Customer created' };
+  return { success: true, message: isExisting ? 'Customer updated' : 'Customer created' };
 }
 
 /**
@@ -473,17 +490,25 @@ export async function mergeShiprocketCustomersAction(
 
   const { sourceCustomerId, targetCustomerId, finalCustomer } = params;
 
+  const cleanedName = cleanName(finalCustomer.customer_name || '');
+  const cleanedPin = cleanPincode(finalCustomer.customer_pincode || '');
+  const dedupKey = `${cleanedName}|${cleanedPin}`;
+
   // Update target with merged data
   await sql`
     UPDATE shiprocket_customers
     SET
+      dedup_key = ${dedupKey},
       customer_name = ${finalCustomer.customer_name || ''},
       customer_phone = ${finalCustomer.customer_phone || ''},
+      customer_phone_2 = ${finalCustomer.customer_phone_2 || null},
       customer_email = ${finalCustomer.customer_email || ''},
       customer_address = ${finalCustomer.customer_address || ''},
+      customer_address_2 = ${finalCustomer.customer_address_2 || null},
       customer_city = ${finalCustomer.customer_city || ''},
       customer_state = ${finalCustomer.customer_state || ''},
-      customer_pincode = ${finalCustomer.customer_pincode || ''},
+      customer_pincode = ${cleanedPin},
+      edited_at = NOW(),
       updated_at = NOW()
     WHERE id = ${targetCustomerId}
   `;
