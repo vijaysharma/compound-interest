@@ -1,12 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { verifyGoogleToken } from '../authHelpers';
-
+test('verifyGoogleToken rejects tokens when GOOGLE_CLIENT_ID is not configured', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalAud = process.env.GOOGLE_CLIENT_ID;
+  const originalNextAud = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const originalViteAud = process.env.NEXT_PUBLIC_VITE_GOOGLE_CLIENT_ID;
+  delete process.env.GOOGLE_CLIENT_ID;
+  delete process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  delete process.env.NEXT_PUBLIC_VITE_GOOGLE_CLIENT_ID;
+  try {
+    globalThis.fetch = async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          aud: 'some-client-id.apps.googleusercontent.com',
+          email: 'user@example.com',
+          email_verified: 'true',
+          sub: '123456789',
+        }),
+      } as unknown as Response;
+    };
+    const result = await verifyGoogleToken('some-token');
+    assert.equal(result, null, 'Must reject token when client ID is not configured');
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalAud !== undefined) process.env.GOOGLE_CLIENT_ID = originalAud;
+    if (originalNextAud !== undefined) process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = originalNextAud;
+    if (originalViteAud !== undefined) process.env.NEXT_PUBLIC_VITE_GOOGLE_CLIENT_ID = originalViteAud;
+  }
+});
 test('verifyGoogleToken rejects tokens with mismatched audience (aud)', async () => {
   const originalFetch = globalThis.fetch;
   const originalAud = process.env.GOOGLE_CLIENT_ID;
   process.env.GOOGLE_CLIENT_ID = 'expected-app-client-id.apps.googleusercontent.com';
-
   try {
     globalThis.fetch = async () => {
       return {
@@ -19,7 +46,6 @@ test('verifyGoogleToken rejects tokens with mismatched audience (aud)', async ()
         }),
       } as unknown as Response;
     };
-
     const result = await verifyGoogleToken('attacker-id-token');
     assert.equal(result, null, 'Should reject token with foreign audience');
   } finally {
@@ -31,13 +57,11 @@ test('verifyGoogleToken rejects tokens with mismatched audience (aud)', async ()
     }
   }
 });
-
 test('verifyGoogleToken accepts tokens when audience matches configured client ID', async () => {
   const originalFetch = globalThis.fetch;
   const originalAud = process.env.GOOGLE_CLIENT_ID;
   const expectedId = 'valid-app-client-id.apps.googleusercontent.com';
   process.env.GOOGLE_CLIENT_ID = expectedId;
-
   try {
     globalThis.fetch = async () => {
       return {
@@ -50,7 +74,6 @@ test('verifyGoogleToken accepts tokens when audience matches configured client I
         }),
       } as unknown as Response;
     };
-
     const result = await verifyGoogleToken('valid-id-token');
     assert.ok(result);
     assert.equal(result.email, 'user@example.com');

@@ -39,8 +39,12 @@ export async function verifyGoogleToken(credential: string): Promise<GoogleToken
         process.env.GOOGLE_CLIENT_ID ||
         process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
         process.env.NEXT_PUBLIC_VITE_GOOGLE_CLIENT_ID;
-      if (expectedAud && info.aud && info.aud !== expectedAud) {
-        console.warn('Google token audience mismatch');
+      if (!expectedAud) {
+        console.warn('GOOGLE_CLIENT_ID is not configured; rejecting Google token verification for security.');
+        return null;
+      }
+      if (!info.aud || info.aud !== expectedAud) {
+        console.warn('Google token audience mismatch or missing aud');
         return null;
       }
       return info;

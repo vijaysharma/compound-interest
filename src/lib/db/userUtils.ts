@@ -61,15 +61,38 @@ export async function getUserFromToken(token: string | null | undefined, sql: Qu
   `) as DbUser[];
   return rows.length > 0 ? rows[0] : null;
 }
-export async function isAuthorizedUser(token: string | null | undefined, sql?: Query): Promise<boolean> {
-  const cleanToken = token?.replace(/^Bearer\s+/i, '').trim();
-  const expectedAdminToken = process.env.ADMIN_SYNC_TOKEN;
-  if (cleanToken && expectedAdminToken && timingSafeEqual(cleanToken, expectedAdminToken)) {
-    return true;
+/**
+ * Robust admin authorization with multiple credential types
+ * - Supports Bearer tokens with ADMIN_SYNC_TOKEN (manual admin)
+ * - Supports Bearer tokens with CRON_SECRET (automated jobs)
+ * - Supports session tokens with admin role (existing admin users)
+ * - Supports email-based admin checking via DB lookup
+ */
+export async function isAuthorizedUser(
+  token: string | null | undefined,
+  sql?: Query
+): Promise<boolean> {
+  if (!token) return false;
+  // Clean the token - remove "Bearer " prefix if present
+  const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+  if (!cleanToken) return false;
+  // CRITICAL: Priority 1 - CRON_SECRET for automated jobs
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && timingSafeEqual(cleanToken, cronSecret.trim())) {
+    return true; // Cron job authenticated
   }
-  if (sql && cleanToken) {
+  // CRITICAL: Priority 2 - ADMIN_SYNC_TOKEN for manual admin override
+  const adminSyncToken = process.env.ADMIN_SYNC_TOKEN;
+  if (adminSyncToken && timingSafeEqual(cleanToken, adminSyncToken.trim())) {
+    return true; // Admin override authenticated
+  }
+  // CRITICAL: Priority 3 - Valid session token with admin role
+  if (sql) {
     const user = await getUserFromToken(cleanToken, sql);
-    if (user && user.role === 'admin') return true;
+    if (user) {
+      if (user.role === 'admin') return true;
+      if (isEmailAdmin(user.email)) return true;
+    }
   }
   return false;
 }

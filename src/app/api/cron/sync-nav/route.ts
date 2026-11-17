@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { probeMarketWatermark } from '@/actions/data/navWatermark';
 import { syncTrackedSchemesFromAmfi } from '@/lib/amfi/trackedNavSync';
-import { isCronAuthorised } from './cronNavWorker';
+import { isCronAuthorised } from '@/lib/cron/verify-cron-request';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 // Leaves headroom under maxDuration for the watermark probe and the response.

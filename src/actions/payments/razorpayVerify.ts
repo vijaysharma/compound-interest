@@ -30,7 +30,7 @@ export async function handleVerifyRazorpayPayment(
     throw new Error('Razorpay secret key is not configured.');
   }
   const keySecret = rawKeySecret.trim().replace(/^["']|["']$/g, '');
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan_id } = body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan_id: _plan_id } = body;
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     throw new Error('Missing required Razorpay payment confirmation parameters');
   }
@@ -51,58 +51,58 @@ export async function handleVerifyRazorpayPayment(
   if (existingPayment.length > 0) {
     throw new Error('This payment has already been verified and processed.');
   }
-
   const rawKeyId =
     process.env.RAZORPAY_KEY_ID ||
     process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
     process.env.VITE_RAZORPAY_KEY_ID;
   const keyId = rawKeyId?.trim().replace(/^["']|["']$/g, '');
-  let verifiedPlanId = plan_id;
-
-  if (keyId && keySecret) {
-    try {
-      const authHeader = btoa(`${keyId}:${keySecret}`);
-      const rzpRes = await fetch(
-        `https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`,
-        {
-          headers: {
-            Authorization: `Basic ${authHeader}`,
-            Accept: 'application/json',
-          },
-          signal: AbortSignal.timeout(8000),
-        }
-      );
-      if (rzpRes.ok) {
-        const orderData = (await rzpRes.json()) as {
-          amount?: number;
-          notes?: { user_id?: string; plan?: string };
-        };
-        if (orderData.notes?.user_id && orderData.notes.user_id !== user.id) {
-          throw new Error('Payment was initiated for a different user account.');
-        }
-        if (orderData.notes?.plan && SUBSCRIPTION_PLANS[orderData.notes.plan]) {
-          verifiedPlanId = orderData.notes.plan;
-        } else if (orderData.amount) {
-          const matchedPlan = Object.values(SUBSCRIPTION_PLANS).find(
-            (p) => Math.round(p.amount * 100) === orderData.amount
-          );
-          if (matchedPlan) {
-            verifiedPlanId = matchedPlan.id;
-          }
-        }
-      }
-    } catch (orderErr) {
-      if (orderErr instanceof Error && orderErr.message.includes('different user account')) {
-        throw orderErr;
-      }
-      console.warn('Razorpay order verification API check failed, falling back:', orderErr);
-    }
+  if (!keyId) {
+    throw new Error('Razorpay key ID is not configured on server.');
   }
-
-  const plan =
-    verifiedPlanId && SUBSCRIPTION_PLANS[verifiedPlanId]
-      ? SUBSCRIPTION_PLANS[verifiedPlanId]
-      : SUBSCRIPTION_PLANS.pro_monthly;
+  let verifiedPlanId: string | undefined;
+  try {
+    const authHeader = btoa(`${keyId}:${keySecret}`);
+    const rzpRes = await fetch(
+      `https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`,
+      {
+        headers: {
+          Authorization: `Basic ${authHeader}`,
+          Accept: 'application/json',
+        },
+        signal: AbortSignal.timeout(8000),
+      }
+    );
+    if (!rzpRes.ok) {
+      throw new Error(`Razorpay order verification API returned HTTP ${rzpRes.status}`);
+    }
+    const orderData = (await rzpRes.json()) as {
+      amount?: number;
+      notes?: { user_id?: string; plan?: string };
+    };
+    if (orderData.notes?.user_id && orderData.notes.user_id !== user.id) {
+      throw new Error('Payment was initiated for a different user account.');
+    }
+    if (orderData.notes?.plan && SUBSCRIPTION_PLANS[orderData.notes.plan]) {
+      verifiedPlanId = orderData.notes.plan;
+    }
+    if (orderData.amount) {
+      const matchedPlan = Object.values(SUBSCRIPTION_PLANS).find(
+        (p) => Math.round(p.amount * 100) === orderData.amount
+      );
+      if (matchedPlan) {
+        verifiedPlanId = matchedPlan.id;
+      }
+    }
+  } catch (orderErr) {
+    if (orderErr instanceof Error && orderErr.message.includes('different user account')) {
+      throw orderErr;
+    }
+    throw new Error(`Razorpay order verification API check failed: ${orderErr instanceof Error ? orderErr.message : String(orderErr)}`);
+  }
+  if (!verifiedPlanId || !SUBSCRIPTION_PLANS[verifiedPlanId]) {
+    throw new Error('Unable to verify a valid subscription plan from Razorpay order details.');
+  }
+  const plan = SUBSCRIPTION_PLANS[verifiedPlanId];
   const recordedAmount = plan.amount;
   const expiresAt = new Date(Date.now() + plan.days * 24 * 60 * 60 * 1000).toISOString();
   await sql`

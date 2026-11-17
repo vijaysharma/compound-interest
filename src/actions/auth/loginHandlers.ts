@@ -6,6 +6,7 @@ import {
   verifyPassword,
 } from '@/lib/db';
 import { AuthUser } from '@/types/auth';
+import { redisGet, redisIncr, redisDel } from '@/lib/redis';
 import { createSession, mapToAuthUser, verifyGoogleToken } from './authHelpers';
 export async function handleLoginWithPassword(data: {
   email: string;
@@ -17,6 +18,11 @@ export async function handleLoginWithPassword(data: {
   if (!email || !password || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('Valid email and password are required');
   }
+  const rateLimitKey = `auth_login_fail:${email}`;
+  const attempts = await redisGet<number>(rateLimitKey);
+  if (attempts !== null && attempts >= 5) {
+    throw new Error('Too many failed login attempts. Please try again after 15 minutes.');
+  }
   const sql = getDb();
   await ensureTables(sql);
   const rows = (await sql`
@@ -25,18 +31,22 @@ export async function handleLoginWithPassword(data: {
     WHERE email = ${email}
   `) as DbUser[];
   if (rows.length === 0) {
-    throw new Error('No account found with this email. Please click Sign Up to register.');
+    await redisIncr(rateLimitKey, 900);
+    throw new Error('Incorrect email or password. Please try again.');
   }
   const user = rows[0];
   if (!user.password_hash || !user.password_salt) {
+    await redisIncr(rateLimitKey, 900);
     throw new Error(
-      'No password set for this account yet. Please use the Sign Up with Google tab to set your password.'
+      'Incorrect email or password. Please try again.'
     );
   }
   const isValid = await verifyPassword(password, user.password_hash, user.password_salt);
   if (!isValid) {
-    throw new Error('Incorrect password. Please try again.');
+    await redisIncr(rateLimitKey, 900);
+    throw new Error('Incorrect email or password. Please try again.');
   }
+  await redisDel(rateLimitKey);
   if (isEmailAdmin(email) && user.role !== 'admin') {
     await sql`UPDATE users SET role = 'admin' WHERE id = ${user.id}`;
     user.role = 'admin';

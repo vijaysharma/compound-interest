@@ -8,6 +8,7 @@ import { ExternalDataSyncSections } from './ExternalDataSyncSections';
 import styles from '../../../views/Admin.module.scss';
 export interface AdminSyncTabProps {
   token: string;
+  cronToken?: string;
   imfJson: string;
   pppJson: string;
   navSchemeCodes: string;
@@ -15,6 +16,7 @@ export interface AdminSyncTabProps {
   busy: string | null;
   navHistory: ReturnType<typeof useAdminNavHistorySync>;
   onTokenChange: (val: string) => void;
+  onCronTokenChange?: (val: string) => void;
   onImfJsonChange: (val: string) => void;
   onPppJsonChange: (val: string) => void;
   onNavSchemeCodesChange: (val: string) => void;
@@ -24,6 +26,7 @@ export interface AdminSyncTabProps {
 export const AdminSyncTab: React.FC<AdminSyncTabProps> = React.memo(
   ({
     token,
+    cronToken,
     imfJson,
     pppJson,
     navSchemeCodes,
@@ -31,6 +34,7 @@ export const AdminSyncTab: React.FC<AdminSyncTabProps> = React.memo(
     busy,
     navHistory,
     onTokenChange,
+    onCronTokenChange,
     onImfJsonChange,
     onPppJsonChange,
     onNavSchemeCodesChange,
@@ -48,6 +52,18 @@ export const AdminSyncTab: React.FC<AdminSyncTabProps> = React.memo(
           placeholder="ADMIN_SYNC_TOKEN (auto-filled if signed in as admin)"
         />
       </label>
+      {token !== 'USE_CRON_SECRET' || cronToken ? (
+        <label className={`${styles.card} ${styles.cardLabel}`}>
+          <span className={styles.label}>Cron Job Secret Token</span>
+          <input
+            className={`${styles.input} ${styles.inputMono}`}
+            type="password"
+            value={cronToken || ''}
+            onChange={(e) => onCronTokenChange?.(e.target.value)}
+            placeholder="CRON_SECRET (for automated sync jobs)"
+          />
+        </label>
+      ) : null}
       <NavSyncSection
         navSchemeCodes={navSchemeCodes}
         navReport={navReport}
