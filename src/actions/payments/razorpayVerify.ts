@@ -45,7 +45,7 @@ export async function handleVerifyRazorpayPayment(
   }
   const existingPayment = (await sql`
     SELECT id FROM payment_submissions
-    WHERE utr_ref = ${razorpay_payment_id} AND status = 'approved'
+    WHERE (utr_ref = ${razorpay_payment_id} OR utr_ref = ${razorpay_order_id}) AND status = 'approved'
     LIMIT 1
   `) as Array<{ id: string }>;
   if (existingPayment.length > 0) {
@@ -77,15 +77,22 @@ export async function handleVerifyRazorpayPayment(
     }
     const orderData = (await rzpRes.json()) as {
       amount?: number;
+      currency?: string;
+      status?: string;
       notes?: { user_id?: string; plan?: string };
     };
-    if (orderData.notes?.user_id && orderData.notes.user_id !== user.id) {
+    if (orderData.currency && orderData.currency !== 'INR') {
+      throw new Error(`Invalid payment currency: ${orderData.currency}`);
+    }
+    if (orderData.status && orderData.status !== 'paid' && orderData.status !== 'attempted') {
+      throw new Error(`Order payment is incomplete (status: ${orderData.status}).`);
+    }
+    if (!orderData.notes?.user_id || orderData.notes.user_id !== user.id) {
       throw new Error('Payment was initiated for a different user account.');
     }
     if (orderData.notes?.plan && SUBSCRIPTION_PLANS[orderData.notes.plan]) {
       verifiedPlanId = orderData.notes.plan;
-    }
-    if (orderData.amount) {
+    } else if (orderData.amount) {
       const matchedPlan = Object.values(SUBSCRIPTION_PLANS).find(
         (p) => Math.round(p.amount * 100) === orderData.amount
       );
@@ -94,7 +101,7 @@ export async function handleVerifyRazorpayPayment(
       }
     }
   } catch (orderErr) {
-    if (orderErr instanceof Error && orderErr.message.includes('different user account')) {
+    if (orderErr instanceof Error && (orderErr.message.includes('different user account') || orderErr.message.includes('Invalid payment currency') || orderErr.message.includes('incomplete'))) {
       throw orderErr;
     }
     throw new Error(`Razorpay order verification API check failed: ${orderErr instanceof Error ? orderErr.message : String(orderErr)}`);

@@ -59,12 +59,9 @@ export function useGoogleRegistration({
       setIsSubmitting(false);
     }
   };
-  const allowedEmail = (
-    process.env.NEXT_PUBLIC_ALLOWED_EMAIL ||
-    process.env.NEXT_PUBLIC_VITE_ALLOWED_EMAIL ||
-    ''
-  ).trim().toLowerCase();
-  const isAdminCandidate = email.trim().toLowerCase() === allowedEmail;
+  // Admin privileges are determined exclusively server-side via ADMIN_EMAILS.
+  // Avoid leaking admin email addresses into client bundles.
+  const isAdminCandidate = false;
   return {
     email,
     setEmail,

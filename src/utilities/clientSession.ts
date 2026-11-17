@@ -12,6 +12,11 @@ export function getOrCreateGuestId(): string {
     return 'guest_fallback';
   }
 }
+/**
+ * Retrieves the authentication token.
+ * Note: Session authentication is primarily managed server-side via HttpOnly cookies (auth_token).
+ * This client helper provides a fallback for client components during transition.
+ */
 export function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
   try {

@@ -1,6 +1,7 @@
 import { DbUser, ensureTables, getDb, hashPassword, isEmailAdmin } from '@/lib/db';
 import { AuthUser } from '@/types/auth';
 import { createSession, mapToAuthUser, verifyGoogleToken } from './authHelpers';
+import { setAuthCookie } from '@/lib/auth/cookieUtils';
 export async function handleSignupWithGooglePassword(data: {
   email: string;
   password: string;
@@ -88,6 +89,7 @@ export async function handleSignupWithGooglePassword(data: {
     user = created[0];
   }
   const sessionToken = await createSession(sql, user.id);
+  await setAuthCookie(sessionToken);
   return {
     token: sessionToken,
     user: mapToAuthUser(user),

@@ -8,6 +8,7 @@ import {
 import { AuthUser } from '@/types/auth';
 import { redisGet, redisIncr, redisDel } from '@/lib/redis';
 import { createSession, mapToAuthUser, verifyGoogleToken } from './authHelpers';
+import { setAuthCookie } from '@/lib/auth/cookieUtils';
 export async function handleLoginWithPassword(data: {
   email: string;
   password: string;
@@ -52,6 +53,7 @@ export async function handleLoginWithPassword(data: {
     user.role = 'admin';
   }
   const sessionToken = await createSession(sql, user.id);
+  await setAuthCookie(sessionToken);
   return {
     token: sessionToken,
     user: mapToAuthUser(user),
@@ -113,6 +115,7 @@ export async function handleLoginWithGoogle(authData: {
     user = created[0];
   }
   const sessionToken = await createSession(sql, user.id);
+  await setAuthCookie(sessionToken);
   return {
     token: sessionToken,
     user: mapToAuthUser(user),

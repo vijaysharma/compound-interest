@@ -1,12 +1,7 @@
 import { FREE_USAGE_LIMIT, type DbUser, type Query } from './types';
 import { timingSafeEqual } from './cryptoUtils';
 export function isEmailAdmin(email: string): boolean {
-  const adminEmails = (
-    process.env.ADMIN_EMAILS ||
-    process.env.NEXT_PUBLIC_ALLOWED_EMAIL ||
-    process.env.VITE_ALLOWED_EMAIL ||
-    ''
-  )
+  const adminEmails = (process.env.ADMIN_EMAILS || '')
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
@@ -45,7 +40,16 @@ export function isPaidUser(user: DbUser): boolean {
   return false;
 }
 export async function getUserFromToken(token: string | null | undefined, sql: Query): Promise<DbUser | null> {
-  const cleanToken = token?.replace(/^Bearer\s+/i, '').trim();
+  let cleanToken = token?.replace(/^Bearer\s+/i, '').trim();
+  if (!cleanToken) {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      cleanToken = cookieStore.get('auth_token')?.value;
+    } catch {
+      // Cookies not available (e.g. non-request context or unit tests)
+    }
+  }
   if (!cleanToken) return null;
   const rows = (await sql`
     SELECT

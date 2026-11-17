@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  productionBrowserSourceMaps: true,
+  productionBrowserSourceMaps: false,
   experimental: {
     optimizePackageImports: ['react-icons', 'ag-charts-community', 'ag-charts-react'],
     // Static pages only change on deploy, so keep prefetched ones (see NavigationWarmup) for an

@@ -7,9 +7,9 @@ import {
 } from '@/lib/db';
 import { AuthUser } from '@/types/auth';
 import { mapToAuthUser } from './authHelpers';
+import { clearAuthCookie } from '@/lib/auth/cookieUtils';
 const sessionUserCache = new Map<string, { user: AuthUser; expiresAt: number }>();
 const SESSION_CACHE_TTL_MS = 60 * 1000; // 60s fast in-memory session cache
-
 export async function handleGetMe(token?: string | null): Promise<{ user: AuthUser } | null> {
   if (!token) return null;
   const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
@@ -120,10 +120,14 @@ export async function handleTrackUsage(
   };
 }
 export async function handleLogout(token?: string | null): Promise<void> {
-  if (!token) return;
+  if (!token) {
+    await clearAuthCookie();
+    return;
+  }
   const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
   sessionUserCache.delete(cleanToken);
   const sql = getDb();
   await ensureTables(sql);
   await sql`DELETE FROM user_sessions WHERE token = ${cleanToken}`;
+  await clearAuthCookie();
 }
