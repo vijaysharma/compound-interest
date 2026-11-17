@@ -112,7 +112,12 @@ export const SEOHead = ({
     <script
       type="application/ld+json"
       data-seo-schema="true"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(schema)
+          .replace(/</g, '\\u003c')
+          .replace(/>/g, '\\u003e')
+          .replace(/&/g, '\\u0026'),
+      }}
     />
   );
 };

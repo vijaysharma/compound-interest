@@ -1,4 +1,5 @@
 'use server';
+import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
 import * as client from './admin/shiprocketClient';
 import * as users from './admin/users';
 import * as ai from './admin/ai';
@@ -10,10 +11,20 @@ import * as postcode from './admin/postcode';
 import * as sync from './admin/sync';
 import * as navSync from './admin/navSync';
 import * as navHistorySync from './admin/navHistorySync';
-export async function getShiprocketAuth(forceRefresh?: boolean) {
+export async function getShiprocketAuth(forceRefresh?: boolean, token?: string | null) {
+  const sql = getDb();
+  await ensureTables(sql);
+  if (!(await isAuthorizedUser(token, sql))) {
+    throw new Error('Unauthorized: Admin access required');
+  }
   return client.getShiprocketAuth(forceRefresh);
 }
-export async function shiprocketFetch(endpoint: string, options?: RequestInit) {
+export async function shiprocketFetch(endpoint: string, options?: RequestInit, token?: string | null) {
+  const sql = getDb();
+  await ensureTables(sql);
+  if (!(await isAuthorizedUser(token, sql))) {
+    throw new Error('Unauthorized: Admin access required');
+  }
   return client.shiprocketFetch(endpoint, options);
 }
 export async function getAdminUsersAction(token?: string | null) {

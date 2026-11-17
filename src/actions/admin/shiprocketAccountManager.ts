@@ -1,5 +1,5 @@
 'use server';
-import { ensureTables, getDb, isAuthorizedUser } from '@/lib/db';
+import { ensureTables, getDb, isAuthorizedUser, encryptSecret } from '@/lib/db';
 import type { DbShiprocketAccount } from '@/lib/db/types';
 import type { ShiprocketAccountProfile } from '@/types/shiprocket';
 import { invalidateShiprocketAuthCache } from './shiprocketClient';
@@ -193,6 +193,7 @@ export async function saveShiprocketAccountAction(
   if (shouldBeActive) {
     await sql`UPDATE shiprocket_accounts SET is_active = false`;
   }
+  const encryptedPassword = await encryptSecret(input.api_password.trim());
   await sql`
     INSERT INTO shiprocket_accounts (
       id, account_label, company_name, contact_name, contact_phone, contact_email,
@@ -206,7 +207,7 @@ export async function saveShiprocketAccountAction(
       ${input.contact_phone.trim()},
       ${input.contact_email.trim()},
       ${input.api_email.trim()},
-      ${input.api_password.trim()},
+      ${encryptedPassword},
       ${testToken},
       ${expiresAt},
       ${srUserId},
@@ -319,6 +320,9 @@ export async function updateShiprocketAccountAction(
       }
     }
   }
+  const encryptedUpdatePassword = input.api_password?.trim()
+    ? await encryptSecret(input.api_password.trim())
+    : null;
   await sql`
     UPDATE shiprocket_accounts
     SET
@@ -328,7 +332,7 @@ export async function updateShiprocketAccountAction(
       contact_phone = COALESCE(${input.contact_phone?.trim() || null}, contact_phone),
       contact_email = COALESCE(${input.contact_email?.trim() || null}, contact_email),
       api_email = COALESCE(${input.api_email?.trim() || null}, api_email),
-      api_password = COALESCE(${input.api_password?.trim() || null}, api_password),
+      api_password = COALESCE(${encryptedUpdatePassword}, api_password),
       auth_token = COALESCE(${newAuthToken}, auth_token),
       token_expires_at = COALESCE(${newExpiresAt}, token_expires_at),
       sr_user_id = COALESCE(${newUserId}, sr_user_id),

@@ -16,7 +16,12 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: PREHYDRATION_NAV_SCRIPT }} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLdData)
+              .replace(/</g, '\\u003c')
+              .replace(/>/g, '\\u003e')
+              .replace(/&/g, '\\u0026'),
+          }}
         />
       </head>
       <body suppressHydrationWarning>

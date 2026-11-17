@@ -1,4 +1,4 @@
-import { AISettings, ensureTables, getDb } from '@/lib/db';
+import { AISettings, ensureTables, getDb, decryptSecret } from '@/lib/db';
 export const DEFAULT_AI_SETTINGS: AISettings = {
   id: 'default',
   enabled: true,
@@ -19,7 +19,11 @@ export async function fetchAISettings(): Promise<AISettings> {
       WHERE id = 'default'
     `) as AISettings[];
     if (rows.length > 0) {
-      return rows[0];
+      const setting = { ...rows[0] };
+      if (setting.api_key) {
+        setting.api_key = await decryptSecret(setting.api_key);
+      }
+      return setting;
     }
   } catch (err) {
     console.warn('DB read failed in fetchAISettings, using defaults:', err);

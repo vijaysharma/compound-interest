@@ -1,5 +1,5 @@
 'use server';
-import { ensureTables, getDb, isAuthorizedUser, type AISettings } from '@/lib/db';
+import { ensureTables, getDb, isAuthorizedUser, encryptSecret, decryptSecret, type AISettings } from '@/lib/db';
 export async function getAISettingsAction(token?: string | null): Promise<{
   settings: AISettings & { has_api_key: boolean };
 }> {
@@ -23,9 +23,10 @@ export async function getAISettingsAction(token?: string | null): Promise<{
       'You are an expert Indian Chartered Accountant and Tax Planner. Analyze the user financial numbers, income sources, deductions, capital gains, and dual regime comparison. Provide actionable, structured, prioritized recommendations to legally minimize Indian income tax, optimize Section 80C/80CCD/80D, capital gains harvesting, and recommend the optimal regime.',
     updated_at: new Date().toISOString(),
   };
-  const hasApiKey = Boolean(current.api_key && current.api_key.trim().length > 0);
+  const rawApiKey = current.api_key ? await decryptSecret(current.api_key) : '';
+  const hasApiKey = Boolean(rawApiKey && rawApiKey.trim().length > 0);
   const maskedKey = hasApiKey
-    ? `${current.api_key.slice(0, 4)}••••••••${current.api_key.slice(-4)}`
+    ? `${rawApiKey.slice(0, 4)}••••••••${rawApiKey.slice(-4)}`
     : '';
   return {
     settings: {
@@ -61,9 +62,10 @@ export async function updateAISettingsAction(
       : 'You are an expert Indian Chartered Accountant and Tax Planner.';
   const newApiKey = typeof body.api_key === 'string' ? body.api_key.trim() : null;
   if (newApiKey !== null && newApiKey !== '' && !newApiKey.includes('••••')) {
+    const encryptedKey = await encryptSecret(newApiKey);
     await sql`
       INSERT INTO ai_settings (id, enabled, provider, model, api_key, system_prompt, updated_at)
-      VALUES ('default', ${enabled}, ${provider}, ${model}, ${newApiKey}, ${systemPrompt}, NOW())
+      VALUES ('default', ${enabled}, ${provider}, ${model}, ${encryptedKey}, ${systemPrompt}, NOW())
       ON CONFLICT (id) DO UPDATE SET
         enabled = EXCLUDED.enabled,
         provider = EXCLUDED.provider,

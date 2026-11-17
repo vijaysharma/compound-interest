@@ -73,12 +73,19 @@ export async function getUserFromToken(token: string | null | undefined, sql: Qu
  * - Supports email-based admin checking via DB lookup
  */
 export async function isAuthorizedUser(
-  token: string | null | undefined,
+  token?: string | null | undefined,
   sql?: Query
 ): Promise<boolean> {
-  if (!token) return false;
-  // Clean the token - remove "Bearer " prefix if present
-  const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+  let cleanToken = token?.replace(/^Bearer\s+/i, '').trim();
+  if (!cleanToken) {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      cleanToken = cookieStore.get('auth_token')?.value;
+    } catch {
+      // Cookies not available (e.g. non-request context or unit tests)
+    }
+  }
   if (!cleanToken) return false;
   // CRITICAL: Priority 1 - CRON_SECRET for automated jobs
   const cronSecret = process.env.CRON_SECRET;

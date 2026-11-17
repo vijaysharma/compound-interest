@@ -112,6 +112,14 @@ export async function createShiprocketOrderAction(
   if (!payload.pickup_location || !payload.billing_customer_name || !payload.billing_address || !payload.billing_city || !payload.billing_pincode || !payload.billing_phone) {
     throw new Error('Missing mandatory fields: pickup location, customer name, address, city, pincode, or phone.');
   }
+  const cleanPincode = String(payload.billing_pincode).trim().replace(/\D/g, '');
+  if (cleanPincode.length !== 6) {
+    throw new Error('Valid 6-digit billing pincode is required');
+  }
+  const cleanPhone = String(payload.billing_phone).trim().replace(/\D/g, '');
+  if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+    throw new Error('Valid billing phone number (10-15 digits) is required');
+  }
   const orderId = payload.order_id || `ORD-${Date.now()}`;
   const orderDate = payload.order_date || new Date().toISOString().slice(0, 10);
   const fullPayload = {
@@ -123,11 +131,11 @@ export async function createShiprocketOrderAction(
     billing_address: String(payload.billing_address),
     billing_address_2: String(payload.billing_address_2 || ''),
     billing_city: String(payload.billing_city),
-    billing_pincode: String(payload.billing_pincode),
+    billing_pincode: cleanPincode,
     billing_state: String(payload.billing_state || ''),
     billing_country: 'India',
     billing_email: String(payload.billing_email || ''),
-    billing_phone: String(payload.billing_phone),
+    billing_phone: cleanPhone,
     shipping_is_billing: true,
     order_items: Array.isArray(payload.order_items) && payload.order_items.length > 0 ? payload.order_items : [
       {

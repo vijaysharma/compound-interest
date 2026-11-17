@@ -1,7 +1,14 @@
-'use server';
-import { ensureTables, getDb } from '@/lib/db';
+import { ensureTables, getDb, decryptSecret } from '@/lib/db';
 import type { DbShiprocketAccount } from '@/lib/db/types';
 import { redisDel } from '@/lib/redis';
+
+function sanitizeAccountProfile(account: DbShiprocketAccount | null): DbShiprocketAccount | null {
+  if (!account) return null;
+  return {
+    ...account,
+    api_password: '',
+  };
+}
 let cachedShiprocketToken: { token: string; expiresAt: number; accountId?: string } | null = null;
 let cachedShiprocketUser: Record<string, unknown> | null = null;
 export async function invalidateShiprocketAuthCache(): Promise<void> {
@@ -68,7 +75,7 @@ export async function getShiprocketAuth(
       return {
         token: cachedShiprocketToken.token,
         user: cachedShiprocketUser,
-        profile: activeDbAccount,
+        profile: sanitizeAccountProfile(activeDbAccount),
       };
     }
     // Use DB stored token if unexpired
@@ -89,17 +96,18 @@ export async function getShiprocketAuth(
       return {
         token: activeDbAccount.auth_token,
         user: userObj,
-        profile: activeDbAccount,
+        profile: sanitizeAccountProfile(activeDbAccount),
       };
     }
     // Otherwise refresh token with Shiprocket login endpoint
-    const password = (activeDbAccount.api_password || '').replace(/\\(\$)/g, '$1');
+    const decryptedPwd = await decryptSecret(activeDbAccount.api_password || '');
+    const password = decryptedPwd.replace(/\\(\$)/g, '$1');
     if (!activeDbAccount.api_email || !password) {
       if (activeDbAccount.auth_token) {
         return {
           token: activeDbAccount.auth_token,
           user: cachedShiprocketUser,
-          profile: activeDbAccount,
+          profile: sanitizeAccountProfile(activeDbAccount),
         };
       }
       throw new Error(`Shiprocket account '${activeDbAccount.account_label}' has no credentials configured.`);
@@ -153,7 +161,7 @@ export async function getShiprocketAuth(
     return {
       token: authData.token,
       user: restUser,
-      profile: activeDbAccount,
+      profile: sanitizeAccountProfile(activeDbAccount),
     };
 }
 /**
